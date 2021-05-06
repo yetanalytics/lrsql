@@ -1,0 +1,13 @@
+{:paths ["src/main"]
+ :deps
+ {com.yetanalytics/lrs
+  {:git/url "git@github.com:yetanalytics/lrs.git"
+   :sha     "84d6e54033f0c84575564c070001530bdece95b2"}}
+ :aliases
+ {:test
+  {:extra-paths ["src/test"]}
+  :runner
+  {:extra-deps
+   {com.cognitect/test-runner
+    {:git/url "https://github.com/cognitect-labs/test-runner.git"
+     :sha     "b6b3193fcc42659d7e46ecd1884a228993441182"}}}}}
