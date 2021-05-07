@@ -1,6 +1,11 @@
-(ns main.lrsql.hugsql
-  (:require [clj-uuid :as uuid]
-            [java-time :as jt]))
+(ns lrsql.hugsql
+  (:require [clojure.spec.alpha :as s]
+            [clj-uuid :as uuid]
+            [java-time :as jt]
+            [hugsql.core :as hugsql]))
+
+(hugsql/def-db-fns "db/h2/h2_insert.sql")
+(hugsql/def-db-fns "db/h2/h2_query.sql")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utils
@@ -48,7 +53,7 @@
                                 :homepage (get account "homepage")}]
         :else        nil))))
 
-(defn- agent->input
+(defn agent->input
   [agent]
   (when-some [ifi-tuple (get-ifi agent)]
     (let [[ifi-type ifi] ifi-tuple
@@ -70,7 +75,7 @@
 ;; - ActivityIRI: STRING UNIQUE KEY NOT NULL
 ;; - Data: JSON NOT NULL
 
-(defn- activity->input
+(defn activity->input
   [activity]
   {:table          :activity
    :primary-key    (generate-uuid)
@@ -84,7 +89,7 @@
 ;; - FileURL: STRING NOT NULL -- Either an external URL or the URL to a LRS location
 ;; - Data: BINARY NOT NULL
 
-(defn- attachment->input
+(defn attachment->input
   [{content      :content
     content-type :contentType
     sha2         :sha2}]
@@ -354,24 +359,24 @@
 ;; - Value: STRING NOT NULL
 
 ;; #_{:clj-kondo/ignore [:unresolved-symbol]}
-(defn insert-hugsql-inputs!
-  [inputs]
-  (doseq [{:keys [table] :as input} inputs]
-    (case table
-      :statement
-      (insert-statement input)
-      :agent
-      (insert-agent input)
-      :activity
-      (insert-activity input)
-      :attachment
-      (insert-activity input)
-      :statement-to-agent
-      (insert-statement-to-agent input)
-      :statement-to-activity
-      (insert-statement-to-activity input)
-      :statement-to-attachment
-      (insert-statement-to-attachment input))))
+;; (defn insert-hugsql-inputs!
+;;   [inputs db]
+;;   (doseq [{:keys [table] :as input} inputs]
+;;     (case table
+;;       :statement
+;;       (insert-statement db input)
+;;       :agent
+;;       (insert-agent db input)
+;;       :activity
+;;       (insert-activity db input)
+;;       :attachment
+;;       (insert-activity db input)
+;;       :statement-to-agent
+;;       (insert-statement-to-agent db input)
+;;       :statement-to-activity
+;;       (insert-statement-to-activity db input)
+;;       :statement-to-attachment
+;;       (insert-statement-to-attachment db input))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query
@@ -380,7 +385,8 @@
 ;; TODO: format
 ;; TODO: attachments
 
-(defn query-params!
+#_{:clj-kondo/ignore [:unresolved-symbol]}
+(defn query-parmas->hugsql-input
   [{statement-id        :statementId
     voided-statement-id :voidedStatementId
     verb                :verb
@@ -396,45 +402,43 @@
     ascending?          :ascending
     page                :page
     from                :from}]
-  (let [hugsql-input
-        (cond-> {}
-          statement-id
-          (merge {:statement-id-snip
-                  (statement-id-snip {:statement-id statement-id})
-                  :is-voided-snip
-                  (is-voided-snip {:voided? false})})
-          voided-statement-id
-          (merge {:statement-id-snip
-                  (statement-id-snip {:statement-id voided-statement-id})
-                  :is-voided-snip
-                  (is-voided-snip {:voided? true})})
-          verb
-          (assoc :verb-iri-snip
-                 (verb-iri-snip {:verb-iri verb}))
-          registration
-          (assoc :registration-snip
-                 (registration-snip {:registration registration}))
-          since
-          (assoc :timestamp-since-snip
-                 (timestamp-since-snip {:since since}))
-          until
-          (assoc :timestamp-until-snip
-                 (timestamp-until-snip {:until until}))
-          agent
-          (assoc :statement-to-agent-join-snip
-                 (statement-to-agent-join-snip
-                  (cond-> {}
-                    related-agents?
-                    (assoc :actor-agent-usage-snip
-                           (actor-agent-usage-snip)))))
-          activity
-          (assoc :statement-to-activity-join-snip
-                 (statement-to-activity-join-snip
-                  (cond-> {}
-                    related-activities?
-                    (assoc :object-activity-usage-snip
-                           (object-activity-usage-snip)))))
-          limit
-          (assoc :limit-snip
-                 (limit-snip {:limit limit})))]
-    (query-statement hugsql-input)))
+  (cond-> {}
+    statement-id
+    (merge {:statement-id-snip
+            (statement-id-snip {:statement-id statement-id})
+            :is-voided-snip
+            (is-voided-snip {:voided? false})})
+    voided-statement-id
+    (merge {:statement-id-snip
+            (statement-id-snip {:statement-id voided-statement-id})
+            :is-voided-snip
+            (is-voided-snip {:voided? true})})
+    verb
+    (assoc :verb-iri-snip
+           (verb-iri-snip {:verb-iri verb}))
+    registration
+    (assoc :registration-snip
+           (registration-snip {:registration registration}))
+    since
+    (assoc :timestamp-since-snip
+           (timestamp-since-snip {:since since}))
+    until
+    (assoc :timestamp-until-snip
+           (timestamp-until-snip {:until until}))
+    agent
+    (assoc :statement-to-agent-join-snip
+           (statement-to-agent-join-snip
+            (cond-> {}
+              related-agents?
+              (assoc :actor-agent-usage-snip
+                     (actor-agent-usage-snip)))))
+    activity
+    (assoc :statement-to-activity-join-snip
+           (statement-to-activity-join-snip
+            (cond-> {}
+              related-activities?
+              (assoc :object-activity-usage-snip
+                     (object-activity-usage-snip)))))
+    limit
+    (assoc :limit-snip
+           (limit-snip {:limit limit}))))
