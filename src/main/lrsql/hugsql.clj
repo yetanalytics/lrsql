@@ -2,6 +2,9 @@
   (:require [clj-uuid :as uuid]
             [java-time :as jt]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Utils
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- current-time
   "Return the current time as a java.util.Instant object."
@@ -12,6 +15,10 @@
   "Return a new sequential UUID."
   []
   (uuid/squuid))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Store
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; /* Need explicit properties for querying Agents Resource */
 ;; Agent
@@ -345,3 +352,89 @@
 ;; - IRI: STRING UNIQUE KEY NOT NULL
 ;; - LangTag: STRING NOT NULL
 ;; - Value: STRING NOT NULL
+
+;; #_{:clj-kondo/ignore [:unresolved-symbol]}
+(defn insert-hugsql-inputs!
+  [inputs]
+  (doseq [{:keys [table] :as input} inputs]
+    (case table
+      :statement
+      (insert-statement input)
+      :agent
+      (insert-agent input)
+      :activity
+      (insert-activity input)
+      :attachment
+      (insert-activity input)
+      :statement-to-agent
+      (insert-statement-to-agent input)
+      :statement-to-activity
+      (insert-statement-to-activity input)
+      :statement-to-attachment
+      (insert-statement-to-attachment input))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Query
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; TODO: format
+;; TODO: attachments
+
+(defn query-params!
+  [{statement-id        :statementId
+    voided-statement-id :voidedStatementId
+    verb                :verb
+    agent               :agent
+    activity            :activity
+    registration        :registration
+    related-activities? :related_activities
+    related-agents?     :related_agents
+    since               :since
+    until               :until
+    limit               :limit
+    attachments?        :attachments
+    ascending?          :ascending
+    page                :page
+    from                :from}]
+  (let [hugsql-input
+        (cond-> {}
+          statement-id
+          (merge {:statement-id-snip
+                  (statement-id-snip {:statement-id statement-id})
+                  :is-voided-snip
+                  (is-voided-snip {:voided? false})})
+          voided-statement-id
+          (merge {:statement-id-snip
+                  (statement-id-snip {:statement-id voided-statement-id})
+                  :is-voided-snip
+                  (is-voided-snip {:voided? true})})
+          verb
+          (assoc :verb-iri-snip
+                 (verb-iri-snip {:verb-iri verb}))
+          registration
+          (assoc :registration-snip
+                 (registration-snip {:registration registration}))
+          since
+          (assoc :timestamp-since-snip
+                 (timestamp-since-snip {:since since}))
+          until
+          (assoc :timestamp-until-snip
+                 (timestamp-until-snip {:until until}))
+          agent
+          (assoc :statement-to-agent-join-snip
+                 (statement-to-agent-join-snip
+                  (cond-> {}
+                    related-agents?
+                    (assoc :actor-agent-usage-snip
+                           (actor-agent-usage-snip)))))
+          activity
+          (assoc :statement-to-activity-join-snip
+                 (statement-to-activity-join-snip
+                  (cond-> {}
+                    related-activities?
+                    (assoc :object-activity-usage-snip
+                           (object-activity-usage-snip)))))
+          limit
+          (assoc :limit-snip
+                 (limit-snip {:limit limit})))]
+    (query-statement hugsql-input)))
