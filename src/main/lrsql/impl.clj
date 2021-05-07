@@ -11,45 +11,45 @@
   p/StatementsResource
   (-store-statements
    [lrs auth-identity statements attachments]
-   nil)
+   {:statement-ids []})
   (-get-statements
-   [lrs auth-identity statements attachments]
-   nil)
+   [this auth-identity params ltags]
+   {:statement {:id "my-statement-id"}}) ; TODO: return needs to be a statement
   (-consistent-through
    [lrs ctx auth-identity]
-   nil)
+   "timestamp-here") ; TODO: return needs to be a timestamp
 
   p/DocumentResource
   (-set-document
    [lrs auth-identity params document merge?]
-   nil)
+   {})
   (-get-document
    [this auth-identity params]
-   nil)
+   {:document nil})
   (-get-document-ids
    [this auth-identity params]
-   nil)
+   {:document-ids []})
   (-delete-document
    [this auth-identity params]
-   nil)
+   {})
   (-delete-documents
    [this auth-identity params]
-   nil)
+   {})
 
   p/AgentInfoResource
   (-get-person
    [this auth-identity params]
-   nil)
+   {:person {:objectType "Person"}})
 
   p/ActivityInfoResource
   (-get-activity
    [this auth-identity params]
-   nil)
+   {:activity {:objectType "Activity"}})
 
   p/LRSAuth
   (-authenticate
    [this ctx]
-   nil)
+   {:result ::forbidden})
   (-authorize
    [this ctx auth-identity]
-   nil))
+   {:result false}))

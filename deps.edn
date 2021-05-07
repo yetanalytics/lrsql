@@ -1,10 +1,20 @@
 {:paths ["src/main"]
  :deps
- {com.yetanalytics/lrs
+ {org.clojure/clojure                    {:mvn/version "1.10.3"}
+  clojure.java-time/clojure.java-time    {:mvn/version "0.3.2"}
+  danlentz/clj-uuid                      {:mvn/version "0.1.9"}
+  com.github.seancorfield/next.jdbc      {:mvn/version "1.2.659"}
+  com.layerware/hugsql                   {:mvn/version "0.5.1"}
+  com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
+  com.yetanalytics/lrs
   {:git/url "git@github.com:yetanalytics/lrs.git"
    :sha     "84d6e54033f0c84575564c070001530bdece95b2"}}
  :aliases
- {:test
+ {:db-h2
+  {:extra-deps {com.h2database/h2 {:mvn/version "1.4.200"}}}
+  :db-sqlite
+  {:extra-deps {}}
+  :test
   {:extra-paths ["src/test"]}
   :runner
   {:extra-deps
