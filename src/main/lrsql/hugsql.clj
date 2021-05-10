@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [clj-uuid :as uuid]
             [java-time :as jt]
-            [hugsql.core :as hugsql]))
+            [hugsql.core :as hugsql]
+            [lrsql.hugsql.spec :as hs]))
 
 (hugsql/def-db-fns "db/h2/h2_insert.sql")
 (hugsql/def-db-fns "db/h2/h2_query.sql")
@@ -38,7 +39,7 @@
 
 (defn- get-ifi
   "Return the Inverse Functional Identifier of `obj` if it is an Actor or an
-   Identified Group. Return value is a tuple of the IFI type and the IFI."
+   Identified Group. Return value is a map between the IFI type and the IFI."
   [obj]
   (when (#{"Agent" "Group"} (get obj "objectType"))
     (let [mbox         (get obj "mbox")
@@ -46,29 +47,23 @@
           openid       (get obj "openid")
           account      (get obj "account")]
       (cond
-        mbox         [:mbox mbox]
-        mbox-sha1sum [:mbox-sha1sum mbox-sha1sum]
-        openid       [:openid openid]
-        account      [:account {:name     (get account "name")
-                                :homepage (get account "homepage")}]
+        mbox         {:mbox mbox}
+        mbox-sha1sum {:mbox-sha1sum mbox-sha1sum}
+        openid       {:openid openid}
+        account      {:account {:name     (get account "name")
+                                :homepage (get account "homepage")}}
         :else        nil))))
 
 (defn agent->input
   [agent]
-  (when-some [ifi-tuple (get-ifi agent)]
-    (let [[ifi-type ifi] ifi-tuple
-          amap           {:table       :agent
-                          :primary-key (generate-uuid)}]
-      (cond-> amap
-        (#{:mbox :mbox-sha1sum :openid} ifi-type)
-        (assoc ifi-type ifi)
-        (#{:account} ifi-type)
-        (merge {:account-name     (:name ifi)
-                :account-homepage (:homepage ifi)})
-        (contains? agent "name")
-        (assoc :name (get agent "name"))
-        (= "Group" (get agent "objectType"))
-        (assoc :identified-group? true)))))
+  (when-some [ifi-m (get-ifi agent)]
+    (cond-> {:table       :agent
+             :primary-key (generate-uuid)
+             :ifi         ifi-m}
+      (contains? agent "name")
+      (assoc :name (get agent "name"))
+      (= "Group" (get agent "objectType"))
+      (assoc :identified-group? true))))
 
 ;; Activity
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
@@ -80,7 +75,7 @@
   {:table          :activity
    :primary-key    (generate-uuid)
    :activity-iri   (get activity "id")
-   :data           activity})
+   :payload        activity})
 
 ;; Attachment
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
@@ -93,12 +88,12 @@
   [{content      :content
     content-type :contentType
     sha2         :sha2}]
-  {:table        :attachment
-   :primary-key  (generate-uuid)
-   :sha2         sha2
-   :content-type content-type
-   :file-url     "" ; TODO
-   :data         content})
+  {:table          :attachment
+   :primary-key    (generate-uuid)
+   :attachment-sha sha2
+   :content-type   content-type
+   :file-url       "" ; TODO
+   :payload        content})
 
 ;; Statement-to-Agent
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
@@ -110,34 +105,12 @@
 ;; - AgentIFIType: STRING IN ('Mbox', 'MboxSHA1Sum', 'OpenID', 'Account') NOT NULL
 
 (defn- agent-input->link-input
-  [statement-pk
-   statement-id
-   agent-usage
-   {agent-pk           :primary-key
-    agent-mbox         :mbox
-    agent-mbox-sha1sum :mbox-sha1sum
-    agent-openid       :openid
-    agent-acc-name     :account-name
-    agent-acc-hp       :account-homepage}]
-  (cond-> {:table        :statement-to-agent
-           :primary-key  (generate-uuid)
-           :statement-pk statement-pk
-           :statement-id statement-id
-           :usage        agent-usage
-           :agent-pk     agent-pk}
-    agent-mbox
-    (merge {:agent-id      agent-mbox
-            :agent-id-type "Mbox"})
-    agent-mbox-sha1sum
-    (merge {:agent-id agent-mbox-sha1sum
-            :agent-id-type "MboxSHA1"})
-    agent-openid
-    (merge {:agent-id agent-openid
-            :agent-id-type "Openid"})
-    (and agent-acc-name agent-acc-hp)
-    (merge {:agent-id (str {:name     agent-acc-name
-                            :homepage agent-acc-hp})
-            :agent-id-type "Account"})))
+  [statement-id agent-usage {agent-ifi :ifi :as _agent}]
+  {:table        :statement-to-agent
+   :primary-key  (generate-uuid)
+   :statement-id statement-id
+   :usage        agent-usage
+   :ifi          agent-ifi})
 
 ;; Statement-to-Activity
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
@@ -148,17 +121,11 @@
 ;; - ActivityIRI: STRING NOT NULL
 
 (defn- activity-input->link-input
-  [statement-pk
-   statement-id
-   activity-usage
-   {activity-pk :primary-key
-    activity-id :activity-iri}]
+  [statement-id activity-usage {activity-id :activity-iri}]
   {:table        :statement-to-activity
    :primary-key  (generate-uuid)
-   :statement-pk statement-pk
    :statement-id statement-id
    :usage        activity-usage
-   :activity-pk  activity-pk
    :activity-iri activity-id})
 
 ;; Statement-to-Attachment
@@ -169,15 +136,10 @@
 ;; - AttachemntSHA2: STRING NOT NULL
 
 (defn- attachment-input->link-input
-  [statement-pk
-   statement-id
-   {attachment-pk :primary-key
-    attachment-id :sha2}]
+  [statement-id {attachment-id :sha2}]
   {:table           :statement-to-attachment
    :primary-key     (generate-uuid)
-   :statement-pk    statement-pk
    :statement-id    statement-id
-   :attachment-pk   attachment-pk
    :attachment-sha2 attachment-id})
 
 ;; Statement
@@ -237,9 +199,9 @@
                       :timestamp         stmt-time
                       :stored            stmt-stored
                       :?registration     stmt-reg
-                      :verb-id           stmt-vrb-id
+                      :verb-iri          stmt-vrb-id
                       :voided?           voided?
-                      :data              statement}
+                      :payload           statement}
         ;; Agent HugSql input
         agnt-inputs  (cond-> []
                        actr-agnt-in (conj actr-agnt-in)
@@ -257,7 +219,7 @@
         ;; Attachment HugSql input
         att-inputs   (when ?attachments (map attachment->input ?attachments))
         ;; Statement-to-Agent HugSql input
-        agent->link  (partial agent-input->link-input stmt-pk stmt-id)
+        agent->link  (partial agent-input->link-input stmt-id)
         stmt-agnts   (cond-> []
                        actr-agnt-in
                        (conj (agent->link "Actor" actr-agnt-in))
@@ -270,7 +232,7 @@
                        team-agnt-in
                        (conj (agent->link "Team" team-agnt-in)))
         ;; Statement-to-Activity HugSql input
-        act->link    (partial activity-input->link-input stmt-pk stmt-id)
+        act->link    (partial activity-input->link-input stmt-id)
         stmt-acts    (cond-> []
                        obj-act-in
                        (conj (act->link "Object" obj-act-in))
@@ -284,9 +246,7 @@
                        (concat (map (partial act->link "Other") oth-acts-in)))
         ;; Statement-to-Attachment HugSql input
         stmt-atts    (when att-inputs
-                       (map (partial attachment-input->link-input
-                                     stmt-pk
-                                     stmt-id)
+                       (map (partial attachment-input->link-input stmt-id)
                             att-inputs))]
     (concat [stmt-input]
             agnt-inputs
@@ -328,7 +288,7 @@
      :primary-key   (generate-uuid)
      :state-id      (get id-params "stateID")
      :activity-id   (get id-params "activityID")
-     :agent         (get id-params "agent")
+     :agent-id      (get id-params "agent")
      :?registration (get id-params "registration")
      :last-modified (current-time)
      :document      document}
@@ -338,7 +298,7 @@
     {:table         :agent-profile-document
      :primary-key   (generate-uuid)
      :profile-id    (get id-params "profileID")
-     :agent         (get id-params "agent")
+     :agent-id      (get id-params "agent")
      :last-modified (current-time)
      :document      document}
 
@@ -428,15 +388,15 @@
     agent
     (assoc :statement-to-agent-join-snip
            (statement-to-agent-join-snip
-            (cond-> {}
-              related-agents?
+            (cond-> {:agent-ifi (get-ifi agent)}
+              (not related-agents?)
               (assoc :actor-agent-usage-snip
                      (actor-agent-usage-snip)))))
     activity
     (assoc :statement-to-activity-join-snip
            (statement-to-activity-join-snip
-            (cond-> {}
-              related-activities?
+            (cond-> {:activity-iri activity}
+              (not related-activities?)
               (assoc :object-activity-usage-snip
                      (object-activity-usage-snip)))))
     limit
