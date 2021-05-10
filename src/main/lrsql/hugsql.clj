@@ -3,12 +3,9 @@
             [clj-uuid :as uuid]
             [java-time :as jt]
             [hugsql.core :as hugsql]
-            [xapi-schema :as xs]
+            [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec :as hs]))
-
-(hugsql/def-db-fns "db/h2/h2_insert.sql")
-(hugsql/def-db-fns "db/h2/h2_query.sql")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utils
@@ -23,6 +20,26 @@
   "Return a new sequential UUID."
   []
   (uuid/squuid))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Declarations
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Shut up VSCode warnings
+(declare statement-id-snip)
+(declare is-voided-snip)
+(declare verb-iri-snip)
+(declare registration-snip)
+(declare timestamp-since-snip)
+(declare timestamp-until-snip)
+(declare statement-to-agent-join-snip)
+(declare statement-to-activity-join-snip)
+(declare actor-agent-usage-snip)
+(declare object-activity-usage-snip)
+(declare limit-snip)
+
+;; (hugsql/def-db-fns "h2/h2_insert.sql")
+(hugsql/def-db-fns "h2/h2_query.sql")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Store
@@ -403,7 +420,7 @@
   :args (s/cat :params :xapi.statements.GET.request/params)
   :ret hs/statement-query-spec)
 
-#_{:clj-kondo/ignore [:unresolved-symbol]}
+; {:clj-kondo/ignore [:unresolved-symbol]}
 (defn query-params->hugsql-input
   [{statement-id        :statementId
     voided-statement-id :voidedStatementId

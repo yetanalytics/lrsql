@@ -1,4 +1,4 @@
-{:paths ["src/main"]
+{:paths ["src/main" "sql"]
  :deps
  {org.clojure/clojure                    {:mvn/version "1.10.3"}
   clojure.java-time/clojure.java-time    {:mvn/version "0.3.2"}
@@ -18,8 +18,8 @@
  :aliases
  {:db-h2
   {:extra-deps {com.h2database/h2 {:mvn/version "1.4.200"}}}
-  :db-sqlite
-  {:extra-deps {}}
+  ;; :db-sqlite
+  ;; {:extra-deps {}}
   :test
   {:extra-paths ["src/test"]}
   :runner

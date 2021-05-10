@@ -1,6 +1,6 @@
 (ns lrsql.hugsql.spec
   (:require [clojure.spec.alpha :as s]
-            [xapi-schema :as xs]))
+            [xapi-schema.spec :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
@@ -32,26 +32,23 @@
 (s/def :lrsql.hugsql.spec.activity/activity-iri :activity/id)
 (s/def :lrsql.hugsql.spec.activity/usage
   #{"Object", "Category", "Grouping", "Parent", "Other"})
-(s/def :lrsql.hugsql.spec.activity/payload :statement-object/activity)
+(s/def :lrsql.hugsql.spec.activity/payload ::xs/activity)
 
 ;; Agent
 (s/def :lrsql.hugsql.spec.agent/name string?)
+(s/def :lrsql.hugsql.spec.agent/identified-group? boolean?)
 
 (s/def :lrsql.hugsql.spec.agent/mbox ::xs/mailto-iri)
 (s/def :lrsql.hugsql.spec.agent/mbox-sha1sum ::xs/sha1sum)
 (s/def :lrsql.hugsql.spec.agent/openid ::xs/openid)
-(s/def :lrsql.hugsql.spec.agent/account-name :account/name)
-(s/def :lrsql.hugsql.spec.agent/account-page :account/homePage)
+(s/def :lrsql.hugsql.spec.agent/account ::xs/account)
 (s/def :lrsql.hugsql.spec.agent/ifi
-  (s/or :mbox         (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox])
-        :mbox-sha1sum (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox-sha1sum])
-        :openid       (s/keys :req-un [:lrsql.hugsql.spec.agent/openid])
-        :account      (s/keys :req-un [:lrsql.hugsql.spec.agent/account-name
-                                       :lrsql.hugsql.spec.agent/account-page])))
-(s/def :lrsql.hugsql.spec.agent/ifi-type
-  #{"Mbox" "MboxSHA1Sum" "ObjectID" "Account"})
-
-(s/def :lrsql.hugsql.spec.agent/identified-group? boolean?)
+  (s/and (s/conformer (partial xs/conform-ns-map "lrsql.hugsql.spec.agent/mbox")
+                      xs/unform-ns-map)
+         (s/keys :req-un [(or :lrsql.hugsql.spec.agent/mbox
+                              :lrsql.hugsql.spec.agent/mbox-sha1sum
+                              :lrsql.hugsql.spec.agent/openid
+                              :lrsql.hugsql.spec.agent/account)])))
 
 (s/def :lrsql.hugsql.spec.agent/usage
   #{"Actor" "Object" "Authority" "Instructor" "Team"})

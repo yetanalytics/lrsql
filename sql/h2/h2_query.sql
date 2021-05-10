@@ -26,10 +26,10 @@ verb_iri = :verb-iri
 -- :snip registration
 registration = :registration
 
--- :timestamp-since
+-- :snip timestamp-since
 stored > :since
 
--- :timestamp-until
+-- :snip timestamp-until
 stored <= :until
 
 -- :snip statement-to-agent-join
