@@ -49,12 +49,7 @@
 (declare object-activity-usage-snip)
 (declare limit-snip)
 
-;; (hugsql/def-db-fns "h2/h2_insert.sql")
-(hugsql/def-db-fns "h2/h2_query.sql")
 (hugsql/def-sqlvec-fns "h2/h2_query.sql")
-
-(comment
-  (hugsql/map-of-sqlvec-fns "h2/h2_query.sql"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Store
@@ -377,10 +372,11 @@
     since               :since
     until               :until
     limit               :limit
-    attachments?        :attachments
-    ascending?          :ascending
-    page                :page
-    from                :from}]
+    ;; attachments?        :attachments
+    ;; ascending?          :ascending
+    ;; page                :page
+    ;; from                :from
+    }]
   (let [stmt-id   (when statement-id (parse-uuid statement-id))
         vstmt-id  (when voided-statement-id (parse-uuid voided-statement-id))
         reg       (when registration (parse-uuid registration))
