@@ -38,21 +38,14 @@
 ;; - IsIdentifiedGroup: BOOLEAN NOT NULL DEFAULT FALSE -- Treat Identified Groups as Agents
 
 (defn- get-ifi
-  "Return the Inverse Functional Identifier of `obj` if it is an Actor or an
-   Identified Group. Return value is a map between the IFI type and the IFI."
+  "Returns a map between the IFI type and the IFI of `obj` if it is an Actor
+   or an Identified Group."
   [obj]
   (when (#{"Agent" "Group"} (get obj "objectType"))
-    (let [mbox         (get obj "mbox")
-          mbox-sha1sum (get obj "mbox_sha1sum")
-          openid       (get obj "openid")
-          account      (get obj "account")]
-      (cond
-        mbox         {:mbox mbox}
-        mbox-sha1sum {:mbox-sha1sum mbox-sha1sum}
-        openid       {:openid openid}
-        account      {:account {:name     (get account "name")
-                                :homepage (get account "homepage")}}
-        :else        nil))))
+    (not-empty (select-keys obj ["mbox"
+                                 "mbox_sha1sum"
+                                 "openid"
+                                 "account"]))))
 
 (defn agent->input
   [agent]
@@ -105,7 +98,7 @@
 ;; - AgentIFIType: STRING IN ('Mbox', 'MboxSHA1Sum', 'OpenID', 'Account') NOT NULL
 
 (defn- agent-input->link-input
-  [statement-id agent-usage {agent-ifi :ifi :as _agent}]
+  [statement-id agent-usage {agent-ifi :ifi}]
   {:table        :statement-to-agent
    :primary-key  (generate-uuid)
    :statement-id statement-id
@@ -280,34 +273,40 @@
 ;; - Document: BINARY NOT NULL
 
 (defn document->hugsql-input
-  [id-params ^bytes document]
+  [{state-id     :stateID
+    profile-id   :profileID
+    activity-id  :activityID
+    agent        :agent
+    registration :registration
+    :as          _id-params}
+   ^bytes document]
   (cond
     ;; State Document
-    (contains? id-params "stateID")
+    state-id
     {:table         :state-document
      :primary-key   (generate-uuid)
-     :state-id      (get id-params "stateID")
-     :activity-id   (get id-params "activityID")
-     :agent-id      (get id-params "agent")
-     :?registration (get id-params "registration")
+     :state-id      state-id
+     :activity-id   activity-id
+     :agent-id      (get-ifi agent)
+     :?registration registration
      :last-modified (current-time)
      :document      document}
 
     ;; Agent Profile Document
-    (contains? id-params "agent")
+    (and profile-id agent)
     {:table         :agent-profile-document
      :primary-key   (generate-uuid)
-     :profile-id    (get id-params "profileID")
-     :agent-id      (get id-params "agent")
+     :profile-id    profile-id
+     :agent-id      (get-ifi agent)
      :last-modified (current-time)
      :document      document}
 
     ;; Activity Profile Document
-    (contains? id-params "activityID")
+    (and profile-id activity-id)
     {:table         :activity-profile-document
      :primary-key   (generate-uuid)
-     :profile-id    (get id-params "profileID")
-     :activity-id   (get id-params "activityID")
+     :profile-id    profile-id
+     :activity-id   activity-id
      :last-modified (current-time)
      :document      document}))
 
