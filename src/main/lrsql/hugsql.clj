@@ -3,6 +3,8 @@
             [clj-uuid :as uuid]
             [java-time :as jt]
             [hugsql.core :as hugsql]
+            [xapi-schema :as xs]
+            [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec :as hs]))
 
 (hugsql/def-db-fns "db/h2/h2_insert.sql")
@@ -47,6 +49,11 @@
                                  "openid"
                                  "account"]))))
 
+(s/fdef agent->input
+  :args (s/cat :agent (s/alt :agent ::xs/agent
+                             :group ::xs/group))
+  :ret hs/agent-input-spec)
+
 (defn agent->input
   [agent]
   (when-some [ifi-m (get-ifi agent)]
@@ -63,6 +70,10 @@
 ;; - ActivityIRI: STRING UNIQUE KEY NOT NULL
 ;; - Data: JSON NOT NULL
 
+(s/fdef activity->input
+  :args (s/cat :activity ::xs/activity)
+  :ret hs/activity-input-spec)
+
 (defn activity->input
   [activity]
   {:table          :activity
@@ -76,6 +87,10 @@
 ;; - ContentType: STRING NOT NULL
 ;; - FileURL: STRING NOT NULL -- Either an external URL or the URL to a LRS location
 ;; - Data: BINARY NOT NULL
+
+(s/fdef attachment->input
+  :args (s/cat :attachment ::ss/attachment)
+  :ret hs/attachment-input-spec)
 
 (defn attachment->input
   [{content      :content
@@ -97,6 +112,12 @@
 ;; - AgentIFI: STRING NOT NULL
 ;; - AgentIFIType: STRING IN ('Mbox', 'MboxSHA1Sum', 'OpenID', 'Account') NOT NULL
 
+(s/fdef agent-input->link-input
+  :args (s/cat :statement-id ::hs/statement-id
+               :agent-usage :lrsql.hugsql.spec.activity/usage
+               :agent-input hs/agent-input-spec)
+  :ret hs/statement-to-agent-input-spec)
+
 (defn- agent-input->link-input
   [statement-id agent-usage {agent-ifi :ifi}]
   {:table        :statement-to-agent
@@ -113,6 +134,12 @@
 ;; - ActivityKey: UUID NOT NULL
 ;; - ActivityIRI: STRING NOT NULL
 
+(s/fdef activity-input->link-input
+  :args (s/cat :statement-id ::hs/statement-id
+               :activity-usage :lrsql.hugsql.spec.activity/usage
+               :activity-input hs/activity-input-spec)
+  :ret hs/statement-to-activity-input-spec)
+
 (defn- activity-input->link-input
   [statement-id activity-usage {activity-id :activity-iri}]
   {:table        :statement-to-activity
@@ -128,8 +155,13 @@
 ;; - AttachmentKey: UUID NOT NULL
 ;; - AttachemntSHA2: STRING NOT NULL
 
+(s/fdef attachment-input->link-input
+  :args (s/cat :statement-id ::hs/statement-id
+               :attachment-input hs/attachment-input-spec)
+  :ret hs/statement-to-attachment-input-spec)
+
 (defn- attachment-input->link-input
-  [statement-id {attachment-id :sha2}]
+  [statement-id {attachment-id :attachment-sha}]
   {:table           :statement-to-attachment
    :primary-key     (generate-uuid)
    :statement-id    statement-id
@@ -146,6 +178,18 @@
 ;; - VerbID: STRING NOT NULL
 ;; - IsVoided: BOOLEAN NOT NULL DEFAULT FALSE
 ;; - Data: JSON NOT NULL
+
+(s/fdef statement->hugsql-input
+  :args (s/cat :statement ::xs/statement
+               :?attachments (s/nilable (s/coll-of ::ss/attachment
+                                                   :min-count 1)))
+  :ret (s/cat
+        :statement-input hs/statement-input-spec
+        :agent-inputs (s/* hs/agent-input-spec)
+        :activity-inputs (s/* hs/activity-input-spec)
+        :stmt-agent-inputs (s/* hs/statement-to-agent-input-spec)
+        :stmt-activity-inputs (s/* hs/statement-to-activity-input-spec)
+        :stmt-attachment-inputs (s/* hs/statement-to-attachment-input-spec)))
 
 (defn statement->hugsql-input
   [statement ?attachments]
@@ -272,6 +316,17 @@
 ;; - LastModified: TIMESTAMP NOT NULL
 ;; - Document: BINARY NOT NULL
 
+(s/fdef document->hugsql-input
+  :args (s/cat
+         :id-params
+         (s/alt :state :xapi.document.state/id-params
+                :agent-profile :xapi.document.agent-profile/id-params
+                :activity-profile :xapi.document.activity-profile/id-params)
+         :document any?) ; TODO: bytes? predicate
+  :ret (s/or :state hs/state-document-input-spec
+             :agent-profile hs/agent-profile-document-input-spec
+             :activity-profile hs/activity-profile-document-input-spec))
+
 (defn document->hugsql-input
   [{state-id     :stateID
     profile-id   :profileID
@@ -344,8 +399,12 @@
 ;; TODO: format
 ;; TODO: attachments
 
+(s/fdef query-params
+  :args (s/cat :params :xapi.statements.GET.request/params)
+  :ret hs/statement-query-spec)
+
 #_{:clj-kondo/ignore [:unresolved-symbol]}
-(defn query-parmas->hugsql-input
+(defn query-params->hugsql-input
   [{statement-id        :statementId
     voided-statement-id :voidedStatementId
     verb                :verb

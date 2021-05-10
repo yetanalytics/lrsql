@@ -102,7 +102,7 @@
   (s/keys :req-un [::primary-key
                    :lrsql.hugsql.spec.attachment/attachment-sha
                    :lrsql.hugsql.spec.attachment/content-type
-                   :lrsql.hugsql.spec.attachment/file-url
+                   ; :lrsql.hugsql.spec.attachment/file-url TODO
                    :lrsql.hugsql.spec.attachment/payload]))
 
 (def statement-to-agent-input-spec
