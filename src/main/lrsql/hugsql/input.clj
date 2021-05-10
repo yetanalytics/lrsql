@@ -66,12 +66,12 @@
                                  "openid"
                                  "account"]))))
 
-(s/fdef agent->input
+(s/fdef agent->insert-input
   :args (s/cat :agent (s/alt :agent ::xs/agent
                              :group ::xs/group))
-  :ret hs/agent-input-spec)
+  :ret hs/agent-insert-spec)
 
-(defn agent->input
+(defn agent->insert-input
   [agent]
   (when-some [ifi-m (get-ifi agent)]
     (cond-> {:table       :agent
@@ -87,11 +87,11 @@
 ;; - ActivityIRI: STRING UNIQUE KEY NOT NULL
 ;; - Data: JSON NOT NULL
 
-(s/fdef activity->input
+(s/fdef activity->insert-input
   :args (s/cat :activity ::xs/activity)
-  :ret hs/activity-input-spec)
+  :ret hs/activity-insert-spec)
 
-(defn activity->input
+(defn activity->insert-input
   [activity]
   {:table          :activity
    :primary-key    (generate-uuid)
@@ -105,11 +105,11 @@
 ;; - FileURL: STRING NOT NULL -- Either an external URL or the URL to a LRS location
 ;; - Data: BINARY NOT NULL
 
-(s/fdef attachment->input
+(s/fdef attachment->insert-input
   :args (s/cat :attachment ::ss/attachment)
-  :ret hs/attachment-input-spec)
+  :ret hs/attachment-insert-spec)
 
-(defn attachment->input
+(defn attachment->insert-input
   [{content      :content
     content-type :contentType
     sha2         :sha2}]
@@ -132,8 +132,8 @@
 (s/fdef agent-input->link-input
   :args (s/cat :statement-id ::hs/statement-id
                :agent-usage :lrsql.hugsql.spec.activity/usage
-               :agent-input hs/agent-input-spec)
-  :ret hs/statement-to-agent-input-spec)
+               :agent-input hs/agent-insert-spec)
+  :ret hs/statement-to-agent-insert-spec)
 
 (defn- agent-input->link-input
   [statement-id agent-usage {agent-ifi :ifi}]
@@ -154,8 +154,8 @@
 (s/fdef activity-input->link-input
   :args (s/cat :statement-id ::hs/statement-id
                :activity-usage :lrsql.hugsql.spec.activity/usage
-               :activity-input hs/activity-input-spec)
-  :ret hs/statement-to-activity-input-spec)
+               :activity-input hs/activity-insert-spec)
+  :ret hs/statement-to-activity-insert-spec)
 
 (defn- activity-input->link-input
   [statement-id activity-usage {activity-id :activity-iri}]
@@ -174,8 +174,8 @@
 
 (s/fdef attachment-input->link-input
   :args (s/cat :statement-id ::hs/statement-id
-               :attachment-input hs/attachment-input-spec)
-  :ret hs/statement-to-attachment-input-spec)
+               :attachment-input hs/attachment-insert-spec)
+  :ret hs/statement-to-attachment-insert-spec)
 
 (defn- attachment-input->link-input
   [statement-id {attachment-id :attachment-sha}]
@@ -196,19 +196,19 @@
 ;; - IsVoided: BOOLEAN NOT NULL DEFAULT FALSE
 ;; - Data: JSON NOT NULL
 
-(s/fdef statement->hugsql-input
+(s/fdef statement->insert-input
   :args (s/cat :statement ::xs/statement
                :?attachments (s/nilable (s/coll-of ::ss/attachment
                                                    :min-count 1)))
   :ret (s/cat
-        :statement-input hs/statement-input-spec
-        :agent-inputs (s/* hs/agent-input-spec)
-        :activity-inputs (s/* hs/activity-input-spec)
-        :stmt-agent-inputs (s/* hs/statement-to-agent-input-spec)
-        :stmt-activity-inputs (s/* hs/statement-to-activity-input-spec)
-        :stmt-attachment-inputs (s/* hs/statement-to-attachment-input-spec)))
+        :statement-input hs/statement-insert-spec
+        :agent-inputs (s/* hs/agent-insert-spec)
+        :activity-inputs (s/* hs/activity-insert-spec)
+        :stmt-agent-inputs (s/* hs/statement-to-agent-insert-spec)
+        :stmt-activity-inputs (s/* hs/statement-to-activity-insert-spec)
+        :stmt-attachment-inputs (s/* hs/statement-to-attachment-insert-spec)))
 
-(defn statement->hugsql-input
+(defn statement->insert-input
   [statement ?attachments]
   (let [stmt-pk      (generate-uuid)
         stmt-id      (get statement "id")
@@ -228,22 +228,22 @@
         stmt-auth    (get statement "authority")
         stmt-inst    (get stmt-ctx "instructor")
         stmt-team    (get stmt-ctx "team")
-        obj-agnt-in  (agent->input stmt-obj)
-        actr-agnt-in (agent->input stmt-actr)
-        auth-agnt-in (agent->input stmt-auth)
-        inst-agnt-in (agent->input stmt-inst)
-        team-agnt-in (agent->input stmt-team)
+        obj-agnt-in  (agent->insert-input stmt-obj)
+        actr-agnt-in (agent->insert-input stmt-actr)
+        auth-agnt-in (agent->insert-input stmt-auth)
+        inst-agnt-in (agent->insert-input stmt-inst)
+        team-agnt-in (agent->insert-input stmt-team)
         ;; Statement Activities
         cat-acts     (get-in stmt-ctx ["contextActivities" "category"])
         grp-acts     (get-in stmt-ctx ["contextActivities" "grouping"])
         prt-acts     (get-in stmt-ctx ["contextActivities" "parent"])
         oth-acts     (get-in stmt-ctx ["contextActivities" "other"])
         obj-act-in   (when (= "Activity" (get stmt-obj "objectType"))
-                       (activity->input stmt-obj))
-        cat-acts-in  (when cat-acts (map activity->input cat-acts))
-        grp-acts-in  (when grp-acts (map activity->input grp-acts))
-        prt-acts-in  (when prt-acts (map activity->input prt-acts))
-        oth-acts-in  (when oth-acts (map activity->input oth-acts))
+                       (activity->insert-input stmt-obj))
+        cat-acts-in  (when cat-acts (map activity->insert-input cat-acts))
+        grp-acts-in  (when grp-acts (map activity->insert-input grp-acts))
+        prt-acts-in  (when prt-acts (map activity->insert-input prt-acts))
+        oth-acts-in  (when oth-acts (map activity->insert-input oth-acts))
         ;; Statement HugSql input
         stmt-input   {:table             :statement
                       :primary-key       stmt-pk
@@ -271,7 +271,8 @@
                        prt-acts-in (concat prt-acts-in)
                        oth-acts-in (concat oth-acts-in))
         ;; Attachment HugSql input
-        att-inputs   (when ?attachments (map attachment->input ?attachments))
+        att-inputs   (when ?attachments
+                       (map attachment->insert-input ?attachments))
         ;; Statement-to-Agent HugSql input
         agent->link  (partial agent-input->link-input stmt-id)
         stmt-agnts   (cond-> []
@@ -340,11 +341,11 @@
                 :agent-profile :xapi.document.agent-profile/id-params
                 :activity-profile :xapi.document.activity-profile/id-params)
          :document any?) ; TODO: bytes? predicate
-  :ret (s/or :state hs/state-document-input-spec
-             :agent-profile hs/agent-profile-document-input-spec
-             :activity-profile hs/activity-profile-document-input-spec))
+  :ret (s/or :state hs/state-document-insert-spec
+             :agent-profile hs/agent-profile-document-insert-spec
+             :activity-profile hs/activity-profile-document-insert-spec))
 
-(defn document->hugsql-input
+(defn document->insert-input
   [{state-id     :stateID
     profile-id   :profileID
     activity-id  :activityID
@@ -421,7 +422,7 @@
   :ret hs/statement-query-spec)
 
 ; {:clj-kondo/ignore [:unresolved-symbol]}
-(defn query-params->hugsql-input
+(defn query-params->query-input
   [{statement-id        :statementId
     voided-statement-id :voidedStatementId
     verb                :verb

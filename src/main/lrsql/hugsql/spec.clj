@@ -72,7 +72,7 @@
 ;; Statement Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def statement-input-spec
+(def statement-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
                    ::?sub-statement-id
@@ -84,37 +84,37 @@
                    ::voided?
                    ::payload]))
 
-(def agent-input-spec
+(def agent-insert-spec
   (s/keys :req-un [::primary-key
                    :lrsql.hugsql.spec.agent/name
                    :lrsql.hugsql.spec.agent/ifi
                    :lrsql.hugsql.spec.agent/identified-group?]))
 
-(def activity-input-spec
+(def activity-insert-spec
   (s/keys :req-un [::primary-key
                    :lrsql.hugsql.spec.activity/activity-iri
                    :lrsql.hugsql.spec.activity/payload]))
 
-(def attachment-input-spec
+(def attachment-insert-spec
   (s/keys :req-un [::primary-key
                    :lrsql.hugsql.spec.attachment/attachment-sha
                    :lrsql.hugsql.spec.attachment/content-type
                    ; :lrsql.hugsql.spec.attachment/file-url TODO
                    :lrsql.hugsql.spec.attachment/payload]))
 
-(def statement-to-agent-input-spec
+(def statement-to-agent-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
                    :lrsql.hugsql.spec.agent/usage
                    :lrsql.hugsql.spec.agent/ifi]))
 
-(def statement-to-activity-input-spec
+(def statement-to-activity-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
                    :lrsql.hugsql.spec.activity/usage
                    :lrsql.hugsql.spec.activity/activity-iri]))
 
-(def statement-to-attachment-input-spec
+(def statement-to-attachment-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
                    :lrsql.hugsql.spec.attachment/attachment-sha]))
@@ -123,7 +123,7 @@
 ;; Document Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def state-document-input-spec
+(def state-document-insert-spec
   (s/keys :req-un [::primary-key
                    ::state-id
                    ::activity-id
@@ -132,14 +132,14 @@
                    ::last-modified
                    ::document]))
 
-(def agent-profile-document-input-spec
+(def agent-profile-document-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
                    ::agent-id
                    ::last-modified
                    ::document]))
 
-(def activity-profile-document-input-spec
+(def activity-profile-document-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
                    ::activity-id
