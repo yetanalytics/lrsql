@@ -21,7 +21,8 @@
   ;; :db-sqlite
   ;; {:extra-deps {}}
   :test
-  {:extra-paths ["src/test"]}
+  {:extra-paths ["src/test"]
+   :extra-deps {org.clojure/test.check {:mvn/version "1.0.0"}}}
   :runner
   {:extra-deps
    {com.cognitect/test-runner

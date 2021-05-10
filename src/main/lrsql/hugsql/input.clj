@@ -1,5 +1,6 @@
 (ns lrsql.hugsql.input
   (:require [clojure.spec.alpha :as s]
+            [clojure.data.json :as json]
             [clj-uuid :as uuid]
             [java-time :as jt]
             [hugsql.core :as hugsql]
@@ -21,6 +22,16 @@
   []
   (uuid/squuid))
 
+(defn- parse-uuid
+  "Parse a string as an UUID."
+  [uuid-str]
+  (java.util.UUID/fromString uuid-str))
+
+(defn- parse-time
+  "Parse a string as a java.util.Instant timestamp."
+  [time-str]
+  (jt/instant time-str))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Declarations
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -40,6 +51,9 @@
 
 ;; (hugsql/def-db-fns "h2/h2_insert.sql")
 (hugsql/def-db-fns "h2/h2_query.sql")
+(hugsql/def-sqlvec-fns "h2/h2_query.sql")
+
+(hugsql/map-of-sqlvec-fns "h2/h2_query.sql")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Store
@@ -57,30 +71,26 @@
 ;; - IsIdentifiedGroup: BOOLEAN NOT NULL DEFAULT FALSE -- Treat Identified Groups as Agents
 
 (defn- get-ifi
-  "Returns a map between the IFI type and the IFI of `obj` if it is an Actor
-   or an Identified Group."
-  [obj]
-  (when (#{"Agent" "Group"} (get obj "objectType"))
-    (not-empty (select-keys obj ["mbox"
+  "Returns a map between the IFI type and the IFI of `agent`."
+  [agent]
+  (not-empty (select-keys agent ["mbox"
                                  "mbox_sha1sum"
                                  "openid"
-                                 "account"]))))
+                                 "account"])))
 
 (s/fdef agent->insert-input
   :args (s/cat :agent (s/alt :agent ::xs/agent
                              :group ::xs/group))
-  :ret hs/agent-insert-spec)
+  :ret (s/nilable hs/agent-insert-spec))
 
 (defn agent->insert-input
   [agent]
   (when-some [ifi-m (get-ifi agent)]
-    (cond-> {:table       :agent
-             :primary-key (generate-uuid)
-             :ifi         ifi-m}
-      (contains? agent "name")
-      (assoc :name (get agent "name"))
-      (= "Group" (get agent "objectType"))
-      (assoc :identified-group? true))))
+    {:table             :agent
+     :primary-key       (generate-uuid)
+     :?name             (get agent "name")
+     :ifi               ifi-m
+     :identified-group? (= "Group" (get agent "objectType"))}))
 
 ;; Activity
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
@@ -131,11 +141,11 @@
 
 (s/fdef agent-input->link-input
   :args (s/cat :statement-id ::hs/statement-id
-               :agent-usage :lrsql.hugsql.spec.activity/usage
+               :agent-usage :lrsql.hugsql.spec.agent/usage
                :agent-input hs/agent-insert-spec)
   :ret hs/statement-to-agent-insert-spec)
 
-(defn- agent-input->link-input
+(defn agent-input->link-input
   [statement-id agent-usage {agent-ifi :ifi}]
   {:table        :statement-to-agent
    :primary-key  (generate-uuid)
@@ -177,12 +187,12 @@
                :attachment-input hs/attachment-insert-spec)
   :ret hs/statement-to-attachment-insert-spec)
 
-(defn- attachment-input->link-input
+(defn attachment-input->link-input
   [statement-id {attachment-id :attachment-sha}]
-  {:table           :statement-to-attachment
-   :primary-key     (generate-uuid)
-   :statement-id    statement-id
-   :attachment-sha2 attachment-id})
+  {:table          :statement-to-attachment
+   :primary-key    (generate-uuid)
+   :statement-id   statement-id
+   :attachment-sha attachment-id})
 
 ;; Statement
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
@@ -204,23 +214,34 @@
         :statement-input hs/statement-insert-spec
         :agent-inputs (s/* hs/agent-insert-spec)
         :activity-inputs (s/* hs/activity-insert-spec)
+        :attachment-inputs (s/* hs/attachment-insert-spec)
         :stmt-agent-inputs (s/* hs/statement-to-agent-insert-spec)
         :stmt-activity-inputs (s/* hs/statement-to-activity-insert-spec)
         :stmt-attachment-inputs (s/* hs/statement-to-attachment-insert-spec)))
 
+;; TODO: Insert sub-statements and their properties
+
 (defn statement->insert-input
   [statement ?attachments]
-  (let [stmt-pk      (generate-uuid)
-        stmt-id      (get statement "id")
+  (let [;; Statement Properties
+        stmt-pk      (generate-uuid)
+        stmt-id      (if-some [id (get statement "id")]
+                       (parse-uuid id)
+                       stmt-pk)
         stmt-obj     (get statement "object")
         stmt-ctx     (get statement "context")
-        stmt-time    (if-let [ts (get statement "timestamp")] ts (current-time))
+        stmt-obj-typ (get stmt-obj "objectType")
+        stmt-time    (if-some [ts (get statement "timestamp")]
+                       (parse-time ts)
+                       (current-time))
         stmt-stored  (current-time)
-        stmt-reg     (get-in statement ["context" "registration"])
-        sub-stmt-id  (when (= "SubStatement" (get stmt-obj "objectType"))
+        stmt-reg     (when-some [reg (get-in statement ["context"
+                                                        "registration"])]
+                       (parse-uuid reg))
+        sub-stmt-id  (when (= "SubStatement" stmt-obj-typ)
                        (generate-uuid))
-        stmt-ref-id  (when (= "StatementRef" (get stmt-obj "objectType"))
-                       (get stmt-obj "id"))
+        stmt-ref-id  (when (= "StatementRef" stmt-obj-typ)
+                       (parse-uuid (get stmt-obj "id")))
         stmt-vrb-id  (get-in statement ["verb" "id"])
         voided?      (= "http://adlnet.gov/expapi/verbs/voided" stmt-vrb-id)
         ;; Statement Agents
@@ -228,7 +249,8 @@
         stmt-auth    (get statement "authority")
         stmt-inst    (get stmt-ctx "instructor")
         stmt-team    (get stmt-ctx "team")
-        obj-agnt-in  (agent->insert-input stmt-obj)
+        obj-agnt-in  (when (#{"Agent" "Group"} stmt-obj-typ)
+                       (agent->insert-input stmt-obj))
         actr-agnt-in (agent->insert-input stmt-actr)
         auth-agnt-in (agent->insert-input stmt-auth)
         inst-agnt-in (agent->insert-input stmt-inst)
@@ -238,7 +260,7 @@
         grp-acts     (get-in stmt-ctx ["contextActivities" "grouping"])
         prt-acts     (get-in stmt-ctx ["contextActivities" "parent"])
         oth-acts     (get-in stmt-ctx ["contextActivities" "other"])
-        obj-act-in   (when (= "Activity" (get stmt-obj "objectType"))
+        obj-act-in   (when (= "Activity" stmt-obj-typ)
                        (activity->insert-input stmt-obj))
         cat-acts-in  (when cat-acts (map activity->insert-input cat-acts))
         grp-acts-in  (when grp-acts (map activity->insert-input grp-acts))
@@ -248,13 +270,13 @@
         stmt-input   {:table             :statement
                       :primary-key       stmt-pk
                       :statement-id      stmt-id
-                      :?sub-statement-id sub-stmt-id
                       :?statement-ref-id stmt-ref-id
                       :timestamp         stmt-time
                       :stored            stmt-stored
                       :?registration     stmt-reg
                       :verb-iri          stmt-vrb-id
                       :voided?           voided?
+                      :?sub-statement-id sub-stmt-id
                       :payload           statement}
         ;; Agent HugSql input
         agnt-inputs  (cond-> []
@@ -302,7 +324,10 @@
         ;; Statement-to-Attachment HugSql input
         stmt-atts    (when att-inputs
                        (map (partial attachment-input->link-input stmt-id)
-                            att-inputs))]
+                            att-inputs))
+        stmt-input   (assoc stmt-input
+                            :?sub-statement-id
+                            (when sub-stmt-id sub-stmt-id))]
     (concat [stmt-input]
             agnt-inputs
             act-inputs
@@ -334,7 +359,7 @@
 ;; - LastModified: TIMESTAMP NOT NULL
 ;; - Document: BINARY NOT NULL
 
-(s/fdef document->hugsql-input
+(s/fdef document->insert-input
   :args (s/cat
          :id-params
          (s/alt :state :xapi.document.state/id-params
@@ -346,9 +371,9 @@
              :activity-profile hs/activity-profile-document-insert-spec))
 
 (defn document->insert-input
-  [{state-id     :stateID
-    profile-id   :profileID
-    activity-id  :activityID
+  [{state-id     :stateId
+    profile-id   :profileId
+    activity-id  :activityId
     agent        :agent
     registration :registration
     :as          _id-params}
@@ -360,8 +385,8 @@
      :primary-key   (generate-uuid)
      :state-id      state-id
      :activity-id   activity-id
-     :agent-id      (get-ifi agent)
-     :?registration registration
+     :agent-id      (get-ifi (json/read-str agent))
+     :?registration (when registration (parse-uuid registration))
      :last-modified (current-time)
      :document      document}
 
@@ -370,7 +395,7 @@
     {:table         :agent-profile-document
      :primary-key   (generate-uuid)
      :profile-id    profile-id
-     :agent-id      (get-ifi agent)
+     :agent-id      (get-ifi (json/read-str agent))
      :last-modified (current-time)
      :document      document}
 
@@ -417,12 +442,11 @@
 ;; TODO: format
 ;; TODO: attachments
 
-(s/fdef query-params
+(s/fdef params->query-input
   :args (s/cat :params :xapi.statements.GET.request/params)
   :ret hs/statement-query-spec)
 
-; {:clj-kondo/ignore [:unresolved-symbol]}
-(defn query-params->query-input
+(defn params->query-input
   [{statement-id        :statementId
     voided-statement-id :voidedStatementId
     verb                :verb
@@ -464,7 +488,7 @@
     agent
     (assoc :statement-to-agent-join-snip
            (statement-to-agent-join-snip
-            (cond-> {:agent-ifi (get-ifi agent)}
+            (cond-> {:agent-ifi (get-ifi (json/read-str agent))}
               (not related-agents?)
               (assoc :actor-agent-usage-snip
                      (actor-agent-usage-snip)))))

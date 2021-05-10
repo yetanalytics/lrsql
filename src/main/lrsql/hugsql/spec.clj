@@ -1,5 +1,7 @@
 (ns lrsql.hugsql.spec
   (:require [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as sgen]
+            [clojure.walk :as w]
             [xapi-schema.spec :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -35,20 +37,32 @@
 (s/def :lrsql.hugsql.spec.activity/payload ::xs/activity)
 
 ;; Agent
-(s/def :lrsql.hugsql.spec.agent/name string?)
+(s/def :lrsql.hugsql.spec.agent/?name (s/nilable string?))
 (s/def :lrsql.hugsql.spec.agent/identified-group? boolean?)
 
 (s/def :lrsql.hugsql.spec.agent/mbox ::xs/mailto-iri)
-(s/def :lrsql.hugsql.spec.agent/mbox-sha1sum ::xs/sha1sum)
+(s/def :lrsql.hugsql.spec.agent/mbox_sha1sum ::xs/sha1sum)
 (s/def :lrsql.hugsql.spec.agent/openid ::xs/openid)
 (s/def :lrsql.hugsql.spec.agent/account ::xs/account)
 (s/def :lrsql.hugsql.spec.agent/ifi
-  (s/and (s/conformer (partial xs/conform-ns-map "lrsql.hugsql.spec.agent/mbox")
-                      xs/unform-ns-map)
-         (s/keys :req-un [(or :lrsql.hugsql.spec.agent/mbox
-                              :lrsql.hugsql.spec.agent/mbox-sha1sum
-                              :lrsql.hugsql.spec.agent/openid
-                              :lrsql.hugsql.spec.agent/account)])))
+  (s/with-gen
+    (s/and (s/conformer w/keywordize-keys
+                        w/stringify-keys)
+           (s/keys :req-un [(or :lrsql.hugsql.spec.agent/mbox
+                                :lrsql.hugsql.spec.agent/mbox_sha1sum
+                                :lrsql.hugsql.spec.agent/openid
+                                :lrsql.hugsql.spec.agent/account)]))
+   #(sgen/fmap
+     w/stringify-keys
+     (s/gen
+      (s/or :mbox
+            (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox])
+            :mbox-sha1sum
+            (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox_sha1sum])
+            :openid
+            (s/keys :req-un [:lrsql.hugsql.spec.agent/openid])
+            :account
+            (s/keys :req-un [:lrsql.hugsql.spec.agent/account]))))))
 
 (s/def :lrsql.hugsql.spec.agent/usage
   #{"Actor" "Object" "Authority" "Instructor" "Team"})
@@ -65,7 +79,7 @@
 (s/def ::activity-id :lrsql.hugsql.spec.activity/activity-iri)
 (s/def ::agent-id :lrsql.hugsql.spec.agent/ifi)
 
-(s/def ::last-modified uuid?)
+(s/def ::last-modified inst?)
 (s/def ::document any?) ; TODO: `binary?` predicate
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -86,7 +100,7 @@
 
 (def agent-insert-spec
   (s/keys :req-un [::primary-key
-                   :lrsql.hugsql.spec.agent/name
+                   :lrsql.hugsql.spec.agent/?name
                    :lrsql.hugsql.spec.agent/ifi
                    :lrsql.hugsql.spec.agent/identified-group?]))
 
@@ -150,6 +164,8 @@
 ;; Statement Queries
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO: Change strings based on SQL implementation (currently H2 only)
+
 (s/def ::statement-id-snip
   (s/cat :query #(= % "statement_id = ?")
          :statement-id ::statement-id))
@@ -211,7 +227,7 @@
          :limit pos-int?))
 
 (def statement-query-spec
-  (s/keys :req-un [::statement-id-snip
+  (s/keys :opt-un [::statement-id-snip
                    ::is-voided-snip
                    ::verb-iri-snip
                    ::registration-snip
