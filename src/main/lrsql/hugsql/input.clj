@@ -60,17 +60,6 @@
 ;; Store
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; /* Need explicit properties for querying Agents Resource */
-;; Agent
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - Name: STRING
-;; - Mbox: STRING
-;; - MboxSHA1Sum: STRING
-;; - OpenID: STRING
-;; - AccountName: STRING
-;; - AccountHomepage: STRING
-;; - IsIdentifiedGroup: BOOLEAN NOT NULL DEFAULT FALSE -- Treat Identified Groups as Agents
-
 (defn- get-ifi
   "Returns a map between the IFI type and the IFI of `agent`."
   [agent]
@@ -93,11 +82,6 @@
      :ifi               ifi-m
      :identified-group? (= "Group" (get agent "objectType"))}))
 
-;; Activity
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - ActivityIRI: STRING UNIQUE KEY NOT NULL
-;; - Data: JSON NOT NULL
-
 (s/fdef activity->insert-input
   :args (s/cat :activity ::xs/activity)
   :ret hs/activity-insert-spec)
@@ -108,13 +92,6 @@
    :primary-key    (generate-uuid)
    :activity-iri   (get activity "id")
    :payload        activity})
-
-;; Attachment
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - SHA2: STRING UNIQUE KEY NOT NULL
-;; - ContentType: STRING NOT NULL
-;; - FileURL: STRING NOT NULL -- Either an external URL or the URL to a LRS location
-;; - Data: BINARY NOT NULL
 
 (s/fdef attachment->insert-input
   :args (s/cat :attachment ::ss/attachment)
@@ -131,15 +108,6 @@
    :file-url       "" ; TODO
    :payload        content})
 
-;; Statement-to-Agent
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementKey: UUID NOT NULL
-;; - StatementID: UUID NOT NULL
-;; - Usage: STRING IN ('Actor', 'Object', 'Authority', 'Instructor', 'Team') NOT NULL
-;; - AgentKey: UUID NOT NULL
-;; - AgentIFI: STRING NOT NULL
-;; - AgentIFIType: STRING IN ('Mbox', 'MboxSHA1Sum', 'OpenID', 'Account') NOT NULL
-
 (s/fdef agent-input->link-input
   :args (s/cat :statement-id ::hs/statement-id
                :agent-usage :lrsql.hugsql.spec.agent/usage
@@ -153,14 +121,6 @@
    :statement-id statement-id
    :usage        agent-usage
    :ifi          agent-ifi})
-
-;; Statement-to-Activity
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementKey: UUID NOT NULL
-;; - StatementID: UUID NOT NULL
-;; - Usage: STRING IN ('Object', 'Category', 'Grouping', 'Parent', 'Other') NOT NULL
-;; - ActivityKey: UUID NOT NULL
-;; - ActivityIRI: STRING NOT NULL
 
 (s/fdef activity-input->link-input
   :args (s/cat :statement-id ::hs/statement-id
@@ -176,13 +136,6 @@
    :usage        activity-usage
    :activity-iri activity-id})
 
-;; Statement-to-Attachment
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementKey: UUID NOT NULL
-;; - StatementID: UUID NOT NULL
-;; - AttachmentKey: UUID NOT NULL
-;; - AttachemntSHA2: STRING NOT NULL
-
 (s/fdef attachment-input->link-input
   :args (s/cat :statement-id ::hs/statement-id
                :attachment-input hs/attachment-insert-spec)
@@ -194,18 +147,6 @@
    :primary-key    (generate-uuid)
    :statement-id   statement-id
    :attachment-sha attachment-id})
-
-;; Statement
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementID: UUID UNIQUE KEY NOT NULL
-;; - SubStatementID: UUID
-;; - StatementRefID: UUID
-;; - Timestamp: TIMESTAMP NOT NULL
-;; - Stored: TIMESTAMP NOT NULL
-;; - Registration: UUID
-;; - VerbID: STRING NOT NULL
-;; - IsVoided: BOOLEAN NOT NULL DEFAULT FALSE
-;; - Data: JSON NOT NULL
 
 (s/fdef statement->insert-input
   :args (s/cat :statement ::xs/statement
@@ -336,29 +277,6 @@
             stmt-agnts
             stmt-acts
             stmt-atts)))
-
-;; State-Document
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StateID: STRING NOT NULL
-;; - ActivityID: STRING NOT NULL
-;; - AgentID: UUID NOT NULL
-;; - Registration: UUID
-;; - LastModified: TIMESTAMP NOT NULL
-;; - Document: BINARY NOT NULL
-;;
-;; Agent-Profile-Document
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - ProfileID: STRING NOT NULL
-;; - AgentID: UUID NOT NULL
-;; - LastModified: TIMESTAMP NOT NULL
-;; - Document: BINARY NOT NULL
-;;
-;; Activity-Profile-Resource
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - ProfileID: STRING NOT NULL
-;; - ActivityID: STRING NOT NULL
-;; - LastModified: TIMESTAMP NOT NULL
-;; - Document: BINARY NOT NULL
 
 (s/fdef document->insert-input
   :args (s/cat

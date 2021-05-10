@@ -86,6 +86,18 @@
 ;; Statement Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Statement
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - StatementID: UUID UNIQUE KEY NOT NULL
+;; - SubStatementID: UUID
+;; - StatementRefID: UUID
+;; - Timestamp: TIMESTAMP NOT NULL
+;; - Stored: TIMESTAMP NOT NULL
+;; - Registration: UUID
+;; - VerbID: STRING NOT NULL
+;; - IsVoided: BOOLEAN NOT NULL DEFAULT FALSE
+;; - Payload: JSON NOT NULL
+
 (def statement-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
@@ -98,16 +110,35 @@
                    ::voided?
                    ::payload]))
 
+;; /* Need explicit properties for querying Agents Resource */
+;; Agent
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - Name: STRING
+;; - IFI: JSON -- Map between IFI type and value
+;; - IsIdentifiedGroup: BOOLEAN NOT NULL DEFAULT FALSE -- Treat Identified Groups as Agents
+
 (def agent-insert-spec
   (s/keys :req-un [::primary-key
                    :lrsql.hugsql.spec.agent/?name
                    :lrsql.hugsql.spec.agent/ifi
                    :lrsql.hugsql.spec.agent/identified-group?]))
 
+;; Activity
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - ActivityIRI: STRING UNIQUE KEY NOT NULL
+;; - Payload: JSON NOT NULL
+
 (def activity-insert-spec
   (s/keys :req-un [::primary-key
                    :lrsql.hugsql.spec.activity/activity-iri
                    :lrsql.hugsql.spec.activity/payload]))
+
+;; Attachment
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - SHA2: STRING UNIQUE KEY NOT NULL
+;; - ContentType: STRING NOT NULL
+;; - FileURL: STRING NOT NULL -- Either an external URL or the URL to a LRS location
+;; - Payload: BINARY NOT NULL
 
 (def attachment-insert-spec
   (s/keys :req-un [::primary-key
@@ -116,17 +147,34 @@
                    ; :lrsql.hugsql.spec.attachment/file-url TODO
                    :lrsql.hugsql.spec.attachment/payload]))
 
+;; Statement-to-Agent
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - StatementID: UUID NOT NULL
+;; - Usage: STRING IN ('Actor', 'Object', 'Authority', 'Instructor', 'Team') NOT NULL
+;; - AgentIFI: JSON NOT NULL
+
 (def statement-to-agent-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
                    :lrsql.hugsql.spec.agent/usage
                    :lrsql.hugsql.spec.agent/ifi]))
 
+;; Statement-to-Activity
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - StatementID: UUID NOT NULL
+;; - Usage: STRING IN ('Object', 'Category', 'Grouping', 'Parent', 'Other') NOT NULL
+;; - ActivityIRI: STRING NOT NULL
+
 (def statement-to-activity-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
                    :lrsql.hugsql.spec.activity/usage
                    :lrsql.hugsql.spec.activity/activity-iri]))
+
+;; Statement-to-Attachment
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - StatementID: UUID NOT NULL
+;; - AttachemntSHA2: STRING NOT NULL
 
 (def statement-to-attachment-insert-spec
   (s/keys :req-un [::primary-key
@@ -137,6 +185,15 @@
 ;; Document Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; State-Document
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - StateID: STRING NOT NULL
+;; - ActivityID: STRING NOT NULL
+;; - AgentID: UUID NOT NULL
+;; - Registration: UUID
+;; - LastModified: TIMESTAMP NOT NULL
+;; - Document: BINARY NOT NULL
+
 (def state-document-insert-spec
   (s/keys :req-un [::primary-key
                    ::state-id
@@ -146,12 +203,26 @@
                    ::last-modified
                    ::document]))
 
+;; Agent-Profile-Document
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - ProfileID: STRING NOT NULL
+;; - AgentID: UUID NOT NULL
+;; - LastModified: TIMESTAMP NOT NULL
+;; - Document: BINARY NOT NULL
+
 (def agent-profile-document-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
                    ::agent-id
                    ::last-modified
                    ::document]))
+
+;; Activity-Profile-Resource
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - ProfileID: STRING NOT NULL
+;; - ActivityID: STRING NOT NULL
+;; - LastModified: TIMESTAMP NOT NULL
+;; - Document: BINARY NOT NULL
 
 (def activity-profile-document-insert-spec
   (s/keys :req-un [::primary-key
