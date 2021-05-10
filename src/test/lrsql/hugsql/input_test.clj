@@ -32,4 +32,4 @@
 
 (deftest test-query-inputs
   (testing "statement query inputs"
-    #_(is (nil? (check-validate `input/params->query-input 1)))))
+    (is (nil? (check-validate `input/params->query-input 100)))))

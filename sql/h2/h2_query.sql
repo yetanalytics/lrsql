@@ -4,51 +4,51 @@
 -- :doc Query a statement using statement resource parameters.
 SELECT payload FROM xapi_statement
 WHERE
-:snip:statement-id,
-:snip:is-voided,
-:snip:verb-iri,
-:snip:registration,
-:snip:timestamp-since,
-:snip:timestamp-until,
-:snip:statement-to-agent-join,
-:snip:statement-to-activity-join,
-:snip:limit,
+:snip:statement-id-snip
+:snip:is-voided-snip
+:snip:verb-iri-snip
+:snip:registration-snip
+:snip:timestamp-since-snip
+:snip:timestamp-until-snip
+:snip:statement-to-agent-join-snip
+:snip:statement-to-activity-join-snip
+:snip:limit-snip
 
--- :snip statement-id
+-- :snip statement-id-snip
 statement_id = :statement-id
 
--- :snip is-voided
+-- :snip is-voided-snip
 is_voided = :voided?
 
--- :snip verb-iri
+-- :snip verb-iri-snip
 verb_iri = :verb-iri
 
--- :snip registration
+-- :snip registration-snip
 registration = :registration
 
--- :snip timestamp-since
+-- :snip timestamp-since-snip
 stored > :since
 
--- :snip timestamp-until
+-- :snip timestamp-until-snip
 stored <= :until
 
--- :snip statement-to-agent-join
+-- :snip statement-to-agent-join-snip
 INNER JOIN statement_to_agent
-  ON statement.statement_id = statement_to_agent.statement_id
-  AND :agent-ifi = statement_to_agent.agent_ifi
-  :snip:actor-agent-usage
+  ON statement_id = statement_to_agent.statement_id
+  AND statement_to_agent.agent_ifi = :agent-ifi
+  :snip:actor-agent-usage-snip
 
--- :snip actor-agent-usage
+-- :snip actor-agent-usage-snip
 AND statement_to_agent.usage = 'Actor'
 
--- :snip statement-to-activity-join
+-- :snip statement-to-activity-join-snip
 INNER JOIN statement_to_activity
-  ON statement.statement_id = statement_to_activity.statement_id
-  AND :activity-iri = statement_to_activity.activity_iri
-  :snip:object-activity-usage
+  ON statement_id = statement_to_activity.statement_id
+  AND statement_to_activity.activity_iri = :activity-iri
+  :snip:object-activity-usage-snip
 
--- :snip object-activity-usage
+-- :snip object-activity-usage-snip
 AND statement_to_activity.usage = 'Object'
 
--- :snip limit
+-- :snip limit-snip
 LIMIT :limit

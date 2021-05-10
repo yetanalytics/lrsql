@@ -183,24 +183,23 @@
          :registration ::?registration))
 
 (s/def ::timestamp-since-snip
-  (s/cat :query #(= % "timestamp > ?")
+  (s/cat :query #(= % "stored > ?")
          :since ::stored))
 
 (s/def ::timestamp-until-snip
-  (s/cat :query #(= % "timestamp <= ?")
+  (s/cat :query #(= % "stored <= ?")
          :until ::stored))
 
 (def ^:private stmt-agent-join-command
   (str "INNER JOIN statement_to_agent\n"
-       "  ON statement.statement_id = statement_to_agent.statement_id\n"
-       "  AND ? = statement_to_agent.agent_ifi"))
+       "  ON statement_id = statement_to_agent.statement_id\n"
+       "  AND statement_to_agent.agent_ifi = ?"))
 
 (s/def ::statement-to-agent-join-snip
   (s/cat :command
          (s/alt :actor
-                #(= % (str
-                       stmt-agent-join-command
-                       "  AND statement_to_agent.usage = 'Actor'"))
+                #(= % (str stmt-agent-join-command
+                           "\n  AND statement_to_agent.usage = 'Actor'"))
                 :broad
                 #(= % stmt-agent-join-command))
          :agent-ifi
@@ -208,23 +207,22 @@
 
 (def ^:private stmt-activity-join-command
   (str "INNER JOIN statement_to_activity\n"
-       "  ON statement.statement_id = statement_to_activity.statement_id\n"
-       "  AND ? = statement_to_activity.activity_iri"))
+       "  ON statement_id = statement_to_activity.statement_id\n"
+       "  AND statement_to_activity.activity_iri = ?"))
 
 (s/def ::statement-to-activity-join-snip
   (s/cat :command
          (s/alt :object
-                #(= % (str
-                       stmt-activity-join-command
-                       "  AND statement_to_activity.usage = 'Object'"))
+                #(= % (str stmt-activity-join-command
+                           "\n  AND statement_to_activity.usage = 'Object'"))
                 :broad
                 #(= % stmt-activity-join-command))
          :activity-iri
-         ::activity-iri))
+         :lrsql.hugsql.spec.activity/activity-iri))
 
 (s/def ::limit-snip
   (s/cat :command #(= % "LIMIT ?")
-         :limit pos-int?))
+         :limit nat-int?))
 
 (def statement-query-spec
   (s/keys :opt-un [::statement-id-snip

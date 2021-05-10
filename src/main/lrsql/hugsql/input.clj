@@ -53,7 +53,8 @@
 (hugsql/def-db-fns "h2/h2_query.sql")
 (hugsql/def-sqlvec-fns "h2/h2_query.sql")
 
-(hugsql/map-of-sqlvec-fns "h2/h2_query.sql")
+(comment
+  (hugsql/map-of-sqlvec-fns "h2/h2_query.sql"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Store
@@ -462,43 +463,44 @@
     ascending?          :ascending
     page                :page
     from                :from}]
-  (cond-> {}
-    statement-id
-    (merge {:statement-id-snip
-            (statement-id-snip {:statement-id statement-id})
-            :is-voided-snip
-            (is-voided-snip {:voided? false})})
-    voided-statement-id
-    (merge {:statement-id-snip
-            (statement-id-snip {:statement-id voided-statement-id})
-            :is-voided-snip
-            (is-voided-snip {:voided? true})})
-    verb
-    (assoc :verb-iri-snip
-           (verb-iri-snip {:verb-iri verb}))
-    registration
-    (assoc :registration-snip
-           (registration-snip {:registration registration}))
-    since
-    (assoc :timestamp-since-snip
-           (timestamp-since-snip {:since since}))
-    until
-    (assoc :timestamp-until-snip
-           (timestamp-until-snip {:until until}))
-    agent
-    (assoc :statement-to-agent-join-snip
-           (statement-to-agent-join-snip
-            (cond-> {:agent-ifi (get-ifi (json/read-str agent))}
-              (not related-agents?)
-              (assoc :actor-agent-usage-snip
-                     (actor-agent-usage-snip)))))
-    activity
-    (assoc :statement-to-activity-join-snip
-           (statement-to-activity-join-snip
-            (cond-> {:activity-iri activity}
-              (not related-activities?)
-              (assoc :object-activity-usage-snip
-                     (object-activity-usage-snip)))))
-    limit
-    (assoc :limit-snip
-           (limit-snip {:limit limit}))))
+  (let [stmt-id   (when statement-id (parse-uuid statement-id))
+        vstmt-id  (when voided-statement-id (parse-uuid voided-statement-id))
+        reg       (when registration (parse-uuid registration))
+        agent-ifi (when agent (get-ifi (json/read-str agent)))
+        since     (when since (parse-time since))
+        until     (when until (parse-time until))
+        limit     (when limit (Long/parseLong limit))]
+    (cond-> {}
+      stmt-id
+      (merge {:statement-id-snip (statement-id-snip {:statement-id stmt-id})
+              :is-voided-snip    (is-voided-snip {:voided? false})})
+      vstmt-id
+      (merge {:statement-id-snip (statement-id-snip {:statement-id vstmt-id})
+              :is-voided-snip    (is-voided-snip {:voided? true})})
+      verb
+      (assoc :verb-iri-snip
+             (verb-iri-snip {:verb-iri verb}))
+      reg
+      (assoc :registration-snip
+             (registration-snip {:registration reg}))
+      since
+      (assoc :timestamp-since-snip
+             (timestamp-since-snip {:since since}))
+      until
+      (assoc :timestamp-until-snip
+             (timestamp-until-snip {:until until}))
+      agent-ifi
+      (assoc :statement-to-agent-join-snip
+             (statement-to-agent-join-snip
+              {:agent-ifi              agent-ifi
+               :actor-agent-usage-snip (when-not related-agents?
+                                         (actor-agent-usage-snip))}))
+      activity
+      (assoc :statement-to-activity-join-snip
+             (statement-to-activity-join-snip
+              {:activity-iri               activity
+               :object-activity-usage-snip (when-not related-activities?
+                                             (object-activity-usage-snip))}))
+      limit
+      (assoc :limit-snip
+             (limit-snip {:limit limit})))))
