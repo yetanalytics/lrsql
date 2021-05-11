@@ -1,5 +1,6 @@
 (ns lrsql.impl
-  (:require [com.yetanalytics.lrs.protocol :as p]))
+  (:require [com.yetanalytics.lrs.protocol :as p]
+            [lrsql.hugsql.input :as input]))
 
 (defrecord LearningRecordStore []
   p/AboutResource

@@ -1,5 +1,6 @@
 (ns lrsql.hugsql.input
   (:require [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as sgen]
             [clojure.data.json :as json]
             [clj-uuid :as uuid]
             [java-time :as jt]
@@ -52,7 +53,7 @@
 (hugsql/def-sqlvec-fns "h2/h2_query.sql")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Store
+;; Agent/Activity/Attachment Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- get-ifi
@@ -143,28 +144,57 @@
    :statement-id   statement-id
    :attachment-sha attachment-id})
 
-(s/fdef statement->insert-input
-  :args (s/cat :statement ::xs/statement
-               :?attachments (s/nilable (s/coll-of ::ss/attachment
-                                                   :min-count 1)))
-  :ret (s/cat
-        :statement-input hs/statement-insert-spec
-        :agent-inputs (s/* hs/agent-insert-spec)
-        :activity-inputs (s/* hs/activity-insert-spec)
-        :attachment-inputs (s/* hs/attachment-insert-spec)
-        :stmt-agent-inputs (s/* hs/statement-to-agent-insert-spec)
-        :stmt-activity-inputs (s/* hs/statement-to-activity-insert-spec)
-        :stmt-attachment-inputs (s/* hs/statement-to-attachment-insert-spec)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Insertion 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: Insert sub-statements and their properties
+(def id-statement-spec
+  (s/cat :stmt-id uuid?
+         :sub-stmt-id (s/nilable uuid?)
+         :statement ::xs/statement))
+
+(def inputs-seq-spec
+  (s/cat
+   :statement-input hs/statement-insert-spec
+   :agent-inputs (s/* hs/agent-insert-spec)
+   :activity-inputs (s/* hs/activity-insert-spec)
+   :stmt-agent-inputs (s/* hs/statement-to-agent-insert-spec)
+   :stmt-activity-inputs (s/* hs/statement-to-activity-insert-spec)))
+
+(defn create-id-statement-tuples
+  [statements]
+  (let [[id-statements id-substatements]
+        (reduce
+         (fn [[id-stmts id-substmts] stmt]
+           (let [stmt-id   (if-some [id (get stmt "id")]
+                             (parse-uuid id)
+                             (generate-uuid))
+                 stmt-obj  (get stmt "object")
+                 sub-stmt  (when (= "SubStatement" (get stmt-obj "objectType"))
+                             (dissoc stmt-obj "objectType"))
+                 sub-id    (when sub-stmt
+                             (generate-uuid))
+                 id-stmts' (conj id-stmts [stmt-id sub-id stmt])
+                 id-subs'  (if sub-id
+                             (conj id-substmts [sub-id nil sub-stmt])
+                             id-substmts)]
+             [id-stmts' id-subs']))
+         [[] []]
+         statements)]
+    (vec (concat id-statements id-substatements))))
+
+(s/fdef statement->insert-input
+  :args (s/with-gen
+          id-statement-spec
+          #(sgen/fmap
+            (fn [stmt] (first (create-id-statement-tuples [stmt])))
+            (s/gen ::xs/statement)))
+  :ret inputs-seq-spec)
 
 (defn statement->insert-input
-  [statement ?attachments]
+  [stmt-id sub-stmt-id statement]
   (let [;; Statement Properties
         stmt-pk      (generate-uuid)
-        stmt-id      (if-some [id (get statement "id")]
-                       (parse-uuid id)
-                       stmt-pk)
         stmt-obj     (get statement "object")
         stmt-ctx     (get statement "context")
         stmt-obj-typ (get stmt-obj "objectType")
@@ -172,11 +202,8 @@
                        (parse-time ts)
                        (current-time))
         stmt-stored  (current-time)
-        stmt-reg     (when-some [reg (get-in statement ["context"
-                                                        "registration"])]
+        stmt-reg     (when-some [reg (get stmt-ctx "registration")]
                        (parse-uuid reg))
-        sub-stmt-id  (when (= "SubStatement" stmt-obj-typ)
-                       (generate-uuid))
         stmt-ref-id  (when (= "StatementRef" stmt-obj-typ)
                        (parse-uuid (get stmt-obj "id")))
         stmt-vrb-id  (get-in statement ["verb" "id"])
@@ -229,9 +256,6 @@
                        grp-acts-in (concat grp-acts-in)
                        prt-acts-in (concat prt-acts-in)
                        oth-acts-in (concat oth-acts-in))
-        ;; Attachment HugSql input
-        att-inputs   (when ?attachments
-                       (map attachment->insert-input ?attachments))
         ;; Statement-to-Agent HugSql input
         agent->link  (partial agent-input->link-input stmt-id)
         stmt-agnts   (cond-> []
@@ -257,21 +281,24 @@
                        prt-acts-in
                        (concat (map (partial act->link "Parent") prt-acts-in))
                        oth-acts-in
-                       (concat (map (partial act->link "Other") oth-acts-in)))
-        ;; Statement-to-Attachment HugSql input
-        stmt-atts    (when att-inputs
-                       (map (partial attachment-input->link-input stmt-id)
-                            att-inputs))
-        stmt-input   (assoc stmt-input
-                            :?sub-statement-id
-                            (when sub-stmt-id sub-stmt-id))]
-    (concat [stmt-input]
-            agnt-inputs
-            act-inputs
-            att-inputs
-            stmt-agnts
-            stmt-acts
-            stmt-atts)))
+                       (concat (map (partial act->link "Other") oth-acts-in)))]
+    (concat [stmt-input] agnt-inputs act-inputs stmt-agnts stmt-acts)))
+
+(s/fdef statements->insert-input
+  :args (s/with-gen
+          (s/cat :id-statements (s/coll-of id-statement-spec :min-count 1))
+          #(sgen/fmap
+            (fn [stmts] [(create-id-statement-tuples stmts)])
+            (s/gen (s/coll-of ::xs/statement :min-count 1 :gen-max 5))))
+  :ret (s/+ inputs-seq-spec))
+
+(defn statements->insert-input
+  [id-statements]
+  (mapcat (partial apply statement->insert-input) id-statements))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Document Insertion 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef document->insert-input
   :args (s/cat
@@ -321,33 +348,6 @@
      :activity-id   activity-id
      :last-modified (current-time)
      :document      document}))
-
-;; TODO
-;; Canonical-Language-Maps
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - IRI: STRING UNIQUE KEY NOT NULL
-;; - LangTag: STRING NOT NULL
-;; - Value: STRING NOT NULL
-
-;; #_{:clj-kondo/ignore [:unresolved-symbol]}
-;; (defn insert-hugsql-inputs!
-;;   [inputs db]
-;;   (doseq [{:keys [table] :as input} inputs]
-;;     (case table
-;;       :statement
-;;       (insert-statement db input)
-;;       :agent
-;;       (insert-agent db input)
-;;       :activity
-;;       (insert-activity db input)
-;;       :attachment
-;;       (insert-activity db input)
-;;       :statement-to-agent
-;;       (insert-statement-to-agent db input)
-;;       :statement-to-activity
-;;       (insert-statement-to-activity db input)
-;;       :statement-to-attachment
-;;       (insert-statement-to-attachment db input))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query

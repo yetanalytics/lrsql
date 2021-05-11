@@ -19,14 +19,16 @@
        res))))
 
 (deftest test-insert-inputs
-  (testing "statement insertion inputs"
+  (testing "statement property insertion inputs"
     (is (nil? (check-validate `input/agent->insert-input)))
     (is (nil? (check-validate `input/activity->insert-input)))
     (is (nil? (check-validate `input/attachment->insert-input)))
     (is (nil? (check-validate `input/agent-input->link-input)))
     (is (nil? (check-validate `input/activity-input->link-input)))
-    (is (nil? (check-validate `input/attachment-input->link-input)))
-    (is (nil? (check-validate `input/statement->insert-input))))
+    (is (nil? (check-validate `input/attachment-input->link-input))))
+  (testing "statement insertion inputs"
+    (is (nil? (check-validate `input/statement->insert-input)))
+    (is (nil? (check-validate `input/statements->insert-input 5))))
   (testing "document insertion inputs"
     (is (nil? (check-validate `input/document->insert-input)))))
 

@@ -231,6 +231,13 @@
                    ::last-modified
                    ::document]))
 
+;; TODO
+;; Canonical-Language-Maps
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - IRI: STRING UNIQUE KEY NOT NULL
+;; - LangTag: STRING NOT NULL
+;; - Value: STRING NOT NULL
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Queries
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
