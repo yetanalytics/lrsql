@@ -30,6 +30,10 @@
     :activity-profile-document ; TODO
     nil))
 
+(defn insert-inputs!
+  [conn inputs]
+  (doall (map (partial insert-input! conn) inputs)))
+
 (defn query-statement-input
   [conn input]
   (f/query-statement conn input))

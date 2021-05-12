@@ -1,5 +1,6 @@
-(ns lrsql.impl
+(ns lrsql.lrs
   (:require [com.yetanalytics.lrs.protocol :as p]
+            [lrsql.hugsql.command :as command]
             [lrsql.hugsql.input :as input]))
 
 (defrecord LearningRecordStore []
@@ -11,13 +12,14 @@
 
   p/StatementsResource
   (-store-statements
-   [lrs auth-identity statements attachments]
-   {:statement-ids []})
+   [this auth-identity statements attachments]
+   (let [inputs (input/statements->insert-input statements)]
+     (command/insert-inputs! this inputs)))
   (-get-statements
    [this auth-identity params ltags]
    {:statement {:id "my-statement-id"}}) ; TODO: return needs to be a statement
   (-consistent-through
-   [lrs ctx auth-identity]
+   [this ctx auth-identity]
    "timestamp-here") ; TODO: return needs to be a timestamp
 
   p/DocumentResource

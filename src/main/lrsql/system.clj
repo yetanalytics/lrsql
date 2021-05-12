@@ -7,7 +7,7 @@
             [lrsql.hugsql.init :as init])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
 
-(defn- db-spec
+(defn db-spec
   "Derive the spec for `connection/component` based off of `env`."
   []
   (let [{db-type   :db-type
@@ -31,7 +31,7 @@
            :dbname db-name
            :host   host
            :port   port
-           :schema schema})]
+           #_:schema #_schema})]
     (cond-> basic-specs
       user
       (assoc :user user)
@@ -66,13 +66,13 @@
 
 (defrecord Database [db-type conn-pool]
   component/Lifecycle
-  (start [_component]
+  (start [component]
     (init/init-hugsql-adapter!)
     (init/init-hugsql-fns! db-type)
     (init/create-tables! (conn-pool))
-    #_(assoc component :conn-pool conn))
-  (stop [_component]
-    #_(dissoc component :conn-pool conn)))
+    (assoc component :conn-pool conn-pool))
+  (stop [component]
+    (dissoc component :conn-pool conn-pool)))
 
 (defn system
   "A thunk that returns a lrsql system when called."

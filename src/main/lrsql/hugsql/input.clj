@@ -39,11 +39,16 @@
 
 (defn- get-ifi
   "Returns a map between the IFI type and the IFI of `agent`."
-  [agent]
-  (not-empty (select-keys agent ["mbox"
-                                 "mbox_sha1sum"
-                                 "openid"
-                                 "account"])))
+  [agnt]
+  (let [agnt' (not-empty (select-keys agnt ["mbox"
+                                            "mbox_sha1sum"
+                                            "openid"
+                                            "account"]))]
+    ;; Ordering of name + homepage doesn't matter
+    ;; Important when comparing JSON strings
+    (cond-> agnt'
+      (contains? agnt' "account")
+      (update "account" (partial into (sorted-map))))))
 
 (s/fdef agent->insert-input
   :args (s/cat :agent (s/alt :agent ::xs/agent
@@ -56,7 +61,7 @@
     {:table             :agent
      :primary-key       (generate-uuid)
      :?name             (get agent "name")
-     :ifi               ifi-m
+     :ifi               (json/write-str ifi-m)
      :identified-group? (= "Group" (get agent "objectType"))}))
 
 (s/fdef activity->insert-input
@@ -68,7 +73,7 @@
   {:table          :activity
    :primary-key    (generate-uuid)
    :activity-iri   (get activity "id")
-   :payload        activity})
+   :payload        (json/write-str activity)})
 
 (s/fdef attachment->insert-input
   :args (s/cat :attachment ::ss/attachment)
@@ -201,7 +206,7 @@
                       :verb-iri          stmt-vrb-id
                       :voided?           voided?
                       :?sub-statement-id sub-stmt-id
-                      :payload           statement}
+                      :payload           (json/write-str statement)}
         ;; Agent HugSql input
         agnt-inputs  (cond-> []
                        actr-agnt-in (conj actr-agnt-in)
@@ -287,7 +292,7 @@
      :primary-key   (generate-uuid)
      :state-id      state-id
      :activity-id   activity-id
-     :agent-id      (get-ifi (json/read-str agent))
+     :agent-id      (json/write-str (get-ifi (json/read-str agent)))
      :?registration (when registration (parse-uuid registration))
      :last-modified (current-time)
      :document      document}
@@ -297,7 +302,7 @@
     {:table         :agent-profile-document
      :primary-key   (generate-uuid)
      :profile-id    profile-id
-     :agent-id      (get-ifi (json/read-str agent))
+     :agent-id      (json/write-str (get-ifi (json/read-str agent)))
      :last-modified (current-time)
      :document      document}
 
