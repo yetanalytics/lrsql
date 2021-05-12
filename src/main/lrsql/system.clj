@@ -4,7 +4,8 @@
             [clj-uuid]
             [next.jdbc.connection :as connection]
             [com.stuartsierra.component :as component]
-            [lrsql.hugsql.init :as init])
+            [lrsql.hugsql.init :as init]
+            [lrsql.lrs :as lrs])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
 
 (defn db-spec
@@ -64,7 +65,7 @@
   []
   (connection/component ComboPooledDataSource (db-spec)))
 
-(defrecord Database [db-type conn-pool]
+#_(defrecord Database [db-type conn-pool]
   component/Lifecycle
   (start [component]
     (init/init-hugsql-adapter!)
@@ -79,6 +80,6 @@
   []
   (component/system-map
    :conn-pool (pool-component)
-   :db (component/using
-        (map->Database {:db-type (get-db-type)})
+   :lrs (component/using
+        (lrs/map->LearningRecordStore {:db-type (get-db-type)})
         [:conn-pool])))

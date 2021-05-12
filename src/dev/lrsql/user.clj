@@ -27,23 +27,27 @@
 
   (def ds (jdbc/get-datasource (system/db-spec)))
 
-  (jdbc/execute-one! ds
-                     (f/insert-activity-sqlvec
-                      (-> (input/statements->insert-input [stmt])
-                          rest
-                          rest
-                          first)))
-  
+  #_(jdbc/execute-one! ds
+                       (f/insert-activity-sqlvec
+                        (-> (input/statements->insert-input [stmt])
+                            rest
+                            rest
+                            first)))
+
   (command/insert-inputs! ds (input/statements->insert-input [stmt]))
 
-  (jdbc/execute! ds ["SELECT * FROM statement_to_activity"])
+  (jdbc/execute! ds ["SELECT * FROM agent"])
+  
+  (p/-store-statements (:lrs sys) {} [stmt] [])
 
-  (f/create-statement-table-sqlvec)
-  (def lrs (lrs/->LearningRecordStore))
-  (p/-store-statements lrs {} [stmt] [])
-
-
-  (lrs/->LearningRecordStore)
-
+  ;; Delete everything
+  (doseq [cmd ["DELETE FROM xapi_statement"
+               "DELETE FROM agent"
+               "DELETE FROM activity"
+               "DELETE FROM attachment"
+               "DELETE FROM statement_to_agent"
+               "DELETE FROM statement_to_activity"
+               "DELETE FROM statement_to_attachment"]]
+    (jdbc/execute! ds [cmd]))
 
   (component/stop sys))

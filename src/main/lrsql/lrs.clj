@@ -1,20 +1,34 @@
 (ns lrsql.lrs
-  (:require [com.yetanalytics.lrs.protocol :as p]
+  (:require [com.stuartsierra.component :as component]
+            [com.yetanalytics.lrs.protocol :as lp]
             [lrsql.hugsql.command :as command]
+            [lrsql.hugsql.init :as init]
             [lrsql.hugsql.input :as input]))
 
-(defrecord LearningRecordStore []
-  p/AboutResource
+(defrecord LearningRecordStore [db-type conn-pool]
+  component/Lifecycle
+  (start
+   [lrs]
+   (init/init-hugsql-adapter!)
+   (init/init-hugsql-fns! db-type)
+   (init/create-tables! (conn-pool))
+   (assoc lrs :conn-pool conn-pool))
+  (stop
+   [lrs]
+   (dissoc lrs :conn-pool conn-pool))
+
+  lp/AboutResource
   (-get-about
    [lrs auth-identity]
    ;; TODO: Add 2.X.X versions
    {:body {:version ["1.0.0" "1.0.1" "1.0.2" "1.0.3"]}})
 
-  p/StatementsResource
+  lp/StatementsResource
   (-store-statements
-   [this auth-identity statements attachments]
-   (let [inputs (input/statements->insert-input statements)]
-     (command/insert-inputs! this inputs)))
+   [lrs auth-identity statements attachments]
+   (let [conn   (:conn-pool lrs)
+         inputs (input/statements->insert-input statements)]
+     (command/insert-inputs! conn inputs)))
   (-get-statements
    [this auth-identity params ltags]
    {:statement {:id "my-statement-id"}}) ; TODO: return needs to be a statement
@@ -22,7 +36,7 @@
    [this ctx auth-identity]
    "timestamp-here") ; TODO: return needs to be a timestamp
 
-  p/DocumentResource
+  lp/DocumentResource
   (-set-document
    [lrs auth-identity params document merge?]
    {})
@@ -39,17 +53,17 @@
    [this auth-identity params]
    {})
 
-  p/AgentInfoResource
+  lp/AgentInfoResource
   (-get-person
    [this auth-identity params]
    {:person {:objectType "Person"}})
 
-  p/ActivityInfoResource
+  lp/ActivityInfoResource
   (-get-activity
    [this auth-identity params]
    {:activity {:objectType "Activity"}})
 
-  p/LRSAuth
+  lp/LRSAuth
   (-authenticate
    [this ctx]
    {:result ::forbidden})

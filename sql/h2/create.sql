@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
 -- :doc Create the agent table if it does not exist yet
 CREATE TABLE IF NOT EXISTS agent (
   id                  UUID NOT NULL PRIMARY KEY,
+  agent_ifi           JSON NOT NULL UNIQUE,
   agent_name          VARCHAR(255),
-  agent_ifi           JSON NOT NULL,
   is_identified_group BOOLEAN DEFAULT FALSE NOT NULL
 )
 
