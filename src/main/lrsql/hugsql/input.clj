@@ -4,10 +4,10 @@
             [clojure.data.json :as json]
             [clj-uuid :as uuid]
             [java-time :as jt]
-            [hugsql.core :as hugsql]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.hugsql.spec :as hs]))
+            [lrsql.hugsql.spec :as hs]
+            [lrsql.hugsql.functions :as f]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utils
@@ -37,20 +37,9 @@
 ;; Declarations
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Shut up VSCode warnings
-(declare statement-id-snip)
-(declare is-voided-snip)
-(declare verb-iri-snip)
-(declare registration-snip)
-(declare timestamp-since-snip)
-(declare timestamp-until-snip)
-(declare statement-to-agent-join-snip)
-(declare statement-to-activity-join-snip)
-(declare actor-agent-usage-snip)
-(declare object-activity-usage-snip)
-(declare limit-snip)
 
-(hugsql/def-sqlvec-fns "h2/h2_query.sql")
+;; TODO: change with :db-type
+;; (hugsql/def-sqlvec-fns "h2/h2_query.sql")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Agent/Activity/Attachment Insertion 
@@ -169,11 +158,10 @@
            (let [stmt-id   (if-some [id (get stmt "id")]
                              (parse-uuid id)
                              (generate-uuid))
-                 stmt-obj  (get stmt "object")
-                 sub-stmt  (when (= "SubStatement" (get stmt-obj "objectType"))
-                             (dissoc stmt-obj "objectType"))
-                 sub-id    (when sub-stmt
-                             (generate-uuid))
+                 sub-stmt  (when-some [obj (get stmt "object")]
+                             (when (= "SubStatement" (get obj "objectType"))
+                               (dissoc obj "objectType")))
+                 sub-id    (when sub-stmt (generate-uuid))
                  id-stmts' (conj id-stmts [stmt-id sub-id stmt])
                  id-subs'  (if sub-id
                              (conj id-substmts [sub-id nil sub-stmt])
@@ -386,35 +374,35 @@
         limit     (when limit (Long/parseLong limit))]
     (cond-> {}
       stmt-id
-      (merge {:statement-id-snip (statement-id-snip {:statement-id stmt-id})
-              :is-voided-snip    (is-voided-snip {:voided? false})})
+      (merge {:statement-id-snip (f/statement-id-snip {:statement-id stmt-id})
+              :is-voided-snip    (f/is-voided-snip {:voided? false})})
       vstmt-id
-      (merge {:statement-id-snip (statement-id-snip {:statement-id vstmt-id})
-              :is-voided-snip    (is-voided-snip {:voided? true})})
+      (merge {:statement-id-snip (f/statement-id-snip {:statement-id vstmt-id})
+              :is-voided-snip    (f/is-voided-snip {:voided? true})})
       verb
       (assoc :verb-iri-snip
-             (verb-iri-snip {:verb-iri verb}))
+             (f/verb-iri-snip {:verb-iri verb}))
       reg
       (assoc :registration-snip
-             (registration-snip {:registration reg}))
+             (f/registration-snip {:registration reg}))
       since
       (assoc :timestamp-since-snip
-             (timestamp-since-snip {:since since}))
+             (f/timestamp-since-snip {:since since}))
       until
       (assoc :timestamp-until-snip
-             (timestamp-until-snip {:until until}))
+             (f/timestamp-until-snip {:until until}))
       agent-ifi
       (assoc :statement-to-agent-join-snip
-             (statement-to-agent-join-snip
+             (f/statement-to-agent-join-snip
               {:agent-ifi              agent-ifi
                :actor-agent-usage-snip (when-not related-agents?
-                                         (actor-agent-usage-snip))}))
+                                         (f/actor-agent-usage-snip))}))
       activity
       (assoc :statement-to-activity-join-snip
-             (statement-to-activity-join-snip
+             (f/statement-to-activity-join-snip
               {:activity-iri               activity
                :object-activity-usage-snip (when-not related-activities?
-                                             (object-activity-usage-snip))}))
+                                             (f/object-activity-usage-snip))}))
       limit
       (assoc :limit-snip
-             (limit-snip {:limit limit})))))
+             (f/limit-snip {:limit limit})))))

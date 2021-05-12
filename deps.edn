@@ -3,9 +3,12 @@
  {org.clojure/clojure                    {:mvn/version "1.10.3"}
   clojure.java-time/clojure.java-time    {:mvn/version "0.3.2"}
   danlentz/clj-uuid                      {:mvn/version "0.1.9"}
+  yogthos/config                         {:mvn/version "1.1.7"}
+  com.mchange/c3p0                       {:mvn/version "0.9.5.5"}
   com.github.seancorfield/next.jdbc      {:mvn/version "1.2.659"}
   com.layerware/hugsql                   {:mvn/version "0.5.1"}
   com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
+  com.stuartsierra/component             {:mvn/version "1.0.0"}
   com.yetanalytics/lrs
   {:git/url    "git@github.com:yetanalytics/lrs.git"
    :sha        "84d6e54033f0c84575564c070001530bdece95b2"

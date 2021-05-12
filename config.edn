@@ -1,0 +1,6 @@
+{:env          :dev
+ :db-type      "h2"
+;;  :db-port      8080
+ :db-name      "example"
+;;  :db-host      ""
+ }
