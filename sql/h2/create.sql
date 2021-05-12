@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
   activity_iri VARCHAR(255) NOT NULL
 )
 
--- :name create-statement-to-agent-table
+-- :name create-statement-to-attachment-table
 -- :command :execute
 -- :result :raw
 -- :doc Create the statement_to_attachment link table if it does not exist yet.
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
   document      BINARY
 )
 
--- :name create-activity-document-table
+-- :name create-activity-profile-document-table
 -- :command :execute
 -- :result :raw
 -- :doc Create the activity_profile_document table if it does not exist yet
