@@ -1,5 +1,10 @@
 (ns lrsql.hugsql.functions)
 
+;; Namespace containing all HugSql functions.
+;; This is not strictly necessary, since `init-hugsql-fns!` will intern the
+;; functions in this namespace anyways, but the functions are provided
+;; for reference.
+
 (declare create-statement-table)
 (declare create-agent-table)
 (declare create-activity-table)
@@ -20,3 +25,13 @@
 (declare insert-statement-to-attachment)
 
 (declare query-statement)
+
+(declare statement-id-snip)
+(declare is-voided-snip)
+(declare verb-iri-snip)
+(declare registration-snip)
+(declare timestamp-since-snip)
+(declare timestamp-until-snip)
+(declare statement-to-agent-join-snip)
+(declare statement-to-activity-join-snip)
+(declare limit-snip)

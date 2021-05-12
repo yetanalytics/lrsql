@@ -4,10 +4,13 @@
             [lrsql.hugsql.functions :as f]))
 
 (defn init-hugsql-adapter!
+  "Initialize HugSql to use the next-jdbc adapter."
   []
   (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc)))
 
 (defn init-hugsql-fns!
+  "Define the HugSql functions defined in the `hugsql.functions` ns.
+   The .sql files that HugSql reads from will depend on `db-type`."
   [db-type]
   ;; Hack the namespace binding or else the hugsql fn namespaces
   ;; will be whatever ns `init-hugsql-fns!` was called from.
@@ -21,6 +24,7 @@
     (hugsql/def-sqlvec-fns (str db-type "/query.sql"))))
 
 (defn create-tables!
+  "Execute SQL commands to create tables if they do not exist."
   [conn]
   (f/create-statement-table conn)
   (f/create-agent-table conn)
