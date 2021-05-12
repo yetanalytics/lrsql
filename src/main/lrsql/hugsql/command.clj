@@ -1,4 +1,5 @@
 (ns lrsql.hugsql.command
+  "DB commands that utilize HugSql functions."
   (:require [lrsql.hugsql.functions :as f]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

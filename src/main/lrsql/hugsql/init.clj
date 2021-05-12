@@ -1,4 +1,5 @@
 (ns lrsql.hugsql.init
+  "Initialize HugSql functions and state."
   (:require [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.hugsql.functions :as f]))

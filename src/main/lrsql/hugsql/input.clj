@@ -1,6 +1,6 @@
 (ns lrsql.hugsql.input
+  "Functions to create HugSql inputs."
   (:require [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sgen]
             [clojure.data.json :as json]
             [clj-uuid :as uuid]
             [java-time :as jt]
@@ -129,55 +129,36 @@
 ;; Statement Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def id-statement-spec
-  (s/cat :stmt-id uuid?
-         :sub-stmt-id (s/nilable uuid?)
-         :statement ::xs/statement))
-
-(def inputs-seq-spec
-  (s/cat
-   :statement-input hs/statement-insert-spec
-   :agent-inputs (s/* hs/agent-insert-spec)
-   :activity-inputs (s/* hs/activity-insert-spec)
-   :stmt-agent-inputs (s/* hs/statement-to-agent-insert-spec)
-   :stmt-activity-inputs (s/* hs/statement-to-activity-insert-spec)))
-
-(defn create-id-statement-tuples
-  [statements]
-  (let [[id-statements id-substatements]
-        (reduce
-         (fn [[id-stmts id-substmts] stmt]
-           (let [stmt-id   (if-some [id (get stmt "id")]
-                             (parse-uuid id)
-                             (generate-uuid))
-                 sub-stmt  (when-some [obj (get stmt "object")]
-                             (when (= "SubStatement" (get obj "objectType"))
-                               (dissoc obj "objectType")))
-                 sub-id    (when sub-stmt (generate-uuid))
-                 id-stmts' (conj id-stmts [stmt-id sub-id stmt])
-                 id-subs'  (if sub-id
-                             (conj id-substmts [sub-id nil sub-stmt])
-                             id-substmts)]
-             [id-stmts' id-subs']))
-         [[] []]
-         statements)]
-    (vec (concat id-statements id-substatements))))
-
 (s/fdef statement->insert-input
-  :args (s/with-gen
-          id-statement-spec
-          #(sgen/fmap
-            (fn [stmt] (first (create-id-statement-tuples [stmt])))
-            (s/gen ::xs/statement)))
-  :ret inputs-seq-spec)
+  :args (s/cat :statement ::xs/statement)
+  :ret (s/cat :statement hs/inputs-seq-spec
+              :sub-statement (s/? hs/inputs-seq-spec)))
 
 (defn statement->insert-input
-  [stmt-id sub-stmt-id statement]
+  [statement]
   (let [;; Statement Properties
+        {stmt-act  "actor"
+         stmt-vrb  "verb"
+         stmt-obj  "object"
+         stmt-ctx  "context"
+         stmt-auth "authority"}
+        statement
+        {stmt-obj-typ "objectType"}
+        stmt-obj
+        {stmt-ctx-acts "contextActivities"
+         stmt-inst     "instructor"
+         stmt-team     "team"}
+        stmt-ctx
+        {cat-acts "category"
+         grp-acts "grouping"
+         prt-acts "parent"
+         oth-acts "other"}
+        stmt-ctx-acts
+        ;; Statement Revised Properties
         stmt-pk      (generate-uuid)
-        stmt-obj     (get statement "object")
-        stmt-ctx     (get statement "context")
-        stmt-obj-typ (get stmt-obj "objectType")
+        stmt-id      (if-some [id (get statement "id")]
+                       (parse-uuid id)
+                       stmt-pk)
         stmt-time    (if-some [ts (get statement "timestamp")]
                        (parse-time ts)
                        (current-time))
@@ -186,24 +167,23 @@
                        (parse-uuid reg))
         stmt-ref-id  (when (= "StatementRef" stmt-obj-typ)
                        (parse-uuid (get stmt-obj "id")))
-        stmt-vrb-id  (get-in statement ["verb" "id"])
+        stmt-vrb-id  (get stmt-vrb "id")
         voided?      (= "http://adlnet.gov/expapi/verbs/voided" stmt-vrb-id)
+        ;; Sub Statement
+        sub-stmt-id  (when (= "SubStatement" stmt-obj-typ)
+                       (generate-uuid))
+        sub-stmt     (when sub-stmt-id
+                       (-> stmt-obj
+                           (dissoc "objectType")
+                           (assoc "id" (str sub-stmt-id))))
         ;; Statement Agents
-        stmt-actr    (get statement "actor")
-        stmt-auth    (get statement "authority")
-        stmt-inst    (get stmt-ctx "instructor")
-        stmt-team    (get stmt-ctx "team")
         obj-agnt-in  (when (#{"Agent" "Group"} stmt-obj-typ)
                        (agent->insert-input stmt-obj))
-        actr-agnt-in (agent->insert-input stmt-actr)
+        actr-agnt-in (agent->insert-input stmt-act)
         auth-agnt-in (agent->insert-input stmt-auth)
         inst-agnt-in (agent->insert-input stmt-inst)
         team-agnt-in (agent->insert-input stmt-team)
         ;; Statement Activities
-        cat-acts     (get-in stmt-ctx ["contextActivities" "category"])
-        grp-acts     (get-in stmt-ctx ["contextActivities" "grouping"])
-        prt-acts     (get-in stmt-ctx ["contextActivities" "parent"])
-        oth-acts     (get-in stmt-ctx ["contextActivities" "other"])
         obj-act-in   (when (= "Activity" stmt-obj-typ)
                        (activity->insert-input stmt-obj))
         cat-acts-in  (when cat-acts (map activity->insert-input cat-acts))
@@ -262,19 +242,20 @@
                        (concat (map (partial act->link "Parent") prt-acts-in))
                        oth-acts-in
                        (concat (map (partial act->link "Other") oth-acts-in)))]
-    (concat [stmt-input] agnt-inputs act-inputs stmt-agnts stmt-acts)))
+    (concat [stmt-input]
+            agnt-inputs
+            act-inputs
+            stmt-agnts
+            stmt-acts
+            (when sub-stmt (statement->insert-input sub-stmt)))))
 
 (s/fdef statements->insert-input
-  :args (s/with-gen
-          (s/cat :id-statements (s/coll-of id-statement-spec :min-count 1))
-          #(sgen/fmap
-            (fn [stmts] [(create-id-statement-tuples stmts)])
-            (s/gen (s/coll-of ::xs/statement :min-count 1 :gen-max 5))))
-  :ret (s/+ inputs-seq-spec))
+  :args (s/cat :statements (s/coll-of ::xs/statement :min-count 1 :gen-max 5))
+  :ret (s/+ hs/inputs-seq-spec))
 
 (defn statements->insert-input
-  [id-statements]
-  (mapcat (partial apply statement->insert-input) id-statements))
+  [statements]
+  (mapcat statement->insert-input statements))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertion 

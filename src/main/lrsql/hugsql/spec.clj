@@ -1,4 +1,5 @@
 (ns lrsql.hugsql.spec
+  "Spec for HugSql inputs."
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
             [clojure.walk :as w]
@@ -180,6 +181,15 @@
   (s/keys :req-un [::primary-key
                    ::statement-id
                    :lrsql.hugsql.spec.attachment/attachment-sha]))
+
+;; Putting it all together
+(def inputs-seq-spec
+  (s/cat
+   :statement-input statement-insert-spec
+   :agent-inputs (s/* agent-insert-spec)
+   :activity-inputs (s/* activity-insert-spec)
+   :stmt-agent-inputs (s/* statement-to-agent-insert-spec)
+   :stmt-activity-inputs (s/* statement-to-activity-insert-spec)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions
