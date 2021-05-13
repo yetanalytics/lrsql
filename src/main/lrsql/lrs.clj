@@ -28,7 +28,7 @@
    [lrs auth-identity statements attachments]
    (let [conn   (:conn-pool lrs)
          inputs (input/statements->insert-inputs statements)]
-     (command/insert-inputs! conn inputs)))
+     (command/insert-inputs! (conn) inputs)))
   (-get-statements
    [this auth-identity params ltags]
    {:statement {:id "my-statement-id"}}) ; TODO: return needs to be a statement

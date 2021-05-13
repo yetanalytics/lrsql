@@ -26,6 +26,10 @@
 
 (declare query-statement)
 
+(declare query-agent-exists)
+(declare query-activity-exists)
+(declare query-attachment-exists)
+
 (declare statement-id-snip)
 (declare is-voided-snip)
 (declare verb-iri-snip)

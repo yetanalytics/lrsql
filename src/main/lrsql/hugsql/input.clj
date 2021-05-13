@@ -97,7 +97,7 @@
   :ret hs/statement-to-agent-insert-spec)
 
 (defn agent-input->link-input
-  [statement-id agent-usage {agent-ifi :ifi}]
+  [statement-id agent-usage {agent-ifi :agent-ifi}]
   {:table        :statement-to-agent
    :primary-key  (generate-uuid)
    :statement-id statement-id

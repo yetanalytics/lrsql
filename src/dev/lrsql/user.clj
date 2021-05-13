@@ -23,7 +23,7 @@
 (comment
   (def sys (system/system))
 
-  (component/start sys)
+  (def sys' (component/start sys))
 
   (def ds (jdbc/get-datasource (system/db-spec)))
 
@@ -36,10 +36,11 @@
 
   (command/insert-inputs! ds (input/statements->insert-input [stmt]))
 
+  (p/-store-statements (:lrs sys') {} [stmt] [])
+
   (jdbc/execute! ds ["SELECT * FROM agent"])
   
-  (p/-store-statements (:lrs sys) {} [stmt] [])
-
+  (jdbc/execute! ds ["SELECT 1 FROM agent WHERE agent_ifi = ?" "foo"])
   ;; Delete everything
   (doseq [cmd ["DELETE FROM xapi_statement"
                "DELETE FROM agent"

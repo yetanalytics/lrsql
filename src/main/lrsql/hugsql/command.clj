@@ -10,19 +10,23 @@
   [conn {:keys [table] :as input}]
   (case table
     :statement
+    ;; TODO: Query the statement by ID first; if IDs match, compare the payloads
+    ;; to determine if the two statements are the same, in which case throw
+    ;; an exception
     (f/insert-statement conn input)
     :agent
     (let [input' (select-keys input [:agent-ifi])
-          count  (f/query-agent-count conn input')]
-      (when (zero? count) (f/insert-agent conn input)))
+          exists (f/query-agent-exists conn input')]
+      (println exists)
+      (when-not exists (f/insert-agent conn input)))
     :activity
     (let [input' (select-keys input [:activity-iri])
-          count  (f/query-activity-count conn input')]
-      (when (zero? count) (f/insert-agent conn input)))
+          exists  (f/query-activity-exists conn input')]
+      (when-not exists (f/insert-activity conn input)))
     :attachment
     (let [input' (select-keys input [:attachment-sha])
-          count  (f/query-attachment-count conn input')]
-      (when (zero? count) (f/insert-attachment conn input)))
+          exists (f/query-attachment-exists conn input')]
+      (when-not exists (f/insert-attachment conn input)))
     :statement-to-agent
     (f/insert-statement-to-agent conn input)
     :statement-to-activity

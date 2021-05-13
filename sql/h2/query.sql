@@ -53,23 +53,25 @@ AND statement_to_activity.usage = 'Object'
 -- :snip limit-snip
 LIMIT :limit
 
--- :name query-agent-count
+/* Existence Checks */
+
+-- :name query-agent-exists
 -- :command :query
--- :result :raw
--- :doc TODO
-SELECT COUNT(*) FROM agent
+-- :result :one
+-- :doc Check for the existence of an Agent with a given IFI in the agent table. Returns NULL iff not found.
+SELECT 1 FROM agent
 WHERE agent_ifi = :agent-ifi
 
--- :name query-activity-count
+-- :name query-activity-exists
 -- :command :query
--- :result :raw
--- :doc TODO
-SELECT COUNT(*) FROM activity
+-- :result :one
+-- :doc Check for the existence of an Activity with a given IRI in the activitie table. Returns NULL iff not found.
+SELECT 1 FROM activity
 WHERE activity_iri = :activity-iri
 
--- :name query-attachment-count
+-- :name query-attachment-exists
 -- :command :query
--- :result :raw
--- :doc TODO
-SELECT COUNT(*) FROM attachment
+-- :result :one
+-- :doc Check for the existence of an Attachment with a given SHA2 hash in the attachment table. Returns NULL iff not found.
+SELECT 1 FROM attachment
 WHERE attachment_sha = :attachment-sha
