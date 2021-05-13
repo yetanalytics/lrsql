@@ -5,7 +5,6 @@
 INSERT INTO xapi_statement SET
 id = :primary-key,
 statement_id = :statement-id,
-sub_statement_id = :?sub-statement-id,
 statement_ref_id = :?statement-ref-id,
 created = :timestamp,
 stored = :stored,

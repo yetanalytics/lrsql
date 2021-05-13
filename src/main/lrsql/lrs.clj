@@ -27,7 +27,7 @@
   (-store-statements
    [lrs auth-identity statements attachments]
    (let [conn   (:conn-pool lrs)
-         inputs (input/statements->insert-input statements)]
+         inputs (input/statements->insert-inputs statements)]
      (command/insert-inputs! conn inputs)))
   (-get-statements
    [this auth-identity params ltags]

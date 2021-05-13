@@ -1,8 +1,8 @@
 (ns lrsql.hugsql.spec
   "Spec for HugSql inputs."
   (:require [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sgen]
-            [clojure.walk :as w]
+            #_[clojure.spec.gen.alpha :as sgen]
+            #_[clojure.walk :as w]
             [xapi-schema.spec :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -14,7 +14,6 @@
 
 ;; Statement IDs
 (s/def ::statement-id uuid?)
-(s/def ::?sub-statement-id (s/nilable uuid?))
 (s/def ::?statement-ref-id (s/nilable uuid?))
 
 ;; Timestamp
@@ -29,13 +28,14 @@
 (s/def ::voided? boolean?)
 
 ;; Statement
-(s/def ::payload ::xs/statement)
+(s/def ::payload any? #_::xs/statement) ; TODO
 
 ;; Activity
 (s/def :lrsql.hugsql.spec.activity/activity-iri :activity/id)
 (s/def :lrsql.hugsql.spec.activity/usage
-  #{"Object", "Category", "Grouping", "Parent", "Other"})
-(s/def :lrsql.hugsql.spec.activity/payload ::xs/activity)
+  #{"Object", "Category", "Grouping", "Parent", "Other"
+    "SubObject" "SubCategory" "SubGrouping" "SubParent" "SubOther"})
+(s/def :lrsql.hugsql.spec.activity/payload any? #_::xs/activity) ; TODO
 
 ;; Agent
 (s/def :lrsql.hugsql.spec.agent/?name (s/nilable string?))
@@ -45,8 +45,9 @@
 (s/def :lrsql.hugsql.spec.agent/mbox_sha1sum ::xs/sha1sum)
 (s/def :lrsql.hugsql.spec.agent/openid ::xs/openid)
 (s/def :lrsql.hugsql.spec.agent/account ::xs/account)
-(s/def :lrsql.hugsql.spec.agent/agent-ifi
-  (s/with-gen
+(s/def :lrsql.hugsql.spec.agent/agent-ifi ; TODO
+       any?
+  #_(s/with-gen
     (s/and (s/conformer w/keywordize-keys
                         w/stringify-keys)
            (s/keys :req-un [(or :lrsql.hugsql.spec.agent/mbox
@@ -66,7 +67,8 @@
             (s/keys :req-un [:lrsql.hugsql.spec.agent/account]))))))
 
 (s/def :lrsql.hugsql.spec.agent/usage
-  #{"Actor" "Object" "Authority" "Instructor" "Team"})
+  #{"Actor" "Object" "Authority" "Instructor" "Team"
+    "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"})
 
 ;; Attachment
 (s/def :lrsql.hugsql.spec.attachment/attachment-sha :attachment/sha2)
@@ -90,7 +92,6 @@
 ;; Statement
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
 ;; - StatementID: UUID UNIQUE KEY NOT NULL
-;; - SubStatementID: UUID
 ;; - StatementRefID: UUID
 ;; - Timestamp: TIMESTAMP NOT NULL
 ;; - Stored: TIMESTAMP NOT NULL
@@ -102,7 +103,6 @@
 (def statement-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
-                   ::?sub-statement-id
                    ::?statement-ref-id
                    ::timestamp
                    ::stored
@@ -185,11 +185,19 @@
 ;; Putting it all together
 (def inputs-seq-spec
   (s/cat
-   :statement-input statement-insert-spec
-   :agent-inputs (s/* agent-insert-spec)
-   :activity-inputs (s/* activity-insert-spec)
-   :stmt-agent-inputs (s/* statement-to-agent-insert-spec)
-   :stmt-activity-inputs (s/* statement-to-activity-insert-spec)))
+   :statement
+   (s/cat
+    :statement-input statement-insert-spec
+    :agent-inputs (s/* agent-insert-spec)
+    :activity-inputs (s/* activity-insert-spec)
+    :stmt-agent-inputs (s/* statement-to-agent-insert-spec)
+    :stmt-activity-inputs (s/* statement-to-activity-insert-spec))
+   :sub-statement
+   (s/? (s/cat
+         :agent-inputs (s/* agent-insert-spec)
+         :activity-inputs (s/* activity-insert-spec)
+         :stmt-agent-inputs (s/* statement-to-agent-insert-spec)
+         :stmt-activity-inputs (s/* statement-to-activity-insert-spec)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions

@@ -30,8 +30,8 @@
     (is (nil? (check-validate `input/activity-input->link-input)))
     (is (nil? (check-validate `input/attachment-input->link-input))))
   (testing "statement insertion inputs"
-    (is (nil? (check-validate `input/statement->insert-input)))
-    (is (nil? (check-validate `input/statements->insert-input 5))))
+    (is (nil? (check-validate `input/statement->insert-inputs)))
+    (is (nil? (check-validate `input/statements->insert-inputs 5))))
   (testing "document insertion inputs"
     (is (nil? (check-validate `input/document->insert-input)))))
 

@@ -5,7 +5,6 @@
 CREATE TABLE IF NOT EXISTS xapi_statement (
   id               UUID NOT NULL PRIMARY KEY,
   statement_id     UUID NOT NULL UNIQUE,
-  sub_statement_id UUID,
   statement_ref_id UUID,
   created          TIMESTAMP WITH TIME ZONE NOT NULL, -- aka `timestamp`
   stored           TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -55,7 +54,9 @@ CREATE TABLE IF NOT EXISTS attachment (
 CREATE TABLE IF NOT EXISTS statement_to_agent (
   id             UUID NOT NULL PRIMARY KEY,
   statement_id   UUID NOT NULL,
-  usage          ENUM('Actor', 'Object', 'Authority', 'Instructor', 'Team') NOT NULL,
+  usage          ENUM('Actor', 'Object', 'Authority', 'Instructor', 'Team',
+                      'SubActor', 'SubObject', 'SubInstructor', 'SubTeam')
+                      NOT NULL,
   agent_ifi      JSON NOT NULL
 )
 
@@ -66,7 +67,9 @@ CREATE TABLE IF NOT EXISTS statement_to_agent (
 CREATE TABLE IF NOT EXISTS statement_to_activity (
   id           UUID NOT NULL PRIMARY KEY,
   statement_id UUID NOT NULL,
-  usage        ENUM('Object', 'Category', 'Grouping', 'Parent', 'Other') NOT NULL,
+  usage        ENUM('Object', 'Category', 'Grouping', 'Parent', 'Other',
+                    'SubObject', 'SubCategory', 'SubGrouping', 'SubParent',
+                    'SubOther') NOT NULL,
   activity_iri VARCHAR(255) NOT NULL
 )
 
