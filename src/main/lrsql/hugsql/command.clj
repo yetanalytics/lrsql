@@ -12,11 +12,17 @@
     :statement
     (f/insert-statement conn input)
     :agent
-    (f/insert-agent conn input)
+    (let [input' (select-keys input [:agent-ifi])
+          count  (f/query-agent-count conn input')]
+      (when (zero? count) (f/insert-agent conn input)))
     :activity
-    (f/insert-activity conn input)
+    (let [input' (select-keys input [:activity-iri])
+          count  (f/query-activity-count conn input')]
+      (when (zero? count) (f/insert-agent conn input)))
     :attachment
-    (f/insert-attachment conn input)
+    (let [input' (select-keys input [:attachment-sha])
+          count  (f/query-attachment-count conn input')]
+      (when (zero? count) (f/insert-attachment conn input)))
     :statement-to-agent
     (f/insert-statement-to-agent conn input)
     :statement-to-activity

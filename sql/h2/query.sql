@@ -52,3 +52,24 @@ AND statement_to_activity.usage = 'Object'
 
 -- :snip limit-snip
 LIMIT :limit
+
+-- :name query-agent-count
+-- :command :query
+-- :result :raw
+-- :doc TODO
+SELECT COUNT(*) FROM agent
+WHERE agent_ifi = :agent-ifi
+
+-- :name query-activity-count
+-- :command :query
+-- :result :raw
+-- :doc TODO
+SELECT COUNT(*) FROM activity
+WHERE activity_iri = :activity-iri
+
+-- :name query-attachment-count
+-- :command :query
+-- :result :raw
+-- :doc TODO
+SELECT COUNT(*) FROM attachment
+WHERE attachment_sha = :attachment-sha

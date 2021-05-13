@@ -61,7 +61,7 @@
     {:table             :agent
      :primary-key       (generate-uuid)
      :?name             (get agent "name")
-     :ifi               (json/write-str ifi-m)
+     :agent-ifi         (json/write-str ifi-m)
      :identified-group? (= "Group" (get agent "objectType"))}))
 
 (s/fdef activity->insert-input
@@ -102,7 +102,7 @@
    :primary-key  (generate-uuid)
    :statement-id statement-id
    :usage        agent-usage
-   :ifi          agent-ifi})
+   :agent-ifi    agent-ifi})
 
 (s/fdef activity-input->link-input
   :args (s/cat :statement-id ::hs/statement-id

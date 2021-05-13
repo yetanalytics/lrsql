@@ -21,7 +21,7 @@ payload = :payload
 INSERT INTO agent SET 
 id = :primary-key,
 agent_name = :?name,
-agent_ifi = :ifi,
+agent_ifi = :agent-ifi,
 is_identified_group = :identified-group?
 
 -- :name insert-activity
@@ -52,7 +52,7 @@ INSERT INTO statement_to_agent SET
 id = :primary-key,
 statement_id = :statement-id,
 usage = :usage,
-agent_ifi = :ifi
+agent_ifi = :agent-ifi
 
 -- :name insert-statement-to-activity
 -- :command :insert

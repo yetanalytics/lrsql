@@ -45,7 +45,7 @@
 (s/def :lrsql.hugsql.spec.agent/mbox_sha1sum ::xs/sha1sum)
 (s/def :lrsql.hugsql.spec.agent/openid ::xs/openid)
 (s/def :lrsql.hugsql.spec.agent/account ::xs/account)
-(s/def :lrsql.hugsql.spec.agent/ifi
+(s/def :lrsql.hugsql.spec.agent/agent-ifi
   (s/with-gen
     (s/and (s/conformer w/keywordize-keys
                         w/stringify-keys)
@@ -78,7 +78,7 @@
 (s/def ::state-id string?)
 (s/def ::profile-id string?)
 (s/def ::activity-id :lrsql.hugsql.spec.activity/activity-iri)
-(s/def ::agent-id :lrsql.hugsql.spec.agent/ifi)
+(s/def ::agent-id :lrsql.hugsql.spec.agent/agent-ifi)
 
 (s/def ::last-modified inst?)
 (s/def ::document any?) ; TODO: `binary?` predicate
@@ -121,7 +121,7 @@
 (def agent-insert-spec
   (s/keys :req-un [::primary-key
                    :lrsql.hugsql.spec.agent/?name
-                   :lrsql.hugsql.spec.agent/ifi
+                   :lrsql.hugsql.spec.agent/agent-ifi
                    :lrsql.hugsql.spec.agent/identified-group?]))
 
 ;; Activity
@@ -158,7 +158,7 @@
   (s/keys :req-un [::primary-key
                    ::statement-id
                    :lrsql.hugsql.spec.agent/usage
-                   :lrsql.hugsql.spec.agent/ifi]))
+                   :lrsql.hugsql.spec.agent/agent-ifi]))
 
 ;; Statement-to-Activity
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
@@ -291,7 +291,7 @@
                 :broad
                 #(= % stmt-agent-join-command))
          :agent-ifi
-         :lrsql.hugsql.spec.agent/ifi))
+         :lrsql.hugsql.spec.agent/agent-ifi))
 
 (def ^:private stmt-activity-join-command
   (str "INNER JOIN statement_to_activity\n"
