@@ -27,20 +27,14 @@
 
   (def ds (jdbc/get-datasource (system/db-spec)))
 
-  #_(jdbc/execute-one! ds
-                       (f/insert-activity-sqlvec
-                        (-> (input/statements->insert-input [stmt])
-                            rest
-                            rest
-                            first)))
-
   (command/insert-inputs! ds (input/statements->insert-input [stmt]))
 
   (p/-store-statements (:lrs sys') {} [stmt] [])
 
-  (jdbc/execute! ds ["SELECT * FROM agent"])
+  (jdbc/execute! ds ["SELECT COUNT(*) FROM xapi_statement"])
   
   (jdbc/execute! ds ["SELECT 1 FROM agent WHERE agent_ifi = ?" "foo"])
+
   ;; Delete everything
   (doseq [cmd ["DELETE FROM xapi_statement"
                "DELETE FROM agent"

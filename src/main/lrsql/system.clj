@@ -4,7 +4,6 @@
             [clj-uuid]
             [next.jdbc.connection :as connection]
             [com.stuartsierra.component :as component]
-            [lrsql.hugsql.init :as init]
             [lrsql.lrs :as lrs])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
 
@@ -64,16 +63,6 @@
   "Return a connection pool component."
   []
   (connection/component ComboPooledDataSource (db-spec)))
-
-#_(defrecord Database [db-type conn-pool]
-  component/Lifecycle
-  (start [component]
-    (init/init-hugsql-adapter!)
-    (init/init-hugsql-fns! db-type)
-    (init/create-tables! (conn-pool))
-    (assoc component :conn-pool conn-pool))
-  (stop [component]
-    (dissoc component :conn-pool conn-pool)))
 
 (defn system
   "A thunk that returns a lrsql system when called."
