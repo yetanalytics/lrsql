@@ -30,8 +30,10 @@
          inputs (input/statements->insert-inputs statements)]
      (command/insert-inputs! (conn) inputs)))
   (-get-statements
-   [this auth-identity params ltags]
-   {:statement {:id "my-statement-id"}}) ; TODO: return needs to be a statement
+   [lrs auth-identity params ltags]
+   (let [conn   (:conn-pool lrs)
+         inputs (input/params->query-input params)]
+     (command/query-statement-input (conn) inputs)))
   (-consistent-through
    [this ctx auth-identity]
    "timestamp-here") ; TODO: return needs to be a timestamp

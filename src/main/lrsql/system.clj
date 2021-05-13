@@ -7,6 +7,8 @@
             [lrsql.lrs :as lrs])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
 
+;; TODO: assert that db-type exists
+
 (defn db-spec
   "Derive the spec for `connection/component` based off of `env`."
   []
@@ -70,5 +72,5 @@
   (component/system-map
    :conn-pool (pool-component)
    :lrs (component/using
-        (lrs/map->LearningRecordStore {:db-type (get-db-type)})
-        [:conn-pool])))
+         (lrs/map->LearningRecordStore {:db-type (get-db-type)})
+         [:conn-pool])))

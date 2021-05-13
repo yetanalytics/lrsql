@@ -6,8 +6,7 @@
             [java-time :as jt]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.hugsql.spec :as hs]
-            [lrsql.hugsql.functions :as f]))
+            [lrsql.hugsql.spec :as hs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utils
@@ -277,7 +276,6 @@
         stmt-ref-id (when (= "StatementRef" stmt-obj-typ)
                       (parse-uuid (get stmt-obj "id")))
         stmt-vrb-id (get stmt-vrb "id")
-        voided?     (= "http://adlnet.gov/expapi/verbs/voided" stmt-vrb-id)
         ;; Statement HugSql input
         stmt-input  {:table             :statement
                      :primary-key       stmt-pk
@@ -287,7 +285,7 @@
                      :stored            stmt-stored
                      :?registration     stmt-reg
                      :verb-iri          stmt-vrb-id
-                     :voided?           voided?
+                     :voided?           false
                      :payload           (json/write-str statement)}
         ;; Agent HugSql Inputs
         [agnt-inputs stmt-agnt-inputs]
@@ -414,41 +412,20 @@
   (let [stmt-id   (when statement-id (parse-uuid statement-id))
         vstmt-id  (when voided-statement-id (parse-uuid voided-statement-id))
         reg       (when registration (parse-uuid registration))
-        agent-ifi (when agent (get-ifi (json/read-str agent)))
+        agent-ifi (when agent (json/write-str (get-ifi (json/read-str agent))))
         since     (when since (parse-time since))
         until     (when until (parse-time until))
         limit     (when limit (Long/parseLong limit))]
-    (cond-> {}
+    (cond-> {:verb-iri            verb
+             :registration        reg
+             :since               since
+             :until               until
+             :agent-ifi           agent-ifi
+             :activity-iri        activity
+             :limit               limit
+             :related-agents?     related-agents?
+             :related-activities? related-activities?}
       stmt-id
-      (merge {:statement-id-snip (f/statement-id-snip {:statement-id stmt-id})
-              :is-voided-snip    (f/is-voided-snip {:voided? false})})
+      (merge {:statement-id stmt-id :voided? false})
       vstmt-id
-      (merge {:statement-id-snip (f/statement-id-snip {:statement-id vstmt-id})
-              :is-voided-snip    (f/is-voided-snip {:voided? true})})
-      verb
-      (assoc :verb-iri-snip
-             (f/verb-iri-snip {:verb-iri verb}))
-      reg
-      (assoc :registration-snip
-             (f/registration-snip {:registration reg}))
-      since
-      (assoc :timestamp-since-snip
-             (f/timestamp-since-snip {:since since}))
-      until
-      (assoc :timestamp-until-snip
-             (f/timestamp-until-snip {:until until}))
-      agent-ifi
-      (assoc :statement-to-agent-join-snip
-             (f/statement-to-agent-join-snip
-              {:agent-ifi              agent-ifi
-               :actor-agent-usage-snip (when-not related-agents?
-                                         (f/actor-agent-usage-snip))}))
-      activity
-      (assoc :statement-to-activity-join-snip
-             (f/statement-to-activity-join-snip
-              {:activity-iri               activity
-               :object-activity-usage-snip (when-not related-activities?
-                                             (f/object-activity-usage-snip))}))
-      limit
-      (assoc :limit-snip
-             (f/limit-snip {:limit limit})))))
+      (merge {:statement-id vstmt-id :voided? true}))))

@@ -10,12 +10,13 @@
             [lrsql.hugsql.functions :as f]))
 
 (def stmt
-  {"actor"  {"mbox"       "mailto:sample.agent@example.com"
+  {"id"     "030e001f-b32a-4361-b701-039a3d9fceb1"
+   "actor"  {"mbox"       "mailto:sample.agent@example.com"
              "name"       "Sample Agent"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
              "display" {"en-US" "answered"}}
-   "object" {"id"         "http://www.example.com/tincan/activities/multipart",
+   "object" {"id"         "http://www.example.com/tincan/activities/multipart"
              "objectType" "Activity"
              "definition" {"name"        {"en-US" "Multi Part Activity"}
                            "description" {"en-US" "Multi Part Activity Description"}}}})
@@ -30,10 +31,20 @@
   (command/insert-inputs! ds (input/statements->insert-input [stmt]))
 
   (p/-store-statements (:lrs sys') {} [stmt] [])
+  (p/-get-statements (:lrs sys') {} {; :statementId "030e001f-b32a-4361-b701-039a3d9fceb1"
+                                     :agent "{\"mbox\":\"mailto:sample.agent@example2.com\"}"
+                                     :activity "http://www.example.com/tincan/activities/multipart"
+                                     :related_activities false
+                                     :limit "1"} {})
 
   (jdbc/execute! ds ["SELECT COUNT(*) FROM xapi_statement"])
-  
+
   (jdbc/execute! ds ["SELECT 1 FROM agent WHERE agent_ifi = ?" "foo"])
+
+  (jdbc/execute! ds ["SELECT payload FROM xapi_statement WHERE
+                      statement_id = ?
+                      AND is_voided = false"
+                     "030e001f-b32a-4361-b701-039a3d9fceb1"])
 
   ;; Delete everything
   (doseq [cmd ["DELETE FROM xapi_statement"

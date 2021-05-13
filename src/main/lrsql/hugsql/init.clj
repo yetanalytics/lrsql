@@ -15,14 +15,10 @@
   [db-type]
   ;; Hack the namespace binding or else the hugsql fn namespaces
   ;; will be whatever ns `init-hugsql-fns!` was called from.
-  (binding [*ns* `lrsql.hugsql.functions]
+  (binding [*ns* (create-ns `lrsql.hugsql.functions)]
     (hugsql/def-db-fns (str db-type "/create.sql"))
     (hugsql/def-db-fns (str db-type "/insert.sql"))
-    (hugsql/def-db-fns (str db-type "/query.sql"))
-    ;; For snippets
-    (hugsql/def-sqlvec-fns (str db-type "/create.sql"))
-    (hugsql/def-sqlvec-fns (str db-type "/insert.sql"))
-    (hugsql/def-sqlvec-fns (str db-type "/query.sql"))))
+    (hugsql/def-db-fns (str db-type "/query.sql"))))
 
 (defn create-tables!
   "Execute SQL commands to create tables if they do not exist."

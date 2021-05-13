@@ -12,12 +12,13 @@
     :statement
     ;; TODO: Query the statement by ID first; if IDs match, compare the payloads
     ;; to determine if the two statements are the same, in which case throw
-    ;; an exception
-    (f/insert-statement conn input)
+    ;; an exception.
+    ;; TODO: Void statements if appropriate.
+    (do (f/insert-statement conn input)
+        (:statement-id input)) ; Success! (Too bad H2 doesn't have INSERT...RETURNING)
     :agent
     (let [input' (select-keys input [:agent-ifi])
           exists (f/query-agent-exists conn input')]
-      (println exists)
       (when-not exists (f/insert-agent conn input)))
     :activity
     (let [input' (select-keys input [:activity-iri])
