@@ -1,3 +1,5 @@
+/* Statement Query */
+
 -- :name query-statement
 -- :command :query
 -- :result :many
@@ -6,38 +8,40 @@
 SELECT payload FROM xapi_statement
 /*~
 (when (:agent-ifi params)
-  (cstr/join
-   "\n"
-   ["INNER JOIN statement_to_agent"
-    "ON xapi_statement.statement_id = statement_to_agent.statement_id"
-    "AND statement_to_agent.agent_ifi = :agent-ifi"
-    (when-not (:related-agents? params) "AND statement_to_agent.usage = 'Actor'")]))
+ (str "INNER JOIN statement_to_agent\n"
+      "ON xapi_statement.statement_id = statement_to_agent.statement_id\n"
+      "AND statement_to_agent.agent_ifi = :agent-ifi\n"
+      (when-not (:related-agents? params)
+       "AND statement_to_agent.usage = 'Actor'")))
 ~*/
 /*~
 (when (:activity-iri params)
-  (cstr/join
-   "\n"
-   ["INNER JOIN statement_to_activity"
-    "ON xapi_statement.statement_id = statement_to_activity.statement_id"
-    "AND statement_to_activity.activity_iri = :activity-iri"
-    (when-not (:related-activites? params) "AND statement_to_activity.usage = 'Object'")]))
+ (str "INNER JOIN statement_to_activity\n"
+      "ON xapi_statement.statement_id = statement_to_activity.statement_id\n"
+      "AND statement_to_activity.activity_iri = :activity-iri\n"
+      (when-not (:related-activites? params)
+       "AND statement_to_activity.usage = 'Object'")))
 ~*/
 /*~
-(let [where-conds
-      [(when (:statement-id params) "xapi_statement.statement_id = :statement-id")
-       (when (:voided? params) "xapi_statement.is_voided = :voided?")
-       (when (:verb-iri params) "xapi_statement.verb_iri = :verb-iri")
-       (when (:registration params) "xapi_statement.registration = :registration")
-       (when (:since params) "xapi_statement.stored > :since")
-       (when (:until params) "xapi_statement.stored <= :until")]
-      where-conds'
-      (filter some? where-conds)]
- (when (not-empty where-conds')
-   (->> where-conds' (cstr/join "\nAND ") (str "WHERE\n"))))
+(some->>
+ [(when (:statement-id params)
+   "xapi_statement.statement_id = :statement-id")
+  (when (:voided? params)
+   "xapi_statement.is_voided = :voided?")
+  (when (:verb-iri params)
+   "xapi_statement.verb_iri = :verb-iri")
+  (when (:registration params)
+   "xapi_statement.registration = :registration")
+  (when (:since params)
+   "xapi_statement.stored > :since")
+  (when (:until params)
+   "xapi_statement.stored <= :until")]
+ (filter some?)
+ not-empty
+ (cstr/join "\nAND ")
+ (str "WHERE\n"))
 ~*/
-/*~
-(when (:limit params) "LIMIT :limit")
-~*/
+--~ (when (:limit params) "LIMIT :limit")
 
 /* Existence Checks */
 

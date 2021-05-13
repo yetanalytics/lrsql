@@ -30,12 +30,15 @@
 
   (command/insert-inputs! ds (input/statements->insert-input [stmt]))
 
+  (def params
+    {:statementId        "030e001f-b32a-4361-b701-039a3d9fceb1"
+     :agent              "{\"mbox\":\"mailto:sample.agent@example.com\"}"
+     :activity           "http://www.example.com/tincan/activities/multipart"
+     :verb               "http://adlnet.gov/expapi/verbs/answered"
+     :related_activities false
+     :limit              "0"})
   (p/-store-statements (:lrs sys') {} [stmt] [])
-  (p/-get-statements (:lrs sys') {} {; :statementId "030e001f-b32a-4361-b701-039a3d9fceb1"
-                                     :agent "{\"mbox\":\"mailto:sample.agent@example2.com\"}"
-                                     :activity "http://www.example.com/tincan/activities/multipart"
-                                     :related_activities false
-                                     :limit "1"} {})
+  (p/-get-statements (:lrs sys') {} params {})
 
   (jdbc/execute! ds ["SELECT COUNT(*) FROM xapi_statement"])
 
