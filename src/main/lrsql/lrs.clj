@@ -1,5 +1,6 @@
 (ns lrsql.lrs
   (:require [com.stuartsierra.component :as component]
+            [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lp]
             [lrsql.hugsql.command :as command]
             [lrsql.hugsql.init :as init]
@@ -28,12 +29,14 @@
    [lrs auth-identity statements attachments]
    (let [conn   (:conn-pool lrs)
          inputs (input/statements->insert-inputs statements)]
-     (command/insert-inputs! (conn) inputs)))
+     (jdbc/with-transaction [tx (conn)]
+       (command/insert-inputs! tx inputs))))
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)
          inputs (input/params->query-input params)]
-     (command/query-statement-input (conn) inputs)))
+     (jdbc/with-transaction [tx (conn)]
+       (command/query-statement-input tx inputs))))
   (-consistent-through
    [this ctx auth-identity]
    "timestamp-here") ; TODO: return needs to be a timestamp

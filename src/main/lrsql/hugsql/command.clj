@@ -5,40 +5,40 @@
             [lrsql.hugsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Commands
+;; Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn insert-input!
   "Insert a new input into the DB. If the input is a Statement, return the
    Statement ID on success, nil for any other kind of input."
-  [conn {:keys [table] :as input}]
+  [tx {:keys [table] :as input}]
   (case table
     :statement
     ;; TODO: Query the statement by ID first; if IDs match, compare the payloads
     ;; to determine if the two statements are the same, in which case throw
     ;; an exception.
-    ;; TODO: Void statements if appropriate.
-    (do (f/insert-statement conn input)
+    ;; TODO: Void statements if :voiding? is true.
+    (do (f/insert-statement tx input)
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
         (u/parse-uuid (:statement-id input)))
     :agent
     (let [input' (select-keys input [:agent-ifi])
-          exists (f/query-agent-exists conn input')]
-      (when-not exists (f/insert-agent conn input)))
+          exists (f/query-agent-exists tx input')]
+      (when-not exists (f/insert-agent tx input)))
     :activity
     (let [input' (select-keys input [:activity-iri])
-          exists  (f/query-activity-exists conn input')]
-      (when-not exists (f/insert-activity conn input)))
+          exists  (f/query-activity-exists tx input')]
+      (when-not exists (f/insert-activity tx input)))
     :attachment
     (let [input' (select-keys input [:attachment-sha])
-          exists (f/query-attachment-exists conn input')]
-      (when-not exists (f/insert-attachment conn input)))
+          exists (f/query-attachment-exists tx input')]
+      (when-not exists (f/insert-attachment tx input)))
     :statement-to-agent
-    (f/insert-statement-to-agent conn input)
+    (f/insert-statement-to-agent tx input)
     :statement-to-activity
-    (f/insert-statement-to-activity conn input)
+    (f/insert-statement-to-activity tx input)
     :statement-to-attachment
-    (f/insert-statement-to-attachment conn input)
+    (f/insert-statement-to-attachment tx input)
     :state-document ; TODO
     nil
     :agent-profile-document ; TODO
@@ -49,8 +49,12 @@
 (defn insert-inputs!
   "Insert a sequence of inputs into th DB. Return a seq of Statement IDs
    for successfully inserted Statements."
-  [conn inputs]
-  (->> inputs (map (partial insert-input! conn)) doall (filter some?)))
+  [tx inputs]
+  (->> inputs (map (partial insert-input! tx)) doall (filter some?)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Queries
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- parse-json
   [jsn]
@@ -63,9 +67,9 @@
 (defn query-statement-input
   "Query Statements from the DB. Return a singleton Statement or nil if
    a Statement ID is included in params, a StatementResult object otherwise."
-  [conn input]
-  (let [res (f/query-statement conn input)]
-    (if (or (:statementId input) (:voidedStatementId input))
+  [tx input]
+  (let [res (f/query-statement tx input)]
+    (if (:statement-id input)
       ;; Statement ID is present => singleton Statement
       (some-> res first :payload parse-json)
       ;; StatementResult
