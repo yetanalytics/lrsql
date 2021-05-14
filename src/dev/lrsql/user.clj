@@ -51,8 +51,7 @@
      :ascending?         true})
   (p/-store-statements (:lrs sys') {} [stmt-1] [])
   (p/-store-statements (:lrs sys') {} [stmt-2] [])
-  (p/-get-statements (:lrs sys') {} {:voidedStatementId
-                                     "030e001f-b32a-4361-b701-039a3d9fceb1"} {})
+  (p/-get-statements (:lrs sys') {} {:until "2021-05-20T16:59:08Z"} {})
 
   (jdbc/execute! ds ["SELECT is_voided
                       FROM xapi_statement"])

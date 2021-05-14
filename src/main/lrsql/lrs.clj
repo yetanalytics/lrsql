@@ -28,7 +28,8 @@
   (-store-statements
    [lrs auth-identity statements attachments]
    (let [conn   (:conn-pool lrs)
-         inputs (input/statements->insert-inputs statements)]
+         stmts  (map input/prepare-statement statements)
+         inputs (input/statements->insert-inputs stmts)]
      (jdbc/with-transaction [tx (conn)]
        (command/insert-inputs! tx inputs))))
   (-get-statements

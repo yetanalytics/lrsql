@@ -7,6 +7,15 @@
             [lrsql.hugsql.spec :as hs]
             [lrsql.hugsql.util :as u]))
 
+;; Copied from lrs - update?
+(def xapi-version "1.0.3")
+
+;; TODO: more specific authority
+(def lrsql-authority {"name" "LRSQL"
+                      "objectType" "Agent"
+                      "account" {"homepage" "http://localhost:8080"
+                                 "name"     "LRSQL"}})
+
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -122,6 +131,25 @@
 ;; Statement Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn prepare-statement
+  "Prepare `statement` for LRS storage by coll-ifying context activities
+   and setting missing id, timestamp, authority, version, and stored
+   properties."
+  [statement]
+  (let [{:strs [id timestamp authority version]} statement]
+    ;; first coll-ify context activities
+    (cond-> (ss/fix-statement-context-activities statement)
+      true ; stored is always set by the LRS
+      (assoc "stored" (u/time->str (u/current-time)))
+      (not id)
+      (assoc "id" (u/uuid->str (u/generate-uuid)))
+      (not timestamp)
+      (assoc "timestamp" (u/time->str (u/current-time)))
+      (not authority)
+      (assoc "authority" lrsql-authority)
+      (not version)
+      (assoc "version" xapi-version))))
+
 (defn- statement->agent-inputs
   [stmt-id stmt-act stmt-obj stmt-auth stmt-inst stmt-team sql-enums]
   (let [;; HugSql Enums
@@ -233,7 +261,8 @@
     (concat agnt-inputs act-inputs stmt-agnt-inputs stmt-act-inputs)))
 
 (s/fdef statement->insert-inputs
-  :args (s/cat :statement ::xs/statement)
+  :args (s/cat :statement (s/and ::xs/statement
+                                 (s/conformer prepare-statement)))
   :ret hs/inputs-seq-spec)
 
 (defn statement->insert-inputs
@@ -241,7 +270,12 @@
    starting with the params for `insert-statement`."
   [statement]
   (let [;; Statement Properties
-        {stmt-act  "actor"
+        ;; id, timestamp, stored, and authority should have already been
+        ;; set by `prepare-statement`.
+        {stmt-id   "id"
+         stmt-time "timestamp"
+         stmt-stor "stored"
+         stmt-act  "actor"
          stmt-vrb  "verb"
          stmt-obj  "object"
          stmt-ctx  "context"
@@ -251,24 +285,21 @@
         stmt-obj
         {stmt-ctx-acts "contextActivities"
          stmt-inst     "instructor"
-         stmt-team     "team"}
+         stmt-team     "team"
+         stmt-reg      "registration"}
         stmt-ctx
-        ;; Statement Revised Properties
+        ;; Revised Properties
         stmt-pk     (u/generate-uuid)
-        stmt-id     (if-some [id (get statement "id")]
-                      (u/str->uuid id)
-                      stmt-pk)
-        stmt-time   (if-some [ts (get statement "timestamp")]
-                      (u/str->time ts)
-                      (u/current-time))
-        stmt-stored (u/current-time)
-        stmt-reg    (when-some [reg (get stmt-ctx "registration")]
-                      (u/str->uuid reg))
+        stmt-id     (u/str->uuid stmt-id)
+        stmt-time   (u/str->time stmt-time)
+        stmt-stored (u/str->time stmt-stor)
+        stmt-reg    (when stmt-reg (u/str->uuid stmt-reg))
         stmt-ref-id (when (= "StatementRef" stmt-obj-typ)
                       (u/str->uuid (get stmt-obj "id")))
         stmt-vrb-id (get stmt-vrb "id")
         ;; `stmt-ref-id` should always be true here, but we still sanity check
-        voiding?    (and (some? stmt-ref-id) (= voiding-verb stmt-vrb-id))
+        voiding?    (and (some? stmt-ref-id)
+                         (= voiding-verb stmt-vrb-id))
         ;; Statement HugSql input
         stmt-input  {:table             :statement
                      :primary-key       stmt-pk
@@ -315,7 +346,10 @@
             sub-inputs)))
 
 (s/fdef statements->insert-inputs
-  :args (s/cat :statements (s/coll-of ::xs/statement :min-count 1 :gen-max 5))
+  :args (s/cat :statements
+               (s/coll-of (s/and ::xs/statement (s/conformer prepare-statement))
+                          :min-count 1
+                          :gen-max 5))
   :ret (s/+ hs/inputs-seq-spec))
 
 (defn statements->insert-inputs

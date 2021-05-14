@@ -24,5 +24,10 @@
 
 (defn str->time
   "Parse a string into a java.util.Instant timestamp."
-  [time-str]
-  (jt/instant time-str))
+  [ts-str]
+  (jt/instant ts-str))
+
+(defn time->str
+  "Convert a java.util.Instant timestamp to a string."
+  [ts]
+  (jt/format ts))
