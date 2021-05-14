@@ -1,4 +1,4 @@
--- :name create-statement-table
+-- :name create-statement-table!
 -- :command :execute
 -- :result :raw
 -- :doc Create the statement table if it does not exist yet.
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   payload          JSON NOT NULL
 )
 
--- :name create-agent-table
+-- :name create-agent-table!
 -- :command :execute
 -- :result :raw
 -- :doc Create the agent table if it does not exist yet
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS agent (
   is_identified_group BOOLEAN DEFAULT FALSE NOT NULL
 )
 
--- :name create-activity-table
+-- :name create-activity-table!
 -- :command :execute
 -- :result :raw
 -- :doc Create the activity table if it does not exist yet
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS activity (
   payload      JSON NOT NULL
 )
 
--- :name create-attachment-table
+-- :name create-attachment-table!
 -- :command :execute
 -- :result :raw
 -- :doc Create the attachment table if it does not exist yet
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS attachment (
   payload        BINARY -- Switch to BLOB?
 )
 
--- :name create-statement-to-agent-table
+-- :name create-statement-to-agent-table!
 -- :command :execute
 -- :result :raw
 -- :doc Create the statement_to_agent link table if it does not exist yet.
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS statement_to_agent (
   agent_ifi    JSON NOT NULL
 )
 
--- :name create-statement-to-activity-table
+-- :name create-statement-to-activity-table!
 -- :command :execute
 -- :result :raw
 -- :doc Create the statement_to_activity link table if it does not exist yet.
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
   activity_iri VARCHAR(255) NOT NULL
 )
 
--- :name create-statement-to-attachment-table
+-- :name create-statement-to-attachment-table!
 -- :command :execute
 -- :result :raw
 -- :doc Create the statement_to_attachment link table if it does not exist yet.
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS statement_to_attachment (
   attachment_sha VARCHAR(255) NOT NULL
 )
 
--- :name create-state-document-table
+-- :name create-state-document-table!
 -- :command :execute
 -- :result :raw
 -- :doc Create the state_document table if it does not exist yet
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS state_document (
   document      BINARY
 )
 
--- :name create-agent-profile-document-table
+-- :name create-agent-profile-document-table!
 -- :command :execute
 -- :result :raw
 -- :doc Create the agent_profile_document table if it does not exist yet
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
   document      BINARY
 )
 
--- :name create-activity-profile-document-table
+-- :name create-activity-profile-document-table!
 -- :command :execute
 -- :result :raw
 -- :doc Create the activity_profile_document table if it does not exist yet

@@ -53,9 +53,11 @@
   []
   (connection/component ComboPooledDataSource (db-spec)))
 
+;; TODO: Add SQLite and Postgres at the very least
 (def valid-db-types #{"h2" "h2:mem"})
 
 (defn- assert-db-type
+  "Assert that `db-type` is valid."
   [db-type]
   (cond
     (not (some? db-type))

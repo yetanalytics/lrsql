@@ -5,29 +5,34 @@
 ;; functions in this namespace anyways, but the functions are provided for
 ;; reference.
 
-(declare create-statement-table)
-(declare create-agent-table)
-(declare create-activity-table)
-(declare create-attachment-table)
-(declare create-statement-to-agent-table)
-(declare create-statement-to-activity-table)
-(declare create-statement-to-attachment-table)
-(declare create-state-document-table)
-(declare create-agent-profile-document-table)
-(declare create-activity-profile-document-table)
+;; Create table
+(declare create-statement-table!)
+(declare create-agent-table!)
+(declare create-activity-table!)
+(declare create-attachment-table!)
+(declare create-statement-to-agent-table!)
+(declare create-statement-to-activity-table!)
+(declare create-statement-to-attachment-table!)
+(declare create-state-document-table!)
+(declare create-agent-profile-document-table!)
+(declare create-activity-profile-document-table!)
 
-(declare insert-statement)
-(declare insert-agent)
-(declare insert-activity)
-(declare insert-attachment)
-(declare insert-statement-to-agent)
-(declare insert-statement-to-activity)
-(declare insert-statement-to-attachment)
+;; Insert
+(declare insert-statement!)
+(declare insert-agent!)
+(declare insert-activity!)
+(declare insert-attachment!)
+(declare insert-statement-to-agent!)
+(declare insert-statement-to-activity!)
+(declare insert-statement-to-attachment!)
 
-(declare void-statement)
+;; Update
+(declare void-statement!)
 
+;; Query
 (declare query-statement)
 
+;; Query existence
 (declare query-agent-exists)
 (declare query-activity-exists)
 (declare query-attachment-exists)

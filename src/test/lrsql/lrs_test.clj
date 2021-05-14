@@ -100,7 +100,7 @@
       (is (= stmt-3
              (remove-props
               (lrsp/-get-statements lrs {} {:statementId id-3} {})))))
-    (testing "Statement Property Queries"
+    (testing "Statement property queries"
       (is (= {:statements [] :more ""}
              (lrsp/-get-statements lrs {} {:since ts} {})))
       (is (= {:statements [stmt-1 stmt-2 stmt-3] :more ""}

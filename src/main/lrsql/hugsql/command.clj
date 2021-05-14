@@ -17,30 +17,30 @@
     ;; TODO: Query the statement by ID first; if IDs match, compare the payloads
     ;; to determine if the two statements are the same, in which case throw
     ;; an exception.
-    (do (f/insert-statement tx input)
+    (do (f/insert-statement! tx input)
         ;; Void statements
         (when (:voiding? input) ; TODO test
-          (f/void-statement tx {:statement-id (:?statement-ref-id input)}))
+          (f/void-statement! tx {:statement-id (:?statement-ref-id input)}))
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
         (u/uuid->str (:statement-id input)))
     :agent
     (let [input' (select-keys input [:agent-ifi])
           exists (f/query-agent-exists tx input')]
-      (when-not exists (f/insert-agent tx input)))
+      (when-not exists (f/insert-agent! tx input)))
     :activity
     (let [input' (select-keys input [:activity-iri])
           exists  (f/query-activity-exists tx input')]
-      (when-not exists (f/insert-activity tx input)))
+      (when-not exists (f/insert-activity! tx input)))
     :attachment
     (let [input' (select-keys input [:attachment-sha])
           exists (f/query-attachment-exists tx input')]
-      (when-not exists (f/insert-attachment tx input)))
+      (when-not exists (f/insert-attachment! tx input)))
     :statement-to-agent
-    (f/insert-statement-to-agent tx input)
+    (f/insert-statement-to-agent! tx input)
     :statement-to-activity
-    (f/insert-statement-to-activity tx input)
+    (f/insert-statement-to-activity! tx input)
     :statement-to-attachment
-    (f/insert-statement-to-attachment tx input)
+    (f/insert-statement-to-attachment! tx input)
     :state-document ; TODO
     nil
     :agent-profile-document ; TODO
