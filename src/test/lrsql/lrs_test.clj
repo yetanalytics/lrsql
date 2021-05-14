@@ -5,7 +5,6 @@
             [clojure.data.json :as json]
             [com.stuartsierra.component    :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.hugsql.util :as u]
             [lrsql.system :as system]))
 
 (def stmt-1
@@ -71,11 +70,10 @@
       (dissoc "version")))
 
 (defn- remove-props-res
+  "Apply `remove-props` to a StatementResult object."
   [query-res]
   (update query-res :statements (partial map remove-props)))
 
-;; TODO: Test batch inserts
-;; TODO: Test related agents and activities
 (deftest test-lrs-protocol-fns
   (let [_     (assert-in-mem-db)
         sys   (system/system)
