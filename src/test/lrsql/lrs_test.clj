@@ -86,10 +86,10 @@
         agt-1 (-> stmt-1 (get "actor") (json/write-str))
         vrb-1 (get-in stmt-1 ["verb" "id"])
         act-1 (get-in stmt-1 ["object" "id"])]
-    (testing "Statement insertions"
+    (testing "tatement insertions"
       (is (= [id-1] (lrsp/-store-statements lrs {} [stmt-1] [])))
       (is (= [id-2 id-3] (lrsp/-store-statements lrs {} [stmt-2 stmt-3] []))))
-    (testing "Statement ID queries"
+    (testing "statement ID queries"
       ;; Statement ID queries
       (is (= stmt-1
              (remove-props
@@ -100,7 +100,7 @@
       (is (= stmt-3
              (remove-props
               (lrsp/-get-statements lrs {} {:statementId id-3} {})))))
-    (testing "Statement property queries"
+    (testing "statement property queries"
       (is (= {:statements [] :more ""}
              (lrsp/-get-statements lrs {} {:since ts} {})))
       (is (= {:statements [stmt-1 stmt-2 stmt-3] :more ""}

@@ -1,10 +1,7 @@
 (ns test.lrsql.hugsql.input-test
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec.test.alpha :as stest]
-            [lrsql.hugsql.init :as init]
             [lrsql.hugsql.input :as input]))
-
-(init/init-hugsql-fns! "h2") ; TODO: Adapt to different dbs
 
 ;; Copied from training-commons.xapi.statement-gen-test
 (defn- check-validate
