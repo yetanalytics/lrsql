@@ -22,7 +22,7 @@
         (when (:voiding? input) ; TODO test
           (f/void-statement tx {:statement-id (:?statement-ref-id input)}))
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
-        (u/parse-uuid (:statement-id input)))
+        (u/uuid->str (:statement-id input)))
     :agent
     (let [input' (select-keys input [:agent-ifi])
           exists (f/query-agent-exists tx input')]

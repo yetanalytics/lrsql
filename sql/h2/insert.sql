@@ -20,6 +20,8 @@ payload = :payload FORMAT JSON
 UPDATE xapi_statement
 SET is_voided = TRUE
 WHERE statement_id = :statement-id
+AND NOT (verb_iri = 'http://adlnet.gov/expapi/verbs/voided')
+-- ^ Any Statement that voids another cannot itself be voided.
 
 -- :name insert-agent
 -- :command :insert

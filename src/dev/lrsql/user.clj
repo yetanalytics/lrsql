@@ -9,7 +9,7 @@
             [lrsql.hugsql.input :as input]
             [lrsql.hugsql.functions :as f]))
 
-(def stmt
+(def stmt-1
   {"id"     "030e001f-b32a-4361-b701-039a3d9fceb1"
    "actor"  {"mbox"       "mailto:sample.agent@example.com"
              "name"       "Sample Agent"
@@ -21,6 +21,17 @@
              "definition" {"name"        {"en-US" "Multi Part Activity"}
                            "description" {"en-US" "Multi Part Activity Description"}}}})
 
+(def stmt-2
+  {"id"     "3f5f3c7d-c786-4496-a3a8-6d6e4461aa9d"
+   "actor"  {"account"    {"name"     "Sample Agent 2"
+                           "homepage" "https://example.org"}
+             "name"       "Sample Agent 2"
+             "objectType" "Agent"}
+   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/voided"
+             "display" "Voided"}
+   "object" {"objectType" "StatementRef"
+             "id"         "030e001f-b32a-4361-b701-039a3d9fceb1"}})
+
 (comment
   (def sys (system/system))
 
@@ -28,7 +39,7 @@
 
   (def ds (jdbc/get-datasource (system/db-spec)))
 
-  (command/insert-inputs! ds (input/statements->insert-input [stmt]))
+  (command/insert-inputs! ds (input/statements->insert-input [stmt-1]))
 
   (def params
     {:statementId        "030e001f-b32a-4361-b701-039a3d9fceb1"
@@ -38,10 +49,13 @@
      :related_activities false
      :limit              "1"
      :ascending?         true})
-  (p/-store-statements (:lrs sys') {} [stmt] [])
-  (p/-get-statements (:lrs sys') {} params {})
+  (p/-store-statements (:lrs sys') {} [stmt-1] [])
+  (p/-store-statements (:lrs sys') {} [stmt-2] [])
+  (p/-get-statements (:lrs sys') {} {:voidedStatementId
+                                     "030e001f-b32a-4361-b701-039a3d9fceb1"} {})
 
-  (jdbc/execute! ds ["SELECT COUNT(*) FROM xapi_statement"])
+  (jdbc/execute! ds ["SELECT is_voided
+                      FROM xapi_statement"])
 
   (jdbc/execute! ds ["SELECT 1 FROM agent WHERE agent_ifi = ?" "foo"])
 

@@ -26,7 +26,7 @@ SELECT payload FROM xapi_statement
 (some->>
  [(when (:statement-id params)
    "xapi_statement.statement_id = :statement-id")
-  (when (:voided? params)
+  (when (some? (:voided? params))
    "xapi_statement.is_voided = :voided?")
   (when (:verb-iri params)
    "xapi_statement.verb_iri = :verb-iri")

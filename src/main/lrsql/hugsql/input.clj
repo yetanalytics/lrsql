@@ -256,16 +256,16 @@
         ;; Statement Revised Properties
         stmt-pk     (u/generate-uuid)
         stmt-id     (if-some [id (get statement "id")]
-                      (u/parse-uuid id)
+                      (u/str->uuid id)
                       stmt-pk)
         stmt-time   (if-some [ts (get statement "timestamp")]
-                      (u/parse-time ts)
+                      (u/str->time ts)
                       (u/current-time))
         stmt-stored (u/current-time)
         stmt-reg    (when-some [reg (get stmt-ctx "registration")]
-                      (u/parse-uuid reg))
+                      (u/str->uuid reg))
         stmt-ref-id (when (= "StatementRef" stmt-obj-typ)
-                      (u/parse-uuid (get stmt-obj "id")))
+                      (u/str->uuid (get stmt-obj "id")))
         stmt-vrb-id (get stmt-vrb "id")
         ;; `stmt-ref-id` should always be true here, but we still sanity check
         voiding?    (and (some? stmt-ref-id) (= voiding-verb stmt-vrb-id))
@@ -356,7 +356,7 @@
      :state-id      state-id
      :activity-id   activity-id
      :agent-id      (json/write-str (get-ifi (json/read-str agent)))
-     :?registration (when registration (u/parse-uuid registration))
+     :?registration (when registration (u/str->uuid registration))
      :last-modified (u/current-time)
      :document      document}
 
@@ -407,11 +407,11 @@
     ;; page                :page
     ;; from                :from
     }]
-  (let [stmt-id     (when stmt-id (u/parse-uuid stmt-id))
-        vstmt-id    (when vstmt-id (u/parse-uuid vstmt-id))
-        reg         (when reg (u/parse-uuid reg))
-        since       (when since (u/parse-time since))
-        until       (when until (u/parse-time until))
+  (let [stmt-id     (when stmt-id (u/str->uuid stmt-id))
+        vstmt-id    (when vstmt-id (u/str->uuid vstmt-id))
+        reg         (when reg (u/str->uuid reg))
+        since       (when since (u/str->time since))
+        until       (when until (u/str->time until))
         rel-agents? (boolean rel-agents?)
         rel-acts?   (boolean rel-acts?)
         agent-ifi   (when agent

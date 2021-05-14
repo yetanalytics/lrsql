@@ -16,7 +16,7 @@
    (assoc lrs :conn-pool conn-pool))
   (stop
    [lrs]
-   (dissoc lrs :conn-pool conn-pool))
+   (assoc lrs :conn-pool nil))
 
   lp/AboutResource
   (-get-about
