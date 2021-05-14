@@ -13,6 +13,14 @@ verb_iri = :verb-iri,
 is_voided = :voided?,
 payload = :payload FORMAT JSON
 
+-- :name void-statement
+-- :command :execute
+-- :result :affected
+-- :doc Update a statement such that is_voided is set to true.
+UPDATE xapi_statement
+SET is_voided = TRUE
+WHERE statement_id = :statement-id
+
 -- :name insert-agent
 -- :command :insert
 -- :result :affected

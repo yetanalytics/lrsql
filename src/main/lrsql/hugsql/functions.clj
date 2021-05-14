@@ -24,6 +24,8 @@
 (declare insert-statement-to-activity)
 (declare insert-statement-to-attachment)
 
+(declare void-statement)
+
 (declare query-statement)
 
 (declare query-agent-exists)

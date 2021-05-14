@@ -267,6 +267,8 @@
         stmt-ref-id (when (= "StatementRef" stmt-obj-typ)
                       (u/parse-uuid (get stmt-obj "id")))
         stmt-vrb-id (get stmt-vrb "id")
+        ;; `stmt-ref-id` should always be true here, but we still sanity check
+        voiding?    (and (some? stmt-ref-id) (= voiding-verb stmt-vrb-id))
         ;; Statement HugSql input
         stmt-input  {:table             :statement
                      :primary-key       stmt-pk
@@ -277,7 +279,7 @@
                      :?registration     stmt-reg
                      :verb-iri          stmt-vrb-id
                      :voided?           false
-                     :voiding?          (= voiding-verb stmt-vrb-id)
+                     :voiding?          voiding?
                      :payload           (json/write-str statement)}
         ;; Agent HugSql Inputs
         [agnt-inputs stmt-agnt-inputs]

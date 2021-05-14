@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS statement_to_agent (
   statement_id   UUID NOT NULL,
   usage          ENUM('Actor', 'Object', 'Authority', 'Instructor', 'Team',
                       'SubActor', 'SubObject', 'SubInstructor', 'SubTeam')
-                      NOT NULL,
+                 NOT NULL,
   agent_ifi      JSON NOT NULL
 )
 
@@ -69,7 +69,8 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
   statement_id UUID NOT NULL,
   usage        ENUM('Object', 'Category', 'Grouping', 'Parent', 'Other',
                     'SubObject', 'SubCategory', 'SubGrouping', 'SubParent',
-                    'SubOther') NOT NULL,
+                    'SubOther')
+               NOT NULL,
   activity_iri VARCHAR(255) NOT NULL
 )
 
@@ -78,9 +79,9 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
 -- :result :raw
 -- :doc Create the statement_to_attachment link table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS statement_to_attachment (
-  id              UUID NOT NULL PRIMARY KEY,
-  statement_id    UUID NOT NULL,
-  attachment_sha  VARCHAR(255) NOT NULL
+  id             UUID NOT NULL PRIMARY KEY,
+  statement_id   UUID NOT NULL,
+  attachment_sha VARCHAR(255) NOT NULL
 )
 
 -- :name create-state-document-table

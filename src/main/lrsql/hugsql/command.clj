@@ -17,8 +17,10 @@
     ;; TODO: Query the statement by ID first; if IDs match, compare the payloads
     ;; to determine if the two statements are the same, in which case throw
     ;; an exception.
-    ;; TODO: Void statements if :voiding? is true.
     (do (f/insert-statement tx input)
+        ;; Void statements
+        (when (:voiding? input) ; TODO test
+          (f/void-statement tx {:statement-id (:?statement-ref-id input)}))
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
         (u/parse-uuid (:statement-id input)))
     :agent
