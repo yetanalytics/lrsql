@@ -1,6 +1,7 @@
 (ns lrsql.hugsql.command
   "DB commands that utilize HugSql functions."
-  (:require [lrsql.hugsql.functions :as f]))
+  (:require [clojure.data.json :as json]
+            [lrsql.hugsql.functions :as f]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Commands
@@ -45,6 +46,20 @@
   [conn inputs]
   (doall (map (partial insert-input! conn) inputs)))
 
+(defn- parse-json
+  [jsn]
+  (cond
+    (string? jsn)
+    (json/read-str jsn)
+    (bytes? jsn) ; H2 returns JSON data as a byte array
+    (json/read-str (String. jsn))))
+
 (defn query-statement-input
   [conn input]
-  (f/query-statement conn input))
+  (let [res (f/query-statement conn input)]
+    (if (or (:statementId input) (:voidedStatementId input))
+      ;; Statement ID is present => singleton Statement
+      (-> res first :payload parse-json)
+      ;; StatementResult
+      {:statements (vec (map #(-> % :payload parse-json) res))
+       :more       ""}))) ; TODO: Return IRI if more statements can be queried

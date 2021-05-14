@@ -11,7 +11,7 @@ stored = :stored,
 registration = :?registration,
 verb_iri = :verb-iri,
 is_voided = :voided?,
-payload = :payload
+payload = :payload FORMAT JSON
 
 -- :name insert-agent
 -- :command :insert
@@ -30,7 +30,7 @@ is_identified_group = :identified-group?
 INSERT INTO activity SET 
 id = :primary-key,
 activity_iri = :activity-iri,
-payload = :payload
+payload = :payload FORMAT JSON
 
 -- :name insert-attachment,
 -- :command :insert,

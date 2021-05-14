@@ -1,9 +1,13 @@
 (ns lrsql.hugsql.spec
   "Spec for HugSql inputs."
   (:require [clojure.spec.alpha :as s]
-            #_[clojure.spec.gen.alpha :as sgen]
-            #_[clojure.walk :as w]
+            [clojure.spec.gen.alpha :as sgen]
+            [clojure.walk :as w]
+            [clojure.data.json :as json]
             [xapi-schema.spec :as xs]))
+
+;; TODO: Deal with different encodings for JSON types (e.g. statement payload,
+;; activity payload, agent ifi), instead of just H2 strings.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
@@ -32,14 +36,20 @@
 (s/def ::voiding? boolean?)
 
 ;; Statement
-(s/def ::payload any? #_::xs/statement) ; TODO
+(s/def ::payload
+  (s/with-gen
+    (s/and (s/conformer json/read-str json/write-str) ::xs/statement)
+    #(sgen/fmap json/write-str (s/gen ::xs/statement))))
 
 ;; Activity
 (s/def :lrsql.hugsql.spec.activity/activity-iri :activity/id)
 (s/def :lrsql.hugsql.spec.activity/usage
   #{"Object", "Category", "Grouping", "Parent", "Other"
     "SubObject" "SubCategory" "SubGrouping" "SubParent" "SubOther"})
-(s/def :lrsql.hugsql.spec.activity/payload any? #_::xs/activity) ; TODO
+(s/def :lrsql.hugsql.spec.activity/payload
+  (s/with-gen
+    (s/and (s/conformer json/read-str json/write-str) ::xs/activity)
+    #(sgen/fmap json/write-str (s/gen ::xs/activity))))
 
 ;; Agent
 (s/def :lrsql.hugsql.spec.agent/?name (s/nilable string?))
@@ -49,17 +59,16 @@
 (s/def :lrsql.hugsql.spec.agent/mbox_sha1sum ::xs/sha1sum)
 (s/def :lrsql.hugsql.spec.agent/openid ::xs/openid)
 (s/def :lrsql.hugsql.spec.agent/account ::xs/account)
-(s/def :lrsql.hugsql.spec.agent/agent-ifi ; TODO
-  some?
-  #_(s/with-gen
-      (s/and (s/conformer w/keywordize-keys
-                          w/stringify-keys)
+(s/def :lrsql.hugsql.spec.agent/agent-ifi
+  (s/with-gen
+      (s/and (s/conformer #(-> % json/read-str w/keywordize-keys)
+                          #(-> % w/stringify-keys json/write-str))
              (s/keys :req-un [(or :lrsql.hugsql.spec.agent/mbox
                                   :lrsql.hugsql.spec.agent/mbox_sha1sum
                                   :lrsql.hugsql.spec.agent/openid
                                   :lrsql.hugsql.spec.agent/account)]))
       #(sgen/fmap
-        w/stringify-keys
+        (fn [ifi] (-> ifi w/stringify-keys json/write-str))
         (s/gen
          (s/or :mbox
                (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox])
@@ -73,6 +82,8 @@
 (s/def :lrsql.hugsql.spec.agent/usage
   #{"Actor" "Object" "Authority" "Instructor" "Team"
     "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"})
+
+;; TODO: Check that `bytes?` work with BLOBs
 
 ;; Attachment
 (s/def :lrsql.hugsql.spec.attachment/attachment-sha :attachment/sha2)

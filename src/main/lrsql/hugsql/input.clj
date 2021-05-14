@@ -39,14 +39,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- get-ifi
-  "Returns a map between the IFI type and the IFI of `agent`."
+  "Returns a map between the IFI type and the IFI of `agent`.
+   Returns nil if the agent doesn't have an IFI (e.g. Anonymous Group)."
   [agnt]
   (let [agnt' (not-empty (select-keys agnt ["mbox"
                                             "mbox_sha1sum"
                                             "openid"
                                             "account"]))]
-    ;; Ordering of name + homepage doesn't matter
-    ;; Important when comparing JSON strings
+    ;; Need to order `name` and `homepage` properties.
+    ;; Important when comparing JSON string/bytes.
     (cond-> agnt'
       (contains? agnt' "account")
       (update "account" (partial into (sorted-map))))))
@@ -417,20 +418,21 @@
         reg         (when reg (parse-uuid reg))
         since       (when since (parse-time since))
         until       (when until (parse-time until))
-        agent-ifi   (when agent (-> agent json/read-str get-ifi json/write-str))
         rel-agents? (boolean rel-agents?)
         rel-acts?   (boolean rel-acts?)
+        agent-ifi   (when agent
+                      (some-> agent json/read-str get-ifi json/write-str))
         limit       (when limit ; "0" = no limit
                       (let [n (Long/parseLong limit)]
                         (when (not (zero? n)) n)))]
     (cond-> {}
-      stmt-id  (merge {:statement-id stmt-id :voided? false})
-      vstmt-id (merge {:statement-id vstmt-id :voided? true})
-      verb-iri (assoc :verb-iri verb-iri)
-      reg      (assoc :registration reg)
-      since    (assoc :since since)
-      until    (assoc :until until)
-      agent    (merge {:agent-ifi agent-ifi :related-agents? rel-agents?})
-      act-iri  (merge {:activity-iri act-iri :related-activities? rel-acts?})
-      limit    (assoc :limit limit)
-      asc?     (assoc :ascending asc?))))
+      stmt-id   (merge {:statement-id stmt-id :voided? false})
+      vstmt-id  (merge {:statement-id vstmt-id :voided? true})
+      verb-iri  (assoc :verb-iri verb-iri)
+      reg       (assoc :registration reg)
+      since     (assoc :since since)
+      until     (assoc :until until)
+      agent-ifi (merge {:agent-ifi agent-ifi :related-agents? rel-agents?})
+      act-iri   (merge {:activity-iri act-iri :related-activities? rel-acts?})
+      limit     (assoc :limit limit)
+      asc?      (assoc :ascending asc?))))
