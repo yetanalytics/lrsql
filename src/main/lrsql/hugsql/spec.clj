@@ -93,6 +93,7 @@
 (s/def ::related-agents? boolean?)
 (s/def ::related-activities? boolean?)
 (s/def ::limit nat-int?)
+(s/def ::ascending? boolean?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertions
@@ -278,6 +279,7 @@
                    ::since
                    ::until
                    ::limit
+                   ::ascending?
                    ::related-agents?
                    ::related-activities?
                    :lrsql.hugsql.spec.agent/agent-ifi

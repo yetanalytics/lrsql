@@ -8,19 +8,19 @@
 SELECT payload FROM xapi_statement
 /*~
 (when (:agent-ifi params)
- (str "INNER JOIN statement_to_agent\n"
-      "ON xapi_statement.statement_id = statement_to_agent.statement_id\n"
-      "AND statement_to_agent.agent_ifi = :agent-ifi\n"
+ (str "INNER JOIN statement_to_agent"
+      "\nON xapi_statement.statement_id = statement_to_agent.statement_id"
+      "\nAND statement_to_agent.agent_ifi = :agent-ifi"
       (when-not (:related-agents? params)
-       "AND statement_to_agent.usage = 'Actor'")))
+       "\nAND statement_to_agent.usage = 'Actor'")))
 ~*/
 /*~
 (when (:activity-iri params)
- (str "INNER JOIN statement_to_activity\n"
-      "ON xapi_statement.statement_id = statement_to_activity.statement_id\n"
-      "AND statement_to_activity.activity_iri = :activity-iri\n"
+ (str "INNER JOIN statement_to_activity"
+      "\nON xapi_statement.statement_id = statement_to_activity.statement_id"
+      "\nAND statement_to_activity.activity_iri = :activity-iri"
       (when-not (:related-activites? params)
-       "AND statement_to_activity.usage = 'Object'")))
+       "\nAND statement_to_activity.usage = 'Object'")))
 ~*/
 /*~
 (some->>
@@ -41,6 +41,7 @@ SELECT payload FROM xapi_statement
  (cstr/join "\nAND ")
  (str "WHERE\n"))
 ~*/
+--~ (when (:ascending? params) "ORDER BY xapi_statement.stored")
 --~ (when (:limit params) "LIMIT :limit")
 
 /* Existence Checks */

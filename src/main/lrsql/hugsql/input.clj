@@ -396,31 +396,41 @@
   :ret hs/statement-query-spec)
 
 (defn params->query-input
-  [{stmt-id    :statementId
-    vstmt-id   :voidedStatementId
-    verb-iri   :verb
-    agent      :agent
-    act-iri    :activity
-    reg        :registration
-    rel-acts?  :related_activities
-    rel-agnts? :related_agents
-    since      :since
-    until      :until
-    limit      :limit
+  [{stmt-id     :statementId
+    vstmt-id    :voidedStatementId
+    verb-iri    :verb
+    agent       :agent
+    act-iri     :activity
+    reg         :registration
+    rel-acts?   :related_activities
+    rel-agents? :related_agents
+    since       :since
+    until       :until
+    limit       :limit
+    asc?        :ascending
     ;; attachments?        :attachments
-    ;; ascending?          :ascending
     ;; page                :page
     ;; from                :from
     }]
-  (cond-> {}
-    stmt-id  (merge {:statement-id (parse-uuid stmt-id) :voided? false})
-    vstmt-id (merge {:statement-id (parse-uuid vstmt-id) :voided? true})
-    verb-iri (assoc :verb-iri verb-iri)
-    reg      (assoc :registration (parse-uuid reg))
-    since    (assoc :since (parse-time since))
-    until    (assoc :until (parse-time until))
-    agent    (merge {:agent-ifi (-> agent json/read-str get-ifi json/write-str)
-                     :related-agents? (boolean rel-agnts?)})
-    act-iri  (merge {:activity-iri act-iri
-                     :related-activities? (boolean rel-acts?)})
-    limit    (assoc :limit (Long/parseLong limit))))
+  (let [stmt-id     (when stmt-id (parse-uuid stmt-id))
+        vstmt-id    (when vstmt-id (parse-uuid vstmt-id))
+        reg         (when reg (parse-uuid reg))
+        since       (when since (parse-time since))
+        until       (when until (parse-time until))
+        agent-ifi   (when agent (-> agent json/read-str get-ifi json/write-str))
+        rel-agents? (boolean rel-agents?)
+        rel-acts?   (boolean rel-acts?)
+        limit       (when limit ; "0" = no limit
+                      (let [n (Long/parseLong limit)]
+                        (when (not (zero? n)) n)))]
+    (cond-> {}
+      stmt-id  (merge {:statement-id stmt-id :voided? false})
+      vstmt-id (merge {:statement-id vstmt-id :voided? true})
+      verb-iri (assoc :verb-iri verb-iri)
+      reg      (assoc :registration reg)
+      since    (assoc :since since)
+      until    (assoc :until until)
+      agent    (merge {:agent-ifi agent-ifi :related-agents? rel-agents?})
+      act-iri  (merge {:activity-iri act-iri :related-activities? rel-acts?})
+      limit    (assoc :limit limit)
+      asc?     (assoc :ascending asc?))))

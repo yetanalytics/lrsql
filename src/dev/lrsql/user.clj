@@ -36,7 +36,8 @@
      :activity           "http://www.example.com/tincan/activities/multipart"
      :verb               "http://adlnet.gov/expapi/verbs/answered"
      :related_activities false
-     :limit              "0"})
+     :limit              "1"
+     :ascending?         true})
   (p/-store-statements (:lrs sys') {} [stmt] [])
   (p/-get-statements (:lrs sys') {} params {})
 
