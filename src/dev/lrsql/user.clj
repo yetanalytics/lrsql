@@ -32,6 +32,16 @@
    "object" {"objectType" "StatementRef"
              "id"         "030e001f-b32a-4361-b701-039a3d9fceb1"}})
 
+(def stmt-3
+  (-> stmt-1
+      (assoc "id" "708b3377-2fa0-4b96-9ff1-b10208b599b1")
+      (assoc "actor" {"openid"     "https://example.org"
+                      "name"       "Sample Agent 3"
+                      "objectType" "Agent"})
+      (assoc-in ["context" "instructor"] (get stmt-1 "actor"))
+      (assoc-in ["object" "id"] "http://www.example.com/tincan/activities/multipart-2")
+      (assoc-in ["context" "contextActivities" "other"] [(get stmt-1 "object")])))
+
 (comment
   (def sys (system/system))
 
@@ -50,8 +60,10 @@
      :limit              "1"
      :ascending?         true})
   (p/-store-statements (:lrs sys') {} [stmt-1] [])
-  (p/-store-statements (:lrs sys') {} [stmt-2] [])
+  (p/-store-statements (:lrs sys') {} [stmt-2 stmt-3] [])
   (p/-get-statements (:lrs sys') {} {:until "2021-05-20T16:59:08Z"} {})
+
+  (jdbc/execute! ds ["SELECT * FROM statement_to_activity"])
 
   (jdbc/execute! ds ["SELECT is_voided
                       FROM xapi_statement"])

@@ -52,12 +52,12 @@ CREATE TABLE IF NOT EXISTS attachment (
 -- :result :raw
 -- :doc Create the statement_to_agent link table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS statement_to_agent (
-  id             UUID NOT NULL PRIMARY KEY,
-  statement_id   UUID NOT NULL,
-  usage          ENUM('Actor', 'Object', 'Authority', 'Instructor', 'Team',
-                      'SubActor', 'SubObject', 'SubInstructor', 'SubTeam')
-                 NOT NULL,
-  agent_ifi      JSON NOT NULL
+  id           UUID NOT NULL PRIMARY KEY,
+  statement_id UUID NOT NULL,
+  usage        ENUM('Actor', 'Object', 'Authority', 'Instructor', 'Team',
+                    'SubActor', 'SubObject', 'SubInstructor', 'SubTeam')
+               NOT NULL,
+  agent_ifi    JSON NOT NULL
 )
 
 -- :name create-statement-to-activity-table

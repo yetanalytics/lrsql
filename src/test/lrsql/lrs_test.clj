@@ -2,8 +2,10 @@
   (:require [clojure.test :refer [deftest testing is]]
             [config.core  :refer [env]]
             [next.jdbc    :as jdbc]
+            [clojure.data.json :as json]
             [com.stuartsierra.component    :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.hugsql.util :as u]
             [lrsql.system :as system]))
 
 (def stmt-1
@@ -29,6 +31,16 @@
    "object" {"objectType" "StatementRef"
              "id"         "030e001f-b32a-4361-b701-039a3d9fceb1"}})
 
+(def stmt-3
+  (-> stmt-1
+      (assoc "id" "708b3377-2fa0-4b96-9ff1-b10208b599b1")
+      (assoc "actor" {"openid"     "https://example.org"
+                      "name"       "Sample Agent 3"
+                      "objectType" "Agent"})
+      (assoc-in ["context" "instructor"] (get stmt-1 "actor"))
+      (assoc-in ["object" "id"] "http://www.example.com/tincan/activities/multipart-2")
+      (assoc-in ["context" "contextActivities" "other"] [(get stmt-1 "object")])))
+
 (defn- assert-in-mem-db
   []
   (when (not= "h2:mem" (:db-type env))
@@ -49,23 +61,68 @@
                "DROP TABLE IF EXISTS statement_to_attachment"]]
     (jdbc/execute! tx [cmd])))
 
+(defn- remove-props
+  "Remove properties added by `input/prepare-statement`."
+  [statement]
+  (-> statement
+      (dissoc "timestamp")
+      (dissoc "stored")
+      (dissoc "authority")
+      (dissoc "version")))
+
+(defn- remove-props-res
+  [query-res]
+  (update query-res :statements (partial map remove-props)))
+
+;; TODO: Test batch inserts
+;; TODO: Test related agents and activities
 (deftest test-lrs-protocol-fns
-  (let [_    (assert-in-mem-db)
-        sys  (system/system)
-        sys' (component/start sys)
-        lrs  (:lrs sys')
-        id-1 (get stmt-1 "id")
-        id-2 (get stmt-2 "id")]
-    (testing "insertions"
+  (let [_     (assert-in-mem-db)
+        sys   (system/system)
+        sys'  (component/start sys)
+        lrs   (:lrs sys')
+        id-1  (get stmt-1 "id")
+        id-2  (get stmt-2 "id")
+        id-3  (get stmt-3 "id")
+        ts    "3000-01-01T01:00:00Z" ; Date far into the future
+        agt-1 (-> stmt-1 (get "actor") (json/write-str))
+        vrb-1 (get-in stmt-1 ["verb" "id"])
+        act-1 (get-in stmt-1 ["object" "id"])]
+    (testing "Statement insertions"
       (is (= [id-1] (lrsp/-store-statements lrs {} [stmt-1] [])))
-      (is (= [id-2] (lrsp/-store-statements lrs {} [stmt-2] []))))
-    (testing "queries"
+      (is (= [id-2 id-3] (lrsp/-store-statements lrs {} [stmt-2 stmt-3] []))))
+    (testing "Statement ID queries"
+      ;; Statement ID queries
+      (is (= stmt-1
+             (remove-props
+              (lrsp/-get-statements lrs {} {:voidedStatementId id-1} {}))))
       (is (= stmt-2
-             (-> (lrsp/-get-statements lrs {} {:statementId id-2} {})
-                 (dissoc "timestamp")
-                 (dissoc "stored")
-                 (dissoc "authority")
-                 (dissoc "version")))))
+             (remove-props
+              (lrsp/-get-statements lrs {} {:statementId id-2} {}))))
+      (is (= stmt-3
+             (remove-props
+              (lrsp/-get-statements lrs {} {:statementId id-3} {})))))
+    (testing "Statement Property Queries"
+      (is (= {:statements [] :more ""}
+             (lrsp/-get-statements lrs {} {:since ts} {})))
+      (is (= {:statements [stmt-1 stmt-2 stmt-3] :more ""}
+             (remove-props-res
+              (lrsp/-get-statements lrs {} {:until ts} {}))))
+      (is (= {:statements [stmt-1] :more ""}
+             (remove-props-res
+              (lrsp/-get-statements lrs {} {:agent agt-1} {}))))
+      (is (= {:statements [stmt-1 stmt-3] :more ""}
+             (remove-props-res
+              (lrsp/-get-statements lrs {} {:agent agt-1 :related_agents true} {}))))
+      (is (= {:statements [stmt-1 stmt-3] :more ""}
+             (remove-props-res
+              (lrsp/-get-statements lrs {} {:verb vrb-1} {}))))
+      (is (= {:statements [stmt-1] :more ""}
+             (remove-props-res
+              (lrsp/-get-statements lrs {} {:activity act-1} {}))))
+      (is (= {:statements [stmt-1 stmt-3] :more ""}
+             (remove-props-res
+              (lrsp/-get-statements lrs {} {:activity act-1 :related_activities true} {})))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))

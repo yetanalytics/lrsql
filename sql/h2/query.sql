@@ -19,7 +19,7 @@ SELECT payload FROM xapi_statement
  (str "INNER JOIN statement_to_activity"
       "\nON xapi_statement.statement_id = statement_to_activity.statement_id"
       "\nAND statement_to_activity.activity_iri = :activity-iri"
-      (when-not (:related-activites? params)
+      (when-not (:related-activities? params)
        "\nAND statement_to_activity.usage = 'Object'")))
 ~*/
 /*~
