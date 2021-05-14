@@ -207,19 +207,11 @@
 ;; Putting it all together
 (def inputs-seq-spec
   (s/cat
-   :statement
-   (s/cat
-    :statement-input statement-insert-spec
-    :agent-inputs (s/* agent-insert-spec)
-    :activity-inputs (s/* activity-insert-spec)
-    :stmt-agent-inputs (s/* statement-to-agent-insert-spec)
-    :stmt-activity-inputs (s/* statement-to-activity-insert-spec))
-   :sub-statement
-   (s/? (s/cat
-         :agent-inputs (s/* agent-insert-spec)
-         :activity-inputs (s/* activity-insert-spec)
-         :stmt-agent-inputs (s/* statement-to-agent-insert-spec)
-         :stmt-activity-inputs (s/* statement-to-activity-insert-spec)))))
+   :statement-input statement-insert-spec
+   :agent-inputs (s/* agent-insert-spec)
+   :activity-inputs (s/* activity-insert-spec)
+   :stmt-agent-inputs (s/* statement-to-agent-insert-spec)
+   :stmt-activity-inputs (s/* statement-to-activity-insert-spec)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions

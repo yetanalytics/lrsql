@@ -1,6 +1,7 @@
 (ns lrsql.hugsql.input
   "Functions to create HugSql inputs."
   (:require [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as sgen]
             [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
@@ -258,11 +259,20 @@
                                      :grp-enum "SubGrouping"
                                      :prt-enum "SubParent"
                                      :oth-enum "SubOther"})]
-    (concat agnt-inputs act-inputs stmt-agnt-inputs stmt-act-inputs)))
+    [agnt-inputs act-inputs stmt-agnt-inputs stmt-act-inputs]))
+
+(def prepared-statement-spec
+  (s/with-gen
+    (s/and ::xs/statement
+           #(contains? % :statement/id)
+           #(contains? % :statement/timestamp)
+           #(contains? % :statement/stored)
+           #(contains? % :statement/authority))
+    #(sgen/fmap prepare-statement
+                (s/gen ::xs/statement))))
 
 (s/fdef statement->insert-inputs
-  :args (s/cat :statement (s/and ::xs/statement
-                                 (s/conformer prepare-statement)))
+  :args (s/cat :statement prepared-statement-spec)
   :ret hs/inputs-seq-spec)
 
 (defn statement->insert-inputs
@@ -336,18 +346,22 @@
                                      :prt-enum "Parent"
                                      :oth-enum "Other"})
         ;; SubStatement HugSql Inputs
-        sub-inputs (when (= "SubStatement" stmt-obj-typ)
+        [sagnt-inputs sact-inputs sstmt-agnt-inputs sstmt-act-inputs]
+        (when (= "SubStatement" stmt-obj-typ)
                      (sub-statement->insert-inputs stmt-id stmt-obj))]
     (concat [stmt-input]
             agnt-inputs
+            sagnt-inputs
             act-inputs
+            sact-inputs
             stmt-agnt-inputs
+            sstmt-agnt-inputs
             stmt-act-inputs
-            sub-inputs)))
+            sstmt-act-inputs)))
 
 (s/fdef statements->insert-inputs
   :args (s/cat :statements
-               (s/coll-of (s/and ::xs/statement (s/conformer prepare-statement))
+               (s/coll-of prepared-statement-spec
                           :min-count 1
                           :gen-max 5))
   :ret (s/+ hs/inputs-seq-spec))
