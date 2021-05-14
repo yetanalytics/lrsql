@@ -2,37 +2,12 @@
   "Functions to create HugSql inputs."
   (:require [clojure.spec.alpha :as s]
             [clojure.data.json :as json]
-            [clj-uuid :as uuid]
-            [java-time :as jt]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.hugsql.spec :as hs]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Utils
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            [lrsql.hugsql.spec :as hs]
+            [lrsql.hugsql.util :as u]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
-
-(defn- current-time
-  "Return the current time as a java.util.Instant object."
-  []
-  (jt/instant))
-
-(defn- generate-uuid
-  "Return a new sequential UUID."
-  []
-  (uuid/squuid))
-
-(defn- parse-uuid
-  "Parse a string as an UUID."
-  [uuid-str]
-  (java.util.UUID/fromString uuid-str))
-
-(defn- parse-time
-  "Parse a string as a java.util.Instant timestamp."
-  [time-str]
-  (jt/instant time-str))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Agent/Activity/Attachment Insertion 
@@ -58,10 +33,11 @@
   :ret (s/nilable hs/agent-insert-spec))
 
 (defn agent->insert-input
+  "Given a Statement Agent, return the HugSql params map for `insert-agent`."
   [agent]
   (when-some [ifi-m (get-ifi agent)]
     {:table             :agent
-     :primary-key       (generate-uuid)
+     :primary-key       (u/generate-uuid)
      :?name             (get agent "name")
      :agent-ifi         (json/write-str ifi-m)
      :identified-group? (= "Group" (get agent "objectType"))}))
@@ -71,9 +47,10 @@
   :ret hs/activity-insert-spec)
 
 (defn activity->insert-input
+  "Given a Statement Agent, return the HugSql params map for `insert-activity`."
   [activity]
   {:table          :activity
-   :primary-key    (generate-uuid)
+   :primary-key    (u/generate-uuid)
    :activity-iri   (get activity "id")
    :payload        (json/write-str activity)})
 
@@ -82,11 +59,12 @@
   :ret hs/attachment-insert-spec)
 
 (defn attachment->insert-input
+  "Given Attachment data, return the HugSql params map for `insert-attachment`."
   [{content      :content
     content-type :contentType
     sha2         :sha2}]
   {:table          :attachment
-   :primary-key    (generate-uuid)
+   :primary-key    (u/generate-uuid)
    :attachment-sha sha2
    :content-type   content-type
    :file-url       "" ; TODO
@@ -99,9 +77,12 @@
   :ret hs/statement-to-agent-insert-spec)
 
 (defn agent-input->link-input
+  "Given `statement-id`, `agent-usage` and the HugSql params map for
+   `insert-agent`, return the HugSql params map for
+   `insert-statement-to-agent`."
   [statement-id agent-usage {agent-ifi :agent-ifi}]
   {:table        :statement-to-agent
-   :primary-key  (generate-uuid)
+   :primary-key  (u/generate-uuid)
    :statement-id statement-id
    :usage        agent-usage
    :agent-ifi    agent-ifi})
@@ -113,9 +94,12 @@
   :ret hs/statement-to-activity-insert-spec)
 
 (defn- activity-input->link-input
+  "Given `statement-id`, `activity-usage` and the HugSql params map for
+   `insert-activity`, return the HugSql params map for
+   `insert-statement-to-activity`."
   [statement-id activity-usage {activity-id :activity-iri}]
   {:table        :statement-to-activity
-   :primary-key  (generate-uuid)
+   :primary-key  (u/generate-uuid)
    :statement-id statement-id
    :usage        activity-usage
    :activity-iri activity-id})
@@ -126,9 +110,11 @@
   :ret hs/statement-to-attachment-insert-spec)
 
 (defn attachment-input->link-input
+  "Given `statement-id` and the HugSql params map for `insert-attachment`,
+   return the HugSql params map for `insert-statement-to-attachment`."
   [statement-id {attachment-id :attachment-sha}]
   {:table          :statement-to-attachment
-   :primary-key    (generate-uuid)
+   :primary-key    (u/generate-uuid)
    :statement-id   statement-id
    :attachment-sha attachment-id})
 
@@ -251,6 +237,8 @@
   :ret hs/inputs-seq-spec)
 
 (defn statement->insert-inputs
+  "Given `statement`, return a seq of HugSql insertion function params maps,
+   starting with the params for `insert-statement`."
   [statement]
   (let [;; Statement Properties
         {stmt-act  "actor"
@@ -266,18 +254,18 @@
          stmt-team     "team"}
         stmt-ctx
         ;; Statement Revised Properties
-        stmt-pk     (generate-uuid)
+        stmt-pk     (u/generate-uuid)
         stmt-id     (if-some [id (get statement "id")]
-                      (parse-uuid id)
+                      (u/parse-uuid id)
                       stmt-pk)
         stmt-time   (if-some [ts (get statement "timestamp")]
-                      (parse-time ts)
-                      (current-time))
-        stmt-stored (current-time)
+                      (u/parse-time ts)
+                      (u/current-time))
+        stmt-stored (u/current-time)
         stmt-reg    (when-some [reg (get stmt-ctx "registration")]
-                      (parse-uuid reg))
+                      (u/parse-uuid reg))
         stmt-ref-id (when (= "StatementRef" stmt-obj-typ)
-                      (parse-uuid (get stmt-obj "id")))
+                      (u/parse-uuid (get stmt-obj "id")))
         stmt-vrb-id (get stmt-vrb "id")
         ;; Statement HugSql input
         stmt-input  {:table             :statement
@@ -329,6 +317,7 @@
   :ret (s/+ hs/inputs-seq-spec))
 
 (defn statements->insert-inputs
+  "Given a `statements` coll, return a seq of HugSql insertion fn param maps."
   [statements]
   (mapcat statement->insert-inputs statements))
 
@@ -348,6 +337,8 @@
              :activity-profile hs/activity-profile-document-insert-spec))
 
 (defn document->insert-input
+  "Given `id-params` and `document`, return the appropriate HugSql insertion
+   function params map."
   [{state-id     :stateId
     profile-id   :profileId
     activity-id  :activityId
@@ -359,30 +350,30 @@
     ;; State Document
     state-id
     {:table         :state-document
-     :primary-key   (generate-uuid)
+     :primary-key   (u/generate-uuid)
      :state-id      state-id
      :activity-id   activity-id
      :agent-id      (json/write-str (get-ifi (json/read-str agent)))
-     :?registration (when registration (parse-uuid registration))
-     :last-modified (current-time)
+     :?registration (when registration (u/parse-uuid registration))
+     :last-modified (u/current-time)
      :document      document}
 
     ;; Agent Profile Document
     (and profile-id agent)
     {:table         :agent-profile-document
-     :primary-key   (generate-uuid)
+     :primary-key   (u/generate-uuid)
      :profile-id    profile-id
      :agent-id      (json/write-str (get-ifi (json/read-str agent)))
-     :last-modified (current-time)
+     :last-modified (u/current-time)
      :document      document}
 
     ;; Activity Profile Document
     (and profile-id activity-id)
     {:table         :activity-profile-document
-     :primary-key   (generate-uuid)
+     :primary-key   (u/generate-uuid)
      :profile-id    profile-id
      :activity-id   activity-id
-     :last-modified (current-time)
+     :last-modified (u/current-time)
      :document      document}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -396,7 +387,8 @@
   :args (s/cat :params :xapi.statements.GET.request/params)
   :ret hs/statement-query-spec)
 
-(defn params->query-input
+(defn params->query-input ; TODO: Rename to statement-query-input
+  "Given params, return the HugSql params map for `query-statement`."
   [{stmt-id     :statementId
     vstmt-id    :voidedStatementId
     verb-iri    :verb
@@ -413,11 +405,11 @@
     ;; page                :page
     ;; from                :from
     }]
-  (let [stmt-id     (when stmt-id (parse-uuid stmt-id))
-        vstmt-id    (when vstmt-id (parse-uuid vstmt-id))
-        reg         (when reg (parse-uuid reg))
-        since       (when since (parse-time since))
-        until       (when until (parse-time until))
+  (let [stmt-id     (when stmt-id (u/parse-uuid stmt-id))
+        vstmt-id    (when vstmt-id (u/parse-uuid vstmt-id))
+        reg         (when reg (u/parse-uuid reg))
+        since       (when since (u/parse-time since))
+        until       (when until (u/parse-time until))
         rel-agents? (boolean rel-agents?)
         rel-acts?   (boolean rel-acts?)
         agent-ifi   (when agent

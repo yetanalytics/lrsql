@@ -1,13 +1,16 @@
 (ns lrsql.hugsql.command
   "DB commands that utilize HugSql functions."
   (:require [clojure.data.json :as json]
-            [lrsql.hugsql.functions :as f]))
+            [lrsql.hugsql.functions :as f]
+            [lrsql.hugsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Commands
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn insert-input!
+  "Insert a new input into the DB. If the input is a Statement, return the
+   Statement ID on success, nil for any other kind of input."
   [conn {:keys [table] :as input}]
   (case table
     :statement
@@ -16,7 +19,8 @@
     ;; an exception.
     ;; TODO: Void statements if appropriate.
     (do (f/insert-statement conn input)
-        (:statement-id input)) ; Success! (Too bad H2 doesn't have INSERT...RETURNING)
+        ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
+        (u/parse-uuid (:statement-id input)))
     :agent
     (let [input' (select-keys input [:agent-ifi])
           exists (f/query-agent-exists conn input')]
@@ -43,8 +47,10 @@
     nil))
 
 (defn insert-inputs!
+  "Insert a sequence of inputs into th DB. Return a seq of Statement IDs
+   for successfully inserted Statements."
   [conn inputs]
-  (doall (map (partial insert-input! conn) inputs)))
+  (->> inputs (map (partial insert-input! conn)) doall (filter some?)))
 
 (defn- parse-json
   [jsn]
@@ -55,11 +61,13 @@
     (json/read-str (String. jsn))))
 
 (defn query-statement-input
+  "Query Statements from the DB. Return a singleton Statement or nil if
+   a Statement ID is included in params, a StatementResult object otherwise."
   [conn input]
   (let [res (f/query-statement conn input)]
     (if (or (:statementId input) (:voidedStatementId input))
       ;; Statement ID is present => singleton Statement
-      (-> res first :payload parse-json)
+      (some-> res first :payload parse-json)
       ;; StatementResult
       {:statements (vec (map #(-> % :payload parse-json) res))
        :more       ""}))) ; TODO: Return IRI if more statements can be queried

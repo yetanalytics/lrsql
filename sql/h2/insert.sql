@@ -35,7 +35,7 @@ payload = :payload FORMAT JSON
 -- :name insert-attachment,
 -- :command :insert,
 -- :result :affected
--- :doc Insert a new attachment
+-- :doc Insert a new attachment.
 INSERT INTO attachment SET 
 id = :primary-key,
 attachment_sha = :attachment-sha,
