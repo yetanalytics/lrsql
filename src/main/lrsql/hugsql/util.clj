@@ -2,10 +2,9 @@
   (:require [java-time :as jt]
             [clj-uuid]))
 
-(defn current-time
-  "Return the current time as a java.util.Instant object."
-  []
-  (jt/instant))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; UUIDs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn generate-uuid
   "Return a new sequential UUID."
@@ -22,12 +21,21 @@
   [uuid]
   (clj-uuid/to-string uuid))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Timestamps
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn current-time
+  "Return the current time as a java.util.Instant timestamp."
+  []
+  (jt/instant))
+
 (defn str->time
   "Parse a string into a java.util.Instant timestamp."
   [ts-str]
   (jt/instant ts-str))
 
 (defn time->str
-  "Convert a java.util.Instant timestamp to a string."
+  "Convert a java.util.Instant timestamp into a string."
   [ts]
   (jt/format ts))
