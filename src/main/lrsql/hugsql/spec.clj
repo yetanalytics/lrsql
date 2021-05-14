@@ -19,13 +19,17 @@
 ;; Timestamp
 (s/def ::timestamp inst?)
 (s/def ::stored inst?)
+(s/def ::since inst?)
+(s/def ::until inst?)
 
 ;; Registration
+(s/def ::registration uuid?)
 (s/def ::?registration (s/nilable uuid?))
 
 ;; Verb
 (s/def ::verb-iri :verb/id)
 (s/def ::voided? boolean?)
+(s/def ::voiding? boolean?)
 
 ;; Statement
 (s/def ::payload any? #_::xs/statement) ; TODO
@@ -85,6 +89,11 @@
 (s/def ::last-modified inst?)
 (s/def ::document any?) ; TODO: `binary?` predicate
 
+;; Query Options
+(s/def ::related-agents? boolean?)
+(s/def ::related-activities? boolean?)
+(s/def ::limit nat-int?)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -109,6 +118,7 @@
                    ::?registration
                    ::verb-iri
                    ::voided?
+                   ::voiding?
                    ::payload]))
 
 ;; /* Need explicit properties for querying Agents Resource */
@@ -260,76 +270,18 @@
 ;; Statement Queries
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: Change strings based on SQL implementation (currently H2 only)
-
-(s/def ::statement-id-snip
-  (s/cat :query #(= % "statement_id = ?")
-         :statement-id ::statement-id))
-
-(s/def ::is-voided-snip
-  (s/cat :query #(= % "is_voided = ?")
-         :voided? ::voided?))
-
-(s/def ::verb-iri-snip
-  (s/cat :query #(= % "verb_iri = ?")
-         :verb-iri ::verb-iri))
-
-(s/def ::registration-snip
-  (s/cat :query #(= % "registration = ?")
-         :registration ::?registration))
-
-(s/def ::timestamp-since-snip
-  (s/cat :query #(= % "stored > ?")
-         :since ::stored))
-
-(s/def ::timestamp-until-snip
-  (s/cat :query #(= % "stored <= ?")
-         :until ::stored))
-
-(def ^:private stmt-agent-join-command
-  (str "INNER JOIN statement_to_agent\n"
-       "  ON statement_id = statement_to_agent.statement_id\n"
-       "  AND statement_to_agent.agent_ifi = ?"))
-
-(s/def ::statement-to-agent-join-snip
-  (s/cat :command
-         (s/alt :actor
-                #(= % (str stmt-agent-join-command
-                           "\n  AND statement_to_agent.usage = 'Actor'"))
-                :broad
-                #(= % stmt-agent-join-command))
-         :agent-ifi
-         :lrsql.hugsql.spec.agent/agent-ifi))
-
-(def ^:private stmt-activity-join-command
-  (str "INNER JOIN statement_to_activity\n"
-       "  ON statement_id = statement_to_activity.statement_id\n"
-       "  AND statement_to_activity.activity_iri = ?"))
-
-(s/def ::statement-to-activity-join-snip
-  (s/cat :command
-         (s/alt :object
-                #(= % (str stmt-activity-join-command
-                           "\n  AND statement_to_activity.usage = 'Object'"))
-                :broad
-                #(= % stmt-activity-join-command))
-         :activity-iri
-         :lrsql.hugsql.spec.activity/activity-iri))
-
-(s/def ::limit-snip
-  (s/cat :command #(= % "LIMIT ?")
-         :limit nat-int?))
-
 (def statement-query-spec
-  (s/keys :opt-un [::statement-id-snip
-                   ::is-voided-snip
-                   ::verb-iri-snip
-                   ::registration-snip
-                   ::timestamp-since-snip
-                   ::timestamp-until-snip
-                   ::statement-to-agent-join-snip
-                   ::statement-to-activity-join-snip
-                   ::limit-snip]))
+  (s/keys :opt-un [::statement-id
+                   ::voided?
+                   ::verb-iri
+                   ::registration
+                   ::since
+                   ::until
+                   ::limit
+                   ::related-agents?
+                   ::related-activities?
+                   :lrsql.hugsql.spec.agent/agent-ifi
+                   :lrsql.hugsql.spec.activity/activity-iri]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Queries

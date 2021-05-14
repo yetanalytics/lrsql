@@ -12,6 +12,8 @@
 ;; Utils
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
+
 (defn- current-time
   "Return the current time as a java.util.Instant object."
   []
@@ -222,25 +224,25 @@
         ;; Agent Inputs
         [agnt-inputs stmt-agnt-inputs]
         (statement->agent-inputs stmt-id
-                                sub-stmt-act
-                                sub-stmt-obj
-                                nil ; No Authority for SubStatements
-                                sub-stmt-inst
-                                sub-stmt-team
-                                {:act-enum  "SubActor"
-                                 :obj-enum  "SubObject"
-                                 :inst-enum "SubInstructor"
-                                 :team-enum "SubTeam"})
+                                 sub-stmt-act
+                                 sub-stmt-obj
+                                 nil ; No Authority for SubStatements
+                                 sub-stmt-inst
+                                 sub-stmt-team
+                                 {:act-enum  "SubActor"
+                                  :obj-enum  "SubObject"
+                                  :inst-enum "SubInstructor"
+                                  :team-enum "SubTeam"})
         ;; Activity Inputs
         [act-inputs stmt-act-inputs]
         (statement->activity-inputs stmt-id
-                                   sub-stmt-obj
-                                   sub-stmt-ctx-acts
-                                   {:obj-enum "SubObject"
-                                    :cat-enum "SubCategory"
-                                    :grp-enum "SubGrouping"
-                                    :prt-enum "SubParent"
-                                    :oth-enum "SubOther"})]
+                                    sub-stmt-obj
+                                    sub-stmt-ctx-acts
+                                    {:obj-enum "SubObject"
+                                     :cat-enum "SubCategory"
+                                     :grp-enum "SubGrouping"
+                                     :prt-enum "SubParent"
+                                     :oth-enum "SubOther"})]
     (concat agnt-inputs act-inputs stmt-agnt-inputs stmt-act-inputs)))
 
 (s/fdef statement->insert-inputs
@@ -286,30 +288,31 @@
                      :?registration     stmt-reg
                      :verb-iri          stmt-vrb-id
                      :voided?           false
+                     :voiding?          (= voiding-verb stmt-vrb-id)
                      :payload           (json/write-str statement)}
         ;; Agent HugSql Inputs
         [agnt-inputs stmt-agnt-inputs]
         (statement->agent-inputs stmt-id
-                                stmt-act
-                                stmt-obj
-                                stmt-auth
-                                stmt-inst
-                                stmt-team
-                                {:act-enum  "Actor"
-                                 :obj-enum  "Object"
-                                 :auth-enum "Authority"
-                                 :inst-enum "Instructor"
-                                 :team-enum "Team"})
+                                 stmt-act
+                                 stmt-obj
+                                 stmt-auth
+                                 stmt-inst
+                                 stmt-team
+                                 {:act-enum  "Actor"
+                                  :obj-enum  "Object"
+                                  :auth-enum "Authority"
+                                  :inst-enum "Instructor"
+                                  :team-enum "Team"})
         ;; Activity HugSql Inputs
         [act-inputs stmt-act-inputs]
         (statement->activity-inputs stmt-id
-                                   stmt-obj
-                                   stmt-ctx-acts
-                                   {:obj-enum "Object"
-                                    :cat-enum "Category"
-                                    :grp-enum "Grouping"
-                                    :prt-enum "Parent"
-                                    :oth-enum "Other"})
+                                    stmt-obj
+                                    stmt-ctx-acts
+                                    {:obj-enum "Object"
+                                     :cat-enum "Category"
+                                     :grp-enum "Grouping"
+                                     :prt-enum "Parent"
+                                     :oth-enum "Other"})
         ;; SubStatement HugSql Inputs
         sub-inputs (when (= "SubStatement" stmt-obj-typ)
                      (sub-statement->insert-inputs stmt-id stmt-obj))]
@@ -393,39 +396,31 @@
   :ret hs/statement-query-spec)
 
 (defn params->query-input
-  [{statement-id        :statementId
-    voided-statement-id :voidedStatementId
-    verb                :verb
-    agent               :agent
-    activity            :activity
-    registration        :registration
-    related-activities? :related_activities
-    related-agents?     :related_agents
-    since               :since
-    until               :until
-    limit               :limit
+  [{stmt-id    :statementId
+    vstmt-id   :voidedStatementId
+    verb-iri   :verb
+    agent      :agent
+    act-iri    :activity
+    reg        :registration
+    rel-acts?  :related_activities
+    rel-agnts? :related_agents
+    since      :since
+    until      :until
+    limit      :limit
     ;; attachments?        :attachments
     ;; ascending?          :ascending
     ;; page                :page
     ;; from                :from
     }]
-  (let [stmt-id   (when statement-id (parse-uuid statement-id))
-        vstmt-id  (when voided-statement-id (parse-uuid voided-statement-id))
-        reg       (when registration (parse-uuid registration))
-        agent-ifi (when agent (json/write-str (get-ifi (json/read-str agent))))
-        since     (when since (parse-time since))
-        until     (when until (parse-time until))
-        limit     (when limit (Long/parseLong limit))]
-    (cond-> {:verb-iri            verb
-             :registration        reg
-             :since               since
-             :until               until
-             :agent-ifi           agent-ifi
-             :activity-iri        activity
-             :limit               limit
-             :related-agents?     related-agents?
-             :related-activities? related-activities?}
-      stmt-id
-      (merge {:statement-id stmt-id :voided? false})
-      vstmt-id
-      (merge {:statement-id vstmt-id :voided? true}))))
+  (cond-> {}
+    stmt-id  (merge {:statement-id (parse-uuid stmt-id) :voided? false})
+    vstmt-id (merge {:statement-id (parse-uuid vstmt-id) :voided? true})
+    verb-iri (assoc :verb-iri verb-iri)
+    reg      (assoc :registration (parse-uuid reg))
+    since    (assoc :since (parse-time since))
+    until    (assoc :until (parse-time until))
+    agent    (merge {:agent-ifi (-> agent json/read-str get-ifi json/write-str)
+                     :related-agents? (boolean rel-agnts?)})
+    act-iri  (merge {:activity-iri act-iri
+                     :related-activities? (boolean rel-acts?)})
+    limit    (assoc :limit (Long/parseLong limit))))

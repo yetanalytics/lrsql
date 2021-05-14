@@ -10,9 +10,9 @@
 (defn- check-validate
   "Given the function name `fname`, returns `nil` if its generative
    tests passes, the erroneous result otherwise. If `num-tests` is
-   not provided, runs 10 tests by default."
+   not provided, runs 50 tests by default."
   ([fname]
-   (check-validate fname 10))
+   (check-validate fname 50))
   ([fname num-tests]
    (let [opts {:clojure.spec.test.check/opts
                {:num-tests num-tests
@@ -30,7 +30,7 @@
     (is (nil? (check-validate `input/activity-input->link-input)))
     (is (nil? (check-validate `input/attachment-input->link-input))))
   (testing "statement insertion inputs"
-    (is (nil? (check-validate `input/statement->insert-inputs)))
+    (is (nil? (check-validate `input/statement->insert-inputs 10)))
     (is (nil? (check-validate `input/statements->insert-inputs 5))))
   (testing "document insertion inputs"
     (is (nil? (check-validate `input/document->insert-input)))))
