@@ -1,5 +1,5 @@
 (ns lrsql.user
-  "Namespace to run the DB during development."
+  "Sandbox to run the DB during development."
   (:require [com.stuartsierra.component :as component]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as p]

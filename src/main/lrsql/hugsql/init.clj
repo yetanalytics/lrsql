@@ -1,6 +1,7 @@
 (ns lrsql.hugsql.init
   "Initialize HugSql functions and state."
-  (:require [hugsql.core :as hugsql]
+  (:require [clojure.string :as cstr]
+            [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.hugsql.functions :as f]))
 
@@ -15,10 +16,11 @@
   [db-type]
   ;; Hack the namespace binding or else the hugsql fn namespaces
   ;; will be whatever ns `init-hugsql-fns!` was called from.
-  (binding [*ns* (create-ns `lrsql.hugsql.functions)]
-    (hugsql/def-db-fns (str db-type "/create.sql"))
-    (hugsql/def-db-fns (str db-type "/insert.sql"))
-    (hugsql/def-db-fns (str db-type "/query.sql"))))
+  (let [db-type' (cstr/replace db-type #":.*" "")] ; h2:mem -> h2
+    (binding [*ns* (create-ns `lrsql.hugsql.functions)]
+      (hugsql/def-db-fns (str db-type' "/create.sql"))
+      (hugsql/def-db-fns (str db-type' "/insert.sql"))
+      (hugsql/def-db-fns (str db-type' "/query.sql")))))
 
 (defn create-tables!
   "Execute SQL commands to create tables if they do not exist."

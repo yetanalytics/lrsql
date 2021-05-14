@@ -1,7 +1,5 @@
 (ns lrsql.system
   (:require [config.core :refer [env]]
-            [clojure.string :as cstr]
-            [clj-uuid]
             [next.jdbc.connection :as connection]
             [com.stuartsierra.component :as component]
             [lrsql.lrs :as lrs])
@@ -16,7 +14,7 @@
          db-name   :db-name
          host      :db-host
          port      :db-port
-         schema    :db-schema
+        ;;  schema    :db-schema ; TODO
          jdbc-url  :db-jdbc-url
          user      :db-user
          password  :db-password
@@ -50,27 +48,34 @@
       max-stmt
       (assoc :maxStatements max-stmt))))
 
-(defn- get-db-type
-  "Get the db-type. Assumes that JDBC URLs start with protocols of
-   the format `jdbc:<db-type>`."
-  []
-  (if-let [db-type (:db-type env)]
-    db-type
-    (let [jdbc-url  (:db-jdbc-url env)
-          split-url (cstr/split jdbc-url #":")]
-      (assert (= "jdbc" (first split-url)))
-      (second split-url))))
-
 (defn- pool-component
   "Return a connection pool component."
   []
   (connection/component ComboPooledDataSource (db-spec)))
 
+(def valid-db-types #{"h2" "h2:mem"})
+
+(defn- assert-db-type
+  [db-type]
+  (cond
+    (not (some? db-type))
+    (throw (ex-data "db-type is nil or not set!"
+                    {:kind    ::missing-db-type
+                     :db-type nil}))
+    (not (valid-db-types db-type))
+    (throw (ex-data "db-type is invalid!"
+                    {:kind    ::invalid-db-type
+                     :db-type db-type}))
+    :else
+    nil))
+
 (defn system
   "A thunk that returns a lrsql system when called."
   []
-  (component/system-map
-   :conn-pool (pool-component)
-   :lrs (component/using
-         (lrs/map->LearningRecordStore {:db-type (get-db-type)})
-         [:conn-pool])))
+  (let [{:keys [db-type]} env]
+    (assert-db-type db-type)
+    (component/system-map
+     :conn-pool (pool-component)
+     :lrs (component/using
+           (lrs/map->LearningRecordStore {:db-type db-type})
+           [:conn-pool]))))
