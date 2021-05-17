@@ -88,6 +88,7 @@
 ;; Attachment
 (s/def :lrsql.hugsql.spec.attachment/attachment-sha :attachment/sha2)
 (s/def :lrsql.hugsql.spec.attachment/content-type string?)
+(s/def :lrsql.hugsql.spec.attachment/content-length pos-int?)
 (s/def :lrsql.hugsql.spec.attachment/file-url ::xs/irl)
 (s/def :lrsql.hugsql.spec.attachment/payload bytes?) ; TODO
 
@@ -167,6 +168,7 @@
   (s/keys :req-un [::primary-key
                    :lrsql.hugsql.spec.attachment/attachment-sha
                    :lrsql.hugsql.spec.attachment/content-type
+                   :lrsql.hugsql.spec.attachment/content-length
                    ; :lrsql.hugsql.spec.attachment/file-url TODO
                    :lrsql.hugsql.spec.attachment/payload]))
 

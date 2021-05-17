@@ -72,11 +72,13 @@
   "Given Attachment data, return the HugSql params map for `insert-attachment`."
   [{content      :content
     content-type :contentType
+    length       :length
     sha2         :sha2}]
   {:table          :attachment
    :primary-key    (u/generate-uuid)
    :attachment-sha sha2
    :content-type   content-type
+   :content-length length
    :file-url       "" ; TODO
    :payload        content})
 

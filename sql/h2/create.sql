@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS attachment (
   id             UUID NOT NULL PRIMARY KEY,
   attachment_sha VARCHAR(255) UNIQUE NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
+  content_length INTEGER NOT NULL,
   file_url       VARCHAR(255) NOT NULL, -- Either external or points to LRS location
   payload        BINARY -- Switch to BLOB?
 )

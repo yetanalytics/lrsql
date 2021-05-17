@@ -73,11 +73,12 @@
 (defn- conform-attachment-res
   [{att-sha      :attachment_sha
     content-type :content_type
+    length       :content_length
     content      :payload}]
-  {:sha2         att-sha
-   :length       1 ; TODO
-   :content-type content-type
-   :content      content})
+  {:sha2        att-sha
+   :length      length
+   :contentType content-type
+   :content     content})
 
 (defn query-statement-input
   "Query Statements from the DB. Return a singleton Statement or nil if
@@ -87,11 +88,12 @@
                        (f/query-statement tx)
                        (map #(-> % :payload parse-json)))
         att-res   (if (:attachments? input)
-                    (doall (map #(->> (get % "id")
-                                      (assoc {} :statement-id)
-                                      (f/query-attachments tx)
-                                      #_conform-attachment-res)
-                                stmt-res))
+                    (->> (doall (map #(->> (get % "id")
+                                           (assoc {} :statement-id)
+                                           (f/query-attachments tx))
+                                     stmt-res))
+                         (apply concat)
+                         (map conform-attachment-res))
                     [])]
     (if (:statement-id input)
       ;; Singleton statement

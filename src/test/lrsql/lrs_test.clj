@@ -173,12 +173,14 @@
                             (partial map remove-props))))))
     (testing "querying with attachments"
       (is (= {:statement-result {:statements [stmt-4] :more ""}
-              :attachments      [stmt-4-attach]}
+              :attachments      [(update stmt-4-attach :content #(String. %))]}
              (-> (lrsp/-get-statements lrs {} {:activity act-4 :attachments true} {})
                  (update-in [:statement-result :statements]
                             (partial map remove-props))
-                 #_(update-in [:attachments]
-                            #(assoc % :length 27))))))
+                 (update-in [:attachments]
+                            vec)
+                 (update-in [:attachments 0 :content]
+                            #(String. %))))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))
