@@ -46,6 +46,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; If a Statement lacks a version, the version MUST be set to 1.0.0
+;; TODO: Change for version 2.0.0
 (def xapi-version "1.0.0")
 
 ;; TODO: more specific authority
