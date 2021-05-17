@@ -118,20 +118,22 @@
         agt-1 (-> stmt-1 (get "actor") (json/write-str))
         vrb-1 (get-in stmt-1 ["verb" "id"])
         act-1 (get-in stmt-1 ["object" "id"])]
-    (testing "tatement insertions"
-      (is (= [id-1] (lrsp/-store-statements lrs {} [stmt-1] [])))
-      (is (= [id-2 id-3] (lrsp/-store-statements lrs {} [stmt-2 stmt-3] []))))
+    (testing "statement insertions"
+      (is (= [id-1]
+             (:statement-ids (lrsp/-store-statements lrs {} [stmt-1] []))))
+      (is (= [id-2 id-3]
+             (:statement-ids (lrsp/-store-statements lrs {} [stmt-2 stmt-3] [])))))
     (testing "statement ID queries"
       ;; Statement ID queries
       (is (= stmt-1
-             (remove-props
-              (lrsp/-get-statements lrs {} {:voidedStatementId id-1} {}))))
+             (-> (lrsp/-get-statements lrs {} {:voidedStatementId id-1} {})
+                 remove-props)))
       (is (= stmt-2
-             (remove-props
-              (lrsp/-get-statements lrs {} {:statementId id-2} {}))))
+             (-> (lrsp/-get-statements lrs {} {:statementId id-2} {})
+                 remove-props)))
       (is (= stmt-3
-             (remove-props
-              (lrsp/-get-statements lrs {} {:statementId id-3} {})))))
+             (-> (lrsp/-get-statements lrs {} {:statementId id-3} {})
+                 remove-props))))
     (testing "statement property queries"
       (is (= {:statements [] :more ""}
              (lrsp/-get-statements lrs {} {:since ts} {})))
@@ -154,7 +156,9 @@
              (remove-props-res
               (lrsp/-get-statements lrs {} {:activity act-1 :related_activities true} {})))))
     (testing "attachments"
-      (is (= [id-4] (lrsp/-store-statements lrs {} [stmt-4] [stmt-4-attach]))))
+      (is (= [id-4]
+             (:statement-ids
+              (lrsp/-store-statements lrs {} [stmt-4] [stmt-4-attach])))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))

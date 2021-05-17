@@ -33,7 +33,8 @@
          att-inputs  (when (not-empty attachments)
                        (input/attachments->insert-inputs stmts attachments))]
      (jdbc/with-transaction [tx (conn)]
-       (command/insert-inputs! tx (concat stmt-inputs att-inputs)))))
+       (let [res (command/insert-inputs! tx (concat stmt-inputs att-inputs))]
+         {:statement-ids res}))))
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)

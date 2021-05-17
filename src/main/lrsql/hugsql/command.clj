@@ -70,10 +70,10 @@
   "Query Statements from the DB. Return a singleton Statement or nil if
    a Statement ID is included in params, a StatementResult object otherwise."
   [tx input]
-  (let [res (f/query-statement tx input)]
+  (let [stmt-res (f/query-statement tx input)]
     (if (:statement-id input)
       ;; Statement ID is present => singleton Statement
-      (some-> res first :payload parse-json)
+      {:statements (some-> stmt-res first :payload parse-json)}
       ;; StatementResult
-      {:statements (vec (map #(-> % :payload parse-json) res))
+      {:statements (vec (map #(-> % :payload parse-json) stmt-res))
        :more       ""}))) ; TODO: Return IRI if more statements can be queried
