@@ -43,7 +43,7 @@ activity_iri = :activity-iri,
 payload = :payload FORMAT JSON
 
 -- :name insert-attachment!
--- :command :insert,
+-- :command :insert
 -- :result :affected
 -- :doc Insert a new attachment.
 INSERT INTO attachment SET 

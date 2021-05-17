@@ -380,6 +380,8 @@
          (s/coll-of ::ss/attachment :gen-max 2)))
 
 (defn- update-stmt-attachments
+  "Update the attachments property of each statement so that any sha2 values
+   correspond to one in `attachments`."
   [[statements attachments]]
   (let [statements'
         (map (fn [stmt]
@@ -411,7 +413,6 @@
   "Given colls `statements` and `attachments`, return a seq of HugSql insertion
    fn param maps."
   [statements attachments]
-  ;; `statement` should have 
   (let [sha-input-m   (reduce
                        (fn [m {sha2 :sha2 :as att}]
                          (assoc m sha2 (attachment->insert-input att)))
