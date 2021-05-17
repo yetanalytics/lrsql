@@ -44,6 +44,19 @@ SELECT payload FROM xapi_statement
 --~ (when (:ascending? params) "ORDER BY xapi_statement.stored")
 --~ (when (:limit params) "LIMIT :limit")
 
+/* Attachment Query */
+
+-- :name query-attachments
+-- :command :query
+-- :result :many
+-- :doc Query attachments using query parameters
+SELECT attachment.attachment_sha, content_type, content_length, payload
+FROM attachment
+INNER JOIN statement_to_attachment
+ON attachment.attachment_sha = statement_to_attachment.attachment_sha
+AND statement_to_attachment.statement_id = :statement-id
+-- WHERE :attachments? = TRUE
+
 /* Existence Checks */
 
 -- :name query-agent-exists

@@ -43,14 +43,14 @@ activity_iri = :activity-iri,
 payload = :payload FORMAT JSON
 
 -- :name insert-attachment!
--- :command :insert,
+-- :command :insert
 -- :result :affected
 -- :doc Insert a new attachment.
 INSERT INTO attachment SET 
 id = :primary-key,
 attachment_sha = :attachment-sha,
 content_type = :content-type,
-file_url = :file-url,
+content_length = :content-length,
 payload = :payload
 
 -- :name insert-statement-to-agent!

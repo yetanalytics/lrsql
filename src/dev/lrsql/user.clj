@@ -43,6 +43,9 @@
       (assoc-in ["context" "contextActivities" "other"] [(get stmt-1 "object")])))
 
 (comment
+  (input/statement->insert-inputs
+   (input/prepare-statement (dissoc stmt-1 "id")))
+  
   (def sys (system/system))
 
   (def sys' (component/start sys))

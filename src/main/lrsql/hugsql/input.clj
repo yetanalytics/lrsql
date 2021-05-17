@@ -1,21 +1,11 @@
 (ns lrsql.hugsql.input
   "Functions to create HugSql inputs."
   (:require [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sgen]
             [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec :as hs]
             [lrsql.hugsql.util :as u]))
-
-;; Copied from lrs - update?
-(def xapi-version "1.0.3")
-
-;; TODO: more specific authority
-(def lrsql-authority {"name" "LRSQL"
-                      "objectType" "Agent"
-                      "account" {"homepage" "http://localhost:8080"
-                                 "name"     "LRSQL"}})
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -72,11 +62,13 @@
   "Given Attachment data, return the HugSql params map for `insert-attachment`."
   [{content      :content
     content-type :contentType
+    length       :length
     sha2         :sha2}]
   {:table          :attachment
    :primary-key    (u/generate-uuid)
    :attachment-sha sha2
    :content-type   content-type
+   :content-length length
    :file-url       "" ; TODO
    :payload        content})
 
@@ -103,7 +95,7 @@
                :activity-input hs/activity-insert-spec)
   :ret hs/statement-to-activity-insert-spec)
 
-(defn- activity-input->link-input
+(defn activity-input->link-input
   "Given `statement-id`, `activity-usage` and the HugSql params map for
    `insert-activity`, return the HugSql params map for
    `insert-statement-to-activity`."
@@ -131,25 +123,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn prepare-statement
-  "Prepare `statement` for LRS storage by coll-ifying context activities
-   and setting missing id, timestamp, authority, version, and stored
-   properties."
-  [statement]
-  (let [{:strs [id timestamp authority version]} statement]
-    ;; first coll-ify context activities
-    (cond-> (ss/fix-statement-context-activities statement)
-      true ; stored is always set by the LRS
-      (assoc "stored" (u/time->str (u/current-time)))
-      (not id)
-      (assoc "id" (u/uuid->str (u/generate-uuid)))
-      (not timestamp)
-      (assoc "timestamp" (u/time->str (u/current-time)))
-      (not authority)
-      (assoc "authority" lrsql-authority)
-      (not version)
-      (assoc "version" xapi-version))))
 
 (defn- statement->agent-inputs
   [stmt-id stmt-act stmt-obj stmt-auth stmt-inst stmt-team sql-enums]
@@ -261,19 +234,9 @@
                                      :oth-enum "SubOther"})]
     [agnt-inputs act-inputs stmt-agnt-inputs stmt-act-inputs]))
 
-(def prepared-statement-spec
-  (s/with-gen
-    (s/and ::xs/statement
-           #(contains? % :statement/id)
-           #(contains? % :statement/timestamp)
-           #(contains? % :statement/stored)
-           #(contains? % :statement/authority))
-    #(sgen/fmap prepare-statement
-                (s/gen ::xs/statement))))
-
 (s/fdef statement->insert-inputs
-  :args (s/cat :statement prepared-statement-spec)
-  :ret hs/inputs-seq-spec)
+  :args (s/cat :statement hs/prepared-statement-spec)
+  :ret hs/statement-inputs-seq-spec)
 
 (defn statement->insert-inputs
   "Given `statement`, return a seq of HugSql insertion function params maps,
@@ -348,7 +311,7 @@
         ;; SubStatement HugSql Inputs
         [sagnt-inputs sact-inputs sstmt-agnt-inputs sstmt-act-inputs]
         (when (= "SubStatement" stmt-obj-typ)
-                     (sub-statement->insert-inputs stmt-id stmt-obj))]
+          (sub-statement->insert-inputs stmt-id stmt-obj))]
     (concat [stmt-input]
             agnt-inputs
             sagnt-inputs
@@ -360,16 +323,64 @@
             sstmt-act-inputs)))
 
 (s/fdef statements->insert-inputs
-  :args (s/cat :statements
-               (s/coll-of prepared-statement-spec
-                          :min-count 1
-                          :gen-max 5))
-  :ret (s/+ hs/inputs-seq-spec))
+  :args (s/cat :statements (s/coll-of hs/prepared-statement-spec
+                                      :min-count 1
+                                      :gen-max 5))
+  :ret (s/+ hs/statement-inputs-seq-spec))
 
 (defn statements->insert-inputs
   "Given a `statements` coll, return a seq of HugSql insertion fn param maps."
   [statements]
   (mapcat statement->insert-inputs statements))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Attachment Insertion 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef attachments->insert-inputs
+  :args hs/prepared-attachments-spec
+  :ret hs/attachment-inputs-seq-spec)
+
+(def invalid-attachment-emsg
+  "Statement attachment does not have a fileUrl value nor a matching SHA2!")
+
+(defn attachments->insert-inputs
+  "Given colls `statements` and `attachments`, return a seq of HugSql insertion
+   fn param maps."
+  [statements attachments]
+  (let [sha-input-m
+        (reduce
+         (fn [m {sha2 :sha2 :as att}]
+           (assoc m sha2 (attachment->insert-input att)))
+         {}
+         attachments)
+        get-att-input
+        (fn [{sha2 "sha2" :as _stmt-att}]
+          (sha-input-m sha2))
+        reduce-att
+        (fn [stmt-id acc att]
+          (let [att-input (get-att-input att)]
+            (cond
+              ;; Attachment sha was found in `attachments`
+              att-input
+              (conj acc (attachment-input->link-input (u/str->uuid stmt-id)
+                                                      att-input))
+              ;; Attachment contains fileUrl
+              ;; Skip url resource verification for simplicity
+              (contains? att "fileUrl")
+              acc
+              ;; Otherwise throw error
+              :else
+              (throw (ex-info invalid-attachment-emsg
+                              {:kind         ::invalid-attachment
+                               :statement-id stmt-id
+                               :attachmment  att})))))
+        reduce-stmt-atts
+        (fn [acc {stmt-id "id" stmt-atts "attachments"}]
+          (reduce (partial reduce-att stmt-id) acc stmt-atts))
+        link-inputs
+        (reduce reduce-stmt-atts '() statements)]
+    (concat (vals sha-input-m) link-inputs)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertion 
@@ -451,7 +462,7 @@
     until       :until
     limit       :limit
     asc?        :ascending
-    ;; attachments?        :attachments
+    atts?       :attachments
     ;; page                :page
     ;; from                :from
     }]
@@ -477,4 +488,5 @@
       agent-ifi (merge {:agent-ifi agent-ifi :related-agents? rel-agents?})
       act-iri   (merge {:activity-iri act-iri :related-activities? rel-acts?})
       limit     (assoc :limit limit)
-      asc?      (assoc :ascending asc?))))
+      asc?      (assoc :ascending asc?)
+      atts?     (assoc :attachments? atts?))))

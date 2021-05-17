@@ -1,4 +1,4 @@
-(ns test.lrsql.hugsql.input-test
+(ns lrsql.hugsql.input-test
   (:require [clojure.test :refer [deftest testing is]]
             [clojure.spec.test.alpha :as stest]
             [lrsql.hugsql.input :as input]))
@@ -29,6 +29,8 @@
   (testing "statement insertion inputs"
     (is (nil? (check-validate `input/statement->insert-inputs 10)))
     (is (nil? (check-validate `input/statements->insert-inputs 5))))
+  (testing "attachment insertion inputs"
+    (is (nil? (check-validate `input/attachments->insert-inputs 5))))
   (testing "document insertion inputs"
     (is (nil? (check-validate `input/document->insert-input)))))
 

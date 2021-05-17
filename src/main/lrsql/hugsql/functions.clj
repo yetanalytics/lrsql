@@ -31,6 +31,7 @@
 
 ;; Query
 (declare query-statement)
+(declare query-attachments)
 
 ;; Query existence
 (declare query-agent-exists)
