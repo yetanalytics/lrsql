@@ -1,7 +1,6 @@
 (ns lrsql.hugsql.input
   "Functions to create HugSql inputs."
   (:require [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sgen]
             [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
@@ -342,37 +341,45 @@
   :args hs/prepared-attachments-spec
   :ret hs/attachment-inputs-seq-spec)
 
-(def invalid-sha2-emsg
-  "Statement attachment sha2 values do not match any provided attachments!")
+(def invalid-attachment-emsg
+  "Statement attachment does not have a fileUrl value nor a matching SHA2!")
 
 (defn attachments->insert-inputs
   "Given colls `statements` and `attachments`, return a seq of HugSql insertion
    fn param maps."
   [statements attachments]
-  (let [sha-input-m   (reduce
-                       (fn [m {sha2 :sha2 :as att}]
-                         (assoc m sha2 (attachment->insert-input att)))
-                       {}
-                       attachments)
-        get-att-input (fn [{sha2 "sha2" :as _stmt-att}]
-                        (sha-input-m sha2))
-        link-inputs   (reduce
-                       (fn [acc {id "id" atts "attachments" :as stmt}]
-                         (if atts
-                         ;; TODO: If fileUrl is included, Statement should not
-                         ;; be rejected. Instead, fileUrl should be used to
-                         ;; retrieve Statement and add construct link table entry
-                           (if-some [att-in (some get-att-input atts)]
-                             (conj acc (attachment-input->link-input
-                                        (u/str->uuid id)
-                                        att-in))
-                             (throw (ex-info invalid-sha2-emsg
-                                             {:kind         ::invalid-sha2
-                                              :statement    stmt
-                                              :attachmments attachments})))
-                           acc))
-                       '()
-                       statements)]
+  (let [sha-input-m
+        (reduce
+         (fn [m {sha2 :sha2 :as att}]
+           (assoc m sha2 (attachment->insert-input att)))
+         {}
+         attachments)
+        get-att-input
+        (fn [{sha2 "sha2" :as _stmt-att}]
+          (sha-input-m sha2))
+        reduce-att
+        (fn [stmt-id acc att]
+          (let [att-input (get-att-input att)]
+            (cond
+              ;; Attachment sha was found in `attachments`
+              att-input
+              (conj acc (attachment-input->link-input (u/str->uuid stmt-id)
+                                                      att-input))
+              ;; Attachment contains fileUrl
+              ;; Skip url resource verification for simplicity
+              (contains? att "fileUrl")
+              acc
+              ;; Otherwise throw error
+              :else
+              (throw (ex-info invalid-attachment-emsg
+                              {:kind         ::invalid-attachment
+                               :statement-id stmt-id
+                               :attachmment  att})))))
+        reduce-stmt-atts
+        (fn [acc {stmt-id "id" stmt-atts "attachments"}]
+          (reduce (partial reduce-att stmt-id) acc stmt-atts))
+        link-inputs
+        (reduce reduce-stmt-atts '() statements)]
     (concat (vals sha-input-m) link-inputs)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
