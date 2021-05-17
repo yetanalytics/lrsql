@@ -92,7 +92,7 @@
 (s/def :lrsql.hugsql.spec.attachment/content-type string?)
 (s/def :lrsql.hugsql.spec.attachment/content-length int?)
 (s/def :lrsql.hugsql.spec.attachment/file-url ::xs/irl)
-(s/def :lrsql.hugsql.spec.attachment/payload bytes?) ; TODO
+(s/def :lrsql.hugsql.spec.attachment/payload bytes?)
 
 ;; Document
 (s/def ::state-id string?)
@@ -101,7 +101,7 @@
 (s/def ::agent-id :lrsql.hugsql.spec.agent/agent-ifi)
 
 (s/def ::last-modified inst?)
-(s/def ::document any?) ; TODO: `binary?` predicate
+(s/def ::document bytes?)
 
 ;; Query Options
 (s/def ::related-agents? boolean?)
@@ -217,7 +217,6 @@
                    :lrsql.hugsql.spec.attachment/attachment-sha
                    :lrsql.hugsql.spec.attachment/content-type
                    :lrsql.hugsql.spec.attachment/content-length
-                   ; :lrsql.hugsql.spec.attachment/file-url TODO
                    :lrsql.hugsql.spec.attachment/payload]))
 
 ;; Statement-to-Agent

@@ -51,7 +51,6 @@ id = :primary-key,
 attachment_sha = :attachment-sha,
 content_type = :content-type,
 content_length = :content-length,
-file_url = :file-url,
 payload = :payload
 
 -- :name insert-statement-to-agent!
