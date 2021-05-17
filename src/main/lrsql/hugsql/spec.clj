@@ -4,7 +4,9 @@
             [clojure.spec.gen.alpha :as sgen]
             [clojure.walk :as w]
             [clojure.data.json :as json]
-            [xapi-schema.spec :as xs]))
+            [xapi-schema.spec :as xs]
+            [com.yetanalytics.lrs.xapi.statements :as ss]
+            [lrsql.hugsql.util :as u]))
 
 ;; TODO: Deal with different encodings for JSON types (e.g. statement payload,
 ;; activity payload, agent ifi), instead of just H2 strings.
@@ -88,7 +90,7 @@
 ;; Attachment
 (s/def :lrsql.hugsql.spec.attachment/attachment-sha :attachment/sha2)
 (s/def :lrsql.hugsql.spec.attachment/content-type string?)
-(s/def :lrsql.hugsql.spec.attachment/content-length pos-int?)
+(s/def :lrsql.hugsql.spec.attachment/content-length int?)
 (s/def :lrsql.hugsql.spec.attachment/file-url ::xs/irl)
 (s/def :lrsql.hugsql.spec.attachment/payload bytes?) ; TODO
 
@@ -106,6 +108,52 @@
 (s/def ::related-activities? boolean?)
 (s/def ::limit nat-int?)
 (s/def ::ascending? boolean?)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statements and Attachment Args
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def prepared-statement-spec
+  (s/with-gen
+    (s/and ::xs/statement
+           #(contains? % :statement/id)
+           #(contains? % :statement/timestamp)
+           #(contains? % :statement/stored)
+           #(contains? % :statement/authority))
+    #(sgen/fmap u/prepare-statement
+                (s/gen ::xs/statement))))
+
+(def statements-attachments-spec
+  (s/cat :statements
+         (s/coll-of prepared-statement-spec :min-count 1 :gen-max 5)
+         :attachments
+         (s/coll-of ::ss/attachment :gen-max 2)))
+
+(defn- update-stmt-attachments
+  "Update the attachments property of each statement so that any sha2 values
+   correspond to one in `attachments`."
+  [[statements attachments]]
+  (let [statements'
+        (map (fn [stmt]
+               (if (not-empty attachments)
+                 (let [{:keys [sha2 contentType length]}
+                       (rand-nth attachments)
+                       att
+                       {"usageType"   "https://example.org/aut"
+                        "display"     {"lat" "Lorem Ipsum"}
+                        "sha2"        sha2
+                        "contentType" contentType
+                        "length"      length}]
+                   (assoc stmt "attachments" [att]))
+                 (assoc stmt "attachments" [])))
+             statements)]
+    [statements' attachments]))
+
+(def prepared-attachments-spec
+  (s/with-gen
+    statements-attachments-spec
+    #(sgen/fmap update-stmt-attachments
+                (s/gen statements-attachments-spec))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertions

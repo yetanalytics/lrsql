@@ -8,15 +8,6 @@
             [lrsql.hugsql.spec :as hs]
             [lrsql.hugsql.util :as u]))
 
-;; Copied from lrs - update?
-(def xapi-version "1.0.3")
-
-;; TODO: more specific authority
-(def lrsql-authority {"name" "LRSQL"
-                      "objectType" "Agent"
-                      "account" {"homepage" "http://localhost:8080"
-                                 "name"     "LRSQL"}})
-
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -134,25 +125,6 @@
 ;; Statement Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn prepare-statement
-  "Prepare `statement` for LRS storage by coll-ifying context activities
-   and setting missing id, timestamp, authority, version, and stored
-   properties."
-  [statement]
-  (let [{:strs [id timestamp authority version]} statement]
-    ;; first coll-ify context activities
-    (cond-> (ss/fix-statement-context-activities statement)
-      true ; stored is always set by the LRS
-      (assoc "stored" (u/time->str (u/current-time)))
-      (not id)
-      (assoc "id" (u/uuid->str (u/generate-uuid)))
-      (not timestamp)
-      (assoc "timestamp" (u/time->str (u/current-time)))
-      (not authority)
-      (assoc "authority" lrsql-authority)
-      (not version)
-      (assoc "version" xapi-version))))
-
 (defn- statement->agent-inputs
   [stmt-id stmt-act stmt-obj stmt-auth stmt-inst stmt-team sql-enums]
   (let [;; HugSql Enums
@@ -263,18 +235,8 @@
                                      :oth-enum "SubOther"})]
     [agnt-inputs act-inputs stmt-agnt-inputs stmt-act-inputs]))
 
-(def prepared-statement-spec
-  (s/with-gen
-    (s/and ::xs/statement
-           #(contains? % :statement/id)
-           #(contains? % :statement/timestamp)
-           #(contains? % :statement/stored)
-           #(contains? % :statement/authority))
-    #(sgen/fmap prepare-statement
-                (s/gen ::xs/statement))))
-
 (s/fdef statement->insert-inputs
-  :args (s/cat :statement prepared-statement-spec)
+  :args (s/cat :statement hs/prepared-statement-spec)
   :ret hs/statement-inputs-seq-spec)
 
 (defn statement->insert-inputs
@@ -362,8 +324,9 @@
             sstmt-act-inputs)))
 
 (s/fdef statements->insert-inputs
-  :args (s/cat :statements
-               (s/coll-of prepared-statement-spec :min-count 1 :gen-max 5))
+  :args (s/cat :statements (s/coll-of hs/prepared-statement-spec
+                                      :min-count 1
+                                      :gen-max 5))
   :ret (s/+ hs/statement-inputs-seq-spec))
 
 (defn statements->insert-inputs
@@ -375,37 +338,8 @@
 ;; Attachment Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def statements-attachments-spec
-  (s/cat :statements
-         (s/coll-of prepared-statement-spec :min-count 1 :gen-max 5)
-         :attachments
-         (s/coll-of ::ss/attachment :gen-max 2)))
-
-(defn- update-stmt-attachments
-  "Update the attachments property of each statement so that any sha2 values
-   correspond to one in `attachments`."
-  [[statements attachments]]
-  (let [statements'
-        (map (fn [stmt]
-               (if (not-empty attachments)
-                 (let [{:keys [sha2 contentType length]}
-                       (rand-nth attachments)
-                       att
-                       {"usageType"   "https://example.org/aut"
-                        "display"     {"lat" "Lorem Ipsum"}
-                        "sha2"        sha2
-                        "contentType" contentType
-                        "length"      length}]
-                   (assoc stmt "attachments" [att]))
-                 (assoc stmt "attachments" [])))
-             statements)]
-    [statements' attachments]))
-
 (s/fdef attachments->insert-inputs
-  :args (s/with-gen 
-          statements-attachments-spec
-          #(sgen/fmap update-stmt-attachments
-                      (s/gen statements-attachments-spec)))
+  :args hs/prepared-attachments-spec
   :ret hs/attachment-inputs-seq-spec)
 
 (def invalid-sha2-emsg

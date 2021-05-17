@@ -4,7 +4,8 @@
             [com.yetanalytics.lrs.protocol :as lp]
             [lrsql.hugsql.command :as command]
             [lrsql.hugsql.init :as init]
-            [lrsql.hugsql.input :as input]))
+            [lrsql.hugsql.input :as input]
+            [lrsql.hugsql.util :as u]))
 
 (defrecord LearningRecordStore [db-type conn-pool]
   component/Lifecycle
@@ -28,7 +29,7 @@
   (-store-statements
    [lrs auth-identity statements attachments]
    (let [conn        (:conn-pool lrs)
-         stmts       (map input/prepare-statement statements)
+         stmts       (map u/prepare-statement statements)
          stmt-inputs (input/statements->insert-inputs stmts)
          att-inputs  (when (not-empty attachments)
                        (input/attachments->insert-inputs stmts attachments))]

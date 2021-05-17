@@ -1,6 +1,7 @@
 (ns lrsql.hugsql.util
   (:require [java-time :as jt]
-            [clj-uuid]))
+            [clj-uuid]
+            [com.yetanalytics.lrs.xapi.statements :as ss]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UUIDs
@@ -39,3 +40,35 @@
   "Convert a java.util.Instant timestamp into a string."
   [ts]
   (jt/format ts))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statements
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; If a Statement lacks a version, the version MUST be set to 1.0.0
+(def xapi-version "1.0.0")
+
+;; TODO: more specific authority
+(def lrsql-authority {"name" "LRSQL"
+                      "objectType" "Agent"
+                      "account" {"homepage" "http://localhost:8080"
+                                 "name"     "LRSQL"}})
+
+(defn prepare-statement
+  "Prepare `statement` for LRS storage by coll-ifying context activities
+   and setting missing id, timestamp, authority, version, and stored
+   properties."
+  [statement]
+  (let [{:strs [id timestamp authority version]} statement]
+    ;; first coll-ify context activities
+    (cond-> (ss/fix-statement-context-activities statement)
+      true ; stored is always set by the LRS
+      (assoc "stored" (time->str (current-time)))
+      (not id)
+      (assoc "id" (uuid->str (generate-uuid)))
+      (not timestamp)
+      (assoc "timestamp" (time->str (current-time)))
+      (not authority)
+      (assoc "authority" lrsql-authority)
+      (not version)
+      (assoc "version" xapi-version))))
