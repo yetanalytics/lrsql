@@ -89,7 +89,7 @@
 (s/def :lrsql.hugsql.spec.attachment/attachment-sha :attachment/sha2)
 (s/def :lrsql.hugsql.spec.attachment/content-type string?)
 (s/def :lrsql.hugsql.spec.attachment/file-url ::xs/irl)
-(s/def :lrsql.hugsql.spec.attachment/payload any?) ; TODO
+(s/def :lrsql.hugsql.spec.attachment/payload bytes?) ; TODO
 
 ;; Document
 (s/def ::state-id string?)
@@ -205,13 +205,18 @@
                    :lrsql.hugsql.spec.attachment/attachment-sha]))
 
 ;; Putting it all together
-(def inputs-seq-spec
+(def statement-inputs-seq-spec
   (s/cat
    :statement-input statement-insert-spec
    :agent-inputs (s/* agent-insert-spec)
    :activity-inputs (s/* activity-insert-spec)
    :stmt-agent-inputs (s/* statement-to-agent-insert-spec)
    :stmt-activity-inputs (s/* statement-to-activity-insert-spec)))
+
+(def attachment-inputs-seq-spec
+  (s/cat
+   :attachment-inputs (s/* attachment-insert-spec)
+   :stmt-attachment-inputs (s/* statement-to-attachment-insert-spec)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions

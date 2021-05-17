@@ -103,7 +103,7 @@
                :activity-input hs/activity-insert-spec)
   :ret hs/statement-to-activity-insert-spec)
 
-(defn- activity-input->link-input
+(defn activity-input->link-input
   "Given `statement-id`, `activity-usage` and the HugSql params map for
    `insert-activity`, return the HugSql params map for
    `insert-statement-to-activity`."
@@ -273,7 +273,7 @@
 
 (s/fdef statement->insert-inputs
   :args (s/cat :statement prepared-statement-spec)
-  :ret hs/inputs-seq-spec)
+  :ret hs/statement-inputs-seq-spec)
 
 (defn statement->insert-inputs
   "Given `statement`, return a seq of HugSql insertion function params maps,
@@ -348,7 +348,7 @@
         ;; SubStatement HugSql Inputs
         [sagnt-inputs sact-inputs sstmt-agnt-inputs sstmt-act-inputs]
         (when (= "SubStatement" stmt-obj-typ)
-                     (sub-statement->insert-inputs stmt-id stmt-obj))]
+          (sub-statement->insert-inputs stmt-id stmt-obj))]
     (concat [stmt-input]
             agnt-inputs
             sagnt-inputs
@@ -361,15 +361,82 @@
 
 (s/fdef statements->insert-inputs
   :args (s/cat :statements
-               (s/coll-of prepared-statement-spec
-                          :min-count 1
-                          :gen-max 5))
-  :ret (s/+ hs/inputs-seq-spec))
+               (s/coll-of prepared-statement-spec :min-count 1 :gen-max 5))
+  :ret (s/+ hs/statement-inputs-seq-spec))
 
 (defn statements->insert-inputs
   "Given a `statements` coll, return a seq of HugSql insertion fn param maps."
   [statements]
   (mapcat statement->insert-inputs statements))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Attachment Insertion 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def statements-attachments-spec
+  (s/cat :statements
+         (s/coll-of prepared-statement-spec :min-count 1 :gen-max 5)
+         :attachments
+         (s/coll-of ::ss/attachment :gen-max 2)))
+
+(defn- update-stmt-attachments
+  [[statements attachments]]
+  (let [statements'
+        (map (fn [stmt]
+               (if (not-empty attachments)
+                 (let [{:keys [sha2 contentType length]}
+                       (rand-nth attachments)
+                       att
+                       {"usageType"   "https://example.org/aut"
+                        "display"     {"lat" "Lorem Ipsum"}
+                        "sha2"        sha2
+                        "contentType" contentType
+                        "length"      length}]
+                   (assoc stmt "attachments" [att]))
+                 (assoc stmt "attachments" [])))
+             statements)]
+    [statements' attachments]))
+
+(s/fdef attachments->insert-inputs
+  :args (s/with-gen 
+          statements-attachments-spec
+          #(sgen/fmap update-stmt-attachments
+                      (s/gen statements-attachments-spec)))
+  :ret hs/attachment-inputs-seq-spec)
+
+(def invalid-sha2-emsg
+  "Statement attachment sha2 values do not match any provided attachments!")
+
+(defn attachments->insert-inputs
+  "Given colls `statements` and `attachments`, return a seq of HugSql insertion
+   fn param maps."
+  [statements attachments]
+  ;; `statement` should have 
+  (let [sha-input-m   (reduce
+                       (fn [m {sha2 :sha2 :as att}]
+                         (assoc m sha2 (attachment->insert-input att)))
+                       {}
+                       attachments)
+        get-att-input (fn [{sha2 "sha2" :as _stmt-att}]
+                        (sha-input-m sha2))
+        link-inputs   (reduce
+                       (fn [acc {id "id" atts "attachments" :as stmt}]
+                         (if atts
+                         ;; TODO: If fileUrl is included, Statement should not
+                         ;; be rejected. Instead, fileUrl should be used to
+                         ;; retrieve Statement and add construct link table entry
+                           (if-some [att-in (some get-att-input atts)]
+                             (conj acc (attachment-input->link-input
+                                        (u/str->uuid id)
+                                        att-in))
+                             (throw (ex-info invalid-sha2-emsg
+                                             {:kind         ::invalid-sha2
+                                              :statement    stmt
+                                              :attachmments attachments})))
+                           acc))
+                       '()
+                       statements)]
+    (concat (vals sha-input-m) link-inputs)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertion 

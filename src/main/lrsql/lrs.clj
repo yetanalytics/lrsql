@@ -27,11 +27,12 @@
   lp/StatementsResource
   (-store-statements
    [lrs auth-identity statements attachments]
-   (let [conn   (:conn-pool lrs)
-         stmts  (map input/prepare-statement statements)
-         inputs (input/statements->insert-inputs stmts)]
+   (let [conn        (:conn-pool lrs)
+         stmts       (map input/prepare-statement statements)
+         stmt-inputs (input/statements->insert-inputs stmts)
+         #_att-inputs  #_(input/attachments->insert-inputs stmts attachments)]
      (jdbc/with-transaction [tx (conn)]
-       (command/insert-inputs! tx inputs))))
+       (command/insert-inputs! tx stmt-inputs #_(concat stmt-inputs att-inputs)))))
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)
