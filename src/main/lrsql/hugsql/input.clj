@@ -519,7 +519,7 @@
     until       :until
     limit       :limit
     asc?        :ascending
-    ;; attachments?        :attachments
+    atts?       :attachments
     ;; page                :page
     ;; from                :from
     }]
@@ -545,4 +545,5 @@
       agent-ifi (merge {:agent-ifi agent-ifi :related-agents? rel-agents?})
       act-iri   (merge {:activity-iri act-iri :related-activities? rel-acts?})
       limit     (assoc :limit limit)
-      asc?      (assoc :ascending asc?))))
+      asc?      (assoc :ascending asc?)
+      atts?     (assoc :attachments? atts?))))

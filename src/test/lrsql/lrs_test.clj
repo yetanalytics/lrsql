@@ -61,13 +61,13 @@
    "attachments" [{"usageType"   "http://example.com/attachment-usage/test"
                    "display"     {"en-US" "A test attachment"}
                    "description" {"en-US" "A test attachment (description)"}
-                   "contentType" "text/plain; charset=ascii"
+                   "contentType" "text/plain"
                    "length"      27
                    "sha2"        "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"}]})
 
 (def stmt-4-attach
   {:content     (.getBytes "here is a simple attachment")
-   :contentType "text/plain; charset=ascii"
+   :contentType "text/plain"
    :length      27
    :sha2        "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"})
 
@@ -117,48 +117,68 @@
         ts    "3000-01-01T01:00:00Z" ; Date far into the future
         agt-1 (-> stmt-1 (get "actor") (json/write-str))
         vrb-1 (get-in stmt-1 ["verb" "id"])
-        act-1 (get-in stmt-1 ["object" "id"])]
+        act-1 (get-in stmt-1 ["object" "id"])
+        act-4 (get-in stmt-4 ["object" "id"])]
     (testing "statement insertions"
-      (is (= [id-1]
-             (:statement-ids (lrsp/-store-statements lrs {} [stmt-1] []))))
-      (is (= [id-2 id-3]
-             (:statement-ids (lrsp/-store-statements lrs {} [stmt-2 stmt-3] [])))))
+      (is (= {:statement-ids [id-1]}
+             (lrsp/-store-statements lrs {} [stmt-1] [])))
+      (is (= {:statement-ids [id-2 id-3]}
+             (lrsp/-store-statements lrs {} [stmt-2 stmt-3] [])))
+      (is (= {:statement-ids [id-4]}
+             (lrsp/-store-statements lrs {} [stmt-4] [stmt-4-attach]))))
     (testing "statement ID queries"
       ;; Statement ID queries
-      (is (= stmt-1
+      (is (= {:statement stmt-1}
              (-> (lrsp/-get-statements lrs {} {:voidedStatementId id-1} {})
-                 remove-props)))
-      (is (= stmt-2
+                 (update :statement remove-props))))
+      (is (= {:statement stmt-2}
              (-> (lrsp/-get-statements lrs {} {:statementId id-2} {})
-                 remove-props)))
-      (is (= stmt-3
+                 (update :statement remove-props))))
+      (is (= {:statement stmt-3}
              (-> (lrsp/-get-statements lrs {} {:statementId id-3} {})
-                 remove-props))))
+                 (update :statement remove-props)))))
     (testing "statement property queries"
-      (is (= {:statements [] :more ""}
+      (is (= {:statement-result {:statements [] :more ""}
+              :attachments      []}
              (lrsp/-get-statements lrs {} {:since ts} {})))
-      (is (= {:statements [stmt-1 stmt-2 stmt-3] :more ""}
-             (remove-props-res
-              (lrsp/-get-statements lrs {} {:until ts} {}))))
-      (is (= {:statements [stmt-1] :more ""}
-             (remove-props-res
-              (lrsp/-get-statements lrs {} {:agent agt-1} {}))))
-      (is (= {:statements [stmt-1 stmt-3] :more ""}
-             (remove-props-res
-              (lrsp/-get-statements lrs {} {:agent agt-1 :related_agents true} {}))))
-      (is (= {:statements [stmt-1 stmt-3] :more ""}
-             (remove-props-res
-              (lrsp/-get-statements lrs {} {:verb vrb-1} {}))))
-      (is (= {:statements [stmt-1] :more ""}
-             (remove-props-res
-              (lrsp/-get-statements lrs {} {:activity act-1} {}))))
-      (is (= {:statements [stmt-1 stmt-3] :more ""}
-             (remove-props-res
-              (lrsp/-get-statements lrs {} {:activity act-1 :related_activities true} {})))))
-    (testing "attachments"
-      (is (= [id-4]
-             (:statement-ids
-              (lrsp/-store-statements lrs {} [stmt-4] [stmt-4-attach])))))
+      (is (= {:statement-result {:statements [stmt-1 stmt-2 stmt-3 stmt-4] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:until ts} {})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-1] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:agent agt-1} {})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-1 stmt-3] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:agent agt-1 :related_agents true} {})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-1 stmt-3] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:verb vrb-1} {})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-1] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:activity act-1} {})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-1 stmt-3] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:activity act-1 :related_activities true} {})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props))))))
+    (testing "querying with attachments"
+      (is (= {:statement-result {:statements [stmt-4] :more ""}
+              :attachments      [stmt-4-attach]}
+             (-> (lrsp/-get-statements lrs {} {:activity act-4 :attachments true} {})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props))
+                 #_(update-in [:attachments]
+                            #(assoc % :length 27))))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))

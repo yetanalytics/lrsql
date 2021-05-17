@@ -52,7 +52,11 @@
   "Insert a sequence of inputs into th DB. Return a seq of Statement IDs
    for successfully inserted Statements."
   [tx inputs]
-  (->> inputs (map (partial insert-input! tx)) doall (filter some?)))
+  (->> inputs
+       (map (partial insert-input! tx))
+       doall
+       (filter some?)
+       (assoc {} :statement-ids)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Queries
@@ -66,14 +70,38 @@
     (bytes? jsn) ; H2 returns JSON data as a byte array
     (json/read-str (String. jsn))))
 
+(defn- conform-attachment-res
+  [{att-sha      :attachment_sha
+    content-type :content_type
+    content      :payload}]
+  {:sha2         att-sha
+   :length       1 ; TODO
+   :content-type content-type
+   :content      content})
+
 (defn query-statement-input
   "Query Statements from the DB. Return a singleton Statement or nil if
    a Statement ID is included in params, a StatementResult object otherwise."
   [tx input]
-  (let [stmt-res (f/query-statement tx input)]
+  (let [stmt-res  (->> input
+                       (f/query-statement tx)
+                       (map #(-> % :payload parse-json)))
+        att-res   (if (:attachments? input)
+                    (doall (map #(->> (get % "id")
+                                      (assoc {} :statement-id)
+                                      (f/query-attachments tx)
+                                      #_conform-attachment-res)
+                                stmt-res))
+                    [])]
     (if (:statement-id input)
-      ;; Statement ID is present => singleton Statement
-      {:statements (some-> stmt-res first :payload parse-json)}
-      ;; StatementResult
-      {:statements (vec (map #(-> % :payload parse-json) stmt-res))
-       :more       ""}))) ; TODO: Return IRI if more statements can be queried
+      ;; Singleton statement
+      (cond-> {}
+        (not-empty stmt-res)
+        (assoc :statement (first stmt-res))
+        (and (not-empty stmt-res) (not-empty att-res))
+        (assoc :attachments att-res))
+      ;; Multiple statements
+      ;; TODO: Return IRI if more statements can be queried
+      {:statement-result {:statements (vec stmt-res)
+                          :more       ""}
+       :attachments      att-res})))
