@@ -1,3 +1,5 @@
+/* Statement + Attachment Insertion */
+
 -- :name insert-statement!
 -- :command :insert
 -- :result :affected
@@ -81,3 +83,40 @@ INSERT INTO statement_to_attachment SET
 id = :primary-key,
 statement_id = :statement-id,
 attachment_sha = :attachment-sha
+
+/* Document Insertion */
+
+-- :name insert-state-document!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a new state document.
+INSERT INTO state_document SET
+id = :primary-key,
+state_id = :state-id,
+activity_iri = :activity-iri,
+agent_ifi = :agent-ifi,
+registration = :?registration,
+stored = :stored,
+document = :document
+
+-- :name insert-agent-profile-document!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a new agent profile document.
+INSERT INTO agent_profile_document SET
+id = :primary-key,
+profile_id = :profile-id,
+agent_ifi = :agent-ifi,
+stored = :stored,
+document = :document
+
+-- :name insert-activity-profile-document!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a new activity profile document.
+INSERT INTO activity_profile_document SET
+id = :primary-key,
+profile_id = :profile-id,
+activity_iri = :activity-iri,
+stored = :stored,
+document = :document

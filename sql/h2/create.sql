@@ -87,37 +87,37 @@ CREATE TABLE IF NOT EXISTS statement_to_attachment (
 -- :name create-state-document-table!
 -- :command :execute
 -- :result :raw
--- :doc Create the state_document table if it does not exist yet
+-- :doc Create the state_document table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS state_document (
-  id            UUID NOT NULL PRIMARY KEY,
-  state_id      VARCHAR(255) NOT NULL,
-  activity_id   VARCHAR(255) NOT NULL,
-  agent_id      JSON NOT NULL,
-  registration  UUID,
-  last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
-  document      BINARY
+  id           UUID NOT NULL PRIMARY KEY,
+  state_id     VARCHAR(255) NOT NULL,
+  activity_iri VARCHAR(255) NOT NULL,
+  agent_ifi    JSON NOT NULL,
+  registration UUID,
+  stored       TIMESTAMP WITH TIME ZONE NOT NULL,
+  document     BINARY
 )
 
 -- :name create-agent-profile-document-table!
 -- :command :execute
 -- :result :raw
--- :doc Create the agent_profile_document table if it does not exist yet
+-- :doc Create the agent_profile_document table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS agent_profile_document (
-  id            UUID NOT NULL PRIMARY KEY,
-  state_id      VARCHAR(255) NOT NULL,
-  agent_id      JSON NOT NULL,
-  last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
-  document      BINARY
+  id         UUID NOT NULL PRIMARY KEY,
+  profile_id VARCHAR(255) NOT NULL,
+  agent_ifi  JSON NOT NULL,
+  stored     TIMESTAMP WITH TIME ZONE NOT NULL,
+  document   BINARY
 )
 
 -- :name create-activity-profile-document-table!
 -- :command :execute
 -- :result :raw
--- :doc Create the activity_profile_document table if it does not exist yet
+-- :doc Create the activity_profile_document table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS activity_profile_document (
-  id            UUID NOT NULL PRIMARY KEY,
-  profile_id    VARCHAR(255) NOT NULL,
-  activity_id   VARCHAR(255) NOT NULL,
-  last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
-  document      BINARY
+  id           UUID NOT NULL PRIMARY KEY,
+  profile_id   VARCHAR(255) NOT NULL,
+  activity_iri VARCHAR(255) NOT NULL,
+  stored       TIMESTAMP WITH TIME ZONE NOT NULL,
+  document     BINARY
 )
