@@ -19,7 +19,8 @@
     ;; an exception.
     (do (f/insert-statement! tx input)
         ;; Void statements
-        (when (:voiding? input) ; TODO test
+        ;; CHECK: Throw exception on invalid voiding?
+        (when (:voiding? input)
           (f/void-statement! tx {:statement-id (:?statement-ref-id input)}))
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
         (u/uuid->str (:statement-id input)))
@@ -45,8 +46,9 @@
     nil))
 
 (defn insert-inputs!
-  "Insert a sequence of inputs into th DB. Return a seq of Statement IDs
-   for successfully inserted Statements."
+  "Insert a sequence of inputs into th DB. Return the following map:
+   
+   {:statement-id <seq of statement IDs>}"
   [tx inputs]
   (->> inputs
        (map (partial insert-input! tx))
@@ -77,8 +79,16 @@
    :content     content})
 
 (defn query-statement-input
-  "Query Statements from the DB. Return a singleton Statement or nil if
-   a Statement ID is included in params, a StatementResult object otherwise."
+  "Query Statements from the DB. Return the following on a singleton Statement
+   query (i.e. if a Statement ID is included in params):
+
+   {:statement   <queried statement>
+    :attachments <seq of attachments>}
+   
+   and the following if multiple Statements are queried:
+   {:statement-result {:statements <seq of queried statements>}
+                       :more       <url for additional queries>}
+    :attachments      <seq of attachments>}"
   [tx input]
   (let [stmt-res  (->> input
                        (f/query-statement tx)
