@@ -380,8 +380,8 @@
 (def state-doc-query-spec
   (s/keys :req-un [::activity-iri
                    ::agent-ifi
-                   ::state-id]
-          :opt-un [::registration]))
+                   ::state-id
+                   ::?registration]))
 
 (def agent-profile-doc-query-spec
   (s/keys :req-un [::agent-ifi
@@ -395,9 +395,9 @@
 
 (def state-doc-ids-query-spec
   (s/keys :req-un [::activity-iri
-                   ::agent-ifi]
-          :opt-un [::registration
-                   ::since]))
+                   ::agent-ifi
+                   ::?registration]
+          :opt-un [::since]))
 
 (def agent-profile-doc-ids-query-spec
   (s/keys :req-un [::agent-ifi]

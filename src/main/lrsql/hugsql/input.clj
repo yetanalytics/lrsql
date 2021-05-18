@@ -510,12 +510,11 @@
     activity-id  :activityId
     agent        :agent
     registration :registration}]
-  (cond-> {:table        :state-document
-           :state-id     state-id
-           :activity-iri activity-id
-           :agent-ifi    (json/write-str (get-ifi (json/read-str agent)))}
-    registration
-    (assoc :registration (u/str->uuid registration))))
+  {:table         :state-document
+   :state-id      state-id
+   :activity-iri  activity-id
+   :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
+   :?registration (when registration (u/str->uuid registration))})
 
 (defmethod params->document-query-input :agent-profile-document
   [{profile-id :profileId
@@ -549,11 +548,10 @@
     agent        :agent
     registration :registration
     since        :since}]
-  (cond-> {:table        :state-document
-           :activity-iri activity-id
-           :agent-ifi    (json/write-str (get-ifi (json/read-str agent)))}
-    registration
-    (assoc :registration (u/str->uuid registration))
+  (cond-> {:table         :state-document
+           :activity-iri  activity-id
+           :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
+           :?registration (when registration (u/str->uuid registration))}
     since
     (assoc :since (u/str->time since))))
 

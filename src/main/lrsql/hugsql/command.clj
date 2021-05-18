@@ -5,6 +5,18 @@
             [lrsql.hugsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Utils
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- parse-json
+  [jsn]
+  (cond
+    (string? jsn)
+    (json/read-str jsn)
+    (bytes? jsn) ; H2 returns JSON data as a byte array
+    (json/read-str (String. jsn))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -64,17 +76,43 @@
        (filter some?)
        (assoc {} :statement-ids)))
 
+(defn update-input!
+  [tx {:keys [table] :as input}]
+  (let [[query-fn update-fn!]
+        (case table
+          :state-document
+          [f/query-state-document
+           f/update-state-document!]
+          :agent-profile-document
+          [f/query-agent-profile-document
+           f/update-agent-profile-document!]
+          :activity-profile-document
+          [f/query-activity-profile-document
+           f/update-activity-profile-document!]
+          :else
+          (throw (ex-info "`update-input!` is not supported for this table type"
+                          {:kind  ::invalid-table-type
+                           :input input})))
+        old-doc
+        (some->> (select-keys
+                  input
+                  [:state-id :agent-ifi :activity-iri :?registration])
+                 (query-fn tx)
+                 :document)
+        old-json-doc
+        (try (parse-json old-doc)
+             (catch Exception _
+               (throw (ex-info "Cannot merge non-JSON document"
+                               {:kind ::non-json-document
+                                :input input
+                                :document old-doc}))))
+        input'
+        (update input :document (fn [new-doc] (merge old-doc new-doc)))]
+    (update-fn! tx input')))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Queries
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn- parse-json
-  [jsn]
-  (cond
-    (string? jsn)
-    (json/read-str jsn)
-    (bytes? jsn) ; H2 returns JSON data as a byte array
-    (json/read-str (String. jsn))))
 
 (defn- conform-attachment-res
   [{att-sha      :attachment_sha

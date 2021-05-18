@@ -90,7 +90,7 @@ SELECT document, state_id, last_modified FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 AND state_id = :state-id
---~ (when (:registration params) "AND registration = :registration")
+--~ (when (:?registration params) "AND registration = :?registration" "AND registration = NULL")
 
 -- :name query-state-document-ids
 -- :command :query
@@ -99,7 +99,7 @@ AND state_id = :state-id
 SELECT state_id FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
---~ (when (:registration params) "AND registration = :registration")
+--~ (when (:?registration params) "AND registration = :?registration" "AND registration = NULL")
 --~ (when (:since params) "AND last_modified > :since")
 
 -- :name query-agent-profile-document

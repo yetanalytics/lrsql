@@ -43,6 +43,11 @@
 (declare insert-agent-profile-document!)
 (declare insert-activity-profile-document!)
 
+;; Update documents
+(declare update-state-document!)
+(declare update-agent-profile-document!)
+(declare update-activity-profile-document!)
+
 ;; Query documents
 (declare query-state-document)
 (declare query-agent-profile-document)

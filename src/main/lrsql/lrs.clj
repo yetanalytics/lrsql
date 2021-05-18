@@ -51,7 +51,9 @@
    (let [conn  (:conn-pool lrs)
          input (input/document->insert-input params document)]
      (jdbc/with-transaction [tx (conn)]
-       (command/insert-input! tx input))))
+       (if merge?
+         (command/update-input! tx input)
+         (command/insert-input! tx input)))))
   (-get-document
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)

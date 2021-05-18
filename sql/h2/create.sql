@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS state_document (
   state_id      VARCHAR(255) NOT NULL,
   activity_iri  VARCHAR(255) NOT NULL,
   agent_ifi     JSON NOT NULL,
-  registration  UUID,
+  registration  UUID DEFAULT NULL,
   last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
   document      BINARY
 )
