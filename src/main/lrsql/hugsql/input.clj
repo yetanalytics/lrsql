@@ -496,3 +496,64 @@
       limit     (assoc :limit limit)
       asc?      (assoc :ascending asc?)
       atts?     (assoc :attachments? atts?))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Document Query
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef params->state-doc-query-input
+  :args (s/cat :id-params :xapi.document.state/id-params)
+  :ret hs/state-doc-query-spec)
+
+(defn params->state-doc-query-input
+  [{state-id     :stateId
+    activity-id  :activityId
+    agent        :agent
+    registration :registration}]
+  (cond-> {:state-id     state-id
+           :activity-iri activity-id
+           :agent-ifi    (json/write-str (get-ifi (json/read-str agent)))}
+    registration
+    (assoc :registration (u/str->uuid registration))))
+
+(s/fdef params->state-doc-ids-query-input
+  :args (s/cat :query-params :xapi.document.state/query-params)
+  :ret hs/state-doc-ids-query-spec)
+
+(defn params->state-doc-ids-query-input
+  [{activity-id  :activityId
+    agent        :agent
+    registration :registration
+    since        :since}]
+  (cond-> {:activity-iri activity-id
+           :agent-ifi    (json/write-str (get-ifi (json/read-str agent)))}
+    registration
+    (assoc :registration (u/str->uuid registration))
+    since
+    (assoc :since (u/str->time since))))
+
+(defn params->agent-profile-doc-query-input
+  [{profile-id :profileId
+    agent      :agent}]
+  {:profile-id profile-id
+   :agent-ifi  (json/write-str (get-ifi (json/read-str agent)))})
+
+(defn params->agent-profile-doc-ids-query-input
+  [{agent :agent
+    since :since}]
+  (cond-> {:agent-ifi (json/write-str (get-ifi (json/read-str agent)))}
+    since
+    (assoc :since (u/str->time since))))
+
+(defn params->activity-profile-doc-query-input
+  [{profile-id  :profileId
+    activity-id :activityId}]
+  {:profile-id   profile-id
+   :activity-iri activity-id})
+
+(defn params->activity-profile-doc-ids-query-input
+  [{activity-id :activityId
+    since       :since}]
+  (cond-> {:activity-iri activity-id}
+    since
+    (assoc :since (u/str->time since))))

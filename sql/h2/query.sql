@@ -79,3 +79,57 @@ WHERE activity_iri = :activity-iri
 -- :doc Check for the existence of an Attachment with a given SHA2 hash in the attachment table. Returns nil iff not found.
 SELECT 1 FROM attachment
 WHERE attachment_sha = :attachment-sha
+
+/* Document Queries */
+
+-- :name query-state-document
+-- :command :query
+-- :result :one
+-- :doc Query for a single state document.
+SELECT document FROM state_document
+WHERE activity_iri = :activity-iri
+AND agent_ifi = :agent-ifi
+AND state_id = :state-id
+--~ (when (:registration params) "AND registration = :registration")
+
+-- :name query-state-document-ids
+-- :command :query
+-- :result :many
+-- :doc Query for state document IDs.
+SELECT state_id FROM state_document
+WHERE activity_iri = :activity-iri
+AND agent_ifi = :agent-ifi
+--~ (when (:registration params) "AND registration = :registration")
+--~ (when (:since params) "AND last_modified > :since")
+
+-- :name query-agent-profile-document
+-- :command :query
+-- :result :one
+-- :doc Query for a single agent profile document.
+SELECT document FROM agent_profile_document
+WHERE agent_ifi = :agent-ifi
+AND profile_id = :profile-id
+
+-- :name query-agent-profile-document-ids
+-- :command :query
+-- :result :many
+-- :doc Query for agent profile document profile IDs.
+SELECT profile_id FROM agent_profile_document
+WHERE agent_ifi = :agent-ifi
+--~ (when (:since params) "AND last_modified > :since")
+
+-- :name query-activity-profile-document
+-- :command :query
+-- :result :one
+-- :doc Query for a single activity profile document.
+SELECT document FROM activity_profile_document
+WHERE activity_iri = :activity-iri
+AND profile_id = :profile-id
+
+-- :name query-activity-profile-document-ids
+-- :command :query
+-- :result :many
+-- :doc Query for activity profile document IDs.
+SELECT profile_id FROM activity_profile_document
+WHERE activity_iri = :activity-iri
+--~ (when (:since params) "AND last_modified > :since")

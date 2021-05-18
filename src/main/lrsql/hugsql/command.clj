@@ -107,3 +107,33 @@
       {:statement-result {:statements (vec stmt-res)
                           :more       ""}
        :attachments      att-res})))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Documents
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- query-document*
+  [tx input query-fn single-query?]
+  (let [res (query-fn tx input)]
+    (if (single-query? input)
+      (some-> res first :document)
+      (map #(get-in % [:document ]) res))))
+
+(defn query-document
+  [tx {:keys [table] :as input}]
+  (case table
+    :state-document
+    (let [res (f/query-state-documents tx input)]
+      (if (:state-id input)
+        (some-> res first :document)
+        (->> res (map :document))))
+    :agent-profile-document
+    (let [res (f/query-agent-profile-documents tx input)]
+      (if (:profile-id input)
+        (some-> res first :document)
+        (->> res (map :document))))
+    :activity-profile-document
+    (let [res (f/query-activity-profile-documents tx input)]
+      (if (:profile-id input)
+        (some-> res first :document)
+        (->> res (map :document))))))

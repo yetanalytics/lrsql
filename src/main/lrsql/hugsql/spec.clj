@@ -342,7 +342,33 @@
                    :lrsql.hugsql.spec.activity/activity-iri]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Document Queries
+;; Document Queries + Deletions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO
+(def state-doc-query-spec
+  (s/keys :req-un [::activity-iri
+                   ::agent-ifi
+                   ::state-id]
+          :opt-un [::registration]))
+
+(def state-doc-ids-query-spec
+  (s/keys :req-un [::activity-iri
+                   ::agent-ifi]
+          :opt-un [::registration
+                   ::since]))
+
+(def agent-profile-doc-query-spec
+  (s/keys :req-un [::agent-ifi
+                   ::profile-id]))
+
+(def agent-profile-doc-ids-query-spec
+  (s/keys :req-un [::agent-ifi]
+          :opt-un [::since]))
+
+(def activity-profile-doc-query-spec
+  (s/keys :req-un [::activity-iri
+                   ::profile-id]))
+
+(def activity-profile-doc-ids-query-spec
+  (s/keys :req-un [::activity-iri]
+          :opt-un [::since]))

@@ -37,3 +37,16 @@
 (declare query-agent-exists)
 (declare query-activity-exists)
 (declare query-attachment-exists)
+
+;; Insert documents
+(declare insert-state-document!)
+(declare insert-agent-profile-document!)
+(declare insert-activity-profile-document!)
+
+;; Query documents
+(declare query-state-document)
+(declare query-agent-profile-document)
+(declare query-activity-profile-document)
+(declare query-state-document-ids)
+(declare query-agent-profile-document-ids)
+(declare query-activity-profile-document-ids)
