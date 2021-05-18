@@ -11,6 +11,13 @@
 ;; TODO: Deal with different encodings for JSON types (e.g. statement payload,
 ;; activity payload, agent ifi), instead of just H2 strings.
 
+;; TODO
+;; Canonical-Language-Maps
+;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
+;; - IRI: STRING UNIQUE KEY NOT NULL
+;; - LangTag: STRING NOT NULL
+;; - Value: STRING NOT NULL
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -267,6 +274,22 @@
    :stmt-attachment-inputs (s/* statement-to-attachment-insert-spec)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Document Args
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def id-params-spec
+  "Regex spec for the three types of ID params."
+  (s/alt :state :xapi.document.state/id-params
+         :agent-profile :xapi.document.agent-profile/id-params
+         :activity-profile :xapi.document.activity-profile/id-params))
+
+(def query-params-spec
+  "Regex spec of the three types of query params."
+  (s/alt :state :xapi.document.state/id-params
+         :agent-profile :xapi.document.agent-profile/id-params
+         :activity-profile :xapi.document.activity-profile/id-params))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -279,7 +302,7 @@
 ;; - LastModified: TIMESTAMP NOT NULL
 ;; - Document: BINARY NOT NULL
 
-(def state-document-insert-spec
+(def state-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::state-id
                    ::activity-iri
@@ -295,7 +318,7 @@
 ;; - LastModified: TIMESTAMP NOT NULL
 ;; - Document: BINARY NOT NULL
 
-(def agent-profile-document-insert-spec
+(def agent-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
                    ::agent-ifi
@@ -309,19 +332,18 @@
 ;; - LastModified: TIMESTAMP NOT NULL
 ;; - Document: BINARY NOT NULL
 
-(def activity-profile-document-insert-spec
+(def activity-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
                    ::activity-iri
                    ::last-modified
                    ::document]))
 
-;; TODO
-;; Canonical-Language-Maps
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - IRI: STRING UNIQUE KEY NOT NULL
-;; - LangTag: STRING NOT NULL
-;; - Value: STRING NOT NULL
+;; Putting it all together
+(def document-insert-spec
+  (s/or :state state-doc-insert-spec
+        :agent-profile agent-profile-doc-insert-spec
+        :activity-profile activity-profile-doc-insert-spec))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Queries
@@ -345,11 +367,23 @@
 ;; Document Queries + Deletions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Document queries
+
 (def state-doc-query-spec
   (s/keys :req-un [::activity-iri
                    ::agent-ifi
                    ::state-id]
           :opt-un [::registration]))
+
+(def agent-profile-doc-query-spec
+  (s/keys :req-un [::agent-ifi
+                   ::profile-id]))
+
+(def activity-profile-doc-query-spec
+  (s/keys :req-un [::activity-iri
+                   ::profile-id]))
+
+;; Document ID queries
 
 (def state-doc-ids-query-spec
   (s/keys :req-un [::activity-iri
@@ -357,18 +391,22 @@
           :opt-un [::registration
                    ::since]))
 
-(def agent-profile-doc-query-spec
-  (s/keys :req-un [::agent-ifi
-                   ::profile-id]))
-
 (def agent-profile-doc-ids-query-spec
   (s/keys :req-un [::agent-ifi]
           :opt-un [::since]))
 
-(def activity-profile-doc-query-spec
-  (s/keys :req-un [::activity-iri
-                   ::profile-id]))
-
 (def activity-profile-doc-ids-query-spec
   (s/keys :req-un [::activity-iri]
           :opt-un [::since]))
+
+;; Putting it all together
+
+(def document-query-spec
+  (s/or :state state-doc-query-spec
+        :agent-profile agent-profile-doc-query-spec
+        :activity-profile activity-profile-doc-query-spec))
+
+(def document-ids-query-spec
+  (s/or :state state-doc-query-spec
+        :agent-profile agent-profile-doc-query-spec
+        :activity-profile activity-profile-doc-query-spec))

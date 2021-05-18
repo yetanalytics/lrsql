@@ -386,13 +386,15 @@
 ;; Document Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef state-document->insert-input
- :args (s/cat :id-params :xapi.document.state/id-params
-              :document bytes?)
- :ret hs/state-document-insert-spec)
+(s/fdef document->insert-input
+  :args (s/cat :id-params hs/id-params-spec :document bytes?)
+  :ret hs/document-insert-spec
+  :fn (fn [{:keys [args ret]}]
+        (= (u/document-dispatch (:id-params args)) (:table ret))))
 
-(defn state-document->insert-input
-  "Given ID parameters for state documents, return the HugSql fn param map."
+(defmulti document->insert-input u/document-dispatch)
+
+(defmethod document->insert-input :state-document
   [{state-id     :stateId
     activity-id  :activityId
     agent        :agent
@@ -407,12 +409,7 @@
    :last-modified (u/current-time)
    :document      document})
 
-(s/fdef agent-profile-document->insert-input
-  :args (s/cat :id-params :xapi.document.agent-profile/id-params
-               :document bytes?)
-  :ret hs/agent-profile-document-insert-spec)
-
-(defn agent-profile-document->insert-input
+(defmethod document->insert-input :agent-profile-document
   "Given ID parameters for agent profile documents, return the HugSql fn
    param map."
   [{profile-id :profileId
@@ -425,12 +422,7 @@
    :last-modified (u/current-time)
    :document      document})
 
-(s/fdef activity-profile-document->insert-input
-  :args (s/cat :id-params :xapi.document.activity-profile/id-params
-               :document bytes?)
-  :ret hs/activity-profile-document-insert-spec)
-
-(defn activity-profile-document->insert-input
+(defmethod document->insert-input :activity-profile-document
   "Given ID parameters for activity profile documents, return the HugSql fn
    param map."
   [{profile-id  :profileId
@@ -501,11 +493,15 @@
 ;; Document Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef params->state-doc-query-input
-  :args (s/cat :id-params :xapi.document.state/id-params)
-  :ret hs/state-doc-query-spec)
+(s/fdef params->document-query-input
+  :args (s/cat :id-params hs/id-params-spec)
+  :ret hs/document-query-spec
+  :fn (fn [{:keys [args ret]}]
+        (= (u/document-dispatch (:id-params args)) (:table ret))))
 
-(defn params->state-doc-query-input
+(defmulti params->document-query-input u/document-dispatch)
+
+(defmethod params->document-query-input :state-document
   [{state-id     :stateId
     activity-id  :activityId
     agent        :agent
@@ -516,11 +512,27 @@
     registration
     (assoc :registration (u/str->uuid registration))))
 
-(s/fdef params->state-doc-ids-query-input
-  :args (s/cat :query-params :xapi.document.state/query-params)
-  :ret hs/state-doc-ids-query-spec)
+(defmethod params->document-query-input :agent-profile-document
+  [{profile-id :profileId
+    agent      :agent}]
+  {:profile-id profile-id
+   :agent-ifi  (json/write-str (get-ifi (json/read-str agent)))})
 
-(defn params->state-doc-ids-query-input
+(defmethod params->document-query-input :activity-profile-document
+  [{profile-id  :profileId
+    activity-id :activityId}]
+  {:profile-id   profile-id
+   :activity-iri activity-id})
+
+(s/fdef params->document-ids-query-input
+  :args (s/cat :query-params hs/query-params-spec)
+  :ret hs/document-ids-query-spec
+  :fn (fn [{:keys [args ret]}]
+        (= (u/document-dispatch (:query-params args)) (:table ret))))
+
+(defmulti params->document-ids-query-input u/document-dispatch)
+
+(defmethod params->document-ids-query-input :state-document
   [{activity-id  :activityId
     agent        :agent
     registration :registration
@@ -532,26 +544,14 @@
     since
     (assoc :since (u/str->time since))))
 
-(defn params->agent-profile-doc-query-input
-  [{profile-id :profileId
-    agent      :agent}]
-  {:profile-id profile-id
-   :agent-ifi  (json/write-str (get-ifi (json/read-str agent)))})
-
-(defn params->agent-profile-doc-ids-query-input
+(defmethod params->document-ids-query-input :agent-profile-document
   [{agent :agent
     since :since}]
   (cond-> {:agent-ifi (json/write-str (get-ifi (json/read-str agent)))}
     since
     (assoc :since (u/str->time since))))
 
-(defn params->activity-profile-doc-query-input
-  [{profile-id  :profileId
-    activity-id :activityId}]
-  {:profile-id   profile-id
-   :activity-iri activity-id})
-
-(defn params->activity-profile-doc-ids-query-input
+(defmethod params->document-ids-query-input :activity-profile-document
   [{activity-id :activityId
     since       :since}]
   (cond-> {:activity-iri activity-id}
