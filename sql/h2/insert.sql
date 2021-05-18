@@ -52,7 +52,7 @@ statement_id = :statement-id,
 attachment_sha = :attachment-sha,
 content_type = :content-type,
 content_length = :content-length,
-payload = :payload
+content = :content
 
 -- :name insert-statement-to-agent!
 -- :command :insert

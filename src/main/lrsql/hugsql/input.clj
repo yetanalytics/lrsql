@@ -324,8 +324,7 @@
      :attachment-sha sha2
      :content-type   content-type
      :content-length length
-     :file-url       "" ; TODO
-     :payload        content}))
+     :content        content}))
 
 (s/fdef attachments->insert-inputs
   :args hs/prepared-attachments-spec

@@ -50,7 +50,7 @@ SELECT payload FROM xapi_statement
 -- :command :query
 -- :result :many
 -- :doc Query attachments using query parameters.
-SELECT attachment_sha, content_type, content_length, payload FROM attachment
+SELECT attachment_sha, content_type, content_length, content FROM attachment
 WHERE statement_id = :statement-id
 
 /* Existence Checks */

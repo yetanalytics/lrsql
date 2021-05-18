@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS attachment (
   attachment_sha VARCHAR(255) NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  payload        BINARY, -- TODO: Switch to BLOB?
+  content        BINARY NOT NULL, -- TODO: Switch to BLOB?
   FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
 )
 

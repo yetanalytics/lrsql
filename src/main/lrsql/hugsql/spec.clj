@@ -91,8 +91,7 @@
 (s/def :lrsql.hugsql.spec.attachment/attachment-sha :attachment/sha2)
 (s/def :lrsql.hugsql.spec.attachment/content-type string?)
 (s/def :lrsql.hugsql.spec.attachment/content-length int?)
-(s/def :lrsql.hugsql.spec.attachment/file-url ::xs/irl)
-(s/def :lrsql.hugsql.spec.attachment/payload bytes?)
+(s/def :lrsql.hugsql.spec.attachment/content bytes?)
 
 ;; Document
 (s/def ::state-id string?)
@@ -220,7 +219,7 @@
                    :lrsql.hugsql.spec.attachment/attachment-sha
                    :lrsql.hugsql.spec.attachment/content-type
                    :lrsql.hugsql.spec.attachment/content-length
-                   :lrsql.hugsql.spec.attachment/payload]))
+                   :lrsql.hugsql.spec.attachment/content]))
 
 ;; Statement-to-Agent
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT

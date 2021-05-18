@@ -70,7 +70,7 @@
   [{att-sha      :attachment_sha
     content-type :content_type
     length       :content_length
-    content      :payload}]
+    content      :content}]
   {:sha2        att-sha
    :length      length
    :contentType content-type

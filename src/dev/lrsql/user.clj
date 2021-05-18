@@ -42,6 +42,37 @@
       (assoc-in ["object" "id"] "http://www.example.com/tincan/activities/multipart-2")
       (assoc-in ["context" "contextActivities" "other"] [(get stmt-1 "object")])))
 
+(def stmt-4
+  {"id"          "e8477a8d-786c-48be-a703-7c8ec7eedee5"
+   "actor"       {"mbox"       "mailto:sample.agent.4@example.com"
+                  "name"       "Sample Agent 4"
+                  "objectType" "Agent"}
+   "verb"        {"id"      "http://adlnet.gov/expapi/verbs/attended"
+                  "display" {"en-US" "attended"}}
+   "object"      {"id"         "http://www.example.com/meetings/occurances/34534"
+                  "definition" {"extensions"  {"http://example.com/profiles/meetings/activitydefinitionextensions/room"
+                                               {"name" "Kilby"
+                                                "id"   "http://example.com/rooms/342"}}
+                                "name"        {"en-GB" "example meeting"
+                                               "en-US" "example meeting"}
+                                "description" {"en-GB" "An example meeting that happened on a specific occasion with certain people present."
+                                               "en-US" "An example meeting that happened on a specific occasion with certain people present."}
+                                "type"        "http://adlnet.gov/expapi/activities/meeting"
+                                "moreInfo"    "http://virtualmeeting.example.com/345256"}
+                  "objectType" "Activity"}
+   "attachments" [{"usageType"   "http://example.com/attachment-usage/test"
+                   "display"     {"en-US" "A test attachment"}
+                   "description" {"en-US" "A test attachment (description)"}
+                   "contentType" "text/plain"
+                   "length"      27
+                   "sha2"        "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"}]})
+
+(def stmt-4-attach
+  {:content     (.getBytes "here is a simple attachment")
+   :contentType "text/plain"
+   :length      27
+   :sha2        "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"})
+
 (comment
   (input/statement->insert-inputs
    (input/prepare-statement (dissoc stmt-1 "id")))
@@ -50,9 +81,6 @@
 
   (def sys' (component/start sys))
 
-  (def ds (jdbc/get-datasource (system/db-spec)))
-
-  (command/insert-inputs! ds (input/statements->insert-input [stmt-1]))
 
   (def params
     {:statementId        "030e001f-b32a-4361-b701-039a3d9fceb1"
@@ -64,9 +92,18 @@
      :ascending?         true})
   (p/-store-statements (:lrs sys') {} [stmt-1] [])
   (p/-store-statements (:lrs sys') {} [stmt-2 stmt-3] [])
+  (p/-store-statements (:lrs sys') {} [stmt-4] [stmt-4-attach])
+
+  (def ds ((:conn-pool (:lrs sys'))))
+
   (p/-get-statements (:lrs sys') {} {:until "2021-05-20T16:59:08Z"} {})
 
-  (jdbc/execute! ds ["SELECT * FROM statement_to_activity"])
+  (p/-get-statements (:lrs sys') {} {:verb "http://adlnet.gov/expapi/verbs/attended"
+                                     :attachments true} {})
+
+  (jdbc/execute! ds ["SELECT attachment_sha, content_type, content_length, content FROM attachment
+                      WHERE statement_id = ?"
+                     (lrsql.hugsql.util/str->uuid "e8477a8d-786c-48be-a703-7c8ec7eedee5")])
 
   (jdbc/execute! ds ["SELECT is_voided
                       FROM xapi_statement"])
