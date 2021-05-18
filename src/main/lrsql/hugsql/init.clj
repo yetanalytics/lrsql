@@ -20,6 +20,7 @@
     (binding [*ns* (create-ns `lrsql.hugsql.functions)]
       (hugsql/def-db-fns (str db-type' "/create.sql"))
       (hugsql/def-db-fns (str db-type' "/insert.sql"))
+      (hugsql/def-db-fns (str db-type' "/delete.sql"))
       (hugsql/def-db-fns (str db-type' "/query.sql")))))
 
 (defn create-tables!

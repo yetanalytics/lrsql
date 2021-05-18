@@ -570,3 +570,16 @@
            :activity-iri activity-id}
     since
     (assoc :since (u/str->time since))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Document Deletion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Only for state documents, thus no need for multimethod
+(defn params->document-multi-delete-input
+  [{activity-id  :activityId
+    agent        :agent
+    registration :registration}]
+  {:activity-iri  activity-id
+   :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
+   :?registration registration})

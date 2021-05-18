@@ -63,15 +63,21 @@
   (-get-document-ids
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
-         input (input/params->document-query-input params)]
+         input (input/params->document-ids-query-input params)]
      (jdbc/with-transaction [tx (conn)]
        (command/query-document-ids tx input))))
   (-delete-document
-   [this auth-identity params]
-   {})
+   [lrs auth-identity params]
+   (let [conn  (:conn-pool lrs)
+         input (input/params->document-query-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/delete-document! tx input))))
   (-delete-documents
-   [this auth-identity params]
-   {})
+   [lrs auth-identity params]
+   (let [conn  (:conn-pool lrs)
+         input (input/params->document-multi-delete-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/delete-document! tx input))))
 
   lp/AgentInfoResource
   (-get-person

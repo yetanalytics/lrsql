@@ -90,7 +90,7 @@ SELECT document, state_id, last_modified FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 AND state_id = :state-id
---~ (when (:?registration params) "AND registration = :?registration")
+--~ (if (:?registration params) "AND registration = :?registration" "AND registration IS NULL")
 
 -- :name query-state-document-ids
 -- :command :query

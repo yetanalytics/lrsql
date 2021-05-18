@@ -48,6 +48,11 @@
 (declare update-agent-profile-document!)
 (declare update-activity-profile-document!)
 
+;; Delete documents
+(declare delete-state-document!)
+(declare delete-agent-profile-document!)
+(declare delete-activity-profile-document!)
+
 ;; Query documents
 (declare query-state-document)
 (declare query-agent-profile-document)

@@ -234,6 +234,15 @@
              (lrsp/-get-document-ids lrs
                                      {}
                                      (dissoc doc-id-params :stateId)))))
+    (testing "document deletion"
+      (is (= {}
+             (lrsp/-delete-document lrs
+                                    {}
+                                    doc-id-params)))
+      (is (= {:document-ids []}
+             (lrsp/-get-document-ids lrs
+                                     {}
+                                     (dissoc doc-id-params :stateId)))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-doc-tables! tx))
     (component/stop sys')))

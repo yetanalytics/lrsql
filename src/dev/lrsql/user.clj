@@ -45,7 +45,7 @@
 (comment
   (input/statement->insert-inputs
    (input/prepare-statement (dissoc stmt-1 "id")))
-  
+
   (def sys (system/system))
 
   (def sys' (component/start sys))
@@ -92,7 +92,7 @@
     {:stateId    "some-id"
      :activityId "https://example.org/activity-type"
      :agent      "{\"mbox\":\"mailto:example@example.org\"}"})
-  
+
   (p/-set-document (:lrs sys')
                    {}
                    doc-id-params
@@ -103,23 +103,23 @@
                    doc-id-params
                    (.getBytes "{\"foo\":\"bee\",\"baz\":\"qux\"}")
                    true)
-  (-> (jdbc/execute! ((-> sys' :lrs :conn-pool))
-                     ["SELECT document FROM state_document"])
-      first
-      :STATE_DOCUMENT/DOCUMENT
-      String.)
-  
+  (jdbc/execute! ((-> sys' :lrs :conn-pool))
+                 ["SELECT * FROM state_document
+                   WHERE REGISTRATION IS NULL"
+                  ])
+
   (jdbc/execute! ((-> sys' :lrs :conn-pool))
                  ["UPDATE state_document
                    SET document = ?
-                   WHERE state_id = ?"
-                  ;; AND activity_iri = ?
-                  ;; AND agent_ifi = ?
-                  ;; AND registration = ?
+                   WHERE state_id = ?
+                   AND activity_iri = ?
+                   AND agent_ifi = ?
+                   AND registration = NULL"
+                  ;; 
                   (.getBytes "{\"foo\":\"bee\",\"baz\":\"qux\"}")
                   (:stateId doc-id-params)
-                  #_(:activityId doc-id-params)
-                  #_(:agent doc-id-params)
+                  (:activityId doc-id-params)
+                  (:agent doc-id-params)
                   #_nil])
 
   (String. (:contents (p/-get-document (:lrs sys')

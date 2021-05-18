@@ -216,3 +216,14 @@
                    (f/query-activity-profile-document-ids tx)
                    (map :profile_id)))]
     {:document-ids (vec ids)}))
+
+(defn delete-document!
+  [tx {:keys [table] :as input}]
+  (case table
+    :state-document
+    (f/delete-state-document! tx input)
+    :agent-profile-document
+    (f/delete-agent-profile-document! tx input)
+    :activity-profile-document
+    (f/delete-activity-profile-document! tx input))
+  {})
