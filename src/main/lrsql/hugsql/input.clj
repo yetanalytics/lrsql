@@ -392,7 +392,10 @@
   :fn (fn [{:keys [args ret]}]
         (= (u/document-dispatch (:id-params args)) (:table ret))))
 
-(defmulti document->insert-input u/document-dispatch)
+(defmulti document->insert-input
+  "Given ID params and `document`, return the appropriate HugSql document
+   insertion fn param map."
+  (fn [id-params _] (u/document-dispatch id-params)))
 
 (defmethod document->insert-input :state-document
   [{state-id     :stateId
@@ -410,8 +413,6 @@
    :document      document})
 
 (defmethod document->insert-input :agent-profile-document
-  "Given ID parameters for agent profile documents, return the HugSql fn
-   param map."
   [{profile-id :profileId
     agent      :agent}
    document]
@@ -423,8 +424,6 @@
    :document      document})
 
 (defmethod document->insert-input :activity-profile-document
-  "Given ID parameters for activity profile documents, return the HugSql fn
-   param map."
   [{profile-id  :profileId
     activity-id :activityId}
    document]
@@ -493,20 +492,26 @@
 ;; Document Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Single document query
+
 (s/fdef params->document-query-input
   :args (s/cat :id-params hs/id-params-spec)
   :ret hs/document-query-spec
   :fn (fn [{:keys [args ret]}]
         (= (u/document-dispatch (:id-params args)) (:table ret))))
 
-(defmulti params->document-query-input u/document-dispatch)
+(defmulti params->document-query-input
+  "Given ID params, return the appropriate HugSql document query fn
+   param map."
+  u/document-dispatch)
 
 (defmethod params->document-query-input :state-document
   [{state-id     :stateId
     activity-id  :activityId
     agent        :agent
     registration :registration}]
-  (cond-> {:state-id     state-id
+  (cond-> {:table        :state-document
+           :state-id     state-id
            :activity-iri activity-id
            :agent-ifi    (json/write-str (get-ifi (json/read-str agent)))}
     registration
@@ -515,14 +520,18 @@
 (defmethod params->document-query-input :agent-profile-document
   [{profile-id :profileId
     agent      :agent}]
-  {:profile-id profile-id
+  {:table      :agent-profile-document
+   :profile-id profile-id
    :agent-ifi  (json/write-str (get-ifi (json/read-str agent)))})
 
 (defmethod params->document-query-input :activity-profile-document
   [{profile-id  :profileId
     activity-id :activityId}]
-  {:profile-id   profile-id
+  {:table        :activity-profile-document
+   :profile-id   profile-id
    :activity-iri activity-id})
+
+;; Multiple document ID query
 
 (s/fdef params->document-ids-query-input
   :args (s/cat :query-params hs/query-params-spec)
@@ -530,14 +539,18 @@
   :fn (fn [{:keys [args ret]}]
         (= (u/document-dispatch (:query-params args)) (:table ret))))
 
-(defmulti params->document-ids-query-input u/document-dispatch)
+(defmulti params->document-ids-query-input
+  "Given query params, return the appropriate HugSql document ID query fn
+   param map."
+  u/document-dispatch)
 
 (defmethod params->document-ids-query-input :state-document
   [{activity-id  :activityId
     agent        :agent
     registration :registration
     since        :since}]
-  (cond-> {:activity-iri activity-id
+  (cond-> {:table        :state-document
+           :activity-iri activity-id
            :agent-ifi    (json/write-str (get-ifi (json/read-str agent)))}
     registration
     (assoc :registration (u/str->uuid registration))
@@ -547,13 +560,15 @@
 (defmethod params->document-ids-query-input :agent-profile-document
   [{agent :agent
     since :since}]
-  (cond-> {:agent-ifi (json/write-str (get-ifi (json/read-str agent)))}
+  (cond-> {:table     :agent-profile-document
+           :agent-ifi (json/write-str (get-ifi (json/read-str agent)))}
     since
     (assoc :since (u/str->time since))))
 
 (defmethod params->document-ids-query-input :activity-profile-document
   [{activity-id :activityId
     since       :since}]
-  (cond-> {:activity-iri activity-id}
+  (cond-> {:table        :activity-profile-document
+           :activity-iri activity-id}
     since
     (assoc :since (u/str->time since))))

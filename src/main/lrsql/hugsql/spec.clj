@@ -277,17 +277,22 @@
 ;; Document Args
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; NOTE: need to call s/nonconforming in order to make args with with
+;; u/document-dispatch
+
 (def id-params-spec
   "Regex spec for the three types of ID params."
-  (s/alt :state :xapi.document.state/id-params
+  (s/nonconforming
+   (s/or :state :xapi.document.state/id-params
          :agent-profile :xapi.document.agent-profile/id-params
-         :activity-profile :xapi.document.activity-profile/id-params))
+         :activity-profile :xapi.document.activity-profile/id-params)))
 
 (def query-params-spec
   "Regex spec of the three types of query params."
-  (s/alt :state :xapi.document.state/id-params
+  (s/nonconforming
+   (s/or :state :xapi.document.state/id-params
          :agent-profile :xapi.document.agent-profile/id-params
-         :activity-profile :xapi.document.activity-profile/id-params))
+         :activity-profile :xapi.document.activity-profile/id-params)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions
@@ -340,10 +345,13 @@
                    ::document]))
 
 ;; Putting it all together
+;; NOTE: need to call s/nonconforming to make it work with s/fdef's :fn
+
 (def document-insert-spec
-  (s/or :state state-doc-insert-spec
-        :agent-profile agent-profile-doc-insert-spec
-        :activity-profile activity-profile-doc-insert-spec))
+  (s/nonconforming
+   (s/or :state state-doc-insert-spec
+         :agent-profile agent-profile-doc-insert-spec
+         :activity-profile activity-profile-doc-insert-spec)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Queries
@@ -400,13 +408,16 @@
           :opt-un [::since]))
 
 ;; Putting it all together
+;; NOTE: need to call s/nonconforming to make it work with s/fdef's :fn
 
 (def document-query-spec
-  (s/or :state state-doc-query-spec
-        :agent-profile agent-profile-doc-query-spec
-        :activity-profile activity-profile-doc-query-spec))
+  (s/nonconforming
+   (s/or :state state-doc-query-spec
+         :agent-profile agent-profile-doc-query-spec
+         :activity-profile activity-profile-doc-query-spec)))
 
 (def document-ids-query-spec
-  (s/or :state state-doc-query-spec
-        :agent-profile agent-profile-doc-query-spec
-        :activity-profile activity-profile-doc-query-spec))
+  (s/nonconforming
+   (s/or :state state-doc-ids-query-spec
+         :agent-profile agent-profile-doc-ids-query-spec
+         :activity-profile activity-profile-doc-ids-query-spec)))

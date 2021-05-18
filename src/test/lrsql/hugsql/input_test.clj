@@ -32,10 +32,11 @@
   (testing "attachment insertion inputs"
     (is (nil? (check-validate `input/attachments->insert-inputs 5))))
   (testing "document insertion inputs"
-    (is (nil? (check-validate `input/state-document->insert-input)))
-    (is (nil? (check-validate `input/agent-profile-document->insert-input)))
-    (is (nil? (check-validate `input/activity-profile-document->insert-input)))))
+    (is (nil? (check-validate `input/document->insert-input)))))
 
 (deftest test-query-inputs
   (testing "statement query inputs"
-    (is (nil? (check-validate `input/params->query-input)))))
+    (is (nil? (check-validate `input/params->query-input))))
+  (testing "document query inputs"
+    (is (nil? (check-validate `input/params->document-query-input)))
+    (is (nil? (check-validate `input/params->document-ids-query-input)))))
