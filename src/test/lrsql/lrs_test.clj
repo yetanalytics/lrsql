@@ -99,11 +99,6 @@
       (dissoc "authority")
       (dissoc "version")))
 
-(defn- remove-props-res
-  "Apply `remove-props` to a StatementResult object."
-  [query-res]
-  (update query-res :statements (partial map remove-props)))
-
 (deftest test-lrs-protocol-fns
   (let [_     (assert-in-mem-db)
         sys   (system/system)
