@@ -184,3 +184,50 @@
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))
+
+(defn- drop-doc-tables!
+  [tx]
+  (doseq [cmd ["DROP TABLE IF EXISTS state_document"
+               "DROP TABLE IF EXISTS agent_profile_document"
+               "DROP TABLE IF EXISTS activity_profile_document"]]
+    (jdbc/execute! tx [cmd])))
+
+(def doc-id-params
+  {:stateId    "some-id"
+   :activityId "https://example.org/activity-type"
+   :agent      "{\"mbox\":\"mailto:example@example.org\"}"})
+
+(def doc-str
+  "here is a simple doc")
+
+(def doc-bytes
+  (.getBytes doc-str))
+
+(deftest test-document-fns
+  (let [_     (assert-in-mem-db)
+        sys   (system/system)
+        sys'  (component/start sys)
+        lrs   (:lrs sys')]
+    (testing "document insertion"
+      (is (= {}
+             (lrsp/-set-document lrs
+                                 {}
+                                 doc-id-params
+                                 doc-bytes
+                                 false))))
+    (testing "document query"
+      (is (= {:contents "here is a simple doc"
+              :content-length 20
+              :content-type "application/octet-stream" ; TODO
+              :id "some-id"}
+             (-> (lrsp/-get-document lrs {} doc-id-params)
+                 (dissoc :updated)
+                 (update :contents #(String. %))))))
+    (testing "document ID query"
+      (is (= {:document-ids ["some-id"]}
+             (lrsp/-get-document-ids lrs
+                                     {}
+                                     (dissoc doc-id-params :stateId)))))
+    (jdbc/with-transaction [tx ((:conn-pool lrs))]
+      (drop-doc-tables! tx))
+    (component/stop sys')))
