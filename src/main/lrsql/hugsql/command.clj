@@ -76,39 +76,62 @@
        (filter some?)
        (assoc {} :statement-ids)))
 
+(defn- update-input!*
+  [tx input query-fn insert-fn! update-fn!]
+  (if-some [old-doc (some->> (select-keys
+                              input
+                              [:state-id :agent-ifi :activity-iri :?registration])
+                             (query-fn tx)
+                             :document)]
+    (let [old-json
+          (try (parse-json old-doc)
+               (catch Exception _
+                 (throw (ex-info "Cannot merge into non-JSON document"
+                                 {:kind    ::non-json-document
+                                  :input   input
+                                  :old-doc old-doc}))))
+          new-json
+          (try (parse-json (:document input))
+               (catch Exception _
+                 (throw (ex-info "Cannot merge in new non-JSON document"
+                                 {:kind    ::non-json-document
+                                  :input   input
+                                  :old-doc old-doc}))))]
+      (->> (merge old-json new-json)
+           json/write-str
+           .getBytes
+           (assoc input :document)
+           (update-fn! tx))
+      {})
+    (do
+      (insert-fn! tx input)
+      {})))
+
 (defn update-input!
   [tx {:keys [table] :as input}]
-  (let [[query-fn update-fn!]
-        (case table
-          :state-document
-          [f/query-state-document
-           f/update-state-document!]
-          :agent-profile-document
-          [f/query-agent-profile-document
-           f/update-agent-profile-document!]
-          :activity-profile-document
-          [f/query-activity-profile-document
-           f/update-activity-profile-document!]
-          :else
-          (throw (ex-info "`update-input!` is not supported for this table type"
-                          {:kind  ::invalid-table-type
-                           :input input})))
-        old-doc
-        (some->> (select-keys
-                  input
-                  [:state-id :agent-ifi :activity-iri :?registration])
-                 (query-fn tx)
-                 :document)
-        old-json-doc
-        (try (parse-json old-doc)
-             (catch Exception _
-               (throw (ex-info "Cannot merge non-JSON document"
-                               {:kind ::non-json-document
-                                :input input
-                                :document old-doc}))))
-        input'
-        (update input :document (fn [new-doc] (merge old-doc new-doc)))]
-    (update-fn! tx input')))
+  (case table
+    :state-document
+    (update-input!* tx
+                    input
+                    f/query-state-document
+                    f/insert-state-document!
+                    f/update-state-document!)
+    :agent-profile-document
+    (update-input!* tx
+                    input
+                    f/query-agent-profile-document
+                    f/insert-agent-profile-document!
+                    f/update-agent-profile-document!)
+    :activity-profile-document
+    (update-input!* tx
+                    input
+                    f/query-activity-profile-document
+                    f/insert-activity-profile-document!
+                    f/update-activity-profile-document!)
+    :else
+    (throw (ex-info "`update-input!` is not supported for this table type"
+                    {:kind  ::invalid-table-type
+                     :input input}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Queries

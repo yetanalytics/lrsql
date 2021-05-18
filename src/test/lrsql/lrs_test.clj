@@ -197,11 +197,11 @@
    :activityId "https://example.org/activity-type"
    :agent      "{\"mbox\":\"mailto:example@example.org\"}"})
 
-(def doc-str
-  "here is a simple doc")
+(def doc-1
+  "{\"foo\":1,\"bar\":2}")
 
-(def doc-bytes
-  (.getBytes doc-str))
+(def doc-2
+  "{\"foo\":10}")
 
 (deftest test-document-fns
   (let [_     (assert-in-mem-db)
@@ -213,13 +213,19 @@
              (lrsp/-set-document lrs
                                  {}
                                  doc-id-params
-                                 doc-bytes
-                                 false))))
+                                 (.getBytes doc-1)
+                                 false)))
+      (is (= {}
+             (lrsp/-set-document lrs
+                                 {}
+                                 doc-id-params
+                                 (.getBytes doc-2)
+                                 true))))
     (testing "document query"
-      (is (= {:contents "here is a simple doc"
-              :content-length 20
-              :content-type "application/octet-stream" ; TODO
-              :id "some-id"}
+      (is (= {:contents        "{\"foo\":10,\"bar\":2}"
+              :content-length 18
+              :content-type   "application/octet-stream" ; TODO
+              :id             "some-id"}
              (-> (lrsp/-get-document lrs {} doc-id-params)
                  (dissoc :updated)
                  (update :contents #(String. %))))))

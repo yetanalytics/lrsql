@@ -130,7 +130,7 @@ SET document = :document, last_modified = :last-modified
 WHERE state_id = :state-id
 AND activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
-AND registration = :?registration
+--~ (when (:?registration params) "AND registration = :?registration")
 
 -- :name update-agent-profile-document!
 -- :command :insert

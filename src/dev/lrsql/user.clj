@@ -88,4 +88,42 @@
                "DELETE FROM statement_to_attachment"]]
     (jdbc/execute! ds [cmd]))
 
+  (def doc-id-params
+    {:stateId    "some-id"
+     :activityId "https://example.org/activity-type"
+     :agent      "{\"mbox\":\"mailto:example@example.org\"}"})
+  
+  (p/-set-document (:lrs sys')
+                   {}
+                   doc-id-params
+                   (.getBytes "{\"foo\":\"bar\",\"baz\":\"qux\"}")
+                   true)
+  (p/-set-document (:lrs sys')
+                   {}
+                   doc-id-params
+                   (.getBytes "{\"foo\":\"bee\",\"baz\":\"qux\"}")
+                   true)
+  (-> (jdbc/execute! ((-> sys' :lrs :conn-pool))
+                     ["SELECT document FROM state_document"])
+      first
+      :STATE_DOCUMENT/DOCUMENT
+      String.)
+  
+  (jdbc/execute! ((-> sys' :lrs :conn-pool))
+                 ["UPDATE state_document
+                   SET document = ?
+                   WHERE state_id = ?"
+                  ;; AND activity_iri = ?
+                  ;; AND agent_ifi = ?
+                  ;; AND registration = ?
+                  (.getBytes "{\"foo\":\"bee\",\"baz\":\"qux\"}")
+                  (:stateId doc-id-params)
+                  #_(:activityId doc-id-params)
+                  #_(:agent doc-id-params)
+                  #_nil])
+
+  (String. (:contents (p/-get-document (:lrs sys')
+                                       {}
+                                       doc-id-params)))
+
   (component/stop sys))
