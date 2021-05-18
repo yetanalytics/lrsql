@@ -413,8 +413,8 @@
     {:table         :state-document
      :primary-key   (u/generate-uuid)
      :state-id      state-id
-     :activity-id   activity-id
-     :agent-id      (json/write-str (get-ifi (json/read-str agent)))
+     :activity-iri  activity-id
+     :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
      :?registration (when registration (u/str->uuid registration))
      :last-modified (u/current-time)
      :document      document}
@@ -424,7 +424,7 @@
     {:table         :agent-profile-document
      :primary-key   (u/generate-uuid)
      :profile-id    profile-id
-     :agent-id      (json/write-str (get-ifi (json/read-str agent)))
+     :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
      :last-modified (u/current-time)
      :document      document}
 
@@ -433,7 +433,7 @@
     {:table         :activity-profile-document
      :primary-key   (u/generate-uuid)
      :profile-id    profile-id
-     :activity-id   activity-id
+     :activity-iri  activity-id
      :last-modified (u/current-time)
      :document      document}))
 

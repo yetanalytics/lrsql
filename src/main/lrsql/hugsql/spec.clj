@@ -97,9 +97,8 @@
 ;; Document
 (s/def ::state-id string?)
 (s/def ::profile-id string?)
-(s/def ::activity-id :lrsql.hugsql.spec.activity/activity-iri)
-(s/def ::agent-id :lrsql.hugsql.spec.agent/agent-ifi)
-
+(s/def ::activity-iri :lrsql.hugsql.spec.activity/activity-iri)
+(s/def ::agent-ifi :lrsql.hugsql.spec.agent/agent-ifi)
 (s/def ::last-modified inst?)
 (s/def ::document bytes?)
 
@@ -283,8 +282,8 @@
 (def state-document-insert-spec
   (s/keys :req-un [::primary-key
                    ::state-id
-                   ::activity-id
-                   ::agent-id
+                   ::activity-iri
+                   ::agent-ifi
                    ::?registration
                    ::last-modified
                    ::document]))
@@ -299,7 +298,7 @@
 (def agent-profile-document-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
-                   ::agent-id
+                   ::agent-ifi
                    ::last-modified
                    ::document]))
 
@@ -313,7 +312,7 @@
 (def activity-profile-document-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
-                   ::activity-id
+                   ::activity-iri
                    ::last-modified
                    ::document]))
 

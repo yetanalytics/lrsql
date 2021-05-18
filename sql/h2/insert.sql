@@ -96,7 +96,7 @@ state_id = :state-id,
 activity_iri = :activity-iri,
 agent_ifi = :agent-ifi,
 registration = :?registration,
-stored = :stored,
+last_modified = :last-modified,
 document = :document
 
 -- :name insert-agent-profile-document!
@@ -107,7 +107,7 @@ INSERT INTO agent_profile_document SET
 id = :primary-key,
 profile_id = :profile-id,
 agent_ifi = :agent-ifi,
-stored = :stored,
+last_modified = :last-modified,
 document = :document
 
 -- :name insert-activity-profile-document!
@@ -118,5 +118,5 @@ INSERT INTO activity_profile_document SET
 id = :primary-key,
 profile_id = :profile-id,
 activity_iri = :activity-iri,
-stored = :stored,
+last_modified = :last-modified,
 document = :document
