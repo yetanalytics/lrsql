@@ -31,7 +31,6 @@
   (f/create-attachment-table! conn)
   (f/create-statement-to-agent-table! conn)
   (f/create-statement-to-activity-table! conn)
-  (f/create-statement-to-attachment-table! conn)
   (f/create-state-document-table! conn)
   (f/create-agent-profile-document-table! conn)
   (f/create-activity-profile-document-table! conn))

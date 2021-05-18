@@ -39,8 +39,6 @@
     (f/insert-statement-to-agent! tx input)
     :statement-to-activity
     (f/insert-statement-to-activity! tx input)
-    :statement-to-attachment
-    (f/insert-statement-to-attachment! tx input)
     :state-document ; TODO
     nil
     :agent-profile-document ; TODO

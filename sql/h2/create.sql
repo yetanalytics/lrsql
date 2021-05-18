@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS activity (
 -- :doc Create the attachment table if it does not exist yet
 CREATE TABLE IF NOT EXISTS attachment (
   id             UUID NOT NULL PRIMARY KEY,
-  attachment_sha VARCHAR(255) UNIQUE NOT NULL,
+  statement_id   UUID NOT NULL,
+  attachment_sha VARCHAR(255) NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
   payload        BINARY -- Switch to BLOB?
@@ -72,16 +73,6 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
                     'SubOther')
                NOT NULL,
   activity_iri VARCHAR(255) NOT NULL
-)
-
--- :name create-statement-to-attachment-table!
--- :command :execute
--- :result :raw
--- :doc Create the statement_to_attachment link table if it does not exist yet.
-CREATE TABLE IF NOT EXISTS statement_to_attachment (
-  id             UUID NOT NULL PRIMARY KEY,
-  statement_id   UUID NOT NULL,
-  attachment_sha VARCHAR(255) NOT NULL
 )
 
 -- :name create-state-document-table!

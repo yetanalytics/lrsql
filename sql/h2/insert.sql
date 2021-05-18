@@ -48,6 +48,7 @@ payload = :payload FORMAT JSON
 -- :doc Insert a new attachment.
 INSERT INTO attachment SET 
 id = :primary-key,
+statement_id = :statement-id,
 attachment_sha = :attachment-sha,
 content_type = :content-type,
 content_length = :content-length,
@@ -72,12 +73,3 @@ id = :primary-key,
 statement_id = :statement-id,
 usage = :usage,
 activity_iri = :activity-iri
-
--- :name insert-statement-to-attachment!
--- :command :insert
--- :result :affected
--- :doc Insert a new statement-to-attachment relation.
-INSERT INTO statement_to_attachment SET
-id = :primary-key,
-statement_id = :statement-id,
-attachment_sha = :attachment-sha

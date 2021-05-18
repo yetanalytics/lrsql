@@ -101,7 +101,7 @@
 (s/def ::agent-id :lrsql.hugsql.spec.agent/agent-ifi)
 
 (s/def ::last-modified inst?)
-(s/def ::document bytes?)
+(s/def ::document any?) ; TODO `bytes?`
 
 ;; Query Options
 (s/def ::related-agents? boolean?)
@@ -130,23 +130,25 @@
          (s/coll-of ::ss/attachment :gen-max 2)))
 
 (defn- update-stmt-attachments
-  "Update the attachments property of each statement so that any sha2 values
-   correspond to one in `attachments`."
+  "Update the attachments property of each attachment has an associated
+   attachment object in a statement."
   [[statements attachments]]
-  (let [statements'
-        (map (fn [stmt]
-               (if (not-empty attachments)
-                 (let [{:keys [sha2 contentType length]}
-                       (rand-nth attachments)
-                       att
-                       {"usageType"   "https://example.org/aut"
-                        "display"     {"lat" "Lorem Ipsum"}
-                        "sha2"        sha2
-                        "contentType" contentType
-                        "length"      length}]
-                   (assoc stmt "attachments" [att]))
-                 (assoc stmt "attachments" [])))
-             statements)]
+  (let [num-stmts (count statements)
+        statements'
+        (reduce (fn [stmts {:keys [sha2 contentType length] :as _att}]
+                  (let [n (rand-int num-stmts)]
+                    (update-in
+                     stmts
+                     [n "attachments"]
+                     (fn [atts]
+                       (conj atts
+                             {"usageType"   "https://example.org/aut"
+                              "display"     {"lat" "Lorem Ipsum"}
+                              "sha2"        sha2
+                              "contentType" contentType
+                              "length"      length})))))
+                statements
+                attachments)]
     [statements' attachments]))
 
 (def prepared-attachments-spec
@@ -214,6 +216,7 @@
 
 (def attachment-insert-spec
   (s/keys :req-un [::primary-key
+                   ::statement-id
                    :lrsql.hugsql.spec.attachment/attachment-sha
                    :lrsql.hugsql.spec.attachment/content-type
                    :lrsql.hugsql.spec.attachment/content-length
@@ -243,16 +246,6 @@
                    :lrsql.hugsql.spec.activity/usage
                    :lrsql.hugsql.spec.activity/activity-iri]))
 
-;; Statement-to-Attachment
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementID: UUID NOT NULL
-;; - AttachemntSHA2: STRING NOT NULL
-
-(def statement-to-attachment-insert-spec
-  (s/keys :req-un [::primary-key
-                   ::statement-id
-                   :lrsql.hugsql.spec.attachment/attachment-sha]))
-
 ;; Putting it all together
 (def statement-inputs-seq-spec
   (s/cat
@@ -263,9 +256,7 @@
    :stmt-activity-inputs (s/* statement-to-activity-insert-spec)))
 
 (def attachment-inputs-seq-spec
-  (s/cat
-   :attachment-inputs (s/* attachment-insert-spec)
-   :stmt-attachment-inputs (s/* statement-to-attachment-insert-spec)))
+  (s/* attachment-insert-spec))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions
