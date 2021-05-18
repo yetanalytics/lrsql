@@ -32,9 +32,7 @@
           exists  (f/query-activity-exists tx input')]
       (when-not exists (f/insert-activity! tx input)))
     :attachment
-    (let [input' (select-keys input [:attachment-sha])
-          exists (f/query-attachment-exists tx input')]
-      (when-not exists (f/insert-attachment! tx input)))
+    (f/insert-attachment! tx input)
     :statement-to-agent
     (f/insert-statement-to-agent! tx input)
     :statement-to-activity

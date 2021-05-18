@@ -69,10 +69,3 @@ WHERE agent_ifi = :agent-ifi
 -- :doc Check for the existence of an Activity with a given IRI in the activity table. Returns nil iff not found.
 SELECT 1 FROM activity
 WHERE activity_iri = :activity-iri
-
--- :name query-attachment-exists
--- :command :query
--- :result :one
--- :doc Check for the existence of an Attachment with a given SHA2 hash in the attachment table. Returns nil iff not found.
-SELECT 1 FROM attachment
-WHERE attachment_sha = :attachment-sha
