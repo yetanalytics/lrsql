@@ -52,7 +52,6 @@ SELECT payload FROM xapi_statement
 -- :doc Query attachments using query parameters.
 SELECT attachment_sha, content_type, content_length, payload FROM attachment
 WHERE statement_id = :statement-id
--- WHERE :attachments? = TRUE
 
 /* Existence Checks */
 
