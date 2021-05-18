@@ -82,13 +82,12 @@
   "Drop all tables in the db, in preparation for adding them again.
    DO NOT RUN THIS DURING PRODUCTION!!!"
   [tx]
-  (doseq [cmd ["DROP TABLE IF EXISTS xapi_statement"
-               "DROP TABLE IF EXISTS agent"
-               "DROP TABLE IF EXISTS activity"
-               "DROP TABLE IF EXISTS attachment"
+  (doseq [cmd ["DROP TABLE IF EXISTS statement_to_activity"
                "DROP TABLE IF EXISTS statement_to_agent"
-               "DROP TABLE IF EXISTS statement_to_activity"
-               "DROP TABLE IF EXISTS statement_to_attachment"]]
+               "DROP TABLE IF EXISTS attachment"
+               "DROP TABLE IF EXISTS activity"
+               "DROP TABLE IF EXISTS agent"
+               "DROP TABLE IF EXISTS xapi_statement"]]
     (jdbc/execute! tx [cmd])))
 
 (defn- remove-props

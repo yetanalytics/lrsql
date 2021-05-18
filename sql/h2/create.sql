@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS attachment (
   attachment_sha VARCHAR(255) NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  payload        BINARY -- Switch to BLOB?
+  payload        BINARY, -- TODO: Switch to BLOB?
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
 )
 
 -- :name create-statement-to-agent-table!
@@ -58,7 +59,9 @@ CREATE TABLE IF NOT EXISTS statement_to_agent (
   usage        ENUM('Actor', 'Object', 'Authority', 'Instructor', 'Team',
                     'SubActor', 'SubObject', 'SubInstructor', 'SubTeam')
                NOT NULL,
-  agent_ifi    JSON NOT NULL
+  agent_ifi    JSON NOT NULL,
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
+  FOREIGN KEY (agent_ifi) REFERENCES agent(agent_ifi)
 )
 
 -- :name create-statement-to-activity-table!
@@ -72,7 +75,9 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
                     'SubObject', 'SubCategory', 'SubGrouping', 'SubParent',
                     'SubOther')
                NOT NULL,
-  activity_iri VARCHAR(255) NOT NULL
+  activity_iri VARCHAR(255) NOT NULL,
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
+  FOREIGN KEY (activity_iri) REFERENCES activity(activity_iri)
 )
 
 -- :name create-state-document-table!
