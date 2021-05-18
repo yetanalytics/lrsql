@@ -112,28 +112,40 @@
 ;; Documents
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- query-document*
-  [tx input query-fn single-query?]
-  (let [res (query-fn tx input)]
-    (if (single-query? input)
-      (some-> res first :document)
-      (map #(get-in % [:document ]) res))))
-
 (defn query-document
+  "Query a single document from the DB. Returns either a map containing the
+   document as a byte array, or nil if not found."
   [tx {:keys [table] :as input}]
-  (case table
-    :state-document
-    (let [res (f/query-state-documents tx input)]
-      (if (:state-id input)
-        (some-> res first :document)
-        (->> res (map :document))))
-    :agent-profile-document
-    (let [res (f/query-agent-profile-documents tx input)]
-      (if (:profile-id input)
-        (some-> res first :document)
-        (->> res (map :document))))
-    :activity-profile-document
-    (let [res (f/query-activity-profile-documents tx input)]
-      (if (:profile-id input)
-        (some-> res first :document)
-        (->> res (map :document))))))
+  (let [res (case table
+              :state-document
+              (f/query-state-document tx input)
+              :agent-profile-document
+              (f/query-agent-profile-document tx input)
+              :activity-profile-document
+              (f/query-activity-profile-document tx input))]
+    {:contents       (-> res :document)
+     :content-length (-> res :document count)
+     :content-type   "application/octet-stream" ; TODO
+     :id             (or (:state_id res) (:profile_id res))
+     :updated        (:last_modified res)}))
+
+;; TODO: The LRS should also return last modified info.
+;; However, this is not supported in Milt's LRS spec.
+(defn query-document-ids
+  "Query multiple document IDs from the DB. Returns a map containing the
+   vector of IDs."
+  [tx {:keys [table] :as input}]
+  (let [ids (case table
+              :state-document
+              (->> input
+                   (f/query-state-document-ids tx)
+                   (map :state_id))
+              :agent-profile-document
+              (->> input
+                   (f/query-agent-profile-document-ids tx)
+                   (map :profile_id))
+              :activity-profile-document
+              (->> input
+                   (f/query-activity-profile-document-ids tx)
+                   (map :profile_id)))]
+    {:document-ids (vec ids)}))

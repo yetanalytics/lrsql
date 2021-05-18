@@ -86,7 +86,7 @@ WHERE attachment_sha = :attachment-sha
 -- :command :query
 -- :result :one
 -- :doc Query for a single state document.
-SELECT document FROM state_document
+SELECT document, state_id, last_modified FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 AND state_id = :state-id
@@ -106,7 +106,7 @@ AND agent_ifi = :agent-ifi
 -- :command :query
 -- :result :one
 -- :doc Query for a single agent profile document.
-SELECT document FROM agent_profile_document
+SELECT document, profile_id, last_modified FROM agent_profile_document
 WHERE agent_ifi = :agent-ifi
 AND profile_id = :profile-id
 
@@ -122,7 +122,7 @@ WHERE agent_ifi = :agent-ifi
 -- :command :query
 -- :result :one
 -- :doc Query for a single activity profile document.
-SELECT document FROM activity_profile_document
+SELECT document, profile_id, last_modified FROM activity_profile_document
 WHERE activity_iri = :activity-iri
 AND profile_id = :profile-id
 
