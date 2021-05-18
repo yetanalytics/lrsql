@@ -48,13 +48,22 @@
   lp/DocumentResource
   (-set-document
    [lrs auth-identity params document merge?]
-   {})
+   (let [conn  (:conn-pool lrs)
+         input (input/document->insert-input params document)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/insert-input! tx input))))
   (-get-document
-   [this auth-identity params]
-   {:document nil})
+   [lrs auth-identity params]
+   (let [conn  (:conn-pool lrs)
+         input (input/params->document-query-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/query-document tx input))))
   (-get-document-ids
-   [this auth-identity params]
-   {:document-ids []})
+   [lrs auth-identity params]
+   (let [conn  (:conn-pool lrs)
+         input (input/params->document-query-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/query-document-ids tx input))))
   (-delete-document
    [this auth-identity params]
    {})

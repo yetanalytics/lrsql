@@ -41,12 +41,18 @@
     (f/insert-statement-to-activity! tx input)
     :statement-to-attachment
     (f/insert-statement-to-attachment! tx input)
-    :state-document ; TODO
-    nil
-    :agent-profile-document ; TODO
-    nil
-    :activity-profile-document ; TODO
-    nil))
+    :state-document
+    (do
+      (f/insert-state-document! tx input)
+      {})
+    :agent-profile-document
+    (do
+      (f/insert-agent-profile-document! tx input)
+      {})
+    :activity-profile-document
+    (do
+      (f/insert-activity-profile-document! tx input)
+      {})))
 
 (defn insert-inputs!
   "Insert a sequence of inputs into th DB. Return a seq of Statement IDs
