@@ -386,56 +386,62 @@
 ;; Document Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef document->insert-input
-  :args (s/cat
-         :id-params
-         (s/alt :state :xapi.document.state/id-params
-                :agent-profile :xapi.document.agent-profile/id-params
-                :activity-profile :xapi.document.activity-profile/id-params)
-         :document any?) ; TODO: bytes? predicate
-  :ret (s/or :state hs/state-document-insert-spec
-             :agent-profile hs/agent-profile-document-insert-spec
-             :activity-profile hs/activity-profile-document-insert-spec))
+(s/fdef state-document->insert-input
+ :args (s/cat :id-params :xapi.document.state/id-params
+              :document bytes?)
+ :ret hs/state-document-insert-spec)
 
-(defn document->insert-input
-  "Given `id-params` and `document`, return the appropriate HugSql insertion
-   function params map."
+(defn state-document->insert-input
+  "Given ID parameters for state documents, return the HugSql fn param map."
   [{state-id     :stateId
-    profile-id   :profileId
     activity-id  :activityId
     agent        :agent
-    registration :registration
-    :as          _id-params}
-   ^bytes document]
-  (cond
-    ;; State Document
-    state-id
-    {:table         :state-document
-     :primary-key   (u/generate-uuid)
-     :state-id      state-id
-     :activity-iri  activity-id
-     :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
-     :?registration (when registration (u/str->uuid registration))
-     :last-modified (u/current-time)
-     :document      document}
+    registration :registration}
+   document]
+  {:table         :state-document
+   :primary-key   (u/generate-uuid)
+   :state-id      state-id
+   :activity-iri  activity-id
+   :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
+   :?registration (when registration (u/str->uuid registration))
+   :last-modified (u/current-time)
+   :document      document})
 
-    ;; Agent Profile Document
-    (and profile-id agent)
-    {:table         :agent-profile-document
-     :primary-key   (u/generate-uuid)
-     :profile-id    profile-id
-     :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
-     :last-modified (u/current-time)
-     :document      document}
+(s/fdef agent-profile-document->insert-input
+  :args (s/cat :id-params :xapi.document.agent-profile/id-params
+               :document bytes?)
+  :ret hs/agent-profile-document-insert-spec)
 
-    ;; Activity Profile Document
-    (and profile-id activity-id)
-    {:table         :activity-profile-document
-     :primary-key   (u/generate-uuid)
-     :profile-id    profile-id
-     :activity-iri  activity-id
-     :last-modified (u/current-time)
-     :document      document}))
+(defn agent-profile-document->insert-input
+  "Given ID parameters for agent profile documents, return the HugSql fn
+   param map."
+  [{profile-id :profileId
+    agent      :agent}
+   document]
+  {:table         :agent-profile-document
+   :primary-key   (u/generate-uuid)
+   :profile-id    profile-id
+   :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
+   :last-modified (u/current-time)
+   :document      document})
+
+(s/fdef activity-profile-document->insert-input
+  :args (s/cat :id-params :xapi.document.activity-profile/id-params
+               :document bytes?)
+  :ret hs/activity-profile-document-insert-spec)
+
+(defn activity-profile-document->insert-input
+  "Given ID parameters for activity profile documents, return the HugSql fn
+   param map."
+  [{profile-id  :profileId
+    activity-id :activityId}
+   document]
+  {:table         :activity-profile-document
+   :primary-key   (u/generate-uuid)
+   :profile-id    profile-id
+   :activity-iri  activity-id
+   :last-modified (u/current-time)
+   :document      document})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query
