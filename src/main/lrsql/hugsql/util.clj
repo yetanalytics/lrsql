@@ -4,6 +4,25 @@
             [com.yetanalytics.lrs.xapi.statements :as ss]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Macros
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmacro with-invalid-str-ex
+  "Wrap `(parse-fn s)` in an exception such that on parse failure, the
+   folloiwing error data is thrown:
+     :kind      ::invalid-string
+     :string    `s`
+     :str-type  `str-type`"
+  [str-type parse-fn s]
+  `(try (~parse-fn ~s)
+        (catch Exception e#
+          (throw (ex-info (format "Cannot parse nil or invalid %s string"
+                                  ~str-type)
+                          {:kind     ::invalid-string
+                           :string   ~s
+                           :str-type ~str-type})))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UUIDs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -15,7 +34,7 @@
 (defn str->uuid
   "Parse a string into an UUID."
   [uuid-str]
-  (java.util.UUID/fromString uuid-str))
+  (with-invalid-str-ex "UUID" java.util.UUID/fromString uuid-str))
 
 (defn uuid->str
   "Convert a UUID into a string."
@@ -34,7 +53,7 @@
 (defn str->time
   "Parse a string into a java.util.Instant timestamp."
   [ts-str]
-  (jt/instant ts-str))
+  (with-invalid-str-ex "timestamp" jt/instant ts-str))
 
 (defn time->str
   "Convert a java.util.Instant timestamp into a string."

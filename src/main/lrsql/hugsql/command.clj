@@ -16,12 +16,18 @@
     (bytes? jsn) ; H2 returns JSON data as a byte array
     (json/read-str (String. jsn))))
 
-(defn- invalid-table-ex
+(defmacro throw-invalid-table-ex
+  "Throw an exception with the following error data:
+   
+   :kind  ::invalid-table
+   :table <table name>
+   :input <input>"
   [fn-name input]
-  (ex-info (format "`%s` not supported for this table type" fn-name)
-           {:kind    ::invalid-table
-            :input   input
-            :fn-name fn-name}))
+  `(throw
+    (ex-info (format "`%s` is not supported for this table type" ~fn-name)
+             {:kind  ::invalid-table
+              :table ~(:table input)
+              :input ~input})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insertions
@@ -136,7 +142,7 @@
                     f/insert-activity-profile-document!
                     f/update-activity-profile-document!)
     ;; Else
-    (throw (invalid-table-ex "update-input!" input))))
+    (throw-invalid-table-ex "update-input!" input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Queries
@@ -196,7 +202,7 @@
               :activity-profile-document
               (f/query-activity-profile-document tx input)
               ;; Else
-              (throw (invalid-table-ex "query-document" input)))]
+              (throw-invalid-table-ex "query-document" input))]
     {:contents       (-> res :document)
      :content-length (-> res :document count)
      :content-type   "application/octet-stream" ; TODO
@@ -223,7 +229,7 @@
                    (f/query-activity-profile-document-ids tx)
                    (map :profile_id))
               ;; Else
-              (throw (invalid-table-ex "query-document-ids" input)))]
+              (throw-invalid-table-ex "query-document-ids" input))]
     {:document-ids (vec ids)}))
 
 (defn delete-document!
@@ -236,5 +242,5 @@
     :activity-profile-document
     (f/delete-activity-profile-document! tx input)
     ;; Else
-    (throw (invalid-table-ex "delete-document!" input)))
+    (throw-invalid-table-ex "delete-document!" input))
   {})
