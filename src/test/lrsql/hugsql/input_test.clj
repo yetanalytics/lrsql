@@ -24,13 +24,12 @@
     (is (nil? (check-validate `input/activity->insert-input)))
     (is (nil? (check-validate `input/attachment->insert-input)))
     (is (nil? (check-validate `input/agent-input->link-input)))
-    (is (nil? (check-validate `input/activity-input->link-input)))
-    (is (nil? (check-validate `input/attachment-input->link-input))))
+    (is (nil? (check-validate `input/activity-input->link-input))))
   (testing "statement insertion inputs"
     (is (nil? (check-validate `input/statement->insert-inputs 10)))
     (is (nil? (check-validate `input/statements->insert-inputs 5))))
   (testing "attachment insertion inputs"
-    (is (nil? (check-validate `input/attachments->insert-inputs 5))))
+    (is (nil? (check-validate `input/attachments->insert-inputs 10))))
   (testing "document insertion inputs"
     (is (nil? (check-validate `input/document->insert-input)))))
 

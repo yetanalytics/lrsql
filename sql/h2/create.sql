@@ -41,10 +41,12 @@ CREATE TABLE IF NOT EXISTS activity (
 -- :doc Create the attachment table if it does not exist yet
 CREATE TABLE IF NOT EXISTS attachment (
   id             UUID NOT NULL PRIMARY KEY,
-  attachment_sha VARCHAR(255) UNIQUE NOT NULL,
+  statement_id   UUID NOT NULL,
+  attachment_sha VARCHAR(255) NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  payload        BINARY -- Switch to BLOB?
+  content        BINARY NOT NULL, -- TODO: Switch to BLOB?
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
 )
 
 -- :name create-statement-to-agent-table!
@@ -57,7 +59,9 @@ CREATE TABLE IF NOT EXISTS statement_to_agent (
   usage        ENUM('Actor', 'Object', 'Authority', 'Instructor', 'Team',
                     'SubActor', 'SubObject', 'SubInstructor', 'SubTeam')
                NOT NULL,
-  agent_ifi    JSON NOT NULL
+  agent_ifi    JSON NOT NULL,
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
+  FOREIGN KEY (agent_ifi) REFERENCES agent(agent_ifi)
 )
 
 -- :name create-statement-to-activity-table!
@@ -71,17 +75,9 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
                     'SubObject', 'SubCategory', 'SubGrouping', 'SubParent',
                     'SubOther')
                NOT NULL,
-  activity_iri VARCHAR(255) NOT NULL
-)
-
--- :name create-statement-to-attachment-table!
--- :command :execute
--- :result :raw
--- :doc Create the statement_to_attachment link table if it does not exist yet.
-CREATE TABLE IF NOT EXISTS statement_to_attachment (
-  id             UUID NOT NULL PRIMARY KEY,
-  statement_id   UUID NOT NULL,
-  attachment_sha VARCHAR(255) NOT NULL
+  activity_iri VARCHAR(255) NOT NULL,
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
+  FOREIGN KEY (activity_iri) REFERENCES activity(activity_iri)
 )
 
 -- :name create-state-document-table!

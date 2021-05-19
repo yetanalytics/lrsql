@@ -49,13 +49,9 @@ SELECT payload FROM xapi_statement
 -- :name query-attachments
 -- :command :query
 -- :result :many
--- :doc Query attachments using query parameters
-SELECT attachment.attachment_sha, content_type, content_length, payload
-FROM attachment
-INNER JOIN statement_to_attachment
-ON attachment.attachment_sha = statement_to_attachment.attachment_sha
-AND statement_to_attachment.statement_id = :statement-id
--- WHERE :attachments? = TRUE
+-- :doc Query attachments using query parameters.
+SELECT attachment_sha, content_type, content_length, content FROM attachment
+WHERE statement_id = :statement-id
 
 /* Existence Checks */
 
@@ -72,13 +68,6 @@ WHERE agent_ifi = :agent-ifi
 -- :doc Check for the existence of an Activity with a given IRI in the activity table. Returns nil iff not found.
 SELECT 1 FROM activity
 WHERE activity_iri = :activity-iri
-
--- :name query-attachment-exists
--- :command :query
--- :result :one
--- :doc Check for the existence of an Attachment with a given SHA2 hash in the attachment table. Returns nil iff not found.
-SELECT 1 FROM attachment
-WHERE attachment_sha = :attachment-sha
 
 /* Document Queries */
 
