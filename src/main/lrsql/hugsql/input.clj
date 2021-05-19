@@ -26,7 +26,6 @@
   (when-some [ifi-str (u/agent->ifi agent)]
     {:table             :agent
      :primary-key       (u/generate-uuid)
-     :?name             (get agent "name")
      :agent-ifi         ifi-str
      :payload           (json/write-str agent)
      :identified-group? (= "Group" (get agent "objectType"))}))

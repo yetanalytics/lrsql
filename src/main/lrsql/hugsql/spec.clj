@@ -81,7 +81,6 @@
 
 ;; Agent
 
-(s/def :lrsql.hugsql.spec.agent/?name (s/nilable string?))
 (s/def :lrsql.hugsql.spec.agent/identified-group? boolean?)
 
 ;; "mbox::mailto:foo@example.com"
@@ -231,7 +230,6 @@
 
 (def agent-insert-spec
   (s/keys :req-un [::primary-key
-                   :lrsql.hugsql.spec.agent/?name
                    :lrsql.hugsql.spec.agent/agent-ifi
                    :lrsql.hugsql.spec.agent/identified-group?
                    :lrsql.hugsql.spec.agent/payload]))
