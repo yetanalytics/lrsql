@@ -100,14 +100,6 @@
 (s/def :lrsql.hugsql.spec.attachment/content-length int?)
 (s/def :lrsql.hugsql.spec.attachment/content bytes?)
 
-;; Document
-(s/def ::state-id string?)
-(s/def ::profile-id string?)
-(s/def ::activity-iri :lrsql.hugsql.spec.activity/activity-iri)
-(s/def ::agent-ifi :lrsql.hugsql.spec.agent/agent-ifi)
-(s/def ::last-modified inst?)
-(s/def ::document any?) ; TODO `bytes?`
-
 ;; Query Options
 (s/def ::related-agents? boolean?)
 (s/def ::related-activities? boolean?)
@@ -252,7 +244,7 @@
                    :lrsql.hugsql.spec.activity/activity-iri]))
 
 ;; Putting it all together
-(def statement-inputs-seq-spec
+(def statement-insert-seq-spec
   (s/cat
    :statement-input statement-insert-spec
    :agent-inputs (s/* agent-insert-spec)
@@ -260,8 +252,26 @@
    :stmt-agent-inputs (s/* statement-to-agent-insert-spec)
    :stmt-activity-inputs (s/* statement-to-activity-insert-spec)))
 
-(def attachment-inputs-seq-spec
+(def attachment-insert-seq-spec
   (s/* attachment-insert-spec))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Queries
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def statement-query-spec
+  (s/keys :opt-un [::statement-id
+                   ::voided?
+                   ::verb-iri
+                   ::registration
+                   ::since
+                   ::until
+                   ::limit
+                   ::ascending?
+                   ::related-agents?
+                   ::related-activities?
+                   :lrsql.hugsql.spec.agent/agent-ifi
+                   :lrsql.hugsql.spec.activity/activity-iri]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Args
@@ -344,75 +354,56 @@
          :activity-profile activity-profile-doc-insert-spec)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Statement Queries
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def statement-query-spec
-  (s/keys :opt-un [::statement-id
-                   ::voided?
-                   ::verb-iri
-                   ::registration
-                   ::since
-                   ::until
-                   ::limit
-                   ::ascending?
-                   ::related-agents?
-                   ::related-activities?
-                   :lrsql.hugsql.spec.agent/agent-ifi
-                   :lrsql.hugsql.spec.activity/activity-iri]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Queries + Deletions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Document queries
+;; Document queries/deletions
 
-(def state-doc-query-spec
+(def state-doc-input-spec
   (s/keys :req-un [::activity-iri
                    ::agent-ifi
                    ::state-id
                    ::?registration]))
 
-(def agent-profile-doc-query-spec
+(def agent-profile-doc-input-spec
   (s/keys :req-un [::agent-ifi
                    ::profile-id]))
 
-(def activity-profile-doc-query-spec
+(def activity-profile-doc-input-spec
   (s/keys :req-un [::activity-iri
                    ::profile-id]))
 
+(def document-input-spec
+  (s/nonconforming ; needed to make s/fdef work
+   (s/or :state state-doc-input-spec
+         :agent-profile agent-profile-doc-input-spec
+         :activity-profile activity-profile-doc-input-spec)))
+
+;; Document multi-query/delete
+
+(def state-doc-multi-input-spec
+  (s/keys :req-un [::activity-iri
+                   ::agent-ifi
+                   ::?registration]))
+
 ;; Document ID queries
 
-(def state-doc-ids-query-spec
+(def state-doc-ids-input-spec
   (s/keys :req-un [::activity-iri
                    ::agent-ifi
                    ::?registration]
           :opt-un [::since]))
 
-(def agent-profile-doc-ids-query-spec
+(def agent-profile-doc-ids-input-spec
   (s/keys :req-un [::agent-ifi]
           :opt-un [::since]))
 
-(def activity-profile-doc-ids-query-spec
+(def activity-profile-doc-ids-input-spec
   (s/keys :req-un [::activity-iri]
           :opt-un [::since]))
 
-(def state-doc-multi-delete-spec
-  (s/keys :req-un [::activity-iri
-                   ::agent-ifi
-                   ::?registration]))
-
-;; Putting it all together
-;; NOTE: need to call s/nonconforming to make it work with s/fdef's :fn
-
-(def document-query-spec
-  (s/nonconforming
-   (s/or :state state-doc-query-spec
-         :agent-profile agent-profile-doc-query-spec
-         :activity-profile activity-profile-doc-query-spec)))
-
 (def document-ids-query-spec
-  (s/nonconforming
-   (s/or :state state-doc-ids-query-spec
-         :agent-profile agent-profile-doc-ids-query-spec
-         :activity-profile activity-profile-doc-ids-query-spec)))
+  (s/nonconforming ; needed to make s/fdef work
+   (s/or :state state-doc-ids-input-spec
+         :agent-profile agent-profile-doc-ids-input-spec
+         :activity-profile activity-profile-doc-ids-input-spec)))

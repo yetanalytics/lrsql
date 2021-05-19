@@ -30,17 +30,17 @@
    [lrs auth-identity statements attachments]
    (let [conn        (:conn-pool lrs)
          stmts       (map u/prepare-statement statements)
-         stmt-inputs (input/statements->insert-inputs stmts)
+         stmt-inputs (input/statements-insert-inputs stmts)
          att-inputs  (when (not-empty attachments)
-                       (input/attachments->insert-inputs stmts attachments))]
+                       (input/attachments-insert-inputs stmts attachments))]
      (jdbc/with-transaction [tx (conn)]
-       (command/insert-inputs! tx (concat stmt-inputs att-inputs)))))
+       (command/insert-statements! tx (concat stmt-inputs att-inputs)))))
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)
-         inputs (input/params->query-input params)]
+         inputs (input/statement-query-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (command/query-statement-input tx inputs))))
+       (command/query-statements tx inputs))))
   (-consistent-through
    [this ctx auth-identity]
    "timestamp-here") ; TODO: return needs to be a timestamp
@@ -49,33 +49,33 @@
   (-set-document
    [lrs auth-identity params document merge?]
    (let [conn  (:conn-pool lrs)
-         input (input/document->insert-input params document)]
+         input (input/document-insert-input params document)]
      (jdbc/with-transaction [tx (conn)]
        (if merge?
-         (command/update-input! tx input)
-         (command/insert-input! tx input)))))
+         (command/update-document! tx input)
+         (command/insert-document! tx input)))))
   (-get-document
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
-         input (input/params->document-query-input params)]
+         input (input/document-input params)]
      (jdbc/with-transaction [tx (conn)]
        (command/query-document tx input))))
   (-get-document-ids
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
-         input (input/params->document-ids-query-input params)]
+         input (input/document-ids-input params)]
      (jdbc/with-transaction [tx (conn)]
        (command/query-document-ids tx input))))
   (-delete-document
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
-         input (input/params->document-query-input params)]
+         input (input/document-input params)]
      (jdbc/with-transaction [tx (conn)]
        (command/delete-document! tx input))))
   (-delete-documents
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
-         input (input/params->document-multi-delete-input params)]
+         input (input/document-multi-input params)]
      (jdbc/with-transaction [tx (conn)]
        (command/delete-document! tx input))))
 

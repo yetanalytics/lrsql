@@ -9,12 +9,24 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- parse-json
-  [jsn]
+  "Parse `data` into JSON format."
+  [data]
   (cond
-    (string? jsn)
-    (json/read-str jsn)
-    (bytes? jsn) ; H2 returns JSON data as a byte array
-    (json/read-str (String. jsn))))
+    (string? data)
+    (json/read-str data)
+    (bytes? data) ; H2 returns JSON data as a byte array
+    (json/read-str (String. data))))
+
+(defmacro wrapped-parse-json
+  "Wraps `parse-json` in a try-catch block, throwing ExceptionInfo containing
+   the description `data-type` on failure."
+  [data-type data]
+  `(try (parse-json ~data)
+        (catch Exception e#
+          (throw (ex-info (format "Cannot parse %s as JSON!" ~data-type)
+                          {:kind ::non-json-document
+                           :type ~data-type
+                           :data ~data})))))
 
 (defmacro throw-invalid-table-ex
   "Throw an exception with the following error data:
@@ -35,10 +47,10 @@
                 :fn-name ~fn-name}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Insertions
+;; Statement Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn insert-input!
+(defn- insert-statement-input!
   "Insert a new input into the DB. If the input is a Statement, return the
    Statement ID on success, nil for any other kind of input."
   [tx {:keys [table] :as input}]
@@ -60,7 +72,7 @@
       (when-not exists (f/insert-agent! tx input)))
     :activity
     (let [input' (select-keys input [:activity-iri])
-          exists  (f/query-activity-exists tx input')]
+          exists (f/query-activity-exists tx input')]
       (when-not exists (f/insert-activity! tx input)))
     :attachment
     (f/insert-attachment! tx input)
@@ -68,87 +80,21 @@
     (f/insert-statement-to-agent! tx input)
     :statement-to-activity
     (f/insert-statement-to-activity! tx input)
-    :state-document
-    (do
-      (f/insert-state-document! tx input)
-      {})
-    :agent-profile-document
-    (do
-      (f/insert-agent-profile-document! tx input)
-      {})
-    :activity-profile-document
-    (do
-      (f/insert-activity-profile-document! tx input)
-      {})))
+    ;; Else
+    (throw-invalid-table-ex "insert-statement!" input)))
 
-(defn insert-inputs!
-  "Insert a sequence of inputs into th DB. Return the following map:
-   
-   {:statement-id <seq of statement IDs>}"
+(defn insert-statements!
+  "Insert one or more statements into the DB by inserting a sequence of inputs.
+   Return a map between `:statement-ids` and a coll of statement IDs."
   [tx inputs]
   (->> inputs
-       (map (partial insert-input! tx))
+       (map (partial insert-statement-input! tx))
        doall
        (filter some?)
        (assoc {} :statement-ids)))
 
-(defn- update-input!*
-  [tx input query-fn insert-fn! update-fn!]
-  (if-some [old-doc (some->> (select-keys
-                              input
-                              [:state-id :agent-ifi :activity-iri :?registration])
-                             (query-fn tx)
-                             :document)]
-    (let [old-json
-          (try (parse-json old-doc)
-               (catch Exception _
-                 (throw (ex-info "Cannot merge into non-JSON document"
-                                 {:kind    ::non-json-document
-                                  :input   input
-                                  :old-doc old-doc}))))
-          new-json
-          (try (parse-json (:document input))
-               (catch Exception _
-                 (throw (ex-info "Cannot merge in new non-JSON document"
-                                 {:kind    ::non-json-document
-                                  :input   input
-                                  :old-doc old-doc}))))]
-      (->> (merge old-json new-json)
-           json/write-str
-           .getBytes
-           (assoc input :document)
-           (update-fn! tx))
-      {})
-    (do
-      (insert-fn! tx input)
-      {})))
-
-(defn update-input!
-  [tx {:keys [table] :as input}]
-  (case table
-    :state-document
-    (update-input!* tx
-                    input
-                    f/query-state-document
-                    f/insert-state-document!
-                    f/update-state-document!)
-    :agent-profile-document
-    (update-input!* tx
-                    input
-                    f/query-agent-profile-document
-                    f/insert-agent-profile-document!
-                    f/update-agent-profile-document!)
-    :activity-profile-document
-    (update-input!* tx
-                    input
-                    f/query-activity-profile-document
-                    f/insert-activity-profile-document!
-                    f/update-activity-profile-document!)
-    ;; Else
-    (throw-invalid-table-ex "update-input!" input)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Queries
+;; Statement Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- conform-attachment-res
@@ -161,21 +107,15 @@
    :contentType content-type
    :content     content})
 
-(defn query-statement-input
-  "Query Statements from the DB. Return the following on a singleton Statement
-   query (i.e. if a Statement ID is included in params):
-
-   {:statement   <queried statement>
-    :attachments <seq of attachments>}
-   
-   and the following if multiple Statements are queried:
-   {:statement-result {:statements <seq of queried statements>}
-                       :more       <url for additional queries>}
-    :attachments      <seq of attachments>}"
+(defn query-statements
+  "Query statements from the DB. Return a map containing a singleton
+   `:statement` if a statement ID is included in the query, or a
+   `:statement-result` object otherwise. The map also contains `:attachments`
+   to return any associated attachments."
   [tx input]
   (let [stmt-res  (->> input
                        (f/query-statement tx)
-                       (map #(-> % :payload parse-json)))
+                       (map #(->> % :payload (wrapped-parse-json "statement"))))
         att-res   (if (:attachments? input)
                     (->> (doall (map #(->> (get % "id")
                                            (assoc {} :statement-id)
@@ -198,7 +138,82 @@
        :attachments      att-res})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Documents
+;; Document Mutation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn insert-document!
+  "Insert a new document into the DB. Returns an empty map."
+  [tx {:keys [table] :as input}]
+  (case table
+    :state-document
+    (f/insert-state-document! tx input)
+    :agent-profile-document
+    (f/insert-agent-profile-document! tx input)
+    :activity-profile-document
+    (f/insert-activity-profile-document! tx input)
+    ;; Else
+    (throw-invalid-table-ex "insert-document!" input))
+  {})
+
+(defn delete-document!
+  "Delete a document from the DB. Returns an empty map."
+  [tx {:keys [table] :as input}]
+  (case table
+    :state-document
+    (f/delete-state-document! tx input)
+    :agent-profile-document
+    (f/delete-agent-profile-document! tx input)
+    :activity-profile-document
+    (f/delete-activity-profile-document! tx input)
+    ;; Else
+    (throw-invalid-table-ex "delete-document!" input))
+  {})
+
+(defn- update-document!*
+  "Common functionality for all cases in `update-document!`"
+  [tx input query-fn insert-fn! update-fn!]
+  (let [query-keys [:state-id :agent-ifi :activity-iri :?registration]
+        old-data   (query-fn tx (select-keys input query-keys))]
+    (if-some [old-doc (some->> old-data :document)]
+      (let [old-json (wrapped-parse-json "stored document" old-doc)
+            new-json (wrapped-parse-json "new document" (:document input))]
+        (->> (merge old-json new-json)
+             json/write-str
+             .getBytes
+             (assoc input :document)
+             (update-fn! tx)))
+      (insert-fn! tx input))))
+
+(defn update-document!
+  "Update the document given by `input` if found, inserts a new document
+   otherwise. Assumes that both the old and new document are in JSON format.
+   Returns an empty map."
+  [tx {:keys [table] :as input}]
+  (case table
+    :state-document
+    (update-document!* tx
+                       input
+                       f/query-state-document
+                       f/insert-state-document!
+                       f/update-state-document!)
+    :agent-profile-document
+    (update-document!* tx
+                       input
+                       f/query-agent-profile-document
+                       f/insert-agent-profile-document!
+                       f/update-agent-profile-document!)
+    :activity-profile-document
+    (update-document!* tx
+                       input
+                       f/query-activity-profile-document
+                       f/insert-activity-profile-document!
+                       f/update-activity-profile-document!)
+    ;; Else
+    (throw-invalid-table-ex "update-input!" input))
+  {})
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Document Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn query-document
@@ -242,16 +257,3 @@
               ;; Else
               (throw-invalid-table-ex "query-document-ids" input))]
     {:document-ids (vec ids)}))
-
-(defn delete-document!
-  [tx {:keys [table] :as input}]
-  (case table
-    :state-document
-    (f/delete-state-document! tx input)
-    :agent-profile-document
-    (f/delete-agent-profile-document! tx input)
-    :activity-profile-document
-    (f/delete-activity-profile-document! tx input)
-    ;; Else
-    (throw-invalid-table-ex "delete-document!" input))
-  {})
