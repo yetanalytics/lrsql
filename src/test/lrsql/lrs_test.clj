@@ -82,7 +82,12 @@
   "Drop all tables in the db, in preparation for adding them again.
    DO NOT RUN THIS DURING PRODUCTION!!!"
   [tx]
-  (doseq [cmd ["DROP TABLE IF EXISTS statement_to_activity"
+  (doseq [cmd [;; Drop document tables
+               "DROP TABLE IF EXISTS state_document"
+               "DROP TABLE IF EXISTS agent_profile_document"
+               "DROP TABLE IF EXISTS activity_profile_document"
+               ;; Drop statement tables
+               "DROP TABLE IF EXISTS statement_to_activity"
                "DROP TABLE IF EXISTS statement_to_agent"
                "DROP TABLE IF EXISTS attachment"
                "DROP TABLE IF EXISTS activity"
@@ -179,13 +184,6 @@
       (drop-all! tx))
     (component/stop sys')))
 
-(defn- drop-doc-tables!
-  [tx]
-  (doseq [cmd ["DROP TABLE IF EXISTS state_document"
-               "DROP TABLE IF EXISTS agent_profile_document"
-               "DROP TABLE IF EXISTS activity_profile_document"]]
-    (jdbc/execute! tx [cmd])))
-
 (def doc-id-params
   {:stateId    "some-id"
    :activityId "https://example.org/activity-type"
@@ -238,5 +236,5 @@
                                      {}
                                      (dissoc doc-id-params :stateId)))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
-      (drop-doc-tables! tx))
+      (drop-all! tx))
     (component/stop sys')))
