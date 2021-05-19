@@ -340,12 +340,16 @@
   ;; NOTE: SHAs may collide, so we also equate on length and content type.
   (let [att-stmt-id-m
         (reduce
-         (fn [m {stmt-id "id" stmt-atts "attachments"}]
-           (reduce
-            (fn [m' {:strs [sha2 length contentType] :as _att}]
-              (assoc m' [sha2 length contentType] stmt-id))
-            m
-            stmt-atts))
+         (fn [m {stmt-id "id" stmt-obj "object" stmt-atts "attachments"}]
+           (let [stmt-atts' (cond-> stmt-atts
+                              ;; SubStatement attachments
+                              (= "SubStatement" (get stmt-obj "objectType"))
+                              (concat (get stmt-obj "attachments")))]
+             (reduce
+              (fn [m' {:strs [sha2 length contentType] :as _att}]
+                (assoc m' [sha2 length contentType] stmt-id))
+              m
+              stmt-atts')))
          {}
          statements)
         att->stmt-id
