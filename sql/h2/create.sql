@@ -1,7 +1,6 @@
 -- :name create-statement-table!
 -- :command :execute
--- :result :raw
--- :doc Create the statement table if it does not exist yet.
+-- :doc Create the `statement` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS xapi_statement (
   id               UUID NOT NULL PRIMARY KEY,
   statement_id     UUID NOT NULL UNIQUE,
@@ -16,8 +15,7 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
 
 -- :name create-agent-table!
 -- :command :execute
--- :result :raw
--- :doc Create the agent table if it does not exist yet
+-- :doc Create the `agent` table if it does not exist yet
 CREATE TABLE IF NOT EXISTS agent (
   id                  UUID NOT NULL PRIMARY KEY,
   agent_ifi           JSON NOT NULL UNIQUE,
@@ -27,8 +25,7 @@ CREATE TABLE IF NOT EXISTS agent (
 
 -- :name create-activity-table!
 -- :command :execute
--- :result :raw
--- :doc Create the activity table if it does not exist yet
+-- :doc Create the `activity` table if it does not exist yet
 CREATE TABLE IF NOT EXISTS activity (
   id           UUID NOT NULL PRIMARY KEY,
   activity_iri VARCHAR(255) NOT NULL UNIQUE,
@@ -37,8 +34,7 @@ CREATE TABLE IF NOT EXISTS activity (
 
 -- :name create-attachment-table!
 -- :command :execute
--- :result :raw
--- :doc Create the attachment table if it does not exist yet
+-- :doc Create the `attachment` table if it does not exist yet
 CREATE TABLE IF NOT EXISTS attachment (
   id             UUID NOT NULL PRIMARY KEY,
   statement_id   UUID NOT NULL,
@@ -51,8 +47,7 @@ CREATE TABLE IF NOT EXISTS attachment (
 
 -- :name create-statement-to-agent-table!
 -- :command :execute
--- :result :raw
--- :doc Create the statement_to_agent link table if it does not exist yet.
+-- :doc Create the `statement_to_agent` link table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS statement_to_agent (
   id           UUID NOT NULL PRIMARY KEY,
   statement_id UUID NOT NULL,
@@ -66,8 +61,7 @@ CREATE TABLE IF NOT EXISTS statement_to_agent (
 
 -- :name create-statement-to-activity-table!
 -- :command :execute
--- :result :raw
--- :doc Create the statement_to_activity link table if it does not exist yet.
+-- :doc Create the `statement_to_activity` link table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS statement_to_activity (
   id           UUID NOT NULL PRIMARY KEY,
   statement_id UUID NOT NULL,
@@ -82,8 +76,7 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
 
 -- :name create-state-document-table!
 -- :command :execute
--- :result :raw
--- :doc Create the state_document table if it does not exist yet.
+-- :doc Create the `state_document` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS state_document (
   id            UUID NOT NULL PRIMARY KEY,
   state_id      VARCHAR(255) NOT NULL,
@@ -96,8 +89,7 @@ CREATE TABLE IF NOT EXISTS state_document (
 
 -- :name create-agent-profile-document-table!
 -- :command :execute
--- :result :raw
--- :doc Create the agent_profile_document table if it does not exist yet.
+-- :doc Create the `agent_profile_document` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS agent_profile_document (
   id            UUID NOT NULL PRIMARY KEY,
   profile_id    VARCHAR(255) NOT NULL,
@@ -108,8 +100,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
 
 -- :name create-activity-profile-document-table!
 -- :command :execute
--- :result :raw
--- :doc Create the activity_profile_document table if it does not exist yet.
+-- :doc Create the `activity_profile_document` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS activity_profile_document (
   id            UUID NOT NULL PRIMARY KEY,
   profile_id    VARCHAR(255) NOT NULL,

@@ -67,19 +67,21 @@
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
         (u/uuid->str (:statement-id input)))
     :agent
-    (let [input' (select-keys input [:agent-ifi])
-          exists (f/query-agent-exists tx input')]
-      (when-not exists (f/insert-agent! tx input)))
+    (do (let [input' (select-keys input [:agent-ifi])
+              exists (f/query-agent-exists tx input')]
+          (when-not exists (f/insert-agent! tx input)))
+        nil)
     :activity
-    (let [input' (select-keys input [:activity-iri])
-          exists (f/query-activity-exists tx input')]
-      (when-not exists (f/insert-activity! tx input)))
+    (do (let [input' (select-keys input [:activity-iri])
+              exists (f/query-activity-exists tx input')]
+          (when-not exists (f/insert-activity! tx input)))
+        nil)
     :attachment
-    (f/insert-attachment! tx input)
+    (do (f/insert-attachment! tx input) nil)
     :statement-to-agent
-    (f/insert-statement-to-agent! tx input)
+    (do (f/insert-statement-to-agent! tx input) nil)
     :statement-to-activity
-    (f/insert-statement-to-activity! tx input)
+    (do (f/insert-statement-to-activity! tx input) nil)
     ;; Else
     (throw-invalid-table-ex "insert-statement!" input)))
 

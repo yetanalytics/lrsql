@@ -3,7 +3,7 @@
 -- :name insert-statement!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new statement.
+-- :doc Insert a new statement with statement resource params.
 INSERT INTO xapi_statement SET
 id = :primary-key,
 statement_id = :statement-id,
@@ -18,7 +18,7 @@ payload = :payload FORMAT JSON
 -- :name insert-agent!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new agent.
+-- :doc Insert a new agent with an IFI and optional name.
 INSERT INTO agent SET 
 id = :primary-key,
 agent_name = :?name,
@@ -28,7 +28,7 @@ is_identified_group = :identified-group?
 -- :name insert-activity!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new activity.
+-- :doc Insert a new activity with an IRI.
 INSERT INTO activity SET 
 id = :primary-key,
 activity_iri = :activity-iri,
@@ -71,7 +71,7 @@ activity_iri = :activity-iri
 -- :name insert-state-document!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new state document.
+-- :doc Insert a new state document using resource params.
 INSERT INTO state_document SET
 id = :primary-key,
 state_id = :state-id,
@@ -84,7 +84,7 @@ document = :document
 -- :name insert-agent-profile-document!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new agent profile document.
+-- :doc Insert a new agent profile document using resource params.
 INSERT INTO agent_profile_document SET
 id = :primary-key,
 profile_id = :profile-id,
@@ -95,7 +95,7 @@ document = :document
 -- :name insert-activity-profile-document!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new activity profile document.
+-- :doc Insert a new activity profile document using resource params.
 INSERT INTO activity_profile_document SET
 id = :primary-key,
 profile_id = :profile-id,
