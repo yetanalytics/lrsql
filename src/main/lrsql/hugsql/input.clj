@@ -28,6 +28,7 @@
      :primary-key       (u/generate-uuid)
      :?name             (get agent "name")
      :agent-ifi         ifi-str
+     :payload           (json/write-str agent)
      :identified-group? (= "Group" (get agent "objectType"))}))
 
 (s/fdef activity-insert-input
@@ -418,7 +419,7 @@
       atts?     (assoc :attachments? atts?))))
 
 (s/fdef agent-query-input
-  :args (s/cat :params hs/agent-query-params-spec)
+  :args (s/cat :params hs/agent-params-spec)
   :ret hs/agent-query-spec)
 
 (defn agent-query-input

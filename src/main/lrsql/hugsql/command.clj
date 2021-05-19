@@ -1,7 +1,6 @@
 (ns lrsql.hugsql.command
   "DB commands that utilize HugSql functions."
   (:require [clojure.data.json :as json]
-            [clojure.string :as cstr]
             [com.yetanalytics.lrs.xapi.agents :as agnt]
             [lrsql.hugsql.functions :as f]
             [lrsql.hugsql.util :as u]))
@@ -147,22 +146,8 @@
 
 (defn query-agent
   [tx input]
-  (if-some [query-res (f/query-agent tx input)]
-    (let [{agent-ifi  :agent_ifi
-           agent-name :agent_name}
-          query-res
-          [[ifi-type ifi-val]]
-          (cstr/split agent-ifi #"::" 1)
-          agent
-          (cond-> {"objectType" "Agent"}
-            (#{"mbox" "mbox_sha1sum" "openid"} ifi-type)
-            (assoc ifi-type ifi-val)
-            (#{"account"} ifi-type)
-            (merge (let [[acc-name acc-page] (cstr/split ifi-val #"@" 1)]
-                     {"account" {"name" acc-name "homePage" acc-page}}))
-            agent-name
-            (assoc "name" agent-name))]
-      {:person (agnt/person agent)})
+  (if-some [{:keys [payload]} (f/query-agent tx input)]
+    {:person (->> payload (wrapped-parse-json "agent") agnt/person)}
     (throw (ex-info "Agent not found" {:kind  ::no-agent
                                        :input input}))))
 

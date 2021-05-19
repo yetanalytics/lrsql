@@ -85,7 +85,7 @@
 (s/def :lrsql.hugsql.spec.agent/identified-group? boolean?)
 
 ;; "mbox::mailto:foo@example.com"
-(def ifi-mbox-spec 
+(def ifi-mbox-spec
   (make-str-spec ::xs/mailto-iri
                  (fn [s] (->> s (re-matches #"mbox::(.*)") second))
                  (fn [s] (->> s (str "mbox::")))))
@@ -121,6 +121,10 @@
   #{"Actor" "Object" "Authority" "Instructor" "Team"
     "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"})
 
+(s/def :lrsql.hugsql.spec.agent/payload
+  :xapi.statements.GET.request.params/agent)
+
+;; For agent queries
 (s/def :lrsql.hugsql.spec.agent/agent
   (xres/json
    (s/nonconforming
@@ -229,7 +233,8 @@
   (s/keys :req-un [::primary-key
                    :lrsql.hugsql.spec.agent/?name
                    :lrsql.hugsql.spec.agent/agent-ifi
-                   :lrsql.hugsql.spec.agent/identified-group?]))
+                   :lrsql.hugsql.spec.agent/identified-group?
+                   :lrsql.hugsql.spec.agent/payload]))
 
 ;; Activity
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
@@ -310,7 +315,7 @@
                    :lrsql.hugsql.spec.agent/agent-ifi
                    :lrsql.hugsql.spec.activity/activity-iri]))
 
-(def agent-query-params-spec
+(def agent-params-spec
   (s/keys :req-un [:lrsql.hugsql.spec.agent/agent]))
 
 (def agent-query-spec

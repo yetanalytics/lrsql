@@ -50,7 +50,7 @@ SELECT payload FROM xapi_statement
 -- :command :query
 -- :result :one
 -- :doc Query an agent with `:agent-ifi`.
-SELECT agent_name, agent_ifi FROM agent
+SELECT payload FROM agent
 WHERE agent_ifi = :agent-ifi
 -- AND is_identified_group = FALSE
 
