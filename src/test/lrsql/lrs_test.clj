@@ -180,6 +180,11 @@
                             vec)
                  (update-in [:attachments 0 :content]
                             #(String. %))))))
+    (testing "agent query"
+      (is (= {:person {"objectType" "Person"
+                       "name" ["Sample Agent"]
+                       "mbox" ["mailto:sample.agent@example.com"]}}
+             (lrsp/-get-person lrs {} {:agent agt-1}))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))

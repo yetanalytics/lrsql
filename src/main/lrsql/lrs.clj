@@ -81,8 +81,14 @@
 
   lp/AgentInfoResource
   (-get-person
-   [this auth-identity params]
-   {:person {:objectType "Person"}})
+   ;; TODO: `params` from `lrs` may be missing `:agent` or have an Anonymous
+   ;; Group as a value. In practice, this shouold never happen, so `lrs` needs
+   ;; to be updated.
+   [lrs auth-identity params]
+   (let [conn  (:conn-pool lrs)
+         input (input/agent-query-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/query-agent tx input))))
 
   lp/ActivityInfoResource
   (-get-activity
