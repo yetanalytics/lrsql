@@ -54,24 +54,6 @@
    :activity-iri   (get activity "id")
    :payload        (json/write-str activity)})
 
-(s/fdef attachment->insert-input
-  :args (s/cat :attachment ::ss/attachment)
-  :ret hs/attachment-insert-spec)
-
-(defn attachment->insert-input
-  "Given Attachment data, return the HugSql params map for `insert-attachment`."
-  [{content      :content
-    content-type :contentType
-    length       :length
-    sha2         :sha2}]
-  {:table          :attachment
-   :primary-key    (u/generate-uuid)
-   :attachment-sha sha2
-   :content-type   content-type
-   :content-length length
-   :file-url       "" ; TODO
-   :payload        content})
-
 (s/fdef agent-input->link-input
   :args (s/cat :statement-id ::hs/statement-id
                :agent-usage :lrsql.hugsql.spec.agent/usage
@@ -105,20 +87,6 @@
    :statement-id statement-id
    :usage        activity-usage
    :activity-iri activity-id})
-
-(s/fdef attachment-input->link-input
-  :args (s/cat :statement-id ::hs/statement-id
-               :attachment-input hs/attachment-insert-spec)
-  :ret hs/statement-to-attachment-insert-spec)
-
-(defn attachment-input->link-input
-  "Given `statement-id` and the HugSql params map for `insert-attachment`,
-   return the HugSql params map for `insert-statement-to-attachment`."
-  [statement-id {attachment-id :attachment-sha}]
-  {:table          :statement-to-attachment
-   :primary-key    (u/generate-uuid)
-   :statement-id   statement-id
-   :attachment-sha attachment-id})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertion 
@@ -337,50 +305,67 @@
 ;; Attachment Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(s/fdef attachment->insert-input
+  :args (s/cat :statement-id ::hs/statement-id
+               :attachment ::ss/attachment)
+  :ret hs/attachment-insert-spec)
+
+(defn attachment->insert-input
+  "Given Attachment data, return the HugSql params map for `insert-attachment`."
+  [statement-id attachment]
+  (let [{content      :content
+         content-type :contentType
+         length       :length
+         sha2         :sha2}
+        attachment]
+    {:table          :attachment
+     :primary-key    (u/generate-uuid)
+     :statement-id   statement-id
+     :attachment-sha sha2
+     :content-type   content-type
+     :content-length length
+     :content        content}))
+
 (s/fdef attachments->insert-inputs
   :args hs/prepared-attachments-spec
   :ret hs/attachment-inputs-seq-spec)
 
-(def invalid-attachment-emsg
-  "Statement attachment does not have a fileUrl value nor a matching SHA2!")
-
 (defn attachments->insert-inputs
   "Given colls `statements` and `attachments`, return a seq of HugSql insertion
-   fn param maps."
+   fn param maps. Each attachment in `attachments` must have an associated
+   attachment object in `statements`."
   [statements attachments]
-  (let [sha-input-m
+  ;; NOTE: Assume that the LRS has already validated that every statement
+  ;; attachment object has a fileUrl or valid SHA2 value.
+  ;; NOTE: SHAs may collide, so we also equate on length and content type.
+  (let [att-stmt-id-m
         (reduce
-         (fn [m {sha2 :sha2 :as att}]
-           (assoc m sha2 (attachment->insert-input att)))
+         (fn [m {stmt-id "id" stmt-obj "object" stmt-atts "attachments"}]
+           (let [stmt-atts' (cond-> stmt-atts
+                              ;; SubStatement attachments
+                              (= "SubStatement" (get stmt-obj "objectType"))
+                              (concat (get stmt-obj "attachments")))]
+             (reduce
+              (fn [m' {:strs [sha2 length contentType] :as _att}]
+                (assoc m' [sha2 length contentType] stmt-id))
+              m
+              stmt-atts')))
          {}
-         attachments)
-        get-att-input
-        (fn [{sha2 "sha2" :as _stmt-att}]
-          (sha-input-m sha2))
-        reduce-att
-        (fn [stmt-id acc att]
-          (let [att-input (get-att-input att)]
-            (cond
-              ;; Attachment sha was found in `attachments`
-              att-input
-              (conj acc (attachment-input->link-input (u/str->uuid stmt-id)
-                                                      att-input))
-              ;; Attachment contains fileUrl
-              ;; Skip url resource verification for simplicity
-              (contains? att "fileUrl")
-              acc
-              ;; Otherwise throw error
-              :else
-              (throw (ex-info invalid-attachment-emsg
-                              {:kind         ::invalid-attachment
-                               :statement-id stmt-id
-                               :attachmment  att})))))
-        reduce-stmt-atts
-        (fn [acc {stmt-id "id" stmt-atts "attachments"}]
-          (reduce (partial reduce-att stmt-id) acc stmt-atts))
-        link-inputs
-        (reduce reduce-stmt-atts '() statements)]
-    (concat (vals sha-input-m) link-inputs)))
+         statements)
+        att->stmt-id
+        (fn [{:keys [sha2 length contentType] :as _att}]
+          (att-stmt-id-m [sha2 length contentType]))]
+    (reduce
+     (fn [acc attachment]
+       (if-some [stmt-id (att->stmt-id attachment)]
+         (conj acc (attachment->insert-input (u/str->uuid stmt-id)
+                                             attachment))
+         (throw (ex-info "Attachment is not associated with a Statement in request."
+                         {:kind ::invalid-attachment
+                          :attachment attachment
+                          :statements statements}))))
+     '()
+     attachments)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertion 
