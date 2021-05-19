@@ -419,9 +419,57 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; DOCUMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn- state-document-basics
+  "Common properties for state document inputs. `state-id?` controls whether
+   the state ID property is added (true for singleton queries, false for
+   array-valued queries)."
+  [{state-id     :stateId
+    activity-id  :activityId
+    agent        :agent
+    registration :registration}
+   state-id?]
+  (cond-> {:table         :state-document
+           :activity-iri  activity-id
+           :agent-ifi     (u/agent-str->ifi agent)
+           :?registration (when registration (u/str->uuid registration))}
+    state-id?
+    (assoc :state-id state-id)))
+
+(defn- agent-profile-document-basics
+  "Common properties for agent profile document inputs. `profile-id?` controls
+   whether the profile ID property is added (true for singleton queries, false
+   for array-valued queries)."
+  [{profile-id :profileId
+    agent      :agent}
+   profile-id?]
+  (cond-> {:table     :agent-profile-document
+           :agent-ifi (u/agent-str->ifi agent)}
+    profile-id?
+    (assoc :profile-id profile-id)))
+
+(defn- activity-profile-document-basics
+  "Common properties for activity profile document inputs. `profile-id?`
+   controls whether the profile ID property is added (true for singleton
+   queries, false for array-valued queries)."
+  [{profile-id  :profileId
+    activity-id :activityId}
+   profile-id?]
+  (cond-> {:table        :activity-profile-document
+           :activity-iri activity-id}
+    profile-id?
+    (assoc :profile-id profile-id)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- document-insert-basics
+  "Common properties for insertion inputs, including the primary key, the last
+   modified time, and `document`"
+  [document]
+  {:primary-key   (u/generate-uuid)
+   :last-modified (u/current-time)
+   :document      document})
 
 (s/fdef document-insert-input
   :args (s/cat :id-params hs/id-params-spec :document bytes?)
@@ -431,46 +479,24 @@
 
 (defmulti document-insert-input
   "Given `id-params` and `document`, construct the input for
-   `command/insert-document!`"
+   `command/insert-document!` and `command/update-document!`"
   {:arglists '([id-params document])}
   (fn [id-params _] (u/document-dispatch id-params)))
 
 (defmethod document-insert-input :state-document
-  [{state-id     :stateId
-    activity-id  :activityId
-    agent        :agent
-    registration :registration}
-   document]
-  {:table         :state-document
-   :primary-key   (u/generate-uuid)
-   :state-id      state-id
-   :activity-iri  activity-id
-   :agent-ifi     (u/agent-str->ifi agent)
-   :?registration (when registration (u/str->uuid registration))
-   :last-modified (u/current-time)
-   :document      document})
+  [id-params document]
+  (merge (state-document-basics id-params true)
+         (document-insert-basics document)))
 
 (defmethod document-insert-input :agent-profile-document
-  [{profile-id :profileId
-    agent      :agent}
-   document]
-  {:table         :agent-profile-document
-   :primary-key   (u/generate-uuid)
-   :profile-id    profile-id
-   :agent-ifi     (u/agent-str->ifi agent)
-   :last-modified (u/current-time)
-   :document      document})
+  [id-params document]
+  (merge (agent-profile-document-basics id-params true)
+         (document-insert-basics document)))
 
 (defmethod document-insert-input :activity-profile-document
-  [{profile-id  :profileId
-    activity-id :activityId}
-   document]
-  {:table         :activity-profile-document
-   :primary-key   (u/generate-uuid)
-   :profile-id    profile-id
-   :activity-iri  activity-id
-   :last-modified (u/current-time)
-   :document      document})
+  [id-params document]
+  (merge (activity-profile-document-basics id-params true)
+         (document-insert-basics document)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Query + Deletion
@@ -491,29 +517,16 @@
   u/document-dispatch)
 
 (defmethod document-input :state-document
-  [{state-id     :stateId
-    activity-id  :activityId
-    agent        :agent
-    registration :registration}]
-  {:table         :state-document
-   :state-id      state-id
-   :activity-iri  activity-id
-   :agent-ifi     (u/agent-str->ifi agent)
-   :?registration (when registration (u/str->uuid registration))})
+  [id-params]
+  (state-document-basics id-params true))
 
 (defmethod document-input :agent-profile-document
-  [{profile-id :profileId
-    agent      :agent}]
-  {:table      :agent-profile-document
-   :profile-id profile-id
-   :agent-ifi  (u/agent-str->ifi agent)})
+  [id-params]
+  (agent-profile-document-basics id-params true))
 
 (defmethod document-input :activity-profile-document
-  [{profile-id  :profileId
-    activity-id :activityId}]
-  {:table        :activity-profile-document
-   :profile-id   profile-id
-   :activity-iri activity-id})
+  [id-params]
+  (activity-profile-document-basics id-params true))
 
 ;; Multiple document deletion
 ;; Multi-delete is only supported for state docs, thus no need for multimethod
@@ -525,15 +538,17 @@
 (defn document-multi-input
   "Given params, construct the input for `command/delete-document!` in the
    case of multiple documents."
-  [{activity-id  :activityId
-    agent        :agent
-    registration :registration}]
-  {:table         :state-document
-   :activity-iri  activity-id
-   :agent-ifi     (u/agent-str->ifi agent)
-   :?registration (when registration (u/str->uuid registration))})
+  [id-params]
+  (state-document-basics id-params false))
 
 ;; Multiple document ID query
+
+(defn- add-since-to-map
+  "Add the `:since` property to `m` if `:since` is present/not nil."
+  [{since :since} m]
+  (cond-> m
+    since
+    (assoc :since (u/str->time since))))
 
 (s/fdef document-ids-input
   :args (s/cat :query-params hs/query-params-spec)
@@ -547,29 +562,16 @@
   u/document-dispatch)
 
 (defmethod document-ids-input :state-document
-  [{activity-id  :activityId
-    agent        :agent
-    registration :registration
-    since        :since}]
-  (cond-> {:table         :state-document
-           :activity-iri  activity-id
-           :agent-ifi     (u/agent-str->ifi agent)
-           :?registration (when registration (u/str->uuid registration))}
-    since
-    (assoc :since (u/str->time since))))
+  [query-params]
+  (->> (state-document-basics query-params false)
+       (add-since-to-map query-params)))
 
 (defmethod document-ids-input :agent-profile-document
-  [{agent :agent
-    since :since}]
-  (cond-> {:table     :agent-profile-document
-           :agent-ifi (u/agent-str->ifi agent)}
-    since
-    (assoc :since (u/str->time since))))
+  [query-params]
+  (->> (agent-profile-document-basics query-params false)
+       (add-since-to-map query-params)))
 
 (defmethod document-ids-input :activity-profile-document
-  [{activity-id :activityId
-    since       :since}]
-  (cond-> {:table        :activity-profile-document
-           :activity-iri activity-id}
-    since
-    (assoc :since (u/str->time since))))
+  [query-params]
+  (->> (activity-profile-document-basics query-params false)
+       (add-since-to-map query-params)))
