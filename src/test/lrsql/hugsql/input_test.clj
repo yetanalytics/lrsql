@@ -39,4 +39,5 @@
     (is (nil? (check-validate `input/params->query-input))))
   (testing "document query inputs"
     (is (nil? (check-validate `input/params->document-query-input)))
-    (is (nil? (check-validate `input/params->document-ids-query-input)))))
+    (is (nil? (check-validate `input/params->document-ids-query-input)))
+    (is (nil? (check-validate `input/params->document-multi-delete-input)))))

@@ -575,6 +575,10 @@
 ;; Document Deletion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(s/fdef params->document-multi-delete-input
+  :args (s/cat :id-params :xapi.document.state/id-params)
+  :ret hs/state-doc-multi-delete-spec)
+
 ;; Only for state documents, thus no need for multimethod
 (defn params->document-multi-delete-input
   [{activity-id  :activityId
@@ -582,4 +586,4 @@
     registration :registration}]
   {:activity-iri  activity-id
    :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
-   :?registration registration})
+   :?registration (when registration (u/str->uuid registration))})

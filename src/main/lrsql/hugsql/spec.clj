@@ -70,23 +70,23 @@
 (s/def :lrsql.hugsql.spec.agent/account ::xs/account)
 (s/def :lrsql.hugsql.spec.agent/agent-ifi
   (s/with-gen
-      (s/and (s/conformer #(-> % json/read-str w/keywordize-keys)
-                          #(-> % w/stringify-keys json/write-str))
-             (s/keys :req-un [(or :lrsql.hugsql.spec.agent/mbox
-                                  :lrsql.hugsql.spec.agent/mbox_sha1sum
-                                  :lrsql.hugsql.spec.agent/openid
-                                  :lrsql.hugsql.spec.agent/account)]))
-      #(sgen/fmap
-        (fn [ifi] (-> ifi w/stringify-keys json/write-str))
-        (s/gen
-         (s/or :mbox
-               (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox])
-               :mbox-sha1sum
-               (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox_sha1sum])
-               :openid
-               (s/keys :req-un [:lrsql.hugsql.spec.agent/openid])
-               :account
-               (s/keys :req-un [:lrsql.hugsql.spec.agent/account]))))))
+    (s/and (s/conformer #(-> % json/read-str w/keywordize-keys)
+                        #(-> % w/stringify-keys json/write-str))
+           (s/keys :req-un [(or :lrsql.hugsql.spec.agent/mbox
+                                :lrsql.hugsql.spec.agent/mbox_sha1sum
+                                :lrsql.hugsql.spec.agent/openid
+                                :lrsql.hugsql.spec.agent/account)]))
+    #(sgen/fmap
+      (fn [ifi] (-> ifi w/stringify-keys json/write-str))
+      (s/gen
+       (s/or :mbox
+             (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox])
+             :mbox-sha1sum
+             (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox_sha1sum])
+             :openid
+             (s/keys :req-un [:lrsql.hugsql.spec.agent/openid])
+             :account
+             (s/keys :req-un [:lrsql.hugsql.spec.agent/account]))))))
 
 (s/def :lrsql.hugsql.spec.agent/usage
   #{"Actor" "Object" "Authority" "Instructor" "Team"
@@ -406,6 +406,11 @@
 (def activity-profile-doc-ids-query-spec
   (s/keys :req-un [::activity-iri]
           :opt-un [::since]))
+
+(def state-doc-multi-delete-spec
+  (s/keys :req-un [::activity-iri
+                   ::agent-ifi
+                   ::?registration]))
 
 ;; Putting it all together
 ;; NOTE: need to call s/nonconforming to make it work with s/fdef's :fn
