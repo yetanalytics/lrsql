@@ -417,6 +417,15 @@
       asc?      (assoc :ascending asc?)
       atts?     (assoc :attachments? atts?))))
 
+(s/fdef agent-query-input
+  :args (s/cat :params hs/agent-query-params-spec)
+  :ret hs/agent-query-spec)
+
+(defn agent-query-input
+  "Construct an input for `command/query-agent!`"
+  [{agent :agent}]
+  {:agent-ifi (u/agent-str->ifi agent)})
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; DOCUMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- state-document-basics

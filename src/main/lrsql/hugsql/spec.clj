@@ -4,6 +4,7 @@
             [clojure.spec.gen.alpha :as sgen]
             [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
+            [xapi-schema.spec.resources :as xres]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.util :as u]))
 
@@ -119,6 +120,12 @@
 (s/def :lrsql.hugsql.spec.agent/usage
   #{"Actor" "Object" "Authority" "Instructor" "Team"
     "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"})
+
+(s/def :lrsql.hugsql.spec.agent/agent
+  (xres/json
+   (s/nonconforming
+    (s/or :agent ::xs/agent
+          :group ::xs/identified-group))))
 
 ;; TODO: Check that `bytes?` work with BLOBs
 
@@ -302,6 +309,12 @@
                    ::related-activities?
                    :lrsql.hugsql.spec.agent/agent-ifi
                    :lrsql.hugsql.spec.activity/activity-iri]))
+
+(def agent-query-params-spec
+  (s/keys :req-un [:lrsql.hugsql.spec.agent/agent]))
+
+(def agent-query-spec
+  (s/keys :req-un [:lrsql.hugsql.spec.agent/agent-ifi]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Args

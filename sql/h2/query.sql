@@ -44,16 +44,17 @@ SELECT payload FROM xapi_statement
 --~ (when (:ascending? params) "ORDER BY xapi_statement.stored")
 --~ (when (:limit params) "LIMIT :limit")
 
-/* Attachment Queries */
+/* Statement Object Queries */
 
--- :name query-attachments
+-- :name query-agent
 -- :command :query
--- :result :many
--- :doc Query for one or more attachments that references `:statement-id`.
-SELECT attachment_sha, content_type, content_length, content FROM attachment
-WHERE statement_id = :statement-id
+-- :result :one
+-- :doc Query an agent with `:agent-ifi`.
+SELECT agent_name, agent_ifi FROM agent
+WHERE agent_ifi = :agent-ifi
+-- AND is_identified_group = FALSE
 
-/* Existence Checks */
+/* Statement Object Existence Checks */
 
 -- :name query-agent-exists
 -- :command :query
@@ -68,6 +69,15 @@ WHERE agent_ifi = :agent-ifi
 -- :doc Check for the existence of an Activity with `:activity-iri`. Returns nil iff not found.
 SELECT 1 FROM activity
 WHERE activity_iri = :activity-iri
+
+/* Attachment Queries */
+
+-- :name query-attachments
+-- :command :query
+-- :result :many
+-- :doc Query for one or more attachments that references `:statement-id`.
+SELECT attachment_sha, content_type, content_length, content FROM attachment
+WHERE statement_id = :statement-id
 
 /* Document Queries */
 
