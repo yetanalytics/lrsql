@@ -1,6 +1,7 @@
 (ns lrsql.hugsql.util
   (:require [java-time :as jt]
             [clj-uuid]
+            [clojure.data.json :as json]
             [com.yetanalytics.lrs.xapi.statements :as ss]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -59,6 +60,34 @@
   "Convert a java.util.Instant timestamp into a string."
   [ts]
   (jt/format ts))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Agents
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn agent->ifi
+  "Returns string of the format \"<ifi-type>::<ifi-value>\".
+   Returns `nil` if the agent doesn't have an IFI (e.g. Anonymous Group)."
+  [agent]
+  (let [{mbox    "mbox"
+         sha     "mbox_sha1sum"
+         openid  "openid"
+         account "account"}
+        agent]
+    (cond
+      mbox    (str "mbox::" mbox)
+      sha     (str "mbox_sha1sum::" sha)
+      openid  (str "openid::" openid)
+      account (let [{acc-name "name"
+                     acc-page "homePage"}
+                    account]
+                (str "account::" acc-name "@" acc-page))
+      :else   nil)))
+
+(defn agent-str->ifi
+  "Same as `agent->ifi` except that `agent-str` is a string."
+  [agent-str]
+  (agent->ifi (json/read-str agent-str)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statements

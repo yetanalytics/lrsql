@@ -2,7 +2,6 @@
   "Spec for HugSql inputs."
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
-            [clojure.walk :as w]
             [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
@@ -22,71 +21,100 @@
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn- make-str-spec
+  "Make a spec w/ gen capability for strings of a particular format."
+  [spec conform-fn unform-fn]
+  (s/with-gen
+    (s/and string?
+           (s/conformer conform-fn unform-fn)
+           spec)
+    #(sgen/fmap unform-fn
+                (s/gen spec))))
+
 ;; Primary key
+
 (s/def ::primary-key uuid?)
 
 ;; Statement IDs
+
 (s/def ::statement-id uuid?)
 (s/def ::?statement-ref-id (s/nilable uuid?))
 
 ;; Timestamp
+
 (s/def ::timestamp inst?)
 (s/def ::stored inst?)
 (s/def ::since inst?)
 (s/def ::until inst?)
 
 ;; Registration
+
 (s/def ::registration uuid?)
 (s/def ::?registration (s/nilable uuid?))
 
 ;; Verb
+
 (s/def ::verb-iri :verb/id)
 (s/def ::voided? boolean?)
 (s/def ::voiding? boolean?)
 
 ;; Statement
+
 (s/def ::payload
-  (s/with-gen
-    (s/and (s/conformer json/read-str json/write-str) ::xs/statement)
-    #(sgen/fmap json/write-str (s/gen ::xs/statement))))
+  (make-str-spec ::xs/statement
+                 json/read-str
+                 json/write-str))
 
 ;; Activity
+
 (s/def :lrsql.hugsql.spec.activity/activity-iri :activity/id)
+
 (s/def :lrsql.hugsql.spec.activity/usage
   #{"Object", "Category", "Grouping", "Parent", "Other"
     "SubObject" "SubCategory" "SubGrouping" "SubParent" "SubOther"})
+
 (s/def :lrsql.hugsql.spec.activity/payload
-  (s/with-gen
-    (s/and (s/conformer json/read-str json/write-str) ::xs/activity)
-    #(sgen/fmap json/write-str (s/gen ::xs/activity))))
+  (make-str-spec ::xs/activity
+                 json/read-str
+                 json/write-str))
 
 ;; Agent
+
 (s/def :lrsql.hugsql.spec.agent/?name (s/nilable string?))
 (s/def :lrsql.hugsql.spec.agent/identified-group? boolean?)
 
-(s/def :lrsql.hugsql.spec.agent/mbox ::xs/mailto-iri)
-(s/def :lrsql.hugsql.spec.agent/mbox_sha1sum ::xs/sha1sum)
-(s/def :lrsql.hugsql.spec.agent/openid ::xs/openid)
-(s/def :lrsql.hugsql.spec.agent/account ::xs/account)
+;; "mbox::mailto:foo@example.com"
+(def ifi-mbox-spec 
+  (make-str-spec ::xs/mailto-iri
+                 (fn [s] (->> s (re-matches #"mbox::(.*)") second))
+                 (fn [s] (->> s (str "mbox::")))))
+
+;; "mbox_sha1sum::123456789ABCDEF123456789ABCDEF123456789A" 
+(def ifi-mbox-sha1sum-spec ;
+  (make-str-spec ::xs/sha1sum
+                 (fn [s] (->> s (re-matches #"mbox_sha1sum::(.*)") second))
+                 (fn [s] (->> s (str "mbox_sha1sum::")))))
+
+;; "openid::http://example.org/bar"
+(def ifi-openid-spec
+  (make-str-spec ::xs/openid
+                 (fn [s] (->> s (re-matches #"openid::(.*)") second))
+                 (fn [s] (->> s (str "openid::")))))
+
+;; "account::alice@http://example.org"
+(def ifi-account-spec
+  (make-str-spec ::xs/account
+                 (fn [s]
+                   (let [[_ nm hp] (re-matches #"account::(.*)@(.*)" s)]
+                     {:account/name nm :account/homePage hp}))
+                 (fn [{nm "name" hp "homePage"}]
+                   (str "account::" nm "@" hp))))
+
 (s/def :lrsql.hugsql.spec.agent/agent-ifi
-  (s/with-gen
-    (s/and (s/conformer #(-> % json/read-str w/keywordize-keys)
-                        #(-> % w/stringify-keys json/write-str))
-           (s/keys :req-un [(or :lrsql.hugsql.spec.agent/mbox
-                                :lrsql.hugsql.spec.agent/mbox_sha1sum
-                                :lrsql.hugsql.spec.agent/openid
-                                :lrsql.hugsql.spec.agent/account)]))
-    #(sgen/fmap
-      (fn [ifi] (-> ifi w/stringify-keys json/write-str))
-      (s/gen
-       (s/or :mbox
-             (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox])
-             :mbox-sha1sum
-             (s/keys :req-un [:lrsql.hugsql.spec.agent/mbox_sha1sum])
-             :openid
-             (s/keys :req-un [:lrsql.hugsql.spec.agent/openid])
-             :account
-             (s/keys :req-un [:lrsql.hugsql.spec.agent/account]))))))
+  (s/or :mbox ifi-mbox-spec
+        :mbox-sha1sum ifi-mbox-sha1sum-spec
+        :openid ifi-openid-spec
+        :account ifi-account-spec))
 
 (s/def :lrsql.hugsql.spec.agent/usage
   #{"Actor" "Object" "Authority" "Instructor" "Team"
@@ -130,22 +158,24 @@
   "Update the attachments property of each attachment has an associated
    attachment object in a statement."
   [[statements attachments]]
-  (let [num-stmts (count statements)
+  (let [num-stmts
+        (count statements)
         statements'
-        (reduce (fn [stmts {:keys [sha2 contentType length] :as _att}]
-                  (let [n (rand-int num-stmts)]
-                    (update-in
-                     stmts
-                     [n "attachments"]
-                     (fn [atts]
-                       (conj atts
-                             {"usageType"   "https://example.org/aut"
-                              "display"     {"lat" "Lorem Ipsum"}
-                              "sha2"        sha2
-                              "contentType" contentType
-                              "length"      length})))))
-                statements
-                attachments)]
+        (reduce
+         (fn [stmts {:keys [sha2 contentType length] :as _att}]
+           (let [n (rand-int num-stmts)]
+             (update-in
+              stmts
+              [n "attachments"]
+              (fn [atts]
+                (conj atts
+                      {"usageType"   "https://example.org/aut"
+                       "display"     {"lat" "Lorem Ipsum"}
+                       "sha2"        sha2
+                       "contentType" contentType
+                       "length"      length})))))
+         statements
+         attachments)]
     [statements' attachments]))
 
 (def prepared-attachments-spec
@@ -185,7 +215,7 @@
 ;; Agent
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
 ;; - Name: STRING
-;; - IFI: JSON -- Map between IFI type and value
+;; - IFI: STRING NOT NULL
 ;; - IsIdentifiedGroup: BOOLEAN NOT NULL DEFAULT FALSE -- Treat Identified Groups as Agents
 
 (def agent-insert-spec
@@ -223,7 +253,7 @@
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
 ;; - StatementID: UUID NOT NULL
 ;; - Usage: STRING IN ('Actor', 'Object', 'Authority', 'Instructor', 'Team') NOT NULL
-;; - AgentIFI: JSON NOT NULL
+;; - AgentIFI: STRING NOT NULL
 
 (def statement-to-agent-insert-spec
   (s/keys :req-un [::primary-key

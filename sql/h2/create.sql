@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
 -- :doc Create the `agent` table if it does not exist yet
 CREATE TABLE IF NOT EXISTS agent (
   id                  UUID NOT NULL PRIMARY KEY,
-  agent_ifi           JSON NOT NULL UNIQUE,
+  agent_ifi           VARCHAR(255) NOT NULL UNIQUE,
   agent_name          VARCHAR(255),
   is_identified_group BOOLEAN DEFAULT FALSE NOT NULL
 )
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS statement_to_agent (
   usage        ENUM('Actor', 'Object', 'Authority', 'Instructor', 'Team',
                     'SubActor', 'SubObject', 'SubInstructor', 'SubTeam')
                NOT NULL,
-  agent_ifi    JSON NOT NULL,
+  agent_ifi    VARCHAR(255) NOT NULL,
   FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
   FOREIGN KEY (agent_ifi) REFERENCES agent(agent_ifi)
 )
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS state_document (
 CREATE TABLE IF NOT EXISTS agent_profile_document (
   id            UUID NOT NULL PRIMARY KEY,
   profile_id    VARCHAR(255) NOT NULL,
-  agent_ifi     JSON NOT NULL,
+  agent_ifi     VARCHAR(255) NOT NULL,
   last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
   document      BINARY
 )

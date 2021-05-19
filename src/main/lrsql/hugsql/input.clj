@@ -15,20 +15,6 @@
 ;; Agent/Activity Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- get-ifi
-  "Returns a map between the IFI type and the IFI of `agent`.
-   Returns nil if the agent doesn't have an IFI (e.g. Anonymous Group)."
-  [agnt]
-  (let [agnt' (not-empty (select-keys agnt ["mbox"
-                                            "mbox_sha1sum"
-                                            "openid"
-                                            "account"]))]
-    ;; Need to order `name` and `homepage` properties.
-    ;; Important when comparing JSON string/bytes.
-    (cond-> agnt'
-      (contains? agnt' "account")
-      (update "account" (partial into (sorted-map))))))
-
 (s/fdef agent-insert-input
   :args (s/cat :agent (s/alt :agent ::xs/agent
                              :group ::xs/group))
@@ -37,11 +23,11 @@
 (defn agent-insert-input
   "Given `agent`, construct the input for `functions/insert-agent!`."
   [agent]
-  (when-some [ifi-m (get-ifi agent)]
+  (when-some [ifi-str (u/agent->ifi agent)]
     {:table             :agent
      :primary-key       (u/generate-uuid)
      :?name             (get agent "name")
-     :agent-ifi         (json/write-str ifi-m)
+     :agent-ifi         ifi-str
      :identified-group? (= "Group" (get agent "objectType"))}))
 
 (s/fdef activity-insert-input
@@ -414,8 +400,7 @@
         until       (when until (u/str->time until))
         rel-agents? (boolean rel-agents?)
         rel-acts?   (boolean rel-acts?)
-        agent-ifi   (when agent
-                      (some-> agent json/read-str get-ifi json/write-str))
+        agent-ifi   (when agent (u/agent-str->ifi agent))
         limit       (when limit ; "0" = no limit
                       (let [n (Long/parseLong limit)]
                         (when (not (zero? n)) n)))]
@@ -460,7 +445,7 @@
    :primary-key   (u/generate-uuid)
    :state-id      state-id
    :activity-iri  activity-id
-   :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
+   :agent-ifi     (u/agent-str->ifi agent)
    :?registration (when registration (u/str->uuid registration))
    :last-modified (u/current-time)
    :document      document})
@@ -472,7 +457,7 @@
   {:table         :agent-profile-document
    :primary-key   (u/generate-uuid)
    :profile-id    profile-id
-   :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
+   :agent-ifi     (u/agent-str->ifi agent)
    :last-modified (u/current-time)
    :document      document})
 
@@ -513,7 +498,7 @@
   {:table         :state-document
    :state-id      state-id
    :activity-iri  activity-id
-   :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
+   :agent-ifi     (u/agent-str->ifi agent)
    :?registration (when registration (u/str->uuid registration))})
 
 (defmethod document-input :agent-profile-document
@@ -521,7 +506,7 @@
     agent      :agent}]
   {:table      :agent-profile-document
    :profile-id profile-id
-   :agent-ifi  (json/write-str (get-ifi (json/read-str agent)))})
+   :agent-ifi  (u/agent-str->ifi agent)})
 
 (defmethod document-input :activity-profile-document
   [{profile-id  :profileId
@@ -545,7 +530,7 @@
     registration :registration}]
   {:table         :state-document
    :activity-iri  activity-id
-   :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
+   :agent-ifi     (u/agent-str->ifi agent)
    :?registration (when registration (u/str->uuid registration))})
 
 ;; Multiple document ID query
@@ -568,7 +553,7 @@
     since        :since}]
   (cond-> {:table         :state-document
            :activity-iri  activity-id
-           :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
+           :agent-ifi     (u/agent-str->ifi agent)
            :?registration (when registration (u/str->uuid registration))}
     since
     (assoc :since (u/str->time since))))
@@ -577,7 +562,7 @@
   [{agent :agent
     since :since}]
   (cond-> {:table     :agent-profile-document
-           :agent-ifi (json/write-str (get-ifi (json/read-str agent)))}
+           :agent-ifi (u/agent-str->ifi agent)}
     since
     (assoc :since (u/str->time since))))
 
