@@ -77,7 +77,7 @@
    (let [conn  (:conn-pool lrs)
          input (input/document-multi-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (command/delete-document! tx input))))
+       (command/delete-documents! tx input))))
 
   lp/AgentInfoResource
   (-get-person

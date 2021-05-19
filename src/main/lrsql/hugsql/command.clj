@@ -114,7 +114,7 @@
    to return any associated attachments."
   [tx input]
   (let [stmt-res  (->> input
-                       (f/query-statement tx)
+                       (f/query-statements tx)
                        (map #(->> % :payload (wrapped-parse-json "statement"))))
         att-res   (if (:attachments? input)
                     (->> (doall (map #(->> (get % "id")
@@ -156,7 +156,7 @@
   {})
 
 (defn delete-document!
-  "Delete a document from the DB. Returns an empty map."
+  "Delete a single document from the DB. Returns an empty map."
   [tx {:keys [table] :as input}]
   (case table
     :state-document
@@ -167,6 +167,15 @@
     (f/delete-activity-profile-document! tx input)
     ;; Else
     (throw-invalid-table-ex "delete-document!" input))
+  {})
+
+(defn delete-documents!
+  [tx {:keys [table] :as input}]
+  (case table
+    :state-document
+    (f/delete-state-documents! tx input)
+    ;; Else
+    (throw-invalid-table-ex "delete-documents!" input))
   {})
 
 (defn- update-document!*

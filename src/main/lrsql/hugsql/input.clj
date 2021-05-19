@@ -543,7 +543,8 @@
   [{activity-id  :activityId
     agent        :agent
     registration :registration}]
-  {:activity-iri  activity-id
+  {:table         :state-document
+   :activity-iri  activity-id
    :agent-ifi     (json/write-str (get-ifi (json/read-str agent)))
    :?registration (when registration (u/str->uuid registration))})
 

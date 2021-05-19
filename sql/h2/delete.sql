@@ -1,25 +1,34 @@
 -- :name delete-state-document!
 -- :command :execute
 -- :result :affected
--- :doc Delete a state document.
+-- :doc Delete a single state document.
 DELETE FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
---~ (when (:state-id params) "AND state_id = :state-id")
---~ (when (:?registration params) "AND registration = :?registration")
+AND state_id = :state-id
+--~ (when (:?registration params) "AND registration = :?registration" "AND registration IS NULL")
+
+-- :name delete-state-documents!
+-- :command :execute
+-- :result :affected
+-- :doc Delete one or more state documents. Unlike delete-state-document, :state-id is not included.
+DELETE FROM state_document
+WHERE activity_iri = :activity-iri
+AND agent_ifi = :agent-ifi
+--~ (when (:?registration params) "AND registration = :?registration" "AND registration IS NULL")
 
 -- :name delete-agent-profile-document!
 -- :command :execute
 -- :result :affected
--- :doc Delete an agent profile document.
+-- :doc Delete a single agent profile document.
 DELETE FROM agent_profile_document
 WHERE profile_id = :profile-id
-AND agent_ifi = :agent-ifi 
+AND agent_ifi = :agent-ifi
 
 -- :name delete-activity-profile-document!
 -- :command :execute
 -- :result :affected
--- :doc Delete an activity profile document.
+-- :doc Delete a single activity profile document.
 DELETE FROM activity_profile_document
 WHERE profile_id = :profile-id
 AND activity_iri = :activity-iri

@@ -231,6 +231,10 @@
              (lrsp/-delete-document lrs
                                     {}
                                     doc-id-params)))
+      (is (= {} ; second delete should do nothing in DB
+             (lrsp/-delete-documents lrs
+                                     {}
+                                     (dissoc doc-id-params :stateId))))
       (is (= {:document-ids []}
              (lrsp/-get-document-ids lrs
                                      {}

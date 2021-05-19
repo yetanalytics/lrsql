@@ -1,9 +1,9 @@
-/* Statement Query */
+/* Statement Queries */
 
--- :name query-statement
+-- :name query-statements
 -- :command :query
 -- :result :many
--- :doc Query a statement using statement resource parameters.
+-- :doc Query for one or more statements using statement resource parameters.
 -- :require [clojure.string :as cstr]
 SELECT payload FROM xapi_statement
 /*~
@@ -44,12 +44,12 @@ SELECT payload FROM xapi_statement
 --~ (when (:ascending? params) "ORDER BY xapi_statement.stored")
 --~ (when (:limit params) "LIMIT :limit")
 
-/* Attachment Query */
+/* Attachment Queries */
 
 -- :name query-attachments
 -- :command :query
 -- :result :many
--- :doc Query attachments using query parameters.
+-- :doc Query for one or more attachments using :statement-id.
 SELECT attachment_sha, content_type, content_length, content FROM attachment
 WHERE statement_id = :statement-id
 
@@ -58,14 +58,14 @@ WHERE statement_id = :statement-id
 -- :name query-agent-exists
 -- :command :query
 -- :result :one
--- :doc Check for the existence of an Agent with a given IFI in the agent table. Returns nil iff not found.
+-- :doc Check for the existence of an Agent with :agent-ifi. Returns nil iff not found.
 SELECT 1 FROM agent
 WHERE agent_ifi = :agent-ifi
 
 -- :name query-activity-exists
 -- :command :query
 -- :result :one
--- :doc Check for the existence of an Activity with a given IRI in the activity table. Returns nil iff not found.
+-- :doc Check for the existence of an Activity with :activity-iri. Returns nil iff not found.
 SELECT 1 FROM activity
 WHERE activity_iri = :activity-iri
 
@@ -81,16 +81,6 @@ AND agent_ifi = :agent-ifi
 AND state_id = :state-id
 --~ (if (:?registration params) "AND registration = :?registration" "AND registration IS NULL")
 
--- :name query-state-document-ids
--- :command :query
--- :result :many
--- :doc Query for state document IDs.
-SELECT state_id FROM state_document
-WHERE activity_iri = :activity-iri
-AND agent_ifi = :agent-ifi
---~ (when (:?registration params) "AND registration = :?registration")
---~ (when (:since params) "AND last_modified > :since")
-
 -- :name query-agent-profile-document
 -- :command :query
 -- :result :one
@@ -98,14 +88,6 @@ AND agent_ifi = :agent-ifi
 SELECT document, profile_id, last_modified FROM agent_profile_document
 WHERE agent_ifi = :agent-ifi
 AND profile_id = :profile-id
-
--- :name query-agent-profile-document-ids
--- :command :query
--- :result :many
--- :doc Query for agent profile document profile IDs.
-SELECT profile_id FROM agent_profile_document
-WHERE agent_ifi = :agent-ifi
---~ (when (:since params) "AND last_modified > :since")
 
 -- :name query-activity-profile-document
 -- :command :query
@@ -115,10 +97,28 @@ SELECT document, profile_id, last_modified FROM activity_profile_document
 WHERE activity_iri = :activity-iri
 AND profile_id = :profile-id
 
+-- :name query-state-document-ids
+-- :command :query
+-- :result :many
+-- :doc Query for one or more state document IDs.
+SELECT state_id FROM state_document
+WHERE activity_iri = :activity-iri
+AND agent_ifi = :agent-ifi
+--~ (when (:?registration params) "AND registration = :?registration" "AND registration IS NULL")
+--~ (when (:since params) "AND last_modified > :since")
+
+-- :name query-agent-profile-document-ids
+-- :command :query
+-- :result :many
+-- :doc Query for one or more agent profile document profile IDs.
+SELECT profile_id FROM agent_profile_document
+WHERE agent_ifi = :agent-ifi
+--~ (when (:since params) "AND last_modified > :since")
+
 -- :name query-activity-profile-document-ids
 -- :command :query
 -- :result :many
--- :doc Query for activity profile document IDs.
+-- :doc Query for one or more activity profile document IDs.
 SELECT profile_id FROM activity_profile_document
 WHERE activity_iri = :activity-iri
 --~ (when (:since params) "AND last_modified > :since")
