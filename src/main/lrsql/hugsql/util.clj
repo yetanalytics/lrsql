@@ -1,7 +1,27 @@
 (ns lrsql.hugsql.util
   (:require [java-time :as jt]
             [clj-uuid]
+            [clojure.data.json :as json]
             [com.yetanalytics.lrs.xapi.statements :as ss]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Macros
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmacro with-invalid-str-ex
+  "Wrap `(parse-fn s)` in an exception such that on parse failure, the
+   folloiwing error data is thrown:
+     :kind      ::invalid-string
+     :string    `s`
+     :str-type  `str-type`"
+  [str-type parse-fn s]
+  `(try (~parse-fn ~s)
+        (catch Exception e#
+          (throw (ex-info (format "Cannot parse nil or invalid %s string"
+                                  ~str-type)
+                          {:kind     ::invalid-string
+                           :string   ~s
+                           :str-type ~str-type})))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UUIDs
@@ -15,7 +35,7 @@
 (defn str->uuid
   "Parse a string into an UUID."
   [uuid-str]
-  (java.util.UUID/fromString uuid-str))
+  (with-invalid-str-ex "UUID" java.util.UUID/fromString uuid-str))
 
 (defn uuid->str
   "Convert a UUID into a string."
@@ -34,12 +54,40 @@
 (defn str->time
   "Parse a string into a java.util.Instant timestamp."
   [ts-str]
-  (jt/instant ts-str))
+  (with-invalid-str-ex "timestamp" jt/instant ts-str))
 
 (defn time->str
   "Convert a java.util.Instant timestamp into a string."
   [ts]
   (jt/format ts))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Agents
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn agent->ifi
+  "Returns string of the format \"<ifi-type>::<ifi-value>\".
+   Returns `nil` if the agent doesn't have an IFI (e.g. Anonymous Group)."
+  [agent]
+  (let [{mbox    "mbox"
+         sha     "mbox_sha1sum"
+         openid  "openid"
+         account "account"}
+        agent]
+    (cond
+      mbox    (str "mbox::" mbox)
+      sha     (str "mbox_sha1sum::" sha)
+      openid  (str "openid::" openid)
+      account (let [{acc-name "name"
+                     acc-page "homePage"}
+                    account]
+                (str "account::" acc-name "@" acc-page))
+      :else   nil)))
+
+(defn agent-str->ifi
+  "Same as `agent->ifi` except that `agent-str` is a string."
+  [agent-str]
+  (agent->ifi (json/read-str agent-str)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statements
@@ -73,3 +121,37 @@
       (assoc "authority" lrsql-authority)
       (not version)
       (assoc "version" xapi-version))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Documents
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn document-dispatch
+  "Return either `:state-document`, `:agent-profile-document`, or
+   `:activity-profile-document` depending on the fields in `params`. Works for
+   both ID params and query params."
+  [{state-id    :stateId
+    profile-id  :profileId
+    activity-id :activityId
+    agent       :agent
+    :as         params}]
+  (cond
+    ;; ID params
+    state-id
+    :state-document
+    (and profile-id agent)
+    :agent-profile-document
+    (and profile-id activity-id)
+    :activity-profile-document
+    ;; Query params
+    (and activity-id agent)
+    :state-document
+    activity-id
+    :activity-profile-document
+    agent
+    :agent-profile-document
+    ;; Error
+    :else
+    (throw (ex-info "Invalid document ID or query parameters!"
+                    {:kind   ::invalid-document-resource-params
+                     :params params}))))

@@ -1,7 +1,9 @@
+/* Statement + Attachment Insertion */
+
 -- :name insert-statement!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new statement.
+-- :doc Insert a new statement with statement resource params.
 INSERT INTO xapi_statement SET
 id = :primary-key,
 statement_id = :statement-id,
@@ -13,20 +15,10 @@ verb_iri = :verb-iri,
 is_voided = :voided?,
 payload = :payload FORMAT JSON
 
--- :name void-statement!
--- :command :execute
--- :result :affected
--- :doc Update a statement such that is_voided is set to true.
-UPDATE xapi_statement
-SET is_voided = TRUE
-WHERE statement_id = :statement-id
-AND NOT (verb_iri = 'http://adlnet.gov/expapi/verbs/voided')
--- ^ Any Statement that voids another cannot itself be voided.
-
 -- :name insert-agent!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new agent.
+-- :doc Insert a new agent with an IFI and optional name.
 INSERT INTO agent SET 
 id = :primary-key,
 agent_name = :?name,
@@ -36,7 +28,7 @@ is_identified_group = :identified-group?
 -- :name insert-activity!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new activity.
+-- :doc Insert a new activity with an IRI.
 INSERT INTO activity SET 
 id = :primary-key,
 activity_iri = :activity-iri,
@@ -73,3 +65,40 @@ id = :primary-key,
 statement_id = :statement-id,
 usage = :usage,
 activity_iri = :activity-iri
+
+/* Document Insertion */
+
+-- :name insert-state-document!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a new state document using resource params.
+INSERT INTO state_document SET
+id = :primary-key,
+state_id = :state-id,
+activity_iri = :activity-iri,
+agent_ifi = :agent-ifi,
+registration = :?registration,
+last_modified = :last-modified,
+document = :document
+
+-- :name insert-agent-profile-document!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a new agent profile document using resource params.
+INSERT INTO agent_profile_document SET
+id = :primary-key,
+profile_id = :profile-id,
+agent_ifi = :agent-ifi,
+last_modified = :last-modified,
+document = :document
+
+-- :name insert-activity-profile-document!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a new activity profile document using resource params.
+INSERT INTO activity_profile_document SET
+id = :primary-key,
+profile_id = :profile-id,
+activity_iri = :activity-iri,
+last_modified = :last-modified,
+document = :document

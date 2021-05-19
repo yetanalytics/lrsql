@@ -18,9 +18,12 @@
   ;; will be whatever ns `init-hugsql-fns!` was called from.
   (let [db-type' (cstr/replace db-type #":.*" "")] ; h2:mem -> h2
     (binding [*ns* (create-ns `lrsql.hugsql.functions)]
+      ;; Follow the CRUD acronym: Create, Read, Update, Delete
       (hugsql/def-db-fns (str db-type' "/create.sql"))
       (hugsql/def-db-fns (str db-type' "/insert.sql"))
-      (hugsql/def-db-fns (str db-type' "/query.sql")))))
+      (hugsql/def-db-fns (str db-type' "/query.sql"))
+      (hugsql/def-db-fns (str db-type' "/update.sql"))
+      (hugsql/def-db-fns (str db-type' "/delete.sql")))))
 
 (defn create-tables!
   "Execute SQL commands to create tables if they do not exist."

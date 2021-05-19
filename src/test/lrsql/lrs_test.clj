@@ -82,7 +82,12 @@
   "Drop all tables in the db, in preparation for adding them again.
    DO NOT RUN THIS DURING PRODUCTION!!!"
   [tx]
-  (doseq [cmd ["DROP TABLE IF EXISTS statement_to_activity"
+  (doseq [cmd [;; Drop document tables
+               "DROP TABLE IF EXISTS state_document"
+               "DROP TABLE IF EXISTS agent_profile_document"
+               "DROP TABLE IF EXISTS activity_profile_document"
+               ;; Drop statement tables
+               "DROP TABLE IF EXISTS statement_to_activity"
                "DROP TABLE IF EXISTS statement_to_agent"
                "DROP TABLE IF EXISTS attachment"
                "DROP TABLE IF EXISTS activity"
@@ -175,6 +180,65 @@
                             vec)
                  (update-in [:attachments 0 :content]
                             #(String. %))))))
+    (jdbc/with-transaction [tx ((:conn-pool lrs))]
+      (drop-all! tx))
+    (component/stop sys')))
+
+(def doc-id-params
+  {:stateId    "some-id"
+   :activityId "https://example.org/activity-type"
+   :agent      "{\"mbox\":\"mailto:example@example.org\"}"})
+
+(def doc-1
+  "{\"foo\":1,\"bar\":2}")
+
+(def doc-2
+  "{\"foo\":10}")
+
+(deftest test-document-fns
+  (let [_     (assert-in-mem-db)
+        sys   (system/system)
+        sys'  (component/start sys)
+        lrs   (:lrs sys')]
+    (testing "document insertion"
+      (is (= {}
+             (lrsp/-set-document lrs
+                                 {}
+                                 doc-id-params
+                                 (.getBytes doc-1)
+                                 false)))
+      (is (= {}
+             (lrsp/-set-document lrs
+                                 {}
+                                 doc-id-params
+                                 (.getBytes doc-2)
+                                 true))))
+    (testing "document query"
+      (is (= {:contents        "{\"foo\":10,\"bar\":2}"
+              :content-length 18
+              :content-type   "application/octet-stream" ; TODO
+              :id             "some-id"}
+             (-> (lrsp/-get-document lrs {} doc-id-params)
+                 (dissoc :updated)
+                 (update :contents #(String. %))))))
+    (testing "document ID query"
+      (is (= {:document-ids ["some-id"]}
+             (lrsp/-get-document-ids lrs
+                                     {}
+                                     (dissoc doc-id-params :stateId)))))
+    (testing "document deletion"
+      (is (= {}
+             (lrsp/-delete-document lrs
+                                    {}
+                                    doc-id-params)))
+      (is (= {} ; second delete should do nothing in DB
+             (lrsp/-delete-documents lrs
+                                     {}
+                                     (dissoc doc-id-params :stateId))))
+      (is (= {:document-ids []}
+             (lrsp/-get-document-ids lrs
+                                     {}
+                                     (dissoc doc-id-params :stateId)))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))

@@ -30,17 +30,17 @@
    [lrs auth-identity statements attachments]
    (let [conn        (:conn-pool lrs)
          stmts       (map u/prepare-statement statements)
-         stmt-inputs (input/statements->insert-inputs stmts)
+         stmt-inputs (input/statements-insert-inputs stmts)
          att-inputs  (when (not-empty attachments)
-                       (input/attachments->insert-inputs stmts attachments))]
+                       (input/attachments-insert-inputs stmts attachments))]
      (jdbc/with-transaction [tx (conn)]
-       (command/insert-inputs! tx (concat stmt-inputs att-inputs)))))
+       (command/insert-statements! tx (concat stmt-inputs att-inputs)))))
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)
-         inputs (input/params->query-input params)]
+         inputs (input/statement-query-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (command/query-statement-input tx inputs))))
+       (command/query-statements tx inputs))))
   (-consistent-through
    [this ctx auth-identity]
    "timestamp-here") ; TODO: return needs to be a timestamp
@@ -48,19 +48,36 @@
   lp/DocumentResource
   (-set-document
    [lrs auth-identity params document merge?]
-   {})
+   (let [conn  (:conn-pool lrs)
+         input (input/document-insert-input params document)]
+     (jdbc/with-transaction [tx (conn)]
+       (if merge?
+         (command/update-document! tx input)
+         (command/insert-document! tx input)))))
   (-get-document
-   [this auth-identity params]
-   {:document nil})
+   [lrs auth-identity params]
+   (let [conn  (:conn-pool lrs)
+         input (input/document-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/query-document tx input))))
   (-get-document-ids
-   [this auth-identity params]
-   {:document-ids []})
+   [lrs auth-identity params]
+   (let [conn  (:conn-pool lrs)
+         input (input/document-ids-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/query-document-ids tx input))))
   (-delete-document
-   [this auth-identity params]
-   {})
+   [lrs auth-identity params]
+   (let [conn  (:conn-pool lrs)
+         input (input/document-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/delete-document! tx input))))
   (-delete-documents
-   [this auth-identity params]
-   {})
+   [lrs auth-identity params]
+   (let [conn  (:conn-pool lrs)
+         input (input/document-multi-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/delete-documents! tx input))))
 
   lp/AgentInfoResource
   (-get-person

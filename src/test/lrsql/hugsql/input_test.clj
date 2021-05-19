@@ -19,20 +19,24 @@
        res))))
 
 (deftest test-insert-inputs
-  (testing "statement property insertion inputs"
-    (is (nil? (check-validate `input/agent->insert-input)))
-    (is (nil? (check-validate `input/activity->insert-input)))
-    (is (nil? (check-validate `input/attachment->insert-input)))
-    (is (nil? (check-validate `input/agent-input->link-input)))
-    (is (nil? (check-validate `input/activity-input->link-input))))
+  (testing "statement object insertion inputs"
+    (is (nil? (check-validate `input/agent-insert-input)))
+    (is (nil? (check-validate `input/activity-insert-input)))
+    (is (nil? (check-validate `input/attachment-insert-input)))
+    (is (nil? (check-validate `input/statement-to-agent-insert-input)))
+    (is (nil? (check-validate `input/statement-to-activity-insert-input))))
   (testing "statement insertion inputs"
-    (is (nil? (check-validate `input/statement->insert-inputs 10)))
-    (is (nil? (check-validate `input/statements->insert-inputs 5))))
+    (is (nil? (check-validate `input/statement-insert-inputs 10)))
+    (is (nil? (check-validate `input/statements-insert-inputs 5))))
   (testing "attachment insertion inputs"
-    (is (nil? (check-validate `input/attachments->insert-inputs 10))))
+    (is (nil? (check-validate `input/attachments-insert-inputs 10))))
   (testing "document insertion inputs"
-    (is (nil? (check-validate `input/document->insert-input)))))
+    (is (nil? (check-validate `input/document-insert-input)))))
 
 (deftest test-query-inputs
   (testing "statement query inputs"
-    (is (nil? (check-validate `input/params->query-input)))))
+    (is (nil? (check-validate `input/statement-query-input))))
+  (testing "document query inputs"
+    (is (nil? (check-validate `input/document-input)))
+    (is (nil? (check-validate `input/document-ids-input)))
+    (is (nil? (check-validate `input/document-multi-input)))))

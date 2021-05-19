@@ -5,7 +5,11 @@
 ;; functions in this namespace anyways, but the functions are provided for
 ;; reference.
 
-;; Create table
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statements + Attachments
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Create tables
 (declare create-statement-table!)
 (declare create-agent-table!)
 (declare create-activity-table!)
@@ -28,10 +32,39 @@
 (declare void-statement!)
 
 ;; Query
-(declare query-statement)
+(declare query-statements)
 (declare query-attachments)
 
 ;; Query existence
 (declare query-agent-exists)
 (declare query-activity-exists)
-(declare query-attachment-exists)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Documents
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Insert
+(declare insert-state-document!)
+(declare insert-agent-profile-document!)
+(declare insert-activity-profile-document!)
+
+;; Update
+(declare update-state-document!)
+(declare update-agent-profile-document!)
+(declare update-activity-profile-document!)
+
+;; Delete
+(declare delete-state-document!)
+(declare delete-state-documents!)
+(declare delete-agent-profile-document!)
+(declare delete-activity-profile-document!)
+
+;; Query
+(declare query-state-document)
+(declare query-agent-profile-document)
+(declare query-activity-profile-document)
+
+;; Query IDs
+(declare query-state-document-ids)
+(declare query-agent-profile-document-ids)
+(declare query-activity-profile-document-ids)
