@@ -16,6 +16,13 @@
     (bytes? jsn) ; H2 returns JSON data as a byte array
     (json/read-str (String. jsn))))
 
+(defn- invalid-table-ex
+  [fn-name input]
+  (ex-info (format "`%s` not supported for this table type" fn-name)
+           {:kind    ::invalid-table
+            :input   input
+            :fn-name fn-name}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -128,10 +135,8 @@
                     f/query-activity-profile-document
                     f/insert-activity-profile-document!
                     f/update-activity-profile-document!)
-    :else
-    (throw (ex-info "`update-input!` is not supported for this table type"
-                    {:kind  ::invalid-table-type
-                     :input input}))))
+    ;; Else
+    (throw (invalid-table-ex "update-input!" input))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Queries
@@ -189,7 +194,9 @@
               :agent-profile-document
               (f/query-agent-profile-document tx input)
               :activity-profile-document
-              (f/query-activity-profile-document tx input))]
+              (f/query-activity-profile-document tx input)
+              ;; Else
+              (throw (invalid-table-ex "query-document" input)))]
     {:contents       (-> res :document)
      :content-length (-> res :document count)
      :content-type   "application/octet-stream" ; TODO
@@ -214,7 +221,9 @@
               :activity-profile-document
               (->> input
                    (f/query-activity-profile-document-ids tx)
-                   (map :profile_id)))]
+                   (map :profile_id))
+              ;; Else
+              (throw (invalid-table-ex "query-document-ids" input)))]
     {:document-ids (vec ids)}))
 
 (defn delete-document!
@@ -225,5 +234,7 @@
     :agent-profile-document
     (f/delete-agent-profile-document! tx input)
     :activity-profile-document
-    (f/delete-activity-profile-document! tx input))
+    (f/delete-activity-profile-document! tx input)
+    ;; Else
+    (throw (invalid-table-ex "delete-document!" input)))
   {})
