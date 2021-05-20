@@ -27,7 +27,7 @@
            "-e" "http://localhost:8080/xapi" "-b" "-z"
 
            ;; zero in on specific tests using grep:
-           ;; "-g" "XAPI-00143"
+           "-g" "XAPI-00315"
 
            ))
       (component/stop sys'))))
