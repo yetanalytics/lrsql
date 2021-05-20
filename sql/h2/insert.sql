@@ -21,9 +21,9 @@ payload = :payload FORMAT JSON
 -- :doc Insert a new agent with an IFI and optional name.
 INSERT INTO agent SET 
 id = :primary-key,
-agent_name = :?name,
 agent_ifi = :agent-ifi,
-is_identified_group = :identified-group?
+is_identified_group = :identified-group?,
+payload = :payload FORMAT JSON
 
 -- :name insert-activity!
 -- :command :insert

@@ -4,6 +4,7 @@
             [clojure.spec.gen.alpha :as sgen]
             [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
+            [xapi-schema.spec.resources :as xres]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.util :as u]))
 
@@ -80,11 +81,10 @@
 
 ;; Agent
 
-(s/def :lrsql.hugsql.spec.agent/?name (s/nilable string?))
 (s/def :lrsql.hugsql.spec.agent/identified-group? boolean?)
 
 ;; "mbox::mailto:foo@example.com"
-(def ifi-mbox-spec 
+(def ifi-mbox-spec
   (make-str-spec ::xs/mailto-iri
                  (fn [s] (->> s (re-matches #"mbox::(.*)") second))
                  (fn [s] (->> s (str "mbox::")))))
@@ -119,6 +119,16 @@
 (s/def :lrsql.hugsql.spec.agent/usage
   #{"Actor" "Object" "Authority" "Instructor" "Team"
     "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"})
+
+(s/def :lrsql.hugsql.spec.agent/payload
+  :xapi.statements.GET.request.params/agent)
+
+;; For agent queries
+(s/def :lrsql.hugsql.spec.agent/agent
+  (xres/json
+   (s/nonconforming
+    (s/or :agent ::xs/agent
+          :group ::xs/identified-group))))
 
 ;; TODO: Check that `bytes?` work with BLOBs
 
@@ -220,9 +230,9 @@
 
 (def agent-insert-spec
   (s/keys :req-un [::primary-key
-                   :lrsql.hugsql.spec.agent/?name
                    :lrsql.hugsql.spec.agent/agent-ifi
-                   :lrsql.hugsql.spec.agent/identified-group?]))
+                   :lrsql.hugsql.spec.agent/identified-group?
+                   :lrsql.hugsql.spec.agent/payload]))
 
 ;; Activity
 ;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
@@ -303,6 +313,9 @@
                    :lrsql.hugsql.spec.agent/agent-ifi
                    :lrsql.hugsql.spec.activity/activity-iri]))
 
+(def agent-query-spec
+  (s/keys :req-un [:lrsql.hugsql.spec.agent/agent-ifi]))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Args
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -320,9 +333,9 @@
 (def query-params-spec
   "Regex spec of the three types of query params."
   (s/nonconforming
-   (s/or :state :xapi.document.state/id-params
-         :agent-profile :xapi.document.agent-profile/id-params
-         :activity-profile :xapi.document.activity-profile/id-params)))
+   (s/or :state :xapi.document.state/query-params
+         :agent-profile :xapi.document.agent-profile/query-params
+         :activity-profile :xapi.document.activity-profile/query-params)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions
