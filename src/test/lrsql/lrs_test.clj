@@ -2,7 +2,6 @@
   (:require [clojure.test :refer [deftest testing is]]
             [config.core  :refer [env]]
             [next.jdbc    :as jdbc]
-            [clojure.data.json :as json]
             [com.stuartsierra.component    :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.system :as system]))
@@ -114,7 +113,7 @@
         id-3  (get stmt-3 "id")
         id-4  (get stmt-4 "id")
         ts    "3000-01-01T01:00:00Z" ; Date far into the future
-        agt-1 (-> stmt-1 (get "actor") (json/write-str))
+        agt-1 (get stmt-1 "actor")
         vrb-1 (get-in stmt-1 ["verb" "id"])
         act-1 (get-in stmt-1 ["object" "id"])
         act-4 (get-in stmt-4 ["object" "id"])]
@@ -198,7 +197,7 @@
 (def doc-id-params
   {:stateId    "some-id"
    :activityId "https://example.org/activity-type"
-   :agent      "{\"mbox\":\"mailto:example@example.org\"}"})
+   :agent      {"mbox" "mailto:example@example.org"}})
 
 (def doc-1
   "{\"foo\":1,\"bar\":2}")

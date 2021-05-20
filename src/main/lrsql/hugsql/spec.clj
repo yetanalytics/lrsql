@@ -5,6 +5,8 @@
             [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
             [xapi-schema.spec.resources :as xres]
+            [com.yetanalytics.lrs.protocol :as lrsp]
+            [com.yetanalytics.lrs.spec.common :as sc]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.util :as u]))
 
@@ -17,6 +19,36 @@
 ;; - IRI: STRING UNIQUE KEY NOT NULL
 ;; - LangTag: STRING NOT NULL
 ;; - Value: STRING NOT NULL
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Params specs
+;; These spec the data received by functions in `lrsql.hugsq.input`.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def get-statements-params
+  ::lrsp/get-statements-params)
+
+(def get-agent-params
+  ::lrsp/get-person-params)
+
+;; For some reason this is not defined in lrs.protocol
+(def get-activity-params
+  (sc/with-conform-gen
+    :xapi.activities.GET.request/params))
+
+;; Need to define new doc specs here in order to work with s/fdef.
+
+(def set-document-params
+  (s/and ::lrsp/set-document-params (s/conformer second)))
+
+(def get-or-delete-document-params
+  (s/and ::lrsp/get-document-params (s/conformer second)))
+
+(def delete-documents-params
+  (s/and ::lrsp/delete-documents-params (s/conformer second)))
+
+(def get-document-ids-params
+  (s/and ::lrsp/get-document-ids-params (s/conformer second)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
@@ -316,9 +348,6 @@
 (def agent-query-spec
   (s/keys :req-un [:lrsql.hugsql.spec.agent/agent-ifi]))
 
-(def activity-params-spec
-  (s/keys :req-un [:xapi.activities.GET.request.params/activityId]))
-
 (def activity-query-spec
   (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri]))
 
@@ -329,19 +358,6 @@
 ;; NOTE: need to call s/nonconforming in order to make args with with
 ;; u/document-dispatch
 
-(def id-params-spec
-  "Regex spec for the three types of ID params."
-  (s/nonconforming
-   (s/or :state :xapi.document.state/id-params
-         :agent-profile :xapi.document.agent-profile/id-params
-         :activity-profile :xapi.document.activity-profile/id-params)))
-
-(def query-params-spec
-  "Regex spec of the three types of query params."
-  (s/nonconforming
-   (s/or :state :xapi.document.state/query-params
-         :agent-profile :xapi.document.agent-profile/query-params
-         :activity-profile :xapi.document.activity-profile/query-params)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions
