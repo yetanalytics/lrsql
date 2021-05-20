@@ -145,6 +145,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn query-agent
+  "Query an agent from the DB. Returns a map between `:person` and the
+   resulting Person object. Throws an exception if not found."
   [tx input]
   (if-some [{:keys [payload]} (f/query-agent tx input)]
     {:person (->> payload (wrapped-parse-json "agent") agnt/person)}
@@ -152,8 +154,9 @@
                                        :input input}))))
 
 (defn query-activity
+  "Query an activity from the DB. Returns a map between `:activity` and the
+   activity found, which is nil if not found."
   [tx input]
-  ;; `payload` may be nil
   (let [{:keys [payload]} (f/query-activity tx input)]
     {:activity (some->> payload (wrapped-parse-json "activity"))}))
 
@@ -190,6 +193,7 @@
   {})
 
 (defn delete-documents!
+  "Delete multiple documents from the DB. Returns an empty map."
   [tx {:keys [table] :as input}]
   (case table
     :state-document
