@@ -6,7 +6,6 @@
             [xapi-schema.spec :as xs]
             [xapi-schema.spec.resources :as xres]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            #_[com.yetanalytics.lrs.spec.common :as sc]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.util :as u]))
 
