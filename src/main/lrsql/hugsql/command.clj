@@ -146,10 +146,11 @@
 
 (defn query-agent
   [tx input]
-  (if-some [{:keys [payload]} (f/query-agent tx input)]
-    {:person (->> payload (wrapped-parse-json "agent") agnt/person)}
-    (throw (ex-info "Agent not found" {:kind  ::no-agent
-                                       :input input}))))
+  ;; If agent is not found, return the original input
+  (let [agent (if-some [result (:payload (f/query-agent tx input))]
+                result
+                (:payload input))]
+    {:person (->> agent (wrapped-parse-json "agent") agnt/person)}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Mutation

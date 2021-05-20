@@ -114,7 +114,7 @@
         id-3  (get stmt-3 "id")
         id-4  (get stmt-4 "id")
         ts    "3000-01-01T01:00:00Z" ; Date far into the future
-        agt-1 (-> stmt-1 (get "actor") (json/write-str))
+        agt-1 (-> stmt-1 (get "actor") (dissoc "name") (json/write-str))
         vrb-1 (get-in stmt-1 ["verb" "id"])
         act-1 (get-in stmt-1 ["object" "id"])
         act-4 (get-in stmt-4 ["object" "id"])]
