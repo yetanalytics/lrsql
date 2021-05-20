@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
 CREATE TABLE IF NOT EXISTS agent (
   id                  UUID NOT NULL PRIMARY KEY,
   agent_ifi           VARCHAR(255) NOT NULL UNIQUE,
-  agent_name          VARCHAR(255),
-  is_identified_group BOOLEAN DEFAULT FALSE NOT NULL
+  is_identified_group BOOLEAN DEFAULT FALSE NOT NULL,
+  payload             JSON NOT NULL
 )
 
 -- :name create-activity-table!

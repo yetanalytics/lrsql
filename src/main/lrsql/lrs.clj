@@ -81,8 +81,11 @@
 
   lp/AgentInfoResource
   (-get-person
-   [this auth-identity params]
-   {:person {:objectType "Person"}})
+   [lrs auth-identity params]
+   (let [conn  (:conn-pool lrs)
+         input (input/agent-query-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/query-agent tx input))))
 
   lp/ActivityInfoResource
   (-get-activity

@@ -33,6 +33,7 @@
 
 ;; Query
 (declare query-statements)
+(declare query-agent)
 (declare query-attachments)
 
 ;; Query existence

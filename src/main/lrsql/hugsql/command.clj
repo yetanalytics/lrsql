@@ -1,6 +1,7 @@
 (ns lrsql.hugsql.command
   "DB commands that utilize HugSql functions."
   (:require [clojure.data.json :as json]
+            [com.yetanalytics.lrs.xapi.agents :as agnt]
             [lrsql.hugsql.functions :as f]
             [lrsql.hugsql.util :as u]))
 
@@ -138,6 +139,18 @@
       {:statement-result {:statements (vec stmt-res)
                           :more       ""}
        :attachments      att-res})))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Object Query
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn query-agent
+  [tx input]
+  ;; If agent is not found, return the original input
+  (let [agent (if-some [result (:payload (f/query-agent tx input))]
+                result
+                (:payload input))]
+    {:person (->> agent (wrapped-parse-json "agent") agnt/person)}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Mutation
