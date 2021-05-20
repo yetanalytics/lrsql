@@ -11,9 +11,10 @@
   com.stuartsierra/component             {:mvn/version "1.0.0"}
   com.yetanalytics/lrs
   {:git/url    "git@github.com:yetanalytics/lrs.git"
-   :sha        "84d6e54033f0c84575564c070001530bdece95b2"
+   :sha        "76bc6b86546299db8d820a2c0e78e851d8dbe01d"
    :exclusions [org.clojure/clojure
                 com.yetanalytics/xapi-schema]}
+  io.pedestal/pedestal.jetty {:mvn/version "0.5.7"}
   com.yetanalytics/xapi-schema
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
    :sha        "77f78d1713e50e7b8610f58b5137695b0fccddaa"
