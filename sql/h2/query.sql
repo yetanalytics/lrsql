@@ -52,7 +52,7 @@ SELECT payload FROM xapi_statement
 -- :doc Query an agent with `:agent-ifi`.
 SELECT payload FROM agent
 WHERE agent_ifi = :agent-ifi
--- AND is_identified_group = FALSE
+AND is_identified_group = FALSE -- query only accepts agents, not groups
 
 -- :name query-activity
 -- :command :query

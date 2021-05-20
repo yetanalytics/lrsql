@@ -418,7 +418,7 @@
       atts?     (assoc :attachments? atts?))))
 
 (s/fdef agent-query-input
-  :args (s/cat :params hs/agent-params-spec)
+  :args (s/cat :params :xapi.agents.GET.request/params)
   :ret hs/agent-query-spec)
 
 (defn agent-query-input
