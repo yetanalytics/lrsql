@@ -333,9 +333,9 @@
 (def query-params-spec
   "Regex spec of the three types of query params."
   (s/nonconforming
-   (s/or :state :xapi.document.state/id-params
-         :agent-profile :xapi.document.agent-profile/id-params
-         :activity-profile :xapi.document.activity-profile/id-params)))
+   (s/or :state :xapi.document.state/query-params
+         :agent-profile :xapi.document.agent-profile/query-params
+         :activity-profile :xapi.document.activity-profile/query-params)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions
