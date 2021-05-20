@@ -1,10 +1,6 @@
-.phony: ci, ephemeral, nvm
+.phony: ci, ephemeral
 
-nvm:
-	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
-	nvm use 12
-
-ci: nvm
+ci:
 	clojure -Xdb-h2:test
 
 ephemeral:
