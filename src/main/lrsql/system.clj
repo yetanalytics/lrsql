@@ -2,7 +2,8 @@
   (:require [config.core :refer [env]]
             [next.jdbc.connection :as connection]
             [com.stuartsierra.component :as component]
-            [lrsql.lrs :as lrs])
+            [lrsql.lrs :as lrs]
+            [lrsql.system.webserver :as webserver])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
 
 ;; TODO: assert that db-type exists
@@ -80,4 +81,7 @@
      :conn-pool (pool-component)
      :lrs (component/using
            (lrs/map->LearningRecordStore {:db-type db-type})
-           [:conn-pool]))))
+           [:conn-pool])
+     :webserver (component/using
+                 (webserver/map->Webserver {})
+                 [:lrs]))))
