@@ -313,9 +313,6 @@
                    :lrsql.hugsql.spec.agent/agent-ifi
                    :lrsql.hugsql.spec.activity/activity-iri]))
 
-(def agent-params-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.agent/agent]))
-
 (def agent-query-spec
   (s/keys :req-un [:lrsql.hugsql.spec.agent/agent-ifi]))
 
