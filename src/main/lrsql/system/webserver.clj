@@ -2,7 +2,8 @@
   (:require [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
-            [com.yetanalytics.lrs.pedestal.interceptor :as i]))
+            [com.yetanalytics.lrs.pedestal.interceptor :as i]
+            [config.core :refer [env]]))
 
 (defrecord Webserver [service server
                       lrs]
@@ -13,7 +14,6 @@
       (if lrs
         (let [service
               (or service ;; accept passed in
-                  ;; TODO: svc params from env?
                   {:env :prod
                    ::http/routes
                    (build {:lrs lrs})
@@ -21,8 +21,8 @@
                    {:creds true :allowed-origins (constantly true)}
                    ::http/resource-path "/public"
                    ::http/type :jetty
-                   ::http/host "0.0.0.0"
-                   ::http/port 8080
+                   ::http/host (:http-host env "0.0.0.0")
+                   ::http/port (:http-port env 8080)
                    ::http/join? false
                    ::http/container-options
                    {:h2c? true
