@@ -17,17 +17,19 @@
 
 (deftest conformance-test
   (assert-in-mem-db)
-  (conf/with-test-suite
-    (let [sys (system/system)
-          ;; TODO: confirm that :io.pedestal.http/join? is false in pedestal
-          ;; service
-          sys' (component/start sys)]
-      (is (conf/conformant?
-           ;; TODO: match these to what you actually serve
-           "-e" "http://localhost:8080/xapi" "-b" "-z"
+  (with-redefs [env (merge env
+                           {:db-name (format
+                                      "conf-test-%s"
+                                      (str (java.util.UUID/randomUUID)))})]
+    (conf/with-test-suite
+      (let [sys (system/system)
+            sys' (component/start sys)]
+        (is (conf/conformant?
+             ;; TODO: match these to what you actually serve
+             "-e" "http://localhost:8080/xapi" "-b" "-z"
 
-           ;; zero in on specific tests using grep:
-           "-g" "XAPI-00315"
+             ;; zero in on specific tests using grep:
+             "-g" "XAPI-00315"
 
-           ))
-      (component/stop sys'))))
+             ))
+        (component/stop sys')))))
