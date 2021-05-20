@@ -23,6 +23,7 @@
                    ::http/type :jetty
                    ::http/host "0.0.0.0"
                    ::http/port 8080
+                   ::http/join? false
                    ::http/container-options
                    {:h2c? true
                     :h2? false
