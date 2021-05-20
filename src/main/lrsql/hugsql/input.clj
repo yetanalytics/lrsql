@@ -3,7 +3,6 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
-            [xapi-schema.spec.resources]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec :as hs]
             [lrsql.hugsql.util :as u]))
