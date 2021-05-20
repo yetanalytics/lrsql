@@ -426,6 +426,15 @@
   [{agent :agent}]
   {:agent-ifi (u/agent-str->ifi agent)})
 
+(s/fdef activity-query-input
+  :args (s/cat :params hs/activity-params-spec)
+  :ret hs/activity-query-spec)
+
+(defn activity-query-input
+  "Construct an input for `command/query-input!`"
+  [{activity-id :activityId}]
+  {:activity-iri activity-id})
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; DOCUMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- state-document-basics

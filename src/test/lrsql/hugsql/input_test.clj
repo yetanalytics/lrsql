@@ -36,7 +36,8 @@
 (deftest test-query-inputs
   (testing "statement query inputs"
     (is (nil? (check-validate `input/statement-query-input)))
-    (is (nil? (check-validate `input/agent-query-input))))
+    (is (nil? (check-validate `input/agent-query-input)))
+    (is (nil? (check-validate `input/activity-query-input))))
   (testing "document query inputs"
     (is (nil? (check-validate `input/document-input)))
     (is (nil? (check-validate `input/document-ids-input)))

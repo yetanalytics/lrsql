@@ -151,6 +151,12 @@
     (throw (ex-info "Agent not found" {:kind  ::no-agent
                                        :input input}))))
 
+(defn query-activity
+  [tx input]
+  ;; `payload` may be nil
+  (let [{:keys [payload]} (f/query-activity tx input)]
+    {:activity (some->> payload (wrapped-parse-json "activity"))}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Mutation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

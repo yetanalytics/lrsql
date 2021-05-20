@@ -185,6 +185,12 @@
                        "name" ["Sample Agent"]
                        "mbox" ["mailto:sample.agent@example.com"]}}
              (lrsp/-get-person lrs {} {:agent agt-1}))))
+    (testing "activity query"
+      (is (= {:activity {"id"         "http://www.example.com/tincan/activities/multipart"
+                         "objectType" "Activity"
+                         "definition" {"name"        {"en-US" "Multi Part Activity"}
+                                       "description" {"en-US" "Multi Part Activity Description"}}}}
+             (lrsp/-get-activity lrs {} {:activityId act-1}))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))

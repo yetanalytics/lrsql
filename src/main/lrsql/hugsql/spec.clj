@@ -319,6 +319,12 @@
 (def agent-query-spec
   (s/keys :req-un [:lrsql.hugsql.spec.agent/agent-ifi]))
 
+(def activity-params-spec
+  (s/keys :req-un [:xapi.activities.GET.request.params/activityId]))
+
+(def activity-query-spec
+  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri]))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Args
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
