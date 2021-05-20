@@ -6,7 +6,7 @@
             [xapi-schema.spec :as xs]
             [xapi-schema.spec.resources :as xres]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [com.yetanalytics.lrs.spec.common :as sc]
+            #_[com.yetanalytics.lrs.spec.common :as sc]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.util :as u]))
 
@@ -33,8 +33,7 @@
 
 ;; For some reason this is not defined in lrs.protocol
 (def get-activity-params
-  (sc/with-conform-gen
-    :xapi.activities.GET.request/params))
+  ::lrsp/get-activity-params)
 
 ;; Need to define new doc specs here in order to work with s/fdef.
 
