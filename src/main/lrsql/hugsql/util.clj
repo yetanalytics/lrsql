@@ -1,7 +1,6 @@
 (ns lrsql.hugsql.util
   (:require [java-time :as jt]
             [clj-uuid]
-            [clojure.data.json :as json]
             [com.yetanalytics.lrs.xapi.statements :as ss]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -65,6 +64,8 @@
 ;; Agents
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; NOTE: Agent objects are encoded without any intention of being parsed back.
+;; Hence this sort of simple encoding is sufficient.
 (defn agent->ifi
   "Returns string of the format \"<ifi-type>::<ifi-value>\".
    Returns `nil` if the agent doesn't have an IFI (e.g. Anonymous Group)."
@@ -83,11 +84,6 @@
                     account]
                 (str "account::" acc-name "@" acc-page))
       :else   nil)))
-
-(defn agent-str->ifi
-  "Same as `agent->ifi` except that `agent-str` is a string."
-  [agent-str]
-  (agent->ifi (json/read-str agent-str)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statements

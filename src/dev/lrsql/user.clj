@@ -156,4 +156,4 @@
                                        {}
                                        doc-id-params)))
 
-  (component/stop sys))
+  (component/stop sys'))

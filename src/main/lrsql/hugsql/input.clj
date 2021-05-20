@@ -372,7 +372,7 @@
 ;; TODO: format
 
 (s/fdef statement-query-input
-  :args (s/cat :params :xapi.statements.GET.request/params)
+  :args (s/cat :params hs/get-statements-params)
   :ret hs/statement-query-spec)
 
 (defn statement-query-input
@@ -400,10 +400,9 @@
         until       (when until (u/str->time until))
         rel-agents? (boolean rel-agents?)
         rel-acts?   (boolean rel-acts?)
-        agent-ifi   (when agent (u/agent-str->ifi agent))
-        limit       (when limit ; "0" = no limit
-                      (let [n (Long/parseLong limit)]
-                        (when (not (zero? n)) n)))]
+        agent-ifi   (when agent (u/agent->ifi agent))
+        limit       (when (and (int? limit) (not (zero? limit)))
+                      limit)] ; "0" = no limit
     (cond-> {}
       stmt-id   (merge {:statement-id stmt-id :voided? false})
       vstmt-id  (merge {:statement-id vstmt-id :voided? true})
@@ -418,13 +417,22 @@
       atts?     (assoc :attachments? atts?))))
 
 (s/fdef agent-query-input
-  :args (s/cat :params :xapi.agents.GET.request/params)
+  :args (s/cat :params hs/get-agent-params)
   :ret hs/agent-query-spec)
 
 (defn agent-query-input
   "Construct an input for `command/query-agent!`"
   [{agent :agent}]
-  {:agent-ifi (u/agent-str->ifi agent)})
+  {:agent-ifi (u/agent->ifi agent)})
+
+(s/fdef activity-query-input
+  :args (s/cat :params hs/get-activity-params)
+  :ret hs/activity-query-spec)
+
+(defn activity-query-input
+  "Construct an input for `command/query-input!`"
+  [{activity-id :activityId}]
+  {:activity-iri activity-id})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; DOCUMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -439,7 +447,7 @@
    state-id?]
   (cond-> {:table         :state-document
            :activity-iri  activity-id
-           :agent-ifi     (u/agent-str->ifi agent)
+           :agent-ifi     (u/agent->ifi agent)
            :?registration (when registration (u/str->uuid registration))}
     state-id?
     (assoc :state-id state-id)))
@@ -452,7 +460,7 @@
     agent      :agent}
    profile-id?]
   (cond-> {:table     :agent-profile-document
-           :agent-ifi (u/agent-str->ifi agent)}
+           :agent-ifi (u/agent->ifi agent)}
     profile-id?
     (assoc :profile-id profile-id)))
 
@@ -481,30 +489,30 @@
    :document      document})
 
 (s/fdef document-insert-input
-  :args (s/cat :id-params hs/id-params-spec :document bytes?)
+  :args (s/cat :params hs/set-document-params :document bytes?)
   :ret hs/document-insert-spec
   :fn (fn [{:keys [args ret]}]
-        (= (u/document-dispatch (:id-params args)) (:table ret))))
+        (= (u/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-insert-input
-  "Given `id-params` and `document`, construct the input for
+  "Given `params` and `document`, construct the input for
    `command/insert-document!` and `command/update-document!`"
-  {:arglists '([id-params document])}
-  (fn [id-params _] (u/document-dispatch id-params)))
+  {:arglists '([params document])}
+  (fn [params _] (u/document-dispatch params)))
 
 (defmethod document-insert-input :state-document
-  [id-params document]
-  (merge (state-document-basics id-params true)
+  [params document]
+  (merge (state-document-basics params true)
          (document-insert-basics document)))
 
 (defmethod document-insert-input :agent-profile-document
-  [id-params document]
-  (merge (agent-profile-document-basics id-params true)
+  [params document]
+  (merge (agent-profile-document-basics params true)
          (document-insert-basics document)))
 
 (defmethod document-insert-input :activity-profile-document
-  [id-params document]
-  (merge (activity-profile-document-basics id-params true)
+  [params document]
+  (merge (activity-profile-document-basics params true)
          (document-insert-basics document)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -514,41 +522,41 @@
 ;; Single document query/deletion
 
 (s/fdef document-input
-  :args (s/cat :id-params hs/id-params-spec)
+  :args (s/cat :params hs/get-or-delete-document-params)
   :ret hs/document-input-spec
   :fn (fn [{:keys [args ret]}]
-        (= (u/document-dispatch (:id-params args)) (:table ret))))
+        (= (u/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-input
-  "Given `id-params`, construct the input for `command/query-document` and
+  "Given `params`, construct the input for `command/query-document` and
    `command/delete-document!`"
-  {:arglists '([id-params])}
+  {:arglists '([params])}
   u/document-dispatch)
 
 (defmethod document-input :state-document
-  [id-params]
-  (state-document-basics id-params true))
+  [params]
+  (state-document-basics params true))
 
 (defmethod document-input :agent-profile-document
-  [id-params]
-  (agent-profile-document-basics id-params true))
+  [params]
+  (agent-profile-document-basics params true))
 
 (defmethod document-input :activity-profile-document
-  [id-params]
-  (activity-profile-document-basics id-params true))
+  [params]
+  (activity-profile-document-basics params true))
 
 ;; Multiple document deletion
 ;; Multi-delete is only supported for state docs, thus no need for multimethod
 
 (s/fdef document-multi-input
-  :args (s/cat :id-params :xapi.document.state/id-params)
+  :args (s/cat :params hs/delete-documents-params)
   :ret hs/state-doc-multi-input-spec)
 
 (defn document-multi-input
   "Given params, construct the input for `command/delete-document!` in the
    case of multiple documents."
-  [id-params]
-  (state-document-basics id-params false))
+  [params]
+  (state-document-basics params false))
 
 ;; Multiple document ID query
 
@@ -560,27 +568,27 @@
     (assoc :since (u/str->time since))))
 
 (s/fdef document-ids-input
-  :args (s/cat :query-params hs/query-params-spec)
+  :args (s/cat :params hs/get-document-ids-params)
   :ret hs/document-ids-query-spec
   :fn (fn [{:keys [args ret]}]
-        (= (u/document-dispatch (:query-params args)) (:table ret))))
+        (= (u/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-ids-input
-  "Given `query-params`, return the input for `command/query-document-ids`."
-  {:arglist '([query-params])}
+  "Given `params`, return the input for `command/query-document-ids`."
+  {:arglist '([params])}
   u/document-dispatch)
 
 (defmethod document-ids-input :state-document
-  [query-params]
-  (->> (state-document-basics query-params false)
-       (add-since-to-map query-params)))
+  [params]
+  (->> (state-document-basics params false)
+       (add-since-to-map params)))
 
 (defmethod document-ids-input :agent-profile-document
-  [query-params]
-  (->> (agent-profile-document-basics query-params false)
-       (add-since-to-map query-params)))
+  [params]
+  (->> (agent-profile-document-basics params false)
+       (add-since-to-map params)))
 
 (defmethod document-ids-input :activity-profile-document
-  [query-params]
-  (->> (activity-profile-document-basics query-params false)
-       (add-since-to-map query-params)))
+  [params]
+  (->> (activity-profile-document-basics params false)
+       (add-since-to-map params)))

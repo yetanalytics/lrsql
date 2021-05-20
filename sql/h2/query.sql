@@ -54,6 +54,13 @@ SELECT payload FROM agent
 WHERE agent_ifi = :agent-ifi
 AND is_identified_group = FALSE -- query only accepts agents, not groups
 
+-- :name query-activity
+-- :command :query
+-- :result :one
+-- :doc Query an activity with `:activity-iri`.
+SELECT payload FROM activity
+WHERE activity_iri = :activity-iri
+
 /* Statement Object Existence Checks */
 
 -- :name query-agent-exists

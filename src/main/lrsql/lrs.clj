@@ -89,8 +89,11 @@
 
   lp/ActivityInfoResource
   (-get-activity
-   [this auth-identity params]
-   {:activity {:objectType "Activity"}})
+   [lrs auth-identity params]
+   (let [conn (:conn-pool lrs)
+         input (input/activity-query-input params)]
+     (jdbc/with-transaction [tx (conn)]
+       (command/query-activity tx input))))
 
   lp/LRSAuth
   (-authenticate

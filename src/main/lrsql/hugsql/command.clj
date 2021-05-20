@@ -145,12 +145,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn query-agent
+  "Query an agent from the DB. Returns a map between `:person` and the
+   resulting Person object. Throws an exception if not found."
   [tx input]
   ;; If agent is not found, return the original input
   (let [agent (if-some [result (:payload (f/query-agent tx input))]
                 result
                 (:payload input))]
     {:person (->> agent (wrapped-parse-json "agent") agnt/person)}))
+
+(defn query-activity
+  "Query an activity from the DB. Returns a map between `:activity` and the
+   activity found, which is nil if not found."
+  [tx input]
+  (let [{:keys [payload]} (f/query-activity tx input)]
+    {:activity (some->> payload (wrapped-parse-json "activity"))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Mutation
@@ -185,6 +194,7 @@
   {})
 
 (defn delete-documents!
+  "Delete multiple documents from the DB. Returns an empty map."
   [tx {:keys [table] :as input}]
   (case table
     :state-document
