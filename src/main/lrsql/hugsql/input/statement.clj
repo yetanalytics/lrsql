@@ -1,13 +1,10 @@
-(ns lrsql.hugsql.input
-  "Functions to create HugSql inputs."
+(ns lrsql.hugsql.input.statement
   (:require [clojure.spec.alpha :as s]
-            [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.hugsql.spec :as hs]
-            [lrsql.hugsql.util :as u]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; STATEMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            [lrsql.hugsql.spec.statement :as hs]
+            [lrsql.hugsql.util :as u]
+            [lrsql.hugsql.util.actor :as ua]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -23,12 +20,12 @@
 (defn actor-insert-input
   "Given `actor`, construct the input for `functions/insert-actor!`."
   [actor]
-  (when-some [ifi-str (u/actor->ifi actor)]
+  (when-some [ifi-str (ua/actor->ifi actor)]
     {:table       :actor
      :primary-key (u/generate-uuid)
      :actor-ifi   ifi-str
      :actor-type  (get actor "objectType" "Agent")
-     :payload     (json/write-str actor)}))
+     :payload     (u/write-json actor)}))
 
 (s/fdef activity-insert-input
   :args (s/cat :activity ::xs/activity)
@@ -40,7 +37,7 @@
   {:table        :activity
    :primary-key  (u/generate-uuid)
    :activity-iri (get activity "id")
-   :payload      (json/write-str activity)})
+   :payload      (u/write-json activity)})
 
 (s/fdef statement-to-actor-insert-input
   :args (s/cat :statement-id ::hs/statement-id
@@ -244,7 +241,7 @@
                      :verb-iri          stmt-vrb-id
                      :voided?           false
                      :voiding?          voiding?
-                     :payload           (json/write-str statement)}
+                     :payload           (u/write-json statement)}
         ;; Actor HugSql Inputs
         [actor-inputs stmt-actor-inputs]
         (statement-actor-insert-inputs stmt-id
@@ -400,7 +397,7 @@
         until       (when until (u/str->time until))
         rel-actors? (boolean rel-actors?)
         rel-activs? (boolean rel-activs?)
-        actor-ifi   (when actor (u/actor->ifi actor))
+        actor-ifi   (when actor (ua/actor->ifi actor))
         limit       (when (and (int? limit) (not (zero? limit)))
                       limit)] ; "0" = no limit
     (cond-> {}
@@ -415,180 +412,3 @@
       limit     (assoc :limit limit)
       asc?      (assoc :ascending asc?)
       atts?     (assoc :attachments? atts?))))
-
-(s/fdef agent-query-input
-  :args (s/cat :params hs/get-actor-params)
-  :ret hs/agent-query-spec)
-
-(defn agent-query-input
-  "Construct an input for `command/query-agent!`"
-  [{agent :agent}]
-  {:agent-ifi (u/actor->ifi agent)})
-
-(s/fdef activity-query-input
-  :args (s/cat :params hs/get-activity-params)
-  :ret hs/activity-query-spec)
-
-(defn activity-query-input
-  "Construct an input for `command/query-input!`"
-  [{activity-id :activityId}]
-  {:activity-iri activity-id})
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; DOCUMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn- state-document-basics
-  "Common properties for state document inputs. `state-id?` controls whether
-   the state ID property is added (true for singleton queries, false for
-   array-valued queries)."
-  [{state-id     :stateId
-    activity-id  :activityId
-    agent        :agent
-    registration :registration}
-   state-id?]
-  (cond-> {:table         :state-document
-           :activity-iri  activity-id
-           :agent-ifi     (u/actor->ifi agent)
-           :?registration (when registration (u/str->uuid registration))}
-    state-id?
-    (assoc :state-id state-id)))
-
-(defn- agent-profile-document-basics
-  "Common properties for agent profile document inputs. `profile-id?` controls
-   whether the profile ID property is added (true for singleton queries, false
-   for array-valued queries)."
-  [{profile-id :profileId
-    agent      :agent}
-   profile-id?]
-  (cond-> {:table     :agent-profile-document
-           :agent-ifi (u/actor->ifi agent)}
-    profile-id?
-    (assoc :profile-id profile-id)))
-
-(defn- activity-profile-document-basics
-  "Common properties for activity profile document inputs. `profile-id?`
-   controls whether the profile ID property is added (true for singleton
-   queries, false for array-valued queries)."
-  [{profile-id  :profileId
-    activity-id :activityId}
-   profile-id?]
-  (cond-> {:table        :activity-profile-document
-           :activity-iri activity-id}
-    profile-id?
-    (assoc :profile-id profile-id)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Document Insertion 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn- document-insert-basics
-  "Common properties for insertion inputs, including the primary key, the last
-   modified time, and `document`"
-  [document]
-  {:primary-key   (u/generate-uuid)
-   :last-modified (u/current-time)
-   :document      document})
-
-(s/fdef document-insert-input
-  :args (s/cat :params hs/set-document-params :document bytes?)
-  :ret hs/document-insert-spec
-  :fn (fn [{:keys [args ret]}]
-        (= (u/document-dispatch (:params args)) (:table ret))))
-
-(defmulti document-insert-input
-  "Given `params` and `document`, construct the input for
-   `command/insert-document!` and `command/update-document!`"
-  {:arglists '([params document])}
-  (fn [params _] (u/document-dispatch params)))
-
-(defmethod document-insert-input :state-document
-  [params document]
-  (merge (state-document-basics params true)
-         (document-insert-basics document)))
-
-(defmethod document-insert-input :agent-profile-document
-  [params document]
-  (merge (agent-profile-document-basics params true)
-         (document-insert-basics document)))
-
-(defmethod document-insert-input :activity-profile-document
-  [params document]
-  (merge (activity-profile-document-basics params true)
-         (document-insert-basics document)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Document Query + Deletion
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Single document query/deletion
-
-(s/fdef document-input
-  :args (s/cat :params hs/get-or-delete-document-params)
-  :ret hs/document-input-spec
-  :fn (fn [{:keys [args ret]}]
-        (= (u/document-dispatch (:params args)) (:table ret))))
-
-(defmulti document-input
-  "Given `params`, construct the input for `command/query-document` and
-   `command/delete-document!`"
-  {:arglists '([params])}
-  u/document-dispatch)
-
-(defmethod document-input :state-document
-  [params]
-  (state-document-basics params true))
-
-(defmethod document-input :agent-profile-document
-  [params]
-  (agent-profile-document-basics params true))
-
-(defmethod document-input :activity-profile-document
-  [params]
-  (activity-profile-document-basics params true))
-
-;; Multiple document deletion
-;; Multi-delete is only supported for state docs, thus no need for multimethod
-
-(s/fdef document-multi-input
-  :args (s/cat :params hs/delete-documents-params)
-  :ret hs/state-doc-multi-input-spec)
-
-(defn document-multi-input
-  "Given params, construct the input for `command/delete-document!` in the
-   case of multiple documents."
-  [params]
-  (state-document-basics params false))
-
-;; Multiple document ID query
-
-(defn- add-since-to-map
-  "Add the `:since` property to `m` if `:since` is present/not nil."
-  [{since :since} m]
-  (cond-> m
-    since
-    (assoc :since (u/str->time since))))
-
-(s/fdef document-ids-input
-  :args (s/cat :params hs/get-document-ids-params)
-  :ret hs/document-ids-query-spec
-  :fn (fn [{:keys [args ret]}]
-        (= (u/document-dispatch (:params args)) (:table ret))))
-
-(defmulti document-ids-input
-  "Given `params`, return the input for `command/query-document-ids`."
-  {:arglist '([params])}
-  u/document-dispatch)
-
-(defmethod document-ids-input :state-document
-  [params]
-  (->> (state-document-basics params false)
-       (add-since-to-map params)))
-
-(defmethod document-ids-input :agent-profile-document
-  [params]
-  (->> (agent-profile-document-basics params false)
-       (add-since-to-map params)))
-
-(defmethod document-ids-input :activity-profile-document
-  [params]
-  (->> (activity-profile-document-basics params false)
-       (add-since-to-map params)))

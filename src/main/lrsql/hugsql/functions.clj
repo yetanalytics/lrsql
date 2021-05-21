@@ -6,10 +6,9 @@
 ;; reference.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Statements + Attachments
+;; Create Tables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Create tables
 (declare create-statement-table!)
 (declare create-actor-table!)
 (declare create-activity-table!)
@@ -20,7 +19,11 @@
 (declare create-agent-profile-document-table!)
 (declare create-activity-profile-document-table!)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insert
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Statements + Statement Objects
 (declare insert-statement!)
 (declare insert-actor!)
 (declare insert-activity!)
@@ -28,45 +31,53 @@
 (declare insert-statement-to-actor!)
 (declare insert-statement-to-activity!)
 
-;; Update
-(declare void-statement!)
-
-;; Query
-(declare query-statements)
-(declare query-agent) ; no `query-actor`
-(declare query-activity)
-(declare query-attachments)
-
-;; Query existence
-(declare query-actor-exists)
-(declare query-activity-exists)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Documents
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Insert
 (declare insert-state-document!)
 (declare insert-agent-profile-document!)
 (declare insert-activity-profile-document!)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Update
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Verbs
+(declare void-statement!)
+
+;; Documents
 (declare update-state-document!)
 (declare update-agent-profile-document!)
 (declare update-activity-profile-document!)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Delete
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Documents
 (declare delete-state-document!)
 (declare delete-state-documents!)
 (declare delete-agent-profile-document!)
 (declare delete-activity-profile-document!)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Statements + Statement Objects
+(declare query-statements)
+(declare query-agent) ; no `query-actor`
+(declare query-activity)
+(declare query-attachments)
+
+;; Statement Object Existence
+(declare query-actor-exists)
+(declare query-activity-exists)
+
+;; Documents
 (declare query-state-document)
 (declare query-agent-profile-document)
 (declare query-activity-profile-document)
 
-;; Query IDs
+;; Document IDs
 (declare query-state-document-ids)
 (declare query-agent-profile-document-ids)
 (declare query-activity-profile-document-ids)
