@@ -9,15 +9,15 @@
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.util :as u]))
 
-;; TODO: Deal with different encodings for JSON types (e.g. statement payload,
-;; activity payload, agent ifi), instead of just H2 strings.
+;; TODO: Deal with different encodings for JSON types (e.g. payloads,
+;; actor ifi), instead of just H2 strings.
 
 ;; TODO
 ;; Canonical-Language-Maps
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - IRI: STRING UNIQUE KEY NOT NULL
-;; - LangTag: STRING NOT NULL
-;; - Value: STRING NOT NULL
+;; - id:       SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - iri:      STRING UNIQUE KEY NOT NULL
+;; - lang_tag: STRING NOT NULL
+;; - value:    STRING NOT NULL
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params specs
@@ -27,7 +27,7 @@
 (def get-statements-params
   ::lrsp/get-statements-params)
 
-(def get-agent-params
+(def get-actor-params
   ::lrsp/get-person-params)
 
 ;; For some reason this is not defined in lrs.protocol
@@ -109,9 +109,7 @@
                  json/read-str
                  json/write-str))
 
-;; Agent
-
-(s/def :lrsql.hugsql.spec.agent/identified-group? boolean?)
+;; Actor
 
 ;; "mbox::mailto:foo@example.com"
 (def ifi-mbox-spec
@@ -140,25 +138,29 @@
                  (fn [{nm "name" hp "homePage"}]
                    (str "account::" nm "@" hp))))
 
-(s/def :lrsql.hugsql.spec.agent/agent-ifi
+(s/def :lrsql.hugsql.spec.actor/actor-ifi
   (s/or :mbox ifi-mbox-spec
         :mbox-sha1sum ifi-mbox-sha1sum-spec
         :openid ifi-openid-spec
         :account ifi-account-spec))
 
-(s/def :lrsql.hugsql.spec.agent/usage
+(s/def :lrsql.hugsql.spec.actor/agent-ifi
+  :lrsql.hugsql.spec.actor/actor-ifi)
+
+(s/def :lrsql.hugsql.spec.actor/actor-type
+  #{"Agent" "Group"})
+
+(s/def :lrsql.hugsql.spec.actor/usage
   #{"Actor" "Object" "Authority" "Instructor" "Team"
     "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"})
 
-(s/def :lrsql.hugsql.spec.agent/payload
+(s/def :lrsql.hugsql.spec.actor/payload
   :xapi.statements.GET.request.params/agent)
 
 ;; For agent queries
-(s/def :lrsql.hugsql.spec.agent/agent
+(s/def :lrsql.hugsql.spec.actor/agent
   (xres/json
-   (s/nonconforming
-    (s/or :agent ::xs/agent
-          :group ::xs/identified-group))))
+   (s/nonconforming ::xs/agent)))
 
 ;; TODO: Check that `bytes?` work with BLOBs
 
@@ -169,10 +171,18 @@
 (s/def :lrsql.hugsql.spec.attachment/content bytes?)
 
 ;; Query Options
-(s/def ::related-agents? boolean?)
+(s/def ::related-actors? boolean?)
 (s/def ::related-activities? boolean?)
 (s/def ::limit nat-int?)
 (s/def ::ascending? boolean?)
+
+;; Documents
+(s/def ::state-id string?)
+;; profile ID should be an IRI, but xapi-schema defines it only as a string
+(s/def ::profile-id string?)
+(s/def ::last-modified inst?)
+(s/def ::since inst?)
+(s/def ::document bytes?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statements and Attachment Args
@@ -229,15 +239,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Statement
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementID: UUID UNIQUE KEY NOT NULL
-;; - StatementRefID: UUID
-;; - Timestamp: TIMESTAMP NOT NULL
-;; - Stored: TIMESTAMP NOT NULL
-;; - Registration: UUID
-;; - VerbID: STRING NOT NULL
-;; - IsVoided: BOOLEAN NOT NULL DEFAULT FALSE
-;; - Payload: JSON NOT NULL
+;; - id:               SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - statement_id:     UUID NOT NULL UNIQUE KEY
+;; - statement_ref_id: UUID
+;; - created:          TIMESTAMP NOT NULL -- :timestamp in code
+;; - stored:           TIMESTAMP NOT NULL
+;; - registration:     UUID
+;; - verb_iri:         STRING NOT NULL
+;; - is_voided:        BOOLEAN NOT NULL DEFAULT FALSE
+;; - payload:          JSON NOT NULL
 
 (def statement-insert-spec
   (s/keys :req-un [::primary-key
@@ -251,23 +261,25 @@
                    ::voiding?
                    ::payload]))
 
-;; /* Need explicit properties for querying Agents Resource */
-;; Agent
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - Name: STRING
-;; - IFI: STRING NOT NULL
-;; - IsIdentifiedGroup: BOOLEAN NOT NULL DEFAULT FALSE -- Treat Identified Groups as Agents
+;; In this context, "Actor" is a catch-all term to refer to both Agents and
+;; Identified Groups, not the Actor object within Statements.
 
-(def agent-insert-spec
+;; Actor
+;; - id:          SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - actor_ifi:   STRING NOT NULL UNIQUE KEY
+;; - actor_type:  ENUM ('Agent', 'Group') NOT NULL
+;; - payload:     JSON NOT NULL
+
+(def actor-insert-spec
   (s/keys :req-un [::primary-key
-                   :lrsql.hugsql.spec.agent/agent-ifi
-                   :lrsql.hugsql.spec.agent/identified-group?
-                   :lrsql.hugsql.spec.agent/payload]))
+                   :lrsql.hugsql.spec.actor/actor-ifi
+                   :lrsql.hugsql.spec.actor/actor-type
+                   :lrsql.hugsql.spec.actor/payload]))
 
 ;; Activity
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - ActivityIRI: STRING UNIQUE KEY NOT NULL
-;; - Payload: JSON NOT NULL
+;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - activity_iri: STRING NOT NULL UNIQUE KEY
+;; - payload:      JSON NOT NULL
 
 (def activity-insert-spec
   (s/keys :req-un [::primary-key
@@ -275,11 +287,12 @@
                    :lrsql.hugsql.spec.activity/payload]))
 
 ;; Attachment
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - SHA2: STRING UNIQUE KEY NOT NULL
-;; - ContentType: STRING NOT NULL
-;; - FileURL: STRING NOT NULL -- Either an external URL or the URL to a LRS location
-;; - Payload: BINARY NOT NULL
+;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - statement_key:  UUID NOT NULL FOREIGN KEY
+;; - attachment_sha: STRING NOT NULL
+;; - content_type:   STRING NOT NULL
+;; - content_length: INTEGER NOT NULL
+;; - payload:        BINARY NOT NULL
 
 (def attachment-insert-spec
   (s/keys :req-un [::primary-key
@@ -289,23 +302,27 @@
                    :lrsql.hugsql.spec.attachment/content-length
                    :lrsql.hugsql.spec.attachment/content]))
 
-;; Statement-to-Agent
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementID: UUID NOT NULL
-;; - Usage: STRING IN ('Actor', 'Object', 'Authority', 'Instructor', 'Team') NOT NULL
-;; - AgentIFI: STRING NOT NULL
+;; Statement-to-Actor
+;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - statement_id: UUID NOT NULL FOREIGN KEY
+;; - usage:        ENUM ('Actor', 'Object', 'Authority', 'Instructor', 'Team',
+;;                       'SubActor', 'SubObject', 'SubAuthority', 'SubInstructor', 'SubTeam')
+;;                 NOT NULL
+;; - actor_ifi:    STRING NOT NULL FOREIGN KEY
 
-(def statement-to-agent-insert-spec
+(def statement-to-actor-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
-                   :lrsql.hugsql.spec.agent/usage
-                   :lrsql.hugsql.spec.agent/agent-ifi]))
+                   :lrsql.hugsql.spec.actor/usage
+                   :lrsql.hugsql.spec.actor/actor-ifi]))
 
 ;; Statement-to-Activity
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementID: UUID NOT NULL
-;; - Usage: STRING IN ('Object', 'Category', 'Grouping', 'Parent', 'Other') NOT NULL
-;; - ActivityIRI: STRING NOT NULL
+;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - statement_id: UUID NOT NULL FOREIGN KEY
+;; - usage:        ENUM ('Object', 'Category', 'Grouping', 'Parent', 'Other',
+;;                       'SubObject', 'SubCategory', 'SubGrouping', 'SubParent', 'SubOther')
+;;                 NOT NULL
+;; - activity_iri: STRING NOT NULL FOREIGN KEY
 
 (def statement-to-activity-insert-spec
   (s/keys :req-un [::primary-key
@@ -317,9 +334,9 @@
 (def statement-insert-seq-spec
   (s/cat
    :statement-input statement-insert-spec
-   :agent-inputs (s/* agent-insert-spec)
+   :actor-inputs (s/* actor-insert-spec)
    :activity-inputs (s/* activity-insert-spec)
-   :stmt-agent-inputs (s/* statement-to-agent-insert-spec)
+   :stmt-actor-inputs (s/* statement-to-actor-insert-spec)
    :stmt-activity-inputs (s/* statement-to-activity-insert-spec)))
 
 (def attachment-insert-seq-spec
@@ -338,13 +355,13 @@
                    ::until
                    ::limit
                    ::ascending?
-                   ::related-agents?
+                   ::related-actors?
                    ::related-activities?
-                   :lrsql.hugsql.spec.agent/agent-ifi
+                   :lrsql.hugsql.spec.actor/actor-ifi
                    :lrsql.hugsql.spec.activity/activity-iri]))
 
 (def agent-query-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.agent/agent-ifi]))
+  (s/keys :req-un [:lrsql.hugsql.spec.actor/agent-ifi]))
 
 (def activity-query-spec
   (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri]))
@@ -354,48 +371,48 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; State-Document
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StateID: STRING NOT NULL
-;; - ActivityID: STRING NOT NULL
-;; - AgentID: UUID NOT NULL
-;; - Registration: UUID
-;; - LastModified: TIMESTAMP NOT NULL
-;; - Document: BINARY NOT NULL
+;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - state_id:      STRING NOT NULL
+;; - activity_iri:  STRING NOT NULL
+;; - agent_ifi:     STRING NOT NULL
+;; - registration:  UUID
+;; - last_modified: TIMESTAMP NOT NULL
+;; - document:      BINARY NOT NULL
 
 (def state-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::state-id
-                   ::activity-iri
-                   ::agent-ifi
+                   :lrsql.hugsql.spec.activity/activity-iri
+                   :lrsql.hugsql.spec.actor/agent-ifi
                    ::?registration
                    ::last-modified
                    ::document]))
 
 ;; Agent-Profile-Document
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - ProfileID: STRING NOT NULL
-;; - AgentID: UUID NOT NULL
-;; - LastModified: TIMESTAMP NOT NULL
-;; - Document: BINARY NOT NULL
+;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - profile_id:    STRING NOT NULL
+;; - agent_ifi:     STRING NOT NULL
+;; - last_modified: TIMESTAMP NOT NULL
+;; - document:      BINARY NOT NULL
 
 (def agent-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
-                   ::agent-ifi
+                   :lrsql.hugsql.spec.actor/agent-ifi
                    ::last-modified
                    ::document]))
 
 ;; Activity-Profile-Resource
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - ProfileID: STRING NOT NULL
-;; - ActivityID: STRING NOT NULL
-;; - LastModified: TIMESTAMP NOT NULL
-;; - Document: BINARY NOT NULL
+;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - profile_id:    STRING NOT NULL
+;; - activity_iri:  STRING NOT NULL
+;; - last_modified: TIMESTAMP NOT NULL
+;; - document:      BINARY NOT NULL
 
 (def activity-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
-                   ::activity-iri
+                   :lrsql.hugsql.spec.activity/activity-iri
                    ::last-modified
                    ::document]))
 
@@ -415,17 +432,17 @@
 ;; Document queries/deletions
 
 (def state-doc-input-spec
-  (s/keys :req-un [::activity-iri
-                   ::agent-ifi
+  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri
+                   :lrsql.hugsql.spec.actor/agent-ifi
                    ::state-id
                    ::?registration]))
 
 (def agent-profile-doc-input-spec
-  (s/keys :req-un [::agent-ifi
+  (s/keys :req-un [:lrsql.hugsql.spec.actor/agent-ifi
                    ::profile-id]))
 
 (def activity-profile-doc-input-spec
-  (s/keys :req-un [::activity-iri
+  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri
                    ::profile-id]))
 
 (def document-input-spec
@@ -437,24 +454,24 @@
 ;; Document multi-query/delete
 
 (def state-doc-multi-input-spec
-  (s/keys :req-un [::activity-iri
-                   ::agent-ifi
+  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri
+                   :lrsql.hugsql.spec.actor/agent-ifi
                    ::?registration]))
 
 ;; Document ID queries
 
 (def state-doc-ids-input-spec
-  (s/keys :req-un [::activity-iri
-                   ::agent-ifi
+  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri
+                   :lrsql.hugsql.spec.actor/agent-ifi
                    ::?registration]
           :opt-un [::since]))
 
 (def agent-profile-doc-ids-input-spec
-  (s/keys :req-un [::agent-ifi]
+  (s/keys :req-un [:lrsql.hugsql.spec.actor/agent-ifi]
           :opt-un [::since]))
 
 (def activity-profile-doc-ids-input-spec
-  (s/keys :req-un [::activity-iri]
+  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri]
           :opt-un [::since]))
 
 (def document-ids-query-spec

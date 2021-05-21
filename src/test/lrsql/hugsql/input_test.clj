@@ -20,10 +20,10 @@
 
 (deftest test-insert-inputs
   (testing "statement object insertion inputs"
-    (is (nil? (check-validate `input/agent-insert-input)))
+    (is (nil? (check-validate `input/actor-insert-input)))
     (is (nil? (check-validate `input/activity-insert-input)))
     (is (nil? (check-validate `input/attachment-insert-input)))
-    (is (nil? (check-validate `input/statement-to-agent-insert-input)))
+    (is (nil? (check-validate `input/statement-to-actor-insert-input)))
     (is (nil? (check-validate `input/statement-to-activity-insert-input))))
   (testing "statement insertion inputs"
     (is (nil? (check-validate `input/statement-insert-inputs 10)))

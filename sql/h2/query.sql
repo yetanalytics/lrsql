@@ -7,12 +7,12 @@
 -- :require [clojure.string :as cstr]
 SELECT payload FROM xapi_statement
 /*~
-(when (:agent-ifi params)
- (str "INNER JOIN statement_to_agent"
-      "\nON xapi_statement.statement_id = statement_to_agent.statement_id"
-      "\nAND statement_to_agent.agent_ifi = :agent-ifi"
-      (when-not (:related-agents? params)
-       "\nAND statement_to_agent.usage = 'Actor'")))
+(when (:actor-ifi params)
+ (str "INNER JOIN statement_to_actor"
+      "\nON xapi_statement.statement_id = statement_to_actor.statement_id"
+      "\nAND statement_to_actor.actor_ifi = :actor-ifi"
+      (when-not (:related-actors? params)
+       "\nAND statement_to_actor.usage = 'Actor'")))
 ~*/
 /*~
 (when (:activity-iri params)
@@ -49,10 +49,10 @@ SELECT payload FROM xapi_statement
 -- :name query-agent
 -- :command :query
 -- :result :one
--- :doc Query an agent with `:agent-ifi`.
-SELECT payload FROM agent
-WHERE agent_ifi = :agent-ifi
-AND is_identified_group = FALSE -- query only accepts agents, not groups
+-- :doc Query an agent with `:agent-ifi`. Groups are not queried.
+SELECT payload FROM actor
+WHERE actor_ifi = :agent-ifi -- not :actor-ifi since group IFIs aren't allowed
+AND actor_type = 'Agent'
 
 -- :name query-activity
 -- :command :query
@@ -63,12 +63,12 @@ WHERE activity_iri = :activity-iri
 
 /* Statement Object Existence Checks */
 
--- :name query-agent-exists
+-- :name query-actor-exists
 -- :command :query
 -- :result :one
--- :doc Check for the existence of an Agent with `:agent-ifi`. Returns nil iff not found.
-SELECT 1 FROM agent
-WHERE agent_ifi = :agent-ifi
+-- :doc Check for the existence of an Agent or Group with `:actor-ifi`. Returns nil iff not found.
+SELECT 1 FROM actor
+WHERE actor_ifi = :actor-ifi
 
 -- :name query-activity-exists
 -- :command :query

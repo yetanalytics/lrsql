@@ -15,14 +15,14 @@ verb_iri = :verb-iri,
 is_voided = :voided?,
 payload = :payload FORMAT JSON
 
--- :name insert-agent!
+-- :name insert-actor!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new agent with an IFI and optional name.
-INSERT INTO agent SET 
+-- :doc Insert a new actor with an IFI and optional name.
+INSERT INTO actor SET 
 id = :primary-key,
-agent_ifi = :agent-ifi,
-is_identified_group = :identified-group?,
+actor_ifi = :actor-ifi,
+actor_type = :actor-type,
 payload = :payload FORMAT JSON
 
 -- :name insert-activity!
@@ -46,15 +46,15 @@ content_type = :content-type,
 content_length = :content-length,
 content = :content
 
--- :name insert-statement-to-agent!
+-- :name insert-statement-to-actor!
 -- :command :insert
 -- :result :affected
--- :doc Insert a new statement-to-agent relation.
-INSERT INTO statement_to_agent SET 
+-- :doc Insert a new statement-to-actor relation.
+INSERT INTO statement_to_actor SET 
 id = :primary-key,
 statement_id = :statement-id,
 usage = :usage,
-agent_ifi = :agent-ifi
+actor_ifi = :actor-ifi
 
 -- :name insert-statement-to-activity!
 -- :command :insert

@@ -13,14 +13,14 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   payload          JSON NOT NULL
 )
 
--- :name create-agent-table!
+-- :name create-actor-table!
 -- :command :execute
--- :doc Create the `agent` table if it does not exist yet
-CREATE TABLE IF NOT EXISTS agent (
-  id                  UUID NOT NULL PRIMARY KEY,
-  agent_ifi           VARCHAR(255) NOT NULL UNIQUE,
-  is_identified_group BOOLEAN DEFAULT FALSE NOT NULL,
-  payload             JSON NOT NULL
+-- :doc Create the `actor` table if it does not exist yet
+CREATE TABLE IF NOT EXISTS actor (
+  id         UUID NOT NULL PRIMARY KEY,
+  actor_ifi  VARCHAR(255) NOT NULL UNIQUE,
+  actor_type ENUM('Agent', 'Group') NOT NULL,
+  payload    JSON NOT NULL
 )
 
 -- :name create-activity-table!
@@ -45,18 +45,18 @@ CREATE TABLE IF NOT EXISTS attachment (
   FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
 )
 
--- :name create-statement-to-agent-table!
+-- :name create-statement-to-actor-table!
 -- :command :execute
--- :doc Create the `statement_to_agent` link table if it does not exist yet.
-CREATE TABLE IF NOT EXISTS statement_to_agent (
+-- :doc Create the `statement_to_actor` link table if it does not exist yet.
+CREATE TABLE IF NOT EXISTS statement_to_actor (
   id           UUID NOT NULL PRIMARY KEY,
   statement_id UUID NOT NULL,
   usage        ENUM('Actor', 'Object', 'Authority', 'Instructor', 'Team',
                     'SubActor', 'SubObject', 'SubInstructor', 'SubTeam')
                NOT NULL,
-  agent_ifi    VARCHAR(255) NOT NULL,
+  actor_ifi    VARCHAR(255) NOT NULL,
   FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
-  FOREIGN KEY (agent_ifi) REFERENCES agent(agent_ifi)
+  FOREIGN KEY (actor_ifi) REFERENCES actor(actor_ifi)
 )
 
 -- :name create-statement-to-activity-table!

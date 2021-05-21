@@ -12,23 +12,23 @@
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Agent/Activity Insertion 
+;; Actor/Activity Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef agent-insert-input
-  :args (s/cat :agent (s/alt :agent ::xs/agent
+(s/fdef actor-insert-input
+  :args (s/cat :actor (s/alt :agent ::xs/agent
                              :group ::xs/group))
-  :ret (s/nilable hs/agent-insert-spec))
+  :ret (s/nilable hs/actor-insert-spec))
 
-(defn agent-insert-input
-  "Given `agent`, construct the input for `functions/insert-agent!`."
-  [agent]
-  (when-some [ifi-str (u/agent->ifi agent)]
-    {:table             :agent
-     :primary-key       (u/generate-uuid)
-     :agent-ifi         ifi-str
-     :payload           (json/write-str agent)
-     :identified-group? (= "Group" (get agent "objectType"))}))
+(defn actor-insert-input
+  "Given `actor`, construct the input for `functions/insert-actor!`."
+  [actor]
+  (when-some [ifi-str (u/actor->ifi actor)]
+    {:table       :actor
+     :primary-key (u/generate-uuid)
+     :actor-ifi   ifi-str
+     :actor-type  (get actor "objectType" "Agent")
+     :payload     (json/write-str actor)}))
 
 (s/fdef activity-insert-input
   :args (s/cat :activity ::xs/activity)
@@ -37,26 +37,26 @@
 (defn activity-insert-input
   "Given `activity`, construct the input for `functions/insert-activity!`."
   [activity]
-  {:table          :activity
-   :primary-key    (u/generate-uuid)
-   :activity-iri   (get activity "id")
-   :payload        (json/write-str activity)})
+  {:table        :activity
+   :primary-key  (u/generate-uuid)
+   :activity-iri (get activity "id")
+   :payload      (json/write-str activity)})
 
-(s/fdef statement-to-agent-insert-input
+(s/fdef statement-to-actor-insert-input
   :args (s/cat :statement-id ::hs/statement-id
-               :agent-usage :lrsql.hugsql.spec.agent/usage
-               :agent-input hs/agent-insert-spec)
-  :ret hs/statement-to-agent-insert-spec)
+               :actor-usage :lrsql.hugsql.spec.actor/usage
+               :actor-input hs/actor-insert-spec)
+  :ret hs/statement-to-actor-insert-spec)
 
-(defn statement-to-agent-insert-input
-  "Given `statement-id`, `agent-usage` and the input params map `insert-agent`,
-   return the input for `functions/insert-statement-to-agent!`."
-  [statement-id agent-usage {agent-ifi :agent-ifi}]
-  {:table        :statement-to-agent
+(defn statement-to-actor-insert-input
+  "Given `statement-id`, `actor-usage` and the input to `f/insert-actor!`,
+   return the input for `functions/insert-statement-to-actor!`."
+  [statement-id actor-usage {actor-ifi :actor-ifi}]
+  {:table        :statement-to-actor
    :primary-key  (u/generate-uuid)
    :statement-id statement-id
-   :usage        agent-usage
-   :agent-ifi    agent-ifi})
+   :usage        actor-usage
+   :actor-ifi    actor-ifi})
 
 (s/fdef statement-to-activity-insert-input
   :args (s/cat :statement-id ::hs/statement-id
@@ -79,46 +79,46 @@
 ;; Statement Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- statement-agent-insert-inputs
-  "Helper to construct the `functions/insert-agent!` inputs for a statement's
-   agents."
+(defn- statement-actor-insert-inputs
+  "Helper to construct the `functions/insert-actor!` inputs for a statement's
+   Agents and Groups."
   [stmt-id stmt-act stmt-obj stmt-auth stmt-inst stmt-team sql-enums]
   (let [;; HugSql Enums
         {:keys [act-enum obj-enum auth-enum inst-enum team-enum]}
         sql-enums
-        ;; Statement Agents
+        ;; Statement Actors
         stmt-obj     (when (#{"Agent" "Group"} (get stmt-obj "objectType"))
                        stmt-obj)
-        act-agnt-in  (when stmt-act (agent-insert-input stmt-act))
-        obj-agnt-in  (when stmt-obj (agent-insert-input stmt-obj))
-        auth-agnt-in (when stmt-auth (agent-insert-input stmt-auth))
-        inst-agnt-in (when stmt-inst (agent-insert-input stmt-inst))
-        team-agnt-in (when stmt-team (agent-insert-input stmt-team))
-        ;; Agent Inputs
-        agnt-inputs  (cond-> []
-                       act-agnt-in (conj act-agnt-in)
-                       obj-agnt-in  (conj obj-agnt-in)
-                       auth-agnt-in (conj auth-agnt-in)
-                       inst-agnt-in (conj inst-agnt-in)
-                       team-agnt-in (conj team-agnt-in))
-        ;; Statement to Agent Inputs
-        agent->link  (partial statement-to-agent-insert-input stmt-id)
-        stmt-agnts   (cond-> []
-                       act-agnt-in
-                       (conj (agent->link act-enum act-agnt-in))
-                       obj-agnt-in
-                       (conj (agent->link obj-enum obj-agnt-in))
-                       auth-agnt-in
-                       (conj (agent->link auth-enum auth-agnt-in))
-                       inst-agnt-in
-                       (conj (agent->link inst-enum inst-agnt-in))
-                       team-agnt-in
-                       (conj (agent->link team-enum team-agnt-in)))]
-    [agnt-inputs stmt-agnts]))
+        act-input    (when stmt-act (actor-insert-input stmt-act))
+        obj-input    (when stmt-obj (actor-insert-input stmt-obj))
+        auth-input   (when stmt-auth (actor-insert-input stmt-auth))
+        inst-input   (when stmt-inst (actor-insert-input stmt-inst))
+        team-input   (when stmt-team (actor-insert-input stmt-team))
+        ;; Actor Inputs
+        actor-inputs (cond-> []
+                       act-input (conj act-input)
+                       obj-input  (conj obj-input)
+                       auth-input (conj auth-input)
+                       inst-input (conj inst-input)
+                       team-input (conj team-input))
+        ;; Statement to Actor Inputs
+        actor->link  (partial statement-to-actor-insert-input stmt-id)
+        stmt-actors  (cond-> []
+                       act-input
+                       (conj (actor->link act-enum act-input))
+                       obj-input
+                       (conj (actor->link obj-enum obj-input))
+                       auth-input
+                       (conj (actor->link auth-enum auth-input))
+                       inst-input
+                       (conj (actor->link inst-enum inst-input))
+                       team-input
+                       (conj (actor->link team-enum team-input)))]
+    [actor-inputs stmt-actors]))
 
 (defn- statement-activity-insert-inputs
   "Helper to construct the `functions/insert-activity!` inputs for a statement's
-   activities."
+   Activities."
   [stmt-id stmt-obj stmt-ctx-acts sql-enums]
   (let [;; HugSql enums
         {:keys [obj-enum cat-enum grp-enum prt-enum oth-enum]}
@@ -143,7 +143,7 @@
                        grp-acts-in (concat grp-acts-in)
                        prt-acts-in (concat prt-acts-in)
                        oth-acts-in (concat oth-acts-in))
-        ;; Statement to Agent Enums
+        ;; Statement to Activity Enums
         act->link    (partial statement-to-activity-insert-input stmt-id)
         stmt-acts    (cond-> []
                        obj-act-in
@@ -169,29 +169,29 @@
          sub-stmt-inst     "instructor"
          sub-stmt-team     "team"}
         sub-stmt-ctx
-        ;; Agent Inputs
-        [agnt-inputs stmt-agnt-inputs]
-        (statement-agent-insert-inputs stmt-id
-                                 sub-stmt-act
-                                 sub-stmt-obj
-                                 nil ; No Authority for SubStatements
-                                 sub-stmt-inst
-                                 sub-stmt-team
-                                 {:act-enum  "SubActor"
-                                  :obj-enum  "SubObject"
-                                  :inst-enum "SubInstructor"
-                                  :team-enum "SubTeam"})
+        ;; Actor Inputs
+        [actor-inputs stmt-actor-inputs]
+        (statement-actor-insert-inputs stmt-id
+                                       sub-stmt-act
+                                       sub-stmt-obj
+                                       nil ; No Authority for SubStatements
+                                       sub-stmt-inst
+                                       sub-stmt-team
+                                       {:act-enum  "SubActor"
+                                        :obj-enum  "SubObject"
+                                        :inst-enum "SubInstructor"
+                                        :team-enum "SubTeam"})
         ;; Activity Inputs
-        [act-inputs stmt-act-inputs]
+        [activity-inputs stmt-activity-inputs]
         (statement-activity-insert-inputs stmt-id
-                                    sub-stmt-obj
-                                    sub-stmt-ctx-acts
-                                    {:obj-enum "SubObject"
-                                     :cat-enum "SubCategory"
-                                     :grp-enum "SubGrouping"
-                                     :prt-enum "SubParent"
-                                     :oth-enum "SubOther"})]
-    [agnt-inputs act-inputs stmt-agnt-inputs stmt-act-inputs]))
+                                          sub-stmt-obj
+                                          sub-stmt-ctx-acts
+                                          {:obj-enum "SubObject"
+                                           :cat-enum "SubCategory"
+                                           :grp-enum "SubGrouping"
+                                           :prt-enum "SubParent"
+                                           :oth-enum "SubOther"})]
+    [actor-inputs activity-inputs stmt-actor-inputs stmt-activity-inputs]))
 
 (s/fdef statement-insert-inputs
   :args (s/cat :statement hs/prepared-statement-spec)
@@ -245,42 +245,42 @@
                      :voided?           false
                      :voiding?          voiding?
                      :payload           (json/write-str statement)}
-        ;; Agent HugSql Inputs
-        [agnt-inputs stmt-agnt-inputs]
-        (statement-agent-insert-inputs stmt-id
-                                 stmt-act
-                                 stmt-obj
-                                 stmt-auth
-                                 stmt-inst
-                                 stmt-team
-                                 {:act-enum  "Actor"
-                                  :obj-enum  "Object"
-                                  :auth-enum "Authority"
-                                  :inst-enum "Instructor"
-                                  :team-enum "Team"})
+        ;; Actor HugSql Inputs
+        [actor-inputs stmt-actor-inputs]
+        (statement-actor-insert-inputs stmt-id
+                                       stmt-act
+                                       stmt-obj
+                                       stmt-auth
+                                       stmt-inst
+                                       stmt-team
+                                       {:act-enum  "Actor"
+                                        :obj-enum  "Object"
+                                        :auth-enum "Authority"
+                                        :inst-enum "Instructor"
+                                        :team-enum "Team"})
         ;; Activity HugSql Inputs
-        [act-inputs stmt-act-inputs]
+        [activ-inputs stmt-activ-inputs]
         (statement-activity-insert-inputs stmt-id
-                                    stmt-obj
-                                    stmt-ctx-acts
-                                    {:obj-enum "Object"
-                                     :cat-enum "Category"
-                                     :grp-enum "Grouping"
-                                     :prt-enum "Parent"
-                                     :oth-enum "Other"})
+                                          stmt-obj
+                                          stmt-ctx-acts
+                                          {:obj-enum "Object"
+                                           :cat-enum "Category"
+                                           :grp-enum "Grouping"
+                                           :prt-enum "Parent"
+                                           :oth-enum "Other"})
         ;; SubStatement HugSql Inputs
-        [sagnt-inputs sact-inputs sstmt-agnt-inputs sstmt-act-inputs]
+        [sactor-inputs sactiv-inputs sstmt-actor-inputs sstmt-activ-inputs]
         (when (= "SubStatement" stmt-obj-typ)
           (sub-statement-insert-inputs stmt-id stmt-obj))]
     (concat [stmt-input]
-            agnt-inputs
-            sagnt-inputs
-            act-inputs
-            sact-inputs
-            stmt-agnt-inputs
-            sstmt-agnt-inputs
-            stmt-act-inputs
-            sstmt-act-inputs)))
+            actor-inputs
+            sactor-inputs
+            activ-inputs
+            sactiv-inputs
+            stmt-actor-inputs
+            sstmt-actor-inputs
+            stmt-activ-inputs
+            sstmt-activ-inputs)))
 
 (s/fdef statements-insert-inputs
   :args (s/cat :statements (s/coll-of hs/prepared-statement-spec
@@ -357,7 +357,7 @@
      (fn [acc attachment]
        (if-some [stmt-id (att->stmt-id attachment)]
          (conj acc (attachment-insert-input (u/str->uuid stmt-id)
-                                             attachment))
+                                            attachment))
          (throw (ex-info "Attachment is not associated with a Statement in request."
                          {:kind ::invalid-attachment
                           :attachment attachment
@@ -380,11 +380,11 @@
   [{stmt-id     :statementId
     vstmt-id    :voidedStatementId
     verb-iri    :verb
-    agent       :agent
+    actor       :agent
     act-iri     :activity
     reg         :registration
-    rel-acts?   :related_activities
-    rel-agents? :related_agents
+    rel-activs? :related_activities
+    rel-actors? :related_agents
     since       :since
     until       :until
     limit       :limit
@@ -398,9 +398,9 @@
         reg         (when reg (u/str->uuid reg))
         since       (when since (u/str->time since))
         until       (when until (u/str->time until))
-        rel-agents? (boolean rel-agents?)
-        rel-acts?   (boolean rel-acts?)
-        agent-ifi   (when agent (u/agent->ifi agent))
+        rel-actors? (boolean rel-actors?)
+        rel-activs? (boolean rel-activs?)
+        actor-ifi   (when actor (u/actor->ifi actor))
         limit       (when (and (int? limit) (not (zero? limit)))
                       limit)] ; "0" = no limit
     (cond-> {}
@@ -410,20 +410,20 @@
       reg       (assoc :registration reg)
       since     (assoc :since since)
       until     (assoc :until until)
-      agent-ifi (merge {:agent-ifi agent-ifi :related-agents? rel-agents?})
-      act-iri   (merge {:activity-iri act-iri :related-activities? rel-acts?})
+      actor-ifi (merge {:actor-ifi actor-ifi :related-actors? rel-actors?})
+      act-iri   (merge {:activity-iri act-iri :related-activities? rel-activs?})
       limit     (assoc :limit limit)
       asc?      (assoc :ascending asc?)
       atts?     (assoc :attachments? atts?))))
 
 (s/fdef agent-query-input
-  :args (s/cat :params hs/get-agent-params)
+  :args (s/cat :params hs/get-actor-params)
   :ret hs/agent-query-spec)
 
 (defn agent-query-input
   "Construct an input for `command/query-agent!`"
   [{agent :agent}]
-  {:agent-ifi (u/agent->ifi agent)})
+  {:agent-ifi (u/actor->ifi agent)})
 
 (s/fdef activity-query-input
   :args (s/cat :params hs/get-activity-params)
@@ -447,7 +447,7 @@
    state-id?]
   (cond-> {:table         :state-document
            :activity-iri  activity-id
-           :agent-ifi     (u/agent->ifi agent)
+           :agent-ifi     (u/actor->ifi agent)
            :?registration (when registration (u/str->uuid registration))}
     state-id?
     (assoc :state-id state-id)))
@@ -460,7 +460,7 @@
     agent      :agent}
    profile-id?]
   (cond-> {:table     :agent-profile-document
-           :agent-ifi (u/agent->ifi agent)}
+           :agent-ifi (u/actor->ifi agent)}
     profile-id?
     (assoc :profile-id profile-id)))
 

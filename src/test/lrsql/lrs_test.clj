@@ -81,10 +81,10 @@
                "DROP TABLE IF EXISTS activity_profile_document"
                ;; Drop statement tables
                "DROP TABLE IF EXISTS statement_to_activity"
-               "DROP TABLE IF EXISTS statement_to_agent"
+               "DROP TABLE IF EXISTS statement_to_actor"
                "DROP TABLE IF EXISTS attachment"
                "DROP TABLE IF EXISTS activity"
-               "DROP TABLE IF EXISTS agent"
+               "DROP TABLE IF EXISTS actor"
                "DROP TABLE IF EXISTS xapi_statement"]]
     (jdbc/execute! tx [cmd])))
 
