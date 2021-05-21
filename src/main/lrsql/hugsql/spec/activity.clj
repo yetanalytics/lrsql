@@ -1,8 +1,8 @@
 (ns lrsql.hugsql.spec.activity
   (:require [clojure.spec.alpha :as s]
-            [clojure.data.json  :as json]
             [xapi-schema.spec   :as xs]
             [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.hugsql.util :as u]
             [lrsql.hugsql.spec.util :refer [make-str-spec]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -16,9 +16,7 @@
     "SubObject" "SubCategory" "SubGrouping" "SubParent" "SubOther"})
 
 (s/def :lrsql.hugsql.spec.activity/payload
-  (make-str-spec ::xs/activity
-                    json/read-str
-                    json/write-str))
+  (make-str-spec ::xs/activity u/read-json u/write-json))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params spec

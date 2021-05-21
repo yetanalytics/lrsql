@@ -2,7 +2,6 @@
   (:require [clojure.test :as t :refer [deftest testing is]]
             [config.core  :refer [env]]
             [next.jdbc    :as jdbc]
-            [clojure.data.json :as json]
             [com.stuartsierra.component    :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.system :as system]

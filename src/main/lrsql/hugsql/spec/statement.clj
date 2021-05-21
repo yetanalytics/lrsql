@@ -1,10 +1,10 @@
 (ns lrsql.hugsql.spec.statement
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
-            [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.statements :as ss]
+            [lrsql.hugsql.util :as u]
             [lrsql.hugsql.spec.activity   :as hs-activ]
             [lrsql.hugsql.spec.actor      :as hs-actor]
             [lrsql.hugsql.spec.attachment :as hs-attach]
@@ -21,7 +21,6 @@
 
 (def get-statements-params
   ::lrsp/get-statements-params)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
@@ -49,9 +48,7 @@
 
 ;; Statement
 (s/def ::payload
-  (make-str-spec ::xs/statement
-                 json/read-str
-                 json/write-str))
+  (make-str-spec ::xs/statement u/read-json u/write-json))
 
 ;; Query-specific Params
 (s/def ::related-actors? boolean?)
