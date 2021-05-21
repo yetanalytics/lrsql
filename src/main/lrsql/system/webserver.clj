@@ -1,5 +1,6 @@
 (ns lrsql.system.webserver
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.tools.logging :as log]
+            [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
@@ -10,7 +11,9 @@
   component/Lifecycle
   (start [this]
     (if server
-      this
+      (do (log/info "Webserver already started; do nothing")
+          (log/tracef "Server map: %s" server)
+          this)
       (if lrs
         (let [service
               (or service ;; accept passed in
@@ -32,6 +35,10 @@
                          i/xapi-default-interceptors
                          http/create-server
                          http/start)]
+          (log/infof "Starting new webserver at host %s and port %s"
+                     (::http/host service)
+                     (::http/port service))
+          (log/tracef "Server map: %s" server)
           (assoc this
                  :service service
                  :server server))
@@ -40,10 +47,11 @@
                          :webserver this})))))
   (stop [this]
     (if server
-      (do
-        (http/stop server)
-        (assoc this
-               :service nil
-               :server nil
-               :lrs nil))
-      this)))
+      (do (log/info "Stopping webserver...")
+          (http/stop server)
+          (assoc this
+                 :service nil
+                 :server nil
+                 :lrs nil))
+      (do (log/info "Webserver already stopped; do nothing")
+          this))))
