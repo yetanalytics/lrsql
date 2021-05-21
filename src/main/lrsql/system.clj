@@ -2,7 +2,7 @@
   (:require [config.core :refer [env]]
             [next.jdbc.connection :as connection]
             [com.stuartsierra.component :as component]
-            [lrsql.lrs :as lrs]
+            [lrsql.system.lrs :as lrs]
             [lrsql.system.webserver :as webserver])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
 

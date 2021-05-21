@@ -1,4 +1,4 @@
-(ns lrsql.lrs
+(ns lrsql.system.lrs
   (:require [com.stuartsierra.component :as component]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lp]
