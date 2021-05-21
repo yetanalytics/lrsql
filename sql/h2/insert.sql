@@ -22,7 +22,7 @@ payload = :payload FORMAT JSON
 INSERT INTO agent SET 
 id = :primary-key,
 agent_ifi = :agent-ifi,
-is_identified_group = :identified-group?,
+actor_type = :actor-type,
 payload = :payload FORMAT JSON
 
 -- :name insert-activity!

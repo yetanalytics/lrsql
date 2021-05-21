@@ -27,8 +27,8 @@
     {:table             :agent
      :primary-key       (u/generate-uuid)
      :agent-ifi         ifi-str
-     :payload           (json/write-str agent)
-     :identified-group? (= "Group" (get agent "objectType"))}))
+     :actor-type        (get agent "objectType" "Agent")
+     :payload           (json/write-str agent)}))
 
 (s/fdef activity-insert-input
   :args (s/cat :activity ::xs/activity)

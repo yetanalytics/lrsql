@@ -111,8 +111,6 @@
 
 ;; Agent
 
-(s/def :lrsql.hugsql.spec.agent/identified-group? boolean?)
-
 ;; "mbox::mailto:foo@example.com"
 (def ifi-mbox-spec
   (make-str-spec ::xs/mailto-iri
@@ -145,6 +143,9 @@
         :mbox-sha1sum ifi-mbox-sha1sum-spec
         :openid ifi-openid-spec
         :account ifi-account-spec))
+
+(s/def :lrsql.hugsql.spec.agent/actor-type
+  #{"Agent" "Group"})
 
 (s/def :lrsql.hugsql.spec.agent/usage
   #{"Actor" "Object" "Authority" "Instructor" "Team"
@@ -261,7 +262,7 @@
 (def agent-insert-spec
   (s/keys :req-un [::primary-key
                    :lrsql.hugsql.spec.agent/agent-ifi
-                   :lrsql.hugsql.spec.agent/identified-group?
+                   :lrsql.hugsql.spec.agent/actor-type
                    :lrsql.hugsql.spec.agent/payload]))
 
 ;; Activity
