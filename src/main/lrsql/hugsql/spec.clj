@@ -4,9 +4,12 @@
             [clojure.spec.gen.alpha :as sgen]
             [clojure.data.json :as json]
             [xapi-schema.spec :as xs]
-            [xapi-schema.spec.resources :as xres]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.statements :as ss]
+            [lrsql.hugsql.spec.activity   :as hs-activ]
+            [lrsql.hugsql.spec.actor      :as hs-actor]
+            [lrsql.hugsql.spec.attachment :as hs-attach]
+            [lrsql.hugsql.spec.util       :refer [make-str-spec]]
             [lrsql.hugsql.util :as u]))
 
 ;; TODO: Deal with different encodings for JSON types (e.g. payloads,
@@ -52,16 +55,6 @@
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- make-str-spec
-  "Make a spec w/ gen capability for strings of a particular format."
-  [spec conform-fn unform-fn]
-  (s/with-gen
-    (s/and string?
-           (s/conformer conform-fn unform-fn)
-           spec)
-    #(sgen/fmap unform-fn
-                (s/gen spec))))
-
 ;; Primary key
 
 (s/def ::primary-key uuid?)
@@ -75,8 +68,6 @@
 
 (s/def ::timestamp inst?)
 (s/def ::stored inst?)
-(s/def ::since inst?)
-(s/def ::until inst?)
 
 ;; Registration
 
@@ -96,83 +87,11 @@
                  json/read-str
                  json/write-str))
 
-;; Activity
-
-(s/def :lrsql.hugsql.spec.activity/activity-iri :activity/id)
-
-(s/def :lrsql.hugsql.spec.activity/usage
-  #{"Object", "Category", "Grouping", "Parent", "Other"
-    "SubObject" "SubCategory" "SubGrouping" "SubParent" "SubOther"})
-
-(s/def :lrsql.hugsql.spec.activity/payload
-  (make-str-spec ::xs/activity
-                 json/read-str
-                 json/write-str))
-
-;; Actor
-
-;; "mbox::mailto:foo@example.com"
-(def ifi-mbox-spec
-  (make-str-spec ::xs/mailto-iri
-                 (fn [s] (->> s (re-matches #"mbox::(.*)") second))
-                 (fn [s] (->> s (str "mbox::")))))
-
-;; "mbox_sha1sum::123456789ABCDEF123456789ABCDEF123456789A" 
-(def ifi-mbox-sha1sum-spec ;
-  (make-str-spec ::xs/sha1sum
-                 (fn [s] (->> s (re-matches #"mbox_sha1sum::(.*)") second))
-                 (fn [s] (->> s (str "mbox_sha1sum::")))))
-
-;; "openid::http://example.org/bar"
-(def ifi-openid-spec
-  (make-str-spec ::xs/openid
-                 (fn [s] (->> s (re-matches #"openid::(.*)") second))
-                 (fn [s] (->> s (str "openid::")))))
-
-;; "account::alice@http://example.org"
-(def ifi-account-spec
-  (make-str-spec ::xs/account
-                 (fn [s]
-                   (let [[_ nm hp] (re-matches #"account::(.*)@(.*)" s)]
-                     {:account/name nm :account/homePage hp}))
-                 (fn [{nm "name" hp "homePage"}]
-                   (str "account::" nm "@" hp))))
-
-(s/def :lrsql.hugsql.spec.actor/actor-ifi
-  (s/or :mbox ifi-mbox-spec
-        :mbox-sha1sum ifi-mbox-sha1sum-spec
-        :openid ifi-openid-spec
-        :account ifi-account-spec))
-
-(s/def :lrsql.hugsql.spec.actor/agent-ifi
-  :lrsql.hugsql.spec.actor/actor-ifi)
-
-(s/def :lrsql.hugsql.spec.actor/actor-type
-  #{"Agent" "Group"})
-
-(s/def :lrsql.hugsql.spec.actor/usage
-  #{"Actor" "Object" "Authority" "Instructor" "Team"
-    "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"})
-
-(s/def :lrsql.hugsql.spec.actor/payload
-  :xapi.statements.GET.request.params/agent)
-
-;; For agent queries
-(s/def :lrsql.hugsql.spec.actor/agent
-  (xres/json
-   (s/nonconforming ::xs/agent)))
-
-;; TODO: Check that `bytes?` work with BLOBs
-
-;; Attachment
-(s/def :lrsql.hugsql.spec.attachment/attachment-sha :attachment/sha2)
-(s/def :lrsql.hugsql.spec.attachment/content-type string?)
-(s/def :lrsql.hugsql.spec.attachment/content-length int?)
-(s/def :lrsql.hugsql.spec.attachment/content bytes?)
-
 ;; Query Options
 (s/def ::related-actors? boolean?)
 (s/def ::related-activities? boolean?)
+(s/def ::since inst?)
+(s/def ::until inst?)
 (s/def ::limit nat-int?)
 (s/def ::ascending? boolean?)
 
@@ -272,9 +191,9 @@
 
 (def actor-insert-spec
   (s/keys :req-un [::primary-key
-                   :lrsql.hugsql.spec.actor/actor-ifi
-                   :lrsql.hugsql.spec.actor/actor-type
-                   :lrsql.hugsql.spec.actor/payload]))
+                   ::hs-actor/actor-ifi
+                   ::hs-actor/actor-type
+                   ::hs-actor/payload]))
 
 ;; Activity
 ;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
@@ -283,8 +202,8 @@
 
 (def activity-insert-spec
   (s/keys :req-un [::primary-key
-                   :lrsql.hugsql.spec.activity/activity-iri
-                   :lrsql.hugsql.spec.activity/payload]))
+                   ::hs-activ/activity-iri
+                   ::hs-activ/payload]))
 
 ;; Attachment
 ;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
@@ -297,10 +216,10 @@
 (def attachment-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
-                   :lrsql.hugsql.spec.attachment/attachment-sha
-                   :lrsql.hugsql.spec.attachment/content-type
-                   :lrsql.hugsql.spec.attachment/content-length
-                   :lrsql.hugsql.spec.attachment/content]))
+                   ::hs-attach/attachment-sha
+                   ::hs-attach/content-type
+                   ::hs-attach/content-length
+                   ::hs-attach/content]))
 
 ;; Statement-to-Actor
 ;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
@@ -313,8 +232,8 @@
 (def statement-to-actor-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
-                   :lrsql.hugsql.spec.actor/usage
-                   :lrsql.hugsql.spec.actor/actor-ifi]))
+                   ::hs-actor/usage
+                   ::hs-actor/actor-ifi]))
 
 ;; Statement-to-Activity
 ;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
@@ -327,8 +246,8 @@
 (def statement-to-activity-insert-spec
   (s/keys :req-un [::primary-key
                    ::statement-id
-                   :lrsql.hugsql.spec.activity/usage
-                   :lrsql.hugsql.spec.activity/activity-iri]))
+                   ::hs-activ/usage
+                   ::hs-activ/activity-iri]))
 
 ;; Putting it all together
 (def statement-insert-seq-spec
@@ -357,14 +276,14 @@
                    ::ascending?
                    ::related-actors?
                    ::related-activities?
-                   :lrsql.hugsql.spec.actor/actor-ifi
-                   :lrsql.hugsql.spec.activity/activity-iri]))
+                   ::hs-actor/actor-ifi
+                   ::hs-activ/activity-iri]))
 
 (def agent-query-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.actor/agent-ifi]))
+  (s/keys :req-un [::hs-actor/agent-ifi]))
 
 (def activity-query-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri]))
+  (s/keys :req-un [::hs-activ/activity-iri]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertions
@@ -382,8 +301,8 @@
 (def state-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::state-id
-                   :lrsql.hugsql.spec.activity/activity-iri
-                   :lrsql.hugsql.spec.actor/agent-ifi
+                   ::hs-activ/activity-iri
+                   ::hs-actor/agent-ifi
                    ::?registration
                    ::last-modified
                    ::document]))
@@ -398,7 +317,7 @@
 (def agent-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
-                   :lrsql.hugsql.spec.actor/agent-ifi
+                   ::hs-actor/agent-ifi
                    ::last-modified
                    ::document]))
 
@@ -412,7 +331,7 @@
 (def activity-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
-                   :lrsql.hugsql.spec.activity/activity-iri
+                   ::hs-activ/activity-iri
                    ::last-modified
                    ::document]))
 
@@ -432,17 +351,17 @@
 ;; Document queries/deletions
 
 (def state-doc-input-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri
-                   :lrsql.hugsql.spec.actor/agent-ifi
+  (s/keys :req-un [::hs-activ/activity-iri
+                   ::hs-actor/agent-ifi
                    ::state-id
                    ::?registration]))
 
 (def agent-profile-doc-input-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.actor/agent-ifi
+  (s/keys :req-un [::hs-actor/agent-ifi
                    ::profile-id]))
 
 (def activity-profile-doc-input-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri
+  (s/keys :req-un [::hs-activ/activity-iri
                    ::profile-id]))
 
 (def document-input-spec
@@ -454,24 +373,24 @@
 ;; Document multi-query/delete
 
 (def state-doc-multi-input-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri
-                   :lrsql.hugsql.spec.actor/agent-ifi
+  (s/keys :req-un [::hs-activ/activity-iri
+                   ::hs-actor/agent-ifi
                    ::?registration]))
 
 ;; Document ID queries
 
 (def state-doc-ids-input-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri
-                   :lrsql.hugsql.spec.actor/agent-ifi
+  (s/keys :req-un [::hs-activ/activity-iri
+                   ::hs-actor/agent-ifi
                    ::?registration]
           :opt-un [::since]))
 
 (def agent-profile-doc-ids-input-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.actor/agent-ifi]
+  (s/keys :req-un [:hs-actor/agent-ifi]
           :opt-un [::since]))
 
 (def activity-profile-doc-ids-input-spec
-  (s/keys :req-un [:lrsql.hugsql.spec.activity/activity-iri]
+  (s/keys :req-un [::hs-activ/activity-iri]
           :opt-un [::since]))
 
 (def document-ids-query-spec
