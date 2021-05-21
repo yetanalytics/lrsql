@@ -5,7 +5,8 @@
             [lrsql.hugsql.command :as command]
             [lrsql.hugsql.init :as init]
             [lrsql.hugsql.input :as input]
-            [lrsql.hugsql.util :as u]))
+            [lrsql.hugsql.util :as u])
+  (:import [java.time Instant]))
 
 (defrecord LearningRecordStore [db-type conn-pool]
   component/Lifecycle
@@ -43,7 +44,9 @@
        (command/query-statements tx inputs))))
   (-consistent-through
    [this ctx auth-identity]
-   "timestamp-here") ; TODO: return needs to be a timestamp
+    ;; TODO: review, this should be OK because of transactions, but we may want
+    ;; to use the tx-inst pattern and set it to that
+    (.toString (Instant/now)))
 
   lp/DocumentResource
   (-set-document
@@ -97,8 +100,12 @@
 
   lp/LRSAuth
   (-authenticate
-   [this ctx]
-   {:result ::forbidden})
+    [this ctx]
+    ;; TODO: Actual auth
+    {:result
+     {:scopes #{:scope/all}
+      :prefix ""
+      :auth {:no-op {}}}})
   (-authorize
    [this ctx auth-identity]
-   {:result false}))
+   {:result true}))
