@@ -24,11 +24,11 @@
   "Given `actor`, construct the input for `functions/insert-actor!`."
   [actor]
   (when-some [ifi-str (u/actor->ifi actor)]
-    {:table             :actor
-     :primary-key       (u/generate-uuid)
-     :actor-ifi         ifi-str
-     :actor-type        (get actor "objectType" "Agent")
-     :payload           (json/write-str actor)}))
+    {:table       :actor
+     :primary-key (u/generate-uuid)
+     :actor-ifi   ifi-str
+     :actor-type  (get actor "objectType" "Agent")
+     :payload     (json/write-str actor)}))
 
 (s/fdef activity-insert-input
   :args (s/cat :activity ::xs/activity)
@@ -37,10 +37,10 @@
 (defn activity-insert-input
   "Given `activity`, construct the input for `functions/insert-activity!`."
   [activity]
-  {:table          :activity
-   :primary-key    (u/generate-uuid)
-   :activity-iri   (get activity "id")
-   :payload        (json/write-str activity)})
+  {:table        :activity
+   :primary-key  (u/generate-uuid)
+   :activity-iri (get activity "id")
+   :payload      (json/write-str activity)})
 
 (s/fdef statement-to-actor-insert-input
   :args (s/cat :statement-id ::hs/statement-id
