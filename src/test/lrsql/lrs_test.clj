@@ -1,10 +1,11 @@
 (ns lrsql.lrs-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [config.core  :refer [env]]
             [next.jdbc    :as jdbc]
             [com.stuartsierra.component    :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.system :as system]))
+            [lrsql.system :as system]
+            [lrsql.test-support :as support]))
 
 (def stmt-1
   {"id"     "030e001f-b32a-4361-b701-039a3d9fceb1"
@@ -70,13 +71,6 @@
    :length      27
    :sha2        "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"})
 
-(defn- assert-in-mem-db
-  []
-  (when (not= "h2:mem" (:db-type env))
-    (throw (ex-info "Test can only be run on in-memory H2 database!"
-                    {:kind    ::non-mem-db
-                     :db-type (:db-type env)}))))
-
 (defn- drop-all!
   "Drop all tables in the db, in preparation for adding them again.
    DO NOT RUN THIS DURING PRODUCTION!!!"
@@ -103,8 +97,10 @@
       (dissoc "authority")
       (dissoc "version")))
 
+(use-fixtures :each support/fresh-db-fixture)
+
 (deftest test-lrs-protocol-fns
-  (let [_     (assert-in-mem-db)
+  (let [_     (support/assert-in-mem-db)
         sys   (system/system)
         sys'  (component/start sys)
         lrs   (:lrs sys')
@@ -206,7 +202,7 @@
   "{\"foo\":10}")
 
 (deftest test-document-fns
-  (let [_     (assert-in-mem-db)
+  (let [_     (support/assert-in-mem-db)
         sys   (system/system)
         sys'  (component/start sys)
         lrs   (:lrs sys')]
