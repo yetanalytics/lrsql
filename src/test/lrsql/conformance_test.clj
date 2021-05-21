@@ -9,17 +9,10 @@
             [com.yetanalytics.lrs.test-runner :as conf]
             [lrsql.test-support :as support]))
 
-(defn- assert-in-mem-db
-  []
-  (when (not= "h2:mem" (:db-type env))
-    (throw (ex-info "Test can only be run on in-memory H2 database!"
-                    {:kind    ::non-mem-db
-                     :db-type (:db-type env)}))))
-
 (t/use-fixtures :each support/fresh-db-fixture)
 
 (deftest conformance-test
-  (assert-in-mem-db)
+  (support/assert-in-mem-db)
   (conf/with-test-suite
     (let [sys (system/system)
           sys' (component/start sys)]
