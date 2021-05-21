@@ -9,13 +9,13 @@
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/def :lrsql.hugsql.spec.activity/activity-iri :activity/id)
+(s/def ::activity-iri :activity/id)
 
-(s/def :lrsql.hugsql.spec.activity/usage
+(s/def ::usage
   #{"Object", "Category", "Grouping", "Parent", "Other"
     "SubObject" "SubCategory" "SubGrouping" "SubParent" "SubOther"})
 
-(s/def :lrsql.hugsql.spec.activity/payload
+(s/def ::payload
   (make-str-spec ::xs/activity u/parse-json u/write-json))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

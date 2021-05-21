@@ -41,8 +41,7 @@
         :openid ifi-openid-spec
         :account ifi-account-spec))
 
-(s/def ::agent-ifi
-  :lrsql.hugsql.spec.actor/actor-ifi)
+(s/def ::agent-ifi ::actor-ifi)
 
 (s/def ::actor-type
   #{"Agent" "Group"})
