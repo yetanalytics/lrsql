@@ -11,7 +11,7 @@
             [lrsql.hugsql.command.activity  :as activity-command]
             [lrsql.hugsql.command.statement :as stmt-command]
             [lrsql.hugsql.command.document  :as doc-command]
-            [lrsql.hugsql.input.util :refer [prepare-statement]])
+            [lrsql.hugsql.util.statement :refer [prepare-statement]])
   (:import [java.time Instant]))
 
 (defrecord LearningRecordStore [db-type conn-pool]

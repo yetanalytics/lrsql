@@ -1,8 +1,9 @@
 (ns lrsql.hugsql.input.document
   (:require [clojure.spec.alpha :as s]
-            [lrsql.hugsql.spec.document :as hs]
             [lrsql.hugsql.util  :as u]
-            [lrsql.hugsql.input.util :as iu]))
+            [lrsql.hugsql.util.actor :as ua]
+            [lrsql.hugsql.util.document :as ud]
+            [lrsql.hugsql.spec.document :as hs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Basics 
@@ -19,7 +20,7 @@
    state-id?]
   (cond-> {:table         :state-document
            :activity-iri  activity-id
-           :agent-ifi     (iu/actor->ifi agent)
+           :agent-ifi     (ua/actor->ifi agent)
            :?registration (when registration (u/str->uuid registration))}
     state-id?
     (assoc :state-id state-id)))
@@ -32,7 +33,7 @@
     agent      :agent}
    profile-id?]
   (cond-> {:table     :agent-profile-document
-           :agent-ifi (iu/actor->ifi agent)}
+           :agent-ifi (ua/actor->ifi agent)}
     profile-id?
     (assoc :profile-id profile-id)))
 
@@ -64,13 +65,13 @@
   :args (s/cat :params hs/set-document-params :document bytes?)
   :ret hs/document-insert-spec
   :fn (fn [{:keys [args ret]}]
-        (= (iu/document-dispatch (:params args)) (:table ret))))
+        (= (ud/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-insert-input
   "Given `params` and `document`, construct the input for
    `command/insert-document!` and `command/update-document!`"
   {:arglists '([params document])}
-  (fn [params _] (iu/document-dispatch params)))
+  (fn [params _] (ud/document-dispatch params)))
 
 (defmethod document-insert-input :state-document
   [params document]
@@ -97,13 +98,13 @@
   :args (s/cat :params hs/get-or-delete-document-params)
   :ret hs/document-input-spec
   :fn (fn [{:keys [args ret]}]
-        (= (iu/document-dispatch (:params args)) (:table ret))))
+        (= (ud/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-input
   "Given `params`, construct the input for `command/query-document` and
    `command/delete-document!`"
   {:arglists '([params])}
-  iu/document-dispatch)
+  ud/document-dispatch)
 
 (defmethod document-input :state-document
   [params]
@@ -143,12 +144,12 @@
   :args (s/cat :params hs/get-document-ids-params)
   :ret hs/document-ids-query-spec
   :fn (fn [{:keys [args ret]}]
-        (= (iu/document-dispatch (:params args)) (:table ret))))
+        (= (ud/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-ids-input
   "Given `params`, return the input for `command/query-document-ids`."
   {:arglist '([params])}
-  iu/document-dispatch)
+  ud/document-dispatch)
 
 (defmethod document-ids-input :state-document
   [params]

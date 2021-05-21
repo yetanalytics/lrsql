@@ -4,7 +4,7 @@
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec.statement :as hs]
             [lrsql.hugsql.util :as u]
-            [lrsql.hugsql.input.util :as iu]))
+            [lrsql.hugsql.util.actor :as ua]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -20,7 +20,7 @@
 (defn actor-insert-input
   "Given `actor`, construct the input for `functions/insert-actor!`."
   [actor]
-  (when-some [ifi-str (iu/actor->ifi actor)]
+  (when-some [ifi-str (ua/actor->ifi actor)]
     {:table       :actor
      :primary-key (u/generate-uuid)
      :actor-ifi   ifi-str
@@ -397,7 +397,7 @@
         until       (when until (u/str->time until))
         rel-actors? (boolean rel-actors?)
         rel-activs? (boolean rel-activs?)
-        actor-ifi   (when actor (iu/actor->ifi actor))
+        actor-ifi   (when actor (ua/actor->ifi actor))
         limit       (when (and (int? limit) (not (zero? limit)))
                       limit)] ; "0" = no limit
     (cond-> {}

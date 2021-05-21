@@ -8,8 +8,8 @@
             [lrsql.hugsql.spec.activity   :as hs-activ]
             [lrsql.hugsql.spec.actor      :as hs-actor]
             [lrsql.hugsql.spec.attachment :as hs-attach]
-            [lrsql.hugsql.spec.util  :refer [make-str-spec]]
-            [lrsql.hugsql.input.util :refer [prepare-statement]]))
+            [lrsql.hugsql.spec.util      :refer [make-str-spec]]
+            [lrsql.hugsql.util.statement :refer [prepare-statement]]))
 
 ;; TODO: Deal with different encodings for JSON types (e.g. payloads,
 ;; actor ifi), instead of just H2 strings.
