@@ -14,10 +14,10 @@
 
 ;; TODO
 ;; Canonical-Language-Maps
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - IRI: STRING UNIQUE KEY NOT NULL
-;; - LangTag: STRING NOT NULL
-;; - Value: STRING NOT NULL
+;; - id:       UUID NOT NULL PRIMARY KEY AUTOINCREMENT
+;; - iri:      STRING UNIQUE KEY NOT NULL
+;; - lang_tag: STRING NOT NULL
+;; - value:    STRING NOT NULL
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params specs
@@ -239,15 +239,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Statement
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementID: UUID UNIQUE KEY NOT NULL
-;; - StatementRefID: UUID
-;; - Timestamp: TIMESTAMP NOT NULL
-;; - Stored: TIMESTAMP NOT NULL
-;; - Registration: UUID
-;; - VerbID: STRING NOT NULL
-;; - IsVoided: BOOLEAN NOT NULL DEFAULT FALSE
-;; - Payload: JSON NOT NULL
+;; - primary_key:      UUID NOT NULL PRIMARY KEY AUTOINCREMENT
+;; - statement_id:     UUID NOT NULL UNIQUE KEY
+;; - statement_ref_id: UUID
+;; - timestamp:        TIMESTAMP NOT NULL
+;; - stored:           TIMESTAMP NOT NULL
+;; - registration:     UUID
+;; - verb_iri:         STRING NOT NULL
+;; - is_voided:        BOOLEAN NOT NULL DEFAULT FALSE
+;; - payload:          JSON NOT NULL
 
 (def statement-insert-spec
   (s/keys :req-un [::primary-key
@@ -261,11 +261,14 @@
                    ::voiding?
                    ::payload]))
 
+;; In this context, "Actor" is a catch-all term to refer to both Agents and
+;; Identified Groups, not the Actor object within Statements.
+
 ;; Actor
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - Name: STRING
-;; - IFI: STRING NOT NULL
-;; - IsIdentifiedGroup: BOOLEAN NOT NULL DEFAULT FALSE -- Treat Identified Groups like Agents
+;; - primary_key: UUID NOT NULL PRIMARY KEY AUTOINCREMENT
+;; - actor_ifi:   STRING NOT NULL UNIQUE KEY
+;; - actor_type:  ENUM ('Agent', 'Group') NOT NULL
+;; - payload:     JSON NOT NULL
 
 (def actor-insert-spec
   (s/keys :req-un [::primary-key
@@ -274,9 +277,9 @@
                    :lrsql.hugsql.spec.actor/payload]))
 
 ;; Activity
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - ActivityIRI: STRING UNIQUE KEY NOT NULL
-;; - Payload: JSON NOT NULL
+;; - primary_key:  UUID NOT NULL PRIMARY KEY AUTOINCREMENT
+;; - activity_iri: STRING NOT NULL UNIQUE KEY
+;; - payload:      JSON NOT NULL
 
 (def activity-insert-spec
   (s/keys :req-un [::primary-key
@@ -284,11 +287,12 @@
                    :lrsql.hugsql.spec.activity/payload]))
 
 ;; Attachment
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - SHA2: STRING UNIQUE KEY NOT NULL
-;; - ContentType: STRING NOT NULL
-;; - FileURL: STRING NOT NULL -- Either an external URL or the URL to a LRS location
-;; - Payload: BINARY NOT NULL
+;; - primary_key:    UUID NOT NULL PRIMARY KEY AUTOINCREMENT
+;; - statement_key:  UUID NOT NULL FOREIGN KEY
+;; - attachment_sha: STRING NOT NULL
+;; - content_type:   STRING NOT NULL
+;; - content_length: INTEGER NOT NULL
+;; - payload:        BINARY NOT NULL
 
 (def attachment-insert-spec
   (s/keys :req-un [::primary-key
@@ -299,10 +303,12 @@
                    :lrsql.hugsql.spec.attachment/content]))
 
 ;; Statement-to-Actor
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementID: UUID NOT NULL
-;; - Usage: STRING IN ('Actor', 'Object', 'Authority', 'Instructor', 'Team') NOT NULL
-;; - ActorIFI: STRING NOT NULL
+;; - primary_key:  UUID NOT NULL PRIMARY KEY AUTOINCREMENT
+;; - statement_id: UUID NOT NULL FOREIGN KEY
+;; - usage:        ENUM ('Actor', 'Object', 'Authority', 'Instructor', 'Team',
+;;                       'SubActor', 'SubObject', 'SubAuthority', 'SubInstructor', 'SubTeam')
+;;                 NOT NULL
+;; - actor_ifi:    STRING NOT NULL FOREIGN KEY
 
 (def statement-to-actor-insert-spec
   (s/keys :req-un [::primary-key
@@ -311,10 +317,12 @@
                    :lrsql.hugsql.spec.actor/actor-ifi]))
 
 ;; Statement-to-Activity
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StatementID: UUID NOT NULL
-;; - Usage: STRING IN ('Object', 'Category', 'Grouping', 'Parent', 'Other') NOT NULL
-;; - ActivityIRI: STRING NOT NULL
+;; - primary_key:  UUID NOT NULL PRIMARY KEY AUTOINCREMENT
+;; - statement_id: UUID NOT NULL FOREIGN KEY
+;; - usage:        ENUM ('Object', 'Category', 'Grouping', 'Parent', 'Other',
+;;                       'SubObject', 'SubCategory', 'SubGrouping', 'SubParent', 'SubOther')
+;;                 NOT NULL
+;; - activity_iri: STRING NOT NULL FOREIGN KEY
 
 (def statement-to-activity-insert-spec
   (s/keys :req-un [::primary-key
@@ -363,13 +371,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; State-Document
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - StateID: STRING NOT NULL
-;; - ActivityID: STRING NOT NULL
-;; - AgentID: UUID NOT NULL
-;; - Registration: UUID
-;; - LastModified: TIMESTAMP NOT NULL
-;; - Document: BINARY NOT NULL
+;; - primary_key:   UUID NOT NULL PRIMARY KEY AUTOINCREMENT
+;; - state_id:      STRING NOT NULL
+;; - activity_iri:  STRING NOT NULL
+;; - agent_ifi:     STRING NOT NULL
+;; - registration:  UUID
+;; - last_modified: TIMESTAMP NOT NULL
+;; - document:      BINARY NOT NULL
 
 (def state-doc-insert-spec
   (s/keys :req-un [::primary-key
@@ -381,11 +389,11 @@
                    ::document]))
 
 ;; Agent-Profile-Document
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - ProfileID: STRING NOT NULL
-;; - AgentID: UUID NOT NULL
-;; - LastModified: TIMESTAMP NOT NULL
-;; - Document: BINARY NOT NULL
+;; - primary_key:   UUID NOT NULL PRIMARY KEY AUTOINCREMENT
+;; - profile_id:    STRING NOT NULL
+;; - agent_ifi:     STRING NOT NULL
+;; - last_modified: TIMESTAMP NOT NULL
+;; - document:      BINARY NOT NULL
 
 (def agent-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
@@ -395,11 +403,11 @@
                    ::document]))
 
 ;; Activity-Profile-Resource
-;; - ID: UUID PRIMARY KEY NOT NULL AUTOINCREMENT
-;; - ProfileID: STRING NOT NULL
-;; - ActivityID: STRING NOT NULL
-;; - LastModified: TIMESTAMP NOT NULL
-;; - Document: BINARY NOT NULL
+;; - primary_key:   UUID NOT NULL PRIMARY KEY AUTOINCREMENT
+;; - profile_id:    STRING NOT NULL
+;; - activity_iri:  STRING NOT NULL
+;; - last_modified: TIMESTAMP NOT NULL
+;; - document:      BINARY NOT NULL
 
 (def activity-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
