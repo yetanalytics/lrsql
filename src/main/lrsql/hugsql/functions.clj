@@ -11,10 +11,10 @@
 
 ;; Create tables
 (declare create-statement-table!)
-(declare create-agent-table!)
+(declare create-actor-table!)
 (declare create-activity-table!)
 (declare create-attachment-table!)
-(declare create-statement-to-agent-table!)
+(declare create-statement-to-actor-table!)
 (declare create-statement-to-activity-table!)
 (declare create-state-document-table!)
 (declare create-agent-profile-document-table!)
@@ -22,10 +22,10 @@
 
 ;; Insert
 (declare insert-statement!)
-(declare insert-agent!)
+(declare insert-actor!)
 (declare insert-activity!)
 (declare insert-attachment!)
-(declare insert-statement-to-agent!)
+(declare insert-statement-to-actor!)
 (declare insert-statement-to-activity!)
 
 ;; Update
@@ -33,12 +33,12 @@
 
 ;; Query
 (declare query-statements)
-(declare query-agent)
+(declare query-agent) ; no `query-actor`
 (declare query-activity)
 (declare query-attachments)
 
 ;; Query existence
-(declare query-agent-exists)
+(declare query-actor-exists)
 (declare query-activity-exists)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

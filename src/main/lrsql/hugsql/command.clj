@@ -67,10 +67,10 @@
           (f/void-statement! tx {:statement-id (:?statement-ref-id input)}))
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
         (u/uuid->str (:statement-id input)))
-    :agent
-    (do (let [input' (select-keys input [:agent-ifi])
-              exists (f/query-agent-exists tx input')]
-          (when-not exists (f/insert-agent! tx input)))
+    :actor
+    (do (let [input' (select-keys input [:actor-ifi])
+              exists (f/query-actor-exists tx input')]
+          (when-not exists (f/insert-actor! tx input)))
         nil)
     :activity
     (do (let [input' (select-keys input [:activity-iri])
@@ -79,8 +79,8 @@
         nil)
     :attachment
     (do (f/insert-attachment! tx input) nil)
-    :statement-to-agent
-    (do (f/insert-statement-to-agent! tx input) nil)
+    :statement-to-actor
+    (do (f/insert-statement-to-actor! tx input) nil)
     :statement-to-activity
     (do (f/insert-statement-to-activity! tx input) nil)
     ;; Else
@@ -145,7 +145,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn query-agent
-  "Query an agent from the DB. Returns a map between `:person` and the
+  "Query an Agent from the DB. Returns a map between `:person` and the
    resulting Person object. Throws an exception if not found."
   [tx input]
   ;; If agent is not found, return the original input
@@ -155,7 +155,7 @@
     {:person (->> agent (wrapped-parse-json "agent") agnt/person)}))
 
 (defn query-activity
-  "Query an activity from the DB. Returns a map between `:activity` and the
+  "Query an Activity from the DB. Returns a map between `:activity` and the
    activity found, which is nil if not found."
   [tx input]
   (let [{:keys [payload]} (f/query-activity tx input)]

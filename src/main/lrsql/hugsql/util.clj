@@ -61,20 +61,20 @@
   (jt/format ts))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Agents
+;; Actors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; NOTE: Agent objects are encoded without any intention of being parsed back.
-;; Hence this sort of simple encoding is sufficient.
-(defn agent->ifi
+;; NOTE: Actors and Groups are encoded without any intention of being parsed
+;; back, hence this sort of simple encoding is sufficient.
+(defn actor->ifi
   "Returns string of the format \"<ifi-type>::<ifi-value>\".
-   Returns `nil` if the agent doesn't have an IFI (e.g. Anonymous Group)."
-  [agent]
+   Returns `nil` if `actor` doesn't have an IFI (e.g. Anonymous Group)."
+  [actor]
   (let [{mbox    "mbox"
          sha     "mbox_sha1sum"
          openid  "openid"
          account "account"}
-        agent]
+        actor]
     (cond
       mbox    (str "mbox::" mbox)
       sha     (str "mbox_sha1sum::" sha)
