@@ -18,7 +18,9 @@
   com.yetanalytics/xapi-schema
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
    :sha        "77f78d1713e50e7b8610f58b5137695b0fccddaa"
-   :exclusions [org.clojure/clojure]}}
+   :exclusions [org.clojure/clojure]}
+  org.clojure/tools.logging {:mvn/version "1.1.0"}
+  ch.qos.logback/logback-classic {:mvn/version "1.2.3"}}
  :aliases
  {:db-h2
   {:extra-deps {com.h2database/h2 {:mvn/version "1.4.200"}}}
