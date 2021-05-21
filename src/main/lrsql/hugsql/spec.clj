@@ -239,10 +239,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Statement
-;; - primary_key:      SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - id:               SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - statement_id:     UUID NOT NULL UNIQUE KEY
 ;; - statement_ref_id: UUID
-;; - timestamp:        TIMESTAMP NOT NULL
+;; - created:          TIMESTAMP NOT NULL -- :timestamp in code
 ;; - stored:           TIMESTAMP NOT NULL
 ;; - registration:     UUID
 ;; - verb_iri:         STRING NOT NULL
@@ -265,7 +265,7 @@
 ;; Identified Groups, not the Actor object within Statements.
 
 ;; Actor
-;; - primary_key: SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - id:          SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - actor_ifi:   STRING NOT NULL UNIQUE KEY
 ;; - actor_type:  ENUM ('Agent', 'Group') NOT NULL
 ;; - payload:     JSON NOT NULL
@@ -287,7 +287,7 @@
                    :lrsql.hugsql.spec.activity/payload]))
 
 ;; Attachment
-;; - primary_key:    SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - statement_key:  UUID NOT NULL FOREIGN KEY
 ;; - attachment_sha: STRING NOT NULL
 ;; - content_type:   STRING NOT NULL
@@ -303,7 +303,7 @@
                    :lrsql.hugsql.spec.attachment/content]))
 
 ;; Statement-to-Actor
-;; - primary_key:  SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - statement_id: UUID NOT NULL FOREIGN KEY
 ;; - usage:        ENUM ('Actor', 'Object', 'Authority', 'Instructor', 'Team',
 ;;                       'SubActor', 'SubObject', 'SubAuthority', 'SubInstructor', 'SubTeam')
@@ -317,7 +317,7 @@
                    :lrsql.hugsql.spec.actor/actor-ifi]))
 
 ;; Statement-to-Activity
-;; - primary_key:  SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - statement_id: UUID NOT NULL FOREIGN KEY
 ;; - usage:        ENUM ('Object', 'Category', 'Grouping', 'Parent', 'Other',
 ;;                       'SubObject', 'SubCategory', 'SubGrouping', 'SubParent', 'SubOther')
@@ -371,7 +371,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; State-Document
-;; - primary_key:   SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - state_id:      STRING NOT NULL
 ;; - activity_iri:  STRING NOT NULL
 ;; - agent_ifi:     STRING NOT NULL
@@ -389,7 +389,7 @@
                    ::document]))
 
 ;; Agent-Profile-Document
-;; - primary_key:   SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - profile_id:    STRING NOT NULL
 ;; - agent_ifi:     STRING NOT NULL
 ;; - last_modified: TIMESTAMP NOT NULL
@@ -403,7 +403,7 @@
                    ::document]))
 
 ;; Activity-Profile-Resource
-;; - primary_key:   SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - profile_id:    STRING NOT NULL
 ;; - activity_iri:  STRING NOT NULL
 ;; - last_modified: TIMESTAMP NOT NULL
