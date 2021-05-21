@@ -277,7 +277,7 @@
                    :lrsql.hugsql.spec.actor/payload]))
 
 ;; Activity
-;; - primary_key:  SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - activity_iri: STRING NOT NULL UNIQUE KEY
 ;; - payload:      JSON NOT NULL
 
