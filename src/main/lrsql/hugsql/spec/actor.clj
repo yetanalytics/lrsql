@@ -1,8 +1,12 @@
 (ns lrsql.hugsql.spec.actor
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec   :as xs]
-            [xapi-schema.spec.resources :as xres]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.hugsql.spec.util :refer [make-str-spec]]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Axioms
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; "mbox::mailto:foo@example.com"
 (def ifi-mbox-spec
@@ -50,7 +54,16 @@
 (s/def ::payload
   :xapi.statements.GET.request.params/agent)
 
-;; For agent queries
-(s/def :lrsql.hugsql.spec.actor/agent
-  (xres/json
-   (s/nonconforming ::xs/agent)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Agent params spec
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def get-agent-params
+  ::lrsp/get-person-params)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Agent query spec
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def agent-query-spec
+  (s/keys :req-un [::agent-ifi]))

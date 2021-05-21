@@ -2,10 +2,16 @@
   (:require [com.stuartsierra.component :as component]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lp]
-            [lrsql.hugsql.command :as command]
             [lrsql.hugsql.init :as init]
-            [lrsql.hugsql.input :as input]
-            [lrsql.hugsql.util :as u])
+            [lrsql.hugsql.input.agent     :as agent-input]
+            [lrsql.hugsql.input.activity  :as activity-input]
+            [lrsql.hugsql.input.statement :as stmt-input]
+            [lrsql.hugsql.input.document  :as doc-input]
+            [lrsql.hugsql.command.agent     :as agent-command]
+            [lrsql.hugsql.command.activity  :as activity-command]
+            [lrsql.hugsql.command.statement :as stmt-command]
+            [lrsql.hugsql.command.document  :as doc-command]
+            [lrsql.hugsql.input.util :refer [prepare-statement]])
   (:import [java.time Instant]))
 
 (defrecord LearningRecordStore [db-type conn-pool]
@@ -30,18 +36,18 @@
   (-store-statements
    [lrs auth-identity statements attachments]
    (let [conn        (:conn-pool lrs)
-         stmts       (map u/prepare-statement statements)
-         stmt-inputs (input/statements-insert-inputs stmts)
+         stmts       (map prepare-statement statements)
+         stmt-inputs (stmt-input/statements-insert-inputs stmts)
          att-inputs  (when (not-empty attachments)
-                       (input/attachments-insert-inputs stmts attachments))]
+                       (stmt-input/attachments-insert-inputs stmts attachments))]
      (jdbc/with-transaction [tx (conn)]
-       (command/insert-statements! tx (concat stmt-inputs att-inputs)))))
+       (stmt-command/insert-statements! tx (concat stmt-inputs att-inputs)))))
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)
-         inputs (input/statement-query-input params)]
+         inputs (stmt-input/statement-query-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (command/query-statements tx inputs))))
+       (stmt-command/query-statements tx inputs))))
   (-consistent-through
    [this ctx auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want
@@ -52,51 +58,51 @@
   (-set-document
    [lrs auth-identity params document merge?]
    (let [conn  (:conn-pool lrs)
-         input (input/document-insert-input params document)]
+         input (doc-input/document-insert-input params document)]
      (jdbc/with-transaction [tx (conn)]
        (if merge?
-         (command/update-document! tx input)
-         (command/insert-document! tx input)))))
+         (doc-command/update-document! tx input)
+         (doc-command/insert-document! tx input)))))
   (-get-document
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
-         input (input/document-input params)]
+         input (doc-input/document-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (command/query-document tx input))))
+       (doc-command/query-document tx input))))
   (-get-document-ids
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
-         input (input/document-ids-input params)]
+         input (doc-input/document-ids-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (command/query-document-ids tx input))))
+       (doc-command/query-document-ids tx input))))
   (-delete-document
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
-         input (input/document-input params)]
+         input (doc-input/document-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (command/delete-document! tx input))))
+       (doc-command/delete-document! tx input))))
   (-delete-documents
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
-         input (input/document-multi-input params)]
+         input (doc-input/document-multi-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (command/delete-documents! tx input))))
+       (doc-command/delete-documents! tx input))))
 
   lp/AgentInfoResource
   (-get-person
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
-         input (input/agent-query-input params)]
+         input (agent-input/agent-query-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (command/query-agent tx input))))
+       (agent-command/query-agent tx input))))
 
   lp/ActivityInfoResource
   (-get-activity
    [lrs auth-identity params]
    (let [conn (:conn-pool lrs)
-         input (input/activity-query-input params)]
+         input (activity-input/activity-query-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (command/query-activity tx input))))
+       (activity-command/query-activity tx input))))
 
   lp/LRSAuth
   (-authenticate

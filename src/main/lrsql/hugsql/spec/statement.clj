@@ -1,5 +1,4 @@
-(ns lrsql.hugsql.spec
-  "Spec for HugSql inputs."
+(ns lrsql.hugsql.spec.statement
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
             [clojure.data.json :as json]
@@ -9,18 +8,11 @@
             [lrsql.hugsql.spec.activity   :as hs-activ]
             [lrsql.hugsql.spec.actor      :as hs-actor]
             [lrsql.hugsql.spec.attachment :as hs-attach]
-            [lrsql.hugsql.spec.util       :refer [make-str-spec]]
-            [lrsql.hugsql.util :as u]))
+            [lrsql.hugsql.spec.util  :refer [make-str-spec]]
+            [lrsql.hugsql.input.util :refer [prepare-statement]]))
 
 ;; TODO: Deal with different encodings for JSON types (e.g. payloads,
 ;; actor ifi), instead of just H2 strings.
-
-;; TODO
-;; Canonical-Language-Maps
-;; - id:       SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - iri:      STRING UNIQUE KEY NOT NULL
-;; - lang_tag: STRING NOT NULL
-;; - value:    STRING NOT NULL
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params specs
@@ -30,78 +22,44 @@
 (def get-statements-params
   ::lrsp/get-statements-params)
 
-(def get-actor-params
-  ::lrsp/get-person-params)
-
-;; For some reason this is not defined in lrs.protocol
-(def get-activity-params
-  ::lrsp/get-activity-params)
-
-;; Need to define new doc specs here in order to work with s/fdef.
-
-(def set-document-params
-  (s/and ::lrsp/set-document-params (s/conformer second)))
-
-(def get-or-delete-document-params
-  (s/and ::lrsp/get-document-params (s/conformer second)))
-
-(def delete-documents-params
-  (s/and ::lrsp/delete-documents-params (s/conformer second)))
-
-(def get-document-ids-params
-  (s/and ::lrsp/get-document-ids-params (s/conformer second)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Primary key
-
 (s/def ::primary-key uuid?)
 
 ;; Statement IDs
-
 (s/def ::statement-id uuid?)
 (s/def ::?statement-ref-id (s/nilable uuid?))
 
 ;; Timestamp
-
 (s/def ::timestamp inst?)
 (s/def ::stored inst?)
 
 ;; Registration
-
 (s/def ::registration uuid?)
 (s/def ::?registration (s/nilable uuid?))
 
 ;; Verb
-
 (s/def ::verb-iri :verb/id)
 (s/def ::voided? boolean?)
 (s/def ::voiding? boolean?)
 
 ;; Statement
-
 (s/def ::payload
   (make-str-spec ::xs/statement
                  json/read-str
                  json/write-str))
 
-;; Query Options
+;; Query-specific Params
 (s/def ::related-actors? boolean?)
 (s/def ::related-activities? boolean?)
 (s/def ::since inst?)
 (s/def ::until inst?)
 (s/def ::limit nat-int?)
 (s/def ::ascending? boolean?)
-
-;; Documents
-(s/def ::state-id string?)
-;; profile ID should be an IRI, but xapi-schema defines it only as a string
-(s/def ::profile-id string?)
-(s/def ::last-modified inst?)
-(s/def ::since inst?)
-(s/def ::document bytes?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statements and Attachment Args
@@ -114,7 +72,7 @@
            #(contains? % :statement/timestamp)
            #(contains? % :statement/stored)
            #(contains? % :statement/authority))
-    #(sgen/fmap u/prepare-statement
+    #(sgen/fmap prepare-statement
                 (s/gen ::xs/statement))))
 
 (def statements-attachments-spec
@@ -278,123 +236,3 @@
                    ::related-activities?
                    ::hs-actor/actor-ifi
                    ::hs-activ/activity-iri]))
-
-(def agent-query-spec
-  (s/keys :req-un [::hs-actor/agent-ifi]))
-
-(def activity-query-spec
-  (s/keys :req-un [::hs-activ/activity-iri]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Document Insertions
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; State-Document
-;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - state_id:      STRING NOT NULL
-;; - activity_iri:  STRING NOT NULL
-;; - agent_ifi:     STRING NOT NULL
-;; - registration:  UUID
-;; - last_modified: TIMESTAMP NOT NULL
-;; - document:      BINARY NOT NULL
-
-(def state-doc-insert-spec
-  (s/keys :req-un [::primary-key
-                   ::state-id
-                   ::hs-activ/activity-iri
-                   ::hs-actor/agent-ifi
-                   ::?registration
-                   ::last-modified
-                   ::document]))
-
-;; Agent-Profile-Document
-;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - profile_id:    STRING NOT NULL
-;; - agent_ifi:     STRING NOT NULL
-;; - last_modified: TIMESTAMP NOT NULL
-;; - document:      BINARY NOT NULL
-
-(def agent-profile-doc-insert-spec
-  (s/keys :req-un [::primary-key
-                   ::profile-id
-                   ::hs-actor/agent-ifi
-                   ::last-modified
-                   ::document]))
-
-;; Activity-Profile-Resource
-;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - profile_id:    STRING NOT NULL
-;; - activity_iri:  STRING NOT NULL
-;; - last_modified: TIMESTAMP NOT NULL
-;; - document:      BINARY NOT NULL
-
-(def activity-profile-doc-insert-spec
-  (s/keys :req-un [::primary-key
-                   ::profile-id
-                   ::hs-activ/activity-iri
-                   ::last-modified
-                   ::document]))
-
-;; Putting it all together
-;; NOTE: need to call s/nonconforming to make it work with s/fdef's :fn
-
-(def document-insert-spec
-  (s/nonconforming
-   (s/or :state state-doc-insert-spec
-         :agent-profile agent-profile-doc-insert-spec
-         :activity-profile activity-profile-doc-insert-spec)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Document Queries + Deletions
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Document queries/deletions
-
-(def state-doc-input-spec
-  (s/keys :req-un [::hs-activ/activity-iri
-                   ::hs-actor/agent-ifi
-                   ::state-id
-                   ::?registration]))
-
-(def agent-profile-doc-input-spec
-  (s/keys :req-un [::hs-actor/agent-ifi
-                   ::profile-id]))
-
-(def activity-profile-doc-input-spec
-  (s/keys :req-un [::hs-activ/activity-iri
-                   ::profile-id]))
-
-(def document-input-spec
-  (s/nonconforming ; needed to make s/fdef work
-   (s/or :state state-doc-input-spec
-         :agent-profile agent-profile-doc-input-spec
-         :activity-profile activity-profile-doc-input-spec)))
-
-;; Document multi-query/delete
-
-(def state-doc-multi-input-spec
-  (s/keys :req-un [::hs-activ/activity-iri
-                   ::hs-actor/agent-ifi
-                   ::?registration]))
-
-;; Document ID queries
-
-(def state-doc-ids-input-spec
-  (s/keys :req-un [::hs-activ/activity-iri
-                   ::hs-actor/agent-ifi
-                   ::?registration]
-          :opt-un [::since]))
-
-(def agent-profile-doc-ids-input-spec
-  (s/keys :req-un [:hs-actor/agent-ifi]
-          :opt-un [::since]))
-
-(def activity-profile-doc-ids-input-spec
-  (s/keys :req-un [::hs-activ/activity-iri]
-          :opt-un [::since]))
-
-(def document-ids-query-spec
-  (s/nonconforming ; needed to make s/fdef work
-   (s/or :state state-doc-ids-input-spec
-         :agent-profile agent-profile-doc-ids-input-spec
-         :activity-profile activity-profile-doc-ids-input-spec)))
