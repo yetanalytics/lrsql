@@ -48,7 +48,7 @@
 
 ;; Statement
 (s/def ::payload
-  (make-str-spec ::xs/statement u/read-json u/write-json))
+  (make-str-spec ::xs/statement u/parse-json u/write-json))
 
 ;; Query-specific Params
 (s/def ::related-actors? boolean?)

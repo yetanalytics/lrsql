@@ -16,7 +16,7 @@
     "SubObject" "SubCategory" "SubGrouping" "SubParent" "SubOther"})
 
 (s/def :lrsql.hugsql.spec.activity/payload
-  (make-str-spec ::xs/activity u/read-json u/write-json))
+  (make-str-spec ::xs/activity u/parse-json u/write-json))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params spec
