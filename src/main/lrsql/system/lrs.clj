@@ -47,7 +47,7 @@
    (let [conn   (:conn-pool lrs)
          inputs (stmt-input/statement-query-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (stmt-command/query-statements tx inputs))))
+       (stmt-command/query-statements tx inputs ltags))))
   (-consistent-through
    [this ctx auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want

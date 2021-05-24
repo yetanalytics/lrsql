@@ -1,5 +1,6 @@
 (ns lrsql.hugsql.command.statement
-  (:require [lrsql.hugsql.functions :as f]
+  (:require [com.yetanalytics.lrs.xapi.statements :as ss]
+            [lrsql.hugsql.functions :as f]
             [lrsql.hugsql.util :as u]
             [lrsql.hugsql.command.util :as cu]))
 
@@ -56,6 +57,20 @@
 ;; Statement Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn- format-stmt
+  [statement format ltags]
+  (case format
+    :ids
+    (ss/format-statement-ids statement)
+    :canonical
+    (ss/format-canonical statement ltags)
+    :exact
+    statement
+    ;; else
+    (throw (ex-info "Unknown format type"
+                    {:kind   ::unknown-format-type
+                     :format format}))))
+
 (defn- conform-attachment-res
   [{att-sha      :attachment_sha
     content-type :content_type
@@ -70,19 +85,26 @@
   "Query statements from the DB. Return a map containing a singleton
    `:statement` if a statement ID is included in the query, or a
    `:statement-result` object otherwise. The map also contains `:attachments`
-   to return any associated attachments."
-  [tx input]
-  (let [stmt-res  (->> input
-                       (f/query-statements tx)
-                       (map #(->> % :payload u/parse-json)))
-        att-res   (if (:attachments? input)
-                    (->> (doall (map #(->> (get % "id")
+   to return any associated attachments. The `ltags` argument controls which
+   language tag-value pairs are returned when `:format` is `:canonical`."
+  [tx input ltags]
+  (let [format   (if-some [fmt (:format input)] fmt :exact)
+        stmt-res (->> input
+                      (f/query-statements tx)
+                      (map (fn [stmt]
+                             (-> stmt
+                                 :payload
+                                 u/parse-json
+                                 (format-stmt format ltags)))))
+        att-res  (if (:attachments? input)
+                   (->> (doall (map (fn [stmt]
+                                      (->> (get stmt "id")
                                            (assoc {} :statement-id)
-                                           (f/query-attachments tx))
-                                     stmt-res))
-                         (apply concat)
-                         (map conform-attachment-res))
-                    [])]
+                                           (f/query-attachments tx)))
+                                    stmt-res))
+                        (apply concat)
+                        (map conform-attachment-res))
+                   [])]
     (if (:statement-id input)
       ;; Singleton statement
       (cond-> {}

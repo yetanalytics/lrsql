@@ -57,6 +57,7 @@
 (s/def ::until inst?)
 (s/def ::limit nat-int?)
 (s/def ::ascending? boolean?)
+(s/def ::format #{:ids :exact :canonical})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statements and Attachment Args
@@ -232,4 +233,5 @@
                    ::related-actors?
                    ::related-activities?
                    ::hs-actor/actor-ifi
-                   ::hs-activ/activity-iri]))
+                   ::hs-activ/activity-iri
+                   ::format]))
