@@ -1,5 +1,6 @@
 (ns lrsql.system.lrs
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.tools.logging :as log]
+            [com.stuartsierra.component :as component]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lp]
             [lrsql.hugsql.init :as init]
@@ -21,9 +22,11 @@
    (init/init-hugsql-adapter!)
    (init/init-hugsql-fns! db-type)
    (init/create-tables! (conn-pool))
+   (log/infof "Starting new %s-based LRS" db-type)
    (assoc lrs :conn-pool conn-pool))
   (stop
    [lrs]
+   (log/info "Stopping LRS...")
    (assoc lrs :conn-pool nil))
 
   lp/AboutResource
