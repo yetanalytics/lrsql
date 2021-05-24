@@ -4,7 +4,6 @@
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
--- :require [clojure.string :as cstr]
 SELECT payload FROM xapi_statement
 /*~
 (when (:actor-ifi params)
@@ -22,27 +21,16 @@ SELECT payload FROM xapi_statement
       (when-not (:related-activities? params)
        "\nAND statement_to_activity.usage = 'Object'")))
 ~*/
-/*~
-(some->>
- [(when (:statement-id params)
-   "xapi_statement.statement_id = :statement-id")
-  (when (some? (:voided? params))
-   "xapi_statement.is_voided = :voided?")
-  (when (:verb-iri params)
-   "xapi_statement.verb_iri = :verb-iri")
-  (when (:registration params)
-   "xapi_statement.registration = :registration")
-  (when (:since params)
-   "xapi_statement.stored > :since")
-  (when (:until params)
-   "xapi_statement.stored <= :until")]
- (filter some?)
- not-empty
- (cstr/join "\nAND ")
- (str "WHERE\n"))
-~*/
---~ (when (:ascending? params) "ORDER BY xapi_statement.stored")
---~ (when (:limit params) "LIMIT :limit")
+WHERE 1
+--~ (when (:statement-id params)    "AND xapi_statement.statement_id = :statement-id")
+--~ (when (some? (:voided? params)) "AND xapi_statement.is_voided = :voided?")
+--~ (when (:verb-iri params)        "AND xapi_statement.verb_iri = :verb-iri")
+--~ (when (:registration params)    "AND xapi_statement.registration = :registration")
+--~ (when (:since params)           "AND xapi_statement.stored > :since")
+--~ (when (:until params)           "AND xapi_statement.stored <= :until")
+--~ (when (:from params)            "AND xapi_statement.statement_id > :from")
+--~ (when (:ascending? params)      "ORDER BY xapi_statement.stored")
+--~ (when (:limit params)           "LIMIT :limit")
 
 /* Statement Object Queries */
 
