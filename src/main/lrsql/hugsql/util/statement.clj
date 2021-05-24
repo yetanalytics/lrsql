@@ -1,5 +1,7 @@
 (ns lrsql.hugsql.util.statement
-  (:require [lrsql.hugsql.util :as u]
+  (:require [config.core :refer [env]]
+            [ring.util.codec :refer [form-encode]]
+            [lrsql.hugsql.util :as u]
             [com.yetanalytics.lrs.xapi.statements :as ss]))
 
 ;; If a Statement lacks a version, the version MUST be set to 1.0.0
@@ -30,3 +32,26 @@
       (assoc "authority" lrsql-authority)
       (not version)
       (assoc "version" xapi-version))))
+
+;; TODO: Get more permanent solution for host and port defaults
+(defn- xapi-path-prefix
+  []
+  (let [{host :db-host
+         port :db-port
+         :or {host "localhost"
+              port 8080}}
+        env]
+    (str "http://" host ":" port)))
+
+(defn make-more-url
+  "If `stmt-query-result` contains a non-empty `more` string signifying the
+   pagination cursor, update it to be a URL to query the next page."
+  [params stmt-query-result]
+  (if-some [stmt-id (not-empty (get-in stmt-query-result
+                                       [:statement-result :more]))]
+    (assoc-in stmt-query-result
+              [:statement-result :more]
+              (str (xapi-path-prefix)
+                   "/xapi/statements?"
+                   (form-encode (assoc params :from stmt-id))))
+    stmt-query-result))

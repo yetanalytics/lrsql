@@ -12,7 +12,7 @@
             [lrsql.hugsql.command.activity  :as activity-command]
             [lrsql.hugsql.command.statement :as stmt-command]
             [lrsql.hugsql.command.document  :as doc-command]
-            [lrsql.hugsql.util.statement :refer [prepare-statement]])
+            [lrsql.hugsql.util.statement :as stmt-util])
   (:import [java.time Instant]))
 
 (defrecord LearningRecordStore [db-type conn-pool]
@@ -39,7 +39,7 @@
   (-store-statements
    [lrs auth-identity statements attachments]
    (let [conn        (:conn-pool lrs)
-         stmts       (map prepare-statement statements)
+         stmts       (map stmt-util/prepare-statement statements)
          stmt-inputs (stmt-input/statements-insert-inputs stmts)
          att-inputs  (when (not-empty attachments)
                        (stmt-input/attachments-insert-inputs stmts attachments))]
@@ -50,7 +50,8 @@
    (let [conn   (:conn-pool lrs)
          inputs (stmt-input/statement-query-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (stmt-command/query-statements tx inputs ltags))))
+       (->> (stmt-command/query-statements tx inputs ltags)
+            (stmt-util/make-more-url params)))))
   (-consistent-through
    [this ctx auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want

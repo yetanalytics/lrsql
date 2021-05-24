@@ -10,7 +10,7 @@
 (def stmt-1
   {"id"     "030e001f-b32a-4361-b701-039a3d9fceb1"
    "actor"  {"mbox"       "mailto:sample.agent@example.com"
-             "name"       "Sample Agent"
+             "name"       "Sample Agent 1"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
              "display" {"en-US" "answered"}}
@@ -176,6 +176,35 @@
              (-> (lrsp/-get-statements lrs {} {:activity act-1 :related_activities true} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props))))))
+    (testing "querying with limits"
+      (is (= {:statement-result
+              {:statements [stmt-1 stmt-2]
+               :more "http://localhost:8080/xapi/statements?limit=2&from="}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props))
+                 (update-in [:statement-result :more]
+                            #(->> % (re-matches #"(.*from=).*") second)))))
+      (is (= {:statement-result
+              {:statements [stmt-1 stmt-2]
+               :more "http://localhost:8080/xapi/statements?limit=2&ascending=true&from="}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props))
+                 (update-in [:statement-result :more]
+                            #(->> % (re-matches #"(.*from=).*") second)))))
+      (is (= {:statement-result {:statements [stmt-2 stmt-3 stmt-4] :more ""}
+              :attachments      []}
+             (let [more
+                   (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
+                       (get-in [:statement-result :more]))
+                   from
+                   (->> more (re-matches #".*from=(.*)") second)]
+               (-> (lrsp/-get-statements lrs {} {:limit 3 :ascending true :from from} #{})
+                   (update-in [:statement-result :statements]
+                              (partial map remove-props)))))))
     (testing "querying with attachments"
       (is (= {:statement-result {:statements [stmt-4] :more ""}
               :attachments      [(update stmt-4-attach :content #(String. %))]}
@@ -188,7 +217,7 @@
                             #(String. %))))))
     (testing "agent query"
       (is (= {:person {"objectType" "Person"
-                       "name" ["Sample Agent"]
+                       "name" ["Sample Agent 1"]
                        "mbox" ["mailto:sample.agent@example.com"]}}
              (lrsp/-get-person lrs {} {:agent agt-1}))))
     (testing "activity query"

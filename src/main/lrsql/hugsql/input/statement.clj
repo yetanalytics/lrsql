@@ -388,9 +388,8 @@
     asc?        :ascending
     atts?       :attachments
     format      :format
-    ;; page                :page
-    ;; from                :from
-    }]
+    ;; Not a Statement Resource param; added by lrsql for pagination
+    from        :from}]
   (let [stmt-id     (when stmt-id (u/str->uuid stmt-id))
         vstmt-id    (when vstmt-id (u/str->uuid vstmt-id))
         reg         (when reg (u/str->uuid reg))
@@ -400,8 +399,8 @@
         rel-activs? (boolean rel-activs?)
         actor-ifi   (when actor (ua/actor->ifi actor))
         format      (when format (keyword format))
-        limit       (when (and (int? limit) (not (zero? limit)))
-                      limit)] ; "0" = no limit
+        limit       (when (and (int? limit) (not (zero? limit))) limit) ; "0" = no limit
+        from        (when from (u/str->uuid from))]
     (cond-> {}
       stmt-id   (merge {:statement-id stmt-id :voided? false})
       vstmt-id  (merge {:statement-id vstmt-id :voided? true})
@@ -414,4 +413,5 @@
       limit     (assoc :limit limit)
       asc?      (assoc :ascending asc?)
       atts?     (assoc :attachments? atts?)
-      format    (assoc :format format))))
+      format    (assoc :format format)
+      from      (assoc :from from))))
