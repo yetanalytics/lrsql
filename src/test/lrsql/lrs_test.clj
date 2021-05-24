@@ -195,14 +195,14 @@
                             (partial map remove-props))
                  (update-in [:statement-result :more]
                             #(->> % (re-matches #"(.*from=).*") second)))))
-      (is (= {:statement-result {:statements [stmt-2 stmt-3 stmt-4] :more ""}
+      (is (= {:statement-result {:statements [stmt-3 stmt-4] :more ""}
               :attachments      []}
              (let [more
                    (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
                        (get-in [:statement-result :more]))
                    from
                    (->> more (re-matches #".*from=(.*)") second)]
-               (-> (lrsp/-get-statements lrs {} {:limit 3 :ascending true :from from} #{})
+               (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true :from from} #{})
                    (update-in [:statement-result :statements]
                               (partial map remove-props)))))))
     (testing "querying with attachments"
