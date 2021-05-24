@@ -387,6 +387,7 @@
     limit       :limit
     asc?        :ascending
     atts?       :attachments
+    format      :format
     ;; page                :page
     ;; from                :from
     }]
@@ -398,6 +399,7 @@
         rel-actors? (boolean rel-actors?)
         rel-activs? (boolean rel-activs?)
         actor-ifi   (when actor (ua/actor->ifi actor))
+        format      (when format (keyword format))
         limit       (when (and (int? limit) (not (zero? limit)))
                       limit)] ; "0" = no limit
     (cond-> {}
@@ -411,4 +413,5 @@
       act-iri   (merge {:activity-iri act-iri :related-activities? rel-activs?})
       limit     (assoc :limit limit)
       asc?      (assoc :ascending asc?)
-      atts?     (assoc :attachments? atts?))))
+      atts?     (assoc :attachments? atts?)
+      format    (assoc :format format))))
