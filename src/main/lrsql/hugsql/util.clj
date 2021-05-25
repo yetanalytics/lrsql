@@ -70,7 +70,7 @@
 (def max-time (java-time/instant bit-mask-36))
 
 (def max-time-emsg
-  (str "Cannot generate SQUUID past August 2, 10889 on 5:31:60.655 UTC."
+  (str "Cannot generate SQUUID past August 2, 10889."
        " The java.time.Instant timestamp would have exceeded 48 bits."))
 
 (defn- assert-valid-time
