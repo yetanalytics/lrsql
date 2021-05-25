@@ -69,7 +69,7 @@
 
 (def max-time (java-time/instant bit-mask-36))
 
-(def max-time-emsg
+(def ^:private max-time-emsg
   (str "Cannot generate SQUUID past August 2, 10889."
        " The java.time.Instant timestamp would have exceeded 48 bits."))
 
@@ -113,7 +113,8 @@
     {:base-uuid uuid
      :squuid    squuid}))
 
-;; Merging Instant/EPOCH with v0 UUID returns the v0 UUID again.
+;; The atom is private so that only generate-squuid(*) can mutate it.
+;; Note that merging Instant/EPOCH with v0 UUID returns the v0 UUID again.
 (def ^:private current-time-atom
   (atom {:timestamp (Instant/EPOCH)
          :base-uuid (clj-uuid/v0)
