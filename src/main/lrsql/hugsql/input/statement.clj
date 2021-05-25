@@ -200,10 +200,9 @@
    `functions/insert-statement!`."
   [statement]
   (let [;; Statement Properties
-        ;; id, timestamp, stored, and authority should have already been
+        ;; id, stored, and authority should have already been
         ;; set by `prepare-statement`.
         {stmt-id   "id"
-         stmt-time "timestamp"
          stmt-stor "stored"
          stmt-act  "actor"
          stmt-vrb  "verb"
@@ -221,7 +220,6 @@
         ;; Revised Properties
         stmt-pk     (-> statement meta :primary-key)
         stmt-id     (u/str->uuid stmt-id)
-        stmt-time   (u/str->time stmt-time)
         stmt-stored (u/str->time stmt-stor)
         stmt-reg    (when stmt-reg (u/str->uuid stmt-reg))
         stmt-ref-id (when (= "StatementRef" stmt-obj-typ)
@@ -235,7 +233,6 @@
                      :primary-key       stmt-pk
                      :statement-id      stmt-id
                      :?statement-ref-id stmt-ref-id
-                     :timestamp         stmt-time
                      :stored            stmt-stored
                      :?registration     stmt-reg
                      :verb-iri          stmt-vrb-id

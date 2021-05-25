@@ -23,16 +23,16 @@
         {squuid      :squuid
          squuid-ts   :timestamp
          squuid-base :base-uuid} (u/generate-squuid*)
-        statement'
-        (-> statement
-            ss/fix-statement-context-activities
-            (assoc "stored" (u/time->str squuid-ts))
-            (vary-meta assoc :primary-key squuid))]
+        squuid-ts-str (u/time->str squuid-ts)
+        statement'    (-> statement
+                          ss/fix-statement-context-activities
+                          (assoc "stored" squuid-ts-str)
+                          (vary-meta assoc :primary-key squuid))]
     (cond-> statement'
       (not id)
       (assoc "id" (u/uuid->str squuid-base))
       (not timestamp)
-      (assoc "timestamp" (u/time->str squuid-ts))
+      (assoc "timestamp" squuid-ts-str)
       (not authority)
       (assoc "authority" lrsql-authority)
       (not version)
