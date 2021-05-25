@@ -144,7 +144,7 @@
    random segment of the SQUUID. An exception is thrown in the unlikely case
    where all 73 random bits are 1s and incrementing can no longer occur."
   []
-  (let [ts (java-time/instant System/currentTimeMillis)
+  (let [ts (java-time/instant (System/currentTimeMillis))
         _  (assert-valid-time ts)
         {:keys [timestamp]} @current-time-atom]
     (if-not (java-time/after? ts timestamp)
