@@ -113,10 +113,11 @@
     {:base-uuid uuid
      :squuid    squuid}))
 
+;; Merging Instant/EPOCH with v0 UUID returns the v0 UUID again.
 (def ^:private current-time-atom
-  (atom (let [ts (java-time/instant)]
-          (merge {:timestamp ts}
-                 (make-squuid ts)))))
+  (atom {:timestamp (Instant/EPOCH)
+         :base-uuid (clj-uuid/v0)
+         :squuid    (clj-uuid/v0)}))
 
 (s/def ::timestamp inst?)
 (s/def ::base-uuid uuid?)
