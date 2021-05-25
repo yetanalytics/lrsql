@@ -1,8 +1,9 @@
 (ns lrsql.hugsql.command.statement
-  (:require [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.hugsql.functions :as f]
-            [lrsql.hugsql.util :as u]
-            [lrsql.hugsql.command.util :as cu]))
+  (:require
+   [com.yetanalytics.lrs.xapi.statements :as ss]
+   [lrsql.hugsql.functions :as f]
+   [lrsql.hugsql.util :as u]
+   [lrsql.hugsql.command.util :as cu]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertions
@@ -86,34 +87,47 @@
    `:statement` if a statement ID is included in the query, or a
    `:statement-result` object otherwise. The map also contains `:attachments`
    to return any associated attachments. The `ltags` argument controls which
-   language tag-value pairs are returned when `:format` is `:canonical`."
+   language tag-value pairs are returned when `:format` is `:canonical`.
+   Note that the `:more` property of `:statement-result` returned is a
+   statement PK, NOT the full URL."
   [tx input ltags]
-  (let [format   (if-some [fmt (:format input)] fmt :exact)
-        stmt-res (->> input
-                      (f/query-statements tx)
-                      (map (fn [stmt]
-                             (-> stmt
+  (let [{:keys [format limit]
+         :or {format :exact}} input
+        ;; If `limit` is present, we need to query one more in order to
+        ;; know if there are additional results that can be queried later.
+        input'        (if limit (update input :limit inc) input)
+        query-results (->> input'
+                           (f/query-statements tx))
+        ;; We can use the statement PKs as cursors since they are always
+        ;; sequential (as SQUUIDs) and unique.
+        next-cursor   (when (and limit
+                                 (= (inc limit) (count query-results)))
+                        (-> query-results last :id u/uuid->str))
+        stmt-results  (map (fn [query-res]
+                             (-> query-res
                                  :payload
                                  u/parse-json
-                                 (format-stmt format ltags)))))
-        att-res  (if (:attachments? input)
-                   (->> (doall (map (fn [stmt]
-                                      (->> (get stmt "id")
-                                           (assoc {} :statement-id)
-                                           (f/query-attachments tx)))
-                                    stmt-res))
-                        (apply concat)
-                        (map conform-attachment-res))
-                   [])]
+                                 (format-stmt format ltags)))
+                           (if next-cursor
+                             (butlast query-results)
+                             query-results))
+        att-results   (if (:attachments? input)
+                        (->> (doall (map (fn [stmt]
+                                           (->> (get stmt "id")
+                                                (assoc {} :statement-id)
+                                                (f/query-attachments tx)))
+                                         stmt-results))
+                             (apply concat)
+                             (map conform-attachment-res))
+                        [])]
     (if (:statement-id input)
       ;; Singleton statement
       (cond-> {}
-        (not-empty stmt-res)
-        (assoc :statement (first stmt-res))
-        (and (not-empty stmt-res) (not-empty att-res))
-        (assoc :attachments att-res))
+        (not-empty stmt-results)
+        (assoc :statement (first stmt-results))
+        (and (not-empty stmt-results) (not-empty att-results))
+        (assoc :attachments att-results))
       ;; Multiple statements
-      ;; TODO: Return IRI if more statements can be queried
-      {:statement-result {:statements (vec stmt-res)
-                          :more       ""}
-       :attachments      att-res})))
+      {:statement-result {:statements stmt-results
+                          :more       (if next-cursor next-cursor "")}
+       :attachments      att-results})))

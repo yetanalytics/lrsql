@@ -22,7 +22,7 @@
   [actor]
   (when-some [ifi-str (ua/actor->ifi actor)]
     {:table       :actor
-     :primary-key (u/generate-uuid)
+     :primary-key (u/generate-squuid)
      :actor-ifi   ifi-str
      :actor-type  (get actor "objectType" "Agent")
      :payload     (u/write-json actor)}))
@@ -35,7 +35,7 @@
   "Given `activity`, construct the input for `functions/insert-activity!`."
   [activity]
   {:table        :activity
-   :primary-key  (u/generate-uuid)
+   :primary-key  (u/generate-squuid)
    :activity-iri (get activity "id")
    :payload      (u/write-json activity)})
 
@@ -50,7 +50,7 @@
    return the input for `functions/insert-statement-to-actor!`."
   [statement-id actor-usage {actor-ifi :actor-ifi}]
   {:table        :statement-to-actor
-   :primary-key  (u/generate-uuid)
+   :primary-key  (u/generate-squuid)
    :statement-id statement-id
    :usage        actor-usage
    :actor-ifi    actor-ifi})
@@ -67,7 +67,7 @@
    `functions/insert-statement-to-activity!`."
   [statement-id activity-usage {activity-id :activity-iri}]
   {:table        :statement-to-activity
-   :primary-key  (u/generate-uuid)
+   :primary-key  (u/generate-squuid)
    :statement-id statement-id
    :usage        activity-usage
    :activity-iri activity-id})
@@ -200,10 +200,9 @@
    `functions/insert-statement!`."
   [statement]
   (let [;; Statement Properties
-        ;; id, timestamp, stored, and authority should have already been
+        ;; id, stored, and authority should have already been
         ;; set by `prepare-statement`.
         {stmt-id   "id"
-         stmt-time "timestamp"
          stmt-stor "stored"
          stmt-act  "actor"
          stmt-vrb  "verb"
@@ -219,9 +218,8 @@
          stmt-reg      "registration"}
         stmt-ctx
         ;; Revised Properties
-        stmt-pk     (u/generate-uuid)
+        stmt-pk     (-> statement meta :primary-key)
         stmt-id     (u/str->uuid stmt-id)
-        stmt-time   (u/str->time stmt-time)
         stmt-stored (u/str->time stmt-stor)
         stmt-reg    (when stmt-reg (u/str->uuid stmt-reg))
         stmt-ref-id (when (= "StatementRef" stmt-obj-typ)
@@ -235,7 +233,6 @@
                      :primary-key       stmt-pk
                      :statement-id      stmt-id
                      :?statement-ref-id stmt-ref-id
-                     :timestamp         stmt-time
                      :stored            stmt-stored
                      :?registration     stmt-reg
                      :verb-iri          stmt-vrb-id
@@ -311,7 +308,7 @@
          sha2         :sha2}
         attachment]
     {:table          :attachment
-     :primary-key    (u/generate-uuid)
+     :primary-key    (u/generate-squuid)
      :statement-id   statement-id
      :attachment-sha sha2
      :content-type   content-type
@@ -388,9 +385,8 @@
     asc?        :ascending
     atts?       :attachments
     format      :format
-    ;; page                :page
-    ;; from                :from
-    }]
+    ;; Not a Statement Resource param; added by lrsql for pagination
+    from        :from}]
   (let [stmt-id     (when stmt-id (u/str->uuid stmt-id))
         vstmt-id    (when vstmt-id (u/str->uuid vstmt-id))
         reg         (when reg (u/str->uuid reg))
@@ -400,8 +396,8 @@
         rel-activs? (boolean rel-activs?)
         actor-ifi   (when actor (ua/actor->ifi actor))
         format      (when format (keyword format))
-        limit       (when (and (int? limit) (not (zero? limit)))
-                      limit)] ; "0" = no limit
+        limit       (when (and (int? limit) (not (zero? limit))) limit) ; "0" = no limit
+        from        (when from (u/str->uuid from))]
     (cond-> {}
       stmt-id   (merge {:statement-id stmt-id :voided? false})
       vstmt-id  (merge {:statement-id vstmt-id :voided? true})
@@ -414,4 +410,5 @@
       limit     (assoc :limit limit)
       asc?      (assoc :ascending asc?)
       atts?     (assoc :attachments? atts?)
-      format    (assoc :format format))))
+      format    (assoc :format format)
+      from      (assoc :from from))))

@@ -34,7 +34,6 @@
 (s/def ::?statement-ref-id (s/nilable uuid?))
 
 ;; Timestamp
-(s/def ::timestamp inst?)
 (s/def ::stored inst?)
 
 ;; Registration
@@ -58,6 +57,7 @@
 (s/def ::limit nat-int?)
 (s/def ::ascending? boolean?)
 (s/def ::format #{:ids :exact :canonical})
+(s/def ::from uuid?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statements and Attachment Args
@@ -117,7 +117,6 @@
 ;; - id:               SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - statement_id:     UUID NOT NULL UNIQUE KEY
 ;; - statement_ref_id: UUID
-;; - created:          TIMESTAMP NOT NULL -- :timestamp in code
 ;; - stored:           TIMESTAMP NOT NULL
 ;; - registration:     UUID
 ;; - verb_iri:         STRING NOT NULL
@@ -128,7 +127,6 @@
   (s/keys :req-un [::primary-key
                    ::statement-id
                    ::?statement-ref-id
-                   ::timestamp
                    ::stored
                    ::?registration
                    ::verb-iri
@@ -234,4 +232,5 @@
                    ::related-activities?
                    ::hs-actor/actor-ifi
                    ::hs-activ/activity-iri
-                   ::format]))
+                   ::format
+                   ::from]))

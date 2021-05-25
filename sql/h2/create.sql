@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   id               UUID NOT NULL PRIMARY KEY,
   statement_id     UUID NOT NULL UNIQUE,
   statement_ref_id UUID,
-  created          TIMESTAMP WITH TIME ZONE NOT NULL, -- aka `timestamp`
   stored           TIMESTAMP WITH TIME ZONE NOT NULL,
   registration     UUID,
   verb_iri         VARCHAR(255) NOT NULL,
