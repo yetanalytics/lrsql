@@ -21,8 +21,11 @@
              (recur squuid-seq' (rest squuid-seq'))
              false))))))
   (testing "squuid monotonicity (lex sort)"
-    (let [squuid-seq  (->> (repeatedly 1000 util/generate-squuid)
-                           (map util/uuid->str))
-          squuid-seq' (sort squuid-seq)]
+    (let [squuid-seq   (repeatedly 1000 util/generate-squuid)
+          squuid-seq'  (->> squuid-seq
+                           (map util/uuid->str)
+                           sort)
+          squuid-seq'' (map util/str->uuid squuid-seq')]
       (is (every? (partial re-matches xsr/UuidRegEx) squuid-seq'))
-      (is (= squuid-seq squuid-seq')))))
+      (is (every? (fn [[u1 u2]] (clj-uuid/uuid= u1 u2))
+                  (map (fn [u1 u2] [u1 u2]) squuid-seq squuid-seq''))))))
