@@ -7,4 +7,7 @@
   (def sys (system/system))
   (def sys' (component/start sys))
 
+  (def lrs (:lrs sys'))
+  (def ds ((-> sys' :lrs :conn-pool)))  
+
   (component/stop sys'))

@@ -22,7 +22,7 @@
   [actor]
   (when-some [ifi-str (ua/actor->ifi actor)]
     {:table       :actor
-     :primary-key (u/generate-uuid)
+     :primary-key (u/generate-squuid)
      :actor-ifi   ifi-str
      :actor-type  (get actor "objectType" "Agent")
      :payload     (u/write-json actor)}))
@@ -35,7 +35,7 @@
   "Given `activity`, construct the input for `functions/insert-activity!`."
   [activity]
   {:table        :activity
-   :primary-key  (u/generate-uuid)
+   :primary-key  (u/generate-squuid)
    :activity-iri (get activity "id")
    :payload      (u/write-json activity)})
 
@@ -50,7 +50,7 @@
    return the input for `functions/insert-statement-to-actor!`."
   [statement-id actor-usage {actor-ifi :actor-ifi}]
   {:table        :statement-to-actor
-   :primary-key  (u/generate-uuid)
+   :primary-key  (u/generate-squuid)
    :statement-id statement-id
    :usage        actor-usage
    :actor-ifi    actor-ifi})
@@ -67,7 +67,7 @@
    `functions/insert-statement-to-activity!`."
   [statement-id activity-usage {activity-id :activity-iri}]
   {:table        :statement-to-activity
-   :primary-key  (u/generate-uuid)
+   :primary-key  (u/generate-squuid)
    :statement-id statement-id
    :usage        activity-usage
    :activity-iri activity-id})
@@ -219,7 +219,7 @@
          stmt-reg      "registration"}
         stmt-ctx
         ;; Revised Properties
-        stmt-pk     (u/generate-uuid)
+        stmt-pk     (-> statement meta :primary-key)
         stmt-id     (u/str->uuid stmt-id)
         stmt-time   (u/str->time stmt-time)
         stmt-stored (u/str->time stmt-stor)
@@ -311,7 +311,7 @@
          sha2         :sha2}
         attachment]
     {:table          :attachment
-     :primary-key    (u/generate-uuid)
+     :primary-key    (u/generate-squuid)
      :statement-id   statement-id
      :attachment-sha sha2
      :content-type   content-type

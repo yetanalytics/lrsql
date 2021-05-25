@@ -19,15 +19,20 @@
    and setting missing id, timestamp, authority, version, and stored
    properties."
   [statement]
-  (let [{:strs [id timestamp authority version]} statement]
-    ;; first coll-ify context activities
-    (cond-> (ss/fix-statement-context-activities statement)
-      true ; stored is always set by the LRS
-      (assoc "stored" (u/time->str (u/current-time)))
+  (let [{:strs [id timestamp authority version]} statement
+        {squuid      :squuid
+         squuid-ts   :timestamp
+         squuid-base :base-uuid} (u/generate-squuid*)
+        statement'
+        (-> statement
+            ss/fix-statement-context-activities
+            (assoc "stored" (u/time->str squuid-ts))
+            (vary-meta assoc :primary-key squuid))]
+    (cond-> statement'
       (not id)
-      (assoc "id" (u/uuid->str (u/generate-uuid)))
+      (assoc "id" (u/uuid->str squuid-base))
       (not timestamp)
-      (assoc "timestamp" (u/time->str (u/current-time)))
+      (assoc "timestamp" (u/time->str squuid-ts))
       (not authority)
       (assoc "authority" lrsql-authority)
       (not version)

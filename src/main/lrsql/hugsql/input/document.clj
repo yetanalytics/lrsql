@@ -57,9 +57,11 @@
   "Common properties for insertion inputs, including the primary key, the last
    modified time, and `document`"
   [document]
-  {:primary-key   (u/generate-uuid)
-   :last-modified (u/current-time)
-   :document      document})
+  (let [{squuid    :squuid
+         squuid-ts :timestamp} (u/generate-squuid*)]
+    {:primary-key   squuid
+     :last-modified squuid-ts
+     :document      document}))
 
 (s/fdef document-insert-input
   :args (s/cat :params hs/set-document-params :document bytes?)
