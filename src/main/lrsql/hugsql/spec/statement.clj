@@ -165,7 +165,7 @@
 ;; - attachment_sha: STRING NOT NULL
 ;; - content_type:   STRING NOT NULL
 ;; - content_length: INTEGER NOT NULL
-;; - payload:        BINARY NOT NULL
+;; - contents:       BINARY NOT NULL
 
 (def attachment-insert-spec
   (s/keys :req-un [::primary-key
@@ -173,7 +173,7 @@
                    ::hs-attach/attachment-sha
                    ::hs-attach/content-type
                    ::hs-attach/content-length
-                   ::hs-attach/content]))
+                   ::hs-attach/contents]))
 
 ;; Statement-to-Actor
 ;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY

@@ -1,6 +1,5 @@
 (ns lrsql.lrs-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [config.core  :refer [env]]
             [next.jdbc    :as jdbc]
             [com.stuartsierra.component    :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]
@@ -257,61 +256,129 @@
       (drop-all! tx))
     (component/stop sys')))
 
-(def doc-id-params
+(def state-id-params
   {:stateId    "some-id"
    :activityId "https://example.org/activity-type"
    :agent      {"mbox" "mailto:example@example.org"}})
 
-(def doc-1
-  "{\"foo\":1,\"bar\":2}")
+(def state-doc-1
+  {:content-length 17
+   :content-type   "application/json"
+   :contents       (.getBytes "{\"foo\":1,\"bar\":2}")})
 
-(def doc-2
-  "{\"foo\":10}")
+(def state-doc-2
+  {:content-length 10
+   :content-type   "application/json"
+   :contents       (.getBytes "{\"foo\":10}")})
+
+(def agent-prof-id-params
+  {:profileId "https://example.org/some-profile"
+   :agent     {"mbox" "mailto:foo@example.org"
+               "name" "Foo Bar"}})
+
+(def agent-prof-doc
+  {:content-length 16
+   :content-type   "text/plain"
+   :contents       (.getBytes "Example Document")})
+
+(def activity-prof-id-params
+  {:profileId  "https://example.org/some-profile"
+   :activityId "https://example.org/some-activity"})
+
+(def activity-prof-doc
+  {:content-length 18
+   :content-type  "text/plain"
+   :contents      (.getBytes "Example Document 2")})
 
 (deftest test-document-fns
-  (let [_     (support/assert-in-mem-db)
-        sys   (system/system)
-        sys'  (component/start sys)
-        lrs   (:lrs sys')]
+  (let [_    (support/assert-in-mem-db)
+        sys  (system/system)
+        sys' (component/start sys)
+        lrs  (:lrs sys')]
     (testing "document insertion"
       (is (= {}
              (lrsp/-set-document lrs
                                  {}
-                                 doc-id-params
-                                 (.getBytes doc-1)
+                                 state-id-params
+                                 state-doc-1
+                                 true)))
+      (is (= {}
+             (lrsp/-set-document lrs
+                                 {}
+                                 state-id-params
+                                 state-doc-2
+                                 true)))
+      (is (= {}
+             (lrsp/-set-document lrs
+                                 {}
+                                 agent-prof-id-params
+                                 agent-prof-doc
                                  false)))
       (is (= {}
              (lrsp/-set-document lrs
                                  {}
-                                 doc-id-params
-                                 (.getBytes doc-2)
-                                 true))))
+                                 activity-prof-id-params
+                                 activity-prof-doc
+                                 false))))
     (testing "document query"
-      (is (= {:contents        "{\"foo\":10,\"bar\":2}"
+      (is (= {:contents       "{\"foo\":10,\"bar\":2}"
               :content-length 18
-              :content-type   "application/octet-stream" ; TODO
+              :content-type   "application/json"
               :id             "some-id"}
-             (-> (lrsp/-get-document lrs {} doc-id-params)
+             (-> (lrsp/-get-document lrs {} state-id-params)
+                 (dissoc :updated)
+                 (update :contents #(String. %)))))
+      (is (= {:contents       "Example Document"
+              :content-length 16
+              :content-type   "text/plain"
+              :id             "https://example.org/some-profile"}
+             (-> (lrsp/-get-document lrs {} agent-prof-id-params)
+                 (dissoc :updated)
+                 (update :contents #(String. %)))))
+      (is (= {:contents       "Example Document 2"
+              :content-length 18
+              :content-type   "text/plain"
+              :id             "https://example.org/some-profile"}
+             (-> (lrsp/-get-document lrs {} activity-prof-id-params)
                  (dissoc :updated)
                  (update :contents #(String. %))))))
     (testing "document ID query"
       (is (= {:document-ids ["some-id"]}
              (lrsp/-get-document-ids lrs
                                      {}
-                                     (dissoc doc-id-params :stateId)))))
+                                     (dissoc state-id-params :stateId))))
+      (is (= {:document-ids ["https://example.org/some-profile"]}
+             (lrsp/-get-document-ids lrs
+                                     {}
+                                     (dissoc agent-prof-id-params
+                                             :profileId))))
+      (is (= {:document-ids ["https://example.org/some-profile"]}
+             (lrsp/-get-document-ids lrs
+                                     {}
+                                     (dissoc activity-prof-id-params
+                                             :profileId)))))
     (testing "document deletion"
+      (is (= {}
+             (lrsp/-delete-documents lrs
+                                     {}
+                                     (dissoc state-id-params :stateId))))
       (is (= {}
              (lrsp/-delete-document lrs
                                     {}
-                                    doc-id-params)))
-      (is (= {} ; second delete should do nothing in DB
-             (lrsp/-delete-documents lrs
-                                     {}
-                                     (dissoc doc-id-params :stateId))))
-      (is (= {:document-ids []}
-             (lrsp/-get-document-ids lrs
-                                     {}
-                                     (dissoc doc-id-params :stateId)))))
+                                    agent-prof-id-params)))
+      (is (= {}
+             (lrsp/-delete-document lrs
+                                    {}
+                                    activity-prof-id-params)))
+      (is (nil? (lrsp/-get-document lrs
+                                    {}
+                                    state-id-params)))
+      (is (nil? (lrsp/-get-document lrs
+                                    {}
+                                    agent-prof-id-params)))
+      (is (nil? (lrsp/-get-document lrs
+                                    {}
+                                    activity-prof-id-params))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))

@@ -71,7 +71,7 @@ WHERE activity_iri = :activity-iri
 -- :command :query
 -- :result :many
 -- :doc Query for one or more attachments that references `:statement-id`.
-SELECT attachment_sha, content_type, content_length, content FROM attachment
+SELECT attachment_sha, content_type, content_length, contents FROM attachment
 WHERE statement_id = :statement-id
 
 /* Document Queries */
@@ -80,7 +80,8 @@ WHERE statement_id = :statement-id
 -- :command :query
 -- :result :one
 -- :doc Query for a single state document using resource params. If `:?registration` is missing then `registration` must be NULL.
-SELECT document, state_id, last_modified FROM state_document
+SELECT contents, content_type, content_length, state_id, last_modified
+FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 AND state_id = :state-id
@@ -90,7 +91,8 @@ AND state_id = :state-id
 -- :command :query
 -- :result :one
 -- :doc Query for a single agent profile document using resource params.
-SELECT document, profile_id, last_modified FROM agent_profile_document
+SELECT contents, content_type, content_length, profile_id, last_modified
+FROM agent_profile_document
 WHERE agent_ifi = :agent-ifi
 AND profile_id = :profile-id
 
@@ -98,7 +100,8 @@ AND profile_id = :profile-id
 -- :command :query
 -- :result :one
 -- :doc Query for a single activity profile document using resource params.
-SELECT document, profile_id, last_modified FROM activity_profile_document
+SELECT contents, content_type, content_length, profile_id, last_modified
+FROM activity_profile_document
 WHERE activity_iri = :activity-iri
 AND profile_id = :profile-id
 

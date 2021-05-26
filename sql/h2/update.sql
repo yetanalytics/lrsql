@@ -11,9 +11,12 @@ AND NOT (verb_iri = 'http://adlnet.gov/expapi/verbs/voided')
 -- :name update-state-document!
 -- :command :insert
 -- :result :affected
--- :doc Update the `document` and `last_modified` fields of a state document.
+-- :doc Update the `contents`, `content_length`, and `last_modified` fields of a state document.
 UPDATE state_document
-SET document = :document, last_modified = :last-modified
+SET
+  content_length = :content-length,
+  contents = :contents,
+  last_modified = :last-modified
 WHERE state_id = :state-id
 AND activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
@@ -22,17 +25,23 @@ AND agent_ifi = :agent-ifi
 -- :name update-agent-profile-document!
 -- :command :insert
 -- :result :affected
--- :doc Update the `document` and `last_modified` fields of an agent profile document.
+-- :doc Update the `contents`, `content_length`, and `last_modified` fields of an agent profile document.
 UPDATE agent_profile_document
-SET document = :document, last_modified = :last-modified
+SET
+  content_length = :content-length,
+  contents = :contents,
+  last_modified = :last-modified
 WHERE profile_id = :profile-id
 AND agent_ifi = :agent-ifi
 
 -- :name update-activity-profile-document!
 -- :command :insert
 -- :result :affected
--- :doc Update the `document` and `last_modified` fields of an activity profile document
+-- :doc Update the `contents`, `content_length`, and `last_modified` fields of an activity profile document
 UPDATE activity_profile_document
-SET document = :document, last_modified = :last-modified
+SET
+  content_length = :content-length,
+  contents = :contents,
+  last_modified = :last-modified
 WHERE profile_id = :profile-id
 AND activity_iri = :activity-iri

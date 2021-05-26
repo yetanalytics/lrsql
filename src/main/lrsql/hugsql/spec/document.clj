@@ -1,6 +1,7 @@
 (ns lrsql.hugsql.spec.document
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
+            [com.yetanalytics.lrs.xapi.document :as lrs-doc]
             [lrsql.hugsql.spec.activity  :as hs-activ]
             [lrsql.hugsql.spec.actor     :as hs-actor]
             [lrsql.hugsql.spec.statement :as hs-stmt]))
@@ -12,11 +13,12 @@
 ;; Primary key
 (s/def ::primary-key uuid?)
 
+;; Parameters
 ;; NOTE: Profile ID should be IRI, but xapi-schema defines it only as a string
 (s/def ::state-id string?)
 (s/def ::profile-id string?)
 (s/def ::last-modified inst?)
-(s/def ::document bytes?)
+(s/def ::contents bytes?)
 
 ;; Query-specific params
 (s/def ::since inst?)
@@ -45,13 +47,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; State-Document
-;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - state_id:      STRING NOT NULL
-;; - activity_iri:  STRING NOT NULL
-;; - agent_ifi:     STRING NOT NULL
-;; - registration:  UUID
-;; - last_modified: TIMESTAMP NOT NULL
-;; - document:      BINARY NOT NULL
+;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - state_id:       STRING NOT NULL
+;; - activity_iri:   STRING NOT NULL
+;; - agent_ifi:      STRING NOT NULL
+;; - registration:   UUID
+;; - last_modified:  TIMESTAMP NOT NULL
+;; - content_type:   STRING NOT NULL
+;; - content_length: INTEGER NOT NULL
+;; - contents:       BINARY NOT NULL
 
 (def state-doc-insert-spec
   (s/keys :req-un [::primary-key
@@ -60,35 +64,45 @@
                    ::hs-actor/agent-ifi
                    ::hs-stmt/?registration
                    ::last-modified
-                   ::document]))
+                   ::lrs-doc/content-type
+                   ::lrs-doc/content-length
+                   ::contents]))
 
 ;; Agent-Profile-Document
-;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - profile_id:    STRING NOT NULL
-;; - agent_ifi:     STRING NOT NULL
-;; - last_modified: TIMESTAMP NOT NULL
-;; - document:      BINARY NOT NULL
+;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - profile_id:     STRING NOT NULL
+;; - agent_ifi:      STRING NOT NULL
+;; - last_modified:  TIMESTAMP NOT NULL
+;; - content_type:   STRING NOT NULL
+;; - content_length: INTEGER NOT NULL
+;; - contents:       BINARY NOT NULL
 
 (def agent-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
                    ::hs-actor/agent-ifi
                    ::last-modified
-                   ::document]))
+                   ::lrs-doc/content-type
+                   ::lrs-doc/content-length
+                   ::contents]))
 
 ;; Activity-Profile-Resource
-;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - profile_id:    STRING NOT NULL
-;; - activity_iri:  STRING NOT NULL
-;; - last_modified: TIMESTAMP NOT NULL
-;; - document:      BINARY NOT NULL
+;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - profile_id:     STRING NOT NULL
+;; - activity_iri:   STRING NOT NULL
+;; - last_modified:  TIMESTAMP NOT NULL
+;; - content_type:   STRING NOT NULL
+;; - content_length: INTEGER NOT NULL
+;; - contents:       BINARY NOT NULL
 
 (def activity-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
                    ::hs-activ/activity-iri
                    ::last-modified
-                   ::document]))
+                   ::lrs-doc/content-type
+                   ::lrs-doc/content-length
+                   ::contents]))
 
 ;; Putting it all together
 ;; NOTE: need to call s/nonconforming to make it work with s/fdef's :fn

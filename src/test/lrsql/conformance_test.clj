@@ -21,6 +21,5 @@
 
            ;; zero in on specific tests using grep:
            "-g" "XAPI-00315"
-
            ))
       (component/stop sys'))))

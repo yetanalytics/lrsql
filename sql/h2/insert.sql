@@ -43,7 +43,7 @@ statement_id = :statement-id,
 attachment_sha = :attachment-sha,
 content_type = :content-type,
 content_length = :content-length,
-content = :content
+contents = :contents
 
 -- :name insert-statement-to-actor!
 -- :command :insert
@@ -78,7 +78,9 @@ activity_iri = :activity-iri,
 agent_ifi = :agent-ifi,
 registration = :?registration,
 last_modified = :last-modified,
-document = :document
+content_type = :content-type,
+content_length = :content-length,
+contents = :contents
 
 -- :name insert-agent-profile-document!
 -- :command :insert
@@ -89,7 +91,9 @@ id = :primary-key,
 profile_id = :profile-id,
 agent_ifi = :agent-ifi,
 last_modified = :last-modified,
-document = :document
+content_type = :content-type,
+content_length = :content-length,
+contents = :contents
 
 -- :name insert-activity-profile-document!
 -- :command :insert
@@ -100,4 +104,6 @@ id = :primary-key,
 profile_id = :profile-id,
 activity_iri = :activity-iri,
 last_modified = :last-modified,
-document = :document
+content_type = :content-type,
+content_length = :content-length,
+contents = :contents

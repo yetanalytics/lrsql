@@ -1,5 +1,6 @@
 (ns lrsql.hugsql.input.document
   (:require [clojure.spec.alpha :as s]
+            [com.yetanalytics.lrs.xapi.document]
             [lrsql.hugsql.util  :as u]
             [lrsql.hugsql.util.actor :as ua]
             [lrsql.hugsql.util.document :as ud]
@@ -59,12 +60,15 @@
   [document]
   (let [{squuid    :squuid
          squuid-ts :timestamp} (u/generate-squuid*)]
-    {:primary-key   squuid
-     :last-modified squuid-ts
-     :document      document}))
+    (merge {:primary-key   squuid
+            :last-modified squuid-ts}
+           (-> document
+               (select-keys [:content-type :content-length :contents])
+               (update :contents u/data->bytes)))))
 
 (s/fdef document-insert-input
-  :args (s/cat :params hs/set-document-params :document bytes?)
+  :args (s/cat :params hs/set-document-params
+               :document :com.yetanalytics.lrs.xapi/document)
   :ret hs/document-insert-spec
   :fn (fn [{:keys [args ret]}]
         (= (ud/document-dispatch (:params args)) (:table ret))))
@@ -131,6 +135,7 @@
   "Given params, construct the input for `command/delete-document!` in the
    case of multiple documents."
   [params]
+  (assert (and (:activityId params) (:agent params))) ; for testing
   (state-document-basics params false))
 
 ;; Multiple document ID query
