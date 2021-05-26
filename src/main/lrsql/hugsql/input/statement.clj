@@ -409,7 +409,9 @@
 ;; Statement Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: format
+;; NOTE: Invalid query params, e.g. those with both a statementId and a
+;; voidedStatementId property, or singleton queries with extra params,
+;; would have been filtered out earlier by interceptors.
 
 (s/fdef statement-query-input
   :args (s/cat :params hs/get-statements-params)
@@ -431,8 +433,7 @@
     asc?        :ascending
     atts?       :attachments
     format      :format
-    ;; Not a Statement Resource param; added by lrsql for pagination
-    from        :from}]
+    from        :from}] ; Not a stmt res param; added by lrsql for pagination
   (let [stmt-id     (when stmt-id (u/str->uuid stmt-id))
         vstmt-id    (when vstmt-id (u/str->uuid vstmt-id))
         reg         (when reg (u/str->uuid reg))
