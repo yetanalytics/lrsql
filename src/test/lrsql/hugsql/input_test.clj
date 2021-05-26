@@ -11,6 +11,7 @@
     (is (nil? (check-validate `stmt-input/actor-insert-input)))
     (is (nil? (check-validate `stmt-input/activity-insert-input)))
     (is (nil? (check-validate `stmt-input/attachment-insert-input)))
+    (is (nil? (check-validate `stmt-input/group-insert-input)))
     (is (nil? (check-validate `stmt-input/statement-to-actor-insert-input)))
     (is (nil? (check-validate `stmt-input/statement-to-activity-insert-input))))
   (testing "statement insertion inputs"
