@@ -77,6 +77,9 @@
 (declare query-actor-exists)
 (declare query-activity-exists)
 
+;; Statement References
+(declare query-statement-ancestors)
+
 ;; Documents
 (declare query-state-document)
 (declare query-agent-profile-document)

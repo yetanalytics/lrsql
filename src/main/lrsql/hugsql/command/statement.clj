@@ -11,7 +11,8 @@
 
 (defn- insert-statement-input!
   "Insert a new input into the DB. If the input is a Statement, return the
-   Statement ID on success, nil for any other kind of input."
+   Statement ID on success, nil for any other kind of input. May void
+   previously-stored Statements."
   [tx {:keys [table] :as input}]
   (case table
     :statement
@@ -20,7 +21,6 @@
     ;; an exception.
     (do (f/insert-statement! tx input)
         ;; Void statements
-        ;; CHECK: Throw exception on invalid voiding?
         (when (:voiding? input)
           (f/void-statement! tx {:statement-id (:?statement-ref-id input)}))
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
@@ -41,6 +41,8 @@
     (do (f/insert-statement-to-actor! tx input) nil)
     :statement-to-activity
     (do (f/insert-statement-to-activity! tx input) nil)
+    :statement-to-statement
+    (do (f/insert-statement-to-statement! tx input) nil)
     ;; Else
     (cu/throw-invalid-table-ex "insert-statement!" input)))
 
@@ -131,3 +133,26 @@
       {:statement-result {:statements stmt-results
                           :more       (if next-cursor next-cursor "")}
        :attachments      att-results})))
+
+(defn query-statement-refs
+  "Query Statement References from the DB. In addition to the immediate
+   references given by `:?statement-ref-id`, it returns ancestral
+   references, i.e. not only the Statement referenced by `:?statement-ref-id`,
+   but the Statement referenced by _that_, and so on. The return value
+   is a lazy seq of maps with `:statement-id` and `:ancestor-id` properties,
+   where `:statement-id` is the same as in `input`; these maps serve as
+   additional inputs for `insert-statements!`."
+  [tx input]
+  (if-some [sref-id (:?statement-ref-id input)]
+    (let [stmt-id (:statement-id input)]
+      ;; Find ancestors of the referenced Statement, and make those
+      ;; the ancestors of the referencing Statement.
+      (->> (f/query-statement-ancestors tx {:statement-id sref-id})
+           (map (fn [{ancestor-id :ancestor_id}]
+                  {:table        :statement-to-statement
+                   :statement-id stmt-id
+                   :ancestor-id  ancestor-id}))
+           (concat [{:table        :statement-to-statement
+                     :statement-id stmt-id
+                     :ancestor-id  sref-id}])))
+    (lazy-seq [])))

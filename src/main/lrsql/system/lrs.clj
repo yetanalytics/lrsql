@@ -44,7 +44,10 @@
          att-inputs  (when (not-empty attachments)
                        (stmt-input/attachments-insert-inputs stmts attachments))]
      (jdbc/with-transaction [tx (conn)]
-       (stmt-command/insert-statements! tx (concat stmt-inputs att-inputs)))))
+       (let [sref-inputs (stmt-command/query-statement-refs tx stmt-inputs)]
+         (stmt-command/insert-statements! tx (concat stmt-inputs
+                                                     #_sref-inputs
+                                                     att-inputs))))))
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)

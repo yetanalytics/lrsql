@@ -65,6 +65,15 @@ WHERE actor_ifi = :actor-ifi
 SELECT 1 FROM activity
 WHERE activity_iri = :activity-iri
 
+/* Statement Reference Queries */
+
+-- :name query-statement-ancestors
+-- :command :query
+-- :result :many
+-- :doc Query for the ancestors of a referenced `:statement-id`.
+SELECT ancestor_id FROM statement_to_statement
+WHERE statement_id = :statement-id
+
 /* Attachment Queries */
 
 -- :name query-attachments

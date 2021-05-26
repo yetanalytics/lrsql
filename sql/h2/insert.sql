@@ -65,6 +65,15 @@ statement_id = :statement-id,
 usage = :usage,
 activity_iri = :activity-iri
 
+-- :name insert-statement-to-statement!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a new statement-to-statement relation, where `:ancestor-id` is a previously-inserted statement.
+INSERT INTO statement_to_statement SET
+id = :primary-key
+statement_id = :statement-id,
+ancestor_id = :ancestor-id
+
 /* Document Insertion */
 
 -- :name insert-state-document!
