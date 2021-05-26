@@ -362,7 +362,7 @@
      :attachment-sha sha2
      :content-type   content-type
      :content-length length
-     :content        content}))
+     :content        (u/data->bytes content)}))
 
 (s/fdef attachments-insert-inputs
   :args hs/prepared-attachments-spec
