@@ -135,6 +135,7 @@
   "Given params, construct the input for `command/delete-document!` in the
    case of multiple documents."
   [params]
+  (assert (and (:activityId params) (:agent params))) ; for testing
   (state-document-basics params false))
 
 ;; Multiple document ID query

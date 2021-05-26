@@ -359,17 +359,26 @@
                                              :profileId)))))
     (testing "document deletion"
       (is (= {}
-             (lrsp/-delete-document lrs
-                                    {}
-                                    state-id-params)))
-      (is (= {} ; second delete should do nothing in DB
              (lrsp/-delete-documents lrs
                                      {}
                                      (dissoc state-id-params :stateId))))
-      (is (= {:document-ids []}
-             (lrsp/-get-document-ids lrs
-                                     {}
-                                     (dissoc state-id-params :stateId)))))
+      (is (= {}
+             (lrsp/-delete-document lrs
+                                    {}
+                                    agent-prof-id-params)))
+      (is (= {}
+             (lrsp/-delete-document lrs
+                                    {}
+                                    activity-prof-id-params)))
+      (is (nil? (lrsp/-get-document lrs
+                                    {}
+                                    state-id-params)))
+      (is (nil? (lrsp/-get-document lrs
+                                    {}
+                                    agent-prof-id-params)))
+      (is (nil? (lrsp/-get-document lrs
+                                    {}
+                                    activity-prof-id-params))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))
