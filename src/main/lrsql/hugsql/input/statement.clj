@@ -130,6 +130,7 @@
         ;; Statement to Actor Inputs
         actor->link (partial statement-to-actor-insert-input stmt-id)
         stmt-actors (cond-> []
+                      ;; Statement Actors
                       act-input
                       (conj (actor->link act-enum act-input))
                       obj-input
@@ -139,7 +140,23 @@
                       inst-input
                       (conj (actor->link inst-enum inst-input))
                       team-input
-                      (conj (actor->link team-enum team-input)))]
+                      (conj (actor->link team-enum team-input))
+                      ;; Member Actors
+                      act-mem-inputs
+                      (concat (map (partial actor->link act-enum)
+                                   act-mem-inputs))
+                      obj-mem-inputs
+                      (concat (map (partial actor->link obj-enum)
+                                   obj-mem-inputs))
+                      auth-mem-inputs
+                      (concat (map (partial actor->link auth-enum)
+                                   auth-mem-inputs))
+                      inst-mem-inputs
+                      (concat (map (partial actor->link inst-enum)
+                                   inst-mem-inputs))
+                      team-mem-inputs
+                      (concat (map (partial actor->link team-enum)
+                                   team-mem-inputs)))]
     [actor-inputs stmt-actors]))
 
 (defn- statement-activity-insert-inputs
