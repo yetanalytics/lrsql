@@ -92,6 +92,9 @@
 ;; Statement Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO: Deal with contextAgents, contextGroups, and any other properties
+;; in version 2.0
+
 (defn- statement-actor-insert-inputs
   "Helper to construct the `functions/insert-actor!` inputs for a statement's
    Agents and Groups."
