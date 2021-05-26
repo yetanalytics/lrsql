@@ -7,6 +7,14 @@
             [lrsql.system :as system]
             [lrsql.test-support :as support]))
 
+(def stmt-0
+  {"id"     "5c9cbcb0-18c0-46de-bed1-c622c03163a1"
+   "actor"  {"mbox"       "mailto:sample.foo@example.com"
+             "objectType" "Agent"}
+   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
+             "display" {"en-US" "answered"}}
+   "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
+
 (def stmt-1
   {"id"     "030e001f-b32a-4361-b701-039a3d9fceb1"
    "actor"  {"mbox"       "mailto:sample.agent@example.com"
@@ -28,7 +36,7 @@
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/voided"
              "display" "Voided"}
    "object" {"objectType" "StatementRef"
-             "id"         "030e001f-b32a-4361-b701-039a3d9fceb1"}})
+             "id"         "5c9cbcb0-18c0-46de-bed1-c622c03163a1"}})
 
 (def stmt-3
   (-> stmt-1
@@ -110,6 +118,7 @@
         sys   (system/system)
         sys'  (component/start sys)
         lrs   (:lrs sys')
+        id-0  (get stmt-0 "id")
         id-1  (get stmt-1 "id")
         id-2  (get stmt-2 "id")
         id-3  (get stmt-3 "id")
@@ -122,19 +131,19 @@
         act-1 (get-in stmt-1 ["object" "id"])
         act-4 (get-in stmt-4 ["object" "id"])]
     (testing "statement insertions"
-      (is (= {:statement-ids [id-1]}
-             (lrsp/-store-statements lrs {} [stmt-1] [])))
-      (is (= {:statement-ids [id-2 id-3]}
-             (lrsp/-store-statements lrs {} [stmt-2 stmt-3] [])))
+      (is (= {:statement-ids [id-0]}
+             (lrsp/-store-statements lrs {} [stmt-0] [])))
+      (is (= {:statement-ids [id-1 id-2 id-3]}
+             (lrsp/-store-statements lrs {} [stmt-1 stmt-2 stmt-3] [])))
       (is (= {:statement-ids [id-4]}
              (lrsp/-store-statements lrs {} [stmt-4] [stmt-4-attach]))))
     (testing "statement ID queries"
       ;; Statement ID queries
-      (is (= {:statement stmt-1}
-             (-> (lrsp/-get-statements lrs {} {:voidedStatementId id-1} #{})
+      (is (= {:statement stmt-0}
+             (-> (lrsp/-get-statements lrs {} {:voidedStatementId id-0} #{})
                  (update :statement remove-props))))
-      (is (= {:statement stmt-1}
-             (-> (lrsp/-get-statements lrs {} {:voidedStatementId id-1 :format "canonical"} #{"en-US"})
+      (is (= {:statement stmt-0}
+             (-> (lrsp/-get-statements lrs {} {:voidedStatementId id-0 :format "canonical"} #{"en-US"})
                  (update :statement remove-props))))
       (is (= {:statement
               {"id"     "030e001f-b32a-4361-b701-039a3d9fceb1"
@@ -142,7 +151,7 @@
                          "mbox"       "mailto:sample.agent@example.com"}
                "verb"   {"id" "http://adlnet.gov/expapi/verbs/answered"}
                "object" {"id" "http://www.example.com/tincan/activities/multipart"}}}
-             (-> (lrsp/-get-statements lrs {} {:voidedStatementId id-1 :format "ids"} #{})
+             (-> (lrsp/-get-statements lrs {} {:statementId id-1 :format "ids"} #{})
                  (update :statement remove-props))))
       (is (= {:statement stmt-2}
              (-> (lrsp/-get-statements lrs {} {:statementId id-2} #{})
