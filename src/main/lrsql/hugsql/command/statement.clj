@@ -76,11 +76,11 @@
   [{att-sha      :attachment_sha
     content-type :content_type
     length       :content_length
-    content      :content}]
+    contents     :contents}]
   {:sha2        att-sha
    :length      length
    :contentType content-type
-   :content     content})
+   :content     contents})
 
 (defn query-statements
   "Query statements from the DB. Return a map containing a singleton

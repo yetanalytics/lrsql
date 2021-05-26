@@ -17,7 +17,7 @@
 (s/def ::state-id string?)
 (s/def ::profile-id string?)
 (s/def ::last-modified inst?)
-(s/def ::document bytes?) ; Different from ::lrs/document spec
+(s/def ::contents bytes?)
 
 ;; Query-specific params
 (s/def ::since inst?)
@@ -52,7 +52,7 @@
 ;; - agent_ifi:     STRING NOT NULL
 ;; - registration:  UUID
 ;; - last_modified: TIMESTAMP NOT NULL
-;; - document:      BINARY NOT NULL
+;; - contents:      BINARY NOT NULL
 
 (def state-doc-insert-spec
   (s/keys :req-un [::primary-key
@@ -61,35 +61,35 @@
                    ::hs-actor/agent-ifi
                    ::hs-stmt/?registration
                    ::last-modified
-                   ::document]))
+                   ::contents]))
 
 ;; Agent-Profile-Document
 ;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - profile_id:    STRING NOT NULL
 ;; - agent_ifi:     STRING NOT NULL
 ;; - last_modified: TIMESTAMP NOT NULL
-;; - document:      BINARY NOT NULL
+;; - contents:      BINARY NOT NULL
 
 (def agent-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
                    ::hs-actor/agent-ifi
                    ::last-modified
-                   ::document]))
+                   ::contents]))
 
 ;; Activity-Profile-Resource
 ;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - profile_id:    STRING NOT NULL
 ;; - activity_iri:  STRING NOT NULL
 ;; - last_modified: TIMESTAMP NOT NULL
-;; - document:      BINARY NOT NULL
+;; - contents:      BINARY NOT NULL
 
 (def activity-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
                    ::profile-id
                    ::hs-activ/activity-iri
                    ::last-modified
-                   ::document]))
+                   ::contents]))
 
 ;; Putting it all together
 ;; NOTE: need to call s/nonconforming to make it work with s/fdef's :fn

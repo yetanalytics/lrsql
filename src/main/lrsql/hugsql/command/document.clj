@@ -1,6 +1,5 @@
 (ns lrsql.hugsql.command.document
-  (:require [clojure.tools.logging :as log]
-            [lrsql.hugsql.functions :as f]
+  (:require [lrsql.hugsql.functions :as f]
             [lrsql.hugsql.util :as u]
             [lrsql.hugsql.command.util :as cu]))
 
@@ -49,15 +48,15 @@
 (defn- update-document!*
   "Common functionality for all cases in `update-document!`"
   [tx input query-fn insert-fn! update-fn!]
-  (let [query-in (dissoc input :last-modified :document)
+  (let [query-in (dissoc input :last-modified :contents)
         old-data (query-fn tx query-in)]
-    (if-some [old-doc (some->> old-data :document)]
+    (if-some [old-doc (some->> old-data :contents)]
       (let [old-json (cu/wrapped-parse-json "stored document" old-doc)
-            new-json (cu/wrapped-parse-json "new document" (:document input))]
+            new-json (cu/wrapped-parse-json "new document" (:contents input))]
         (->> (merge old-json new-json)
              u/write-json
              .getBytes
-             (assoc input :document)
+             (assoc input :contents)
              (update-fn! tx)))
       (insert-fn! tx input))))
 
@@ -106,12 +105,12 @@
                     (f/query-activity-profile-document tx input)
                     ;; Else
                     (cu/throw-invalid-table-ex "query-document" input))]
-    (let [{document   :document
+    (let [{contents   :contents
            state-id   :state_id
            profile-id :profile_id
            updated    :last_modified} res]
-      {:contents       document
-       :content-length (count document)
+      {:contents       contents
+       :content-length (count contents)
        :content-type   "application/octet-stream" ; TODO
        :id             (or state-id profile-id)
        :updated        updated})))

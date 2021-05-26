@@ -62,7 +62,7 @@
          squuid-ts :timestamp} (u/generate-squuid*)]
     {:primary-key   squuid
      :last-modified squuid-ts
-     :document      (-> document :contents u/data->bytes)}))
+     :contents      (-> document :contents u/data->bytes)}))
 
 (s/fdef document-insert-input
   :args (s/cat :params hs/set-document-params

@@ -351,7 +351,7 @@
    `functions/insert-attachment!`. `statement-id` will be associated with
    `attachment` as a foreign key reference."
   [statement-id attachment]
-  (let [{content      :content
+  (let [{contents     :content
          content-type :contentType
          length       :length
          sha2         :sha2}
@@ -362,7 +362,7 @@
      :attachment-sha sha2
      :content-type   content-type
      :content-length length
-     :content        (u/data->bytes content)}))
+     :contents       (u/data->bytes contents)}))
 
 (s/fdef attachments-insert-inputs
   :args hs/prepared-attachments-spec

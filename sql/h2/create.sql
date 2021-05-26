@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS attachment (
   attachment_sha VARCHAR(255) NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  content        BINARY NOT NULL, -- TODO: Switch to BLOB?
+  contents       BINARY NOT NULL, -- TODO: Switch to BLOB?
   FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
 )
 
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS state_document (
   agent_ifi     JSON NOT NULL,
   registration  UUID DEFAULT NULL,
   last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
-  document      BINARY
+  contents      BINARY NOT NULL
 )
 
 -- :name create-agent-profile-document-table!
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
   profile_id    VARCHAR(255) NOT NULL,
   agent_ifi     VARCHAR(255) NOT NULL,
   last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
-  document      BINARY
+  contents      BINARY NOT NULL
 )
 
 -- :name create-activity-profile-document-table!
@@ -105,5 +105,5 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
   profile_id    VARCHAR(255) NOT NULL,
   activity_iri  VARCHAR(255) NOT NULL,
   last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
-  document      BINARY
+  contents      BINARY NOT NULL
 )
