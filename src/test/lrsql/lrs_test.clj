@@ -1,6 +1,5 @@
 (ns lrsql.lrs-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [config.core  :refer [env]]
             [next.jdbc    :as jdbc]
             [com.stuartsierra.component    :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]
@@ -340,9 +339,3 @@
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))
-
-(comment
-  (def sys (component/start (system/system)))
-  (def lrs (:lrs sys))
-  (lrsp/-get-document lrs {} state-id-params)
-  (component/stop sys))
