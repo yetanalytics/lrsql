@@ -18,7 +18,8 @@
   :ret (s/nilable hs/actor-insert-spec))
 
 (defn actor-insert-input
-  "Given `actor`, construct the input for `functions/insert-actor!`."
+  "Given `actor`, construct the input for `functions/insert-actor!`, or nil
+   if it does not have an IFI."
   [actor]
   (when-some [ifi-str (ua/actor->ifi actor)]
     {:table       :actor
@@ -26,6 +27,21 @@
      :actor-ifi   ifi-str
      :actor-type  (get actor "objectType" "Agent")
      :payload     (u/write-json actor)}))
+
+(s/fdef group-insert-input
+  :args (s/cat :actor (s/alt :agent ::xs/agent
+                             :group ::xs/group))
+  :ret (s/nilable (s/coll-of hs/actor-insert-spec :min-count 1)))
+
+(defn group-insert-input
+  "Given `actor`, return a coll of actor inputs, or nil if `actor` is not
+   a Group or has no members. Both Anonymous and Identified Group members
+   count."
+  [actor]
+  ;; Use let-binding in order to avoid cluttering args list
+  (let [{obj-type "objectType" members  "member"} actor]
+    (when (and (= "Group" obj-type) (not-empty members))
+      (map actor-insert-input members))))
 
 (s/fdef activity-insert-input
   :args (s/cat :activity ::xs/activity)
@@ -76,6 +92,9 @@
 ;; Statement Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO: Deal with contextAgents, contextGroups, and any other properties
+;; in version 2.0
+
 (defn- statement-actor-insert-inputs
   "Helper to construct the `functions/insert-actor!` inputs for a statement's
    Agents and Groups."
@@ -84,33 +103,63 @@
         {:keys [act-enum obj-enum auth-enum inst-enum team-enum]}
         sql-enums
         ;; Statement Actors
-        stmt-obj     (when (#{"Agent" "Group"} (get stmt-obj "objectType"))
-                       stmt-obj)
-        act-input    (when stmt-act (actor-insert-input stmt-act))
-        obj-input    (when stmt-obj (actor-insert-input stmt-obj))
-        auth-input   (when stmt-auth (actor-insert-input stmt-auth))
-        inst-input   (when stmt-inst (actor-insert-input stmt-inst))
-        team-input   (when stmt-team (actor-insert-input stmt-team))
+        stmt-obj   (when (#{"Agent" "Group"} (get stmt-obj "objectType"))
+                     stmt-obj)
+        act-input  (when stmt-act (actor-insert-input stmt-act))
+        obj-input  (when stmt-obj (actor-insert-input stmt-obj))
+        auth-input (when stmt-auth (actor-insert-input stmt-auth))
+        inst-input (when stmt-inst (actor-insert-input stmt-inst))
+        team-input (when stmt-team (actor-insert-input stmt-team))
+        ;; Member Actors
+        act-mem-inputs  (when stmt-act (group-insert-input stmt-act))
+        obj-mem-inputs  (when stmt-obj (group-insert-input stmt-obj))
+        auth-mem-inputs (when stmt-auth (group-insert-input stmt-auth))
+        inst-mem-inputs (when stmt-inst (group-insert-input stmt-inst))
+        team-mem-inputs (when stmt-team (group-insert-input stmt-team))
         ;; Actor Inputs
         actor-inputs (cond-> []
-                       act-input (conj act-input)
+                       ;; Statememt Actors
+                       act-input  (conj act-input)
                        obj-input  (conj obj-input)
                        auth-input (conj auth-input)
                        inst-input (conj inst-input)
-                       team-input (conj team-input))
+                       team-input (conj team-input)
+                       ;; Member Actors
+                       act-mem-inputs  (concat act-mem-inputs)
+                       obj-mem-inputs  (concat obj-mem-inputs)
+                       auth-mem-inputs (concat auth-mem-inputs)
+                       inst-mem-inputs (concat inst-mem-inputs)
+                       team-mem-inputs (concat team-mem-inputs))
         ;; Statement to Actor Inputs
-        actor->link  (partial statement-to-actor-insert-input stmt-id)
-        stmt-actors  (cond-> []
-                       act-input
-                       (conj (actor->link act-enum act-input))
-                       obj-input
-                       (conj (actor->link obj-enum obj-input))
-                       auth-input
-                       (conj (actor->link auth-enum auth-input))
-                       inst-input
-                       (conj (actor->link inst-enum inst-input))
-                       team-input
-                       (conj (actor->link team-enum team-input)))]
+        actor->link (partial statement-to-actor-insert-input stmt-id)
+        stmt-actors (cond-> []
+                      ;; Statement Actors
+                      act-input
+                      (conj (actor->link act-enum act-input))
+                      obj-input
+                      (conj (actor->link obj-enum obj-input))
+                      auth-input
+                      (conj (actor->link auth-enum auth-input))
+                      inst-input
+                      (conj (actor->link inst-enum inst-input))
+                      team-input
+                      (conj (actor->link team-enum team-input))
+                      ;; Member Actors
+                      act-mem-inputs
+                      (concat (map (partial actor->link act-enum)
+                                   act-mem-inputs))
+                      obj-mem-inputs
+                      (concat (map (partial actor->link obj-enum)
+                                   obj-mem-inputs))
+                      auth-mem-inputs
+                      (concat (map (partial actor->link auth-enum)
+                                   auth-mem-inputs))
+                      inst-mem-inputs
+                      (concat (map (partial actor->link inst-enum)
+                                   inst-mem-inputs))
+                      team-mem-inputs
+                      (concat (map (partial actor->link team-enum)
+                                   team-mem-inputs)))]
     [actor-inputs stmt-actors]))
 
 (defn- statement-activity-insert-inputs
@@ -126,33 +175,33 @@
          prt-acts "parent"
          oth-acts "other"}
         stmt-ctx-acts
-        stmt-obj     (when (#{"Activity"} (get stmt-obj "objectType"))
-                       stmt-obj)
-        obj-act-in   (when stmt-obj (activity-insert-input stmt-obj))
-        cat-acts-in  (when cat-acts (map activity-insert-input cat-acts))
-        grp-acts-in  (when grp-acts (map activity-insert-input grp-acts))
-        prt-acts-in  (when prt-acts (map activity-insert-input prt-acts))
-        oth-acts-in  (when oth-acts (map activity-insert-input oth-acts))
+        stmt-obj    (when (#{"Activity"} (get stmt-obj "objectType"))
+                      stmt-obj)
+        obj-act-in  (when stmt-obj (activity-insert-input stmt-obj))
+        cat-acts-in (when cat-acts (map activity-insert-input cat-acts))
+        grp-acts-in (when grp-acts (map activity-insert-input grp-acts))
+        prt-acts-in (when prt-acts (map activity-insert-input prt-acts))
+        oth-acts-in (when oth-acts (map activity-insert-input oth-acts))
         ;; Activity Inputs
-        act-inputs   (cond-> []
-                       obj-act-in  (conj obj-act-in)
-                       cat-acts-in (concat cat-acts-in)
-                       grp-acts-in (concat grp-acts-in)
-                       prt-acts-in (concat prt-acts-in)
-                       oth-acts-in (concat oth-acts-in))
+        act-inputs (cond-> []
+                     obj-act-in  (conj obj-act-in)
+                     cat-acts-in (concat cat-acts-in)
+                     grp-acts-in (concat grp-acts-in)
+                     prt-acts-in (concat prt-acts-in)
+                     oth-acts-in (concat oth-acts-in))
         ;; Statement to Activity Enums
-        act->link    (partial statement-to-activity-insert-input stmt-id)
-        stmt-acts    (cond-> []
-                       obj-act-in
-                       (conj (act->link obj-enum obj-act-in))
-                       cat-acts-in
-                       (concat (map (partial act->link cat-enum) cat-acts-in))
-                       grp-acts-in
-                       (concat (map (partial act->link grp-enum) grp-acts-in))
-                       prt-acts-in
-                       (concat (map (partial act->link prt-enum) prt-acts-in))
-                       oth-acts-in
-                       (concat (map (partial act->link oth-enum) oth-acts-in)))]
+        act->link (partial statement-to-activity-insert-input stmt-id)
+        stmt-acts (cond-> []
+                    obj-act-in
+                    (conj (act->link obj-enum obj-act-in))
+                    cat-acts-in
+                    (concat (map (partial act->link cat-enum) cat-acts-in))
+                    grp-acts-in
+                    (concat (map (partial act->link grp-enum) grp-acts-in))
+                    prt-acts-in
+                    (concat (map (partial act->link prt-enum) prt-acts-in))
+                    oth-acts-in
+                    (concat (map (partial act->link oth-enum) oth-acts-in)))]
     [act-inputs stmt-acts]))
 
 (defn- sub-statement-insert-inputs

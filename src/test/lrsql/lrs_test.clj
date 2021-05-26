@@ -42,9 +42,15 @@
 
 (def stmt-4
   {"id"          "e8477a8d-786c-48be-a703-7c8ec7eedee5"
-   "actor"       {"mbox"       "mailto:sample.agent.4@example.com"
-                  "name"       "Sample Agent 4"
-                  "objectType" "Agent"}
+   "actor"       {"mbox"       "mailto:sample.group.4@example.com"
+                  "name"       "Sample Group 4"
+                  "objectType" "Group"
+                  "member"     [{"mbox" "mailto:member1@example.com"
+                                 "name" "Group Member 1"}
+                                {"mbox" "mailto:member2@example.com"
+                                 "name" "Group Member 2"}
+                                {"mbox" "mailto:member3@example.com"
+                                 "name" "Group Member 4"}]}
    "verb"        {"id"      "http://adlnet.gov/expapi/verbs/attended"
                   "display" {"en-US" "attended"}}
    "object"      {"id"         "http://www.example.com/meetings/occurances/34534"
@@ -110,6 +116,8 @@
         id-4  (get stmt-4 "id")
         ts    "3000-01-01T01:00:00Z" ; Date far into the future
         agt-1 (-> stmt-1 (get "actor") (dissoc "name"))
+        grp-4 (-> stmt-4 (get "actor") (dissoc "name"))
+        mem-4 (-> stmt-4 (get-in ["actor" "member" 0]) (dissoc "name"))
         vrb-1 (get-in stmt-1 ["verb" "id"])
         act-1 (get-in stmt-1 ["object" "id"])
         act-4 (get-in stmt-4 ["object" "id"])]
@@ -159,6 +167,16 @@
       (is (= {:statement-result {:statements [stmt-1 stmt-3] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:agent agt-1 :related_agents true} #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-4] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:agent grp-4} #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-4] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:agent mem-4} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
       (is (= {:statement-result {:statements [stmt-1 stmt-3] :more ""}
