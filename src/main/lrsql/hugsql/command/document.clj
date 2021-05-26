@@ -51,13 +51,15 @@
   (let [query-in (dissoc input :last-modified :contents)
         old-data (query-fn tx query-in)]
     (if-some [old-doc (some->> old-data :contents)]
-      (let [old-json (cu/wrapped-parse-json "stored document" old-doc)
-            new-json (cu/wrapped-parse-json "new document" (:contents input))]
-        (->> (merge old-json new-json)
-             u/write-json
-             .getBytes
-             (assoc input :contents)
-             (update-fn! tx)))
+      (let [old-json  (cu/wrapped-parse-json "stored document" old-doc)
+            new-json  (cu/wrapped-parse-json "new document" (:contents input))
+            new-data  (->> (merge old-json new-json)
+                           u/write-json
+                           .getBytes)
+            new-input (-> input
+                          (assoc :contents new-data)
+                          (assoc :content-length (count new-data)))]
+        (update-fn! tx new-input))
       (insert-fn! tx input))))
 
 (defn update-document!
@@ -105,13 +107,15 @@
                     (f/query-activity-profile-document tx input)
                     ;; Else
                     (cu/throw-invalid-table-ex "query-document" input))]
-    (let [{contents   :contents
-           state-id   :state_id
-           profile-id :profile_id
-           updated    :last_modified} res]
+    (let [{contents     :contents
+           content-type :content_type
+           content-len  :content_length
+           state-id     :state_id
+           profile-id   :profile_id
+           updated      :last_modified} res]
       {:contents       contents
-       :content-length (count contents)
-       :content-type   "application/octet-stream" ; TODO
+       :content-length content-len
+       :content-type   content-type
        :id             (or state-id profile-id)
        :updated        updated})))
 

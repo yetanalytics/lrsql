@@ -282,10 +282,10 @@
    :contents       (.getBytes "Example Document")})
 
 (deftest test-document-fns
-  (let [_     (support/assert-in-mem-db)
-        sys   (system/system)
-        sys'  (component/start sys)
-        lrs   (:lrs sys')]
+  (let [_    (support/assert-in-mem-db)
+        sys  (system/system)
+        sys' (component/start sys)
+        lrs  (:lrs sys')]
     (testing "document insertion"
       (is (= {}
              (lrsp/-set-document lrs
@@ -306,9 +306,9 @@
                                  agent-prof-doc
                                  false))))
     (testing "document query"
-      (is (= {:contents        "{\"foo\":10,\"bar\":2}"
+      (is (= {:contents       "{\"foo\":10,\"bar\":2}"
               :content-length 18
-              :content-type   "application/octet-stream" ; TODO
+              :content-type   "application/json"
               :id             "some-id"}
              (-> (lrsp/-get-document lrs {} state-id-params)
                  (dissoc :updated)

@@ -1,6 +1,7 @@
 (ns lrsql.hugsql.spec.document
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
+            [com.yetanalytics.lrs.xapi.document :as lrs-doc]
             [lrsql.hugsql.spec.activity  :as hs-activ]
             [lrsql.hugsql.spec.actor     :as hs-actor]
             [lrsql.hugsql.spec.statement :as hs-stmt]))
@@ -61,6 +62,8 @@
                    ::hs-actor/agent-ifi
                    ::hs-stmt/?registration
                    ::last-modified
+                   ::lrs-doc/content-type
+                   ::lrs-doc/content-length
                    ::contents]))
 
 ;; Agent-Profile-Document
@@ -75,6 +78,8 @@
                    ::profile-id
                    ::hs-actor/agent-ifi
                    ::last-modified
+                   ::lrs-doc/content-type
+                   ::lrs-doc/content-length
                    ::contents]))
 
 ;; Activity-Profile-Resource
@@ -89,6 +94,8 @@
                    ::profile-id
                    ::hs-activ/activity-iri
                    ::last-modified
+                   ::lrs-doc/content-type
+                   ::lrs-doc/content-length
                    ::contents]))
 
 ;; Putting it all together

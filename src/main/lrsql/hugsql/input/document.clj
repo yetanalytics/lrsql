@@ -60,9 +60,11 @@
   [document]
   (let [{squuid    :squuid
          squuid-ts :timestamp} (u/generate-squuid*)]
-    {:primary-key   squuid
-     :last-modified squuid-ts
-     :contents      (-> document :contents u/data->bytes)}))
+    (merge {:primary-key   squuid
+            :last-modified squuid-ts}
+           (-> document
+               (select-keys [:content-type :content-length :contents])
+               (update :contents u/data->bytes)))))
 
 (s/fdef document-insert-input
   :args (s/cat :params hs/set-document-params

@@ -77,33 +77,39 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
 -- :command :execute
 -- :doc Create the `state_document` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS state_document (
-  id            UUID NOT NULL PRIMARY KEY,
-  state_id      VARCHAR(255) NOT NULL,
-  activity_iri  VARCHAR(255) NOT NULL,
-  agent_ifi     JSON NOT NULL,
-  registration  UUID DEFAULT NULL,
-  last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
-  contents      BINARY NOT NULL
+  id             UUID NOT NULL PRIMARY KEY,
+  state_id       VARCHAR(255) NOT NULL,
+  activity_iri   VARCHAR(255) NOT NULL,
+  agent_ifi      JSON NOT NULL,
+  registration   UUID DEFAULT NULL,
+  last_modified  TIMESTAMP WITH TIME ZONE NOT NULL,
+  content_type   VARCHAR(255) NOT NULL,
+  content_length INTEGER NOT NULL,
+  contents       BINARY NOT NULL
 )
 
 -- :name create-agent-profile-document-table!
 -- :command :execute
 -- :doc Create the `agent_profile_document` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS agent_profile_document (
-  id            UUID NOT NULL PRIMARY KEY,
-  profile_id    VARCHAR(255) NOT NULL,
-  agent_ifi     VARCHAR(255) NOT NULL,
-  last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
-  contents      BINARY NOT NULL
+  id             UUID NOT NULL PRIMARY KEY,
+  profile_id     VARCHAR(255) NOT NULL,
+  agent_ifi      VARCHAR(255) NOT NULL,
+  last_modified  TIMESTAMP WITH TIME ZONE NOT NULL,
+  content_type   VARCHAR(255) NOT NULL,
+  content_length INTEGER NOT NULL,
+  contents       BINARY NOT NULL
 )
 
 -- :name create-activity-profile-document-table!
 -- :command :execute
 -- :doc Create the `activity_profile_document` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS activity_profile_document (
-  id            UUID NOT NULL PRIMARY KEY,
-  profile_id    VARCHAR(255) NOT NULL,
-  activity_iri  VARCHAR(255) NOT NULL,
-  last_modified TIMESTAMP WITH TIME ZONE NOT NULL,
-  contents      BINARY NOT NULL
+  id             UUID NOT NULL PRIMARY KEY,
+  profile_id     VARCHAR(255) NOT NULL,
+  activity_iri   VARCHAR(255) NOT NULL,
+  last_modified  TIMESTAMP WITH TIME ZONE NOT NULL,
+  content_type   VARCHAR(255) NOT NULL,
+  content_length INTEGER NOT NULL,
+  contents       BINARY NOT NULL
 )

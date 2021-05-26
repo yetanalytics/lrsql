@@ -78,6 +78,8 @@ activity_iri = :activity-iri,
 agent_ifi = :agent-ifi,
 registration = :?registration,
 last_modified = :last-modified,
+content_type = :content-type,
+content_length = :content-length,
 contents = :contents
 
 -- :name insert-agent-profile-document!
@@ -89,6 +91,8 @@ id = :primary-key,
 profile_id = :profile-id,
 agent_ifi = :agent-ifi,
 last_modified = :last-modified,
+content_type = :content-type,
+content_length = :content-length,
 contents = :contents
 
 -- :name insert-activity-profile-document!
@@ -100,4 +104,6 @@ id = :primary-key,
 profile_id = :profile-id,
 activity_iri = :activity-iri,
 last_modified = :last-modified,
+content_type = :content-type,
+content_length = :content-length,
 contents = :contents
