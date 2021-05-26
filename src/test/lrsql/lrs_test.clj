@@ -281,6 +281,15 @@
    :content-type   "text/plain"
    :contents       (.getBytes "Example Document")})
 
+(def activity-prof-id-params
+  {:profileId  "https://example.org/some-profile"
+   :activityId "https://example.org/some-activity"})
+
+(def activity-prof-doc
+  {:content-length 18
+   :content-type  "text/plain"
+   :contents      (.getBytes "Example Document 2")})
+
 (deftest test-document-fns
   (let [_    (support/assert-in-mem-db)
         sys  (system/system)
@@ -304,6 +313,12 @@
                                  {}
                                  agent-prof-id-params
                                  agent-prof-doc
+                                 false)))
+      (is (= {}
+             (lrsp/-set-document lrs
+                                 {}
+                                 activity-prof-id-params
+                                 activity-prof-doc
                                  false))))
     (testing "document query"
       (is (= {:contents       "{\"foo\":10,\"bar\":2}"
@@ -311,6 +326,20 @@
               :content-type   "application/json"
               :id             "some-id"}
              (-> (lrsp/-get-document lrs {} state-id-params)
+                 (dissoc :updated)
+                 (update :contents #(String. %)))))
+      (is (= {:contents       "Example Document"
+              :content-length 16
+              :content-type   "text/plain"
+              :id             "https://example.org/some-profile"}
+             (-> (lrsp/-get-document lrs {} agent-prof-id-params)
+                 (dissoc :updated)
+                 (update :contents #(String. %)))))
+      (is (= {:contents       "Example Document 2"
+              :content-length 18
+              :content-type   "text/plain"
+              :id             "https://example.org/some-profile"}
+             (-> (lrsp/-get-document lrs {} activity-prof-id-params)
                  (dissoc :updated)
                  (update :contents #(String. %))))))
     (testing "document ID query"
@@ -322,6 +351,11 @@
              (lrsp/-get-document-ids lrs
                                      {}
                                      (dissoc agent-prof-id-params
+                                             :profileId))))
+      (is (= {:document-ids ["https://example.org/some-profile"]}
+             (lrsp/-get-document-ids lrs
+                                     {}
+                                     (dissoc activity-prof-id-params
                                              :profileId)))))
     (testing "document deletion"
       (is (= {}
