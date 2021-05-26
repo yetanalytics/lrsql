@@ -9,12 +9,16 @@
 ;; Create Tables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Statement + Attachment Tables
 (declare create-statement-table!)
 (declare create-actor-table!)
 (declare create-activity-table!)
 (declare create-attachment-table!)
 (declare create-statement-to-actor-table!)
 (declare create-statement-to-activity-table!)
+(declare create-statement-to-statement-table!)
+
+;; Document Tables
 (declare create-state-document-table!)
 (declare create-agent-profile-document-table!)
 (declare create-activity-profile-document-table!)
@@ -30,6 +34,7 @@
 (declare insert-attachment!)
 (declare insert-statement-to-actor!)
 (declare insert-statement-to-activity!)
+
 
 ;; Documents
 (declare insert-state-document!)

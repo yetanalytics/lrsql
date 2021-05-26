@@ -93,6 +93,7 @@
                "DROP TABLE IF EXISTS agent_profile_document"
                "DROP TABLE IF EXISTS activity_profile_document"
                ;; Drop statement tables
+               "DROP TABLE IF EXISTS statement_to_statement"
                "DROP TABLE IF EXISTS statement_to_activity"
                "DROP TABLE IF EXISTS statement_to_actor"
                "DROP TABLE IF EXISTS attachment"
