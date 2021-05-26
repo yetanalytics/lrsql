@@ -2,9 +2,11 @@
   (:require [clj-uuid]
             [java-time]
             [clojure.spec.alpha :as s]
-            [clojure.data.json :as json])
+            [clojure.data.json  :as json]
+            [clojure.java.io    :as io])
   (:import [java.util UUID]
-           [java.time Instant]))
+           [java.time Instant]
+           [java.io ByteArrayOutputStream]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
@@ -191,7 +193,8 @@
     (string? data)
     (json/read-str data)
     (bytes? data) ; H2 returns JSON data as a byte array
-    (json/read-str (String. data)))) ; TODO: Fix reflection warning
+    (json/read-str (String.  data))))
+;; ^"[B"
 
 (defn parse-json
   "Parse `data` into JSON format. `data` may be a string or a byte array."
@@ -202,3 +205,17 @@
   "Write `jsn` to a string."
   [jsn]
   (json/write-str jsn))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Bytes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn data->bytes
+  [data]
+  (if (bytes? data)
+    data
+    (let [baos (ByteArrayOutputStream.)]
+      (with-open [in (io/input-stream data)]
+        (io/copy in baos)
+        (.flush baos)
+        (.toByteArray baos)))))

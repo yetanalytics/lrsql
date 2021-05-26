@@ -1,5 +1,6 @@
 (ns lrsql.hugsql.input.document
   (:require [clojure.spec.alpha :as s]
+            [com.yetanalytics.lrs.xapi.document]
             [lrsql.hugsql.util  :as u]
             [lrsql.hugsql.util.actor :as ua]
             [lrsql.hugsql.util.document :as ud]
@@ -61,10 +62,11 @@
          squuid-ts :timestamp} (u/generate-squuid*)]
     {:primary-key   squuid
      :last-modified squuid-ts
-     :document      document}))
+     :document      (-> document :contents u/data->bytes)}))
 
 (s/fdef document-insert-input
-  :args (s/cat :params hs/set-document-params :document bytes?)
+  :args (s/cat :params hs/set-document-params
+               :document :com.yetanalytics.lrs.xapi/document)
   :ret hs/document-insert-spec
   :fn (fn [{:keys [args ret]}]
         (= (ud/document-dispatch (:params args)) (:table ret))))

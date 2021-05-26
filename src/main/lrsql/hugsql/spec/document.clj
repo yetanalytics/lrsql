@@ -12,11 +12,12 @@
 ;; Primary key
 (s/def ::primary-key uuid?)
 
+;; Parameters
 ;; NOTE: Profile ID should be IRI, but xapi-schema defines it only as a string
 (s/def ::state-id string?)
 (s/def ::profile-id string?)
 (s/def ::last-modified inst?)
-(s/def ::document bytes?)
+(s/def ::document bytes?) ; Different from ::lrs/document spec
 
 ;; Query-specific params
 (s/def ::since inst?)

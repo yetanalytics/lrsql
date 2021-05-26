@@ -1,5 +1,6 @@
 (ns lrsql.hugsql.command.document
-  (:require [lrsql.hugsql.functions :as f]
+  (:require [clojure.tools.logging :as log]
+            [lrsql.hugsql.functions :as f]
             [lrsql.hugsql.util :as u]
             [lrsql.hugsql.command.util :as cu]))
 
@@ -48,8 +49,8 @@
 (defn- update-document!*
   "Common functionality for all cases in `update-document!`"
   [tx input query-fn insert-fn! update-fn!]
-  (let [query-keys [:state-id :agent-ifi :activity-iri :?registration]
-        old-data   (query-fn tx (select-keys input query-keys))]
+  (let [query-in (dissoc input :last-modified :document)
+        old-data (query-fn tx query-in)]
     (if-some [old-doc (some->> old-data :document)]
       (let [old-json (cu/wrapped-parse-json "stored document" old-doc)
             new-json (cu/wrapped-parse-json "new document" (:document input))]
@@ -96,20 +97,24 @@
   "Query a single document from the DB. Returns either a map containing the
    document as a byte array, or nil if not found."
   [tx {:keys [table] :as input}]
-  (let [res (case table
-              :state-document
-              (f/query-state-document tx input)
-              :agent-profile-document
-              (f/query-agent-profile-document tx input)
-              :activity-profile-document
-              (f/query-activity-profile-document tx input)
-              ;; Else
-              (cu/throw-invalid-table-ex "query-document" input))]
-    {:contents       (-> res :document)
-     :content-length (-> res :document count)
-     :content-type   "application/octet-stream" ; TODO
-     :id             (or (:state_id res) (:profile_id res))
-     :updated        (:last_modified res)}))
+  (when-some [res (case table
+                    :state-document
+                    (f/query-state-document tx input)
+                    :agent-profile-document
+                    (f/query-agent-profile-document tx input)
+                    :activity-profile-document
+                    (f/query-activity-profile-document tx input)
+                    ;; Else
+                    (cu/throw-invalid-table-ex "query-document" input))]
+    (let [{document   :document
+           state-id   :state_id
+           profile-id :profile_id
+           updated    :last_modified} res]
+      {:contents       document
+       :content-length (count document)
+       :content-type   "application/octet-stream" ; TODO
+       :id             (or state-id profile-id)
+       :updated        updated})))
 
 ;; TODO: The LRS should also return last modified info.
 ;; However, this is not supported in Milt's LRS spec.

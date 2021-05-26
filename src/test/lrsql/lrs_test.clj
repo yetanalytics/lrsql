@@ -257,16 +257,30 @@
       (drop-all! tx))
     (component/stop sys')))
 
-(def doc-id-params
+(def state-id-params
   {:stateId    "some-id"
    :activityId "https://example.org/activity-type"
    :agent      {"mbox" "mailto:example@example.org"}})
 
-(def doc-1
-  "{\"foo\":1,\"bar\":2}")
+(def state-doc-1
+  {:content-length 17
+   :content-type   "application/json"
+   :contents       (.getBytes "{\"foo\":1,\"bar\":2}")})
 
-(def doc-2
-  "{\"foo\":10}")
+(def state-doc-2
+  {:content-length 10
+   :content-type   "application/json"
+   :contents       (.getBytes "{\"foo\":10}")})
+
+(def agent-prof-id-params
+  {:profileId "https://example.org/some-profile"
+   :agent     {"mbox" "mailto:foo@example.org"
+               "name" "Foo Bar"}})
+
+(def agent-prof-doc
+  {:content-length 16
+   :content-type   "text/plain"
+   :contents       (.getBytes "Example Document")})
 
 (deftest test-document-fns
   (let [_     (support/assert-in-mem-db)
@@ -277,41 +291,58 @@
       (is (= {}
              (lrsp/-set-document lrs
                                  {}
-                                 doc-id-params
-                                 (.getBytes doc-1)
-                                 false)))
+                                 state-id-params
+                                 state-doc-1
+                                 true)))
       (is (= {}
              (lrsp/-set-document lrs
                                  {}
-                                 doc-id-params
-                                 (.getBytes doc-2)
-                                 true))))
+                                 state-id-params
+                                 state-doc-2
+                                 true)))
+      (is (= {}
+             (lrsp/-set-document lrs
+                                 {}
+                                 agent-prof-id-params
+                                 agent-prof-doc
+                                 false))))
     (testing "document query"
       (is (= {:contents        "{\"foo\":10,\"bar\":2}"
               :content-length 18
               :content-type   "application/octet-stream" ; TODO
               :id             "some-id"}
-             (-> (lrsp/-get-document lrs {} doc-id-params)
+             (-> (lrsp/-get-document lrs {} state-id-params)
                  (dissoc :updated)
                  (update :contents #(String. %))))))
     (testing "document ID query"
       (is (= {:document-ids ["some-id"]}
              (lrsp/-get-document-ids lrs
                                      {}
-                                     (dissoc doc-id-params :stateId)))))
+                                     (dissoc state-id-params :stateId))))
+      (is (= {:document-ids ["https://example.org/some-profile"]}
+             (lrsp/-get-document-ids lrs
+                                     {}
+                                     (dissoc agent-prof-id-params
+                                             :profileId)))))
     (testing "document deletion"
       (is (= {}
              (lrsp/-delete-document lrs
                                     {}
-                                    doc-id-params)))
+                                    state-id-params)))
       (is (= {} ; second delete should do nothing in DB
              (lrsp/-delete-documents lrs
                                      {}
-                                     (dissoc doc-id-params :stateId))))
+                                     (dissoc state-id-params :stateId))))
       (is (= {:document-ids []}
              (lrsp/-get-document-ids lrs
                                      {}
-                                     (dissoc doc-id-params :stateId)))))
+                                     (dissoc state-id-params :stateId)))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))
+
+(comment
+  (def sys (component/start (system/system)))
+  (def lrs (:lrs sys))
+  (lrsp/-get-document lrs {} state-id-params)
+  (component/stop sys))
