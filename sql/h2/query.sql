@@ -22,15 +22,15 @@ SELECT xapi_statement.id, payload FROM xapi_statement
        "\nAND statement_to_activity.usage = 'Object'")))
 ~*/
 WHERE 1
---~ (when (:statement-id params)    "AND xapi_statement.statement_id = :statement-id")
---~ (when (:from params)            "AND xapi_statement.id >= :from")
---~ (when (some? (:voided? params)) "AND is_voided = :voided?")
---~ (when (:verb-iri params)        "AND verb_iri = :verb-iri")
---~ (when (:registration params)    "AND registration = :registration")
---~ (when (:since params)           "AND stored > :since")
---~ (when (:until params)           "AND stored <= :until")
---~ (when (:ascending? params)      "ORDER BY stored")
---~ (when (:limit params)           "LIMIT :limit")
+--~ (if (some? (:voided? params)) "AND is_voided = :voided?" "AND is_voided = FALSE")
+--~ (when (:statement-id params)  "AND xapi_statement.statement_id = :statement-id")
+--~ (when (:from params)          "AND xapi_statement.id >= :from")
+--~ (when (:verb-iri params)      "AND verb_iri = :verb-iri")
+--~ (when (:registration params)  "AND registration = :registration")
+--~ (when (:since params)         "AND stored > :since")
+--~ (when (:until params)         "AND stored <= :until")
+--~ (when (:ascending? params)    "ORDER BY stored")
+--~ (when (:limit params)         "LIMIT :limit")
 
 /* Statement Object Queries */
 
