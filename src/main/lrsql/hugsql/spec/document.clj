@@ -47,13 +47,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; State-Document
-;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - state_id:      STRING NOT NULL
-;; - activity_iri:  STRING NOT NULL
-;; - agent_ifi:     STRING NOT NULL
-;; - registration:  UUID
-;; - last_modified: TIMESTAMP NOT NULL
-;; - contents:      BINARY NOT NULL
+;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - state_id:       STRING NOT NULL
+;; - activity_iri:   STRING NOT NULL
+;; - agent_ifi:      STRING NOT NULL
+;; - registration:   UUID
+;; - last_modified:  TIMESTAMP NOT NULL
+;; - content_type:   STRING NOT NULL
+;; - content_length: INTEGER NOT NULL
+;; - contents:       BINARY NOT NULL
 
 (def state-doc-insert-spec
   (s/keys :req-un [::primary-key
@@ -67,11 +69,13 @@
                    ::contents]))
 
 ;; Agent-Profile-Document
-;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - profile_id:    STRING NOT NULL
-;; - agent_ifi:     STRING NOT NULL
-;; - last_modified: TIMESTAMP NOT NULL
-;; - contents:      BINARY NOT NULL
+;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - profile_id:     STRING NOT NULL
+;; - agent_ifi:      STRING NOT NULL
+;; - last_modified:  TIMESTAMP NOT NULL
+;; - content_type:   STRING NOT NULL
+;; - content_length: INTEGER NOT NULL
+;; - contents:       BINARY NOT NULL
 
 (def agent-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
@@ -83,11 +87,13 @@
                    ::contents]))
 
 ;; Activity-Profile-Resource
-;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - profile_id:    STRING NOT NULL
-;; - activity_iri:  STRING NOT NULL
-;; - last_modified: TIMESTAMP NOT NULL
-;; - contents:      BINARY NOT NULL
+;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - profile_id:     STRING NOT NULL
+;; - activity_iri:   STRING NOT NULL
+;; - last_modified:  TIMESTAMP NOT NULL
+;; - content_type:   STRING NOT NULL
+;; - content_length: INTEGER NOT NULL
+;; - contents:       BINARY NOT NULL
 
 (def activity-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
