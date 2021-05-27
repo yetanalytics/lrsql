@@ -457,7 +457,7 @@
                         (min limit
                              limit-max)
                         ;; if zero, spec says use max
-                        (zero? limit)
+                        (and limit (zero? limit))
                         limit-max
                         ;; otherwise default
                         :else
