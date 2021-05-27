@@ -1,5 +1,13 @@
 /* Statement Queries */
 
+-- :name query-statement
+-- :command :query
+-- :result :one
+-- :doc Query for one statement using statement IDs.
+SELECT payload FROM xapi_statement
+WHERE statement_id = :statement-id
+AND --~ (if (:voided? params) "is_voided = TRUE" "is_voided = FALSE")
+
 -- :name query-statements
 -- :command :query
 -- :result :many
@@ -21,9 +29,7 @@ SELECT xapi_statement.id, payload FROM xapi_statement
       (when-not (:related-activities? params)
        "\nAND statement_to_activity.usage = 'Object'")))
 ~*/
-WHERE 1
---~ (if (some? (:voided? params)) "AND is_voided = :voided?" "AND is_voided = FALSE")
---~ (when (:statement-id params)  "AND xapi_statement.statement_id = :statement-id")
+WHERE is_voided = FALSE
 --~ (when (:from params)          "AND xapi_statement.id >= :from")
 --~ (when (:verb-iri params)      "AND verb_iri = :verb-iri")
 --~ (when (:registration params)  "AND registration = :registration")

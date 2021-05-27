@@ -74,6 +74,13 @@
                     {:kind   ::unknown-format-type
                      :format format}))))
 
+(defn- query-res->statement
+  [format ltags query-res]
+  (-> query-res
+      :payload
+      u/parse-json
+      (format-stmt format ltags)))
+
 (defn- conform-attachment-res
   [{att-sha      :attachment_sha
     content-type :content_type
@@ -84,6 +91,49 @@
    :contentType content-type
    :content     contents})
 
+(defn- query-one-statement
+  "Query a single statement from the DB, using the `:statement-id` parameter."
+  [tx input ltags]
+  (let [{:keys [format attachments?] :or {format :exact}} input
+        query-result (f/query-statement tx input)
+        statement   (when query-result
+                           (query-res->statement format ltags query-result))
+        attachments (when (and statement attachments?)
+                      (->> {:statement-id (get statement "id")}
+                           (f/query-attachments tx)
+                           conform-attachment-res))]
+    (cond-> {}
+      statement   (assoc :statement statement)
+      attachments (assoc :attachments attachments))))
+
+(defn- query-many-statements
+  "Query potentially multiple statements from the DB."
+  [tx input ltags]
+  (let [{:keys [format limit attachments?]
+         :or   {format :exact}} input
+        input'        (if limit (update input :limit inc) input)
+        query-results (f/query-statements tx input')
+        next-cursor   (if (and limit
+                               (= (inc limit) (count query-results)))
+                        (-> query-results last :id u/uuid->str)
+                        "")
+        stmt-results  (map (partial query-res->statement format ltags)
+                           (if (not-empty next-cursor)
+                             (butlast query-results)
+                             query-results))
+        att-results   (if attachments?
+                        (->> (doall (map (fn [stmt]
+                                           (->> (get stmt "id")
+                                                (assoc {} :statement-id)
+                                                (f/query-attachments tx)))
+                                         stmt-results))
+                             (apply concat)
+                             (map conform-attachment-res))
+                        [])]
+    {:statement-result {:statements stmt-results
+                        :more       next-cursor}
+     :attachments      att-results}))
+
 (defn query-statements
   "Query statements from the DB. Return a map containing a singleton
    `:statement` if a statement ID is included in the query, or a
@@ -93,46 +143,10 @@
    Note that the `:more` property of `:statement-result` returned is a
    statement PK, NOT the full URL."
   [tx input ltags]
-  (let [{:keys [format limit]
-         :or {format :exact}} input
-        ;; If `limit` is present, we need to query one more in order to
-        ;; know if there are additional results that can be queried later.
-        input'        (if limit (update input :limit inc) input)
-        query-results (->> input'
-                           (f/query-statements tx))
-        ;; We can use the statement PKs as cursors since they are always
-        ;; sequential (as SQUUIDs) and unique.
-        next-cursor   (when (and limit
-                                 (= (inc limit) (count query-results)))
-                        (-> query-results last :id u/uuid->str))
-        stmt-results  (map (fn [query-res]
-                             (-> query-res
-                                 :payload
-                                 u/parse-json
-                                 (format-stmt format ltags)))
-                           (if next-cursor
-                             (butlast query-results)
-                             query-results))
-        att-results   (if (:attachments? input)
-                        (->> (doall (map (fn [stmt]
-                                           (->> (get stmt "id")
-                                                (assoc {} :statement-id)
-                                                (f/query-attachments tx)))
-                                         stmt-results))
-                             (apply concat)
-                             (map conform-attachment-res))
-                        [])]
-    (if (:statement-id input)
-      ;; Singleton statement
-      (cond-> {}
-        (not-empty stmt-results)
-        (assoc :statement (first stmt-results))
-        (and (not-empty stmt-results) (not-empty att-results))
-        (assoc :attachments att-results))
-      ;; Multiple statements
-      {:statement-result {:statements stmt-results
-                          :more       (if next-cursor next-cursor "")}
-       :attachments      att-results})))
+  (let [{:keys [statement-id]} input]
+    (if statement-id
+      (query-one-statement tx input ltags)
+      (query-many-statements tx input ltags))))
 
 (defn query-statement-refs
   "Query Statement References from the DB. In addition to the immediate

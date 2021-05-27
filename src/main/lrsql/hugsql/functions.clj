@@ -68,6 +68,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Statements + Statement Objects
+(declare query-statement)
 (declare query-statements)
 (declare query-agent) ; no `query-actor`
 (declare query-activity)
