@@ -4,12 +4,13 @@
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec.statement :as hs]
             [lrsql.hugsql.util :as u]
-            [lrsql.hugsql.util.actor :as ua]))
+            [lrsql.hugsql.util.actor :as ua]
+            [config.core :as config]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Actor/Activity Insertion 
+;; Actor/Activity Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef actor-insert-input
@@ -437,17 +438,31 @@
     atts?       :attachments
     format      :format
     from        :from}] ; Not a stmt res param; added by lrsql for pagination
-  (let [stmt-id     (when stmt-id (u/str->uuid stmt-id))
-        vstmt-id    (when vstmt-id (u/str->uuid vstmt-id))
-        reg         (when reg (u/str->uuid reg))
-        since       (when since (u/str->time since))
-        until       (when until (u/str->time until))
-        rel-actors? (boolean rel-actors?)
-        rel-activs? (boolean rel-activs?)
-        actor-ifi   (when actor (ua/actor->ifi actor))
-        format      (when format (keyword format))
-        limit       (when (and (int? limit) (not (zero? limit))) limit) ; "0" = no limit
-        from        (when from (u/str->uuid from))]
+  (let [stmt-id       (when stmt-id (u/str->uuid stmt-id))
+        vstmt-id      (when vstmt-id (u/str->uuid vstmt-id))
+        reg           (when reg (u/str->uuid reg))
+        since         (when since (u/str->time since))
+        until         (when until (u/str->time until))
+        rel-actors?   (boolean rel-actors?)
+        rel-activs?   (boolean rel-activs?)
+        actor-ifi     (when actor (ua/actor->ifi actor))
+        format        (when format (keyword format))
+        ;; TODO: env defaults out of code.. Aero?
+        ;; TODO: reevaluate defaults
+        limit-max     (:stmt-get-max config/env 100)
+        limit-default (:stmt-get-default config/env 100)
+        limit         (cond
+                        ;; ensure limit is =< max
+                        (pos-int? limit)
+                        (min limit
+                             limit-max)
+                        ;; if zero, spec says use max
+                        (and limit (zero? limit))
+                        limit-max
+                        ;; otherwise default
+                        :else
+                        limit-default)
+        from          (when from (u/str->uuid from))]
     (cond-> {}
       stmt-id   (merge {:statement-id stmt-id :voided? false})
       vstmt-id  (merge {:statement-id vstmt-id :voided? true})

@@ -4,4 +4,6 @@
  :db-name      "example"
 ;;  :db-host      ""
  :db-schema "lrsql"
+ :stmt-get-default 100
+ :stmt-get-max     100
  }
