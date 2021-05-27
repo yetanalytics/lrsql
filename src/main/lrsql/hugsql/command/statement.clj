@@ -147,12 +147,12 @@
     (let [stmt-id (:statement-id input)]
       ;; Find ancestors of the referenced Statement, and make those
       ;; the ancestors of the referencing Statement.
-      (->> (f/query-statement-ancestors tx {:statement-id sref-id})
+      (->> (f/query-statement-ancestors tx {:descendant-id sref-id})
            (map (fn [{ancestor-id :ancestor_id}]
-                  {:table        :statement-to-statement
-                   :statement-id stmt-id
-                   :ancestor-id  ancestor-id}))
-           (concat [{:table        :statement-to-statement
-                     :statement-id stmt-id
-                     :ancestor-id  sref-id}])))
+                  {:table         :statement-to-statement
+                   :descendant-id stmt-id
+                   :ancestor-id   ancestor-id}))
+           (concat [{:table         :statement-to-statement
+                     :descendant-id stmt-id
+                     :ancestor-id   sref-id}])))
     (lazy-seq [])))

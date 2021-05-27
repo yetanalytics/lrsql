@@ -34,7 +34,7 @@
 (declare insert-attachment!)
 (declare insert-statement-to-actor!)
 (declare insert-statement-to-activity!)
-
+(declare insert-statement-to-statement!)
 
 ;; Documents
 (declare insert-state-document!)

@@ -402,7 +402,7 @@
          (conj acc (attachment-insert-input (u/str->uuid stmt-id)
                                             attachment))
          (throw (ex-info "Attachment is not associated with a Statement in request."
-                         {:kind ::invalid-attachment
+                         {:kind       ::invalid-attachment
                           :attachment attachment
                           :statements statements}))))
      '()

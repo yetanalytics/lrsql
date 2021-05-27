@@ -31,7 +31,9 @@
 
 ;; Statement IDs
 (s/def ::statement-id uuid?)
-(s/def ::?statement-ref-id (s/nilable uuid?))
+(s/def ::?statement-ref-id (s/nilable ::statement-id))
+(s/def ::ancestor-id ::statement-id)
+(s/def ::descendant-id ::statement-id)
 
 ;; Timestamp
 (s/def ::stored inst?)
@@ -214,6 +216,11 @@
 
 (def attachment-insert-seq-spec
   (s/* attachment-insert-spec))
+
+(def statement-to-statement-insert-spec
+  (s/keys :req-un [::primary-key
+                   ::ancestor-id
+                   ::descendant-id]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Queries

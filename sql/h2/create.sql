@@ -79,11 +79,11 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
 -- :command :execute
 -- :doc Create the `statement_to_statement` link table, used for StatementRef associations, if it doesn't exist yet.
 CREATE TABLE IF NOT EXISTS statement_to_statement (
-  id           UUID NOT NULL PRIMARY KEY,
-  statement_id UUID NOT NULL,
-  ancestor_id  UUID NOT NULL,
-  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
-  FOREIGN KEY (ancestor_id) REFERENCES xapi_statement(statement_id)
+  id            UUID NOT NULL PRIMARY KEY,
+  ancestor_id   UUID NOT NULL,
+  descendant_id UUID NOT NULL,
+  FOREIGN KEY (ancestor_id) REFERENCES xapi_statement(statement_id),
+  FOREIGN KEY (descendant_id) REFERENCES xapi_statement(statement_id)
 )
 
 /* Document Tables */
