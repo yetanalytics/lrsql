@@ -438,23 +438,33 @@
     atts?       :attachments
     format      :format
     from        :from}] ; Not a stmt res param; added by lrsql for pagination
-  (let [stmt-id     (when stmt-id (u/str->uuid stmt-id))
-        vstmt-id    (when vstmt-id (u/str->uuid vstmt-id))
-        reg         (when reg (u/str->uuid reg))
-        since       (when since (u/str->time since))
-        until       (when until (u/str->time until))
-        rel-actors? (boolean rel-actors?)
-        rel-activs? (boolean rel-activs?)
-        actor-ifi   (when actor (ua/actor->ifi actor))
-        format      (when format (keyword format))
-        limit       (or
-                     (and limit
+  (let [stmt-id       (when stmt-id (u/str->uuid stmt-id))
+        vstmt-id      (when vstmt-id (u/str->uuid vstmt-id))
+        reg           (when reg (u/str->uuid reg))
+        since         (when since (u/str->time since))
+        until         (when until (u/str->time until))
+        rel-actors?   (boolean rel-actors?)
+        rel-activs?   (boolean rel-activs?)
+        actor-ifi     (when actor (ua/actor->ifi actor))
+        format        (when format (keyword format))
+        ;; TODO: env defaults out of code.. Aero?
+        ;; TODO: reevaluate defaults
+        limit-max     (:stmt-get-max config/env 100)
+        limit-default (:stmt-get-default config/env 100)
+        limit         (or
+                       (and
+                        limit
+                        (or
+                         (and
                           (pos-int? limit)
                           (min limit
-                               ;; TODO: defaults out of code.. Aero?
-                               (:stmt-get-limit-max config/env 1000)))
-                     (:stmt-get-limit-default config/env 50))
-        from        (when from (u/str->uuid from))]
+                               limit-max))
+                         (and
+                          (zero? limit)
+                          limit-max)))
+                       ;; otherwise, if missing, default
+                       limit-default)
+        from          (when from (u/str->uuid from))]
     (cond-> {}
       stmt-id   (merge {:statement-id stmt-id :voided? false})
       vstmt-id  (merge {:statement-id vstmt-id :voided? true})
