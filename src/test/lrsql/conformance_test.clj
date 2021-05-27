@@ -30,40 +30,50 @@
           ;; explode the logs, keeping :depth
           tests (support/tests-seq logs)
           code-set (support/req-code-set
-                    tests)]
-      (is
-       (= #{"XAPI-00183"
-            "XAPI-00217"
-            "XAPI-00288"
-            "XAPI-00278"
-            "XAPI-00282"
-            "XAPI-00192"
-            "XAPI-00281"
-            "XAPI-00274"
-            "XAPI-00322"
-            "XAPI-00234"
-            "XAPI-00233"
-            "XAPI-00313"
-            "XAPI-00269"
-            "XAPI-00126"
-            "XAPI-00220"
-            "XAPI-00164"
-            "XAPI-00162"
-            "XAPI-00290"
-            "XAPI-00188"
-            "XAPI-00254"
-            "XAPI-00232"
-            "XAPI-00279"
-            "XAPI-00154"
-            "XAPI-00229"
-            "XAPI-00280"
-            "XAPI-00125"
-            "XAPI-00310"
-            "XAPI-00184"
-            "XAPI-00308"
-            "XAPI-00259"
-            "XAPI-00127"
-            "XAPI-00314"
-            "XAPI-00309"}
-          code-set))
+                    tests)
+          error-count (count (keep :error tests))]
+      (testing "Error count has not increased"
+          (is (>= 50
+                  error-count)))
+      (testing "Known failures"
+          (is
+           (= #{"XAPI-00125"
+                "XAPI-00126"
+                "XAPI-00127"
+                "XAPI-00154" ;; TODO: broken by stmt-get-max/default
+                ;; An LRS’s Statement API upon processing a successful GET request
+                ;; with neither a “statementId” nor a “voidedStatementId” parameter,
+                ;; returns code 200 OK and a StatementResult Object.
+                "XAPI-00162"
+                "XAPI-00164" ;; TODO: broken by stmt-get-max/default
+                ;; The Statements within the “statements” property will correspond
+                ;; to the filtering criterion sent in with the GET reques
+                "XAPI-00183"
+                "XAPI-00184"
+                "XAPI-00188"
+                "XAPI-00192"
+                "XAPI-00217"
+                "XAPI-00220"
+                "XAPI-00229"
+                "XAPI-00232"
+                "XAPI-00233"
+                "XAPI-00234"
+                "XAPI-00254"
+                "XAPI-00259"
+                "XAPI-00269"
+                "XAPI-00274"
+                "XAPI-00278"
+                "XAPI-00279"
+                "XAPI-00280"
+                "XAPI-00281"
+                "XAPI-00282"
+                "XAPI-00288"
+                "XAPI-00290"
+                "XAPI-00308"
+                "XAPI-00309"
+                "XAPI-00310"
+                "XAPI-00313"
+                "XAPI-00314"
+                "XAPI-00322"}
+              code-set)))
       (component/stop sys'))))
