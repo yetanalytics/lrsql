@@ -29,7 +29,7 @@
 (def stmt-2
   {"id"     "3f5f3c7d-c786-4496-a3a8-6d6e4461aa9d"
    "actor"  {"account"    {"name"     "Sample Agent 2"
-                           "homepage" "https://example.org"}
+                           "homePage" "https://example.org"}
              "name"       "Sample Agent 2"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/voided"
