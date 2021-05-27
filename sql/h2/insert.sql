@@ -70,7 +70,7 @@ activity_iri = :activity-iri
 -- :result :affected
 -- :doc Insert a new statement-to-statement relation, where `:ancestor-id` is a previously-inserted statement.
 INSERT INTO statement_to_statement SET
-id = :primary-key
+id = :primary-key,
 ancestor_id = :ancestor-id,
 descendant_id = :descendant-id
 

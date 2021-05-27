@@ -148,25 +148,30 @@
       (query-one-statement tx input ltags)
       (query-many-statements tx input ltags))))
 
+(defn- query-statement-refs*
+  [tx input]
+  (when-some [sref-id (:?statement-ref-id input)]
+    (let [stmt-id (:statement-id input)]
+      ;; Find ancestors of the referenced Statement, and make those
+      ;; the ancestors of the referencing Statement.
+      (->> (f/query-statement-ancestors tx {:descendant-id sref-id})
+           (map :ancestor_id)
+           (concat [sref-id])
+           (map (fn [ancestor-id]
+                  {:table         :statement-to-statement
+                   :primary-key   (u/generate-squuid)
+                   :descendant-id stmt-id
+                   :ancestor-id   ancestor-id}))))))
+
 (defn query-statement-refs
   "Query Statement References from the DB. In addition to the immediate
    references given by `:?statement-ref-id`, it returns ancestral
    references, i.e. not only the Statement referenced by `:?statement-ref-id`,
    but the Statement referenced by _that_, and so on. The return value
-   is a lazy seq of maps with `:statement-id` and `:ancestor-id` properties,
-   where `:statement-id` is the same as in `input`; these maps serve as
+   is a lazy seq of maps with `:descendant-id` and `:ancestor-id` properties,
+   where `:descendant-id` is the same as in `input`; these maps serve as
    additional inputs for `insert-statements!`."
-  [tx input]
-  (if-some [sref-id (:?statement-ref-id input)]
-    (let [stmt-id (:statement-id input)]
-      ;; Find ancestors of the referenced Statement, and make those
-      ;; the ancestors of the referencing Statement.
-      (->> (f/query-statement-ancestors tx {:descendant-id sref-id})
-           (map (fn [{ancestor-id :ancestor_id}]
-                  {:table         :statement-to-statement
-                   :descendant-id stmt-id
-                   :ancestor-id   ancestor-id}))
-           (concat [{:table         :statement-to-statement
-                     :descendant-id stmt-id
-                     :ancestor-id   sref-id}])))
-    (lazy-seq [])))
+  [tx inputs]
+  (->> inputs
+       (mapcat (partial query-statement-refs* tx))
+       (filter some?)))

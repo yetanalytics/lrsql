@@ -46,7 +46,7 @@
      (jdbc/with-transaction [tx (conn)]
        (let [sref-inputs (stmt-command/query-statement-refs tx stmt-inputs)]
          (stmt-command/insert-statements! tx (concat stmt-inputs
-                                                     #_sref-inputs
+                                                     sref-inputs
                                                      att-inputs))))))
   (-get-statements
    [lrs auth-identity params ltags]

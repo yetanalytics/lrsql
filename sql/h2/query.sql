@@ -94,9 +94,9 @@ WHERE activity_iri = :activity-iri
 -- :name query-statement-ancestors
 -- :command :query
 -- :result :many
--- :doc Query for the ancestors of a referenced `:statement-id`.
+-- :doc Query for the ancestors of a referenced `:descendant-id`.
 SELECT ancestor_id FROM statement_to_statement
-WHERE statement_id = :statement-id
+WHERE descendant_id = :descendant-id
 
 /* Attachment Queries */
 
