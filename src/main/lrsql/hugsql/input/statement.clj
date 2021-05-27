@@ -451,19 +451,17 @@
         ;; TODO: reevaluate defaults
         limit-max     (:stmt-get-max config/env 100)
         limit-default (:stmt-get-default config/env 100)
-        limit         (or
-                       (and
-                        limit
-                        (or
-                         (and
-                          (pos-int? limit)
-                          (min limit
-                               limit-max))
-                         (and
-                          (zero? limit)
-                          limit-max)))
-                       ;; otherwise, if missing, default
-                       limit-default)
+        limit         (cond
+                        ;; ensure limit is =< max
+                        (pos-int? limit)
+                        (min limit
+                             limit-max)
+                        ;; if zero, spec says use max
+                        (zero? limit)
+                        limit-max
+                        ;; otherwise default
+                        :else
+                        limit-default)
         from          (when from (u/str->uuid from))]
     (cond-> {}
       stmt-id   (merge {:statement-id stmt-id :voided? false})
