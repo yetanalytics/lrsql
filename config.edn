@@ -4,4 +4,6 @@
  :db-name      "example"
 ;;  :db-host      ""
  :db-schema "lrsql"
+ :stmt-get-limit-default 50
+ :stmt-get-limit-max     1000
  }

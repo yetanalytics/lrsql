@@ -446,7 +446,13 @@
         rel-activs? (boolean rel-activs?)
         actor-ifi   (when actor (ua/actor->ifi actor))
         format      (when format (keyword format))
-        limit       (when (and (int? limit) (not (zero? limit))) limit) ; "0" = no limit
+        limit       (or
+                     (and limit
+                          (pos-int? limit)
+                          (min limit
+                               ;; TODO: defaults out of code.. Aero?
+                               (:stmt-get-limit-max env 1000)))
+                     (:stmt-get-limit-default env 50))
         from        (when from (u/str->uuid from))]
     (cond-> {}
       stmt-id   (merge {:statement-id stmt-id :voided? false})
