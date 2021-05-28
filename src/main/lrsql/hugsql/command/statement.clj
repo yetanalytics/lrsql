@@ -160,8 +160,8 @@
            (map (fn [ancestor-id]
                   {:table         :statement-to-statement
                    :primary-key   (u/generate-squuid)
-                   :descendant-id stmt-id
-                   :ancestor-id   ancestor-id}))))))
+                   :descendant-id ancestor-id ; add one level to hierarchy
+                   :ancestor-id   stmt-id}))))))
 
 (defn query-statement-refs
   "Query Statement References from the DB. In addition to the immediate
