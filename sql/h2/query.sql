@@ -21,16 +21,16 @@ FROM xapi_statement stmt
   /*~
   (when (:actor-ifi params)
     (str "  INNER JOIN statement_to_actor stmt_actor\n"
-         "    ON stmt.statement_id = stmt_actor.statement_id\n"
-         "  LEFT JOIN statement_to_actor stmt_desc_actor\n"
-         "    ON stmt_desc.statement_id = stmt_desc_actor.statement_id"))
+         "    ON (stmt.statement_id = stmt_actor.statement_id\n"
+         "    OR stmt_desc.statement_id = stmt_actor.statement_id)\n"
+         "    AND stmt_actor.actor_ifi = :actor-ifi"))
   ~*/
   /*~
   (when (:activity-iri params)
-    (str "  INNER JOIN statement_to_activity stmt_activ\n"
-         "    ON stmt.statement_id = stmt_activ.statement_id\n"
-         "  LEFT JOIN statement_to_activity stmt_desc_activ\n"
-         "    ON stmt_desc.statement_id = stmt_desc_activ.statement_id"))
+    (str "  LEFT JOIN statement_to_activity stmt_activ\n"
+         "    ON (stmt.statement_id = stmt_activ.statement_id\n"
+         "    OR stmt_desc.statement_id = stmt_activ.statement_id)\n"
+         "    AND stmt_activ.activity_iri = :activ-iri"))
   ~*/
 WHERE 1
   --~ (when (:from params)  "AND stmt.id >= :from")
@@ -91,12 +91,12 @@ WHERE activity_iri = :activity-iri
 
 /* Statement Reference Queries */
 
--- :name query-statement-ancestors
+-- :name query-statement-descendants
 -- :command :query
 -- :result :many
--- :doc Query for the ancestors of a referenced `:descendant-id`.
-SELECT ancestor_id FROM statement_to_statement
-WHERE descendant_id = :descendant-id
+-- :doc Query for the descendants of a referencing `:ancestor-id`.
+SELECT descendant_id FROM statement_to_statement
+WHERE ancestor_id = :ancestor-id
 
 /* Attachment Queries */
 

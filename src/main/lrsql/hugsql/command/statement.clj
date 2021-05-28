@@ -152,15 +152,15 @@
   [tx input]
   (when-some [sref-id (:?statement-ref-id input)]
     (let [stmt-id (:statement-id input)]
-      ;; Find ancestors of the referenced Statement, and make those
-      ;; the ancestors of the referencing Statement.
-      (->> (f/query-statement-ancestors tx {:descendant-id sref-id})
-           (map :ancestor_id)
+      ;; Find descendants of the referenced Statement, and make those
+      ;; the descendants of the referencing Statement.
+      (->> (f/query-statement-descendants tx {:ancestor-id sref-id})
+           (map :descendant_id)
            (concat [sref-id])
-           (map (fn [ancestor-id]
+           (map (fn [descendant-id]
                   {:table         :statement-to-statement
                    :primary-key   (u/generate-squuid)
-                   :descendant-id ancestor-id ; add one level to hierarchy
+                   :descendant-id descendant-id ; add one level to hierarchy
                    :ancestor-id   stmt-id}))))))
 
 (defn query-statement-refs

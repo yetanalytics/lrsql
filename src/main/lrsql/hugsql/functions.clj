@@ -79,7 +79,7 @@
 (declare query-activity-exists)
 
 ;; Statement References
-(declare query-statement-ancestors)
+(declare query-statement-descendants)
 
 ;; Documents
 (declare query-state-document)
