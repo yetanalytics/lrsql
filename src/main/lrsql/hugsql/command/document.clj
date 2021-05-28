@@ -81,7 +81,8 @@
                   new-input (-> input
                                 (assoc :contents new-data)
                                 (assoc :content-length (count new-data)))]
-              (update-fn! tx new-input))
+              (do (update-fn! tx new-input)
+                  {}))
             {:error
              (ex-info "Invalid Merge"
                       {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
@@ -94,7 +95,8 @@
                   {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
                    :old-doc old-doc
                    :new-doc input})})
-      (insert-fn! tx input))))
+      (do (insert-fn! tx input)
+          {}))))
 
 (defn update-document!
   "Update the document given by `input` if found, inserts a new document
