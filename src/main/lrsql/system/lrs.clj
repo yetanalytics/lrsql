@@ -49,7 +49,7 @@
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)
          coerced-params (-> params
-                            stmt-util/default-max-limit)
+                            stmt-util/ensure-default-max-limit)
          inputs (stmt-input/statement-query-input
                  coerced-params)]
      (jdbc/with-transaction [tx (conn)]

@@ -61,7 +61,7 @@
                    (form-encode (assoc params :from stmt-id))))
     stmt-query-result))
 
-(defn default-max-limit
+(defn ensure-default-max-limit
   "Apply default/max limit to params"
   [{:keys [limit]
     :as params}]
