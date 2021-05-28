@@ -327,24 +327,24 @@
                :content-type   "application/json"
                :id             "some-id"}}
              (-> (lrsp/-get-document lrs {} state-id-params)
-                 (dissoc :updated)
-                 (update :contents #(String. %)))))
+                 (update :document dissoc :updated)
+                 (update-in [:document :contents] #(String. %)))))
       (is (= {:document
               {:contents       "Example Document"
                :content-length 16
                :content-type   "text/plain"
                :id             "https://example.org/some-profile"}}
              (-> (lrsp/-get-document lrs {} agent-prof-id-params)
-                 (dissoc :updated)
-                 (update :contents #(String. %)))))
+                 (update :document dissoc :updated)
+                 (update-in [:document :contents] #(String. %)))))
       (is (= {:document
               {:contents       "Example Document 2"
                :content-length 18
                :content-type   "text/plain"
                :id             "https://example.org/some-profile"}}
              (-> (lrsp/-get-document lrs {} activity-prof-id-params)
-                 (dissoc :updated)
-                 (update :contents #(String. %))))))
+                 (update :document dissoc :updated)
+                 (update-in [:document :contents] #(String. %))))))
     (testing "document ID query"
       (is (= {:document-ids ["some-id"]}
              (lrsp/-get-document-ids lrs
