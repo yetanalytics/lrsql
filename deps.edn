@@ -34,6 +34,6 @@
                  :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
                 com.yetanalytics.lrs/test-runner
                 {:git/url "git@github.com:yetanalytics/lrs-test-runner.git"
-                 :sha "33b408d5b80a0334e2a226afca638f1b62eb879d"}}
+                 :sha "8bd5be7816288e85f5c07fc11bf8cf53667e72da"}}
    :exec-fn cognitect.test-runner.api/test
    :exec-args {:dirs ["src/test"]}}}}
