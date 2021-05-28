@@ -321,24 +321,27 @@
                                  activity-prof-doc
                                  false))))
     (testing "document query"
-      (is (= {:contents       "{\"foo\":10,\"bar\":2}"
-              :content-length 18
-              :content-type   "application/json"
-              :id             "some-id"}
+      (is (= {:document
+              {:contents       "{\"foo\":10,\"bar\":2}"
+               :content-length 18
+               :content-type   "application/json"
+               :id             "some-id"}}
              (-> (lrsp/-get-document lrs {} state-id-params)
                  (dissoc :updated)
                  (update :contents #(String. %)))))
-      (is (= {:contents       "Example Document"
-              :content-length 16
-              :content-type   "text/plain"
-              :id             "https://example.org/some-profile"}
+      (is (= {:document
+              {:contents       "Example Document"
+               :content-length 16
+               :content-type   "text/plain"
+               :id             "https://example.org/some-profile"}}
              (-> (lrsp/-get-document lrs {} agent-prof-id-params)
                  (dissoc :updated)
                  (update :contents #(String. %)))))
-      (is (= {:contents       "Example Document 2"
-              :content-length 18
-              :content-type   "text/plain"
-              :id             "https://example.org/some-profile"}
+      (is (= {:document
+              {:contents       "Example Document 2"
+               :content-length 18
+               :content-type   "text/plain"
+               :id             "https://example.org/some-profile"}}
              (-> (lrsp/-get-document lrs {} activity-prof-id-params)
                  (dissoc :updated)
                  (update :contents #(String. %))))))
