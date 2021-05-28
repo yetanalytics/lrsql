@@ -32,9 +32,6 @@
           code-set (support/req-code-set
                     tests)
           error-count (count (keep :error tests))]
-      (testing "Error count has not increased"
-          (is (>= 50
-                  error-count)))
       (testing "Known failures"
           (is
            (= #{"XAPI-00125"
