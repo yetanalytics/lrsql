@@ -157,7 +157,10 @@
 
 (def stateful-failures
   "XAPI conformance codes that fail when run with other tests"
-  #{"XAPI-00164"})
+  #{"XAPI-00164"
+    ;; The Statements within the "statements" property will correspond
+    ;; to the filtering criterion sent in with the GET request
+    })
 
 (t/use-fixtures :each support/fresh-db-fixture)
 
