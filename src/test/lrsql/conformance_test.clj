@@ -30,8 +30,7 @@
           ;; explode the logs, keeping :depth
           tests (support/tests-seq logs)
           code-set (support/req-code-set
-                    tests)
-          error-count (count (keep :error tests))]
+                    tests)]
       (testing "Known failures"
           (is
            (= #{"XAPI-00125"
