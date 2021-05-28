@@ -20,6 +20,6 @@
            "-e" "http://localhost:8080/xapi" "-b" "-z"
 
            ;; zero in on specific tests using grep:
-           "-g" "XAPI-00154" ;; failing post SQL-29, fix for global limit default/max
+           "-g" "XAPI-00164"
            ))
       (component/stop sys'))))
