@@ -8,9 +8,11 @@
             [com.yetanalytics.lrs.test-runner :as conf]
             [lrsql.test-support :as support]
             [clojure.string :as cs]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clojure.set :as cset]))
 
 (def known-failures
+  "XAPI conformance codes that we know fail in isolation"
   #{"XAPI-00125"
     ;; An LRS responds to a HEAD request in the same way as a GET
     ;; request, but without the message-body. This means run ALL GET
@@ -153,6 +155,12 @@
     ;; Activity Profile)
     })
 
+(def stateful-failures
+  "XAPI conformance codes that fail when run with other tests"
+  #{"XAPI-00164"})
+
+(t/use-fixtures :each support/fresh-db-fixture)
+
 (deftest conformance-test
   (support/assert-in-mem-db)
   (conf/with-test-suite
@@ -171,10 +179,31 @@
                    sys' (component/start sys)
                    ;; run test suite w/o bail
                    conformant?
-                   (conf/conformant?
-                    "-e" "http://localhost:8080/xapi" "-z"
-                    "-g" code)
+                   (binding [conf/report-sh-result (constantly nil)]
+                     (conf/conformant?
+                      "-e" "http://localhost:8080/xapi" "-z"
+                      "-g" code))
                    ;; stop capturing logs so we don't mess with test output
                    _ (log/log-uncapture!)]
                (is (not conformant?))
-               (component/stop sys')))))))))
+               (component/stop sys')))))))
+    (testing "regression"
+      (let [_ (log/log-capture!
+               'lrsql.conformance-test
+               :debug
+               :debug)
+            sys (system/system)
+            sys' (component/start sys)
+            ;; run test suite w/o bail
+            {:keys [logs]} (conf/run-test-suite
+                            "-e" "http://localhost:8080/xapi" "-z")
+            _ (log/log-uncapture!)
+            tests (support/tests-seq logs)
+            code-set (support/req-code-set
+                      tests)
+            regressions (cset/difference
+                         code-set
+                         known-failures
+                         stateful-failures)]
+        (is (empty? regressions))
+        (component/stop sys')))))
