@@ -47,19 +47,53 @@
 
 (defn- update-document!*
   "Common functionality for all cases in `update-document!`"
-  [tx input query-fn insert-fn! update-fn!]
-  (let [query-in (dissoc input :last-modified :contents)
-        old-data (query-fn tx query-in)]
-    (if-some [old-doc (some->> old-data :contents)]
-      (let [old-json  (cu/wrapped-parse-json "stored document" old-doc)
-            new-json  (cu/wrapped-parse-json "new document" (:contents input))
-            new-data  (->> (merge old-json new-json)
-                           u/write-json
-                           .getBytes)
-            new-input (-> input
-                          (assoc :contents new-data)
-                          (assoc :content-length (count new-data)))]
-        (update-fn! tx new-input))
+  [tx {new-ctype :content-type
+       :as input} query-fn insert-fn! update-fn!]
+  (let [query-in (dissoc input :last-modified :contents)]
+    (if-let [{old-ctype :content_type
+              :as old-doc} (query-fn tx query-in)]
+      (if (every? ;; an attempted merge should be json-json
+           #(.startsWith ^String % "application/json")
+           [old-ctype
+            new-ctype])
+        (let [old-json
+              (try (let [json (cu/wrapped-parse-json
+                               "stored document"
+                               (:contents old-doc))]
+                     (when (map? json)
+                       json))
+                   (catch clojure.lang.ExceptionInfo exi
+                     (if (some-> exi ex-data :kind ::cu/non-json-document)
+                       nil)))
+              new-json
+              (try (let [json (cu/wrapped-parse-json "new document"
+                                                     (:contents input))]
+                     (when (map? json)
+                       json))
+                   (catch clojure.lang.ExceptionInfo exi
+                     (if (some-> exi ex-data :kind ::cu/non-json-document)
+                       nil)))]
+          (if (and old-json
+                   new-json)
+            (let [new-data  (->> (merge old-json new-json)
+                                 u/write-json
+                                 .getBytes)
+                  new-input (-> input
+                                (assoc :contents new-data)
+                                (assoc :content-length (count new-data)))]
+              (update-fn! tx new-input))
+            {:error
+             (ex-info "Invalid Merge"
+                      {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
+                       :old-doc old-doc
+                       :new-doc input})}))
+        ;; currently this does not happen
+        ;; a content type always seems to be passed in even if one is not included
+        {:error
+         (ex-info "Invalid Merge"
+                  {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
+                   :old-doc old-doc
+                   :new-doc input})})
       (insert-fn! tx input))))
 
 (defn update-document!
@@ -87,8 +121,7 @@
                        f/insert-activity-profile-document!
                        f/update-activity-profile-document!)
     ;; Else
-    (cu/throw-invalid-table-ex "update-input!" input))
-  {})
+    (cu/throw-invalid-table-ex "update-input!" input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Query
