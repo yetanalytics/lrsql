@@ -4,8 +4,7 @@
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec.statement :as hs]
             [lrsql.hugsql.util :as u]
-            [lrsql.hugsql.util.actor :as ua]
-            [config.core :as config]))
+            [lrsql.hugsql.util.actor :as ua]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -446,21 +445,6 @@
         rel-activs?   (boolean rel-activs?)
         actor-ifi     (when actor (ua/actor->ifi actor))
         format        (when format (keyword format))
-        ;; TODO: env defaults out of code.. Aero?
-        ;; TODO: reevaluate defaults
-        limit-max     (:stmt-get-max config/env 100)
-        limit-default (:stmt-get-default config/env 100)
-        limit         (cond
-                        ;; ensure limit is =< max
-                        (pos-int? limit)
-                        (min limit
-                             limit-max)
-                        ;; if zero, spec says use max
-                        (and limit (zero? limit))
-                        limit-max
-                        ;; otherwise default
-                        :else
-                        limit-default)
         from          (when from (u/str->uuid from))]
     (cond-> {}
       stmt-id   (merge {:statement-id stmt-id :voided? false})
