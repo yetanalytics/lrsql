@@ -45,22 +45,57 @@
     (cu/throw-invalid-table-ex "delete-documents!" input))
   {})
 
+(defn- mergeable-json
+  "Checks that json is returned, and that it is mergeable"
+  [{:keys [json]}]
+  (when (and json
+             (map? json))
+    json))
+
 (defn- update-document!*
   "Common functionality for all cases in `update-document!`"
-  [tx input query-fn insert-fn! update-fn!]
-  (let [query-in (dissoc input :last-modified :contents)
-        old-data (query-fn tx query-in)]
-    (if-some [old-doc (some->> old-data :contents)]
-      (let [old-json  (cu/wrapped-parse-json "stored document" old-doc)
-            new-json  (cu/wrapped-parse-json "new document" (:contents input))
-            new-data  (->> (merge old-json new-json)
-                           u/write-json
-                           .getBytes)
-            new-input (-> input
-                          (assoc :contents new-data)
-                          (assoc :content-length (count new-data)))]
-        (update-fn! tx new-input))
-      (insert-fn! tx input))))
+  [tx {new-ctype :content-type
+       :as input} query-fn insert-fn! update-fn!]
+  (let [query-in (dissoc input :last-modified :contents)]
+    (if-let [{old-ctype :content_type
+              :as old-doc} (query-fn tx query-in)]
+      (if (every? ;; an attempted merge should be json-json
+           #(.startsWith ^String % "application/json")
+           [old-ctype
+            new-ctype])
+        (let [?old-json (mergeable-json
+                         (cu/wrapped-parse-json
+                          "stored document"
+                          (:contents old-doc)))
+
+              ?new-json (mergeable-json
+                         (cu/wrapped-parse-json
+                          "new document"
+                          (:contents input)))]
+          (if (and ?old-json
+                   ?new-json)
+            (let [new-data  (->> (merge ?old-json ?new-json)
+                                 u/write-json
+                                 .getBytes)
+                  new-input (-> input
+                                (assoc :contents new-data)
+                                (assoc :content-length (count new-data)))]
+              (do (update-fn! tx new-input)
+                  {}))
+            {:error
+             (ex-info "Invalid Merge"
+                      {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
+                       :old-doc old-doc
+                       :new-doc input})}))
+        ;; currently this does not happen
+        ;; a content type always seems to be passed in even if one is not included
+        {:error
+         (ex-info "Invalid Merge"
+                  {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
+                   :old-doc old-doc
+                   :new-doc input})})
+      (do (insert-fn! tx input)
+          {}))))
 
 (defn update-document!
   "Update the document given by `input` if found, inserts a new document
@@ -87,8 +122,7 @@
                        f/insert-activity-profile-document!
                        f/update-activity-profile-document!)
     ;; Else
-    (cu/throw-invalid-table-ex "update-input!" input))
-  {})
+    (cu/throw-invalid-table-ex "update-input!" input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Query
@@ -113,11 +147,12 @@
            state-id     :state_id
            profile-id   :profile_id
            updated      :last_modified} res]
-      {:contents       contents
-       :content-length content-len
-       :content-type   content-type
-       :id             (or state-id profile-id)
-       :updated        updated})))
+      {:document
+       {:contents       contents
+        :content-length content-len
+        :content-type   content-type
+        :id             (or state-id profile-id)
+        :updated        (u/time->str updated)}})))
 
 ;; TODO: The LRS should also return last modified info.
 ;; However, this is not supported in Milt's LRS spec.

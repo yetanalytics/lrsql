@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   id               UUID NOT NULL PRIMARY KEY,
   statement_id     UUID NOT NULL UNIQUE,
   statement_ref_id UUID,
-  stored           TIMESTAMP WITH TIME ZONE NOT NULL,
+  stored           TIMESTAMP NOT NULL,
   registration     UUID,
   verb_iri         VARCHAR(255) NOT NULL,
   is_voided        BOOLEAN DEFAULT FALSE NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS state_document (
   activity_iri   VARCHAR(255) NOT NULL,
   agent_ifi      JSON NOT NULL,
   registration   UUID DEFAULT NULL,
-  last_modified  TIMESTAMP WITH TIME ZONE NOT NULL,
+  last_modified  TIMESTAMP NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
   contents       BINARY NOT NULL
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
   id             UUID NOT NULL PRIMARY KEY,
   profile_id     VARCHAR(255) NOT NULL,
   agent_ifi      VARCHAR(255) NOT NULL,
-  last_modified  TIMESTAMP WITH TIME ZONE NOT NULL,
+  last_modified  TIMESTAMP NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
   contents       BINARY NOT NULL
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
   id             UUID NOT NULL PRIMARY KEY,
   profile_id     VARCHAR(255) NOT NULL,
   activity_iri   VARCHAR(255) NOT NULL,
-  last_modified  TIMESTAMP WITH TIME ZONE NOT NULL,
+  last_modified  TIMESTAMP NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
   contents       BINARY NOT NULL

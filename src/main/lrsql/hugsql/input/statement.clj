@@ -9,7 +9,7 @@
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Actor/Activity Insertion 
+;; Actor/Activity Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef actor-insert-input
@@ -378,7 +378,6 @@
   [statements attachments]
   ;; NOTE: Assume that the LRS has already validated that every statement
   ;; attachment object has a fileUrl or valid SHA2 value.
-  ;; NOTE: SHAs may collide, so we also equate on length and content type.
   (let [;; attachment-to-statement-id map
         att-stmt-id-m
         (reduce
@@ -388,16 +387,16 @@
                               (= "SubStatement" (get stmt-obj "objectType"))
                               (concat (get stmt-obj "attachments")))]
              (reduce
-              (fn [m' {:strs [sha2 length contentType] :as _att}]
-                (assoc m' [sha2 length contentType] stmt-id))
+              (fn [m' {:strs [sha2]}]
+                (assoc m' sha2 stmt-id))
               m
               stmt-atts')))
          {}
          statements)
         ;; attachment to statement id
         att->stmt-id
-        (fn [{:keys [sha2 length contentType] :as _att}]
-          (att-stmt-id-m [sha2 length contentType]))]
+        (fn [{:keys [sha2]}]
+          (att-stmt-id-m sha2))]
     (reduce
      (fn [acc attachment]
        (if-some [stmt-id (att->stmt-id attachment)]
@@ -439,17 +438,16 @@
     atts?       :attachments
     format      :format
     from        :from}] ; Not a stmt res param; added by lrsql for pagination
-  (let [stmt-id     (when stmt-id (u/str->uuid stmt-id))
-        vstmt-id    (when vstmt-id (u/str->uuid vstmt-id))
-        reg         (when reg (u/str->uuid reg))
-        since       (when since (u/str->time since))
-        until       (when until (u/str->time until))
-        rel-actors? (boolean rel-actors?)
-        rel-activs? (boolean rel-activs?)
-        actor-ifi   (when actor (ua/actor->ifi actor))
-        format      (when format (keyword format))
-        limit       (when (and (int? limit) (not (zero? limit))) limit) ; "0" = no limit
-        from        (when from (u/str->uuid from))]
+  (let [stmt-id       (when stmt-id (u/str->uuid stmt-id))
+        vstmt-id      (when vstmt-id (u/str->uuid vstmt-id))
+        reg           (when reg (u/str->uuid reg))
+        since         (when since (u/str->time since))
+        until         (when until (u/str->time until))
+        rel-actors?   (boolean rel-actors?)
+        rel-activs?   (boolean rel-activs?)
+        actor-ifi     (when actor (ua/actor->ifi actor))
+        format        (when format (keyword format))
+        from          (when from (u/str->uuid from))]
     (cond-> {}
       stmt-id   (merge {:statement-id stmt-id :voided? false})
       vstmt-id  (merge {:statement-id vstmt-id :voided? true})

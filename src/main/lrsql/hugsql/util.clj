@@ -6,7 +6,7 @@
             [clojure.java.io    :as io])
   (:import [java.util UUID]
            [java.time Instant]
-           [java.io ByteArrayOutputStream]))
+           [java.io StringReader PushbackReader ByteArrayOutputStream]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
@@ -187,13 +187,28 @@
 ;; JSON
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn read-str-strict
+  "Reads one JSON value from input String. Throws if there are more.."
+  [string & {:as options}]
+  (let [rdr (PushbackReader. (StringReader. string) 64)
+        obj (apply
+             json/read rdr
+             (mapcat identity options))]
+    (if (apply json/read rdr
+               (mapcat identity (assoc options
+                                       :eof-error? false)))
+      (throw (ex-info "More input after JSON object"
+                      {:type ::extra-input
+                       :json string}))
+      obj)))
+
 (defn- parse-json*
   [data]
   (cond
     (string? data)
-    (json/read-str data)
+    (read-str-strict data)
     (bytes? data) ; H2 returns JSON data as a byte array
-    (json/read-str (String.  data))))
+    (read-str-strict (String.  data))))
 ;; ^"[B"
 
 (defn parse-json
