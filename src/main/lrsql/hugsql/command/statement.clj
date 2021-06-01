@@ -42,7 +42,10 @@
     :statement-to-activity
     (do (f/insert-statement-to-activity! tx input) nil)
     :statement-to-statement
-    (do (f/insert-statement-to-statement! tx input) nil)
+    (do (let [input' {:statement-id (:descendant-id input)}
+              exists (f/query-statement-exists tx input')]
+          (when exists (f/insert-statement-to-statement! tx input)))
+        nil)
     ;; Else
     (cu/throw-invalid-table-ex "insert-statement!" input)))
 

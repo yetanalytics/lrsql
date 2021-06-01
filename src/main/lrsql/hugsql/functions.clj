@@ -75,6 +75,7 @@
 (declare query-attachments)
 
 ;; Statement Object Existence
+(declare query-statement-exists)
 (declare query-actor-exists)
 (declare query-activity-exists)
 

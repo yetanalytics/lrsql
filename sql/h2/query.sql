@@ -73,7 +73,14 @@ AND actor_type = 'Agent'
 SELECT payload FROM activity
 WHERE activity_iri = :activity-iri
 
-/* Statement Object Existence Checks */
+/* Existence Checks */
+
+-- :name query-statement-exists
+-- :command :query
+-- :result :one
+-- :doc Check for the existence of a Statement with `:statement-id`. Returns nil iff not found. Includes voided Statements.
+SELECT 1 FROM xapi_statement
+WHERE statement_id = :statement-id
 
 -- :name query-actor-exists
 -- :command :query
