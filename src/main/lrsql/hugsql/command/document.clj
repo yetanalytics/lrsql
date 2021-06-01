@@ -45,6 +45,13 @@
     (cu/throw-invalid-table-ex "delete-documents!" input))
   {})
 
+(defn- mergeable-json
+  "Checks that json is returned, and that it is mergeable"
+  [{:keys [json]}]
+  (when (and json
+             (map? json))
+    json))
+
 (defn- update-document!*
   "Common functionality for all cases in `update-document!`"
   [tx {new-ctype :content-type
@@ -56,26 +63,18 @@
            #(.startsWith ^String % "application/json")
            [old-ctype
             new-ctype])
-        (let [old-json
-              (try (let [json (cu/wrapped-parse-json
-                               "stored document"
-                               (:contents old-doc))]
-                     (when (map? json)
-                       json))
-                   (catch clojure.lang.ExceptionInfo exi
-                     (if (some-> exi ex-data :kind ::cu/non-json-document)
-                       nil)))
-              new-json
-              (try (let [json (cu/wrapped-parse-json "new document"
-                                                     (:contents input))]
-                     (when (map? json)
-                       json))
-                   (catch clojure.lang.ExceptionInfo exi
-                     (if (some-> exi ex-data :kind ::cu/non-json-document)
-                       nil)))]
-          (if (and old-json
-                   new-json)
-            (let [new-data  (->> (merge old-json new-json)
+        (let [?old-json (mergeable-json
+                         (cu/wrapped-parse-json
+                          "stored document"
+                          (:contents old-doc)))
+
+              ?new-json (mergeable-json
+                         (cu/wrapped-parse-json
+                          "new document"
+                          (:contents input)))]
+          (if (and ?old-json
+                   ?new-json)
+            (let [new-data  (->> (merge ?old-json ?new-json)
                                  u/write-json
                                  .getBytes)
                   new-input (-> input

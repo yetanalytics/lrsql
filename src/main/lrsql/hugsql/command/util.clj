@@ -1,16 +1,13 @@
 (ns lrsql.hugsql.command.util
   (:require [lrsql.hugsql.util :refer [parse-json]]))
 
-(defmacro wrapped-parse-json
-  "Wraps `parse-json` in a try-catch block, throwing ExceptionInfo containing
-   the description `data-type` on failure."
+(defn wrapped-parse-json
+  "Wraps `parse-json` in a try-catch block, returning a map with :json
+  or :exception which is the parse exception, wrapped in an ex-info"
   [data-type data]
-  `(try (parse-json ~data)
-        (catch Exception e#
-          (throw (ex-info (format "Cannot parse %s as JSON!" ~data-type)
-                          {:kind ::non-json-document
-                           :type ~data-type
-                           :data ~data})))))
+  (try {:json (parse-json data)}
+       (catch Exception ex
+         {:exception ex})))
 
 (defmacro throw-invalid-table-ex
   "Throw an exception with the following error data:
