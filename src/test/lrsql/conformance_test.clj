@@ -169,7 +169,7 @@
   (support/assert-in-mem-db)
   (conf/with-test-suite
     (testing "known failures"
-      (doseq [code known-failures]
+      (doseq [code (sort known-failures)]
         (testing (format "requirement: %s" code)
           ;; invoke the fixture manually so we get a fresh db for each assert
           (support/fresh-db-fixture
