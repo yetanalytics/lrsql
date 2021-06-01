@@ -376,7 +376,6 @@
   [statements attachments]
   ;; NOTE: Assume that the LRS has already validated that every statement
   ;; attachment object has a fileUrl or valid SHA2 value.
-  ;; NOTE: SHAs may collide, so we also equate on length and content type.
   (let [;; attachment-to-statement-id map
         att-stmt-id-m
         (reduce
@@ -386,16 +385,16 @@
                               (= "SubStatement" (get stmt-obj "objectType"))
                               (concat (get stmt-obj "attachments")))]
              (reduce
-              (fn [m' {:strs [sha2 length contentType] :as _att}]
-                (assoc m' [sha2 length contentType] stmt-id))
+              (fn [m' {:strs [sha2]}]
+                (assoc m' sha2 stmt-id))
               m
               stmt-atts')))
          {}
          statements)
         ;; attachment to statement id
         att->stmt-id
-        (fn [{:keys [sha2 length contentType] :as _att}]
-          (att-stmt-id-m [sha2 length contentType]))]
+        (fn [{:keys [sha2]}]
+          (att-stmt-id-m sha2))]
     (reduce
      (fn [acc attachment]
        (if-some [stmt-id (att->stmt-id attachment)]
