@@ -1,6 +1,7 @@
 (ns lrsql.test-support
   (:require [config.core :refer [env]]
-            [clojure.spec.test.alpha :as stest])
+            [clojure.spec.test.alpha :as stest]
+            [clojure.string :as cs])
   (:import [java.util UUID]))
 
 (defn fresh-db-fixture
@@ -33,3 +34,50 @@
          res (stest/check fname opts)]
      (when-not (true? (-> res first :clojure.spec.test.check/ret :pass?))
        res))))
+
+(defn tests-seq
+  "Given nested xapi conformance logs, flatten them into a seq"
+  [logs]
+  (mapcat
+   (fn splode [{:keys [title
+                       status
+                       tests]
+                :as test}
+               & {:keys [depth]
+                  :or {depth 0}}]
+     (cons (-> test
+               (assoc :depth depth))
+           (mapcat #(splode % :depth (inc depth))
+                   tests)))
+   (map :log logs)))
+
+(defn test-codes
+  "Extract codes from a test"
+  [{:keys [title name requirement]}]
+  (re-seq
+   #"XAPI-\d\d\d\d\d"
+   (str
+    title
+    name
+    (if (coll? requirement)
+      (apply str requirement)
+      requirement))))
+
+(defn req-code-set
+  "Return a set of mentioned XAPI-XXXXX codes in test results"
+  [tests]
+  (into #{}
+        (mapcat
+         test-codes
+         tests)))
+
+(defn filter-code
+  "Filter tests with the given code"
+  [code tests]
+  (filter
+   #(contains?
+     (into #{}
+           (test-codes
+            %))
+     code)
+   tests))
