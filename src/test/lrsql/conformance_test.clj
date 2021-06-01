@@ -9,7 +9,8 @@
             [lrsql.test-support :as support]
             [clojure.string :as cs]
             [clojure.tools.logging :as log]
-            [clojure.set :as cset]))
+            [clojure.set :as cset]
+            [clojure.pprint :refer [pprint]]))
 
 (def known-failures
   "XAPI conformance codes that we know fail in isolation"
@@ -209,4 +210,12 @@
                          known-failures
                          stateful-failures)]
         (is (empty? regressions))
+        ;; print log information per regression
+        (doseq [code regressions]
+          (printf "\nfailing xapi code: %s\n" code)
+          (println "logs:")
+          (doseq [fail (support/filter-code
+                        code
+                        tests)]
+            (pprint (conf/wrap-request-logs fail))))
         (component/stop sys')))))

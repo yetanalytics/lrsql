@@ -46,24 +46,38 @@
                & {:keys [depth]
                   :or {depth 0}}]
      (cons (-> test
-               (dissoc :tests)
                (assoc :depth depth))
            (mapcat #(splode % :depth (inc depth))
                    tests)))
    (map :log logs)))
+
+(defn test-codes
+  "Extract codes from a test"
+  [{:keys [title name requirement]}]
+  (re-seq
+   #"XAPI-\d\d\d\d\d"
+   (str
+    title
+    name
+    (if (coll? requirement)
+      (apply str requirement)
+      requirement))))
 
 (defn req-code-set
   "Return a set of mentioned XAPI-XXXXX codes in test results"
   [tests]
   (into #{}
         (mapcat
-         (fn [{:keys [title name requirement]}]
-           (re-seq
-            #"XAPI-\d\d\d\d\d"
-            (str
-             title
-             name
-             (if (coll? requirement)
-               (apply str requirement)
-               requirement))))
+         test-codes
          tests)))
+
+(defn filter-code
+  "Filter tests with the given code"
+  [code tests]
+  (filter
+   #(contains?
+     (into #{}
+           (test-codes
+            %))
+     code)
+   tests))
