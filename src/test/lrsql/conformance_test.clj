@@ -30,10 +30,6 @@
     ;; An LRS's State API, rejects a POST request if the
     ;; document is found and either document is not a valid JSON
     ;; Object
-    "XAPI-00232"
-    ;; An LRS's State API, rejects a POST request if the
-    ;; document is found and either document's type is not
-    ;; "application/json" with error code 400 Bad Request
     "XAPI-00254"
     ;; The Activity Object must contain all available information
     ;; about an activity from any statements who target the same
@@ -44,14 +40,6 @@
     ;; Activities endpoint for that “activityId”.
     "XAPI-00278"
     ;; An LRS's Agent Profile API, rejects a POST request if
-    ;; the document is found and either document's type is not
-    ;; "application/json" with error code 400 Bad Request
-    "XAPI-00281"
-    ;; An LRS's Agent Profile API, rejects a POST request if
-    ;; the document is found and either document is not a valid JSON
-    ;; Object
-    "XAPI-00309"
-    ;; An LRS's Activity Profile API, rejects a POST request if
     ;; the document is found and either document's type is not
     ;; "application/json" with error code 400 Bad Request
     "XAPI-00313"
