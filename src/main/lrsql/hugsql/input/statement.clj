@@ -4,8 +4,7 @@
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec.statement :as hs]
             [lrsql.hugsql.util :as u]
-            [lrsql.hugsql.util.actor :as ua]
-            [config.core :as config]))
+            [lrsql.hugsql.util.actor :as ua]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -377,7 +376,6 @@
   [statements attachments]
   ;; NOTE: Assume that the LRS has already validated that every statement
   ;; attachment object has a fileUrl or valid SHA2 value.
-  ;; NOTE: SHAs may collide, so we also equate on length and content type.
   (let [;; attachment-to-statement-id map
         att-stmt-id-m
         (reduce
@@ -387,16 +385,16 @@
                               (= "SubStatement" (get stmt-obj "objectType"))
                               (concat (get stmt-obj "attachments")))]
              (reduce
-              (fn [m' {:strs [sha2 length contentType] :as _att}]
-                (assoc m' [sha2 length contentType] stmt-id))
+              (fn [m' {:strs [sha2]}]
+                (assoc m' sha2 stmt-id))
               m
               stmt-atts')))
          {}
          statements)
         ;; attachment to statement id
         att->stmt-id
-        (fn [{:keys [sha2 length contentType] :as _att}]
-          (att-stmt-id-m [sha2 length contentType]))]
+        (fn [{:keys [sha2]}]
+          (att-stmt-id-m sha2))]
     (reduce
      (fn [acc attachment]
        (if-some [stmt-id (att->stmt-id attachment)]
@@ -447,21 +445,6 @@
         rel-activs?   (boolean rel-activs?)
         actor-ifi     (when actor (ua/actor->ifi actor))
         format        (when format (keyword format))
-        ;; TODO: env defaults out of code.. Aero?
-        ;; TODO: reevaluate defaults
-        limit-max     (:stmt-get-max config/env 100)
-        limit-default (:stmt-get-default config/env 100)
-        limit         (cond
-                        ;; ensure limit is =< max
-                        (pos-int? limit)
-                        (min limit
-                             limit-max)
-                        ;; if zero, spec says use max
-                        (and limit (zero? limit))
-                        limit-max
-                        ;; otherwise default
-                        :else
-                        limit-default)
         from          (when from (u/str->uuid from))]
     (cond-> {}
       stmt-id   (merge {:statement-id stmt-id :voided? false})

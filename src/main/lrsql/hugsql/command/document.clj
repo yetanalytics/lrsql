@@ -148,11 +148,12 @@
            state-id     :state_id
            profile-id   :profile_id
            updated      :last_modified} res]
-      {:contents       contents
-       :content-length content-len
-       :content-type   content-type
-       :id             (or state-id profile-id)
-       :updated        updated})))
+      {:document
+       {:contents       contents
+        :content-length content-len
+        :content-type   content-type
+        :id             (or state-id profile-id)
+        :updated        (u/time->str updated)}})))
 
 ;; TODO: The LRS should also return last modified info.
 ;; However, this is not supported in Milt's LRS spec.
