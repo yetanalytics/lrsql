@@ -14,11 +14,7 @@
 
 (def known-failures
   "XAPI conformance codes that we know fail in isolation"
-  #{"XAPI-00127"
-    ;; An LRS rejects with error code 400 Bad Request, a PUT or POST
-    ;; Request which does not have a "Content-Type" header
-    ;; with value "application/json" or "multipart/mixed"
-    "XAPI-00154" ;; TODO: broken by stmt-get-max/default
+  #{"XAPI-00154" ;; TODO: broken by stmt-get-max/default
     ;; An LRS’s Statement API upon processing a successful GET
     ;; request with neither a “statementId” nor a
     ;; “voidedStatementId” parameter, returns code 200 OK and a
