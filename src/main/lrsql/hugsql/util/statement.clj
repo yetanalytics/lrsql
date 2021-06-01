@@ -60,3 +60,25 @@
                    "/xapi/statements?"
                    (form-encode (assoc params :from stmt-id))))
     stmt-query-result))
+
+(defn ensure-default-max-limit
+  "Apply default/max limit to params"
+  [{:keys [limit]
+    :as params}]
+  (let [;; TODO: env defaults out of code.. Aero?
+        ;; TODO: reevaluate defaults
+        limit-max     (:stmt-get-max env 100)
+        limit-default (:stmt-get-default env 100)]
+    (assoc params
+           :limit
+           (cond
+             ;; ensure limit is =< max
+             (pos-int? limit)
+             (min limit
+                  limit-max)
+             ;; if zero, spec says use max
+             (and limit (zero? limit))
+             limit-max
+             ;; otherwise default
+             :else
+             limit-default))))
