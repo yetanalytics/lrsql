@@ -12,7 +12,7 @@ AND is_voided = :voided?
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
-SELECT stmt.id, stmt.payload
+SELECT DISTINCT stmt.id, stmt.payload
 FROM xapi_statement stmt
   LEFT JOIN statement_to_statement
     ON stmt.statement_id = statement_to_statement.ancestor_id
@@ -20,17 +20,17 @@ FROM xapi_statement stmt
     ON stmt_desc.statement_id = statement_to_statement.descendant_id
   /*~
   (when (:actor-ifi params)
-    (str "  INNER JOIN statement_to_actor stmt_actor\n"
-         "    ON (stmt.statement_id = stmt_actor.statement_id\n"
-         "    OR stmt_desc.statement_id = stmt_actor.statement_id)\n"
-         "    AND stmt_actor.actor_ifi = :actor-ifi"))
+    (str "  LEFT JOIN statement_to_actor stmt_actor\n"
+         "    ON stmt.statement_id = stmt_actor.statement_id\n"
+         "  LEFT JOIN statement_to_actor stmt_desc_actor\n"
+         "    ON stmt_desc.statement_id = stmt_desc_actor.statement_id"))
   ~*/
   /*~
   (when (:activity-iri params)
     (str "  LEFT JOIN statement_to_activity stmt_activ\n"
-         "    ON (stmt.statement_id = stmt_activ.statement_id\n"
-         "    OR stmt_desc.statement_id = stmt_activ.statement_id)\n"
-         "    AND stmt_activ.activity_iri = :activ-iri"))
+         "    ON stmt.statement_id = stmt_activ.statement_id\n"
+         "  LEFT JOIN statement_to_activity stmt_desc_activ\n"
+         "    ON stmt_desc.statement_id = stmt_desc_activ.statement_id"))
   ~*/
 WHERE 1
   --~ (when (:from params)  "AND stmt.id >= :from")
