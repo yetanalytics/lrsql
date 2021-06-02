@@ -94,23 +94,27 @@
                   {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
                    :old-doc old-doc
                    :new-doc input})})
-      ;; XAPI-00314
-      (if-let [good-json (mergeable-json
-                          (cu/wrapped-parse-json
-                           "new document"
-                           (:contents input)))]
-        (let [new-data (->> good-json
-                            u/write-json
-                            .getBytes)
-              new-input (-> input
-                            (assoc :contents new-data)
-                            (assoc :content-length (count new-data)))]
-          (do (insert-fn! tx new-input)
-              {}))
-        {:error
-         (ex-info "Invalid JSON object"
-                  {:type :com.yetanalytics.lrs.xapi.document/json-read-error
-                   :new-doc input})}))))
+      (if (and new-ctype
+               (.startsWith ^String new-ctype "application/json"))
+        ;; XAPI-00314
+        (if-let [good-json (mergeable-json
+                            (cu/wrapped-parse-json
+                             "new document"
+                             (:contents input)))]
+          (let [new-data (->> good-json
+                              u/write-json
+                              .getBytes)
+                new-input (-> input
+                              (assoc :contents new-data)
+                              (assoc :content-length (count new-data)))]
+            (do (insert-fn! tx new-input)
+                {}))
+          {:error
+           (ex-info "Invalid JSON object"
+                    {:type :com.yetanalytics.lrs.xapi.document/json-read-error
+                     :new-doc input})})
+        (do (insert-fn! tx input)
+            {})))))
 
 (defn update-document!
   "Update the document given by `input` if found, inserts a new document
