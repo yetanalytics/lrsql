@@ -21,10 +21,6 @@
     ;; the voided statement. The API must return 200 Ok and the
     ;; statement result object, containing statements which target a
     ;; voided statement, but not the voided statement itself.
-    "XAPI-00229"
-    ;; An LRS's State API, rejects a POST request if the
-    ;; document is found and either document is not a valid JSON
-    ;; Object
     "XAPI-00254"
     ;; The Activity Object must contain all available information
     ;; about an activity from any statements who target the same
@@ -33,14 +29,6 @@
     ;; the exact same “activityId”. The LRS must return both
     ;; language descriptions when a GET request is made to the
     ;; Activities endpoint for that “activityId”.
-    "XAPI-00278"
-    ;; An LRS's Agent Profile API, rejects a POST request if
-    ;; the document is found and either document's type is not
-    ;; "application/json" with error code 400 Bad Request
-    "XAPI-00313"
-    ;; An LRS's Activity Profile API, rejects a POST request if
-    ;; the document is found and either document is not a valid JSON
-    ;; Object
     "XAPI-00314"
     ;; An LRS must reject, with 400 Bad Request, a POST request to
     ;; the Activity Profile API which contains name/value pairs with
