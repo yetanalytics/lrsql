@@ -21,7 +21,7 @@ AND is_voided = :voided?
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
-SELECT DISTINCT stmt.id, stmt.payload
+SELECT DISTINCT stmt.id, stmt.stored, stmt.payload
 FROM xapi_statement stmt
   LEFT JOIN statement_to_statement
     ON stmt.statement_id = statement_to_statement.ancestor_id
@@ -62,8 +62,8 @@ WHERE 1
     --~ (when (and (:actor-ifi params) (not (:related-actors? params)))        "AND stmt_desc_actor.usage = 'Actor'")
     --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_desc_activ.usage = 'Object'")
   ))
---~ (when (:ascending? params) "ORDER BY stmt.stored")
---~ (when (:limit params)      "LIMIT :limit")
+--~ (if (:ascending? params) "ORDER BY stmt.stored ASC" "ORDER BY stmt.stored DESC")
+--~ (when (:limit params)    "LIMIT :limit")
 
 /* Statement Object Queries */
 
