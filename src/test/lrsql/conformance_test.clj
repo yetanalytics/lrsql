@@ -14,14 +14,7 @@
 
 (def known-failures
   "XAPI conformance codes that we know fail in isolation"
-  #{"XAPI-00162"
-    ;; An LRS&'s Statement API processes a successful GET
-    ;; request using a parameter (such as stored time) which
-    ;; includes a voided statement and unvoided statements targeting
-    ;; the voided statement. The API must return 200 Ok and the
-    ;; statement result object, containing statements which target a
-    ;; voided statement, but not the voided statement itself.
-    "XAPI-00254"
+  #{"XAPI-00254"
     ;; The Activity Object must contain all available information
     ;; about an activity from any statements who target the same
     ;; “activityId”. For example, LRS accepts two statements each
