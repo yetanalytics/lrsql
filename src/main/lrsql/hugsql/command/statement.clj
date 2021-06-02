@@ -28,14 +28,24 @@
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
         (u/uuid->str (:statement-id input)))
     :actor
-    (do (let [input' (select-keys input [:actor-ifi])
-              exists (f/query-actor-exists tx input')]
-          (when-not exists (f/insert-actor! tx input)))
+    (do (if-some [actor' (some->> (select-keys input [:actor-ifi])
+                                  (f/query-actor tx)
+                                  :payload
+                                  u/parse-json)]
+          (f/update-actor! tx input)
+          (f/insert-actor! tx input))
         nil)
     :activity
-    (do (let [input' (select-keys input [:activity-iri])
-              exists (f/query-activity-exists tx input')]
-          (when-not exists (f/insert-activity! tx input)))
+    (do (if-some [activity' (some->> (select-keys input [:activity-iri])
+                                     (f/query-activity tx)
+                                     :payload
+                                     u/parse-json)]
+          (let [activity'' (activs/merge-activity
+                            activity'
+                            (-> input :payload u/parse-json))
+                input'     (assoc input :payload (u/write-json activity''))]
+            (f/update-activity! tx input'))
+          (f/insert-activity! tx input))
         nil)
     :attachment
     (do (f/insert-attachment! tx input) nil)

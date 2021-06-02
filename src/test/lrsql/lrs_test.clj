@@ -266,12 +266,11 @@
                        "mbox" ["mailto:sample.agent@example.com"]}}
              (lrsp/-get-person lrs {} {:agent agt-1}))))
     (testing "activity query"
-      (is (= {:activity {"id" "http://www.example.com/tincan/activities/multipart"}}
-             ;; TODO: Deal with agent/activity updates?
-             #_{:activity {"id"         "http://www.example.com/tincan/activities/multipart"
-                           "objectType" "Activity"
-                           "definition" {"name"        {"en-US" "Multi Part Activity"}
-                                         "description" {"en-US" "Multi Part Activity Description"}}}}
+      ;; The activity was update between stmt-0 and stmt-1
+      (is (= {:activity {"id"         "http://www.example.com/tincan/activities/multipart"
+                         "objectType" "Activity"
+                         "definition" {"name"        {"en-US" "Multi Part Activity"}
+                                       "description" {"en-US" "Multi Part Activity Description"}}}}
              (lrsp/-get-activity lrs {} {:activityId act-1}))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
