@@ -163,9 +163,14 @@
       (is (= {:statement-result {:statements [] :more ""}
               :attachments      []}
              (lrsp/-get-statements lrs {} {:since ts} #{})))
-      (is (= {:statement-result {:statements [stmt-1 stmt-2 stmt-3 stmt-4] :more ""}
+      (is (= {:statement-result {:statements [stmt-4 stmt-3 stmt-2 stmt-1] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:until ts} #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-1 stmt-2 stmt-3 stmt-4] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:until ts :ascending true} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
       (is (= {:statement-result {:statements [stmt-1] :more ""}
@@ -173,7 +178,7 @@
              (-> (lrsp/-get-statements lrs {} {:agent agt-1} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-1 stmt-3] :more ""}
+      (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:agent agt-1 :related_agents true} #{})
                  (update-in [:statement-result :statements]
@@ -188,7 +193,7 @@
              (-> (lrsp/-get-statements lrs {} {:agent mem-4} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-1 stmt-3] :more ""}
+      (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:verb vrb-1} #{})
                  (update-in [:statement-result :statements]
@@ -198,14 +203,14 @@
              (-> (lrsp/-get-statements lrs {} {:activity act-1} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-1 stmt-3] :more ""}
+      (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:activity act-1 :related_activities true} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props))))))
     (testing "querying with limits"
       (is (= {:statement-result
-              {:statements [stmt-1 stmt-2]
+              {:statements [stmt-4 stmt-3]
                :more "http://localhost:8080/xapi/statements?limit=2&from="}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
@@ -262,6 +267,7 @@
              (lrsp/-get-person lrs {} {:agent agt-1}))))
     (testing "activity query"
       (is (= {:activity {"id" "http://www.example.com/tincan/activities/multipart"}}
+             ;; TODO: Deal with agent/activity updates?
              #_{:activity {"id"         "http://www.example.com/tincan/activities/multipart"
                            "objectType" "Activity"
                            "definition" {"name"        {"en-US" "Multi Part Activity"}
@@ -270,7 +276,6 @@
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))
-
 
 (def stmt-1'
   {"id"     "00000000-0000-0000-0000-000000000001"
@@ -309,7 +314,7 @@
                               "00000000-0000-0000-0000-000000000003"]}
              (lrsp/-store-statements lrs {} [stmt-1' stmt-2' stmt-3'] []))))
     (testing "statement queries"
-      (is (= {:statement-result {:statements [stmt-1' stmt-2' stmt-3'] :more ""}
+      (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs
                                        {}
@@ -318,7 +323,7 @@
                                        #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-1' stmt-2' stmt-3'] :more ""}
+      (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs
                                        {}
@@ -326,7 +331,7 @@
                                        #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-1' stmt-2' stmt-3'] :more ""}
+      (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs
                                        {}
@@ -342,12 +347,21 @@
                                        #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-1']}
+      (is (= {:statement-result {:statements [stmt-1' stmt-2' stmt-3'] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs
+                                       {}
+                                       {:until     "3000-01-01T01:00:00Z"
+                                        :ascending true}
+                                       #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-3']}
               :attachments      []}
              (-> (lrsp/-get-statements lrs
                                        {}
                                        {:activity "http://www.example.com/tincan/activities/multipart"
-                                        :limit 1}
+                                        :limit    1}
                                        #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props))

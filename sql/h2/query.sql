@@ -17,11 +17,20 @@ AND is_voided = :voided?
    across multiple such tuples, we apply SELECT DISTINCT at the top level.
 */
 
+/* `id` (the primary key) is a SQUUID with guarenteed monotonicity. This is
+   important for the following:
+   - As a cursor to the next page of query results when `limit` is applied.
+     `id` thus must always be sequential; otherwise, for instance, new
+     statements may be inserted mid-page instead of appended.
+   - As a secondary sort property for query results; we cannot only apply
+     `stored` as the only property since it only has millisecond resolution,
+     which is not good enough for deterministic results. */
+
 -- :name query-statements
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
-SELECT DISTINCT stmt.id, stmt.payload
+SELECT DISTINCT stmt.id, stmt.stored, stmt.payload
 FROM xapi_statement stmt
   LEFT JOIN statement_to_statement
     ON stmt.statement_id = statement_to_statement.ancestor_id
@@ -51,19 +60,25 @@ WHERE 1
     --~ (when (:registration params)  "AND stmt.registration = :registration")
     --~ (when (:actor-ifi params)     "AND stmt_actor.actor_ifi = :actor-ifi")
     --~ (when (:activity-iri params)  "AND stmt_activ.activity_iri = :activity-iri")
-    --~ (when (and (:actor-ifi params) (not (:related-actors? params)))        "AND stmt_actor.usage = 'Actor'")
-    --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_activ.usage = 'Object'")
+    /*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
+          "AND stmt_actor.usage = 'Actor'") ~*/
+    /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
+          "AND stmt_activ.usage = 'Object'") ~*/
   ) OR (
     stmt_desc.is_voided = FALSE
     --~ (when (:verb-iri params)      "AND stmt_desc.verb_iri = :verb-iri")
     --~ (when (:registration params)  "AND stmt_desc.registration = :registration")
     --~ (when (:actor-ifi params)     "AND stmt_desc_actor.actor_ifi = :actor-ifi")
     --~ (when (:activity-iri params)  "AND stmt_desc_activ.activity_iri = :activity-iri")
-    --~ (when (and (:actor-ifi params) (not (:related-actors? params)))        "AND stmt_desc_actor.usage = 'Actor'")
-    --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_desc_activ.usage = 'Object'")
+    /*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
+          "AND stmt_desc_actor.usage = 'Actor'") ~*/
+    /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
+          "AND stmt_desc_activ.usage = 'Object'") ~*/
   ))
---~ (when (:ascending? params) "ORDER BY stmt.stored")
---~ (when (:limit params)      "LIMIT :limit")
+/*~ (if (:ascending? params)
+      "ORDER BY stmt.stored ASC, stmt.id ASC"
+      "ORDER BY stmt.stored DESC, stmt.id DESC") ~*/
+--~ (when (:limit params) "LIMIT :limit")
 
 /* Statement Object Queries */
 

@@ -6,14 +6,17 @@
 (comment
   (require '[next.jdbc :as jdbc]
            '[com.yetanalytics.lrs.protocol :as lrsp]
-           '[lrsql.hugsql.util.statement :as u])
+           '[lrsql.hugsql.util.statement :as u]
+           '[lrsql.lrs-test :refer [stmt-1' stmt-2' stmt-3']])
 
   (def sys (system/system))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
   (def ds ((-> sys' :lrs :conn-pool)))
-  
+
+  (lrsp/-store-statements lrs {} [stmt-1' stmt-2' stmt-3'] [])
+
   (doseq [cmd [;; Drop document tables
                "DROP TABLE IF EXISTS state_document"
                "DROP TABLE IF EXISTS agent_profile_document"
