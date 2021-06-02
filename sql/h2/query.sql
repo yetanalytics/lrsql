@@ -8,6 +8,15 @@ SELECT payload FROM xapi_statement
 WHERE statement_id = :statement-id
 AND is_voided = :voided?
 
+/* The strategy of `query-statements` is to use multiple joins to form a
+   Cartesian product over statements, agents, and activities:
+   
+     (stmt, stmt_desc, stmt_actor, stmt_desc_actor, stmt_activity, stmt_desc_activity)
+   
+   Because we only want to return properties of `stmt`, which may be identical
+   across multiple such tuples, we apply SELECT DISTINCT at the top level.
+*/
+
 -- :name query-statements
 -- :command :query
 -- :result :many
