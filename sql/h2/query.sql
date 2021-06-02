@@ -51,19 +51,25 @@ WHERE 1
     --~ (when (:registration params)  "AND stmt.registration = :registration")
     --~ (when (:actor-ifi params)     "AND stmt_actor.actor_ifi = :actor-ifi")
     --~ (when (:activity-iri params)  "AND stmt_activ.activity_iri = :activity-iri")
-    --~ (when (and (:actor-ifi params) (not (:related-actors? params)))        "AND stmt_actor.usage = 'Actor'")
-    --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_activ.usage = 'Object'")
+    /*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
+          "AND stmt_actor.usage = 'Actor'") ~*/
+    /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
+          "AND stmt_activ.usage = 'Object'") ~*/
   ) OR (
     stmt_desc.is_voided = FALSE
     --~ (when (:verb-iri params)      "AND stmt_desc.verb_iri = :verb-iri")
     --~ (when (:registration params)  "AND stmt_desc.registration = :registration")
     --~ (when (:actor-ifi params)     "AND stmt_desc_actor.actor_ifi = :actor-ifi")
     --~ (when (:activity-iri params)  "AND stmt_desc_activ.activity_iri = :activity-iri")
-    --~ (when (and (:actor-ifi params) (not (:related-actors? params)))        "AND stmt_desc_actor.usage = 'Actor'")
-    --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_desc_activ.usage = 'Object'")
+    /*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
+          "AND stmt_desc_actor.usage = 'Actor'") ~*/
+    /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
+          "AND stmt_desc_activ.usage = 'Object'") ~*/
   ))
---~ (if (:ascending? params) "ORDER BY stmt.stored ASC, stmt.id ASC" "ORDER BY stmt.stored DESC, stmt.id DESC")
---~ (when (:limit params)    "LIMIT :limit")
+/*~ (if (:ascending? params)
+      "ORDER BY stmt.stored ASC, stmt.id ASC"
+      "ORDER BY stmt.stored DESC, stmt.id DESC") ~*/
+--~ (when (:limit params) "LIMIT :limit")
 
 /* Statement Object Queries */
 
