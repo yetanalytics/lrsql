@@ -1,6 +1,8 @@
 (ns lrsql.hugsql.command.statement
   (:require
    [com.yetanalytics.lrs.xapi.statements :as ss]
+   [com.yetanalytics.lrs.xapi.agents     :as actors]
+   [com.yetanalytics.lrs.xapi.activities :as activs]
    [lrsql.hugsql.functions :as f]
    [lrsql.hugsql.util :as u]
    [lrsql.hugsql.command.util :as cu]))
