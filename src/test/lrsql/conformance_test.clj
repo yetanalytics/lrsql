@@ -29,10 +29,6 @@
     ;; the exact same “activityId”. The LRS must return both
     ;; language descriptions when a GET request is made to the
     ;; Activities endpoint for that “activityId”.
-    "XAPI-00314"
-    ;; An LRS must reject, with 400 Bad Request, a POST request to
-    ;; the Activity Profile API which contains name/value pairs with
-    ;; invalid JSON and the Content-Type header is "application/json
     })
 
 (def stateful-failures
