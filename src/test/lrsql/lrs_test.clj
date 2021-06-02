@@ -266,9 +266,9 @@
                        "mbox" ["mailto:sample.agent@example.com"]}}
              (lrsp/-get-person lrs {} {:agent agt-1}))))
     (testing "activity query"
-      (is (= {:activity {"id" "http://www.example.com/tincan/activities/multipart"}}
+      (is (= #_{:activity {"id" "http://www.example.com/tincan/activities/multipart"}}
              ;; TODO: Deal with agent/activity updates?
-             #_{:activity {"id"         "http://www.example.com/tincan/activities/multipart"
+             {:activity {"id"         "http://www.example.com/tincan/activities/multipart"
                            "objectType" "Activity"
                            "definition" {"name"        {"en-US" "Multi Part Activity"}
                                          "description" {"en-US" "Multi Part Activity Description"}}}}
