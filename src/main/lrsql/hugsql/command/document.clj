@@ -1,11 +1,14 @@
 (ns lrsql.hugsql.command.document
-  (:require [lrsql.hugsql.functions :as f]
+  (:require [clojure.string :as cstr]
+            [lrsql.hugsql.functions :as f]
             [lrsql.hugsql.util :as u]
             [lrsql.hugsql.command.util :as cu]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Mutation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Insert document
 
 (defn insert-document!
   "Insert a new document into the DB. Returns an empty map."
@@ -20,6 +23,8 @@
     ;; Else
     (cu/throw-invalid-table-ex "insert-document!" input))
   {})
+
+;; Delete document(s)
 
 (defn delete-document!
   "Delete a single document from the DB. Returns an empty map."
@@ -45,6 +50,8 @@
     (cu/throw-invalid-table-ex "delete-documents!" input))
   {})
 
+;; Update document
+
 (defn- mergeable-json
   "Checks that json is returned, and that it is mergeable"
   [{:keys [json]}]
@@ -52,50 +59,70 @@
              (map? json))
     json))
 
+(defn- doc->json
+  "Given a document map with `:contents` property, return the parsed
+   contents if valid, or nil otherwise."
+  [doc]
+  (mergeable-json
+   (cu/wrapped-parse-json
+    (:contents doc))))
+
+(defn- json-content-type?
+  [ctype]
+  (cstr/starts-with? ctype "application/json"))
+
+(defn- invalid-merge-error
+  [old-doc input]
+  {:error
+   (ex-info "Invalid Merge"
+            {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
+             :old-doc old-doc
+             :new-doc input})})
+
+(defn- json-read-error
+  [input]
+  {:error
+   (ex-info "Invalid JSON object"
+            {:type :com.yetanalytics.lrs.xapi.document/json-read-error
+             :new-doc input})})
+
+#_{:clj-kondo/ignore [:redundant-do]}
 (defn- update-document!*
   "Common functionality for all cases in `update-document!`"
   [tx {new-ctype :content-type
        :as input} query-fn insert-fn! update-fn!]
   (let [query-in (dissoc input :last-modified :contents)]
-    (if-let [{old-ctype :content_type
-              :as old-doc} (query-fn tx query-in)]
-      (if (every? ;; an attempted merge should be json-json
-           #(.startsWith ^String % "application/json")
-           [old-ctype
-            new-ctype])
-        (let [?old-json (mergeable-json
-                         (cu/wrapped-parse-json
-                          "stored document"
-                          (:contents old-doc)))
-
-              ?new-json (mergeable-json
-                         (cu/wrapped-parse-json
-                          "new document"
-                          (:contents input)))]
-          (if (and ?old-json
-                   ?new-json)
-            (let [new-data  (->> (merge ?old-json ?new-json)
-                                 u/write-json
-                                 .getBytes)
-                  new-input (-> input
-                                (assoc :contents new-data)
-                                (assoc :content-length (count new-data)))]
-              (do (update-fn! tx new-input)
-                  {}))
-            {:error
-             (ex-info "Invalid Merge"
-                      {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
-                       :old-doc old-doc
-                       :new-doc input})}))
-        ;; currently this does not happen
-        ;; a content type always seems to be passed in even if one is not included
-        {:error
-         (ex-info "Invalid Merge"
-                  {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
-                   :old-doc old-doc
-                   :new-doc input})})
-      (do (insert-fn! tx input)
-          {}))))
+    (if-some [{old-ctype :content_type
+               :as old-doc} (query-fn tx query-in)]
+      ;; We have a pre-existing document in the store
+      ;; Only JSON documents can be stored
+      (let [?old-json (and (json-content-type? old-ctype)
+                           (doc->json old-doc))
+            ?new-json (and (json-content-type? new-ctype)
+                           (doc->json input))]
+        (if (and ?old-json
+                 ?new-json)
+          (let [new-data  (->> (merge ?old-json ?new-json)
+                               u/write-json
+                               .getBytes)
+                new-input (-> input
+                              (assoc :contents new-data)
+                              (assoc :content-length (count new-data)))]
+            (do (update-fn! tx new-input)
+                {}))
+          (invalid-merge-error old-doc input)))
+      ;; We don't have a pre-existing document - insert
+      (if (and new-ctype
+               (json-content-type? new-ctype))
+        ;; XAPI-00314 - must check if doc contents are JSON if
+        ;; content type is application/json
+        (if-some [_ (doc->json input)]
+          (do (insert-fn! tx input)
+              {})
+          (json-read-error input))
+        ;; Regular data - directly insert
+        (do (insert-fn! tx input)
+            {})))))
 
 (defn update-document!
   "Update the document given by `input` if found, inserts a new document

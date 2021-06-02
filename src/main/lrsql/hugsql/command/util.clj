@@ -4,7 +4,7 @@
 (defn wrapped-parse-json
   "Wraps `parse-json` in a try-catch block, returning a map with :json
   or :exception which is the parse exception, wrapped in an ex-info"
-  [data-type data]
+  [data]
   (try {:json (parse-json data)}
        (catch Exception ex
          {:exception ex})))
