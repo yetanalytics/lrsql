@@ -21,14 +21,6 @@
     ;; the voided statement. The API must return 200 Ok and the
     ;; statement result object, containing statements which target a
     ;; voided statement, but not the voided statement itself.
-    "XAPI-00254"
-    ;; The Activity Object must contain all available information
-    ;; about an activity from any statements who target the same
-    ;; “activityId”. For example, LRS accepts two statements each
-    ;; with a different language description of an activity using
-    ;; the exact same “activityId”. The LRS must return both
-    ;; language descriptions when a GET request is made to the
-    ;; Activities endpoint for that “activityId”.
     })
 
 (def stateful-failures
