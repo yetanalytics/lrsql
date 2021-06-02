@@ -14,14 +14,7 @@
 
 (def known-failures
   "XAPI conformance codes that we know fail in isolation"
-  #{"XAPI-00162"
-    ;; An LRS&'s Statement API processes a successful GET
-    ;; request using a parameter (such as stored time) which
-    ;; includes a voided statement and unvoided statements targeting
-    ;; the voided statement. The API must return 200 Ok and the
-    ;; statement result object, containing statements which target a
-    ;; voided statement, but not the voided statement itself.
-    })
+  #{})
 
 (def stateful-failures
   "XAPI conformance codes that fail when run with other tests"

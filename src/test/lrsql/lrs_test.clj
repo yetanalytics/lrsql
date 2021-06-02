@@ -193,17 +193,19 @@
              (-> (lrsp/-get-statements lrs {} {:agent mem-4} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
+      ;; XAPI-00162 - stmt-2 shows up because it refers to a statement that
+      ;; meets the query criteria, even though that statement is void
+      (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:verb vrb-1} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-1] :more ""}
+      (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:activity act-1} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
+      (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:activity act-1 :related_activities true} #{})
                  (update-in [:statement-result :statements]
