@@ -1,7 +1,6 @@
 (ns lrsql.hugsql.command.statement
   (:require
    [com.yetanalytics.lrs.xapi.statements :as ss]
-   [com.yetanalytics.lrs.xapi.agents     :as actors]
    [com.yetanalytics.lrs.xapi.activities :as activs]
    [lrsql.hugsql.functions :as f]
    [lrsql.hugsql.util :as u]
@@ -28,23 +27,29 @@
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
         (u/uuid->str (:statement-id input)))
     :actor
-    (do (if-some [actor' (some->> (select-keys input [:actor-ifi])
-                                  (f/query-actor tx)
-                                  :payload
-                                  u/parse-json)]
-          (f/update-actor! tx input)
+    ;; We could have added new names by storing the actor as a Person object,
+    ;; but here it is simpler (and more client-friendly) to override previous
+    ;; names.
+    (do (if-some [_ (some->> (select-keys input [:actor-ifi])
+                             (f/query-actor tx)
+                             :payload)]
+          (f/update-actor! tx input) ; override name and actor type
           (f/insert-actor! tx input))
         nil)
     :activity
-    (do (if-some [activity' (some->> (select-keys input [:activity-iri])
-                                     (f/query-activity tx)
-                                     :payload
-                                     u/parse-json)]
-          (let [activity'' (activs/merge-activity
-                            activity'
-                            (-> input :payload u/parse-json))
-                input'     (assoc input :payload (u/write-json activity''))]
-            (f/update-activity! tx input'))
+    (do (if-some [old-activity (some->> (select-keys input [:activity-iri])
+                                        (f/query-activity tx)
+                                        :payload
+                                        u/parse-json)]
+          ;; TODO: Calling parse-json here seems wasteful - perhaps the input
+          ;; payload should still be in map form?
+          (let [new-activity (some->> input
+                                      :payload
+                                      u/parse-json)]
+            (when-not (= old-activity new-activity)
+              (let [activity' (activs/merge-activity old-activity new-activity)
+                    input'    (assoc input :payload activity')]
+                (f/update-activity! tx input'))))
           (f/insert-activity! tx input))
         nil)
     :attachment
