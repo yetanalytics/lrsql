@@ -45,6 +45,10 @@
 ;; Update
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Actors + Activities
+(declare update-actor!)
+(declare update-activity!)
+
 ;; Verbs
 (declare void-statement!)
 
