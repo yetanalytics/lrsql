@@ -87,8 +87,6 @@
                       {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
                        :old-doc old-doc
                        :new-doc input})}))
-        ;; currently this does not happen
-        ;; a content type always seems to be passed in even if one is not included
         {:error
          (ex-info "Invalid Merge"
                   {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
