@@ -242,6 +242,19 @@
                             vec)
                  (update-in [:attachments 0 :content]
                             #(String. %))))))
+
+    (testing "querying with attachments (single)"
+      (is (= {:statement    stmt-4
+              :attachments  [(update stmt-4-attach :content #(String. %))]}
+             (-> (lrsp/-get-statements lrs {} {:statementId
+                                               (get stmt-4 "id")
+                                               :attachments true} #{})
+                 (update    :statement
+                            remove-props)
+                 (update-in [:attachments]
+                            vec)
+                 (update-in [:attachments 0 :content]
+                            #(String. %))))))
     (testing "agent query"
       (is (= {:person {"objectType" "Person"
                        "name" ["Sample Agent 1"]

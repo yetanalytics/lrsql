@@ -104,7 +104,7 @@
         attachments (when (and statement attachments?)
                       (->> {:statement-id (get statement "id")}
                            (f/query-attachments tx)
-                           conform-attachment-res))]
+                           (map conform-attachment-res)))]
     (cond-> {}
       statement   (assoc :statement statement)
       attachments (assoc :attachments attachments))))
