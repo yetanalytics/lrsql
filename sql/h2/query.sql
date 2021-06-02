@@ -17,6 +17,15 @@ AND is_voided = :voided?
    across multiple such tuples, we apply SELECT DISTINCT at the top level.
 */
 
+/* `id` (the primary key) is a SQUUID with guarenteed monotonicity. This is
+   important for the following:
+   - As a cursor to the next page of query results when `limit` is applied.
+     `id` thus must always be sequential; otherwise, for instance, new
+     statements may be inserted mid-page instead of appended.
+   - As a secondary sort property for query results; we cannot only apply
+     `stored` as the only property since it only has millisecond resolution,
+     which is not good enough for deterministic results. */
+
 -- :name query-statements
 -- :command :query
 -- :result :many
