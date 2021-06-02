@@ -45,6 +45,10 @@
 ;; Update
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Actors + Activities
+(declare update-actor!)
+(declare update-activity!)
+
 ;; Verbs
 (declare void-statement!)
 
@@ -70,7 +74,8 @@
 ;; Statements + Statement Objects
 (declare query-statement)
 (declare query-statements)
-(declare query-agent) ; no `query-actor`
+(declare query-agent)
+(declare query-actor)
 (declare query-activity)
 (declare query-attachments)
 
