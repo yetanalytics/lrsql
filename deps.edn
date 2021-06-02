@@ -1,6 +1,8 @@
 {:paths ["src/main" "sql"]
  :deps
  {org.clojure/clojure                    {:mvn/version "1.10.3"}
+  ;; TODO: Switch to a faster JSON lib
+  org.clojure/data.json                  {:mvn/version "0.2.6"}
   clojure.java-time/clojure.java-time    {:mvn/version "0.3.2"}
   danlentz/clj-uuid                      {:mvn/version "0.1.9"}
   yogthos/config                         {:mvn/version "1.1.7"}
@@ -34,6 +36,7 @@
                  :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
                 com.yetanalytics.lrs/test-runner
                 {:git/url "git@github.com:yetanalytics/lrs-test-runner.git"
-                 :sha "8bd5be7816288e85f5c07fc11bf8cf53667e72da"}}
+                 :sha "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
+                 :exclusions [org.clojure/data.json]}}
    :exec-fn cognitect.test-runner.api/test
    :exec-args {:dirs ["src/test"]}}}}
