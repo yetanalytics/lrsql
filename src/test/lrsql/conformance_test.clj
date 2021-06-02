@@ -14,12 +14,7 @@
 
 (def known-failures
   "XAPI conformance codes that we know fail in isolation"
-  #{"XAPI-00154" ;; TODO: broken by stmt-get-max/default
-    ;; An LRS’s Statement API upon processing a successful GET
-    ;; request with neither a “statementId” nor a
-    ;; “voidedStatementId” parameter, returns code 200 OK and a
-    ;; StatementResult Object.
-    "XAPI-00162"
+  #{"XAPI-00162"
     ;; An LRS&'s Statement API processes a successful GET
     ;; request using a parameter (such as stored time) which
     ;; includes a voided statement and unvoided statements targeting
@@ -54,10 +49,7 @@
 
 (def stateful-failures
   "XAPI conformance codes that fail when run with other tests"
-  #{"XAPI-00164"
-    ;; The Statements within the "statements" property will correspond
-    ;; to the filtering criterion sent in with the GET request
-    })
+  #{})
 
 (t/use-fixtures :each support/fresh-db-fixture)
 
