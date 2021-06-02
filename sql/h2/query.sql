@@ -65,7 +65,7 @@ WHERE 1
     /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
           "AND stmt_activ.usage = 'Object'") ~*/
   ) OR (
-    stmt_desc.is_voided = FALSE
+    1
     --~ (when (:verb-iri params)      "AND stmt_desc.verb_iri = :verb-iri")
     --~ (when (:registration params)  "AND stmt_desc.registration = :registration")
     --~ (when (:actor-ifi params)     "AND stmt_desc_actor.actor_ifi = :actor-ifi")
