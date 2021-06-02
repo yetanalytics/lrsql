@@ -210,7 +210,7 @@
                             (partial map remove-props))))))
     (testing "querying with limits"
       (is (= {:statement-result
-              {:statements [stmt-2 stmt-1]
+              {:statements [stmt-4 stmt-3]
                :more "http://localhost:8080/xapi/statements?limit=2&from="}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:limit 2} #{})

@@ -458,7 +458,7 @@
       actor-ifi (merge {:actor-ifi actor-ifi :related-actors? rel-actors?})
       act-iri   (merge {:activity-iri act-iri :related-activities? rel-activs?})
       limit     (assoc :limit limit)
-      asc?      (assoc :ascending asc?)
+      asc?      (assoc :ascending? asc?)
       atts?     (assoc :attachments? atts?)
       format    (assoc :format format)
       from      (assoc :from from))))

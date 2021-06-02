@@ -62,7 +62,7 @@ WHERE 1
     --~ (when (and (:actor-ifi params) (not (:related-actors? params)))        "AND stmt_desc_actor.usage = 'Actor'")
     --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_desc_activ.usage = 'Object'")
   ))
---~ (if (:ascending? params) "ORDER BY stmt.stored ASC" "ORDER BY stmt.stored DESC")
+--~ (if (:ascending? params) "ORDER BY stmt.stored ASC, stmt.id ASC" "ORDER BY stmt.stored DESC, stmt.id DESC")
 --~ (when (:limit params)    "LIMIT :limit")
 
 /* Statement Object Queries */
