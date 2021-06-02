@@ -101,14 +101,8 @@
                             (cu/wrapped-parse-json
                              "new document"
                              (:contents input)))]
-          (let [new-data (->> good-json
-                              u/write-json
-                              .getBytes)
-                new-input (-> input
-                              (assoc :contents new-data)
-                              (assoc :content-length (count new-data)))]
-            (do (insert-fn! tx new-input)
-                {}))
+          (do (insert-fn! tx input)
+              {})
           {:error
            (ex-info "Invalid JSON object"
                     {:type :com.yetanalytics.lrs.xapi.document/json-read-error
