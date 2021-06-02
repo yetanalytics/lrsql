@@ -29,7 +29,7 @@
 (def stmt-2
   {"id"     "3f5f3c7d-c786-4496-a3a8-6d6e4461aa9d"
    "actor"  {"account"    {"name"     "Sample Agent 2"
-                           "homepage" "https://example.org"}
+                           "homePage" "https://example.org"}
              "name"       "Sample Agent 2"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/voided"
@@ -93,6 +93,7 @@
                "DROP TABLE IF EXISTS agent_profile_document"
                "DROP TABLE IF EXISTS activity_profile_document"
                ;; Drop statement tables
+               "DROP TABLE IF EXISTS statement_to_statement"
                "DROP TABLE IF EXISTS statement_to_activity"
                "DROP TABLE IF EXISTS statement_to_actor"
                "DROP TABLE IF EXISTS attachment"
@@ -112,7 +113,7 @@
 
 (use-fixtures :each support/fresh-db-fixture)
 
-(deftest test-lrs-protocol-fns
+(deftest test-statement-fns
   (let [_     (support/assert-in-mem-db)
         sys   (system/system)
         sys'  (component/start sys)
@@ -241,17 +242,116 @@
                             vec)
                  (update-in [:attachments 0 :content]
                             #(String. %))))))
+
+    (testing "querying with attachments (single)"
+      (is (= {:statement    stmt-4
+              :attachments  [(update stmt-4-attach :content #(String. %))]}
+             (-> (lrsp/-get-statements lrs {} {:statementId
+                                               (get stmt-4 "id")
+                                               :attachments true} #{})
+                 (update    :statement
+                            remove-props)
+                 (update-in [:attachments]
+                            vec)
+                 (update-in [:attachments 0 :content]
+                            #(String. %))))))
     (testing "agent query"
       (is (= {:person {"objectType" "Person"
                        "name" ["Sample Agent 1"]
                        "mbox" ["mailto:sample.agent@example.com"]}}
              (lrsp/-get-person lrs {} {:agent agt-1}))))
     (testing "activity query"
-      (is (= {:activity {"id"         "http://www.example.com/tincan/activities/multipart"
-                         "objectType" "Activity"
-                         "definition" {"name"        {"en-US" "Multi Part Activity"}
-                                       "description" {"en-US" "Multi Part Activity Description"}}}}
+      (is (= {:activity {"id" "http://www.example.com/tincan/activities/multipart"}}
+             #_{:activity {"id"         "http://www.example.com/tincan/activities/multipart"
+                           "objectType" "Activity"
+                           "definition" {"name"        {"en-US" "Multi Part Activity"}
+                                         "description" {"en-US" "Multi Part Activity Description"}}}}
              (lrsp/-get-activity lrs {} {:activityId act-1}))))
+    (jdbc/with-transaction [tx ((:conn-pool lrs))]
+      (drop-all! tx))
+    (component/stop sys')))
+
+
+(def stmt-1'
+  {"id"     "00000000-0000-0000-0000-000000000001"
+   "actor"  {"mbox"       "mailto:sample.0@example.com"
+             "objectType" "Agent"}
+   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
+             "display" {"en-US" "answered"}}
+   "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
+
+(def stmt-2'
+  {"id"     "00000000-0000-0000-0000-000000000002"
+   "actor"  {"mbox"       "mailto:sample.1@example.com"
+             "objectType" "Agent"}
+   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
+             "display" {"en-US" "answered"}}
+   "object" {"objectType" "StatementRef"
+             "id" "00000000-0000-0000-0000-000000000001"}})
+
+(def stmt-3'
+  {"id"     "00000000-0000-0000-0000-000000000003"
+   "actor"  {"mbox"       "mailto:sample.2@example.com"
+             "objectType" "Agent"}
+   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
+             "display" {"en-US" "answered"}}
+   "object" {"objectType" "StatementRef"
+             "id" "00000000-0000-0000-0000-000000000002"}})
+
+(deftest test-statement-ref-fns
+  (let [_     (support/assert-in-mem-db)
+        sys   (system/system)
+        sys'  (component/start sys)
+        lrs   (:lrs sys')]
+    (testing "statement insertions"
+      (is (= {:statement-ids ["00000000-0000-0000-0000-000000000001"
+                              "00000000-0000-0000-0000-000000000002"
+                              "00000000-0000-0000-0000-000000000003"]}
+             (lrsp/-store-statements lrs {} [stmt-1' stmt-2' stmt-3'] []))))
+    (testing "statement queries"
+      (is (= {:statement-result {:statements [stmt-1' stmt-2' stmt-3'] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs
+                                       {}
+                                       {:agent {"mbox" "mailto:sample.0@example.com"
+                                                "objectType" "Agent"}}
+                                       #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-1' stmt-2' stmt-3'] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs
+                                       {}
+                                       {:activity "http://www.example.com/tincan/activities/multipart"}
+                                       #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-1' stmt-2' stmt-3'] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs
+                                       {}
+                                       {:verb "http://adlnet.gov/expapi/verbs/answered"}
+                                       #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs
+                                       {}
+                                       {:since "3000-01-01T01:00:00Z"}
+                                       #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-1']}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs
+                                       {}
+                                       {:activity "http://www.example.com/tincan/activities/multipart"
+                                        :limit 1}
+                                       #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props))
+                 (update :statement-result dissoc :more)))))
     (jdbc/with-transaction [tx ((:conn-pool lrs))]
       (drop-all! tx))
     (component/stop sys')))

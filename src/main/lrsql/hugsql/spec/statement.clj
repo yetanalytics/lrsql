@@ -31,7 +31,9 @@
 
 ;; Statement IDs
 (s/def ::statement-id uuid?)
-(s/def ::?statement-ref-id (s/nilable uuid?))
+(s/def ::?statement-ref-id (s/nilable ::statement-id))
+(s/def ::ancestor-id ::statement-id)
+(s/def ::descendant-id ::statement-id)
 
 ;; Timestamp
 (s/def ::stored inst?)
@@ -56,8 +58,9 @@
 (s/def ::until inst?)
 (s/def ::limit nat-int?)
 (s/def ::ascending? boolean?)
-(s/def ::format #{:ids :exact :canonical})
 (s/def ::from uuid?)
+(s/def ::format #{:ids :exact :canonical})
+(s/def ::attachments? boolean?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statements and Attachment Args
@@ -215,22 +218,36 @@
 (def attachment-insert-seq-spec
   (s/* attachment-insert-spec))
 
+(def statement-to-statement-insert-spec
+  (s/keys :req-un [::primary-key
+                   ::ancestor-id
+                   ::descendant-id]))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Queries
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def statement-query-spec
-  (s/keys :opt-un [::statement-id
-                   ::voided?
-                   ::verb-iri
-                   ::registration
+(def statement-query-one-spec
+  (s/keys :req-un [::statement-id
+                   ::voided?]
+          :opt-un [::format
+                   ::attachments?]))
+
+(def statement-query-many-spec
+  (s/keys :opt-un [::from
                    ::since
                    ::until
                    ::limit
                    ::ascending?
+                   ::verb-iri
+                   ::registration
                    ::related-actors?
                    ::related-activities?
                    ::hs-actor/actor-ifi
                    ::hs-activ/activity-iri
                    ::format
-                   ::from]))
+                   ::attachments?]))
+
+(def statement-query-spec
+  (s/or :one  statement-query-one-spec
+        :many statement-query-many-spec))

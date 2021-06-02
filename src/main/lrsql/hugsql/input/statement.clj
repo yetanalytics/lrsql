@@ -99,14 +99,15 @@
   "Helper to construct the `functions/insert-actor!` inputs for a statement's
    Agents and Groups."
   [stmt-id stmt-act stmt-obj stmt-auth stmt-inst stmt-team sql-enums]
-  (let [;; HugSql Enums
+  (let [;; Destructuring
         {:keys [act-enum obj-enum auth-enum inst-enum team-enum]}
         sql-enums
+        {stmt-obj-type "objectType" :or {stmt-obj-type "Activity"}}
+        stmt-obj
         ;; Statement Actors
-        stmt-obj   (when (#{"Agent" "Group"} (get stmt-obj "objectType"))
-                     stmt-obj)
+        obj-input  (when (and stmt-obj (#{"Agent" "Group"} stmt-obj-type))
+                     (actor-insert-input stmt-obj))
         act-input  (when stmt-act (actor-insert-input stmt-act))
-        obj-input  (when stmt-obj (actor-insert-input stmt-obj))
         auth-input (when stmt-auth (actor-insert-input stmt-auth))
         inst-input (when stmt-inst (actor-insert-input stmt-inst))
         team-input (when stmt-team (actor-insert-input stmt-team))
@@ -166,18 +167,19 @@
   "Helper to construct the `functions/insert-activity!` inputs for a statement's
    Activities."
   [stmt-id stmt-obj stmt-ctx-acts sql-enums]
-  (let [;; HugSql enums
+  (let [;; Destructuring
         {:keys [obj-enum cat-enum grp-enum prt-enum oth-enum]}
         sql-enums
-        ;; Statement Activities
+        {stmt-obj-type "objectType" :or {stmt-obj-type "Activity"}}
+        stmt-obj
         {cat-acts "category"
          grp-acts "grouping"
          prt-acts "parent"
          oth-acts "other"}
         stmt-ctx-acts
-        stmt-obj    (when (#{"Activity"} (get stmt-obj "objectType"))
-                      stmt-obj)
-        obj-act-in  (when stmt-obj (activity-insert-input stmt-obj))
+        ;; Statement Activities
+        obj-act-in  (when (and stmt-obj (#{"Activity"} stmt-obj-type))
+                      (activity-insert-input stmt-obj))
         cat-acts-in (when cat-acts (map activity-insert-input cat-acts))
         grp-acts-in (when grp-acts (map activity-insert-input grp-acts))
         prt-acts-in (when prt-acts (map activity-insert-input prt-acts))
@@ -401,7 +403,7 @@
          (conj acc (attachment-insert-input (u/str->uuid stmt-id)
                                             attachment))
          (throw (ex-info "Attachment is not associated with a Statement in request."
-                         {:kind ::invalid-attachment
+                         {:kind       ::invalid-attachment
                           :attachment attachment
                           :statements statements}))))
      '()

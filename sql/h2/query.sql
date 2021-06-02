@@ -1,36 +1,69 @@
 /* Statement Queries */
 
+-- :name query-statement
+-- :command :query
+-- :result :one
+-- :doc Query for one statement using statement IDs.
+SELECT payload FROM xapi_statement
+WHERE statement_id = :statement-id
+AND is_voided = :voided?
+
+/* The strategy of `query-statements` is to use multiple joins to form a
+   Cartesian product over statements, agents, and activities:
+   
+     (stmt, stmt_desc, stmt_actor, stmt_desc_actor, stmt_activity, stmt_desc_activity)
+   
+   Because we only want to return properties of `stmt`, which may be identical
+   across multiple such tuples, we apply SELECT DISTINCT at the top level.
+*/
+
 -- :name query-statements
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
-SELECT xapi_statement.id, payload FROM xapi_statement
-/*~
-(when (:actor-ifi params)
- (str "INNER JOIN statement_to_actor"
-      "\nON xapi_statement.statement_id = statement_to_actor.statement_id"
-      "\nAND statement_to_actor.actor_ifi = :actor-ifi"
-      (when-not (:related-actors? params)
-       "\nAND statement_to_actor.usage = 'Actor'")))
-~*/
-/*~
-(when (:activity-iri params)
- (str "INNER JOIN statement_to_activity"
-      "\nON xapi_statement.statement_id = statement_to_activity.statement_id"
-      "\nAND statement_to_activity.activity_iri = :activity-iri"
-      (when-not (:related-activities? params)
-       "\nAND statement_to_activity.usage = 'Object'")))
-~*/
+SELECT DISTINCT stmt.id, stmt.payload
+FROM xapi_statement stmt
+  LEFT JOIN statement_to_statement
+    ON stmt.statement_id = statement_to_statement.ancestor_id
+  LEFT JOIN xapi_statement stmt_desc
+    ON stmt_desc.statement_id = statement_to_statement.descendant_id
+  /*~
+  (when (:actor-ifi params)
+    (str "  LEFT JOIN statement_to_actor stmt_actor\n"
+         "    ON stmt.statement_id = stmt_actor.statement_id\n"
+         "  LEFT JOIN statement_to_actor stmt_desc_actor\n"
+         "    ON stmt_desc.statement_id = stmt_desc_actor.statement_id"))
+  ~*/
+  /*~
+  (when (:activity-iri params)
+    (str "  LEFT JOIN statement_to_activity stmt_activ\n"
+         "    ON stmt.statement_id = stmt_activ.statement_id\n"
+         "  LEFT JOIN statement_to_activity stmt_desc_activ\n"
+         "    ON stmt_desc.statement_id = stmt_desc_activ.statement_id"))
+  ~*/
 WHERE 1
---~ (if (some? (:voided? params)) "AND is_voided = :voided?" "AND is_voided = FALSE")
---~ (when (:statement-id params)  "AND xapi_statement.statement_id = :statement-id")
---~ (when (:from params)          "AND xapi_statement.id >= :from")
---~ (when (:verb-iri params)      "AND verb_iri = :verb-iri")
---~ (when (:registration params)  "AND registration = :registration")
---~ (when (:since params)         "AND stored > :since")
---~ (when (:until params)         "AND stored <= :until")
---~ (when (:ascending? params)    "ORDER BY stored")
---~ (when (:limit params)         "LIMIT :limit")
+  --~ (when (:from params)  "AND stmt.id >= :from")
+  --~ (when (:since params) "AND stmt.stored > :since")
+  --~ (when (:until params) "AND stmt.stored <= :until")
+  AND ((
+    stmt.is_voided = FALSE
+    --~ (when (:verb-iri params)      "AND stmt.verb_iri = :verb-iri")
+    --~ (when (:registration params)  "AND stmt.registration = :registration")
+    --~ (when (:actor-ifi params)     "AND stmt_actor.actor_ifi = :actor-ifi")
+    --~ (when (:activity-iri params)  "AND stmt_activ.activity_iri = :activity-iri")
+    --~ (when (and (:actor-ifi params) (not (:related-actors? params)))        "AND stmt_actor.usage = 'Actor'")
+    --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_activ.usage = 'Object'")
+  ) OR (
+    stmt_desc.is_voided = FALSE
+    --~ (when (:verb-iri params)      "AND stmt_desc.verb_iri = :verb-iri")
+    --~ (when (:registration params)  "AND stmt_desc.registration = :registration")
+    --~ (when (:actor-ifi params)     "AND stmt_desc_actor.actor_ifi = :actor-ifi")
+    --~ (when (:activity-iri params)  "AND stmt_desc_activ.activity_iri = :activity-iri")
+    --~ (when (and (:actor-ifi params) (not (:related-actors? params)))        "AND stmt_desc_actor.usage = 'Actor'")
+    --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_desc_activ.usage = 'Object'")
+  ))
+--~ (when (:ascending? params) "ORDER BY stmt.stored")
+--~ (when (:limit params)      "LIMIT :limit")
 
 /* Statement Object Queries */
 
@@ -49,7 +82,14 @@ AND actor_type = 'Agent'
 SELECT payload FROM activity
 WHERE activity_iri = :activity-iri
 
-/* Statement Object Existence Checks */
+/* Existence Checks */
+
+-- :name query-statement-exists
+-- :command :query
+-- :result :one
+-- :doc Check for the existence of a Statement with `:statement-id`. Returns nil iff not found. Includes voided Statements.
+SELECT 1 FROM xapi_statement
+WHERE statement_id = :statement-id
 
 -- :name query-actor-exists
 -- :command :query
@@ -64,6 +104,15 @@ WHERE actor_ifi = :actor-ifi
 -- :doc Check for the existence of an Activity with `:activity-iri`. Returns nil iff not found.
 SELECT 1 FROM activity
 WHERE activity_iri = :activity-iri
+
+/* Statement Reference Queries */
+
+-- :name query-statement-descendants
+-- :command :query
+-- :result :many
+-- :doc Query for the descendants of a referencing `:ancestor-id`.
+SELECT descendant_id FROM statement_to_statement
+WHERE ancestor_id = :ancestor-id
 
 /* Attachment Queries */
 

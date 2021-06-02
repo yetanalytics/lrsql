@@ -11,7 +11,7 @@
 ;; TODO: more specific authority
 (def lrsql-authority {"name" "LRSQL"
                       "objectType" "Agent"
-                      "account" {"homepage" "http://localhost:8080"
+                      "account" {"homePage" "http://localhost:8080"
                                  "name"     "LRSQL"}})
 
 (defn prepare-statement
