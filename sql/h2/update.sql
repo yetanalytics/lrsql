@@ -8,22 +8,6 @@ WHERE statement_id = :statement-id
 AND NOT (verb_iri = 'http://adlnet.gov/expapi/verbs/voided')
 -- ^ Any Statement that voids another cannot itself be voided.
 
--- :name update-actor!
--- :command :execute
--- :result :affected
--- :doc Update a pre-existing actor with a new actor type and payload.
-UPDATE actor
-SET actor_type = :actor-type, payload = :payload FORMAT JSON
-WHERE actor_ifi = :actor-ifi
-
--- :name update-activity!
--- :command :execute
--- :result :affected
--- :doc Update a pre-existing activity with a new paylaod.
-UPDATE activity
-SET payload = :payload FORMAT JSON
-WHERE activity_iri = :activity-iri
-
 -- :name update-state-document!
 -- :command :insert
 -- :result :affected

@@ -90,13 +90,6 @@ SELECT payload FROM actor
 WHERE actor_ifi = :agent-ifi -- not :actor-ifi since group IFIs aren't allowed
 AND actor_type = 'Agent'
 
--- :name query-actor
--- :command :query
--- :result :one
--- :doc Query an activity with `:actor-ifi`. Both Agent and Groups may be queried.
-SELECT payload FROM actor
-WHERE actor_ifi = :actor-ifi
-
 -- :name query-activity
 -- :command :query
 -- :result :one
