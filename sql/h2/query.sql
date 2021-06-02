@@ -50,12 +50,12 @@ FROM xapi_statement stmt
          "  LEFT JOIN statement_to_activity stmt_desc_activ\n"
          "    ON stmt_desc.statement_id = stmt_desc_activ.statement_id"))
   ~*/
-WHERE 1
+WHERE stmt.is_voided = FALSE
   --~ (when (:from params)  "AND stmt.id >= :from")
   --~ (when (:since params) "AND stmt.stored > :since")
   --~ (when (:until params) "AND stmt.stored <= :until")
   AND ((
-    stmt.is_voided = FALSE
+    1
     --~ (when (:verb-iri params)      "AND stmt.verb_iri = :verb-iri")
     --~ (when (:registration params)  "AND stmt.registration = :registration")
     --~ (when (:actor-ifi params)     "AND stmt_actor.actor_ifi = :actor-ifi")
