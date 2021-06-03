@@ -259,7 +259,8 @@
          stmt-vrb  "verb"
          stmt-obj  "object"
          stmt-ctx  "context"
-         stmt-auth "authority"}
+         stmt-auth "authority"
+         stmt-atts "attachments"}
         statement
         {stmt-obj-typ "objectType"}
         stmt-obj
@@ -279,6 +280,13 @@
         ;; `stmt-ref-id` should always be true here, but we still sanity check
         voiding?    (and (some? stmt-ref-id)
                          (= voiding-verb stmt-vrb-id))
+        att-shas    (set
+                     (concat (when stmt-atts
+                               (map #(get % "sha2") stmt-atts))
+                             (when-let [sstmt-atts
+                                        (and (= "SubStatement" stmt-obj-typ)
+                                             (get stmt-obj "attachments"))]
+                               (map #(get % "sha2") sstmt-atts))))
         ;; Statement HugSql input
         stmt-input  {:table             :statement
                      :primary-key       stmt-pk
@@ -286,6 +294,7 @@
                      :?statement-ref-id stmt-ref-id
                      :stored            stmt-stored
                      :?registration     stmt-reg
+                     :?attachment-shas  att-shas
                      :verb-iri          stmt-vrb-id
                      :voided?           false
                      :voiding?          voiding?
@@ -317,15 +326,13 @@
         [sactor-inputs sactiv-inputs sstmt-actor-inputs sstmt-activ-inputs]
         (when (= "SubStatement" stmt-obj-typ)
           (sub-statement-insert-inputs stmt-id stmt-obj))]
-    (concat [stmt-input]
-            actor-inputs
-            sactor-inputs
-            activ-inputs
-            sactiv-inputs
-            stmt-actor-inputs
-            sstmt-actor-inputs
-            stmt-activ-inputs
-            sstmt-activ-inputs)))
+    {:statement-input      stmt-input
+     :actor-inputs         (vec (concat actor-inputs sactor-inputs))
+     :activity-inputs      (vec (concat activ-inputs sactiv-inputs))
+     :stmt-actor-inputs    (vec (concat stmt-actor-inputs sstmt-actor-inputs))
+     :stmt-activity-inputs (vec (concat stmt-activ-inputs sstmt-activ-inputs))
+     :stmt-stmt-inputs     []
+     :attachment-inputs    []}))
 
 (s/fdef statements-insert-inputs
   :args (s/cat :statements (s/coll-of hs/prepared-statement-spec
@@ -337,7 +344,29 @@
   "Given the coll `statements`, return a seq of input maps that serve as the
    input for `command/insert-statements!`"
   [statements]
-  (mapcat statement-insert-inputs statements))
+  (map statement-insert-inputs statements))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Descendant Insertion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- descendant-insert-input
+  [stmt-id desc-id]
+  {:table         :statement-to-statement
+   :primary-key   (u/generate-squuid)
+   :descendant-id desc-id
+   :ancestor-id   stmt-id})
+
+(defn add-descendant-insert-input
+  [input-map desc-ids]
+  (let [stmt-id (-> input-map :statement-input :statement-id)]
+    (reduce (fn [input-map' desc-id]
+              (update input-map'
+                      :stmt-stmt-inputs
+                      conj
+                      (descendant-insert-input stmt-id desc-id)))
+            input-map
+            desc-ids)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Attachment Insertion 
@@ -408,6 +437,35 @@
                           :statements statements}))))
      '()
      attachments)))
+
+;; TODO: This looks disgusting - refactor
+(defn add-attachment-insert-inputs
+  [input-maps attachments]
+  (reduce (fn [input-maps' {sha :sha2 :as attachment}]
+            (loop [prev-maps '()
+                   rest-maps input-maps']
+              (if-some [{{stmt-id   :statement-id
+                          ?att-shas :?attachment-shas} :statement-input
+                         :as input-map}
+                        (first rest-maps)]
+                (if (and ?att-shas (contains? ?att-shas sha))
+                  (let [input-map'
+                        (update input-map
+                                :attachment-inputs
+                                conj
+                                (attachment-insert-input stmt-id attachment))]
+                    ;; Reverse b/c we were conj-ing a list
+                    (reverse (concat (conj prev-maps input-map')
+                                     (rest rest-maps))))
+                  (recur (conj prev-maps input-map)
+                         (rest rest-maps)))
+                (throw
+                 (ex-info "Attachment is not associated with a Statement in request."
+                          {:kind       ::invalid-attachment
+                           :attachment attachment
+                           :statements input-maps})))))
+          input-maps
+          attachments))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Query

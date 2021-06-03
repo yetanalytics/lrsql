@@ -12,7 +12,8 @@
             [lrsql.hugsql.command.activity  :as activity-command]
             [lrsql.hugsql.command.statement :as stmt-command]
             [lrsql.hugsql.command.document  :as doc-command]
-            [lrsql.hugsql.util.statement :as stmt-util])
+            [lrsql.hugsql.util.statement :as stmt-util]
+            [lrsql.hugsql.util :as u])
   (:import [java.time Instant]))
 
 (defrecord LearningRecordStore [db-type conn-pool]
@@ -38,7 +39,27 @@
   lp/StatementsResource
   (-store-statements
    [lrs auth-identity statements attachments]
-   (let [conn        (:conn-pool lrs)
+   (jdbc/with-transaction [tx ((:conn-pool lrs))]
+     (let [stmts       (map stmt-util/prepare-statement statements)
+           stmt-inputs (-> (map stmt-input/statement-insert-inputs stmts)
+                           (stmt-input/add-attachment-insert-inputs
+                            attachments))
+          ;;  _ (clojure.tools.logging/errorf "stmt inputs: %s" stmt-inputs)
+           stmt-res    (map (fn [stmt-input]
+                              (let [stmt-descs
+                                    (stmt-command/query-descendants
+                                     tx
+                                     stmt-input)
+                                    stmt-input'
+                                    (stmt-input/add-descendant-insert-input
+                                     stmt-input
+                                     stmt-descs)]
+                                (stmt-command/insert-statement!
+                                 tx
+                                 stmt-input')))
+                            stmt-inputs)]
+       {:statement-ids (->> stmt-res (map u/uuid->str) vec)}))
+   #_(let [conn        (:conn-pool lrs)
          stmts       (map stmt-util/prepare-statement statements)
          stmt-inputs (stmt-input/statements-insert-inputs stmts)
          att-inputs  (when (not-empty attachments)
