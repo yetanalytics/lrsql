@@ -15,7 +15,7 @@
 (s/fdef actor-insert-input
   :args (s/cat :actor (s/alt :agent ::xs/agent
                              :group ::xs/group))
-  :ret (s/nilable hs/actor-insert-spec))
+  :ret (s/nilable ::hs/actor-input))
 
 (defn actor-insert-input
   "Given `actor`, construct the input for `functions/insert-actor!`, or nil
@@ -31,7 +31,7 @@
 (s/fdef group-insert-input
   :args (s/cat :actor (s/alt :agent ::xs/agent
                              :group ::xs/group))
-  :ret (s/nilable (s/coll-of hs/actor-insert-spec :min-count 1)))
+  :ret (s/nilable ::hs/actor-inputs))
 
 (defn group-insert-input
   "Given `actor`, return a coll of actor inputs, or nil if `actor` is not
@@ -45,7 +45,7 @@
 
 (s/fdef activity-insert-input
   :args (s/cat :activity ::xs/activity)
-  :ret hs/activity-insert-spec)
+  :ret ::hs/activity-input)
 
 (defn activity-insert-input
   "Given `activity`, construct the input for `functions/insert-activity!`."
@@ -58,8 +58,8 @@
 (s/fdef statement-to-actor-insert-input
   :args (s/cat :statement-id ::hs/statement-id
                :actor-usage :lrsql.hugsql.spec.actor/usage
-               :actor-input hs/actor-insert-spec)
-  :ret hs/statement-to-actor-insert-spec)
+               :actor-input ::hs/actor-input)
+  :ret ::hs/stmt-actor-input)
 
 (defn statement-to-actor-insert-input
   "Given `statement-id`, `actor-usage` and the input to `f/insert-actor!`,
@@ -74,8 +74,8 @@
 (s/fdef statement-to-activity-insert-input
   :args (s/cat :statement-id ::hs/statement-id
                :activity-usage :lrsql.hugsql.spec.activity/usage
-               :activity-input hs/activity-insert-spec)
-  :ret hs/statement-to-activity-insert-spec)
+               :activity-input ::hs/activity-input)
+  :ret ::hs/stmt-activity-input)
 
 (defn statement-to-activity-insert-input
   "Given `statement-id`, `activity-usage` and the HugSql params map for
@@ -243,7 +243,7 @@
 
 (s/fdef statement-insert-inputs
   :args (s/cat :statement hs/prepared-statement-spec)
-  :ret hs/statement-insert-seq-spec)
+  :ret hs/statement-insert-map-spec)
 
 (defn statement-insert-inputs
   "Given `statement`, return a seq of inputs that serve as the input for
@@ -338,7 +338,7 @@
   :args (s/cat :statements (s/coll-of hs/prepared-statement-spec
                                       :min-count 1
                                       :gen-max 5))
-  :ret (s/+ hs/statement-insert-seq-spec))
+  :ret (s/coll-of hs/statement-insert-map-spec :min-count 1))
 
 (defn statements-insert-inputs
   "Given the coll `statements`, return a seq of input maps that serve as the
@@ -357,7 +357,12 @@
    :descendant-id desc-id
    :ancestor-id   stmt-id})
 
-(defn add-descendant-insert-input
+(s/fdef add-descendant-insert-inputs
+  :args (s/cat :input-map hs/statement-insert-map-spec
+               :desc-ids  (s/coll-of uuid?))
+  :ret  hs/statement-insert-map-spec)
+
+(defn add-descendant-insert-inputs
   [input-map desc-ids]
   (let [stmt-id (-> input-map :statement-input :statement-id)]
     (reduce (fn [input-map' desc-id]
@@ -372,10 +377,13 @@
 ;; Attachment Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; NOTE: Assume that the LRS has already validated that every statement
+;; attachment object has a fileUrl or valid SHA2 value.
+
 (s/fdef attachment-insert-input
   :args (s/cat :statement-id ::hs/statement-id
                :attachment ::ss/attachment)
-  :ret hs/attachment-insert-spec)
+  :ret ::hs/attachment-input)
 
 (defn attachment-insert-input
   "Given `statement-id` and `attachment`, construct the input for
@@ -395,48 +403,9 @@
      :content-length length
      :contents       (u/data->bytes contents)}))
 
-(s/fdef attachments-insert-inputs
-  :args hs/prepared-attachments-spec
-  :ret hs/attachment-insert-seq-spec)
-
-(defn attachments-insert-inputs
-  "Given colls `statements` and `attachments`, return a seq of
-   `functions/insert-attachment!` inputs that will be part of the input for
-   `command/insert-statements!`. Each attachment in `attachments` must have an
-   associated attachment object in `statements` (including substatements)."
-  [statements attachments]
-  ;; NOTE: Assume that the LRS has already validated that every statement
-  ;; attachment object has a fileUrl or valid SHA2 value.
-  (let [;; attachment-to-statement-id map
-        att-stmt-id-m
-        (reduce
-         (fn [m {stmt-id "id" stmt-obj "object" stmt-atts "attachments"}]
-           (let [stmt-atts' (cond-> stmt-atts
-                              ;; SubStatement attachments
-                              (= "SubStatement" (get stmt-obj "objectType"))
-                              (concat (get stmt-obj "attachments")))]
-             (reduce
-              (fn [m' {:strs [sha2]}]
-                (assoc m' sha2 stmt-id))
-              m
-              stmt-atts')))
-         {}
-         statements)
-        ;; attachment to statement id
-        att->stmt-id
-        (fn [{:keys [sha2]}]
-          (att-stmt-id-m sha2))]
-    (reduce
-     (fn [acc attachment]
-       (if-some [stmt-id (att->stmt-id attachment)]
-         (conj acc (attachment-insert-input (u/str->uuid stmt-id)
-                                            attachment))
-         (throw (ex-info "Attachment is not associated with a Statement in request."
-                         {:kind       ::invalid-attachment
-                          :attachment attachment
-                          :statements statements}))))
-     '()
-     attachments)))
+(s/fdef add-attachment-insert-inputs
+  :args hs/stmt-input-attachments-spec
+  :ret (s/coll-of hs/statement-insert-map-spec))
 
 ;; TODO: This looks disgusting - refactor
 (defn add-attachment-insert-inputs

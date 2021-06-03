@@ -51,7 +51,7 @@
                                      tx
                                      stmt-input)
                                     stmt-input'
-                                    (stmt-input/add-descendant-insert-input
+                                    (stmt-input/add-descendant-insert-inputs
                                      stmt-input
                                      stmt-descs)]
                                 (stmt-command/insert-statement!

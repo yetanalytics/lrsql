@@ -10,15 +10,17 @@
   (testing "statement object insertion inputs"
     (is (nil? (check-validate `stmt-input/actor-insert-input)))
     (is (nil? (check-validate `stmt-input/activity-insert-input)))
-    (is (nil? (check-validate `stmt-input/attachment-insert-input)))
     (is (nil? (check-validate `stmt-input/group-insert-input)))
     (is (nil? (check-validate `stmt-input/statement-to-actor-insert-input)))
     (is (nil? (check-validate `stmt-input/statement-to-activity-insert-input))))
   (testing "statement insertion inputs"
-    (is (nil? (check-validate `stmt-input/statement-insert-inputs 10)))
-    (is (nil? (check-validate `stmt-input/statements-insert-inputs 5))))
+    (is (nil? (check-validate `stmt-input/statement-insert-inputs 1)))
+    (is (nil? (check-validate `stmt-input/statements-insert-inputs 1))))
+  (testing "descendant insertion inputs"
+    (is (nil? (check-validate `stmt-input/add-descendant-insert-inputs 1))))
   (testing "attachment insertion inputs"
-    (is (nil? (check-validate `stmt-input/attachments-insert-inputs 10))))
+    (is (nil? (check-validate `stmt-input/attachment-insert-input)))
+    (is (nil? (check-validate `stmt-input/add-attachment-insert-inputs 1))))
   (testing "document insertion inputs"
     (is (nil? (check-validate `doc-input/document-insert-input)))))
 
