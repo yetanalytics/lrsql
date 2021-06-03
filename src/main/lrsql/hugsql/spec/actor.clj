@@ -51,7 +51,8 @@
     "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"})
 
 (s/def ::payload
-  :xapi.statements.GET.request.params/agent)
+  ::xs/actor
+  #_:xapi.statements.GET.request.params/agent)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Agent params spec

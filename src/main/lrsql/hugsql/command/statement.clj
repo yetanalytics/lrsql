@@ -20,7 +20,7 @@
     ;; TODO: Query the statement by ID first; if IDs match, compare the payloads
     ;; to determine if the two statements are the same, in which case throw
     ;; an exception.
-    (do (f/insert-statement! tx input)
+    (do (f/insert-statement! tx (update input :payload u/write-json))
         ;; Void statements
         (when (:voiding? input)
           (f/void-statement! tx {:statement-id (:?statement-ref-id input)}))
@@ -29,19 +29,19 @@
     :actor
     (do (if (some->> (select-keys input [:actor-ifi])
                      (f/query-actor-exists tx))
-          (f/update-actor! tx input)
-          (f/insert-actor! tx input))
+          (f/update-actor! tx (update input :payload u/write-json))
+          (f/insert-actor! tx (update input :payload u/write-json)))
         nil)
     :activity
     (do (if-some [old-activ (some->> (select-keys input [:activity-iri])
                                      (f/query-activity tx)
                                      :payload
                                      u/parse-json)]
-          (let [new-activ (some-> input :payload u/parse-json)
+          (let [new-activ (:payload input)
                 activity' (as/merge-activity old-activ new-activ)
                 input'    (assoc input :payload (u/write-json activity'))]
             (f/update-activity! tx input'))
-          (f/insert-activity! tx input))
+          (f/insert-activity! tx (update input :payload u/write-json)))
         nil)
     :attachment
     (do (f/insert-attachment! tx input) nil)

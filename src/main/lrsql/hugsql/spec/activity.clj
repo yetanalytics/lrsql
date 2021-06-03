@@ -16,7 +16,8 @@
     "SubObject" "SubCategory" "SubGrouping" "SubParent" "SubOther"})
 
 (s/def ::payload
-  (make-str-spec ::xs/activity u/parse-json u/write-json))
+  ::xs/activity
+  #_(make-str-spec ::xs/activity u/parse-json u/write-json))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params spec
