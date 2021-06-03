@@ -4,11 +4,9 @@
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.hugsql.util :as u]
             [lrsql.hugsql.spec.activity   :as hs-activ]
             [lrsql.hugsql.spec.actor      :as hs-actor]
             [lrsql.hugsql.spec.attachment :as hs-attach]
-            [lrsql.hugsql.spec.util      :refer [make-str-spec]]
             [lrsql.hugsql.util.statement :refer [prepare-statement]]))
 
 ;; TODO: Deal with different encodings for JSON types (e.g. payloads,

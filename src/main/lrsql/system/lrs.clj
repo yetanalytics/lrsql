@@ -44,7 +44,6 @@
            stmt-inputs (-> (map stmt-input/statement-insert-inputs stmts)
                            (stmt-input/add-attachment-insert-inputs
                             attachments))
-          ;;  _ (clojure.tools.logging/errorf "stmt inputs: %s" stmt-inputs)
            stmt-res    (map (fn [stmt-input]
                               (let [stmt-descs
                                     (stmt-command/query-descendants
@@ -58,17 +57,7 @@
                                  tx
                                  stmt-input')))
                             stmt-inputs)]
-       {:statement-ids (->> stmt-res (map u/uuid->str) vec)}))
-   #_(let [conn        (:conn-pool lrs)
-         stmts       (map stmt-util/prepare-statement statements)
-         stmt-inputs (stmt-input/statements-insert-inputs stmts)
-         att-inputs  (when (not-empty attachments)
-                       (stmt-input/attachments-insert-inputs stmts attachments))]
-     (jdbc/with-transaction [tx (conn)]
-       (let [sref-inputs (stmt-command/query-statement-refs tx stmt-inputs)]
-         (stmt-command/insert-statements! tx (concat stmt-inputs
-                                                     sref-inputs
-                                                     att-inputs))))))
+       {:statement-ids (->> stmt-res (map u/uuid->str) vec)})))
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)
