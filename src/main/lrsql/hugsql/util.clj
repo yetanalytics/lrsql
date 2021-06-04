@@ -3,7 +3,7 @@
             [java-time]
             [clojure.spec.alpha :as s]
             [clojure.java.io    :as io]
-            [cheshire.core      :as json])
+            [clojure.data.json  :as json])
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]))
@@ -191,10 +191,11 @@
   "Reads one JSON value from input String. Throws if there are more.."
   [string & {:as options}]
   (let [rdr (PushbackReader. (StringReader. string) 64)
-        obj (apply json/parse-stream
+        obj (apply json/read
                    rdr
                    (mapcat identity options))]
-    (if (apply json/parse-stream rdr
+    (if (apply json/read
+               rdr
                (mapcat identity
                        (assoc options :eof-error? false)))
       (throw (ex-info "More input after JSON object"
@@ -219,7 +220,7 @@
 (defn write-json
   "Write `jsn` to a string."
   [jsn]
-  (json/generate-string jsn))
+  (json/write-str jsn))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Bytes
