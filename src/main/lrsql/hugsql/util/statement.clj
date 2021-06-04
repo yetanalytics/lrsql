@@ -49,17 +49,12 @@
     (str "http://" host ":" port)))
 
 (defn make-more-url
-  "If `stmt-query-result` contains a non-empty `more` string signifying the
-   pagination cursor, update it to be a URL to query the next page."
-  [params stmt-query-result]
-  (if-some [stmt-id (not-empty (get-in stmt-query-result
-                                       [:statement-result :more]))]
-    (assoc-in stmt-query-result
-              [:statement-result :more]
-              (str (xapi-path-prefix)
-                   "/xapi/statements?"
-                   (form-encode (assoc params :from stmt-id))))
-    stmt-query-result))
+  "Forms the `more` URL value from `query-params` and the Statement ID
+   `next-cursor` which points to the first Statement of the next page."
+  [query-params next-cursor]
+  (str (xapi-path-prefix)
+       "/xapi/statements?"
+       (form-encode (assoc query-params :from next-cursor))))
 
 (defn ensure-default-max-limit
   "Apply default/max limit to params"

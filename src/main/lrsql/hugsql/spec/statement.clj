@@ -17,7 +17,7 @@
 ;; These spec the data received by functions in `lrsql.hugsq.input`.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def get-statements-params
+(s/def ::query-params
   ::lrsp/get-statements-params)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -269,7 +269,8 @@
                    ::limit
                    ::ascending?
                    ::format
-                   ::attachments?]))
+                   ::attachments?
+                   ::query-params]))
 
 (def statement-query-spec
   (s/or :one  statement-query-one-spec

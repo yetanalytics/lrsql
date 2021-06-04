@@ -3,7 +3,8 @@
    [com.yetanalytics.lrs.xapi.statements :as ss]
    [com.yetanalytics.lrs.xapi.activities :as as]
    [lrsql.hugsql.functions :as f]
-   [lrsql.hugsql.util :as u]))
+   [lrsql.hugsql.util :as u]
+   [lrsql.hugsql.util.statement :as us]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertions
@@ -132,15 +133,14 @@
 (defn- query-many-statements
   "Query potentially multiple statements from the DB."
   [tx input ltags]
-  (let [{:keys [format limit attachments?]} input
+  (let [{:keys [format limit attachments? query-params]} input
         input'        (if limit (update input :limit inc) input)
         query-results (f/query-statements tx input')
-        next-cursor   (if (and limit
-                               (= (inc limit) (count query-results)))
-                        (-> query-results last :id u/uuid->str)
-                        "")
+        ?next-cursor  (when (and limit
+                                 (= (inc limit) (count query-results)))
+                        (-> query-results last :id u/uuid->str))
         stmt-results  (map (partial query-res->statement format ltags)
-                           (if (not-empty next-cursor)
+                           (if (not-empty ?next-cursor)
                              (butlast query-results)
                              query-results))
         att-results   (if attachments?
@@ -153,7 +153,10 @@
                              (map conform-attachment-res))
                         [])]
     {:statement-result {:statements stmt-results
-                        :more       next-cursor}
+                        :more       (if ?next-cursor
+                                      (us/make-more-url query-params
+                                                        ?next-cursor)
+                                      "")}
      :attachments      att-results}))
 
 (defn query-statements

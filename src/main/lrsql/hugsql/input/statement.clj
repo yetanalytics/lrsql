@@ -469,7 +469,7 @@
 ;; would have been filtered out earlier by interceptors.
 
 (s/fdef statement-query-input
-  :args (s/cat :params hs/get-statements-params)
+  :args (s/cat :params ::hs/query-params)
   :ret hs/statement-query-spec)
 
 (defn statement-query-input
@@ -488,7 +488,8 @@
     ?asc?        :ascending
     ?atts?       :attachments
     ?format      :format
-    ?from        :from}] ; Not a stmt res param; added by lrsql for pagination
+    ?from        :from ; Not a stmt res param; added by lrsql for pagination
+    :as          params}]
   (let [?stmt-id    (when ?stmt-id (u/str->uuid ?stmt-id))
         ?vstmt-id   (when ?vstmt-id (u/str->uuid ?vstmt-id))
         ?actor-ifi  (when ?actor (ua/actor->ifi ?actor))
@@ -519,4 +520,5 @@
               :?until               ?until
               :?from                ?from
               :ascending?           asc?
-              :limit                limit}))))
+              :limit                limit
+              :query-params         params}))))
