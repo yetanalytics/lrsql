@@ -63,11 +63,11 @@
   (cond
     (not (some? db-type))
     (throw (ex-data "db-type is nil or not set!"
-                    {:kind    ::missing-db-type
+                    {:type    ::missing-db-type
                      :db-type nil}))
     (not (valid-db-types db-type))
     (throw (ex-data "db-type is invalid!"
-                    {:kind    ::invalid-db-type
+                    {:type    ::invalid-db-type
                      :db-type db-type}))
     :else
     nil))
