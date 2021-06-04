@@ -61,13 +61,10 @@
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)
-         coerced-params (-> params
-                            stmt-util/ensure-default-max-limit)
-         inputs (stmt-input/statement-query-input
-                 coerced-params)]
+         inputs (stmt-input/statement-query-input params)]
      (jdbc/with-transaction [tx (conn)]
        (->> (stmt-command/query-statements tx inputs ltags)
-            (stmt-util/make-more-url coerced-params)))))
+            (stmt-util/make-more-url params)))))
   (-consistent-through
    [this ctx auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want

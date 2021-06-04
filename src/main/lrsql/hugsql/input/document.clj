@@ -14,41 +14,41 @@
   "Common properties for state document inputs. `state-id?` controls whether
    the state ID property is added (true for singleton queries, false for
    array-valued queries)."
-  [{state-id     :stateId
-    activity-id  :activityId
-    agent        :agent
-    registration :registration}
+  [{?state-id     :stateId
+    activity-id   :activityId
+    agent         :agent
+    ?registration :registration}
    state-id?]
   (cond-> {:table         :state-document
            :activity-iri  activity-id
            :agent-ifi     (ua/actor->ifi agent)
-           :?registration (when registration (u/str->uuid registration))}
+           :?registration (when ?registration (u/str->uuid ?registration))}
     state-id?
-    (assoc :state-id state-id)))
+    (assoc :state-id ?state-id)))
 
 (defn- agent-profile-document-basics
   "Common properties for agent profile document inputs. `profile-id?` controls
    whether the profile ID property is added (true for singleton queries, false
    for array-valued queries)."
-  [{profile-id :profileId
-    agent      :agent}
+  [{?profile-id :profileId
+    agent       :agent}
    profile-id?]
   (cond-> {:table     :agent-profile-document
            :agent-ifi (ua/actor->ifi agent)}
     profile-id?
-    (assoc :profile-id profile-id)))
+    (assoc :profile-id ?profile-id)))
 
 (defn- activity-profile-document-basics
   "Common properties for activity profile document inputs. `profile-id?`
    controls whether the profile ID property is added (true for singleton
    queries, false for array-valued queries)."
-  [{profile-id  :profileId
+  [{?profile-id :profileId
     activity-id :activityId}
    profile-id?]
   (cond-> {:table        :activity-profile-document
            :activity-iri activity-id}
     profile-id?
-    (assoc :profile-id profile-id)))
+    (assoc :profile-id ?profile-id)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertion 
@@ -142,10 +142,8 @@
 
 (defn- add-since-to-map
   "Add the `:since` property to `m` if `:since` is present/not nil."
-  [{since :since} m]
-  (cond-> m
-    since
-    (assoc :since (u/str->time since))))
+  [{?since :since} m]
+  (merge m {:?since ?since}))
 
 (s/fdef document-ids-input
   :args (s/cat :params hs/get-document-ids-params)

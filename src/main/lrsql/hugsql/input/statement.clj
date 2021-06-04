@@ -5,7 +5,8 @@
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec.statement :as hs]
             [lrsql.hugsql.util :as u]
-            [lrsql.hugsql.util.actor :as ua]))
+            [lrsql.hugsql.util.actor :as ua]
+            [lrsql.hugsql.util.statement :as us]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -99,133 +100,137 @@
 (defn- statement-actor-insert-inputs
   "Helper to construct the `functions/insert-actor!` inputs for a statement's
    Agents and Groups."
-  [stmt-id stmt-act stmt-obj stmt-auth stmt-inst stmt-team sql-enums]
+  [stmt-id stmt-act stmt-obj ?stmt-auth ?stmt-inst ?stmt-team sql-enums]
   (let [;; Destructuring
         {:keys [act-enum obj-enum auth-enum inst-enum team-enum]}
         sql-enums
         {stmt-obj-type "objectType" :or {stmt-obj-type "Activity"}}
         stmt-obj
+        ;; Object Type
+        actor-obj?
+        (boolean (#{"Agent" "Group"} stmt-obj-type))
         ;; Statement Actors
-        obj-input  (when (and stmt-obj (#{"Agent" "Group"} stmt-obj-type))
-                     (actor-insert-input stmt-obj))
-        act-input  (when stmt-act (actor-insert-input stmt-act))
-        auth-input (when stmt-auth (actor-insert-input stmt-auth))
-        inst-input (when stmt-inst (actor-insert-input stmt-inst))
-        team-input (when stmt-team (actor-insert-input stmt-team))
+        ?act-input  (actor-insert-input stmt-act)
+        ?obj-input  (when actor-obj? (actor-insert-input stmt-obj))
+        ?auth-input (when ?stmt-auth (actor-insert-input ?stmt-auth))
+        ?inst-input (when ?stmt-inst (actor-insert-input ?stmt-inst))
+        ?team-input (when ?stmt-team (actor-insert-input ?stmt-team))
         ;; Member Actors
-        act-mem-inputs  (when stmt-act (group-insert-input stmt-act))
-        obj-mem-inputs  (when stmt-obj (group-insert-input stmt-obj))
-        auth-mem-inputs (when stmt-auth (group-insert-input stmt-auth))
-        inst-mem-inputs (when stmt-inst (group-insert-input stmt-inst))
-        team-mem-inputs (when stmt-team (group-insert-input stmt-team))
+        ?act-mem-inputs  (group-insert-input stmt-act)
+        ?obj-mem-inputs  (when actor-obj? (group-insert-input stmt-obj))
+        ?auth-mem-inputs (when ?stmt-auth (group-insert-input ?stmt-auth))
+        ?inst-mem-inputs (when ?stmt-inst (group-insert-input ?stmt-inst))
+        ?team-mem-inputs (when ?stmt-team (group-insert-input ?stmt-team))
         ;; Actor Inputs
         actor-inputs (cond-> []
                        ;; Statememt Actors
-                       act-input  (conj act-input)
-                       obj-input  (conj obj-input)
-                       auth-input (conj auth-input)
-                       inst-input (conj inst-input)
-                       team-input (conj team-input)
+                       ?act-input  (conj ?act-input)
+                       ?obj-input  (conj ?obj-input)
+                       ?auth-input (conj ?auth-input)
+                       ?inst-input (conj ?inst-input)
+                       ?team-input (conj ?team-input)
                        ;; Member Actors
-                       act-mem-inputs  (concat act-mem-inputs)
-                       obj-mem-inputs  (concat obj-mem-inputs)
-                       auth-mem-inputs (concat auth-mem-inputs)
-                       inst-mem-inputs (concat inst-mem-inputs)
-                       team-mem-inputs (concat team-mem-inputs))
+                       ?act-mem-inputs  (concat ?act-mem-inputs)
+                       ?obj-mem-inputs  (concat ?obj-mem-inputs)
+                       ?auth-mem-inputs (concat ?auth-mem-inputs)
+                       ?inst-mem-inputs (concat ?inst-mem-inputs)
+                       ?team-mem-inputs (concat ?team-mem-inputs))
         ;; Statement to Actor Inputs
         actor->link (partial statement-to-actor-insert-input stmt-id)
         stmt-actors (cond-> []
                       ;; Statement Actors
-                      act-input
-                      (conj (actor->link act-enum act-input))
-                      obj-input
-                      (conj (actor->link obj-enum obj-input))
-                      auth-input
-                      (conj (actor->link auth-enum auth-input))
-                      inst-input
-                      (conj (actor->link inst-enum inst-input))
-                      team-input
-                      (conj (actor->link team-enum team-input))
+                      ?act-input
+                      (conj (actor->link act-enum ?act-input))
+                      ?obj-input
+                      (conj (actor->link obj-enum ?obj-input))
+                      ?auth-input
+                      (conj (actor->link auth-enum ?auth-input))
+                      ?inst-input
+                      (conj (actor->link inst-enum ?inst-input))
+                      ?team-input
+                      (conj (actor->link team-enum ?team-input))
                       ;; Member Actors
-                      act-mem-inputs
+                      ?act-mem-inputs
                       (concat (map (partial actor->link act-enum)
-                                   act-mem-inputs))
-                      obj-mem-inputs
+                                   ?act-mem-inputs))
+                      ?obj-mem-inputs
                       (concat (map (partial actor->link obj-enum)
-                                   obj-mem-inputs))
-                      auth-mem-inputs
+                                   ?obj-mem-inputs))
+                      ?auth-mem-inputs
                       (concat (map (partial actor->link auth-enum)
-                                   auth-mem-inputs))
-                      inst-mem-inputs
+                                   ?auth-mem-inputs))
+                      ?inst-mem-inputs
                       (concat (map (partial actor->link inst-enum)
-                                   inst-mem-inputs))
-                      team-mem-inputs
+                                   ?inst-mem-inputs))
+                      ?team-mem-inputs
                       (concat (map (partial actor->link team-enum)
-                                   team-mem-inputs)))]
+                                   ?team-mem-inputs)))]
     [actor-inputs stmt-actors]))
 
 (defn- statement-activity-insert-inputs
   "Helper to construct the `functions/insert-activity!` inputs for a statement's
    Activities."
-  [stmt-id stmt-obj stmt-ctx-acts sql-enums]
+  [stmt-id stmt-obj ?stmt-ctx-acts sql-enums]
   (let [;; Destructuring
         {:keys [obj-enum cat-enum grp-enum prt-enum oth-enum]}
         sql-enums
         {stmt-obj-type "objectType" :or {stmt-obj-type "Activity"}}
         stmt-obj
-        {cat-acts "category"
-         grp-acts "grouping"
-         prt-acts "parent"
-         oth-acts "other"}
-        stmt-ctx-acts
+        {?cat-acts "category"
+         ?grp-acts "grouping"
+         ?prt-acts "parent"
+         ?oth-acts "other"}
+        ?stmt-ctx-acts
+        ;; Object Type
+        activity-obj?
+        (boolean (#{"Activity"} stmt-obj-type))
         ;; Statement Activities
-        obj-act-in  (when (and stmt-obj (#{"Activity"} stmt-obj-type))
-                      (activity-insert-input stmt-obj))
-        cat-acts-in (when cat-acts (map activity-insert-input cat-acts))
-        grp-acts-in (when grp-acts (map activity-insert-input grp-acts))
-        prt-acts-in (when prt-acts (map activity-insert-input prt-acts))
-        oth-acts-in (when oth-acts (map activity-insert-input oth-acts))
+        ?obj-act-in  (when activity-obj? (activity-insert-input stmt-obj))
+        ?cat-acts-in (when ?cat-acts (map activity-insert-input ?cat-acts))
+        ?grp-acts-in (when ?grp-acts (map activity-insert-input ?grp-acts))
+        ?prt-acts-in (when ?prt-acts (map activity-insert-input ?prt-acts))
+        ?oth-acts-in (when ?oth-acts (map activity-insert-input ?oth-acts))
         ;; Activity Inputs
         act-inputs (cond-> []
-                     obj-act-in  (conj obj-act-in)
-                     cat-acts-in (concat cat-acts-in)
-                     grp-acts-in (concat grp-acts-in)
-                     prt-acts-in (concat prt-acts-in)
-                     oth-acts-in (concat oth-acts-in))
+                     ?obj-act-in  (conj ?obj-act-in)
+                     ?cat-acts-in (concat ?cat-acts-in)
+                     ?grp-acts-in (concat ?grp-acts-in)
+                     ?prt-acts-in (concat ?prt-acts-in)
+                     ?oth-acts-in (concat ?oth-acts-in))
         ;; Statement to Activity Enums
         act->link (partial statement-to-activity-insert-input stmt-id)
         stmt-acts (cond-> []
-                    obj-act-in
-                    (conj (act->link obj-enum obj-act-in))
-                    cat-acts-in
-                    (concat (map (partial act->link cat-enum) cat-acts-in))
-                    grp-acts-in
-                    (concat (map (partial act->link grp-enum) grp-acts-in))
-                    prt-acts-in
-                    (concat (map (partial act->link prt-enum) prt-acts-in))
-                    oth-acts-in
-                    (concat (map (partial act->link oth-enum) oth-acts-in)))]
+                    ?obj-act-in
+                    (conj (act->link obj-enum ?obj-act-in))
+                    ?cat-acts-in
+                    (concat (map (partial act->link cat-enum) ?cat-acts-in))
+                    ?grp-acts-in
+                    (concat (map (partial act->link grp-enum) ?grp-acts-in))
+                    ?prt-acts-in
+                    (concat (map (partial act->link prt-enum) ?prt-acts-in))
+                    ?oth-acts-in
+                    (concat (map (partial act->link oth-enum) ?oth-acts-in)))]
     [act-inputs stmt-acts]))
 
 (defn- sub-statement-insert-inputs
   [stmt-id sub-statement]
   (let [;; SubStatement Properties
-        {sub-stmt-act "actor"
-         sub-stmt-obj "object"
-         sub-stmt-ctx "context"}
+        {sub-stmt-act  "actor"
+         sub-stmt-obj  "object"
+         ?sub-stmt-ctx "context"}
         sub-statement
-        {sub-stmt-ctx-acts "contextActivities"
-         sub-stmt-inst     "instructor"
-         sub-stmt-team     "team"}
-        sub-stmt-ctx
+        {?sub-stmt-ctx-acts "contextActivities"
+         ?sub-stmt-inst     "instructor"
+         ?sub-stmt-team     "team"}
+        ?sub-stmt-ctx
         ;; Actor Inputs
         [actor-inputs stmt-actor-inputs]
         (statement-actor-insert-inputs stmt-id
                                        sub-stmt-act
                                        sub-stmt-obj
                                        nil ; No Authority for SubStatements
-                                       sub-stmt-inst
-                                       sub-stmt-team
+                                       ?sub-stmt-inst
+                                       ?sub-stmt-team
                                        {:act-enum  "SubActor"
                                         :obj-enum  "SubObject"
                                         :inst-enum "SubInstructor"
@@ -234,7 +239,7 @@
         [activity-inputs stmt-activity-inputs]
         (statement-activity-insert-inputs stmt-id
                                           sub-stmt-obj
-                                          sub-stmt-ctx-acts
+                                          ?sub-stmt-ctx-acts
                                           {:obj-enum "SubObject"
                                            :cat-enum "SubCategory"
                                            :grp-enum "SubGrouping"
@@ -252,50 +257,51 @@
    `functions/insert-statement!`."
   [statement]
   (let [;; Statement Properties
-        ;; id, stored, and authority should have already been
+        ;; `id`, `stored`, and `authority` should have already been
         ;; set by `prepare-statement`.
-        {stmt-id   "id"
-         stmt-stor "stored"
-         stmt-act  "actor"
-         stmt-vrb  "verb"
-         stmt-obj  "object"
-         stmt-ctx  "context"
-         stmt-auth "authority"
-         stmt-atts "attachments"}
+        {stmt-id    "id"
+         stmt-stor  "stored"
+         stmt-act   "actor"
+         stmt-vrb   "verb"
+         stmt-obj   "object"
+         ?stmt-ctx  "context"
+         ?stmt-auth "authority"
+         ?stmt-atts "attachments"}
         statement
-        {stmt-obj-typ "objectType"}
+        {stmt-vrb-id "id"}
+        stmt-vrb
+        {stmt-obj-type "objectType" :or {stmt-obj-type "Activity"}}
         stmt-obj
-        {stmt-ctx-acts "contextActivities"
-         stmt-inst     "instructor"
-         stmt-team     "team"
-         stmt-reg      "registration"}
-        stmt-ctx
+        {?stmt-ctx-acts "contextActivities"
+         ?stmt-inst     "instructor"
+         ?stmt-team     "team"
+         ?stmt-reg      "registration"}
+        ?stmt-ctx
         ;; Revised Properties
-        stmt-pk     (-> statement meta :primary-key)
-        stmt-id     (u/str->uuid stmt-id)
-        stmt-stored (u/str->time stmt-stor)
-        stmt-reg    (when stmt-reg (u/str->uuid stmt-reg))
-        stmt-ref-id (when (= "StatementRef" stmt-obj-typ)
+        stmt-pk      (-> statement meta :primary-key)
+        stmt-id      (u/str->uuid stmt-id)
+        stmt-stored  (u/str->time stmt-stor)
+        ?stmt-reg    (when ?stmt-reg (u/str->uuid ?stmt-reg))
+        ?stmt-ref-id (when (= "StatementRef" stmt-obj-type)
                       (u/str->uuid (get stmt-obj "id")))
-        stmt-vrb-id (get stmt-vrb "id")
         ;; `stmt-ref-id` should always be true here, but we still sanity check
-        voiding?    (and (some? stmt-ref-id)
+        voiding?    (and (some? ?stmt-ref-id)
                          (= voiding-verb stmt-vrb-id))
-        att-shas    (set
-                     (concat (when stmt-atts
-                               (map #(get % "sha2") stmt-atts))
-                             (when-let [sstmt-atts
-                                        (and (= "SubStatement" stmt-obj-typ)
-                                             (get stmt-obj "attachments"))]
-                               (map #(get % "sha2") sstmt-atts))))
+        att-shas    (set (concat
+                          (when ?stmt-atts
+                            (map #(get % "sha2") ?stmt-atts))
+                          (when-let [sstmt-atts
+                                     (and (= "SubStatement" stmt-obj-type)
+                                          (get stmt-obj "attachments"))]
+                            (map #(get % "sha2") sstmt-atts))))
         ;; Statement HugSql input
         stmt-input  {:table             :statement
                      :primary-key       stmt-pk
                      :statement-id      stmt-id
-                     :?statement-ref-id stmt-ref-id
+                     :?statement-ref-id ?stmt-ref-id
                      :stored            stmt-stored
-                     :?registration     stmt-reg
-                     :?attachment-shas  att-shas
+                     :?registration     ?stmt-reg
+                     :attachment-shas   att-shas
                      :verb-iri          stmt-vrb-id
                      :voided?           false
                      :voiding?          voiding?
@@ -305,9 +311,9 @@
         (statement-actor-insert-inputs stmt-id
                                        stmt-act
                                        stmt-obj
-                                       stmt-auth
-                                       stmt-inst
-                                       stmt-team
+                                       ?stmt-auth
+                                       ?stmt-inst
+                                       ?stmt-team
                                        {:act-enum  "Actor"
                                         :obj-enum  "Object"
                                         :auth-enum "Authority"
@@ -317,7 +323,7 @@
         [activ-inputs stmt-activ-inputs]
         (statement-activity-insert-inputs stmt-id
                                           stmt-obj
-                                          stmt-ctx-acts
+                                          ?stmt-ctx-acts
                                           {:obj-enum "Object"
                                            :cat-enum "Category"
                                            :grp-enum "Grouping"
@@ -325,7 +331,7 @@
                                            :oth-enum "Other"})
         ;; SubStatement HugSql Inputs
         [sactor-inputs sactiv-inputs sstmt-actor-inputs sstmt-activ-inputs]
-        (when (= "SubStatement" stmt-obj-typ)
+        (when (= "SubStatement" stmt-obj-type)
           (sub-statement-insert-inputs stmt-id stmt-obj))]
     {:statement-input      stmt-input
      :actor-inputs         (vec (concat actor-inputs sactor-inputs))
@@ -424,7 +430,7 @@
           result
           (for [imap input-maps
                 :let [stmt-id    (-> imap :statement-input :statement-id)
-                      ?att-shas  (-> imap :statement-input :?attachment-shas)
+                      ?att-shas  (-> imap :statement-input :attachment-shas)
                       ?stmt-shas (and ?att-shas
                                       (cset/intersection shas ?att-shas))
                       new-imap   (reduce
@@ -468,42 +474,49 @@
 
 (defn statement-query-input
   "Construct the input for `command/query-statement!`."
-  [{stmt-id     :statementId
-    vstmt-id    :voidedStatementId
-    verb-iri    :verb
-    actor       :agent
-    act-iri     :activity
-    reg         :registration
-    rel-activs? :related_activities
-    rel-actors? :related_agents
-    since       :since
-    until       :until
-    limit       :limit
-    asc?        :ascending
-    atts?       :attachments
-    format      :format
-    from        :from}] ; Not a stmt res param; added by lrsql for pagination
-  (let [stmt-id       (when stmt-id (u/str->uuid stmt-id))
-        vstmt-id      (when vstmt-id (u/str->uuid vstmt-id))
-        reg           (when reg (u/str->uuid reg))
-        since         (when since (u/str->time since))
-        until         (when until (u/str->time until))
-        rel-actors?   (boolean rel-actors?)
-        rel-activs?   (boolean rel-activs?)
-        actor-ifi     (when actor (ua/actor->ifi actor))
-        format        (when format (keyword format))
-        from          (when from (u/str->uuid from))]
-    (cond-> {}
-      stmt-id   (merge {:statement-id stmt-id :voided? false})
-      vstmt-id  (merge {:statement-id vstmt-id :voided? true})
-      verb-iri  (assoc :verb-iri verb-iri)
-      reg       (assoc :registration reg)
-      since     (assoc :since since)
-      until     (assoc :until until)
-      actor-ifi (merge {:actor-ifi actor-ifi :related-actors? rel-actors?})
-      act-iri   (merge {:activity-iri act-iri :related-activities? rel-activs?})
-      limit     (assoc :limit limit)
-      asc?      (assoc :ascending? asc?)
-      atts?     (assoc :attachments? atts?)
-      format    (assoc :format format)
-      from      (assoc :from from))))
+  [{?stmt-id     :statementId
+    ?vstmt-id    :voidedStatementId
+    ?verb-iri    :verb
+    ?actor       :agent
+    ?activ-iri   :activity
+    ?reg         :registration
+    ?rel-activs? :related_activities
+    ?rel-actors? :related_agents
+    ?since       :since
+    ?until       :until
+    ?limit       :limit
+    ?asc?        :ascending
+    ?atts?       :attachments
+    ?format      :format
+    ?from        :from}] ; Not a stmt res param; added by lrsql for pagination
+  (let [?stmt-id    (when ?stmt-id (u/str->uuid ?stmt-id))
+        ?vstmt-id   (when ?vstmt-id (u/str->uuid ?vstmt-id))
+        ?actor-ifi  (when ?actor (ua/actor->ifi ?actor))
+        ?reg        (when ?reg (u/str->uuid ?reg))
+        ?from       (when ?from (u/str->uuid ?from))
+        ?since      (when ?since (u/str->time ?since))
+        ?until      (when ?until (u/str->time ?until))
+        limit       (us/ensure-default-max-limit ?limit)
+        asc?        (boolean ?asc?)
+        format      (if ?format (keyword ?format) :exact)
+        atts?       (boolean ?atts?)
+        comm-params {:format       format
+                     :attachments? atts?}]
+    (if-some [stmt-id (or ?stmt-id ?vstmt-id)]
+      ;; Single statement query
+      (merge comm-params
+             {:statement-id stmt-id
+              :voided?      (boolean ?vstmt-id)})
+      ;; Multiple statement query
+      (merge comm-params
+             {:?actor-ifi           ?actor-ifi
+              :?verb-iri            ?verb-iri
+              :?activity-iri        ?activ-iri
+              :?registration        ?reg
+              :?related-actors?     ?rel-actors?
+              :?related-activities? ?rel-activs?
+              :?since               ?since
+              :?until               ?until
+              :?from                ?from
+              :ascending?           asc?
+              :limit                limit}))))

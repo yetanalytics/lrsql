@@ -86,12 +86,12 @@
 (defn- format-stmt
   [statement format ltags]
   (case format
+    :exact
+    statement
     :ids
     (ss/format-statement-ids statement)
     :canonical
     (ss/format-canonical statement ltags)
-    :exact
-    statement
     ;; else
     (throw (ex-info "Unknown format type"
                     {:kind   ::unknown-format-type
@@ -117,7 +117,7 @@
 (defn- query-one-statement
   "Query a single statement from the DB, using the `:statement-id` parameter."
   [tx input ltags]
-  (let [{:keys [format attachments?] :or {format :exact}} input
+  (let [{:keys [format attachments?]} input
         query-result (f/query-statement tx input)
         statement   (when query-result
                            (query-res->statement format ltags query-result))
@@ -132,8 +132,7 @@
 (defn- query-many-statements
   "Query potentially multiple statements from the DB."
   [tx input ltags]
-  (let [{:keys [format limit attachments?]
-         :or   {format :exact}} input
+  (let [{:keys [format limit attachments?]} input
         input'        (if limit (update input :limit inc) input)
         query-results (f/query-statements tx input')
         next-cursor   (if (and limit
@@ -166,8 +165,8 @@
    Note that the `:more` property of `:statement-result` returned is a
    statement PK, NOT the full URL."
   [tx input ltags]
-  (let [{:keys [statement-id]} input]
-    (if statement-id
+  (let [{?stmt-id :statement-id} input]
+    (if ?stmt-id
       (query-one-statement tx input ltags)
       (query-many-statements tx input ltags))))
 

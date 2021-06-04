@@ -37,48 +37,48 @@ FROM xapi_statement stmt
   LEFT JOIN xapi_statement stmt_desc
     ON stmt_desc.statement_id = statement_to_statement.descendant_id
   /*~
-  (when (:actor-ifi params)
+  (when (:?actor-ifi params)
     (str "  LEFT JOIN statement_to_actor stmt_actor\n"
          "    ON stmt.statement_id = stmt_actor.statement_id\n"
          "  LEFT JOIN statement_to_actor stmt_desc_actor\n"
          "    ON stmt_desc.statement_id = stmt_desc_actor.statement_id"))
   ~*/
   /*~
-  (when (:activity-iri params)
+  (when (:?activity-iri params)
     (str "  LEFT JOIN statement_to_activity stmt_activ\n"
          "    ON stmt.statement_id = stmt_activ.statement_id\n"
          "  LEFT JOIN statement_to_activity stmt_desc_activ\n"
          "    ON stmt_desc.statement_id = stmt_desc_activ.statement_id"))
   ~*/
 WHERE stmt.is_voided = FALSE
-  --~ (when (:from params)  "AND stmt.id >= :from")
-  --~ (when (:since params) "AND stmt.stored > :since")
-  --~ (when (:until params) "AND stmt.stored <= :until")
+  --~ (when (:?from params)  "AND stmt.id >= :?from")
+  --~ (when (:?since params) "AND stmt.stored > :?since")
+  --~ (when (:?until params) "AND stmt.stored <= :?until")
   AND ((
     1
-    --~ (when (:verb-iri params)      "AND stmt.verb_iri = :verb-iri")
-    --~ (when (:registration params)  "AND stmt.registration = :registration")
-    --~ (when (:actor-ifi params)     "AND stmt_actor.actor_ifi = :actor-ifi")
-    --~ (when (:activity-iri params)  "AND stmt_activ.activity_iri = :activity-iri")
-    /*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
+    --~ (when (:?verb-iri params)     "AND stmt.verb_iri = :?verb-iri")
+    --~ (when (:?registration params) "AND stmt.registration = :?registration")
+    --~ (when (:?actor-ifi params)    "AND stmt_actor.actor_ifi = :?actor-ifi")
+    --~ (when (:?activity-iri params) "AND stmt_activ.activity_iri = :?activity-iri")
+    /*~ (when (and (:?actor-ifi params) (not (:?related-actors? params)))
           "AND stmt_actor.usage = 'Actor'") ~*/
-    /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
+    /*~ (when (and (:?activity-iri params) (not (:?related-activities? params)))
           "AND stmt_activ.usage = 'Object'") ~*/
   ) OR (
     1
-    --~ (when (:verb-iri params)      "AND stmt_desc.verb_iri = :verb-iri")
-    --~ (when (:registration params)  "AND stmt_desc.registration = :registration")
-    --~ (when (:actor-ifi params)     "AND stmt_desc_actor.actor_ifi = :actor-ifi")
-    --~ (when (:activity-iri params)  "AND stmt_desc_activ.activity_iri = :activity-iri")
-    /*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
+    --~ (when (:?verb-iri params)     "AND stmt_desc.verb_iri = :?verb-iri")
+    --~ (when (:?registration params) "AND stmt_desc.registration = :?registration")
+    --~ (when (:?actor-ifi params)    "AND stmt_desc_actor.actor_ifi = :?actor-ifi")
+    --~ (when (:?activity-iri params) "AND stmt_desc_activ.activity_iri = :?activity-iri")
+    /*~ (when (and (:?actor-ifi params) (not (:?related-actors? params)))
           "AND stmt_desc_actor.usage = 'Actor'") ~*/
-    /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
+    /*~ (when (and (:?activity-iri params) (not (:?related-activities? params)))
           "AND stmt_desc_activ.usage = 'Object'") ~*/
   ))
 /*~ (if (:ascending? params)
       "ORDER BY stmt.stored ASC, stmt.id ASC"
       "ORDER BY stmt.stored DESC, stmt.id DESC") ~*/
---~ (when (:limit params) "LIMIT :limit")
+LIMIT :limit
 
 /* Statement Object Queries */
 
@@ -177,7 +177,7 @@ SELECT state_id FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 --~ (when (:?registration params) "AND registration = :?registration" "AND registration IS NULL")
---~ (when (:since params) "AND last_modified > :since")
+--~ (when (:?since params) "AND last_modified > :?since")
 
 -- :name query-agent-profile-document-ids
 -- :command :query
@@ -185,7 +185,7 @@ AND agent_ifi = :agent-ifi
 -- :doc Query for one or more agent profile document profile IDs using resource params.
 SELECT profile_id FROM agent_profile_document
 WHERE agent_ifi = :agent-ifi
---~ (when (:since params) "AND last_modified > :since")
+--~ (when (:?since params) "AND last_modified > :?since")
 
 -- :name query-activity-profile-document-ids
 -- :command :query
@@ -193,4 +193,4 @@ WHERE agent_ifi = :agent-ifi
 -- :doc Query for one or more activity profile document IDs using resource params.
 SELECT profile_id FROM activity_profile_document
 WHERE activity_iri = :activity-iri
---~ (when (:since params) "AND last_modified > :since")
+--~ (when (:?since params) "AND last_modified > :?since")

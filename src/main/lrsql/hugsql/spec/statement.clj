@@ -46,10 +46,10 @@
 (s/def ::voiding? boolean?)
 
 ;; Attachments
-(s/def ::?attachment-shas
-  (s/nilable (s/coll-of ::hs-attach/attachment-sha
-                        :kind set?
-                        :gen-max 5)))
+(s/def ::attachment-shas
+  (s/coll-of ::hs-attach/attachment-sha
+             :kind set?
+             :gen-max 5))
 
 ;; Statement
 (s/def ::payload
@@ -57,13 +57,16 @@
   #_(make-str-spec ::xs/statement u/parse-json u/write-json))
 
 ;; Query-specific Params
-(s/def ::related-actors? boolean?)
-(s/def ::related-activities? boolean?)
-(s/def ::since inst?)
-(s/def ::until inst?)
+(s/def ::?related-actors? (s/nilable boolean?))
+(s/def ::?related-activities? (s/nilable boolean?))
+
+(s/def ::?since (s/nilable inst?))
+(s/def ::?until (s/nilable inst?))
+(s/def ::?from (s/nilable uuid?))
+
 (s/def ::limit nat-int?)
 (s/def ::ascending? boolean?)
-(s/def ::from uuid?)
+
 (s/def ::format #{:ids :exact :canonical})
 (s/def ::attachments? boolean?)
 
@@ -90,7 +93,7 @@
                    ::verb-iri
                    ::voided?
                    ::voiding?
-                   ::?attachment-shas
+                   ::attachment-shas
                    ::payload]))
 
 ;; In this context, "Actor" is a catch-all term to refer to both Agents and
@@ -224,8 +227,8 @@
          (fn [stmt-inputs {:keys [sha2] :as _attachment}]
            (let [n (rand-int num-stmts)]
              (update-in stmt-inputs
-                        [n :statement-input :?attachment-shas]
-                        (fn [shas s] (if shas (conj s) #{s}))
+                        [n :statement-input :attachment-shas]
+                        conj
                         sha2)))
          stmt-inputs
          attachments)]
@@ -249,22 +252,22 @@
 
 (def statement-query-one-spec
   (s/keys :req-un [::statement-id
-                   ::voided?]
-          :opt-un [::format
+                   ::voided?
+                   ::format
                    ::attachments?]))
 
 (def statement-query-many-spec
-  (s/keys :opt-un [::from
-                   ::since
-                   ::until
+  (s/keys :req-un [::hs-actor/?actor-ifi
+                   ::hs-activ/?activity-iri
+                   ::?verb-iri
+                   ::?registration
+                   ::?related-actors?
+                   ::?related-activities?
+                   ::?from
+                   ::?since
+                   ::?until
                    ::limit
                    ::ascending?
-                   ::verb-iri
-                   ::registration
-                   ::related-actors?
-                   ::related-activities?
-                   ::hs-actor/actor-ifi
-                   ::hs-activ/activity-iri
                    ::format
                    ::attachments?]))
 

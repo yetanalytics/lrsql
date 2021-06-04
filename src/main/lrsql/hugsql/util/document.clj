@@ -4,25 +4,25 @@
   "Return either `:state-document`, `:agent-profile-document`, or
    `:activity-profile-document` depending on the fields in `params`. Works for
    both ID params and query params."
-  [{state-id    :stateId
-    profile-id  :profileId
-    activity-id :activityId
-    agent       :agent
-    :as         params}]
+  [{?state-id    :stateId
+    ?profile-id  :profileId
+    ?activity-id :activityId
+    ?agent       :agent
+    :as          params}]
   (cond
     ;; ID params
-    state-id
+    ?state-id
     :state-document
-    (and profile-id agent)
+    (and ?profile-id ?agent)
     :agent-profile-document
-    (and profile-id activity-id)
+    (and ?profile-id ?activity-id)
     :activity-profile-document
     ;; Query params
-    (and activity-id agent)
+    (and ?activity-id ?agent)
     :state-document
-    activity-id
+    ?activity-id
     :activity-profile-document
-    agent
+    ?agent
     :agent-profile-document
     ;; Error
     :else

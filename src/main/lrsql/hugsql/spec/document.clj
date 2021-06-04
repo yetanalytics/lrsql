@@ -21,7 +21,7 @@
 (s/def ::contents bytes?)
 
 ;; Query-specific params
-(s/def ::since inst?)
+(s/def ::?since (s/nilable inst?))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params specs
@@ -151,16 +151,16 @@
 (def state-doc-ids-input-spec
   (s/keys :req-un [::hs-activ/activity-iri
                    ::hs-actor/agent-ifi
-                   ::hs-stmt/?registration]
-          :opt-un [::since]))
+                   ::hs-stmt/?registration
+                   ::?since]))
 
 (def agent-profile-doc-ids-input-spec
-  (s/keys :req-un [:hs-actor/agent-ifi]
-          :opt-un [::since]))
+  (s/keys :req-un [:hs-actor/agent-ifi
+                   ::?since]))
 
 (def activity-profile-doc-ids-input-spec
-  (s/keys :req-un [::hs-activ/activity-iri]
-          :opt-un [::since]))
+  (s/keys :req-un [::hs-activ/activity-iri
+                   ::?since]))
 
 (def document-ids-query-spec
   (s/nonconforming ; needed to make s/fdef work

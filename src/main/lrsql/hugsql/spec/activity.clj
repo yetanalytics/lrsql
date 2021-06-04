@@ -10,6 +10,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/def ::activity-iri :activity/id)
+(s/def ::?activity-iri (s/nilable ::activity-iri))
 
 (s/def ::usage
   #{"Object", "Category", "Grouping", "Parent", "Other"
