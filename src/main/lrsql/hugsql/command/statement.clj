@@ -109,7 +109,7 @@
         attachments (when (and statement attachments?)
                       (->> {:statement-id (get statement "id")}
                            (f/query-attachments tx)
-                           (map conform-attachment-res)))]
+                           (mapv conform-attachment-res)))]
     (cond-> {}
       statement   (assoc :statement statement)
       attachments (assoc :attachments attachments))))
@@ -134,13 +134,14 @@
                                                 (f/query-attachments tx)))
                                          stmt-results))
                              (apply concat)
-                             (map conform-attachment-res))
+                             (mapv conform-attachment-res))
                         [])]
-    {:statement-result {:statements stmt-results
-                        :more (if ?next-cursor
-                                (us/make-more-url query-params ?next-cursor)
-                                "")}
-     :attachments      att-results}))
+    {:statement-result
+     {:statements (vec stmt-results)
+      :more       (if ?next-cursor
+                    (us/make-more-url query-params ?next-cursor)
+                    "")}
+     :attachments att-results}))
 
 (defn query-statements
   "Query statements from the DB. Return a map containing a singleton
@@ -160,12 +161,13 @@
   "Query Statement References from the DB. In addition to the immediate
    references given by `:?statement-ref-id`, it returns ancestral
    references, i.e. not only the Statement referenced by `:?statement-ref-id`,
-   but the Statement referenced by _that_, and so on. The return value
-   is a lazy seq of the descendant statemnet IDs; these are later added
-   to the input map."
+   but the Statement referenced by that ID, and so on. The return value
+   is a seq of the descendant statemnet IDs; these are later added to the
+   input map."
   [tx {{?sref-id :?statement-ref-id} :statement-input}]
   (when ?sref-id
     (->> {:ancestor-id ?sref-id}
          (f/query-statement-descendants tx)
          (map :descendant_id)
-         (concat [?sref-id]))))
+         (concat [?sref-id])
+         vec)))

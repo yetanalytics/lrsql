@@ -258,7 +258,7 @@
    `command/insert-statements!`, starting with the params for
    `functions/insert-statement!`."
   [statement]
-  (let [;; Statement Properties
+  (let [;; Destructuring
         ;; `id`, `stored`, and `authority` should have already been
         ;; set by `prepare-statement`.
         {stmt-id    "id"
@@ -279,35 +279,35 @@
          ?stmt-team     "team"
          ?stmt-reg      "registration"}
         ?stmt-ctx
-        ;; Revised Properties
+        ;; Revised Statement Properties
         stmt-pk      (-> statement meta :primary-key)
         stmt-id      (u/str->uuid stmt-id)
         stmt-stored  (u/str->time stmt-stor)
-        ?stmt-reg    (when ?stmt-reg (u/str->uuid ?stmt-reg))
+        ?stmt-reg    (when ?stmt-reg
+                       (u/str->uuid ?stmt-reg))
         ?stmt-ref-id (when (= "StatementRef" stmt-obj-type)
-                      (u/str->uuid (get stmt-obj "id")))
-        ;; `stmt-ref-id` should always be true here, but we still sanity check
-        voiding?    (and (some? ?stmt-ref-id)
-                         (= voiding-verb stmt-vrb-id))
-        att-shas    (set (concat
-                          (when ?stmt-atts
-                            (map #(get % "sha2") ?stmt-atts))
-                          (when-let [sstmt-atts
-                                     (and (= "SubStatement" stmt-obj-type)
-                                          (get stmt-obj "attachments"))]
-                            (map #(get % "sha2") sstmt-atts))))
+                       (u/str->uuid (get stmt-obj "id")))
+        voiding?     (and (some? ?stmt-ref-id) ; should be true but sanity check
+                          (= voiding-verb stmt-vrb-id))
+        att-shas     (set (concat
+                           (when ?stmt-atts
+                             (map #(get % "sha2") ?stmt-atts))
+                           (when-let [sstmt-atts
+                                      (and (= "SubStatement" stmt-obj-type)
+                                           (get stmt-obj "attachments"))]
+                             (map #(get % "sha2") sstmt-atts))))
         ;; Statement HugSql input
-        stmt-input  {:table             :statement
-                     :primary-key       stmt-pk
-                     :statement-id      stmt-id
-                     :?statement-ref-id ?stmt-ref-id
-                     :stored            stmt-stored
-                     :?registration     ?stmt-reg
-                     :attachment-shas   att-shas
-                     :verb-iri          stmt-vrb-id
-                     :voided?           false
-                     :voiding?          voiding?
-                     :payload           statement}
+        stmt-input {:table             :statement
+                    :primary-key       stmt-pk
+                    :statement-id      stmt-id
+                    :?statement-ref-id ?stmt-ref-id
+                    :stored            stmt-stored
+                    :?registration     ?stmt-reg
+                    :attachment-shas   att-shas
+                    :verb-iri          stmt-vrb-id
+                    :voided?           false
+                    :voiding?          voiding?
+                    :payload           statement}
         ;; Actor HugSql Inputs
         [actor-inputs stmt-actor-inputs]
         (statement-actor-insert-inputs stmt-id
@@ -336,10 +336,10 @@
         (when (= "SubStatement" stmt-obj-type)
           (sub-statement-insert-inputs stmt-id stmt-obj))]
     {:statement-input      stmt-input
-     :actor-inputs         (vec (concat actor-inputs sactor-inputs))
-     :activity-inputs      (vec (concat activ-inputs sactiv-inputs))
-     :stmt-actor-inputs    (vec (concat stmt-actor-inputs sstmt-actor-inputs))
-     :stmt-activity-inputs (vec (concat stmt-activ-inputs sstmt-activ-inputs))
+     :actor-inputs         (concat actor-inputs sactor-inputs)
+     :activity-inputs      (concat activ-inputs sactiv-inputs)
+     :stmt-actor-inputs    (concat stmt-actor-inputs sstmt-actor-inputs)
+     :stmt-activity-inputs (concat stmt-activ-inputs sstmt-activ-inputs)
      :stmt-stmt-inputs     []
      :attachment-inputs    []}))
 
