@@ -19,23 +19,28 @@
    and setting missing id, timestamp, authority, version, and stored
    properties."
   [statement]
-  (let [{:strs [id timestamp authority version]} statement
+  (let [{?id        "id"
+         ?timestamp "timestamp"
+         ?authority "authority"
+         ?version   "version"}
+        statement
         {squuid      :squuid
          squuid-ts   :timestamp
-         squuid-base :base-uuid} (u/generate-squuid*)
+         squuid-base :base-uuid}
+        (u/generate-squuid*)
         squuid-ts-str (u/time->str squuid-ts)
         statement'    (-> statement
                           ss/fix-statement-context-activities
                           (assoc "stored" squuid-ts-str)
                           (vary-meta assoc :primary-key squuid))]
     (cond-> statement'
-      (not id)
+      (not ?id)
       (assoc "id" (u/uuid->str squuid-base))
-      (not timestamp)
+      (not ?timestamp)
       (assoc "timestamp" squuid-ts-str)
-      (not authority)
+      (not ?authority)
       (assoc "authority" lrsql-authority)
-      (not version)
+      (not ?version)
       (assoc "version" xapi-version))))
 
 (defn format-statement
