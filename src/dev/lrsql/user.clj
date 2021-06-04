@@ -17,8 +17,6 @@
 
   (lrsp/-store-statements lrs {} [stmt-1' stmt-2' stmt-3' stmt-4] [stmt-4-attach])
 
-  (jdbc/execute! ds ["SELECT * FROM attachment"])
-
   (doseq [cmd [;; Drop document tables
                "DROP TABLE IF EXISTS state_document"
                "DROP TABLE IF EXISTS agent_profile_document"
