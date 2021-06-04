@@ -143,7 +143,8 @@
 (defn- add-since-to-map
   "Add the `:since` property to `m` if `:since` is present/not nil."
   [{?since :since} m]
-  (merge m {:?since ?since}))
+  (merge m
+         {:?since (when ?since (u/str->time ?since))}))
 
 (s/fdef document-ids-input
   :args (s/cat :params hs/get-document-ids-params)
