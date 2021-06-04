@@ -1,5 +1,6 @@
 (ns lrsql.hugsql.input.statement
   (:require [clojure.spec.alpha :as s]
+            [clojure.set :as cset]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec.statement :as hs]
@@ -407,34 +408,51 @@
   :args hs/stmt-input-attachments-spec
   :ret (s/coll-of hs/statement-insert-map-spec))
 
-;; TODO: This looks disgusting - refactor
+(def ^:private attachment-emsg
+  "There exist Attachments not associated with the Statements in the request.")
+
+;; TODO: The SHA2 hash may result in hash collisions with otherwise-different
+;; binary data. May want to investigate further.
+
 (defn add-attachment-insert-inputs
   [input-maps attachments]
-  (reduce (fn [input-maps' {sha :sha2 :as attachment}]
-            (loop [prev-maps '()
-                   rest-maps input-maps']
-              (if-some [{{stmt-id   :statement-id
-                          ?att-shas :?attachment-shas} :statement-input
-                         :as input-map}
-                        (first rest-maps)]
-                (if (and ?att-shas (contains? ?att-shas sha))
-                  (let [input-map'
-                        (update input-map
-                                :attachment-inputs
-                                conj
-                                (attachment-insert-input stmt-id attachment))]
-                    ;; Reverse b/c we were conj-ing a list
-                    (reverse (concat (conj prev-maps input-map')
-                                     (rest rest-maps))))
-                  (recur (conj prev-maps input-map)
-                         (rest rest-maps)))
-                (throw
-                 (ex-info "Attachment is not associated with a Statement in request."
-                          {:kind       ::invalid-attachment
-                           :attachment attachment
-                           :statements input-maps})))))
-          input-maps
-          attachments))
+  (if (not-empty attachments)
+    (let [sha-att-m
+          (into {} (map (fn [{sha :sha2 :as att}] [sha att]) attachments))
+          shas
+          (set (keys sha-att-m))
+          result
+          (for [imap input-maps
+                :let [stmt-id    (-> imap :statement-input :statement-id)
+                      ?att-shas  (-> imap :statement-input :?attachment-shas)
+                      ?stmt-shas (and ?att-shas
+                                      (cset/intersection shas ?att-shas))
+                      new-imap   (reduce
+                                  (fn [imap sha]
+                                    (let [att    (sha-att-m sha)
+                                          att-in (attachment-insert-input
+                                                  stmt-id
+                                                  att)]
+                                      (update imap
+                                              :attachment-inputs
+                                              conj
+                                              att-in)))
+                                  imap
+                                  ?stmt-shas)]]
+            [new-imap ?stmt-shas])
+          added-shas
+          (->> result (map second) (filter some?) (apply cset/union))]
+      (if-some [diff-sha (not-empty (clojure.set/difference shas
+                                                            added-shas))]
+        ;; Some attachments weren't included - throw an error
+        (throw (ex-info attachment-emsg
+                        {:kind         ::invalid-attachments
+                         :attachments  attachments
+                         :invalid-shas diff-sha
+                         :stmt-inputs  input-maps}))
+        ;; All attachments were included - return new stmt inputs
+        (map first result)))
+    input-maps))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Query
