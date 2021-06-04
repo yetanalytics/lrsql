@@ -27,5 +27,5 @@
     ;; Error
     :else
     (throw (ex-info "Invalid document ID or query parameters!"
-                    {:kind   ::invalid-document-resource-params
+                    {:type   ::invalid-document-resource-params
                      :params params}))))

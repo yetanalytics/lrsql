@@ -1,6 +1,7 @@
 (ns lrsql.hugsql.input.statement
   (:require [clojure.spec.alpha :as s]
             [clojure.set :as cset]
+            [com.yetanalytics.lrs.pedestal.interceptor.xapi.statements.attachment :as xsa]
             ;; Specs
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
@@ -459,7 +460,7 @@
                                                             added-shas))]
         ;; Some attachments weren't included - throw an error
         (throw (ex-info attachment-emsg
-                        {:kind         ::invalid-attachments
+                        {:type         ::xsa/statement-attachment-mismatch
                          :attachments  attachments
                          :invalid-shas diff-sha
                          :stmt-inputs  input-maps}))

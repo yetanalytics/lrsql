@@ -53,7 +53,7 @@
     (ss/format-canonical statement ltags)
     ;; else
     (throw (ex-info "Unknown format type"
-                    {:kind   ::unknown-format-type
+                    {:type   ::unknown-format-type
                      :format format}))))
 
 ;; TODO: Get more permanent solution for host and port defaults
