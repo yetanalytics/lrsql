@@ -45,16 +45,9 @@
 (s/def ::voided? boolean?)
 (s/def ::voiding? boolean?)
 
-;; Attachments
-(s/def ::attachment-shas
-  (s/coll-of ::hs-attach/attachment-sha
-             :kind set?
-             :gen-max 5))
-
 ;; Statement
-(s/def ::payload
-  ::xs/statement
-  #_(make-str-spec ::xs/statement u/parse-json u/write-json))
+;; JSON string version: (make-str-spec ::xs/statement u/parse-json u/write-json)
+(s/def ::payload ::xs/statement)
 
 ;; Query-specific Params
 (s/def ::?related-actors? (s/nilable boolean?))
@@ -93,7 +86,7 @@
                    ::verb-iri
                    ::voided?
                    ::voiding?
-                   ::attachment-shas
+                   ::hs-attach/attachment-shas
                    ::payload]))
 
 ;; In this context, "Actor" is a catch-all term to refer to both Agents and

@@ -52,9 +52,8 @@
   #{"Actor" "Object" "Authority" "Instructor" "Team"
     "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"})
 
-(s/def ::payload
-  ::xs/actor
-  #_:xapi.statements.GET.request.params/agent)
+;; JSON string version: :xapi.statements.GET.request.params/agent
+(s/def ::payload ::xs/actor)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Agent params spec

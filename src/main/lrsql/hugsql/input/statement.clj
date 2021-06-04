@@ -28,7 +28,7 @@
      :primary-key (u/generate-squuid)
      :actor-ifi   ifi-str
      :actor-type  (get actor "objectType" "Agent")
-     :payload     actor #_(u/write-json actor)}))
+     :payload     actor}))
 
 (s/fdef group-insert-input
   :args (s/cat :actor (s/alt :agent ::xs/agent
@@ -55,7 +55,7 @@
   {:table        :activity
    :primary-key  (u/generate-squuid)
    :activity-iri (get activity "id")
-   :payload      activity #_(u/write-json activity)})
+   :payload      activity})
 
 (s/fdef statement-to-actor-insert-input
   :args (s/cat :statement-id ::hs/statement-id
@@ -305,7 +305,7 @@
                      :verb-iri          stmt-vrb-id
                      :voided?           false
                      :voiding?          voiding?
-                     :payload           statement #_(u/write-json statement)}
+                     :payload           statement}
         ;; Actor HugSql Inputs
         [actor-inputs stmt-actor-inputs]
         (statement-actor-insert-inputs stmt-id

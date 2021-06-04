@@ -153,10 +153,9 @@
                              (map conform-attachment-res))
                         [])]
     {:statement-result {:statements stmt-results
-                        :more       (if ?next-cursor
-                                      (us/make-more-url query-params
-                                                        ?next-cursor)
-                                      "")}
+                        :more (if ?next-cursor
+                                (us/make-more-url query-params ?next-cursor)
+                                "")}
      :attachments      att-results}))
 
 (defn query-statements
