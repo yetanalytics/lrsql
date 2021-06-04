@@ -1,4 +1,5 @@
-(ns lrsql.hugsql.util.actor)
+(ns lrsql.hugsql.util.actor
+  (:require [com.yetanalytics.lrs.xapi.agents :as agnt]))
 
 ;; NOTE: Actors and Groups are encoded without any intention of being parsed
 ;; back, hence this sort of simple encoding is sufficient.
@@ -20,3 +21,9 @@
                     account]
                 (str "account::" acc-name "@" acc-page))
       :else   nil)))
+
+(defn actor->person
+  "Given the Agent or Group `actor`, return an equivalent Person object with
+   the IFI and name wrapped in vectors."
+  [actor]
+  (agnt/person actor))

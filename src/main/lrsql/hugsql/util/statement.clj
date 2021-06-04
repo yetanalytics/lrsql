@@ -38,6 +38,24 @@
       (not version)
       (assoc "version" xapi-version))))
 
+(defn format-statement
+  "Given `statement`, format it according to the value of `format`:
+   - :exact      No change to the Statement
+   - :ids        Return only the IDs in each Statement object
+   - :canonical  Return a \"canonical\" version of lang maps based on `ltags`."
+  [statement format ltags]
+  (case format
+    :exact
+    statement
+    :ids
+    (ss/format-statement-ids statement)
+    :canonical
+    (ss/format-canonical statement ltags)
+    ;; else
+    (throw (ex-info "Unknown format type"
+                    {:kind   ::unknown-format-type
+                     :format format}))))
+
 ;; TODO: Get more permanent solution for host and port defaults
 (defn- xapi-path-prefix
   []

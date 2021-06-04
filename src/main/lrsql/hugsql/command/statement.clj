@@ -1,10 +1,8 @@
 (ns lrsql.hugsql.command.statement
-  (:require
-   [com.yetanalytics.lrs.xapi.statements :as ss]
-   [com.yetanalytics.lrs.xapi.activities :as as]
-   [lrsql.hugsql.functions :as f]
-   [lrsql.hugsql.util :as u]
-   [lrsql.hugsql.util.statement :as us]))
+  (:require [lrsql.hugsql.functions :as f]
+            [lrsql.hugsql.util :as u]
+            [lrsql.hugsql.util.activity :as ua]
+            [lrsql.hugsql.util.statement :as us]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertions
@@ -34,7 +32,7 @@
                                :payload
                                u/parse-json)]
     (let [new-activ (:payload input)
-          activity' (as/merge-activity old-activ new-activ)
+          activity' (ua/merge-activities old-activ new-activ)
           input'    (assoc input :payload (u/write-json activity'))]
       (f/update-activity! tx input'))
     (f/insert-activity! tx (update input :payload u/write-json)))
@@ -84,26 +82,12 @@
 ;; Statement Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- format-stmt
-  [statement format ltags]
-  (case format
-    :exact
-    statement
-    :ids
-    (ss/format-statement-ids statement)
-    :canonical
-    (ss/format-canonical statement ltags)
-    ;; else
-    (throw (ex-info "Unknown format type"
-                    {:kind   ::unknown-format-type
-                     :format format}))))
-
 (defn- query-res->statement
   [format ltags query-res]
   (-> query-res
       :payload
       u/parse-json
-      (format-stmt format ltags)))
+      (us/format-statement format ltags)))
 
 (defn- conform-attachment-res
   [{att-sha      :attachment_sha

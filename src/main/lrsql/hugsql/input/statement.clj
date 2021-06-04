@@ -1,9 +1,11 @@
 (ns lrsql.hugsql.input.statement
   (:require [clojure.spec.alpha :as s]
             [clojure.set :as cset]
+            ;; Specs
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.hugsql.spec.statement :as hs]
+            ;; Utils
             [lrsql.hugsql.util :as u]
             [lrsql.hugsql.util.actor :as ua]
             [lrsql.hugsql.util.statement :as us]))

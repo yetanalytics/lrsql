@@ -2,7 +2,7 @@
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [next.jdbc :as jdbc]
-            [com.yetanalytics.lrs.protocol :as lp]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.hugsql.init :as init]
             [lrsql.hugsql.input.agent     :as agent-input]
             [lrsql.hugsql.input.activity  :as activity-input]
@@ -30,13 +30,13 @@
    (log/info "Stopping LRS...")
    (assoc lrs :conn-pool nil))
 
-  lp/AboutResource
+  lrsp/AboutResource
   (-get-about
    [lrs auth-identity]
    ;; TODO: Add 2.X.X versions
    {:body {:version ["1.0.0" "1.0.1" "1.0.2" "1.0.3"]}})
 
-  lp/StatementsResource
+  lrsp/StatementsResource
   (-store-statements
    [lrs auth-identity statements attachments]
    (jdbc/with-transaction [tx ((:conn-pool lrs))]
@@ -70,7 +70,7 @@
     ;; to use the tx-inst pattern and set it to that
     (.toString (Instant/now)))
 
-  lp/DocumentResource
+  lrsp/DocumentResource
   (-set-document
    [lrs auth-identity params document merge?]
    (let [conn  (:conn-pool lrs)
@@ -104,7 +104,7 @@
      (jdbc/with-transaction [tx (conn)]
        (doc-command/delete-documents! tx input))))
 
-  lp/AgentInfoResource
+  lrsp/AgentInfoResource
   (-get-person
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
@@ -112,7 +112,7 @@
      (jdbc/with-transaction [tx (conn)]
        (agent-command/query-agent tx input))))
 
-  lp/ActivityInfoResource
+  lrsp/ActivityInfoResource
   (-get-activity
    [lrs auth-identity params]
    (let [conn (:conn-pool lrs)
@@ -120,7 +120,7 @@
      (jdbc/with-transaction [tx (conn)]
        (activity-command/query-activity tx input))))
 
-  lp/LRSAuth
+  lrsp/LRSAuth
   (-authenticate
     [this ctx]
     ;; TODO: Actual auth
