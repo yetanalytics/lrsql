@@ -10,11 +10,25 @@
 
 (defn- insert-statement-input!
   [tx input]
-  ;; TODO: Add check for clashing statements
-  (f/insert-statement! tx (update input :payload u/write-json))
-  (when (:voiding? input)
-    (f/void-statement! tx {:statement-id (:statement-ref-id input)}))
-  nil)
+  (let [{stmt-id  :statement-id
+         new-stmt :payload} input
+        exists (f/query-statement-exists tx {:statement-id stmt-id})]
+    (if exists
+      (let [old-data (or (f/query-statement {:statement-id stmt-id
+                                             :voided?      false})
+                         (f/query-statement {:statement-id stmt-id
+                                             :voided?      true}))
+            old-stmt (-> old-data :payload u/parse-json)]
+        (when-not (us/statement-equal? old-stmt new-stmt)
+          (throw
+           (ex-info "Statement Conflict!"
+                    {:type :com.yetanalytics.lrs.protocol/statement-conflict
+                     :old-stmt old-stmt
+                     :new-stmt new-stmt}))))
+      (do
+        (f/insert-statement! tx (update input :payload u/write-json))
+        (when (:voiding? input)
+          (f/void-statement! tx {:statement-id (:statement-ref-id input)}))))))
 
 (defn- insert-actor-input!
   [tx input]

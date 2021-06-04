@@ -130,10 +130,13 @@
       (update "object" (dissoc-statement-properties* stmt true)))))
 
 (defn dissoc-statement-properties
+  "Dissociate any Statement properties in `stmt` that are an exception to
+   Statement Immutability."
   [stmt]
   (dissoc-statement-properties* stmt false))
 
-(defn statement-equals?
+(defn statement-equal?
+  "Compare two Statements based on their immutable properties."
   [stmt1 stmt2]
   (= (dissoc-statement-properties stmt1)
      (dissoc-statement-properties stmt2)))
