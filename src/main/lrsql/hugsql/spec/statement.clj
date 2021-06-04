@@ -29,7 +29,7 @@
 
 ;; Statement IDs
 (s/def ::statement-id uuid?)
-(s/def ::?statement-ref-id (s/nilable ::statement-id))
+(s/def ::statement-ref-id (s/nilable ::statement-id))
 (s/def ::ancestor-id ::statement-id)
 (s/def ::descendant-id ::statement-id)
 
@@ -37,8 +37,8 @@
 (s/def ::stored inst?)
 
 ;; Registration
-(s/def ::registration uuid?)
-(s/def ::?registration (s/nilable uuid?))
+;; TODO: Make a separate nilable version
+(s/def ::registration (s/nilable uuid?))
 
 ;; Verb
 (s/def ::verb-iri :verb/id)
@@ -50,12 +50,12 @@
 (s/def ::payload ::xs/statement)
 
 ;; Query-specific Params
-(s/def ::?related-actors? (s/nilable boolean?))
-(s/def ::?related-activities? (s/nilable boolean?))
+(s/def ::related-actors? boolean?)
+(s/def ::related-activities? boolean?)
 
-(s/def ::?since (s/nilable inst?))
-(s/def ::?until (s/nilable inst?))
-(s/def ::?from (s/nilable uuid?))
+(s/def ::since inst?)
+(s/def ::until inst?)
+(s/def ::from uuid?)
 
 (s/def ::limit nat-int?)
 (s/def ::ascending? boolean?)
@@ -80,9 +80,9 @@
 (s/def ::statement-input
   (s/keys :req-un [::primary-key
                    ::statement-id
-                   ::?statement-ref-id
+                   ::statement-ref-id ; nilable
                    ::stored
-                   ::?registration
+                   ::registration     ; nilable
                    ::verb-iri
                    ::voided?
                    ::voiding?
@@ -250,20 +250,20 @@
                    ::attachments?]))
 
 (def statement-query-many-spec
-  (s/keys :req-un [::hs-actor/?actor-ifi
-                   ::hs-activ/?activity-iri
-                   ::?verb-iri
-                   ::?registration
-                   ::?related-actors?
-                   ::?related-activities?
-                   ::?from
-                   ::?since
-                   ::?until
-                   ::limit
+  (s/keys :req-un [::limit
                    ::ascending?
                    ::format
                    ::attachments?
-                   ::query-params]))
+                   ::query-params]
+          :opt-un [::hs-actor/actor-ifi
+                   ::hs-actor/activity-iri
+                   ::verb-iri
+                   ::registration
+                   ::related-actors?
+                   ::related-activities?
+                   ::from
+                   ::since
+                   ::until]))
 
 (def statement-query-spec
   (s/or :one  statement-query-one-spec

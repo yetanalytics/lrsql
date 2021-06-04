@@ -13,18 +13,21 @@
 (defn- state-document-basics
   "Common properties for state document inputs. `state-id?` controls whether
    the state ID property is added (true for singleton queries, false for
-   array-valued queries)."
+   array-valued queries). `add-registration?` controls whether a registration
+   is added even if it is not present (in which case `nil` is assoc'd)."
   [{?state-id     :stateId
     activity-id   :activityId
     agent         :agent
     ?registration :registration}
-   state-id?]
+   state-id?
+   add-registration?]
   (cond-> {:table         :state-document
            :activity-iri  activity-id
-           :agent-ifi     (ua/actor->ifi agent)
-           :?registration (when ?registration (u/str->uuid ?registration))}
+           :agent-ifi     (ua/actor->ifi agent)}
     state-id?
-    (assoc :state-id ?state-id)))
+    (assoc :state-id ?state-id)
+    (or add-registration? ?registration)
+    (assoc :registration (when ?registration (u/str->uuid ?registration)))))
 
 (defn- agent-profile-document-basics
   "Common properties for agent profile document inputs. `profile-id?` controls
@@ -81,7 +84,7 @@
 
 (defmethod document-insert-input :state-document
   [params document]
-  (merge (state-document-basics params true)
+  (merge (state-document-basics params true true)
          (document-insert-basics document)))
 
 (defmethod document-insert-input :agent-profile-document
@@ -114,7 +117,7 @@
 
 (defmethod document-input :state-document
   [params]
-  (state-document-basics params true))
+  (state-document-basics params true false))
 
 (defmethod document-input :agent-profile-document
   [params]
@@ -136,15 +139,15 @@
    case of multiple documents."
   [params]
   (assert (and (:activityId params) (:agent params))) ; for testing
-  (state-document-basics params false))
+  (state-document-basics params false false))
 
 ;; Multiple document ID query
 
 (defn- add-since-to-map
   "Add the `:since` property to `m` if `:since` is present/not nil."
   [{?since :since} m]
-  (merge m
-         {:?since (when ?since (u/str->time ?since))}))
+  (cond-> m
+    ?since (assoc :since (u/str->time ?since))))
 
 (s/fdef document-ids-input
   :args (s/cat :params hs/get-document-ids-params)
@@ -159,7 +162,7 @@
 
 (defmethod document-ids-input :state-document
   [params]
-  (->> (state-document-basics params false)
+  (->> (state-document-basics params false false)
        (add-since-to-map params)))
 
 (defmethod document-ids-input :agent-profile-document

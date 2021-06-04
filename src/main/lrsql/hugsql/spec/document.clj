@@ -28,7 +28,7 @@
 (s/def ::contents bytes?)
 
 ;; Query-specific params
-(s/def ::?since (s/nilable inst?))
+(s/def ::since inst?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params specs
@@ -70,7 +70,7 @@
                    ::state-id
                    ::hs-activ/activity-iri
                    ::hs-actor/agent-ifi
-                   ::hs-stmt/?registration
+                   ::hs-stmt/registration ; nilable
                    ::last-modified
                    ::lrs-doc/content-type
                    ::lrs-doc/content-length
@@ -133,8 +133,8 @@
   (s/keys :req-un [::state-id
                    ::table
                    ::hs-activ/activity-iri
-                   ::hs-actor/agent-ifi
-                   ::hs-stmt/?registration]))
+                   ::hs-actor/agent-ifi]
+          :opt-un [::hs-stmt/registration]))
 
 (def agent-profile-doc-input-spec
   (s/keys :req-un [::hs-actor/agent-ifi
@@ -157,27 +157,27 @@
 (def state-doc-multi-input-spec
   (s/keys :req-un [::table
                    ::hs-activ/activity-iri
-                   ::hs-actor/agent-ifi
-                   ::hs-stmt/?registration]))
+                   ::hs-actor/agent-ifi]
+          :opt-un [::hs-stmt/registration]))
 
 ;; Document ID queries
 
 (def state-doc-ids-input-spec
   (s/keys :req-un [::table
                    ::hs-activ/activity-iri
-                   ::hs-actor/agent-ifi
-                   ::hs-stmt/?registration
-                   ::?since]))
+                   ::hs-actor/agent-ifi]
+          :opt-un [::hs-stmt/registration
+                   ::since]))
 
 (def agent-profile-doc-ids-input-spec
   (s/keys :req-un [::table
-                   ::hs-actor/agent-ifi
-                   ::?since]))
+                   ::hs-actor/agent-ifi]
+          :opt-un [::since]))
 
 (def activity-profile-doc-ids-input-spec
   (s/keys :req-un [::table
-                   ::hs-activ/activity-iri
-                   ::?since]))
+                   ::hs-activ/activity-iri]
+          :opt-un [::since]))
 
 (def document-ids-query-spec
   (s/nonconforming ; needed to make s/fdef work

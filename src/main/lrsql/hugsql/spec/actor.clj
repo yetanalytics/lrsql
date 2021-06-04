@@ -41,8 +41,6 @@
         :openid ifi-openid-spec
         :account ifi-account-spec))
 
-(s/def ::?actor-ifi (s/nilable ::actor-ifi))
-
 (s/def ::agent-ifi ::actor-ifi)
 
 (s/def ::actor-type

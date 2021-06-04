@@ -13,7 +13,7 @@
   (f/insert-statement! tx (update input :payload u/write-json))
         ;; Void statements
   (when (:voiding? input)
-    (f/void-statement! tx {:statement-id (:?statement-ref-id input)}))
+    (f/void-statement! tx {:statement-id (:statement-ref-id input)}))
         ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
   (u/uuid->str (:statement-id input)))
 
@@ -159,13 +159,13 @@
 
 (defn query-descendants
   "Query Statement References from the DB. In addition to the immediate
-   references given by `:?statement-ref-id`, it returns ancestral
-   references, i.e. not only the Statement referenced by `:?statement-ref-id`,
+   references given by `:statement-ref-id`, it returns ancestral
+   references, i.e. not only the Statement referenced by `:statement-ref-id`,
    but the Statement referenced by that ID, and so on. The return value
    is a seq of the descendant statemnet IDs; these are later added to the
    input map."
-  [tx {{?sref-id :?statement-ref-id} :statement-input}]
-  (when ?sref-id
+  [tx input]
+  (when-some [?sref-id (-> input :statement-input :statement-ref-id)]
     (->> {:ancestor-id ?sref-id}
          (f/query-statement-descendants tx)
          (map :descendant_id)

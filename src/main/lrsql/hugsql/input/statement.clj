@@ -301,9 +301,9 @@
         stmt-input {:table             :statement
                     :primary-key       stmt-pk
                     :statement-id      stmt-id
-                    :?statement-ref-id ?stmt-ref-id
+                    :statement-ref-id  ?stmt-ref-id
                     :stored            stmt-stored
-                    :?registration     ?stmt-reg
+                    :registration      ?stmt-reg
                     :attachment-shas   att-shas
                     :verb-iri          stmt-vrb-id
                     :voided?           false
@@ -505,6 +505,8 @@
         ?from       (when ?from (u/str->uuid ?from))
         ?since      (when ?since (u/str->time ?since))
         ?until      (when ?until (u/str->time ?until))
+        rel-actors? (boolean ?rel-actors?) 
+        rel-activs? (boolean ?rel-activs?)
         limit       (us/ensure-default-max-limit ?limit)
         asc?        (boolean ?asc?)
         format      (if ?format (keyword ?format) :exact)
@@ -517,16 +519,16 @@
              {:statement-id stmt-id
               :voided?      (boolean ?vstmt-id)})
       ;; Multiple statement query
-      (merge comm-params
-             {:?actor-ifi           ?actor-ifi
-              :?verb-iri            ?verb-iri
-              :?activity-iri        ?activ-iri
-              :?registration        ?reg
-              :?related-actors?     ?rel-actors?
-              :?related-activities? ?rel-activs?
-              :?since               ?since
-              :?until               ?until
-              :?from                ?from
-              :ascending?           asc?
-              :limit                limit
-              :query-params         params}))))
+      (cond-> comm-params
+        true       (assoc :ascending?   asc?
+                          :limit        limit
+                          :query-params params)
+        ?actor-ifi (assoc :actor-ifi       ?actor-ifi
+                          :related-actors? rel-actors?)
+        ?activ-iri (assoc :activity-iri        ?activ-iri
+                          :related-activities? rel-activs?)
+        ?verb-iri  (assoc :verb-iri ?verb-iri)
+        ?reg       (assoc :registration ?reg)
+        ?since     (assoc :since ?since)
+        ?until     (assoc :until ?until)
+        ?from      (assoc :from ?from)))))
