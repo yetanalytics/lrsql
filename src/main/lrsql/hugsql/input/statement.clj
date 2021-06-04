@@ -359,12 +359,17 @@
 ;; Statement Descendant Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- descendant-insert-input
-  [stmt-id desc-id]
+(s/fdef descendant-insert-input
+  :args (s/cat :statement-id ::hs/statement-id
+               :desceendant-id ::hs/statement-id)
+  :ret ::hs/stmt-stmt-input)
+
+(defn descendant-insert-input
+  [statement-id descendant-id]
   {:table         :statement-to-statement
    :primary-key   (u/generate-squuid)
-   :descendant-id desc-id
-   :ancestor-id   stmt-id})
+   :descendant-id descendant-id
+   :ancestor-id   statement-id})
 
 (s/fdef add-descendant-insert-inputs
   :args (s/cat :input-map hs/statement-insert-map-spec

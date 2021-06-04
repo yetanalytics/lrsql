@@ -17,6 +17,7 @@
     (is (nil? (check-validate `stmt-input/statement-insert-inputs 10)))
     (is (nil? (check-validate `stmt-input/statements-insert-inputs 5))))
   (testing "descendant insertion inputs"
+    (is (nil? (check-validate `stmt-input/descendant-insert-input)))
     (is (nil? (check-validate `stmt-input/add-descendant-insert-inputs 10))))
   (testing "attachment insertion inputs"
     (is (nil? (check-validate `stmt-input/attachment-insert-input)))
