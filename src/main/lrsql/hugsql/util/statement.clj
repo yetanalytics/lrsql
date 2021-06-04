@@ -19,24 +19,47 @@
    and setting missing id, timestamp, authority, version, and stored
    properties."
   [statement]
-  (let [{:strs [id timestamp authority version]} statement
+  (let [{?id        "id"
+         ?timestamp "timestamp"
+         ?authority "authority"
+         ?version   "version"}
+        statement
         {squuid      :squuid
          squuid-ts   :timestamp
-         squuid-base :base-uuid} (u/generate-squuid*)
+         squuid-base :base-uuid}
+        (u/generate-squuid*)
         squuid-ts-str (u/time->str squuid-ts)
         statement'    (-> statement
                           ss/fix-statement-context-activities
                           (assoc "stored" squuid-ts-str)
                           (vary-meta assoc :primary-key squuid))]
     (cond-> statement'
-      (not id)
+      (not ?id)
       (assoc "id" (u/uuid->str squuid-base))
-      (not timestamp)
+      (not ?timestamp)
       (assoc "timestamp" squuid-ts-str)
-      (not authority)
+      (not ?authority)
       (assoc "authority" lrsql-authority)
-      (not version)
+      (not ?version)
       (assoc "version" xapi-version))))
+
+(defn format-statement
+  "Given `statement`, format it according to the value of `format`:
+   - :exact      No change to the Statement
+   - :ids        Return only the IDs in each Statement object
+   - :canonical  Return a \"canonical\" version of lang maps based on `ltags`."
+  [statement format ltags]
+  (case format
+    :exact
+    statement
+    :ids
+    (ss/format-statement-ids statement)
+    :canonical
+    (ss/format-canonical statement ltags)
+    ;; else
+    (throw (ex-info "Unknown format type"
+                    {:type   ::unknown-format-type
+                     :format format}))))
 
 ;; TODO: Get more permanent solution for host and port defaults
 (defn- xapi-path-prefix
@@ -49,36 +72,29 @@
     (str "http://" host ":" port)))
 
 (defn make-more-url
-  "If `stmt-query-result` contains a non-empty `more` string signifying the
-   pagination cursor, update it to be a URL to query the next page."
-  [params stmt-query-result]
-  (if-some [stmt-id (not-empty (get-in stmt-query-result
-                                       [:statement-result :more]))]
-    (assoc-in stmt-query-result
-              [:statement-result :more]
-              (str (xapi-path-prefix)
-                   "/xapi/statements?"
-                   (form-encode (assoc params :from stmt-id))))
-    stmt-query-result))
+  "Forms the `more` URL value from `query-params` and the Statement ID
+   `next-cursor` which points to the first Statement of the next page."
+  [query-params next-cursor]
+  (str (xapi-path-prefix)
+       "/xapi/statements?"
+       (form-encode (assoc query-params :from next-cursor))))
 
 (defn ensure-default-max-limit
-  "Apply default/max limit to params"
-  [{:keys [limit]
-    :as params}]
-  (let [;; TODO: env defaults out of code.. Aero?
-        ;; TODO: reevaluate defaults
-        limit-max     (:stmt-get-max env 100)
+  "Given `?limit`, apply the maximum possible limit (if it is zero
+   or exceeds that limit) or the default limit (if it is `nil`).
+   The maximum and default limits are set in as environment vars."
+  [?limit]
+  ;; TODO: env defaults out of code.. Aero?
+  ;; TODO: reevaluate defaults
+  (let [limit-max     (:stmt-get-max env 100)
         limit-default (:stmt-get-default env 100)]
-    (assoc params
-           :limit
-           (cond
-             ;; ensure limit is =< max
-             (pos-int? limit)
-             (min limit
-                  limit-max)
-             ;; if zero, spec says use max
-             (and limit (zero? limit))
-             limit-max
-             ;; otherwise default
-             :else
-             limit-default))))
+    (cond
+      ;; Ensure limit is =< max
+      (pos-int? ?limit)
+      (min ?limit limit-max)
+      ;; If zero, spec says use max
+      (and ?limit (zero? ?limit))
+      limit-max
+      ;; Otherwise, apply default
+      :else
+      limit-default)))

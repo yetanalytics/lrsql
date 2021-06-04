@@ -13,42 +13,45 @@
 (defn- state-document-basics
   "Common properties for state document inputs. `state-id?` controls whether
    the state ID property is added (true for singleton queries, false for
-   array-valued queries)."
-  [{state-id     :stateId
-    activity-id  :activityId
-    agent        :agent
-    registration :registration}
-   state-id?]
+   array-valued queries). `add-registration?` controls whether a registration
+   is added even if it is not present (in which case `nil` is assoc'd)."
+  [{?state-id     :stateId
+    activity-id   :activityId
+    agent         :agent
+    ?registration :registration}
+   state-id?
+   add-registration?]
   (cond-> {:table         :state-document
            :activity-iri  activity-id
-           :agent-ifi     (ua/actor->ifi agent)
-           :?registration (when registration (u/str->uuid registration))}
+           :agent-ifi     (ua/actor->ifi agent)}
     state-id?
-    (assoc :state-id state-id)))
+    (assoc :state-id ?state-id)
+    (or add-registration? ?registration)
+    (assoc :registration (when ?registration (u/str->uuid ?registration)))))
 
 (defn- agent-profile-document-basics
   "Common properties for agent profile document inputs. `profile-id?` controls
    whether the profile ID property is added (true for singleton queries, false
    for array-valued queries)."
-  [{profile-id :profileId
-    agent      :agent}
+  [{?profile-id :profileId
+    agent       :agent}
    profile-id?]
   (cond-> {:table     :agent-profile-document
            :agent-ifi (ua/actor->ifi agent)}
     profile-id?
-    (assoc :profile-id profile-id)))
+    (assoc :profile-id ?profile-id)))
 
 (defn- activity-profile-document-basics
   "Common properties for activity profile document inputs. `profile-id?`
    controls whether the profile ID property is added (true for singleton
    queries, false for array-valued queries)."
-  [{profile-id  :profileId
+  [{?profile-id :profileId
     activity-id :activityId}
    profile-id?]
   (cond-> {:table        :activity-profile-document
            :activity-iri activity-id}
     profile-id?
-    (assoc :profile-id profile-id)))
+    (assoc :profile-id ?profile-id)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertion 
@@ -74,14 +77,14 @@
         (= (ud/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-insert-input
-  "Given `params` and `document`, construct the input for
-   `command/insert-document!` and `command/update-document!`"
+  "Given `params` and `document`, construct the input for `insert-document!`
+   and `update-document!`"
   {:arglists '([params document])}
   (fn [params _] (ud/document-dispatch params)))
 
 (defmethod document-insert-input :state-document
   [params document]
-  (merge (state-document-basics params true)
+  (merge (state-document-basics params true true)
          (document-insert-basics document)))
 
 (defmethod document-insert-input :agent-profile-document
@@ -107,14 +110,14 @@
         (= (ud/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-input
-  "Given `params`, construct the input for `command/query-document` and
-   `command/delete-document!`"
+  "Given `params`, construct the input for `query-document` and
+   `delete-document!`"
   {:arglists '([params])}
   ud/document-dispatch)
 
 (defmethod document-input :state-document
   [params]
-  (state-document-basics params true))
+  (state-document-basics params true false))
 
 (defmethod document-input :agent-profile-document
   [params]
@@ -132,20 +135,18 @@
   :ret hs/state-doc-multi-input-spec)
 
 (defn document-multi-input
-  "Given params, construct the input for `command/delete-document!` in the
-   case of multiple documents."
+  "Given params, construct the input for `delete-documents!`"
   [params]
   (assert (and (:activityId params) (:agent params))) ; for testing
-  (state-document-basics params false))
+  (state-document-basics params false false))
 
 ;; Multiple document ID query
 
 (defn- add-since-to-map
   "Add the `:since` property to `m` if `:since` is present/not nil."
-  [{since :since} m]
+  [{?since :since} m]
   (cond-> m
-    since
-    (assoc :since (u/str->time since))))
+    ?since (assoc :since (u/str->time ?since))))
 
 (s/fdef document-ids-input
   :args (s/cat :params hs/get-document-ids-params)
@@ -154,13 +155,13 @@
         (= (ud/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-ids-input
-  "Given `params`, return the input for `command/query-document-ids`."
+  "Given `params`, return the input for `query-document-ids`."
   {:arglist '([params])}
   ud/document-dispatch)
 
 (defmethod document-ids-input :state-document
   [params]
-  (->> (state-document-basics params false)
+  (->> (state-document-basics params false false)
        (add-since-to-map params)))
 
 (defmethod document-ids-input :agent-profile-document

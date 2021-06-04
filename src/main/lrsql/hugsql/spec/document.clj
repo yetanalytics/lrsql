@@ -13,6 +13,13 @@
 ;; Primary key
 (s/def ::primary-key uuid?)
 
+;; Table
+;; Also found in other input maps, but these are only necessary for documents
+(s/def ::table
+  #{:state-document
+    :agent-profile-document
+    :activity-profile-document})
+
 ;; Parameters
 ;; NOTE: Profile ID should be IRI, but xapi-schema defines it only as a string
 (s/def ::state-id string?)
@@ -59,10 +66,11 @@
 
 (def state-doc-insert-spec
   (s/keys :req-un [::primary-key
+                   ::table
                    ::state-id
                    ::hs-activ/activity-iri
                    ::hs-actor/agent-ifi
-                   ::hs-stmt/?registration
+                   ::hs-stmt/registration ; nilable
                    ::last-modified
                    ::lrs-doc/content-type
                    ::lrs-doc/content-length
@@ -79,6 +87,7 @@
 
 (def agent-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
+                   ::table
                    ::profile-id
                    ::hs-actor/agent-ifi
                    ::last-modified
@@ -97,6 +106,7 @@
 
 (def activity-profile-doc-insert-spec
   (s/keys :req-un [::primary-key
+                   ::table
                    ::profile-id
                    ::hs-activ/activity-iri
                    ::last-modified
@@ -121,16 +131,19 @@
 
 (def state-doc-input-spec
   (s/keys :req-un [::state-id
+                   ::table
                    ::hs-activ/activity-iri
-                   ::hs-actor/agent-ifi
-                   ::hs-stmt/?registration]))
+                   ::hs-actor/agent-ifi]
+          :opt-un [::hs-stmt/registration]))
 
 (def agent-profile-doc-input-spec
   (s/keys :req-un [::hs-actor/agent-ifi
+                   ::table
                    ::profile-id]))
 
 (def activity-profile-doc-input-spec
   (s/keys :req-un [::hs-activ/activity-iri
+                   ::table
                    ::profile-id]))
 
 (def document-input-spec
@@ -142,24 +155,28 @@
 ;; Document multi-query/delete
 
 (def state-doc-multi-input-spec
-  (s/keys :req-un [::hs-activ/activity-iri
-                   ::hs-actor/agent-ifi
-                   ::hs-stmt/?registration]))
+  (s/keys :req-un [::table
+                   ::hs-activ/activity-iri
+                   ::hs-actor/agent-ifi]
+          :opt-un [::hs-stmt/registration]))
 
 ;; Document ID queries
 
 (def state-doc-ids-input-spec
-  (s/keys :req-un [::hs-activ/activity-iri
-                   ::hs-actor/agent-ifi
-                   ::hs-stmt/?registration]
-          :opt-un [::since]))
+  (s/keys :req-un [::table
+                   ::hs-activ/activity-iri
+                   ::hs-actor/agent-ifi]
+          :opt-un [::hs-stmt/registration
+                   ::since]))
 
 (def agent-profile-doc-ids-input-spec
-  (s/keys :req-un [:hs-actor/agent-ifi]
+  (s/keys :req-un [::table
+                   ::hs-actor/agent-ifi]
           :opt-un [::since]))
 
 (def activity-profile-doc-ids-input-spec
-  (s/keys :req-un [::hs-activ/activity-iri]
+  (s/keys :req-un [::table
+                   ::hs-activ/activity-iri]
           :opt-un [::since]))
 
 (def document-ids-query-spec

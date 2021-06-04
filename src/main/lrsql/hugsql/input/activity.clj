@@ -7,6 +7,6 @@
   :ret hs/activity-query-spec)
 
 (defn activity-query-input
-  "Construct an input for `command/query-input!`"
+  "Construct an input for `query-activity!`"
   [{activity-id :activityId}]
   {:activity-iri activity-id})

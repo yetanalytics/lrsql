@@ -2,8 +2,8 @@
   (:require [clj-uuid]
             [java-time]
             [clojure.spec.alpha :as s]
-            [clojure.data.json  :as json]
-            [clojure.java.io    :as io])
+            [clojure.java.io    :as io]
+            [clojure.data.json  :as json])
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]))
@@ -15,7 +15,7 @@
 (defmacro wrap-parse-fn
   "Wrap `(parse-fn s)` in an exception such that on parse failure, the
    folloiwing error data is thrown:
-     :kind      ::parse-failure
+     :type      ::parse-failure
      :data      `data`
      :str-type  `str-type`"
   [parse-fn data-type data]
@@ -23,7 +23,7 @@
         (catch Exception e#
           (throw (ex-info (format "Cannot parse nil or invalid %s"
                                   ~data-type)
-                          {:kind     ::parse-failure
+                          {:type     ::parse-failure
                            :data     ~data
                            :daa-type ~data-type})))))
 
@@ -79,7 +79,7 @@
   [ts]
   (when-not (java-time/before? ts max-time)
     (throw (ex-info max-time-emsg
-                    {:kind ::exceeded-max-time
+                    {:type ::exceeded-max-time
                      :time ts}))))
 
 (defn- inc-uuid
@@ -97,7 +97,7 @@
       :else
       (throw (ex-info (format "Cannot increment UUID %s any further."
                               uuid)
-                      {:kind ::exceeded-max-uuid-node
+                      {:type ::exceeded-max-uuid-node
                        :uuid uuid})))))
 
 (defn- make-squuid
@@ -188,15 +188,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn read-str-strict
-  "Reads one JSON value from input String. Throws if there are more.."
+  "Reads one JSON value from input String. Throws if there are more."
   [string & {:as options}]
   (let [rdr (PushbackReader. (StringReader. string) 64)
-        obj (apply
-             json/read rdr
-             (mapcat identity options))]
-    (if (apply json/read rdr
-               (mapcat identity (assoc options
-                                       :eof-error? false)))
+        obj (apply json/read
+                   rdr
+                   (mapcat identity options))]
+    (if (apply json/read
+               rdr
+               (mapcat identity
+                       (assoc options :eof-error? false)))
       (throw (ex-info "More input after JSON object"
                       {:type ::extra-input
                        :json string}))

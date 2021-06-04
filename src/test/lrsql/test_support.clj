@@ -17,7 +17,7 @@
   []
   (when (not= "h2:mem" (:db-type env))
     (throw (ex-info "Test can only be run on in-memory H2 database!"
-                    {:kind    ::non-mem-db
+                    {:type    ::non-mem-db
                      :db-type (:db-type env)}))))
 
 ;; Copied from training-commons.xapi.statement-gen-test

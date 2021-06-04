@@ -1,7 +1,7 @@
 (ns lrsql.hugsql.command.agent
   (:require [lrsql.hugsql.functions :as f]
             [lrsql.hugsql.util :as u]
-            [com.yetanalytics.lrs.xapi.agents :as agnt]))
+            [lrsql.hugsql.util.actor :as ua]))
 
 (defn query-agent
   "Query an Agent from the DB. Returns a map between `:person` and the
@@ -11,4 +11,4 @@
   (let [agent (if-some [result (:payload (f/query-agent tx input))]
                 result
                 (:payload input))]
-    {:person (->> agent u/parse-json agnt/person)}))
+    {:person (->> agent u/parse-json ua/actor->person)}))

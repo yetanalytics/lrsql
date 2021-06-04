@@ -4,11 +4,9 @@
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.hugsql.util :as u]
             [lrsql.hugsql.spec.activity   :as hs-activ]
             [lrsql.hugsql.spec.actor      :as hs-actor]
             [lrsql.hugsql.spec.attachment :as hs-attach]
-            [lrsql.hugsql.spec.util      :refer [make-str-spec]]
             [lrsql.hugsql.util.statement :refer [prepare-statement]]))
 
 ;; TODO: Deal with different encodings for JSON types (e.g. payloads,
@@ -19,7 +17,7 @@
 ;; These spec the data received by functions in `lrsql.hugsq.input`.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def get-statements-params
+(s/def ::query-params
   ::lrsp/get-statements-params)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -31,7 +29,7 @@
 
 ;; Statement IDs
 (s/def ::statement-id uuid?)
-(s/def ::?statement-ref-id (s/nilable ::statement-id))
+(s/def ::statement-ref-id (s/nilable ::statement-id))
 (s/def ::ancestor-id ::statement-id)
 (s/def ::descendant-id ::statement-id)
 
@@ -39,8 +37,8 @@
 (s/def ::stored inst?)
 
 ;; Registration
-(s/def ::registration uuid?)
-(s/def ::?registration (s/nilable uuid?))
+;; TODO: Make a separate nilable version
+(s/def ::registration (s/nilable uuid?))
 
 ;; Verb
 (s/def ::verb-iri :verb/id)
@@ -48,69 +46,22 @@
 (s/def ::voiding? boolean?)
 
 ;; Statement
-(s/def ::payload
-  (make-str-spec ::xs/statement u/parse-json u/write-json))
+;; JSON string version: (make-str-spec ::xs/statement u/parse-json u/write-json)
+(s/def ::payload ::xs/statement)
 
 ;; Query-specific Params
 (s/def ::related-actors? boolean?)
 (s/def ::related-activities? boolean?)
+
 (s/def ::since inst?)
 (s/def ::until inst?)
+(s/def ::from uuid?)
+
 (s/def ::limit nat-int?)
 (s/def ::ascending? boolean?)
-(s/def ::from uuid?)
+
 (s/def ::format #{:ids :exact :canonical})
 (s/def ::attachments? boolean?)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Statements and Attachment Args
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def prepared-statement-spec
-  (s/with-gen
-    (s/and ::xs/statement
-           #(contains? % :statement/id)
-           #(contains? % :statement/timestamp)
-           #(contains? % :statement/stored)
-           #(contains? % :statement/authority))
-    #(sgen/fmap prepare-statement
-                (s/gen ::xs/statement))))
-
-(def statements-attachments-spec
-  (s/cat :statements
-         (s/coll-of prepared-statement-spec :min-count 1 :gen-max 5)
-         :attachments
-         (s/coll-of ::ss/attachment :gen-max 2)))
-
-(defn- update-stmt-attachments
-  "Update the attachments property of each attachment has an associated
-   attachment object in a statement."
-  [[statements attachments]]
-  (let [num-stmts
-        (count statements)
-        statements'
-        (reduce
-         (fn [stmts {:keys [sha2 contentType length] :as _att}]
-           (let [n (rand-int num-stmts)]
-             (update-in
-              stmts
-              [n "attachments"]
-              (fn [atts]
-                (conj atts
-                      {"usageType"   "https://example.org/aut"
-                       "display"     {"lat" "Lorem Ipsum"}
-                       "sha2"        sha2
-                       "contentType" contentType
-                       "length"      length})))))
-         statements
-         attachments)]
-    [statements' attachments]))
-
-(def prepared-attachments-spec
-  (s/with-gen
-    statements-attachments-spec
-    #(sgen/fmap update-stmt-attachments
-                (s/gen statements-attachments-spec))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertions
@@ -126,15 +77,16 @@
 ;; - is_voided:        BOOLEAN NOT NULL DEFAULT FALSE
 ;; - payload:          JSON NOT NULL
 
-(def statement-insert-spec
+(s/def ::statement-input
   (s/keys :req-un [::primary-key
                    ::statement-id
-                   ::?statement-ref-id
+                   ::statement-ref-id ; nilable
                    ::stored
-                   ::?registration
+                   ::registration     ; nilable
                    ::verb-iri
                    ::voided?
                    ::voiding?
+                   ::hs-attach/attachment-shas
                    ::payload]))
 
 ;; In this context, "Actor" is a catch-all term to refer to both Agents and
@@ -146,21 +98,27 @@
 ;; - actor_type:  ENUM ('Agent', 'Group') NOT NULL
 ;; - payload:     JSON NOT NULL
 
-(def actor-insert-spec
+(s/def ::actor-input
   (s/keys :req-un [::primary-key
                    ::hs-actor/actor-ifi
                    ::hs-actor/actor-type
                    ::hs-actor/payload]))
+
+(s/def ::actor-inputs
+  (s/coll-of ::actor-input :gen-max 5))
 
 ;; Activity
 ;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - activity_iri: STRING NOT NULL UNIQUE KEY
 ;; - payload:      JSON NOT NULL
 
-(def activity-insert-spec
+(s/def ::activity-input
   (s/keys :req-un [::primary-key
                    ::hs-activ/activity-iri
                    ::hs-activ/payload]))
+
+(s/def ::activity-inputs
+  (s/coll-of ::activity-input :gen-max 5))
 
 ;; Attachment
 ;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
@@ -170,13 +128,16 @@
 ;; - content_length: INTEGER NOT NULL
 ;; - contents:       BINARY NOT NULL
 
-(def attachment-insert-spec
+(s/def ::attachment-input
   (s/keys :req-un [::primary-key
                    ::statement-id
                    ::hs-attach/attachment-sha
                    ::hs-attach/content-type
                    ::hs-attach/content-length
                    ::hs-attach/contents]))
+
+(s/def ::attachment-inputs
+  (s/coll-of ::attachment-input :gen-max 5))
 
 ;; Statement-to-Actor
 ;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
@@ -186,11 +147,14 @@
 ;;                 NOT NULL
 ;; - actor_ifi:    STRING NOT NULL FOREIGN KEY
 
-(def statement-to-actor-insert-spec
+(s/def ::stmt-actor-input
   (s/keys :req-un [::primary-key
                    ::statement-id
                    ::hs-actor/usage
                    ::hs-actor/actor-ifi]))
+
+(s/def ::stmt-actor-inputs
+  (s/coll-of ::stmt-actor-input :gen-max 5))
 
 ;; Statement-to-Activity
 ;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
@@ -200,28 +164,80 @@
 ;;                 NOT NULL
 ;; - activity_iri: STRING NOT NULL FOREIGN KEY
 
-(def statement-to-activity-insert-spec
+(s/def ::stmt-activity-input
   (s/keys :req-un [::primary-key
                    ::statement-id
                    ::hs-activ/usage
                    ::hs-activ/activity-iri]))
 
-;; Putting it all together
-(def statement-insert-seq-spec
-  (s/cat
-   :statement-input statement-insert-spec
-   :actor-inputs (s/* actor-insert-spec)
-   :activity-inputs (s/* activity-insert-spec)
-   :stmt-actor-inputs (s/* statement-to-actor-insert-spec)
-   :stmt-activity-inputs (s/* statement-to-activity-insert-spec)))
+(s/def ::stmt-activity-inputs
+  (s/coll-of ::stmt-activity-input :gen-max 5))
 
-(def attachment-insert-seq-spec
-  (s/* attachment-insert-spec))
+;; Statement-to-Statement
+;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - ancestor_id:   UUID NOT NULL FOREIGN KEY
+;; - descendant_id: UUID NOT NULL FOREIGN KEY
 
-(def statement-to-statement-insert-spec
+(s/def ::stmt-stmt-input
   (s/keys :req-un [::primary-key
                    ::ancestor-id
                    ::descendant-id]))
+
+(s/def ::stmt-stmt-inputs
+  (s/coll-of ::stmt-stmt-input :gen-max 5))
+
+;; Putting it all together
+
+(def statement-insert-map-spec
+  (s/keys :req-un [::statement-input
+                   ::actor-inputs
+                   ::activity-inputs
+                   ::attachment-inputs
+                   ::stmt-actor-inputs
+                   ::stmt-activity-inputs
+                   ::stmt-stmt-inputs]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Function Parameters
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def prepared-statement-spec
+  (s/with-gen
+    (s/and ::xs/statement
+           #(contains? % :statement/id)
+           #(contains? % :statement/timestamp)
+           #(contains? % :statement/stored)
+           #(contains? % :statement/authority))
+    #(sgen/fmap prepare-statement
+                (s/gen ::xs/statement))))
+
+(defn- update-stmt-input-attachments
+  [[stmt-inputs attachments]]
+  (let [num-stmts
+        (count stmt-inputs)
+        stmt-inputs'
+        (reduce
+         (fn [stmt-inputs {:keys [sha2] :as _attachment}]
+           (let [n (rand-int num-stmts)]
+             (update-in stmt-inputs
+                        [n :statement-input :attachment-shas]
+                        conj
+                        sha2)))
+         stmt-inputs
+         attachments)]
+    [stmt-inputs' attachments]))
+
+(def stmt-input-attachments-spec*
+  (s/cat :statement-inputs
+         (s/coll-of statement-insert-map-spec :min-count 1 :gen-max 5)
+         :attachments
+         (s/coll-of ::ss/attachment :gen-max 2)))
+
+(def stmt-input-attachments-spec
+  (s/with-gen
+   stmt-input-attachments-spec*
+   #(sgen/fmap update-stmt-input-attachments
+               (s/gen stmt-input-attachments-spec*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Queries
@@ -229,24 +245,25 @@
 
 (def statement-query-one-spec
   (s/keys :req-un [::statement-id
-                   ::voided?]
-          :opt-un [::format
+                   ::voided?
+                   ::format
                    ::attachments?]))
 
 (def statement-query-many-spec
-  (s/keys :opt-un [::from
-                   ::since
-                   ::until
-                   ::limit
+  (s/keys :req-un [::limit
                    ::ascending?
+                   ::format
+                   ::attachments?
+                   ::query-params]
+          :opt-un [::hs-actor/actor-ifi
+                   ::hs-actor/activity-iri
                    ::verb-iri
                    ::registration
                    ::related-actors?
                    ::related-activities?
-                   ::hs-actor/actor-ifi
-                   ::hs-activ/activity-iri
-                   ::format
-                   ::attachments?]))
+                   ::from
+                   ::since
+                   ::until]))
 
 (def statement-query-spec
   (s/or :one  statement-query-one-spec
