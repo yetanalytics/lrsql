@@ -77,8 +77,8 @@
         (= (ud/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-insert-input
-  "Given `params` and `document`, construct the input for
-   `command/insert-document!` and `command/update-document!`"
+  "Given `params` and `document`, construct the input for `insert-document!`
+   and `update-document!`"
   {:arglists '([params document])}
   (fn [params _] (ud/document-dispatch params)))
 
@@ -110,8 +110,8 @@
         (= (ud/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-input
-  "Given `params`, construct the input for `command/query-document` and
-   `command/delete-document!`"
+  "Given `params`, construct the input for `query-document` and
+   `delete-document!`"
   {:arglists '([params])}
   ud/document-dispatch)
 
@@ -135,8 +135,7 @@
   :ret hs/state-doc-multi-input-spec)
 
 (defn document-multi-input
-  "Given params, construct the input for `command/delete-document!` in the
-   case of multiple documents."
+  "Given params, construct the input for `delete-documents!`"
   [params]
   (assert (and (:activityId params) (:agent params))) ; for testing
   (state-document-basics params false false))
@@ -156,7 +155,7 @@
         (= (ud/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-ids-input
-  "Given `params`, return the input for `command/query-document-ids`."
+  "Given `params`, return the input for `query-document-ids`."
   {:arglist '([params])}
   ud/document-dispatch)
 

@@ -1,7 +1,7 @@
 (ns lrsql.hugsql.input.statement
   (:require [clojure.spec.alpha :as s]
+            [clojure.tools.logging :as log]
             [clojure.set :as cset]
-            [com.yetanalytics.lrs.pedestal.interceptor.xapi.statements.attachment :as xsa]
             ;; Specs
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
@@ -67,8 +67,9 @@
   :ret ::hs/stmt-actor-input)
 
 (defn statement-to-actor-insert-input
-  "Given `statement-id`, `actor-usage` and the input to `f/insert-actor!`,
-   return the input for `functions/insert-statement-to-actor!`."
+  "Given `statement-id`, `actor-usage` and the return value of
+   `actor-insert-input`, return the input for
+   `functions/insert-statement-to-actor!`."
   [statement-id actor-usage {actor-ifi :actor-ifi}]
   {:table        :statement-to-actor
    :primary-key  (u/generate-squuid)
@@ -83,8 +84,8 @@
   :ret ::hs/stmt-activity-input)
 
 (defn statement-to-activity-insert-input
-  "Given `statement-id`, `activity-usage` and the HugSql params map for
-   `insert-activity`, return the HugSql params map for
+  "Given `statement-id`, `activity-usage` and the return value of
+   `activity-insert-input`, return the input for
    `functions/insert-statement-to-activity!`."
   [statement-id activity-usage {activity-id :activity-iri}]
   {:table        :statement-to-activity
@@ -255,9 +256,8 @@
   :ret hs/statement-insert-map-spec)
 
 (defn statement-insert-inputs
-  "Given `statement`, return a seq of inputs that serve as the input for
-   `command/insert-statements!`, starting with the params for
-   `functions/insert-statement!`."
+  "Given `statement`, return a map of HugSql inputs that serve as the input for
+   `insert-statement!`."
   [statement]
   (let [;; Destructuring
         ;; `id`, `stored`, and `authority` should have already been
@@ -351,8 +351,8 @@
   :ret (s/coll-of hs/statement-insert-map-spec :min-count 1))
 
 (defn statements-insert-inputs
-  "Given the coll `statements`, return a seq of input maps that serve as the
-   input for `command/insert-statements!`"
+  "Given the coll `statements`, return a seq of input maps that can each be
+   passed to `insert-statement!`"
   [statements]
   (map statement-insert-inputs statements))
 
@@ -366,6 +366,9 @@
   :ret ::hs/stmt-stmt-input)
 
 (defn descendant-insert-input
+  "Given `statement-id` and `attachment`, construct the input for
+   `functions/insert-statement-to-statement!`. `statement-id` will serve as
+   the ancestor ID."
   [statement-id descendant-id]
   {:table         :statement-to-statement
    :primary-key   (u/generate-squuid)
@@ -378,7 +381,9 @@
   :ret  hs/statement-insert-map-spec)
 
 (defn add-descendant-insert-inputs
-  [input-map desc-ids]
+  "Given `input-map` and `descendant-ids`, add any descendant IDs to the input
+   map in order to be passed to `functions/insert-statement-to-statement!`"
+  [input-map descendant-ids]
   (let [stmt-id (-> input-map :statement-input :statement-id)]
     (reduce (fn [input-map' desc-id]
               (update input-map'
@@ -386,7 +391,7 @@
                       conj
                       (descendant-insert-input stmt-id desc-id)))
             input-map
-            desc-ids)))
+            descendant-ids)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Attachment Insertion 
@@ -422,19 +427,33 @@
   :args hs/stmt-input-attachments-spec
   :ret (s/coll-of hs/statement-insert-map-spec))
 
-(def ^:private attachment-emsg
-  "There exist Attachments not associated with the Statements in the request.")
+(def ^:private duplicate-sha-emsg
+  "Some Attachments provided have duplicate SHA2 hashes. Some Attachments may not be stored in the DB successfully.")
 
-;; TODO: The SHA2 hash may result in hash collisions with otherwise-different
-;; binary data. May want to investigate further.
+(def ^:private bad-attachment-emsg
+  "Some Attachments provided are not associated with the Statements in the request.")
+
+(def ^:private attachment-mismatch-type
+  :com.yetanalytics.lrs.pedestal.interceptor.xapi.statements.attachment/statement-attachment-mismatch)
+
+;; SHA2 hashes may result in hash collisions with otherwise different binary
+;; data, though this should be very rare. For now, emit an error message if
+;; this occurs.
 
 (defn add-attachment-insert-inputs
+  "Given `input-maps` and `attachments`, add each attachment to the appropriate
+   input map, i.e. the one that contains the attachment's SHA2 hash."
   [input-maps attachments]
   (if (not-empty attachments)
     (let [sha-att-m
           (into {} (map (fn [{sha :sha2 :as att}] [sha att]) attachments))
           shas
           (set (keys sha-att-m))
+          _
+          (when (not= (count attachments) (count shas))
+            (log/warnf "%s\nAttachments: %s"
+                       duplicate-sha-emsg
+                       (map #(dissoc % :content) attachments)))
           result
           (for [imap input-maps
                 :let [stmt-id    (-> imap :statement-input :statement-id)
@@ -459,8 +478,8 @@
       (if-some [diff-sha (not-empty (clojure.set/difference shas
                                                             added-shas))]
         ;; Some attachments weren't included - throw an error
-        (throw (ex-info attachment-emsg
-                        {:type         ::xsa/statement-attachment-mismatch
+        (throw (ex-info bad-attachment-emsg
+                        {:type         attachment-mismatch-type
                          :attachments  attachments
                          :invalid-shas diff-sha
                          :stmt-inputs  input-maps}))
@@ -481,7 +500,8 @@
   :ret hs/statement-query-spec)
 
 (defn statement-query-input
-  "Construct the input for `command/query-statement!`."
+  "Construct the input for `query-statement!`. Returns either an input for
+   singleton or multi-statement query."
   [{?stmt-id     :statementId
     ?vstmt-id    :voidedStatementId
     ?verb-iri    :verb

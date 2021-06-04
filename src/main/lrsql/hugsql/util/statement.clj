@@ -80,19 +80,21 @@
        (form-encode (assoc query-params :from next-cursor))))
 
 (defn ensure-default-max-limit
-  "Apply default/max limit to params"
+  "Given `?limit`, apply the maximum possible limit (if it is zero
+   or exceeds that limit) or the default limit (if it is `nil`).
+   The maximum and default limits are set in as environment vars."
   [?limit]
-  (let [;; TODO: env defaults out of code.. Aero?
-        ;; TODO: reevaluate defaults
-        limit-max     (:stmt-get-max env 100)
+  ;; TODO: env defaults out of code.. Aero?
+  ;; TODO: reevaluate defaults
+  (let [limit-max     (:stmt-get-max env 100)
         limit-default (:stmt-get-default env 100)]
     (cond
-      ;; ensure limit is =< max
+      ;; Ensure limit is =< max
       (pos-int? ?limit)
       (min ?limit limit-max)
-      ;; if zero, spec says use max
+      ;; If zero, spec says use max
       (and ?limit (zero? ?limit))
       limit-max
-      ;; otherwise default
+      ;; Otherwise, apply default
       :else
       limit-default)))

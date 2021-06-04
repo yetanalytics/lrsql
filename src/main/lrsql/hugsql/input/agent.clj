@@ -8,6 +8,6 @@
   :ret hs/agent-query-spec)
 
 (defn agent-query-input
-  "Construct an input for `command/query-agent!`"
+  "Construct an input for `query-agent!`"
   [{agent :agent}]
   {:agent-ifi (actor->ifi agent)})

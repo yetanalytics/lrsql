@@ -10,12 +10,11 @@
 
 (defn- insert-statement-input!
   [tx input]
+  ;; TODO: Add check for clashing statements
   (f/insert-statement! tx (update input :payload u/write-json))
-        ;; Void statements
   (when (:voiding? input)
     (f/void-statement! tx {:statement-id (:statement-ref-id input)}))
-        ;; Success! (Too bad H2 doesn't have INSERT...RETURNING)
-  (u/uuid->str (:statement-id input)))
+  nil)
 
 (defn- insert-actor-input!
   [tx input]

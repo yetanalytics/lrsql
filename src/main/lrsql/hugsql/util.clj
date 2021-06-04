@@ -188,7 +188,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn read-str-strict
-  "Reads one JSON value from input String. Throws if there are more.."
+  "Reads one JSON value from input String. Throws if there are more."
   [string & {:as options}]
   (let [rdr (PushbackReader. (StringReader. string) 64)
         obj (apply json/read
