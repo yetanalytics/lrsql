@@ -11,13 +11,14 @@
 (defn- insert-statement-input!
   [tx input]
   (let [{stmt-id  :statement-id
+         sref-id  :statement-ref-id
          new-stmt :payload} input
         exists (f/query-statement-exists tx {:statement-id stmt-id})]
     (if exists
-      (let [old-data (or (f/query-statement {:statement-id stmt-id
-                                             :voided?      false})
-                         (f/query-statement {:statement-id stmt-id
-                                             :voided?      true}))
+      (let [old-data (or (f/query-statement tx {:statement-id stmt-id
+                                                :voided?      false})
+                         (f/query-statement tx {:statement-id stmt-id
+                                                :voided?      true}))
             old-stmt (-> old-data :payload u/parse-json)]
         (when-not (us/statement-equal? old-stmt new-stmt)
           (throw
@@ -27,8 +28,8 @@
                      :new-stmt new-stmt}))))
       (do
         (f/insert-statement! tx (update input :payload u/write-json))
-        (when (:voiding? input)
-          (f/void-statement! tx {:statement-id (:statement-ref-id input)}))))))
+        (when (:voiding? input) (f/void-statement! tx {:statement-id sref-id}))
+        stmt-id))))
 
 (defn- insert-actor-input!
   [tx input]
@@ -81,15 +82,15 @@
               stmt-actor-inputs
               stmt-activity-inputs
               stmt-stmt-inputs]}]
-  (insert-statement-input! tx statement-input)
-  (doall (map (partial insert-actor-input! tx) actor-inputs))
-  (doall (map (partial insert-activity-input! tx) activity-inputs))
-  (doall (map (partial insert-stmt-actor-input! tx) stmt-actor-inputs))
-  (doall (map (partial insert-stmt-activity-input! tx) stmt-activity-inputs))
-  (doall (map (partial insert-stmt-stmt-input! tx) stmt-stmt-inputs))
-  (doall (map (partial insert-attachment-input! tx) attachment-inputs))
-  ;; Success! Return the statement ID
-  (:statement-id statement-input))
+  (let [?stmt-id (insert-statement-input! tx statement-input)]
+    (doall (map (partial insert-actor-input! tx) actor-inputs))
+    (doall (map (partial insert-activity-input! tx) activity-inputs))
+    (doall (map (partial insert-stmt-actor-input! tx) stmt-actor-inputs))
+    (doall (map (partial insert-stmt-activity-input! tx) stmt-activity-inputs))
+    (doall (map (partial insert-stmt-stmt-input! tx) stmt-stmt-inputs))
+    (doall (map (partial insert-attachment-input! tx) attachment-inputs))
+    ;; Return the statement ID (or nil on failure)
+    ?stmt-id))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Query
