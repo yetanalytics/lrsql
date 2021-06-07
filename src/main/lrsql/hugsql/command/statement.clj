@@ -1,5 +1,6 @@
 (ns lrsql.hugsql.command.statement
-  (:require [lrsql.hugsql.functions :as f]
+  (:require [clojure.tools.logging :as log]
+            [lrsql.hugsql.functions :as f]
             [lrsql.hugsql.util :as u]
             [lrsql.hugsql.util.activity :as ua]
             [lrsql.hugsql.util.statement :as us]))
@@ -7,6 +8,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- prepare-input
+  "Prepare the input for insertion. In particular, convert the payload into a
+   JSON string."
+  [input]
+  (update input :payload u/write-json))
 
 (defn- insert-statement-input!
   [tx input]
@@ -24,19 +31,50 @@
           (throw
            (ex-info "Statement Conflict!"
                     {:type :com.yetanalytics.lrs.protocol/statement-conflict
-                     :old-stmt old-stmt
-                     :new-stmt new-stmt}))))
+                     :extant-statement old-stmt
+                     :statement        new-stmt}))))
       (do
-        (f/insert-statement! tx (update input :payload u/write-json))
+        (f/insert-statement! tx (prepare-input input))
         (when (:voiding? input) (f/void-statement! tx {:statement-id sref-id}))
         stmt-id))))
 
 (defn- insert-actor-input!
   [tx input]
-  (if (some->> (select-keys input [:actor-ifi])
-               (f/query-actor-exists tx))
-    (f/update-actor! tx (update input :payload u/write-json))
-    (f/insert-actor! tx (update input :payload u/write-json)))
+  (if-some [old-actor (some->> (select-keys input [:actor-ifi])
+                               (f/query-actor tx)
+                               :payload
+                               u/parse-json)]
+    (let [new-actor (:payload input)
+          {old-name "name"
+           old-type "objectType" :or {old-type "Agent"}} old-actor
+          {new-name "name"
+           new-type "objectType" :or {new-type "Agent"}} new-actor]
+      (cond
+        ;; An Identified Group SHOULD NOT use Inverse Functional Identifiers
+        ;; that are also used as Agent identifiers.
+        (and (= "Agent" old-type) (= "Group" new-type))
+        (do
+          (log/warnf (str "An Agent is overriding a Group with the same IFI!\n"
+                          "Agent: %s\n"
+                          "Group: %s\n")
+                     old-actor
+                     new-actor)
+          (f/update-actor! tx (prepare-input input)))
+        (and (= "Group" old-type) (= "Agent" new-type))
+        (do
+          (log/warnf (str "A Group is overriding an Agent with the same IFI!\n"
+                          "Group: %s\n"
+                          "Agent: %s\n")
+                     old-actor
+                     new-actor)
+          (f/update-actor! tx (prepare-input input)))
+        ;; Update name
+        (not= old-name new-name)
+        (f/update-actor! tx (prepare-input input))
+        ;; Identical actors -> no-op
+        :else
+        nil))
+    (f/insert-actor! tx (prepare-input input)))
   nil)
 
 (defn- insert-activity-input!
@@ -47,9 +85,9 @@
                                u/parse-json)]
     (let [new-activ (:payload input)
           activity' (ua/merge-activities old-activ new-activ)
-          input'    (assoc input :payload (u/write-json activity'))]
-      (f/update-activity! tx input'))
-    (f/insert-activity! tx (update input :payload u/write-json)))
+          input'    (assoc input :payload activity')]
+      (f/update-activity! tx (prepare-input input')))
+    (f/insert-activity! tx (prepare-input input)))
   nil)
 
 (defn- insert-attachment-input!
