@@ -4,7 +4,7 @@
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.init :as init]
-            [lrsql.input.agent     :as agent-input]
+            [lrsql.input.actor     :as agent-input]
             [lrsql.input.activity  :as activity-input]
             [lrsql.input.statement :as stmt-input]
             [lrsql.input.document  :as doc-input]

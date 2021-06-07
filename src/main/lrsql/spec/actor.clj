@@ -2,7 +2,11 @@
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec   :as xs]
             [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.spec.common :as c]
             [lrsql.spec.util :refer [make-str-spec]]))
+
+;; In this context, "Actor" is a catch-all term to refer to both Agents and
+;; Identified Groups, not the Actor object within Statements.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
@@ -52,14 +56,51 @@
 (s/def ::payload ::xs/actor)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Agent params spec
+;; Insertion spec
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Actor
+;; - id:          SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - actor_ifi:   STRING NOT NULL UNIQUE KEY
+;; - actor_type:  ENUM ('Agent', 'Group') NOT NULL
+;; - payload:     JSON NOT NULL
+
+(s/def ::actor-input
+  (s/keys :req-un [::c/primary-key
+                   ::actor-ifi
+                   ::actor-type
+                   ::payload]))
+
+(s/def ::actor-inputs
+  (s/coll-of ::actor-input :gen-max 5))
+
+;; Statement-to-Actor
+;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
+;; - statement_id: UUID NOT NULL FOREIGN KEY
+;; - usage:        ENUM ('Actor', 'Object', 'Authority', 'Instructor', 'Team',
+;;                       'SubActor', 'SubObject', 'SubAuthority', 'SubInstructor', 'SubTeam')
+;;                 NOT NULL
+;; - actor_ifi:    STRING NOT NULL FOREIGN KEY
+
+(s/def ::stmt-actor-input
+  (s/keys :req-un [::c/primary-key
+                   ::c/statement-id
+                   ::usage
+                   ::actor-ifi
+                   ::actor-type]))
+
+(s/def ::stmt-actor-inputs
+  (s/coll-of ::stmt-actor-input :gen-max 5))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Query params spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def get-agent-params
   ::lrsp/get-person-params)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Agent query spec
+;; Query spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def agent-query-spec

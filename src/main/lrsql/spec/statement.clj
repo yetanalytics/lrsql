@@ -4,6 +4,7 @@
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.statements :as ss]
+            [lrsql.spec.common     :as c]
             [lrsql.spec.activity   :as hs-activ]
             [lrsql.spec.actor      :as hs-actor]
             [lrsql.spec.attachment :as hs-attach]
@@ -13,14 +14,6 @@
 ;; actor ifi), instead of just H2 strings.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Params specs
-;; These spec the data received by functions in `lrsql.hugsq.input`.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(s/def ::query-params
-  ::lrsp/get-statements-params)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -28,7 +21,7 @@
 (s/def ::primary-key uuid?)
 
 ;; Statement IDs
-(s/def ::statement-id uuid?)
+(s/def ::statement-id ::c/statement-id)
 (s/def ::statement-ref-id (s/nilable ::statement-id))
 (s/def ::ancestor-id ::statement-id)
 (s/def ::descendant-id ::statement-id)
@@ -64,7 +57,7 @@
 (s/def ::attachments? boolean?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Statement Insertions
+;; Insertion spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Statement
@@ -78,7 +71,7 @@
 ;; - payload:          JSON NOT NULL
 
 (s/def ::statement-input
-  (s/keys :req-un [::primary-key
+  (s/keys :req-un [::c/primary-key
                    ::statement-id
                    ::statement-ref-id ; nilable
                    ::stored
@@ -89,98 +82,13 @@
                    ::hs-attach/attachment-shas
                    ::payload]))
 
-;; In this context, "Actor" is a catch-all term to refer to both Agents and
-;; Identified Groups, not the Actor object within Statements.
-
-;; Actor
-;; - id:          SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - actor_ifi:   STRING NOT NULL UNIQUE KEY
-;; - actor_type:  ENUM ('Agent', 'Group') NOT NULL
-;; - payload:     JSON NOT NULL
-
-(s/def ::actor-input
-  (s/keys :req-un [::primary-key
-                   ::hs-actor/actor-ifi
-                   ::hs-actor/actor-type
-                   ::hs-actor/payload]))
-
-(s/def ::actor-inputs
-  (s/coll-of ::actor-input :gen-max 5))
-
-;; Activity
-;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - activity_iri: STRING NOT NULL UNIQUE KEY
-;; - payload:      JSON NOT NULL
-
-(s/def ::activity-input
-  (s/keys :req-un [::primary-key
-                   ::hs-activ/activity-iri
-                   ::hs-activ/payload]))
-
-(s/def ::activity-inputs
-  (s/coll-of ::activity-input :gen-max 5))
-
-;; Attachment
-;; - id:             SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - statement_key:  UUID NOT NULL FOREIGN KEY
-;; - attachment_sha: STRING NOT NULL
-;; - content_type:   STRING NOT NULL
-;; - content_length: INTEGER NOT NULL
-;; - contents:       BINARY NOT NULL
-
-(s/def ::attachment-input
-  (s/keys :req-un [::primary-key
-                   ::statement-id
-                   ::hs-attach/attachment-sha
-                   ::hs-attach/content-type
-                   ::hs-attach/content-length
-                   ::hs-attach/contents]))
-
-(s/def ::attachment-inputs
-  (s/coll-of ::attachment-input :gen-max 5))
-
-;; Statement-to-Actor
-;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - statement_id: UUID NOT NULL FOREIGN KEY
-;; - usage:        ENUM ('Actor', 'Object', 'Authority', 'Instructor', 'Team',
-;;                       'SubActor', 'SubObject', 'SubAuthority', 'SubInstructor', 'SubTeam')
-;;                 NOT NULL
-;; - actor_ifi:    STRING NOT NULL FOREIGN KEY
-
-(s/def ::stmt-actor-input
-  (s/keys :req-un [::primary-key
-                   ::statement-id
-                   ::hs-actor/usage
-                   ::hs-actor/actor-ifi
-                   ::hs-actor/actor-type]))
-
-(s/def ::stmt-actor-inputs
-  (s/coll-of ::stmt-actor-input :gen-max 5))
-
-;; Statement-to-Activity
-;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
-;; - statement_id: UUID NOT NULL FOREIGN KEY
-;; - usage:        ENUM ('Object', 'Category', 'Grouping', 'Parent', 'Other',
-;;                       'SubObject', 'SubCategory', 'SubGrouping', 'SubParent', 'SubOther')
-;;                 NOT NULL
-;; - activity_iri: STRING NOT NULL FOREIGN KEY
-
-(s/def ::stmt-activity-input
-  (s/keys :req-un [::primary-key
-                   ::statement-id
-                   ::hs-activ/usage
-                   ::hs-activ/activity-iri]))
-
-(s/def ::stmt-activity-inputs
-  (s/coll-of ::stmt-activity-input :gen-max 5))
-
 ;; Statement-to-Statement
 ;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - ancestor_id:   UUID NOT NULL FOREIGN KEY
 ;; - descendant_id: UUID NOT NULL FOREIGN KEY
 
 (s/def ::stmt-stmt-input
-  (s/keys :req-un [::primary-key
+  (s/keys :req-un [::c/primary-key
                    ::ancestor-id
                    ::descendant-id]))
 
@@ -191,15 +99,15 @@
 
 (def statement-insert-map-spec
   (s/keys :req-un [::statement-input
-                   ::actor-inputs
-                   ::activity-inputs
-                   ::attachment-inputs
-                   ::stmt-actor-inputs
-                   ::stmt-activity-inputs
+                   ::hs-actor/actor-inputs
+                   ::hs-activ/activity-inputs
+                   ::hs-attach/attachment-inputs
+                   ::hs-actor/stmt-actor-inputs
+                   ::hs-activ/stmt-activity-inputs
                    ::stmt-stmt-inputs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Function Parameters
+;; Insertion params spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def prepared-statement-spec
@@ -241,7 +149,14 @@
                (s/gen stmt-input-attachments-spec*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Statement Queries
+;; Query params specs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/def ::query-params
+  ::lrsp/get-statements-params)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Query spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def statement-query-one-spec

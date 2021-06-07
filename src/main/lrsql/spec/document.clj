@@ -2,6 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.document :as lrs-doc]
+            [lrsql.spec.common    :as c]
             [lrsql.spec.activity  :as hs-activ]
             [lrsql.spec.actor     :as hs-actor]
             [lrsql.spec.statement :as hs-stmt]))
@@ -9,9 +10,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Primary key
-(s/def ::primary-key uuid?)
 
 ;; Table
 ;; Also found in other input maps, but these are only necessary for documents
@@ -50,7 +48,7 @@
   (s/and ::lrsp/get-document-ids-params (s/conformer second)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Document Insertions
+;; Insertion spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; State-Document
@@ -65,7 +63,7 @@
 ;; - contents:       BINARY NOT NULL
 
 (def state-doc-insert-spec
-  (s/keys :req-un [::primary-key
+  (s/keys :req-un [::c/primary-key
                    ::table
                    ::state-id
                    ::hs-activ/activity-iri
@@ -86,7 +84,7 @@
 ;; - contents:       BINARY NOT NULL
 
 (def agent-profile-doc-insert-spec
-  (s/keys :req-un [::primary-key
+  (s/keys :req-un [::c/primary-key
                    ::table
                    ::profile-id
                    ::hs-actor/agent-ifi
@@ -105,7 +103,7 @@
 ;; - contents:       BINARY NOT NULL
 
 (def activity-profile-doc-insert-spec
-  (s/keys :req-un [::primary-key
+  (s/keys :req-un [::c/primary-key
                    ::table
                    ::profile-id
                    ::hs-activ/activity-iri

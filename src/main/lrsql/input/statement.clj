@@ -3,97 +3,17 @@
             [clojure.tools.logging :as log]
             [clojure.set :as cset]
             ;; Specs
-            [xapi-schema.spec :as xs]
-            [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.spec.statement :as hs]
+            [lrsql.spec.statement :as ss]
+            ;; Inputs
+            [lrsql.input.actor      :as i-ac]
+            [lrsql.input.activity   :as i-av]
+            [lrsql.input.attachment :as i-at]
             ;; Utils
             [lrsql.util :as u]
             [lrsql.util.actor :as ua]
             [lrsql.util.statement :as us]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Actor/Activity Insertion
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(s/fdef actor-insert-input
-  :args (s/cat :actor (s/alt :agent ::xs/agent
-                             :group ::xs/group))
-  :ret (s/nilable ::hs/actor-input))
-
-(defn actor-insert-input
-  "Given `actor`, construct the input for `functions/insert-actor!`, or nil
-   if it does not have an IFI."
-  [actor]
-  (when-some [ifi-str (ua/actor->ifi actor)]
-    {:table       :actor
-     :primary-key (u/generate-squuid)
-     :actor-ifi   ifi-str
-     :actor-type  (get actor "objectType" "Agent")
-     :payload     actor}))
-
-(s/fdef group-insert-input
-  :args (s/cat :actor (s/alt :agent ::xs/agent
-                             :group ::xs/group))
-  :ret (s/nilable ::hs/actor-inputs))
-
-(defn group-insert-input
-  "Given `actor`, return a coll of actor inputs, or nil if `actor` is not
-   a Group or has no members. Both Anonymous and Identified Group members
-   count."
-  [actor]
-  ;; Use let-binding in order to avoid cluttering args list
-  (let [{obj-type "objectType" members  "member"} actor]
-    (when (and (= "Group" obj-type) (not-empty members))
-      (map actor-insert-input members))))
-
-(s/fdef activity-insert-input
-  :args (s/cat :activity ::xs/activity)
-  :ret ::hs/activity-input)
-
-(defn activity-insert-input
-  "Given `activity`, construct the input for `functions/insert-activity!`."
-  [activity]
-  {:table        :activity
-   :primary-key  (u/generate-squuid)
-   :activity-iri (get activity "id")
-   :payload      activity})
-
-(s/fdef statement-to-actor-insert-input
-  :args (s/cat :statement-id ::hs/statement-id
-               :actor-usage :lrsql.spec.actor/usage
-               :actor-input ::hs/actor-input)
-  :ret ::hs/stmt-actor-input)
-
-(defn statement-to-actor-insert-input
-  "Given `statement-id`, `actor-usage` and the return value of
-   `actor-insert-input`, return the input for
-   `functions/insert-statement-to-actor!`."
-  [statement-id actor-usage {:keys [actor-ifi actor-type]}]
-  {:table        :statement-to-actor
-   :primary-key  (u/generate-squuid)
-   :statement-id statement-id
-   :usage        actor-usage
-   :actor-ifi    actor-ifi
-   :actor-type   actor-type})
-
-(s/fdef statement-to-activity-insert-input
-  :args (s/cat :statement-id ::hs/statement-id
-               :activity-usage :lrsql.spec.activity/usage
-               :activity-input ::hs/activity-input)
-  :ret ::hs/stmt-activity-input)
-
-(defn statement-to-activity-insert-input
-  "Given `statement-id`, `activity-usage` and the return value of
-   `activity-insert-input`, return the input for
-   `functions/insert-statement-to-activity!`."
-  [statement-id activity-usage {activity-id :activity-iri}]
-  {:table        :statement-to-activity
-   :primary-key  (u/generate-squuid)
-   :statement-id statement-id
-   :usage        activity-usage
-   :activity-iri activity-id})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertion 
@@ -115,17 +35,17 @@
         actor-obj?
         (boolean (#{"Agent" "Group"} stmt-obj-type))
         ;; Statement Actors
-        ?act-input  (actor-insert-input stmt-act)
-        ?obj-input  (when actor-obj? (actor-insert-input stmt-obj))
-        ?auth-input (when ?stmt-auth (actor-insert-input ?stmt-auth))
-        ?inst-input (when ?stmt-inst (actor-insert-input ?stmt-inst))
-        ?team-input (when ?stmt-team (actor-insert-input ?stmt-team))
+        ?act-input  (i-ac/actor-insert-input stmt-act)
+        ?obj-input  (when actor-obj? (i-ac/actor-insert-input stmt-obj))
+        ?auth-input (when ?stmt-auth (i-ac/actor-insert-input ?stmt-auth))
+        ?inst-input (when ?stmt-inst (i-ac/actor-insert-input ?stmt-inst))
+        ?team-input (when ?stmt-team (i-ac/actor-insert-input ?stmt-team))
         ;; Member Actors
-        ?act-mem-inputs  (group-insert-input stmt-act)
-        ?obj-mem-inputs  (when actor-obj? (group-insert-input stmt-obj))
-        ?auth-mem-inputs (when ?stmt-auth (group-insert-input ?stmt-auth))
-        ?inst-mem-inputs (when ?stmt-inst (group-insert-input ?stmt-inst))
-        ?team-mem-inputs (when ?stmt-team (group-insert-input ?stmt-team))
+        ?act-mem-inputs  (i-ac/group-insert-input stmt-act)
+        ?obj-mem-inputs  (when actor-obj? (i-ac/group-insert-input stmt-obj))
+        ?auth-mem-inputs (when ?stmt-auth (i-ac/group-insert-input ?stmt-auth))
+        ?inst-mem-inputs (when ?stmt-inst (i-ac/group-insert-input ?stmt-inst))
+        ?team-mem-inputs (when ?stmt-team (i-ac/group-insert-input ?stmt-team))
         ;; Actor Inputs
         actor-inputs (cond-> []
                        ;; Statememt Actors
@@ -141,7 +61,7 @@
                        ?inst-mem-inputs (concat ?inst-mem-inputs)
                        ?team-mem-inputs (concat ?team-mem-inputs))
         ;; Statement to Actor Inputs
-        actor->link (partial statement-to-actor-insert-input stmt-id)
+        actor->link (partial i-ac/statement-to-actor-insert-input stmt-id)
         stmt-actors (cond-> []
                       ;; Statement Actors
                       ?act-input
@@ -190,11 +110,11 @@
         activity-obj?
         (boolean (#{"Activity"} stmt-obj-type))
         ;; Statement Activities
-        ?obj-act-in  (when activity-obj? (activity-insert-input stmt-obj))
-        ?cat-acts-in (when ?cat-acts (map activity-insert-input ?cat-acts))
-        ?grp-acts-in (when ?grp-acts (map activity-insert-input ?grp-acts))
-        ?prt-acts-in (when ?prt-acts (map activity-insert-input ?prt-acts))
-        ?oth-acts-in (when ?oth-acts (map activity-insert-input ?oth-acts))
+        ?obj-act-in  (when activity-obj? (i-av/activity-insert-input stmt-obj))
+        ?cat-acts-in (when ?cat-acts (map i-av/activity-insert-input ?cat-acts))
+        ?grp-acts-in (when ?grp-acts (map i-av/activity-insert-input ?grp-acts))
+        ?prt-acts-in (when ?prt-acts (map i-av/activity-insert-input ?prt-acts))
+        ?oth-acts-in (when ?oth-acts (map i-av/activity-insert-input ?oth-acts))
         ;; Activity Inputs
         act-inputs (cond-> []
                      ?obj-act-in  (conj ?obj-act-in)
@@ -203,7 +123,7 @@
                      ?prt-acts-in (concat ?prt-acts-in)
                      ?oth-acts-in (concat ?oth-acts-in))
         ;; Statement to Activity Enums
-        act->link (partial statement-to-activity-insert-input stmt-id)
+        act->link (partial i-av/statement-to-activity-insert-input stmt-id)
         stmt-acts (cond-> []
                     ?obj-act-in
                     (conj (act->link obj-enum ?obj-act-in))
@@ -253,8 +173,8 @@
     [actor-inputs activity-inputs stmt-actor-inputs stmt-activity-inputs]))
 
 (s/fdef statement-insert-inputs
-  :args (s/cat :statement hs/prepared-statement-spec)
-  :ret hs/statement-insert-map-spec)
+  :args (s/cat :statement ss/prepared-statement-spec)
+  :ret ss/statement-insert-map-spec)
 
 (defn statement-insert-inputs
   "Given `statement`, return a map of HugSql inputs that serve as the input for
@@ -346,10 +266,10 @@
      :attachment-inputs    []}))
 
 (s/fdef statements-insert-inputs
-  :args (s/cat :statements (s/coll-of hs/prepared-statement-spec
+  :args (s/cat :statements (s/coll-of ss/prepared-statement-spec
                                       :min-count 1
                                       :gen-max 5))
-  :ret (s/coll-of hs/statement-insert-map-spec :min-count 1))
+  :ret (s/coll-of ss/statement-insert-map-spec :min-count 1))
 
 (defn statements-insert-inputs
   "Given the coll `statements`, return a seq of input maps that can each be
@@ -358,13 +278,13 @@
   (map statement-insert-inputs statements))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Statement Descendant Insertion
+;; Statement Insertion w/ Descendants
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef descendant-insert-input
-  :args (s/cat :statement-id ::hs/statement-id
-               :desceendant-id ::hs/statement-id)
-  :ret ::hs/stmt-stmt-input)
+  :args (s/cat :statement-id ::ss/statement-id
+               :desceendant-id ::ss/statement-id)
+  :ret ::ss/stmt-stmt-input)
 
 (defn descendant-insert-input
   "Given `statement-id` and `attachment`, construct the input for
@@ -377,9 +297,9 @@
    :ancestor-id   statement-id})
 
 (s/fdef add-descendant-insert-inputs
-  :args (s/cat :input-map hs/statement-insert-map-spec
+  :args (s/cat :input-map ss/statement-insert-map-spec
                :desc-ids  (s/coll-of uuid?))
-  :ret  hs/statement-insert-map-spec)
+  :ret  ss/statement-insert-map-spec)
 
 (defn add-descendant-insert-inputs
   "Given `input-map` and `descendant-ids`, add any descendant IDs to the input
@@ -395,38 +315,15 @@
             descendant-ids)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Attachment Insertion 
+;; Statement Insertion w/ Attachments
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; NOTE: Assume that the LRS has already validated that every statement
 ;; attachment object has a fileUrl or valid SHA2 value.
 
-(s/fdef attachment-insert-input
-  :args (s/cat :statement-id ::hs/statement-id
-               :attachment ::ss/attachment)
-  :ret ::hs/attachment-input)
-
-(defn attachment-insert-input
-  "Given `statement-id` and `attachment`, construct the input for
-   `functions/insert-attachment!`. `statement-id` will be associated with
-   `attachment` as a foreign key reference."
-  [statement-id attachment]
-  (let [{contents     :content
-         content-type :contentType
-         length       :length
-         sha2         :sha2}
-        attachment]
-    {:table          :attachment
-     :primary-key    (u/generate-squuid)
-     :statement-id   statement-id
-     :attachment-sha sha2
-     :content-type   content-type
-     :content-length length
-     :contents       (u/data->bytes contents)}))
-
 (s/fdef add-attachment-insert-inputs
-  :args hs/stmt-input-attachments-spec
-  :ret (s/coll-of hs/statement-insert-map-spec))
+  :args ss/stmt-input-attachments-spec
+  :ret (s/coll-of ss/statement-insert-map-spec))
 
 (def ^:private duplicate-sha-emsg
   "Some Attachments provided have duplicate SHA2 hashes. Some Attachments may not be stored in the DB successfully.")
@@ -464,7 +361,7 @@
                       new-imap   (reduce
                                   (fn [imap sha]
                                     (let [att    (sha-att-m sha)
-                                          att-in (attachment-insert-input
+                                          att-in (i-at/attachment-insert-input
                                                   stmt-id
                                                   att)]
                                       (update imap
@@ -497,8 +394,8 @@
 ;; would have been filtered out earlier by interceptors.
 
 (s/fdef statement-query-input
-  :args (s/cat :params ::hs/query-params)
-  :ret hs/statement-query-spec)
+  :args (s/cat :params ::ss/query-params)
+  :ret ss/statement-query-spec)
 
 (defn statement-query-input
   "Construct the input for `query-statement!`. Returns either an input for

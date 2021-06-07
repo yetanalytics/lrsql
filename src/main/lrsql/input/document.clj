@@ -4,7 +4,7 @@
             [lrsql.util  :as u]
             [lrsql.util.actor :as ua]
             [lrsql.util.document :as ud]
-            [lrsql.spec.document :as hs]))
+            [lrsql.spec.document :as ds]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Basics 
@@ -70,9 +70,9 @@
                (update :contents u/data->bytes)))))
 
 (s/fdef document-insert-input
-  :args (s/cat :params hs/set-document-params
+  :args (s/cat :params ds/set-document-params
                :document :com.yetanalytics.lrs.xapi/document)
-  :ret hs/document-insert-spec
+  :ret ds/document-insert-spec
   :fn (fn [{:keys [args ret]}]
         (= (ud/document-dispatch (:params args)) (:table ret))))
 
@@ -104,8 +104,8 @@
 ;; Single document query/deletion
 
 (s/fdef document-input
-  :args (s/cat :params hs/get-or-delete-document-params)
-  :ret hs/document-input-spec
+  :args (s/cat :params ds/get-or-delete-document-params)
+  :ret ds/document-input-spec
   :fn (fn [{:keys [args ret]}]
         (= (ud/document-dispatch (:params args)) (:table ret))))
 
@@ -131,8 +131,8 @@
 ;; Multi-delete is only supported for state docs, thus no need for multimethod
 
 (s/fdef document-multi-input
-  :args (s/cat :params hs/delete-documents-params)
-  :ret hs/state-doc-multi-input-spec)
+  :args (s/cat :params ds/delete-documents-params)
+  :ret ds/state-doc-multi-input-spec)
 
 (defn document-multi-input
   "Given params, construct the input for `delete-documents!`"
@@ -149,8 +149,8 @@
     ?since (assoc :since (u/str->time ?since))))
 
 (s/fdef document-ids-input
-  :args (s/cat :params hs/get-document-ids-params)
-  :ret hs/document-ids-query-spec
+  :args (s/cat :params ds/get-document-ids-params)
+  :ret ds/document-ids-query-spec
   :fn (fn [{:keys [args ret]}]
         (= (ud/document-dispatch (:params args)) (:table ret))))
 
