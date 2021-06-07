@@ -1,8 +1,6 @@
 (ns lrsql.hugsql.util.statement
   (:require [config.core :refer [env]]
-            [clojure.spec.alpha :as s]
             [ring.util.codec :refer [form-encode]]
-            [xapi-schema.spec :as xs]
             [lrsql.hugsql.util :as u]
             [com.yetanalytics.lrs.xapi.statements :as ss]))
 
