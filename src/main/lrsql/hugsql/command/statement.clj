@@ -58,10 +58,11 @@
                                (f/query-activity tx)
                                :payload
                                u/parse-json)]
-    (let [new-activ (:payload input)
-          activity' (ua/merge-activities old-activ new-activ)
-          input'    (assoc input :payload activity')]
-      (f/update-activity! tx (prepare-input input')))
+    (let [{new-activ :payload} input]
+      (when-not (= old-activ new-activ)
+        (let [activity' (ua/merge-activities old-activ new-activ)
+              input'    (assoc input :payload activity')]
+          (f/update-activity! tx (prepare-input input')))))
     (f/insert-activity! tx (prepare-input input)))
   nil)
 
