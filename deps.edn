@@ -26,7 +26,8 @@
    :exclusions [org.clojure/clojure]}}
  :aliases
  {:db-h2
-  {:extra-deps {com.h2database/h2 {:mvn/version "1.4.200"}}}
+  {:extra-paths ["src/sql"]
+   :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
   ;; :db-sqlite
   ;; {:extra-deps {}}
   :test

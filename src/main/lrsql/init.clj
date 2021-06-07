@@ -10,6 +10,8 @@
   []
   (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc)))
 
+;; TODO: instead of using `db-type'`, we could rely entirely on the paths
+;; in deps.edn
 (defn init-hugsql-fns!
   "Define the HugSql functions defined in the `hugsql.functions` ns.
    The .sql files that HugSql reads from will depend on `db-type`."
