@@ -1,4 +1,4 @@
-(ns lrsql.input-test
+(ns lrsql.input.input-test
   (:require [clojure.test :refer [deftest testing is]]
             [lrsql.test-support :refer [check-validate]]
             [lrsql.input.actor      :as i-ac]
