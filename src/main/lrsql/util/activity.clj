@@ -1,4 +1,4 @@
-(ns lrsql.hugsql.util.activity
+(ns lrsql.util.activity
   (:require [com.yetanalytics.lrs.xapi.activities :as as]))
 
 (defn merge-activities

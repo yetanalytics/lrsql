@@ -1,4 +1,4 @@
-(ns lrsql.hugsql.spec.activity
+(ns lrsql.spec.activity
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec   :as xs]
             [com.yetanalytics.lrs.protocol :as lrsp]))

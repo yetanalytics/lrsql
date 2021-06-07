@@ -1,4 +1,4 @@
-(ns lrsql.hugsql.spec.util
+(ns lrsql.spec.util
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]))
 

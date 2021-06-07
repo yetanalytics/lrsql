@@ -1,4 +1,4 @@
-(ns lrsql.hugsql.util.actor
+(ns lrsql.util.actor
   (:require [com.yetanalytics.lrs.xapi.agents :as agnt]))
 
 ;; NOTE: Actors and Groups are encoded without any intention of being parsed

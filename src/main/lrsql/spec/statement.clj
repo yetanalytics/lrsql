@@ -1,13 +1,13 @@
-(ns lrsql.hugsql.spec.statement
+(ns lrsql.spec.statement
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.hugsql.spec.activity   :as hs-activ]
-            [lrsql.hugsql.spec.actor      :as hs-actor]
-            [lrsql.hugsql.spec.attachment :as hs-attach]
-            [lrsql.hugsql.util.statement :refer [prepare-statement]]))
+            [lrsql.spec.activity   :as hs-activ]
+            [lrsql.spec.actor      :as hs-actor]
+            [lrsql.spec.attachment :as hs-attach]
+            [lrsql.util.statement :refer [prepare-statement]]))
 
 ;; TODO: Deal with different encodings for JSON types (e.g. payloads,
 ;; actor ifi), instead of just H2 strings.

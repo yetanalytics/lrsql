@@ -1,10 +1,10 @@
-(ns lrsql.hugsql.util-test
+(ns lrsql.util-test
   (:require [clojure.test :refer [deftest testing is]]
             [clj-uuid]
             [xapi-schema.spec.regex :as xsr]
             [lrsql.test-support :refer [check-validate]]
-            [lrsql.hugsql.util :as util]
-            [lrsql.hugsql.util.statement :as us]))
+            [lrsql.util :as util]
+            [lrsql.util.statement :as us]))
 
 (deftest squuid-test
   (testing "squuid gentests"

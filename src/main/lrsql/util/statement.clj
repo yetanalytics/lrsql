@@ -1,7 +1,7 @@
-(ns lrsql.hugsql.util.statement
+(ns lrsql.util.statement
   (:require [config.core :refer [env]]
             [ring.util.codec :refer [form-encode]]
-            [lrsql.hugsql.util :as u]
+            [lrsql.util :as u]
             [com.yetanalytics.lrs.xapi.statements :as ss]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

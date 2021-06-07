@@ -1,7 +1,7 @@
-(ns lrsql.hugsql.command.agent
-  (:require [lrsql.hugsql.functions :as f]
-            [lrsql.hugsql.util :as u]
-            [lrsql.hugsql.util.actor :as ua]))
+(ns lrsql.command.agent
+  (:require [lrsql.functions :as f]
+            [lrsql.util :as u]
+            [lrsql.util.actor :as ua]))
 
 (defn query-agent
   "Query an Agent from the DB. Returns a map between `:person` and the

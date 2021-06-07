@@ -1,8 +1,8 @@
-(ns lrsql.hugsql.spec.actor
+(ns lrsql.spec.actor
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec   :as xs]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.hugsql.spec.util :refer [make-str-spec]]))
+            [lrsql.spec.util :refer [make-str-spec]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

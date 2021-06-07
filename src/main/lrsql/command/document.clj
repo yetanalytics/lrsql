@@ -1,8 +1,8 @@
-(ns lrsql.hugsql.command.document
+(ns lrsql.command.document
   (:require [clojure.string :as cstr]
-            [lrsql.hugsql.functions :as f]
-            [lrsql.hugsql.util :as u]
-            [lrsql.hugsql.command.util :as cu]))
+            [lrsql.functions :as f]
+            [lrsql.util :as u]
+            [lrsql.command.util :as cu]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Mutation

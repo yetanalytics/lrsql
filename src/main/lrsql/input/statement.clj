@@ -1,15 +1,15 @@
-(ns lrsql.hugsql.input.statement
+(ns lrsql.input.statement
   (:require [clojure.spec.alpha :as s]
             [clojure.tools.logging :as log]
             [clojure.set :as cset]
             ;; Specs
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.hugsql.spec.statement :as hs]
+            [lrsql.spec.statement :as hs]
             ;; Utils
-            [lrsql.hugsql.util :as u]
-            [lrsql.hugsql.util.actor :as ua]
-            [lrsql.hugsql.util.statement :as us]))
+            [lrsql.util :as u]
+            [lrsql.util.actor :as ua]
+            [lrsql.util.statement :as us]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -62,7 +62,7 @@
 
 (s/fdef statement-to-actor-insert-input
   :args (s/cat :statement-id ::hs/statement-id
-               :actor-usage :lrsql.hugsql.spec.actor/usage
+               :actor-usage :lrsql.spec.actor/usage
                :actor-input ::hs/actor-input)
   :ret ::hs/stmt-actor-input)
 
@@ -80,7 +80,7 @@
 
 (s/fdef statement-to-activity-insert-input
   :args (s/cat :statement-id ::hs/statement-id
-               :activity-usage :lrsql.hugsql.spec.activity/usage
+               :activity-usage :lrsql.spec.activity/usage
                :activity-input ::hs/activity-input)
   :ret ::hs/stmt-activity-input)
 

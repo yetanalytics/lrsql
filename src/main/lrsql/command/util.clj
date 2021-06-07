@@ -1,5 +1,5 @@
-(ns lrsql.hugsql.command.util
-  (:require [lrsql.hugsql.util :refer [parse-json]]))
+(ns lrsql.command.util
+  (:require [lrsql.util :refer [parse-json]]))
 
 (defn wrapped-parse-json
   "Wraps `parse-json` in a try-catch block, returning a map with :json

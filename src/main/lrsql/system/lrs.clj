@@ -3,17 +3,17 @@
             [com.stuartsierra.component :as component]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.hugsql.init :as init]
-            [lrsql.hugsql.input.agent     :as agent-input]
-            [lrsql.hugsql.input.activity  :as activity-input]
-            [lrsql.hugsql.input.statement :as stmt-input]
-            [lrsql.hugsql.input.document  :as doc-input]
-            [lrsql.hugsql.command.agent     :as agent-command]
-            [lrsql.hugsql.command.activity  :as activity-command]
-            [lrsql.hugsql.command.statement :as stmt-command]
-            [lrsql.hugsql.command.document  :as doc-command]
-            [lrsql.hugsql.util.statement :as stmt-util]
-            [lrsql.hugsql.util :as u])
+            [lrsql.init :as init]
+            [lrsql.input.agent     :as agent-input]
+            [lrsql.input.activity  :as activity-input]
+            [lrsql.input.statement :as stmt-input]
+            [lrsql.input.document  :as doc-input]
+            [lrsql.command.agent     :as agent-command]
+            [lrsql.command.activity  :as activity-command]
+            [lrsql.command.statement :as stmt-command]
+            [lrsql.command.document  :as doc-command]
+            [lrsql.util.statement :as stmt-util]
+            [lrsql.util :as u])
   (:import [java.time Instant]))
 
 (defrecord LearningRecordStore [db-type conn-pool]

@@ -1,4 +1,4 @@
-(ns lrsql.hugsql.util
+(ns lrsql.util
   (:require [clj-uuid]
             [java-time]
             [clojure.spec.alpha :as s]

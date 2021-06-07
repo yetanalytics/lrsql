@@ -1,4 +1,4 @@
-(ns lrsql.hugsql.spec.attachment
+(ns lrsql.spec.attachment
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec]))
 

@@ -1,4 +1,4 @@
-(ns lrsql.hugsql.functions
+(ns lrsql.functions
   "Namespace containing all HugSql functions.")
 
 ;; This ns is not strictly necessary, since `init-hugsql-fns!` will intern the

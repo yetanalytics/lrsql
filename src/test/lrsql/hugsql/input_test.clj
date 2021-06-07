@@ -1,10 +1,10 @@
-(ns lrsql.hugsql.input-test
+(ns lrsql.input-test
   (:require [clojure.test :refer [deftest testing is]]
             [lrsql.test-support :refer [check-validate]]
-            [lrsql.hugsql.input.agent     :as agent-input]
-            [lrsql.hugsql.input.activity  :as activity-input]
-            [lrsql.hugsql.input.statement :as stmt-input]
-            [lrsql.hugsql.input.document  :as doc-input]))
+            [lrsql.input.agent     :as agent-input]
+            [lrsql.input.activity  :as activity-input]
+            [lrsql.input.statement :as stmt-input]
+            [lrsql.input.document  :as doc-input]))
 
 (deftest test-insert-inputs
   (testing "statement object insertion inputs"

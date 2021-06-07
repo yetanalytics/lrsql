@@ -1,6 +1,6 @@
-(ns lrsql.hugsql.input.activity
+(ns lrsql.input.activity
   (:require [clojure.spec.alpha :as s]
-            [lrsql.hugsql.spec.activity :as hs]))
+            [lrsql.spec.activity :as hs]))
 
 (s/fdef activity-query-input
   :args (s/cat :params hs/get-activity-params)

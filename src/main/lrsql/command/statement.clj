@@ -1,8 +1,8 @@
-(ns lrsql.hugsql.command.statement
-  (:require [lrsql.hugsql.functions :as f]
-            [lrsql.hugsql.util :as u]
-            [lrsql.hugsql.util.activity :as ua]
-            [lrsql.hugsql.util.statement :as us]))
+(ns lrsql.command.statement
+  (:require [lrsql.functions :as f]
+            [lrsql.util :as u]
+            [lrsql.util.activity :as ua]
+            [lrsql.util.statement :as us]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertions

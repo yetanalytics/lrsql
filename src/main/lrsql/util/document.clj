@@ -1,4 +1,4 @@
-(ns lrsql.hugsql.util.document)
+(ns lrsql.util.document)
 
 (defn document-dispatch
   "Return either `:state-document`, `:agent-profile-document`, or

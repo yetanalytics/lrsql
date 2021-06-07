@@ -1,7 +1,7 @@
-(ns lrsql.hugsql.input.agent
+(ns lrsql.input.agent
   (:require [clojure.spec.alpha :as s]
-            [lrsql.hugsql.spec.actor :as hs]
-            [lrsql.hugsql.util.actor :refer [actor->ifi]]))
+            [lrsql.spec.actor :as hs]
+            [lrsql.util.actor :refer [actor->ifi]]))
 
 (s/fdef agent-query-input
   :args (s/cat :params hs/get-agent-params)

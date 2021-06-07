@@ -1,6 +1,6 @@
-(ns lrsql.hugsql.command.activity
-  (:require [lrsql.hugsql.functions :as f]
-            [lrsql.hugsql.util :as u]))
+(ns lrsql.command.activity
+  (:require [lrsql.functions :as f]
+            [lrsql.util :as u]))
 
 (defn query-activity
   "Query an Activity from the DB. Returns a map between `:activity` and the

@@ -1,10 +1,10 @@
-(ns lrsql.hugsql.input.document
+(ns lrsql.input.document
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.xapi.document]
-            [lrsql.hugsql.util  :as u]
-            [lrsql.hugsql.util.actor :as ua]
-            [lrsql.hugsql.util.document :as ud]
-            [lrsql.hugsql.spec.document :as hs]))
+            [lrsql.util  :as u]
+            [lrsql.util.actor :as ua]
+            [lrsql.util.document :as ud]
+            [lrsql.spec.document :as hs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Basics 

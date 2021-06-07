@@ -1,10 +1,10 @@
-(ns lrsql.hugsql.spec.document
+(ns lrsql.spec.document
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.document :as lrs-doc]
-            [lrsql.hugsql.spec.activity  :as hs-activ]
-            [lrsql.hugsql.spec.actor     :as hs-actor]
-            [lrsql.hugsql.spec.statement :as hs-stmt]))
+            [lrsql.spec.activity  :as hs-activ]
+            [lrsql.spec.actor     :as hs-actor]
+            [lrsql.spec.statement :as hs-stmt]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
