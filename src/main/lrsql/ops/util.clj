@@ -1,13 +1,4 @@
-(ns lrsql.command.util
-  (:require [lrsql.util :refer [parse-json]]))
-
-(defn wrapped-parse-json
-  "Wraps `parse-json` in a try-catch block, returning a map with :json
-  or :exception which is the parse exception, wrapped in an ex-info"
-  [data]
-  (try {:json (parse-json data)}
-       (catch Exception ex
-         {:exception ex})))
+(ns lrsql.ops.util)
 
 (defmacro throw-invalid-table-ex
   "Throw an exception with the following error data:

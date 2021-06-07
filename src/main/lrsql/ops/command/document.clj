@@ -1,14 +1,12 @@
-(ns lrsql.command.document
+(ns lrsql.ops.command.document
   (:require [clojure.string :as cstr]
             [lrsql.functions :as f]
             [lrsql.util :as u]
-            [lrsql.command.util :as cu]))
+            [lrsql.ops.util :refer [throw-invalid-table-ex]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Document Mutation
+;; Document Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Insert document
 
 (defn insert-document!
   "Insert a new document into the DB. Returns an empty map."
@@ -21,10 +19,12 @@
     :activity-profile-document
     (f/insert-activity-profile-document! tx input)
     ;; Else
-    (cu/throw-invalid-table-ex "insert-document!" input))
+    (throw-invalid-table-ex "insert-document!" input))
   {})
 
-;; Delete document(s)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Document Deletion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn delete-document!
   "Delete a single document from the DB. Returns an empty map."
@@ -37,7 +37,7 @@
     :activity-profile-document
     (f/delete-activity-profile-document! tx input)
     ;; Else
-    (cu/throw-invalid-table-ex "delete-document!" input))
+    (throw-invalid-table-ex "delete-document!" input))
   {})
 
 (defn delete-documents!
@@ -47,10 +47,12 @@
     :state-document
     (f/delete-state-documents! tx input)
     ;; Else
-    (cu/throw-invalid-table-ex "delete-documents!" input))
+    (throw-invalid-table-ex "delete-documents!" input))
   {})
 
-;; Update document
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Document Update
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- mergeable-json
   "Checks that json is returned, and that it is mergeable"
@@ -59,15 +61,24 @@
              (map? json))
     json))
 
+(defn- wrapped-parse-json
+  "Wraps `parse-json` in a try-catch block, returning a map with :json
+   or :exception which is the parse exception, wrapped in an ex-info"
+  [data]
+  (try {:json (u/parse-json data)}
+       (catch Exception ex
+         {:exception ex})))
+
 (defn- doc->json
   "Given a document map with `:contents` property, return the parsed
    contents if valid, or nil otherwise."
   [doc]
   (mergeable-json
-   (cu/wrapped-parse-json
+   (wrapped-parse-json
     (:contents doc))))
 
 (defn- json-content-type?
+  "Returns true iff the content type is \"application/json\"."
   [ctype]
   (cstr/starts-with? ctype "application/json"))
 
@@ -149,57 +160,4 @@
                        f/insert-activity-profile-document!
                        f/update-activity-profile-document!)
     ;; Else
-    (cu/throw-invalid-table-ex "update-input!" input)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Document Query
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn query-document
-  "Query a single document from the DB. Returns either a map containing the
-   document as a byte array, or nil if not found."
-  [tx {:keys [table] :as input}]
-  (when-some [res (case table
-                    :state-document
-                    (f/query-state-document tx input)
-                    :agent-profile-document
-                    (f/query-agent-profile-document tx input)
-                    :activity-profile-document
-                    (f/query-activity-profile-document tx input)
-                    ;; Else
-                    (cu/throw-invalid-table-ex "query-document" input))]
-    (let [{contents     :contents
-           content-type :content_type
-           content-len  :content_length
-           state-id     :state_id
-           profile-id   :profile_id
-           updated      :last_modified} res]
-      {:document
-       {:contents       contents
-        :content-length content-len
-        :content-type   content-type
-        :id             (or state-id profile-id)
-        :updated        (u/time->str updated)}})))
-
-;; TODO: The LRS should also return last modified info.
-;; However, this is not supported in Milt's LRS spec.
-(defn query-document-ids
-  "Query multiple document IDs from the DB. Returns a map containing the
-   vector of IDs."
-  [tx {:keys [table] :as input}]
-  (let [ids (case table
-              :state-document
-              (->> input
-                   (f/query-state-document-ids tx)
-                   (map :state_id))
-              :agent-profile-document
-              (->> input
-                   (f/query-agent-profile-document-ids tx)
-                   (map :profile_id))
-              :activity-profile-document
-              (->> input
-                   (f/query-activity-profile-document-ids tx)
-                   (map :profile_id))
-              ;; Else
-              (cu/throw-invalid-table-ex "query-document-ids" input))]
-    {:document-ids (vec ids)}))
+    (throw-invalid-table-ex "update-input!" input)))

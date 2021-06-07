@@ -1,4 +1,4 @@
-(ns lrsql.command.activity
+(ns lrsql.ops.query.activity
   (:require [lrsql.functions :as f]
             [lrsql.util :as u]))
 

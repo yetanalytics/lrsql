@@ -1,4 +1,4 @@
-(ns lrsql.command.agent
+(ns lrsql.ops.query.actor
   (:require [lrsql.functions :as f]
             [lrsql.util :as u]
             [lrsql.util.actor :as ua]))

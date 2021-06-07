@@ -8,10 +8,12 @@
             [lrsql.input.activity  :as activity-input]
             [lrsql.input.statement :as stmt-input]
             [lrsql.input.document  :as doc-input]
-            [lrsql.command.agent     :as agent-command]
-            [lrsql.command.activity  :as activity-command]
-            [lrsql.command.statement :as stmt-command]
-            [lrsql.command.document  :as doc-command]
+            [lrsql.ops.command.document  :as doc-cmd]
+            [lrsql.ops.command.statement :as stmt-cmd]
+            [lrsql.ops.query.actor     :as actor-q]
+            [lrsql.ops.query.activity  :as activ-q]
+            [lrsql.ops.query.document  :as doc-q]
+            [lrsql.ops.query.statement :as stmt-q]
             [lrsql.util.statement :as stmt-util]
             [lrsql.util :as u])
   (:import [java.time Instant]))
@@ -40,30 +42,32 @@
   (-store-statements
    [lrs auth-identity statements attachments]
    (jdbc/with-transaction [tx ((:conn-pool lrs))]
-     (let [stmts       (map stmt-util/prepare-statement statements)
-           stmt-inputs (-> (map stmt-input/statement-insert-inputs stmts)
-                           (stmt-input/add-attachment-insert-inputs
-                            attachments))
-           stmt-res    (map (fn [stmt-input]
-                              (let [stmt-descs
-                                    (stmt-command/query-descendants
-                                     tx
-                                     stmt-input)
-                                    stmt-input'
-                                    (stmt-input/add-descendant-insert-inputs
+     (let [stmts
+           (map stmt-util/prepare-statement
+                statements)
+           stmt-inputs
+           (-> (map stmt-input/statement-insert-inputs stmts)
+               (stmt-input/add-attachment-insert-inputs
+                attachments))
+           stmt-res
+           (map (fn [stmt-input]
+                  (let [stmt-descs (stmt-q/query-descendants
+                                    tx
+                                    stmt-input)
+                        stmt-input' (stmt-input/add-descendant-insert-inputs
                                      stmt-input
                                      stmt-descs)]
-                                (stmt-command/insert-statement!
-                                 tx
-                                 stmt-input')))
-                            stmt-inputs)]
+                    (stmt-cmd/insert-statement!
+                     tx
+                     stmt-input')))
+                stmt-inputs)]
        {:statement-ids (->> stmt-res (filter some?) (map u/uuid->str) vec)})))
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)
          inputs (stmt-input/statement-query-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (stmt-command/query-statements tx inputs ltags))))
+       (stmt-q/query-statements tx inputs ltags))))
   (-consistent-through
    [this ctx auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want
@@ -77,32 +81,32 @@
          input (doc-input/document-insert-input params document)]
      (jdbc/with-transaction [tx (conn)]
        (if merge?
-         (doc-command/update-document! tx input)
-         (doc-command/insert-document! tx input)))))
+         (doc-cmd/update-document! tx input)
+         (doc-cmd/insert-document! tx input)))))
   (-get-document
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
          input (doc-input/document-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (doc-command/query-document tx input))))
+       (doc-q/query-document tx input))))
   (-get-document-ids
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
          input (doc-input/document-ids-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (doc-command/query-document-ids tx input))))
+       (doc-q/query-document-ids tx input))))
   (-delete-document
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
          input (doc-input/document-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (doc-command/delete-document! tx input))))
+       (doc-cmd/delete-document! tx input))))
   (-delete-documents
    [lrs auth-identity params]
    (let [conn  (:conn-pool lrs)
          input (doc-input/document-multi-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (doc-command/delete-documents! tx input))))
+       (doc-cmd/delete-documents! tx input))))
 
   lrsp/AgentInfoResource
   (-get-person
@@ -110,7 +114,7 @@
    (let [conn  (:conn-pool lrs)
          input (agent-input/agent-query-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (agent-command/query-agent tx input))))
+       (actor-q/query-agent tx input))))
 
   lrsp/ActivityInfoResource
   (-get-activity
@@ -118,7 +122,7 @@
    (let [conn (:conn-pool lrs)
          input (activity-input/activity-query-input params)]
      (jdbc/with-transaction [tx (conn)]
-       (activity-command/query-activity tx input))))
+       (activ-q/query-activity tx input))))
 
   lrsp/LRSAuth
   (-authenticate
