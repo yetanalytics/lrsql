@@ -6,7 +6,7 @@
 (comment
   (require '[next.jdbc :as jdbc]
            '[com.yetanalytics.lrs.protocol :as lrsp]
-           '[lrsql.hugsql.util :as util]
+           '[lrsql.util :as util]
            '[lrsql.lrs-test :refer [stmt-1' stmt-2' stmt-3' stmt-4 stmt-4-attach]])
 
   (def sys (system/system))
