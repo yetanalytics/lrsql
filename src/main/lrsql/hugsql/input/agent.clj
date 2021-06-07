@@ -10,4 +10,5 @@
 (defn agent-query-input
   "Construct an input for `query-agent!`"
   [{agent :agent}]
-  {:agent-ifi (actor->ifi agent)})
+  {:actor-ifi  (actor->ifi agent)
+   :actor-type "Agent"}) ; Cannot query Groups

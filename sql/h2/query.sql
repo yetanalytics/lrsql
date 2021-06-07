@@ -8,6 +8,13 @@ SELECT payload FROM xapi_statement
 WHERE statement_id = :statement-id
 AND is_voided = :voided?
 
+-- :name query-statement-exists
+-- :command :query
+-- :result :one
+-- :doc Check for the existence of a Statement with `:statement-id`. Returns nil iff not found. Includes voided Statements.
+SELECT 1 FROM xapi_statement
+WHERE statement_id = :statement-id
+
 /* The strategy of `query-statements` is to use multiple joins to form a
    Cartesian product over statements, agents, and activities:
    
@@ -24,7 +31,8 @@ AND is_voided = :voided?
      statements may be inserted mid-page instead of appended.
    - As a secondary sort property for query results; we cannot only apply
      `stored` as the only property since it only has millisecond resolution,
-     which is not good enough for deterministic results. */
+     which is not good enough for deterministic results.
+*/
 
 -- :name query-statements
 -- :command :query
@@ -82,42 +90,19 @@ LIMIT :limit
 
 /* Statement Object Queries */
 
--- :name query-agent
+-- :name query-actor
 -- :command :query
 -- :result :one
--- :doc Query an agent with `:agent-ifi`. Groups are not queried.
+-- :doc Query an actor with `:actor-ifi` and `:actor-type`.
 SELECT payload FROM actor
-WHERE actor_ifi = :agent-ifi -- not :actor-ifi since group IFIs aren't allowed
-AND actor_type = 'Agent'
+WHERE actor_ifi = :actor-ifi
+AND actor_type = :actor-type
 
 -- :name query-activity
 -- :command :query
 -- :result :one
 -- :doc Query an activity with `:activity-iri`.
 SELECT payload FROM activity
-WHERE activity_iri = :activity-iri
-
-/* Existence Checks */
-
--- :name query-statement-exists
--- :command :query
--- :result :one
--- :doc Check for the existence of a Statement with `:statement-id`. Returns nil iff not found. Includes voided Statements.
-SELECT 1 FROM xapi_statement
-WHERE statement_id = :statement-id
-
--- :name query-actor-exists
--- :command :query
--- :result :one
--- :doc Check for the existence of an Agent or Group with `:actor-ifi`. Returns nil iff not found.
-SELECT 1 FROM actor
-WHERE actor_ifi = :actor-ifi
-
--- :name query-activity-exists
--- :command :query
--- :result :one
--- :doc Check for the existence of an Activity with `:activity-iri`. Returns nil iff not found.
-SELECT 1 FROM activity
 WHERE activity_iri = :activity-iri
 
 /* Statement Reference Queries */

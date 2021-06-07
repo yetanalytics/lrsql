@@ -71,17 +71,15 @@
 ;; Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Statements + Statement Objects
+;; Statements
 (declare query-statement)
 (declare query-statements)
-(declare query-agent) ; no `query-actor`
+(declare query-statement-exists)
+
+;; Statement Objects
+(declare query-actor)
 (declare query-activity)
 (declare query-attachments)
-
-;; Statement + Statement Object Existence
-(declare query-statement-exists)
-(declare query-actor-exists)
-(declare query-activity-exists)
 
 ;; Statement References
 (declare query-statement-descendants)

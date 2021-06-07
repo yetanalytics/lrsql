@@ -6,5 +6,7 @@
   "Query an Activity from the DB. Returns a map between `:activity` and the
    activity found, which is nil if not found."
   [tx input]
-  (let [{:keys [payload]} (f/query-activity tx input)]
-    {:activity (some->> payload u/parse-json)}))
+  (let [activity (some-> (f/query-activity tx input)
+                         :payload
+                         u/parse-json)]
+    {:activity activity}))

@@ -11,10 +11,11 @@ AND NOT (verb_iri = 'http://adlnet.gov/expapi/verbs/voided')
 -- :name update-actor!
 -- :command :execute
 -- :result :affected
--- :doc Update the type and payload of a pre-existing actor.
+-- :doc Update the payload of a pre-existing actor.
 UPDATE actor
-SET actor_type = :actor-type, payload = :payload FORMAT JSON
+SET payload = :payload FORMAT JSON
 WHERE actor_ifi = :actor-ifi
+AND actor_type = :actor-type
 
 -- :name update-activity!
 -- :command :execute

@@ -70,12 +70,13 @@
   "Given `statement-id`, `actor-usage` and the return value of
    `actor-insert-input`, return the input for
    `functions/insert-statement-to-actor!`."
-  [statement-id actor-usage {actor-ifi :actor-ifi}]
+  [statement-id actor-usage {:keys [actor-ifi actor-type]}]
   {:table        :statement-to-actor
    :primary-key  (u/generate-squuid)
    :statement-id statement-id
    :usage        actor-usage
-   :actor-ifi    actor-ifi})
+   :actor-ifi    actor-ifi
+   :actor-type   actor-type})
 
 (s/fdef statement-to-activity-insert-input
   :args (s/cat :statement-id ::hs/statement-id

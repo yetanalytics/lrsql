@@ -19,9 +19,10 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
 -- :doc Create the `actor` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS actor (
   id         UUID NOT NULL PRIMARY KEY,
-  actor_ifi  VARCHAR(255) NOT NULL UNIQUE,
+  actor_ifi  VARCHAR(255) NOT NULL,
   actor_type ENUM('Agent', 'Group') NOT NULL,
-  payload    JSON NOT NULL
+  payload    JSON NOT NULL,
+  UNIQUE (actor_ifi, actor_type)
 )
 
 -- :name create-activity-table!
@@ -56,8 +57,9 @@ CREATE TABLE IF NOT EXISTS statement_to_actor (
                     'SubActor', 'SubObject', 'SubInstructor', 'SubTeam')
                NOT NULL,
   actor_ifi    VARCHAR(255) NOT NULL,
+  actor_type   ENUM('Agent', 'Group'),
   FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
-  FOREIGN KEY (actor_ifi) REFERENCES actor(actor_ifi)
+  FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 )
 
 -- :name create-statement-to-activity-table!

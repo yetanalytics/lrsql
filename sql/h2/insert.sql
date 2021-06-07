@@ -53,7 +53,8 @@ INSERT INTO statement_to_actor SET
 id = :primary-key,
 statement_id = :statement-id,
 usage = :usage,
-actor_ifi = :actor-ifi
+actor_ifi = :actor-ifi,
+actor_type = :actor-type
 
 -- :name insert-statement-to-activity!
 -- :command :insert

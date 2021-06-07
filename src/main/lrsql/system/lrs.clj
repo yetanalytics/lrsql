@@ -57,7 +57,7 @@
                                  tx
                                  stmt-input')))
                             stmt-inputs)]
-       {:statement-ids (->> stmt-res (map u/uuid->str) vec)})))
+       {:statement-ids (->> stmt-res (filter some?) (map u/uuid->str) vec)})))
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (:conn-pool lrs)
