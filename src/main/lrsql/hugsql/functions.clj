@@ -78,7 +78,6 @@
 
 ;; Statement Objects
 (declare query-actor)
-(declare query-agent) ; no `query-actor`
 (declare query-activity)
 (declare query-attachments)
 

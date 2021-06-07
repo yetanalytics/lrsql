@@ -41,8 +41,6 @@
         :openid ifi-openid-spec
         :account ifi-account-spec))
 
-(s/def ::agent-ifi ::actor-ifi)
-
 (s/def ::actor-type
   #{"Agent" "Group"})
 
@@ -65,4 +63,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def agent-query-spec
-  (s/keys :req-un [::agent-ifi]))
+  (s/and (s/keys :req-un [::actor-ifi
+                          ::actor-type])
+         #(= "Agent" (:actor-type %))))
