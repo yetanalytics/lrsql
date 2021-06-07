@@ -1,6 +1,5 @@
 (ns lrsql.hugsql.command.statement
-  (:require [clojure.tools.logging :as log]
-            [lrsql.hugsql.functions :as f]
+  (:require [lrsql.hugsql.functions :as f]
             [lrsql.hugsql.util :as u]
             [lrsql.hugsql.util.activity :as ua]
             [lrsql.hugsql.util.statement :as us]))
@@ -40,40 +39,16 @@
 
 (defn- insert-actor-input!
   [tx input]
-  (if-some [old-actor (some->> (select-keys input [:actor-ifi])
+  (if-some [old-actor (some->> (select-keys input [:actor-ifi
+                                                   :actor-type])
                                (f/query-actor tx)
                                :payload
                                u/parse-json)]
-    (let [new-actor (:payload input)
-          {old-name "name"
-           old-type "objectType" :or {old-type "Agent"}} old-actor
-          {new-name "name"
-           new-type "objectType" :or {new-type "Agent"}} new-actor]
-      (cond
-        ;; An Identified Group SHOULD NOT use Inverse Functional Identifiers
-        ;; that are also used as Agent identifiers.
-        (and (= "Agent" old-type) (= "Group" new-type))
-        (do
-          (log/warnf (str "An Agent is overriding a Group with the same IFI!\n"
-                          "Agent: %s\n"
-                          "Group: %s\n")
-                     old-actor
-                     new-actor)
-          (f/update-actor! tx (prepare-input input)))
-        (and (= "Group" old-type) (= "Agent" new-type))
-        (do
-          (log/warnf (str "A Group is overriding an Agent with the same IFI!\n"
-                          "Group: %s\n"
-                          "Agent: %s\n")
-                     old-actor
-                     new-actor)
-          (f/update-actor! tx (prepare-input input)))
-        ;; Update name
-        (not= old-name new-name)
-        (f/update-actor! tx (prepare-input input))
-        ;; Identical actors -> no-op
-        :else
-        nil))
+    (let [{new-actor :payload} input
+          {old-name "name"}    old-actor
+          {new-name "name"}    new-actor]
+      (when-not (= old-name new-name)
+        (f/update-actor! tx (prepare-input input))))
     (f/insert-actor! tx (prepare-input input)))
   nil)
 

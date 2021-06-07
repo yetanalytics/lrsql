@@ -31,7 +31,8 @@ WHERE statement_id = :statement-id
      statements may be inserted mid-page instead of appended.
    - As a secondary sort property for query results; we cannot only apply
      `stored` as the only property since it only has millisecond resolution,
-     which is not good enough for deterministic results. */
+     which is not good enough for deterministic results.
+*/
 
 -- :name query-statements
 -- :command :query
@@ -92,9 +93,10 @@ LIMIT :limit
 -- :name query-actor
 -- :command :query
 -- :result :one
--- :doc Query an actor with `:actor-ifi`.
+-- :doc Query an actor with `:actor-ifi` and `:actor-type`.
 SELECT payload FROM actor
 WHERE actor_ifi = :actor-ifi
+AND actor_type = :actor-type
 
 -- :name query-agent
 -- :command :query

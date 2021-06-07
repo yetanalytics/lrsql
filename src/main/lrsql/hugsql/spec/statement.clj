@@ -151,7 +151,8 @@
   (s/keys :req-un [::primary-key
                    ::statement-id
                    ::hs-actor/usage
-                   ::hs-actor/actor-ifi]))
+                   ::hs-actor/actor-ifi
+                   ::hs-actor/actor-type]))
 
 (s/def ::stmt-actor-inputs
   (s/coll-of ::stmt-actor-input :gen-max 5))
