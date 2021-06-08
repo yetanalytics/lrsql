@@ -8,7 +8,8 @@
  :stmt-get-max     50
  }
 {:connection
- {:db-type "h2:mem"
+ {:db-type #profile {:test "h2:mem"
+                     :default "h2:mem"}
   :db-name "example"
   :db-schema "lrsql"}
  :lrs

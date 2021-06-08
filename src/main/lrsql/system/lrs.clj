@@ -27,26 +27,16 @@
   component/Lifecycle
   (start
    [lrs]
-   (if-not (:connection lrs)
-     (do
-       (init/init-hugsql-adapter!)
-       ;; TODO: calling a dependency's config var seems like a code smell
-       (init/init-hugsql-fns! (-> connection :config :db-type))
-       (init/create-tables! (:conn-pool connection))
-       (log/info "Starting new LRS")
-       (assoc lrs :connection connection))
-     (do
-       (log/info "LRS already started; do nothing.")
-       lrs)))
+   (init/init-hugsql-adapter!)
+   ;; TODO: calling a dependency's config var seems like a code smell
+   (init/init-hugsql-fns! (-> connection :config :db-type))
+   (init/create-tables! (:conn-pool connection))
+   (log/info "Starting new LRS")
+   (assoc lrs :connection connection))
   (stop
    [lrs]
-   (if (:connection lrs)
-     (do
-       (log/info "Stopping LRS...")
-       (assoc lrs :connection nil))
-     (do
-       (log/info "LRS already stopped; do nothing...")
-       lrs)))
+   (log/info "Stopping LRS...")
+   (assoc lrs :connection nil))
 
   lrsp/AboutResource
   (-get-about

@@ -1,24 +1,24 @@
 (ns lrsql.test-support
-  (:require [config.core :refer [env]]
+  (:require [aero.core :refer [read-config]]
             [clojure.spec.test.alpha :as stest]
             [clojure.string :as cs])
   (:import [java.util UUID]))
 
-(defn fresh-db-fixture
+
+#_(defn fresh-db-fixture
   [f]
   (with-redefs
-    [env (merge
-          env
-          {:db-name
-           (str (UUID/randomUUID))})]
+    [env (assoc-in env [:connection :db-name] (str (UUID/randomUUID)))]
     (f)))
 
 (defn assert-in-mem-db
   []
-  (when (not= "h2:mem" (:db-type env))
-    (throw (ex-info "Test can only be run on in-memory H2 database!"
-                    {:type    ::non-mem-db
-                     :db-type (:db-type env)}))))
+  (let [env     (read-config "config.edn" {:profile :test})
+        db-type (-> env :connection :db-type)]
+    (when (not= "h2:mem" db-type)
+      (throw (ex-info "Test can only be run on in-memory H2 database!"
+                      {:type    ::non-mem-db
+                       :db-type db-type})))))
 
 ;; Copied from training-commons.xapi.statement-gen-test
 (defn check-validate

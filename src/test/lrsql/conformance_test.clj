@@ -8,14 +8,14 @@
             [com.yetanalytics.lrs.test-runner :as conf]
             [lrsql.test-support :as support]))
 
-(t/use-fixtures :each support/fresh-db-fixture)
+#_(t/use-fixtures :each support/fresh-db-fixture)
 
 (deftest conformance-test
   (support/assert-in-mem-db)
   (conf/with-test-suite
     (binding [conf/*print-logs* true]
       (testing "no regressions"
-        (let [sys (system/system)
+        (let [sys  (system/system :test)
               sys' (component/start sys)]
           (is (conf/conformant?
                "-e" "http://localhost:8080/xapi" "-b" "-z"))

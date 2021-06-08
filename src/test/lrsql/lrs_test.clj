@@ -111,11 +111,11 @@
       (dissoc "authority")
       (dissoc "version")))
 
-(use-fixtures :each support/fresh-db-fixture)
+#_(use-fixtures :each support/fresh-db-fixture)
 
 (deftest test-statement-fns
   (let [_     (support/assert-in-mem-db)
-        sys   (system/system)
+        sys   (system/system :test)
         sys'  (component/start sys)
         lrs   (:lrs sys')
         id-0  (get stmt-0 "id")
@@ -289,7 +289,7 @@
                          "definition" {"name"        {"en-US" "Multi Part Activity"}
                                        "description" {"en-US" "Multi Part Activity Description"}}}}
              (lrsp/-get-activity lrs {} {:activityId act-1}))))
-    (jdbc/with-transaction [tx ((:conn-pool lrs))]
+    (jdbc/with-transaction [tx (-> lrs :connection :conn-pool)]
       (drop-all! tx))
     (component/stop sys')))
 
@@ -321,7 +321,7 @@
 
 (deftest test-statement-ref-fns
   (let [_     (support/assert-in-mem-db)
-        sys   (system/system)
+        sys   (system/system :test)
         sys'  (component/start sys)
         lrs   (:lrs sys')]
     (testing "statement insertions"
@@ -382,7 +382,7 @@
                  (update-in [:statement-result :statements]
                             (partial map remove-props))
                  (update :statement-result dissoc :more)))))
-    (jdbc/with-transaction [tx ((:conn-pool lrs))]
+    (jdbc/with-transaction [tx (-> lrs :connection :conn-pool)]
       (drop-all! tx))
     (component/stop sys')))
 
@@ -422,7 +422,7 @@
 
 (deftest test-document-fns
   (let [_    (support/assert-in-mem-db)
-        sys  (system/system)
+        sys  (system/system :test)
         sys' (component/start sys)
         lrs  (:lrs sys')]
     (testing "document insertion"
@@ -512,6 +512,6 @@
       (is (nil? (lrsp/-get-document lrs
                                     {}
                                     activity-prof-id-params))))
-    (jdbc/with-transaction [tx ((:conn-pool lrs))]
+    (jdbc/with-transaction [tx (-> lrs :connection :conn-pool)]
       (drop-all! tx))
     (component/stop sys')))
