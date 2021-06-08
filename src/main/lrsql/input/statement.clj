@@ -10,8 +10,7 @@
             [lrsql.input.attachment :as i-at]
             ;; Utils
             [lrsql.util :as u]
-            [lrsql.util.actor :as ua]
-            [lrsql.util.statement :as us]))
+            [lrsql.util.actor :as ua]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
