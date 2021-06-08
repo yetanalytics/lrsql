@@ -185,7 +185,7 @@
          port :db-port
          :or {host "localhost"
               port 8080}}
-        config-vars]
+        @config-vars]
     (str "http://" host ":" port)))
 
 (defn make-more-url
@@ -203,8 +203,11 @@
   [?limit]
   ;; TODO: env defaults out of code.. Aero?
   ;; TODO: reevaluate defaults
-  (let [limit-max     (:stmt-get-max config-vars 100)
-        limit-default (:stmt-get-default config-vars 100)]
+  (let [{limit-max     :stmt-get-max
+         limit-default :stmt-get-default
+         :or {limit-max     100
+              limit-default 100}}
+        @config-vars]
     (cond
       ;; Ensure limit is =< max
       (pos-int? ?limit)
