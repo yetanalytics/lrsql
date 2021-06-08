@@ -1,7 +1,7 @@
 (ns lrsql.system
   (:require [aero.core :as aero]
             [com.stuartsierra.component :as component]
-            [lrsql.system.connection :as conn]
+            [lrsql.system.database :as db]
             [lrsql.system.lrs :as lrs]
             [lrsql.system.webserver :as webserver]))
 
@@ -14,7 +14,7 @@
    (let [initial-sys ; init without configuration
          (component/system-map
           :connection (component/using
-                       (conn/map->Connection {})
+                       (db/map->Connection {})
                        [])
           :lrs       (component/using
                       (lrs/map->LearningRecordStore {})

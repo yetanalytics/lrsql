@@ -1,4 +1,4 @@
-(ns lrsql.system.connection
+(ns lrsql.system.database
   (:require [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component])
