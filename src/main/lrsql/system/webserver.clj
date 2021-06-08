@@ -3,18 +3,17 @@
             [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
-            [com.yetanalytics.lrs.pedestal.interceptor :as i]
-            [config.core :refer [env]]))
+            [com.yetanalytics.lrs.pedestal.interceptor :as i]))
 
 (defn- service-map
   "Create a new service map for the webserver."
-  [lrs]
+  [lrs config]
   {:env                 :prod
    ::http/routes        (build {:lrs lrs})
    ::http/resource-path "/public"
    ::http/type          :jetty
-   ::http/host          (:http-host env "0.0.0.0")
-   ::http/port          (:http-port env 8080)
+   ::http/host          (:http-host config "0.0.0.0")
+   ::http/port          (:http-port config 8080)
    ::http/join?         false
    ::http/allowed-origins
    {:creds           true
@@ -26,7 +25,8 @@
 
 (defrecord Webserver [service
                       server
-                      lrs]
+                      lrs
+                      config]
   component/Lifecycle
   (start [this]
     (if server
@@ -35,7 +35,7 @@
           this)
       (if lrs
         (let [service (or service ;; accept passed in
-                          (service-map lrs))
+                          (service-map lrs config))
               server  (-> service
                           i/xapi-default-interceptors
                           http/create-server

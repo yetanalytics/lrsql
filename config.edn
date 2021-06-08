@@ -1,4 +1,4 @@
-{:env          :dev
+#_{:env          :dev
  :db-type      "h2:mem"
 ;;  :db-port      8080
  :db-name      "example"
@@ -7,3 +7,13 @@
  :stmt-get-default 50
  :stmt-get-max     50
  }
+{:connection
+ {:db-type "h2:mem"
+  :db-name "example"
+  :db-schema "lrsql"}
+ :lrs
+ {:stmt-get-default 50
+  :stmt-get-max     50}
+ :webserver
+ {:http-host "0.0.0.0"
+  :http-port 8080}}
