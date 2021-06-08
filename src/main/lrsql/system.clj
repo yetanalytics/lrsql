@@ -46,6 +46,8 @@
                       (webserver/map->Webserver {})
                       [:lrs]))
          config
-         (aero/read-config "config.edn" {:profile profile})]
-     (-> (merge-with (fn [m cm] (assoc m :config cm)) initial-sys config)
+         (aero/read-config "config.edn" {:profile profile})
+         assoc-config
+         (fn [m config-m] (assoc m :config config-m))]
+     (-> (merge-with assoc-config initial-sys config)
          (component/system-using {})))))

@@ -27,15 +27,25 @@
   component/Lifecycle
   (start
    [lrs]
-   (init/init-hugsql-adapter!)
-   (init/init-hugsql-fns! (-> connection :config :db-type))
-   (init/create-tables! (:conn-pool connection))
-   (log/info "Starting new LRS")
-   (assoc lrs :connection connection))
+   (if-not (:connection lrs)
+     (do
+       (init/init-hugsql-adapter!)
+       (init/init-hugsql-fns! (-> connection :config :db-type))
+       (init/create-tables! (:conn-pool connection))
+       (log/info "Starting new LRS")
+       (assoc lrs :connection connection))
+     (do
+       (log/info "LRS already started; do nothing.")
+       lrs)))
   (stop
    [lrs]
-   (log/info "Stopping LRS...")
-   (assoc lrs :connection nil))
+   (if (:connection lrs)
+     (do
+       (log/info "Stopping LRS...")
+       (assoc lrs :connection nil))
+     (do
+       (log/info "LRS already stopped; do nothing...")
+       lrs)))
 
   lrsp/AboutResource
   (-get-about
