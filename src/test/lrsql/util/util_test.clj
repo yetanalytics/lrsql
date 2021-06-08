@@ -31,6 +31,20 @@
       (is (every? (fn [[u1 u2]] (clj-uuid/uuid= u1 u2))
                   (map (fn [u1 u2] [u1 u2]) squuid-seq squuid-seq''))))))
 
+(deftest json-test
+  (testing "parsing JSON"
+    (is (= {"foo" "bar"}
+           (util/parse-json "{\"foo\":\"bar\"}")))
+    (is (try (util/parse-json "{\"foo\":\"bar\"} {\"baz\":\"qux\"}")
+             (catch Exception e (= ::util/extra-json-input
+                                   (-> e ex-data :type)))))
+    (is (try (util/parse-json "[{\"foo\":\"bar\"}, {\"baz\":\"qux\"}]")
+             (catch Exception e (= ::util/not-json-object
+                                   (-> e ex-data :type))))))
+  (testing "writing JSON"
+    (is (= "{\"foo\":\"bar\"}"
+           (String. ^"[B" (util/write-json {"foo" "bar"}))))))
+
 (deftest dissoc-statement-properties-test
   (testing "dissoc non-immutable statement properties"
     (= {"actor"   {"mbox"       "mailto:sample.group@example.com"

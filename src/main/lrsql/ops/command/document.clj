@@ -114,8 +114,7 @@
         (if (and ?old-json
                  ?new-json)
           (let [new-data  (->> (merge ?old-json ?new-json)
-                               u/write-json
-                               .getBytes)
+                               u/write-json)
                 new-input (-> input
                               (assoc :contents new-data)
                               (assoc :content-length (count new-data)))]
