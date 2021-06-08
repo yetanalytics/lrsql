@@ -22,7 +22,7 @@
           :webserver (component/using
                       (webserver/map->Webserver {})
                       [:lrs]))
-         config
+         config ; TODO: Switch to io/resource
          (aero/read-config "config.edn" {:profile profile})
          assoc-config
          (fn [m config-m] (assoc m :config config-m))]

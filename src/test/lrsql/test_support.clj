@@ -11,6 +11,7 @@
     [env (assoc-in env [:connection :db-name] (str (UUID/randomUUID)))]
     (f)))
 
+;; TODO: Switch to io/resource for reading config file
 (defn assert-in-mem-db
   []
   (let [env     (read-config "config.edn" {:profile :test})
