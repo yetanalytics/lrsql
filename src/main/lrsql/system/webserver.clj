@@ -6,7 +6,26 @@
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [config.core :refer [env]]))
 
-(defrecord Webserver [service server
+(defn- service-map
+  "Create a new service map for the webserver."
+  [lrs]
+  {:env                 :prod
+   ::http/routes        (build {:lrs lrs})
+   ::http/resource-path "/public"
+   ::http/type          :jetty
+   ::http/host          (:http-host env "0.0.0.0")
+   ::http/port          (:http-port env 8080)
+   ::http/join?         false
+   ::http/allowed-origins
+   {:creds           true
+    :allowed-origins (constantly true)}
+   ::http/container-options
+   {:h2c? true
+    :h2?  false
+    :ssl? false}})
+
+(defrecord Webserver [service
+                      server
                       lrs]
   component/Lifecycle
   (start [this]
@@ -15,26 +34,12 @@
           (log/tracef "Server map: %s" server)
           this)
       (if lrs
-        (let [service
-              (or service ;; accept passed in
-                  {:env :prod
-                   ::http/routes
-                   (build {:lrs lrs})
-                   ::http/allowed-origins
-                   {:creds true :allowed-origins (constantly true)}
-                   ::http/resource-path "/public"
-                   ::http/type :jetty
-                   ::http/host (:http-host env "0.0.0.0")
-                   ::http/port (:http-port env 8080)
-                   ::http/join? false
-                   ::http/container-options
-                   {:h2c? true
-                    :h2? false
-                    :ssl? false}})
-              server (-> service
-                         i/xapi-default-interceptors
-                         http/create-server
-                         http/start)]
+        (let [service (or service ;; accept passed in
+                          (service-map lrs))
+              server  (-> service
+                          i/xapi-default-interceptors
+                          http/create-server
+                          http/start)]
           (log/infof "Starting new webserver at host %s and port %s"
                      (::http/host service)
                      (::http/port service))
