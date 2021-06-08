@@ -2,8 +2,11 @@
  {:db-type   #profile {:test    "h2:mem"
                        :default "h2:mem"}
   :db-name   "example"
-  :db-host   "0.0.0.0" ; use #or and #env
-  :db-port   8080      ; use #or and #env
+  ;; use #or and #env
+  :db-host   #profile {:test    "localhost"
+                       :default "0.0.0.0"} 
+  :db-port   #profile {:test    8080
+                       :default 8080}
   :db-schema "lrsql"}
  :connection
  {:database #ref [:database]}
