@@ -28,35 +28,37 @@
                       lrs
                       config]
   component/Lifecycle
-  (start [this]
-    (if server
-      (do (log/info "Webserver already started; do nothing")
-          (log/tracef "Server map: %s" server)
-          this)
-      (if lrs
-        (let [service (or service ;; accept passed in
-                          (service-map lrs config))
-              server  (-> service
-                          i/xapi-default-interceptors
-                          http/create-server
-                          http/start)]
-          (log/infof "Starting new webserver at host %s and port %s"
-                     (::http/host service)
-                     (::http/port service))
-          (log/tracef "Server map: %s" server)
-          (assoc this
-                 :service service
-                 :server server))
-        (throw (ex-info "LRS Required to build service!"
-                        {:type ::start-no-lrs
-                         :webserver this})))))
-  (stop [this]
-    (if server
-      (do (log/info "Stopping webserver...")
-          (http/stop server)
-          (assoc this
-                 :service nil
-                 :server nil
-                 :lrs nil))
-      (do (log/info "Webserver already stopped; do nothing")
-          this))))
+  (start
+   [this]
+   (if server
+     (do (log/info "Webserver already started; do nothing.")
+         (log/tracef "Server map: %s" server)
+         this)
+     (if lrs
+       (let [service (or service ;; accept passed in
+                         (service-map lrs config))
+             server  (-> service
+                         i/xapi-default-interceptors
+                         http/create-server
+                         http/start)]
+         (log/infof "Starting new webserver at host %s and port %s"
+                    (::http/host service)
+                    (::http/port service))
+         (log/tracef "Server map: %s" server)
+         (assoc this
+                :service service
+                :server server))
+       (throw (ex-info "LRS Required to build service!"
+                       {:type ::start-no-lrs
+                        :webserver this})))))
+  (stop
+   [this]
+   (if server
+     (do (log/info "Stopping webserver...")
+         (http/stop server)
+         (assoc this
+                :service nil
+                :server nil
+                :lrs nil))
+     (do (log/info "Webserver already stopped; do nothing.")
+         this))))

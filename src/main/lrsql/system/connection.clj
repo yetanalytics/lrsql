@@ -68,7 +68,7 @@
 
 (defrecord Connection [conn-pool config]
   component/Lifecycle
-  (component/start
+  (start
    [conn]
    (let [{?conn-pool :conn-pool
           {{db-type :db-type} :database :as config} :config}
@@ -82,7 +82,7 @@
        (do
          (log/info "Connection already started; do nothing.")
          conn))))
-  (component/stop
+  (stop
    [conn]
    (if-some [conn-pool (:conn-pool conn)]
      (do
