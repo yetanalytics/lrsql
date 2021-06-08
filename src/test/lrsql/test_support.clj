@@ -5,11 +5,13 @@
   (:import [java.util UUID]))
 
 
-#_(defn fresh-db-fixture
+(defn fresh-db-fixture
   [f]
-  (with-redefs
-    [env (assoc-in env [:connection :db-name] (str (UUID/randomUUID)))]
-    (f)))
+  (let [cfg (-> (read-config "config.edn" {:profile :test})
+                (assoc-in [:database :db-name] (str (UUID/randomUUID))))]
+    (with-redefs
+      [read-config (constantly cfg)]
+      (f))))
 
 ;; TODO: Switch to io/resource for reading config file
 (defn assert-in-mem-db
