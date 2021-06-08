@@ -80,15 +80,15 @@
          (log/tracef "Config: %s" config)
          (assoc conn :conn-pool conn-pool))
        (do
-         (log/infof "Connection already started; do nothing.")
+         (log/info "Connection already started; do nothing.")
          conn))))
   (component/stop
    [conn]
    (if-some [conn-pool (:conn-pool conn)]
      (do
-       (log/infof "Stopping connection...")
+       (log/info "Stopping connection...")
        (.close conn-pool)
        (assoc conn :conn-pool nil))
      (do
-       (log/infof "Connection already stopped; do nothing.")
+       (log/info "Connection already stopped; do nothing.")
        conn))))
