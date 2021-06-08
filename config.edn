@@ -1,10 +1,15 @@
-{:connection
- {:db-type #profile {:test "h2:mem"
-                     :default "h2:mem"}
-  :db-name "example"
+{:database
+ {:db-type   #profile {:test    "h2:mem"
+                       :default "h2:mem"}
+  :db-name   "example"
+  :db-host   "0.0.0.0" ; use #or and #env
+  :db-port   8080      ; use #or and #env
   :db-schema "lrsql"}
+ :connection
+ {:database #ref [:database]}
  :lrs
- {:stmt-get-default 50
+ {:database #ref [:database]
+  :stmt-get-default 50
   :stmt-get-max     50}
  :webserver
  {:http-host "0.0.0.0"

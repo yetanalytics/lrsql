@@ -14,7 +14,7 @@
 (defn assert-in-mem-db
   []
   (let [env     (read-config "config.edn" {:profile :test})
-        db-type (-> env :connection :db-type)]
+        db-type (-> env :database :db-type)]
     (when (not= "h2:mem" db-type)
       (throw (ex-info "Test can only be run on in-memory H2 database!"
                       {:type    ::non-mem-db

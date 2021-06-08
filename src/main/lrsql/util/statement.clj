@@ -1,8 +1,23 @@
 (ns lrsql.util.statement
-  (:require [aero.core :refer [read-config]]
-            [ring.util.codec :refer [form-encode]]
+  (:require [ring.util.codec :refer [form-encode]]
             [lrsql.util :as u]
             [com.yetanalytics.lrs.xapi.statements :as ss]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Config Vars
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def ^:private config-vars (atom {}))
+
+(defn set-statement-config-vars!
+  "Set global vars that will be used for Statement-related util functions."
+  [{:keys [database stmt-get-default stmt-get-max]}]
+  (swap! config-vars
+         assoc
+         :stmt-get-default stmt-get-default
+         :stmt-get-max stmt-get-max
+         :db-host (:db-host database)
+         :db-port (:db-port database)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Preparation
@@ -170,8 +185,7 @@
          port :db-port
          :or {host "localhost"
               port 8080}}
-        (-> (read-config "config.edn") ; TODO: Code smell?
-            :connection)]
+        config-vars]
     (str "http://" host ":" port)))
 
 (defn make-more-url
@@ -189,9 +203,8 @@
   [?limit]
   ;; TODO: env defaults out of code.. Aero?
   ;; TODO: reevaluate defaults
-  (let [env           (-> (read-config "config.edn") :lrs) ; TODO: Code smell?
-        limit-max     (:stmt-get-max env 100)
-        limit-default (:stmt-get-default env 100)]
+  (let [limit-max     (:stmt-get-max config-vars 100)
+        limit-default (:stmt-get-default config-vars 100)]
     (cond
       ;; Ensure limit is =< max
       (pos-int? ?limit)

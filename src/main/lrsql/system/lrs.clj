@@ -28,9 +28,9 @@
   (start
    [lrs]
    (init/init-hugsql-adapter!)
-   ;; TODO: calling a dependency's config var seems like a code smell
-   (init/init-hugsql-fns! (-> connection :config :db-type))
+   (init/init-hugsql-fns! (-> config :database :db-type))
    (init/create-tables! (:conn-pool connection))
+   (stmt-util/set-statement-config-vars! config)
    (log/info "Starting new LRS")
    (assoc lrs :connection connection))
   (stop
