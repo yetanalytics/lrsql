@@ -7,8 +7,11 @@
 
 (defn fresh-db-fixture
   [f]
-  (let [cfg (-> (read-config "config.edn" {:profile :test})
-                (assoc-in [:database :db-name] (str (UUID/randomUUID))))]
+  (let [id-str (str (UUID/randomUUID))
+        cfg (-> (read-config "config.edn" {:profile :test})
+                (assoc-in [:database :db-name] id-str)
+                (assoc-in [:connection :database :db-name] id-str)
+                (assoc-in [:lrs :database :db-name] id-str))]
     (with-redefs
       [read-config (constantly cfg)]
       (f))))
