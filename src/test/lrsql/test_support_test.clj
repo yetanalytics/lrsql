@@ -30,7 +30,7 @@
                       {:profile :test}))))))
   (testing "sets system db-name"
     (is
-     (not= "example"
+     (not= "example" ;; TODO: this will come from env, check against that
            (get-in
             (fresh-db-fixture
              #(system/system))
