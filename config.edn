@@ -1,12 +1,3 @@
-#_{:env          :dev
- :db-type      "h2:mem"
-;;  :db-port      8080
- :db-name      "example"
-;;  :db-host      ""
- :db-schema "lrsql"
- :stmt-get-default 50
- :stmt-get-max     50
- }
 {:connection
  {:db-type #profile {:test "h2:mem"
                      :default "h2:mem"}

@@ -13,12 +13,13 @@
   (def sys' (component/start sys))
 
   (into {} sys)
-  
+
   (def lrs (:lrs sys'))
-  (def ds ((-> sys' :lrs :conn-pool)))
+  (def ds (-> sys' :lrs :connection :conn-pool))
 
   (lrsp/-store-statements lrs {} [stmt-1' stmt-2' stmt-3' stmt-4] [stmt-4-attach])
 
+  (lrsp/-get-statements lrs {} {} #{})
   (doseq [cmd [;; Drop document tables
                "DROP TABLE IF EXISTS state_document"
                "DROP TABLE IF EXISTS agent_profile_document"

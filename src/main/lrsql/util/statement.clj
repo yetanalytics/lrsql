@@ -1,6 +1,5 @@
 (ns lrsql.util.statement
-  (:require #_[config.core :refer [env]]
-            [aero.core :refer [read-config]]
+  (:require [aero.core :refer [read-config]]
             [ring.util.codec :refer [form-encode]]
             [lrsql.util :as u]
             [com.yetanalytics.lrs.xapi.statements :as ss]))

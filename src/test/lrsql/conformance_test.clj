@@ -1,9 +1,6 @@
 (ns lrsql.conformance-test
   (:require [clojure.test :as t :refer [deftest testing is]]
-            [config.core  :refer [env]]
-            [next.jdbc    :as jdbc]
             [com.stuartsierra.component    :as component]
-            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.system :as system]
             [com.yetanalytics.lrs.test-runner :as conf]
             [lrsql.test-support :as support]))
