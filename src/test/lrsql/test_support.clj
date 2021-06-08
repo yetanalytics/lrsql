@@ -1,7 +1,6 @@
 (ns lrsql.test-support
   (:require [aero.core :refer [read-config]]
-            [clojure.spec.test.alpha :as stest]
-            [clojure.string :as cs])
+            [clojure.spec.test.alpha :as stest])
   (:import [java.util UUID]))
 
 

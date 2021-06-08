@@ -1,7 +1,7 @@
 (ns lrsql.test-support-test
-  (:require [aero.core :refer [read-config]]
-            [lrsql.test-support :refer :all]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is]]
+            [aero.core :refer [read-config]]
+            [lrsql.test-support :refer [fresh-db-fixture]]
             [lrsql.system :as system]))
 
 (defn- get-db-name
@@ -30,7 +30,7 @@
                       {:profile :test}))))))
   (testing "sets system db-name"
     (is
-     (not= "example" ;; TODO: this will come from env, check against that
+     (not= "example" ; TODO: this will come from env, check against that
            (get-in
             (fresh-db-fixture
              #(system/system))
