@@ -10,8 +10,7 @@
             [lrsql.input.attachment :as i-at]
             ;; Utils
             [lrsql.util :as u]
-            [lrsql.util.actor :as ua]
-            [lrsql.util.statement :as us]))
+            [lrsql.util.actor :as ua]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -410,11 +409,13 @@
     ?rel-actors? :related_agents
     ?since       :since
     ?until       :until
-    ?limit       :limit
     ?asc?        :ascending
+    limit        :limit ; Ensured by `ensure-default-max-limit`
     ?atts?       :attachments
     ?format      :format
     ?from        :from ; Not a stmt res param; added by lrsql for pagination
+    host         :host ; Ensured by `add-db-host-port`
+    port         :port ; Ensured by `add-db-host-port`
     :as          params}]
   (let [?stmt-id    (when ?stmt-id (u/str->uuid ?stmt-id))
         ?vstmt-id   (when ?vstmt-id (u/str->uuid ?vstmt-id))
@@ -425,7 +426,6 @@
         ?until      (when ?until (u/str->time ?until))
         rel-actors? (boolean ?rel-actors?) 
         rel-activs? (boolean ?rel-activs?)
-        limit       (us/ensure-default-max-limit ?limit)
         asc?        (boolean ?asc?)
         format      (if ?format (keyword ?format) :exact)
         atts?       (boolean ?atts?)
@@ -440,7 +440,9 @@
       (cond-> comm-params
         true       (assoc :ascending?   asc?
                           :limit        limit
-                          :query-params params)
+                          :query-params params
+                          :host         host
+                          :port         port)
         ?actor-ifi (assoc :actor-ifi       ?actor-ifi
                           :related-actors? rel-actors?)
         ?activ-iri (assoc :activity-iri        ?activ-iri

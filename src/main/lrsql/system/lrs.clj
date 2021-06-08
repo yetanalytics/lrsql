@@ -30,7 +30,6 @@
    (init/init-hugsql-adapter!)
    (init/init-hugsql-fns! (-> config :database :db-type))
    (init/create-tables! (:conn-pool connection))
-   (stmt-util/set-statement-config-vars! config)
    (log/info "Starting new LRS")
    (assoc lrs :connection connection))
   (stop
@@ -76,7 +75,11 @@
   (-get-statements
    [lrs auth-identity params ltags]
    (let [conn   (lrs-conn lrs)
-         inputs (stmt-input/statement-query-input params)]
+         config (:config lrs)
+         inputs (->> params
+                     (stmt-util/add-db-host-port config)
+                     (stmt-util/ensure-default-max-limit config)
+                     stmt-input/statement-query-input)]
      (jdbc/with-transaction [tx conn]
        (stmt-q/query-statements tx inputs ltags))))
   (-consistent-through

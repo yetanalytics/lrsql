@@ -56,6 +56,9 @@
 (s/def ::format #{:ids :exact :canonical})
 (s/def ::attachments? boolean?)
 
+(s/def ::host string?)
+(s/def ::port pos-int?)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insertion spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -153,7 +156,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/def ::query-params
-  ::lrsp/get-statements-params)
+  (s/and (s/keys :req-un [::limit ::host ::port])
+         ::lrsp/get-statements-params))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query spec
@@ -170,7 +174,9 @@
                    ::ascending?
                    ::format
                    ::attachments?
-                   ::query-params]
+                   ::query-params
+                   ::host
+                   ::port]
           :opt-un [::hs-actor/actor-ifi
                    ::hs-actor/activity-iri
                    ::verb-iri
