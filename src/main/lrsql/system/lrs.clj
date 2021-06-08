@@ -30,6 +30,7 @@
    (if-not (:connection lrs)
      (do
        (init/init-hugsql-adapter!)
+       ;; TODO: calling a dependency's config var seems like a code smell
        (init/init-hugsql-fns! (-> connection :config :db-type))
        (init/create-tables! (:conn-pool connection))
        (log/info "Starting new LRS")

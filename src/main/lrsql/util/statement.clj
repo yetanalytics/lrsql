@@ -1,5 +1,6 @@
 (ns lrsql.util.statement
-  (:require [config.core :refer [env]]
+  (:require #_[config.core :refer [env]]
+            [aero.core :refer [read-config]]
             [ring.util.codec :refer [form-encode]]
             [lrsql.util :as u]
             [com.yetanalytics.lrs.xapi.statements :as ss]))
@@ -170,7 +171,8 @@
          port :db-port
          :or {host "localhost"
               port 8080}}
-        env]
+        (-> (read-config "config.edn") ; TODO: Code smell?
+            :connection)]
     (str "http://" host ":" port)))
 
 (defn make-more-url
@@ -188,7 +190,8 @@
   [?limit]
   ;; TODO: env defaults out of code.. Aero?
   ;; TODO: reevaluate defaults
-  (let [limit-max     (:stmt-get-max env 100)
+  (let [env           (-> (read-config "config.edn") :lrs) ; TODO: Code smell?
+        limit-max     (:stmt-get-max env 100)
         limit-default (:stmt-get-default env 100)]
     (cond
       ;; Ensure limit is =< max
