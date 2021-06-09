@@ -1,19 +1,21 @@
 {:database
- {:db-type   #profile {:test    "h2:mem"
-                       :default "h2:mem"}
-  :db-name   "example"
-  ;; use #or and #env
-  :db-host   #profile {:test    "localhost"
-                       :default "0.0.0.0"} 
-  :db-port   #profile {:test    8080
-                       :default 8080}
-  :db-schema "lrsql"}
+ #profile
+  {:test {:db-type   "h2:mem"
+          :db-name   "example"
+          :db-host   "localhost"
+          :db-port   8080
+          :db-schema "lrsql"}
+   :default {:db-type   #or [#env DB_TYPE "h2:mem"]
+             :db-name   #or [#env DB_NAME "example"]
+             :db-host   #or [#env DB_HOST "localhost"]
+             :db-port   #or [#env DB_PORT 8080]
+             :db-schema #or [#env DB_SCHEMA "lrsql"]}}
  :connection
  {:database #ref [:database]}
  :lrs
  {:database #ref [:database]
-  :stmt-get-default 50
-  :stmt-get-max     50}
+  :stmt-get-default #or [#env STATEMENT_GET_DEFAULT 50]
+  :stmt-get-max     #or [#env STATEMENT_GET_MAX 50]}
  :webserver
- {:http-host "0.0.0.0"
-  :http-port 8080}}
+ {:http-host #or [#env HTTP_HOST "0.0.0.0"]
+  :http-port #or [#env HTTP_PORT 8080]}}
