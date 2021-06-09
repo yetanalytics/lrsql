@@ -1,6 +1,5 @@
 (ns lrsql.spec.config
   (:require [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sgen]
             [xapi-schema.spec :as xs]))
 
 ;; TODO: Add SQLite and Postgres at the very least

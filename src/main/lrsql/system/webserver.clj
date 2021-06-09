@@ -1,6 +1,5 @@
 (ns lrsql.system.webserver
-  (:require [clojure.spec.alpha :as s]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
