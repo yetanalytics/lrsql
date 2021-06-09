@@ -3,6 +3,6 @@
             [lrsql.system :as system])
   (:gen-class))
 
-(defn -main [& args]
+(defn -main [& _]
   (-> (system/system)
       component/start))

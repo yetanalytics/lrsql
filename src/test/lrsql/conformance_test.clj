@@ -1,9 +1,6 @@
 (ns lrsql.conformance-test
   (:require [clojure.test :as t :refer [deftest testing is]]
-            [config.core  :refer [env]]
-            [next.jdbc    :as jdbc]
-            [com.stuartsierra.component    :as component]
-            [com.yetanalytics.lrs.protocol :as lrsp]
+            [com.stuartsierra.component :as component]
             [lrsql.system :as system]
             [com.yetanalytics.lrs.test-runner :as conf]
             [lrsql.test-support :as support]))
@@ -15,7 +12,7 @@
   (conf/with-test-suite
     (binding [conf/*print-logs* true]
       (testing "no regressions"
-        (let [sys (system/system)
+        (let [sys  (system/system :test)
               sys' (component/start sys)]
           (is (conf/conformant?
                "-e" "http://localhost:8080/xapi" "-b" "-z"))

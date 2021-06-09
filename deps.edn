@@ -1,4 +1,4 @@
-{:paths ["src/main"]
+{:paths ["src/main" "config"]
  :deps
  {org.clojure/clojure                    {:mvn/version "1.10.3"}
   ;; TODO: Switch to a faster JSON lib
@@ -6,7 +6,7 @@
   cheshire/cheshire                      {:mvn/version "5.10.0"}
   clojure.java-time/clojure.java-time    {:mvn/version "0.3.2"}
   danlentz/clj-uuid                      {:mvn/version "0.1.9"}
-  yogthos/config                         {:mvn/version "1.1.7"}
+  aero/aero                              {:mvn/version "1.1.6"}
   io.pedestal/pedestal.jetty             {:mvn/version "0.5.7"}
   com.mchange/c3p0                       {:mvn/version "0.9.5.5"}
   com.github.seancorfield/next.jdbc      {:mvn/version "1.2.659"}
