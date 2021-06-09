@@ -56,6 +56,8 @@
 (s/def ::format #{:ids :exact :canonical})
 (s/def ::attachments? boolean?)
 
+(s/def ::more-url-prefix string?)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insertion spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -153,7 +155,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/def ::query-params
-  ::lrsp/get-statements-params)
+  (s/merge ::lrsp/get-statements-params
+           (s/keys :req-un [::limit]
+                   :opt-un [::more-url-prefix])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query spec
@@ -170,7 +174,8 @@
                    ::ascending?
                    ::format
                    ::attachments?
-                   ::query-params]
+                   ::query-params
+                   ::more-url-prefix]
           :opt-un [::hs-actor/actor-ifi
                    ::hs-actor/activity-iri
                    ::verb-iri

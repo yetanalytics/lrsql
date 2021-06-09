@@ -1,20 +1,23 @@
 (ns lrsql.test-support
-  (:require [aero.core :refer [read-config]]
-            [clojure.spec.test.alpha :as stest]
-            [clojure.string :as cs])
+  (:require [clojure.spec.test.alpha :as stest]
+            [lrsql.util :as u])
   (:import [java.util UUID]))
 
-
-#_(defn fresh-db-fixture
+(defn fresh-db-fixture
   [f]
-  (with-redefs
-    [env (assoc-in env [:connection :db-name] (str (UUID/randomUUID)))]
-    (f)))
+  (let [id-str (str (UUID/randomUUID))
+        cfg (-> (u/read-config :test)
+                (assoc-in [:database :db-name] id-str)
+                (assoc-in [:connection :database :db-name] id-str)
+                (assoc-in [:lrs :database :db-name] id-str))]
+    (with-redefs
+      [u/read-config (constantly cfg)]
+      (f))))
 
 ;; TODO: Switch to io/resource for reading config file
 (defn assert-in-mem-db
   []
-  (let [env     (read-config "config.edn" {:profile :test})
+  (let [env     (u/read-config :test)
         db-type (-> env :database :db-type)]
     (when (not= "h2:mem" db-type)
       (throw (ex-info "Test can only be run on in-memory H2 database!"
@@ -36,12 +39,13 @@
      (when-not (true? (-> res first :clojure.spec.test.check/ret :pass?))
        res))))
 
+;; TODO: This function is unused - remove or use
 (defn tests-seq
   "Given nested xapi conformance logs, flatten them into a seq"
   [logs]
   (mapcat
-   (fn splode [{:keys [title
-                       status
+   (fn splode [{:keys [_title
+                       _status
                        tests]
                 :as test}
                & {:keys [depth]

@@ -4,22 +4,6 @@
             [com.yetanalytics.lrs.xapi.statements :as ss]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Statement Config Vars
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def ^:private config-vars (atom {}))
-
-(defn set-statement-config-vars!
-  "Set global vars that will be used for Statement-related util functions."
-  [{:keys [database stmt-get-default stmt-get-max]}]
-  (swap! config-vars
-         assoc
-         :stmt-get-default stmt-get-default
-         :stmt-get-max stmt-get-max
-         :db-host (:db-host database)
-         :db-port (:db-port database)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Preparation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -178,40 +162,47 @@
 ;; Statement Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: Get more permanent solution for host and port defaults
-(defn- xapi-path-prefix
-  []
-  (let [{host :db-host
-         port :db-port
-         :or {host "localhost"
-              port 8080}}
-        config-vars]
-    (str "http://" host ":" port)))
+;; Pre-query
 
-(defn make-more-url
-  "Forms the `more` URL value from `query-params` and the Statement ID
-   `next-cursor` which points to the first Statement of the next page."
-  [query-params next-cursor]
-  (str (xapi-path-prefix)
-       "/xapi/statements?"
-       (form-encode (assoc query-params :from next-cursor))))
+(defn add-more-url-prefix
+  "Apply the URL prefix for the `more` StatementResult property to the params
+   map from the LRS configs."
+  [{?url-prefix :stmt-more-url-prefix :as _lrs-config}
+   params]
+  (when ?url-prefix
+    (assoc params :more-url-prefix ?url-prefix)))
 
 (defn ensure-default-max-limit
   "Given `?limit`, apply the maximum possible limit (if it is zero
    or exceeds that limit) or the default limit (if it is `nil`).
    The maximum and default limits are set in as environment vars."
-  [?limit]
-  ;; TODO: env defaults out of code.. Aero?
-  ;; TODO: reevaluate defaults
-  (let [limit-max     (:stmt-get-max config-vars 100)
-        limit-default (:stmt-get-default config-vars 100)]
-    (cond
-      ;; Ensure limit is =< max
-      (pos-int? ?limit)
-      (min ?limit limit-max)
-      ;; If zero, spec says use max
-      (and ?limit (zero? ?limit))
-      limit-max
-      ;; Otherwise, apply default
-      :else
-      limit-default)))
+  [{limit-max     :stmt-get-max
+    limit-default :stmt-get-default
+    :as _lrs-config}
+   {?limit :limit
+    :as    params}]
+  (assoc params
+         :limit
+         (cond
+           ;; Ensure limit is =< max
+           (pos-int? ?limit)
+           (min ?limit limit-max)
+           ;; If zero, spec says use max
+           (and ?limit (zero? ?limit))
+           limit-max
+           ;; Otherwise, apply default
+           :else
+           limit-default)))
+
+;; Post-query
+
+(defn make-more-url
+  "Forms the `more` URL value from `query-params` and the Statement ID
+   `next-cursor` which points to the first Statement of the next page."
+  [query-params next-cursor]
+  (let [{:keys [more-url-prefix]} query-params]
+    (str more-url-prefix
+         "/xapi/statements?"
+         (form-encode (-> query-params
+                          (assoc :from next-cursor)
+                          (dissoc :more-url-prefix))))))

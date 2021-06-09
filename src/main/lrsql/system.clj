@@ -1,20 +1,20 @@
 (ns lrsql.system
-  (:require [aero.core :as aero]
-            [com.stuartsierra.component :as component]
-            [lrsql.system.connection :as conn]
+  (:require [com.stuartsierra.component :as component]
+            [lrsql.system.database :as db]
             [lrsql.system.lrs :as lrs]
-            [lrsql.system.webserver :as webserver]))
+            [lrsql.system.webserver :as webserver]
+            [lrsql.util :as u]))
 
 (defn system
   "Return a lrsql system with configuration specified by the `profile`
-   keyword (or `:default` if not present)."
+   keyword (set to `:default` if not given)."
   ([]
    (system :default))
   ([profile]
    (let [initial-sys ; init without configuration
          (component/system-map
           :connection (component/using
-                       (conn/map->Connection {})
+                       (db/map->Connection {})
                        [])
           :lrs       (component/using
                       (lrs/map->LearningRecordStore {})
@@ -22,8 +22,8 @@
           :webserver (component/using
                       (webserver/map->Webserver {})
                       [:lrs]))
-         config ; TODO: Switch to io/resource
-         (aero/read-config "config.edn" {:profile profile})
+         config
+         (u/read-config profile)
          assoc-config
          (fn [m config-m] (assoc m :config config-m))]
      (-> (merge-with assoc-config initial-sys config)

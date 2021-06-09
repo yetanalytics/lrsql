@@ -1,6 +1,5 @@
 (ns lrsql.lrs-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [next.jdbc    :as jdbc]
             [com.stuartsierra.component    :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.system :as system]
@@ -84,24 +83,6 @@
    :length      27
    :sha2        "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"})
 
-(defn- drop-all!
-  "Drop all tables in the db, in preparation for adding them again.
-   DO NOT RUN THIS DURING PRODUCTION!!!"
-  [tx]
-  (doseq [cmd [;; Drop document tables
-               "DROP TABLE IF EXISTS state_document"
-               "DROP TABLE IF EXISTS agent_profile_document"
-               "DROP TABLE IF EXISTS activity_profile_document"
-               ;; Drop statement tables
-               "DROP TABLE IF EXISTS statement_to_statement"
-               "DROP TABLE IF EXISTS statement_to_activity"
-               "DROP TABLE IF EXISTS statement_to_actor"
-               "DROP TABLE IF EXISTS attachment"
-               "DROP TABLE IF EXISTS activity"
-               "DROP TABLE IF EXISTS actor"
-               "DROP TABLE IF EXISTS xapi_statement"]]
-    (jdbc/execute! tx [cmd])))
-
 (defn- remove-props
   "Remove properties added by `input/prepare-statement`."
   [statement]
@@ -111,7 +92,7 @@
       (dissoc "authority")
       (dissoc "version")))
 
-#_(use-fixtures :each support/fresh-db-fixture)
+(use-fixtures :each support/fresh-db-fixture)
 
 (deftest test-statement-fns
   (let [_     (support/assert-in-mem-db)
@@ -228,7 +209,7 @@
     (testing "querying with limits"
       (is (= {:statement-result
               {:statements [stmt-4 stmt-3]
-               :more "http://localhost:8080/xapi/statements?limit=2&from="}
+               :more "/xapi/statements?limit=2&from="}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
                  (update-in [:statement-result :statements]
@@ -237,7 +218,7 @@
                             #(->> % (re-matches #"(.*from=).*") second)))))
       (is (= {:statement-result
               {:statements [stmt-1 stmt-2]
-               :more "http://localhost:8080/xapi/statements?limit=2&ascending=true&from="}
+               :more "/xapi/statements?limit=2&ascending=true&from="}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
                  (update-in [:statement-result :statements]
@@ -264,7 +245,6 @@
                             vec)
                  (update-in [:attachments 0 :content]
                             #(String. %))))))
-
     (testing "querying with attachments (single)"
       (is (= {:statement    stmt-4
               :attachments  [(update stmt-4-attach :content #(String. %))]}
@@ -289,8 +269,6 @@
                          "definition" {"name"        {"en-US" "Multi Part Activity"}
                                        "description" {"en-US" "Multi Part Activity Description"}}}}
              (lrsp/-get-activity lrs {} {:activityId act-1}))))
-    (jdbc/with-transaction [tx (-> lrs :connection :conn-pool)]
-      (drop-all! tx))
     (component/stop sys')))
 
 (def stmt-1'
@@ -382,8 +360,6 @@
                  (update-in [:statement-result :statements]
                             (partial map remove-props))
                  (update :statement-result dissoc :more)))))
-    (jdbc/with-transaction [tx (-> lrs :connection :conn-pool)]
-      (drop-all! tx))
     (component/stop sys')))
 
 (def state-id-params
@@ -512,6 +488,4 @@
       (is (nil? (lrsp/-get-document lrs
                                     {}
                                     activity-prof-id-params))))
-    (jdbc/with-transaction [tx (-> lrs :connection :conn-pool)]
-      (drop-all! tx))
     (component/stop sys')))

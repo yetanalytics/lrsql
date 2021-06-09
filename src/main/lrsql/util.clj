@@ -1,6 +1,7 @@
 (ns lrsql.util
   (:require [clj-uuid]
             [java-time]
+            [aero.core :as aero]
             [clojure.spec.alpha :as s]
             [clojure.java.io    :as io]
             [cheshire.core      :as cjson])
@@ -26,6 +27,20 @@
                           {:type      ::parse-failure
                            :data      ~data
                            :data-type ~data-type})))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn read-config*
+  "Read `config/config.edn` with the given value of `profile`. Valid
+   profiles are `:test` and `:default`."
+  [profile]
+  (aero/read-config (io/resource "config.edn") {:profile profile}))
+
+(def read-config
+  "Memoized version of `read-config*`."
+  (memoize read-config*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Timestamps
