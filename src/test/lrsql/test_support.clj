@@ -40,6 +40,8 @@
      (when-not (true? (-> res first :clojure.spec.test.check/ret :pass?))
        res))))
 
+;; TODO: This function is unused - remove or use
+#_{:clj-kondo/ignore [:unused-binding]} ; for `title` and `status`
 (defn tests-seq
   "Given nested xapi conformance logs, flatten them into a seq"
   [logs]
