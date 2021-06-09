@@ -3,7 +3,6 @@
             [lrsql.util :as u])
   (:import [java.util UUID]))
 
-
 (defn fresh-db-fixture
   [f]
   (let [id-str (str (UUID/randomUUID))

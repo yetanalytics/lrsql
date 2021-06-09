@@ -2,7 +2,7 @@
   (:require [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component])
-  (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
+  (:import [com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource]))
 
 ;; TODO: Add SQLite and Postgres at the very least
 (def valid-db-types #{"h2" "h2:mem"})
@@ -87,7 +87,7 @@
    (if-some [conn-pool (:conn-pool conn)]
      (do
        (log/info "Stopping connection...")
-       (.close conn-pool)
+       (.close ^PooledDataSource conn-pool)
        (assoc conn :conn-pool nil))
      (do
        (log/info "Connection already stopped; do nothing.")

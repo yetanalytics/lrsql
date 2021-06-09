@@ -372,8 +372,8 @@
             [new-imap ?stmt-shas])
           added-shas
           (->> result (map second) (filter some?) (apply cset/union))]
-      (if-some [diff-sha (not-empty (clojure.set/difference shas
-                                                            added-shas))]
+      (if-some [diff-sha (not-empty (cset/difference shas
+                                                     added-shas))]
         ;; Some attachments weren't included - throw an error
         (throw (ex-info bad-attachment-emsg
                         {:type         attachment-mismatch-type
