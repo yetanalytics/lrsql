@@ -32,18 +32,15 @@
 ;; Config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: Switch to `io/resource` (from the aero README: "it's very likely to
-;; catastrophically fail if you run your application from the generated .jar
-;; file.")
-
-(def read-config*
-  (memoize aero/read-config))
-
-(defn read-config
-  "Memoized version of aero/read-config, with the config file fixed as
-   `config.edn`. Valid values for `profile` include `:test` and `:default`."
+(defn read-config*
+  "Read `config/config.edn` with the given value of `profile`. Valid
+   profiles are `:test` and `:default`."
   [profile]
-  (read-config* "config.edn" {:profile profile}))
+  (aero/read-config (io/resource "config.edn") {:profile profile}))
+
+(def read-config
+  "Memoized version of `read-config*`."
+  (memoize read-config*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Timestamps
