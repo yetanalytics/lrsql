@@ -1,6 +1,7 @@
 (ns lrsql.util
   (:require [clj-uuid]
             [java-time]
+            [aero.core :as aero]
             [clojure.spec.alpha :as s]
             [clojure.java.io    :as io]
             [clojure.data.json  :as json])
@@ -26,6 +27,23 @@
                           {:type     ::parse-failure
                            :data     ~data
                            :daa-type ~data-type})))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; TODO: Switch to `io/resource` (from the aero README: "it's very likely to
+;; catastrophically fail if you run your application from the generated .jar
+;; file.")
+
+(def read-config*
+  (memoize aero/read-config))
+
+(defn read-config
+  "Memoized version of aero/read-config, with the config file fixed as
+   `config.edn`. Valid values for `profile` include `:test` and `:default`."
+  [profile]
+  (read-config* "config.edn" {:profile profile}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Timestamps
