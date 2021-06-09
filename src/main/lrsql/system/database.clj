@@ -11,10 +11,10 @@
   (assert-config ::cs/connection "connection" conn-config)
   (let [{{db-type   :db-type
           db-name   :db-name
-          host      :host
-          port      :port
-          schema    :schema
-          ?jdbc-url :jdbc-url}
+          host      :db-host
+          port      :db-port
+          schema    :db-schema
+          ?jdbc-url :db-jdbc-url}
          :database
          ?user      :user
          ?password  :password
