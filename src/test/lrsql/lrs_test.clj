@@ -209,7 +209,7 @@
     (testing "querying with limits"
       (is (= {:statement-result
               {:statements [stmt-4 stmt-3]
-               :more "http://localhost:8080/xapi/statements?limit=2&from="}
+               :more "/xapi/statements?limit=2&from="}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
                  (update-in [:statement-result :statements]
@@ -218,7 +218,7 @@
                             #(->> % (re-matches #"(.*from=).*") second)))))
       (is (= {:statement-result
               {:statements [stmt-1 stmt-2]
-               :more "http://localhost:8080/xapi/statements?limit=2&ascending=true&from="}
+               :more "/xapi/statements?limit=2&ascending=true&from="}
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
                  (update-in [:statement-result :statements]
@@ -245,7 +245,6 @@
                             vec)
                  (update-in [:attachments 0 :content]
                             #(String. %))))))
-
     (testing "querying with attachments (single)"
       (is (= {:statement    stmt-4
               :attachments  [(update stmt-4-attach :content #(String. %))]}

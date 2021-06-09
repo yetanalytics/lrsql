@@ -414,8 +414,7 @@
     ?atts?       :attachments
     ?format      :format
     ?from        :from ; Not a stmt res param; added by lrsql for pagination
-    host         :host ; Ensured by `add-db-host-port`
-    port         :port ; Ensured by `add-db-host-port`
+    ?url-prefix  :more-url-prefix ; Added by `add-more-url-prefix`
     :as          params}]
   (let [?stmt-id    (when ?stmt-id (u/str->uuid ?stmt-id))
         ?vstmt-id   (when ?vstmt-id (u/str->uuid ?vstmt-id))
@@ -429,6 +428,7 @@
         asc?        (boolean ?asc?)
         format      (if ?format (keyword ?format) :exact)
         atts?       (boolean ?atts?)
+        url-prefix  (if ?url-prefix ?url-prefix "")
         comm-params {:format       format
                      :attachments? atts?}]
     (if-some [stmt-id (or ?stmt-id ?vstmt-id)]
@@ -438,11 +438,10 @@
               :voided?      (boolean ?vstmt-id)})
       ;; Multiple statement query
       (cond-> comm-params
-        true       (assoc :ascending?   asc?
-                          :limit        limit
-                          :query-params params
-                          :host         host
-                          :port         port)
+        true       (assoc :ascending?      asc?
+                          :limit           limit
+                          :query-params    params
+                          :more-url-prefix url-prefix)
         ?actor-ifi (assoc :actor-ifi       ?actor-ifi
                           :related-actors? rel-actors?)
         ?activ-iri (assoc :activity-iri        ?activ-iri

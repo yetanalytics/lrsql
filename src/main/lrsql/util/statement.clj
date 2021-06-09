@@ -164,16 +164,13 @@
 
 ;; Pre-query
 
-(defn add-db-host-port
-  "Apply the host and port values from the `:database` map of the LRS config
-   map."
-  [{{host :db-host
-     port :db-port} :database
-    :as _lrs-config}
+(defn add-more-url-prefix
+  "Apply the URL prefix for the `more` StatementResult property to the params
+   map from the LRS configs."
+  [{?url-prefix :stmt-more-url-prefix :as _lrs-config}
    params]
-  (assoc params
-         :host host
-         :port port))
+  (when ?url-prefix
+    (assoc params :more-url-prefix ?url-prefix)))
 
 (defn ensure-default-max-limit
   "Given `?limit`, apply the maximum possible limit (if it is zero
@@ -181,13 +178,9 @@
    The maximum and default limits are set in as environment vars."
   [{limit-max     :stmt-get-max
     limit-default :stmt-get-default
-    :or {limit-max     100
-         limit-default 100}
     :as _lrs-config}
    {?limit :limit
     :as    params}]
-  ;; TODO: env defaults out of code.. Aero?
-  ;; TODO: reevaluate defaults
   (assoc params
          :limit
          (cond
@@ -203,17 +196,13 @@
 
 ;; Post-query
 
-;; TODO: Get more permanent solution for host and port defaults
-(defn- xapi-path-prefix
-  [host port]
-  (str "http://" host ":" port "/xapi/statements?"))
-
 (defn make-more-url
   "Forms the `more` URL value from `query-params` and the Statement ID
    `next-cursor` which points to the first Statement of the next page."
   [query-params next-cursor]
-  (let [{:keys [host port]} query-params]
-    (str (xapi-path-prefix host port)
+  (let [{:keys [more-url-prefix]} query-params]
+    (str more-url-prefix
+         "/xapi/statements?"
          (form-encode (-> query-params
                           (assoc :from next-cursor)
-                          (dissoc :host :port))))))
+                          (dissoc :more-url-prefix))))))

@@ -13,9 +13,12 @@
  :connection
  {:database #ref [:database]}
  :lrs
- {:database #ref [:database]
-  :stmt-get-default #or [#env STATEMENT_GET_DEFAULT 50]
-  :stmt-get-max     #or [#env STATEMENT_GET_MAX 50]}
+ {:database             #ref [:database]
+  :stmt-more-url-prefix #profile
+                         {:test    ""
+                          :default #or [#env STATEMENT_MORE_URL_PREFIX ""]}
+  :stmt-get-default     #or [#env STATEMENT_GET_DEFAULT 50]
+  :stmt-get-max         #or [#env STATEMENT_GET_MAX 50]}
  :webserver
  {:http-host #or [#env HTTP_HOST "0.0.0.0"]
   :http-port #or [#env HTTP_PORT 8080]}}
