@@ -1,5 +1,6 @@
 (ns lrsql.system.lrs
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
@@ -14,6 +15,8 @@
             [lrsql.ops.query.activity  :as activ-q]
             [lrsql.ops.query.document  :as doc-q]
             [lrsql.ops.query.statement :as stmt-q]
+            [lrsql.spec.config :as cs]
+            [lrsql.system.util :refer [assert-config]]
             [lrsql.util.statement :as stmt-util]
             [lrsql.util :as u])
   (:import [java.time Instant]))
@@ -27,6 +30,7 @@
   component/Lifecycle
   (start
    [lrs]
+   (assert-config ::cs/lrs "LRS" config)
    (init/init-hugsql-adapter!)
    (init/init-hugsql-fns! (-> config :database :db-type))
    (init/create-tables! (:conn-pool connection))

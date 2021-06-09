@@ -1,29 +1,14 @@
 (ns lrsql.system.database
   (:require [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
-            [com.stuartsierra.component :as component])
+            [com.stuartsierra.component :as component]
+            [lrsql.spec.config :as cs]
+            [lrsql.system.util :refer [assert-config]])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
 
-;; TODO: Add SQLite and Postgres at the very least
-(def valid-db-types #{"h2" "h2:mem"})
-
-(defn- assert-db-type
-  "Assert that `db-type` is valid."
-  [db-type]
-  (cond
-    (not (some? db-type))
-    (throw (ex-info "db-type is nil or not set!"
-                    {:type    ::missing-db-type
-                     :db-type nil}))
-    (not (valid-db-types db-type))
-    (throw (ex-info "db-type is invalid!"
-                    {:type    ::invalid-db-type
-                     :db-type db-type}))
-    :else
-    nil))
-
-(defn- coerce-conn-spec
-  [conn-spec]
+(defn- coerce-conn-config
+  [conn-config]
+  (assert-config ::cs/connection "connection" conn-config)
   (let [{{db-type   :db-type
           db-name   :db-name
           host      :host
@@ -38,8 +23,7 @@
          ?inc       :pool-inc
          ?max-size  :pool-max-size
          ?max-stmt  :pool-max-stmts}
-        conn-spec]
-    (assert-db-type db-type)
+        conn-config]
     (cond-> {}
       ;; Basic specs
       ?jdbc-url
@@ -69,26 +53,26 @@
 (defrecord Connection [conn-pool config]
   component/Lifecycle
   (start
-   [conn]
-   (let [{?conn-pool :conn-pool
-          {{db-type :db-type} :database :as config} :config}
-         conn]
-     (if-not ?conn-pool
-       (let [conn-pool (jdbc-conn/->pool ComboPooledDataSource
-                                         (coerce-conn-spec config))]
-         (log/infof "Starting new connection for %s database..." db-type)
-         (log/tracef "Config: %s" config)
-         (assoc conn :conn-pool conn-pool))
-       (do
-         (log/info "Connection already started; do nothing.")
-         conn))))
+    [conn]
+    (let [{?conn-pool :conn-pool
+           {{db-type :db-type} :database :as config} :config}
+          conn]
+      (if-not ?conn-pool
+        (let [conn-pool (jdbc-conn/->pool ComboPooledDataSource
+                                          (coerce-conn-config config))]
+          (log/infof "Starting new connection for %s database..." db-type)
+          (log/tracef "Config: %s" config)
+          (assoc conn :conn-pool conn-pool))
+        (do
+          (log/info "Connection already started; do nothing.")
+          conn))))
   (stop
-   [conn]
-   (if-some [conn-pool (:conn-pool conn)]
-     (do
-       (log/info "Stopping connection...")
-       (.close ^ComboPooledDataSource conn-pool)
-       (assoc conn :conn-pool nil))
-     (do
-       (log/info "Connection already stopped; do nothing.")
-       conn))))
+    [conn]
+    (if-some [conn-pool (:conn-pool conn)]
+      (do
+        (log/info "Stopping connection...")
+        (.close ^ComboPooledDataSource conn-pool)
+        (assoc conn :conn-pool nil))
+      (do
+        (log/info "Connection already stopped; do nothing.")
+        conn))))

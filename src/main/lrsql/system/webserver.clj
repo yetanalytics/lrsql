@@ -1,9 +1,12 @@
 (ns lrsql.system.webserver
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
-            [com.yetanalytics.lrs.pedestal.interceptor :as i]))
+            [com.yetanalytics.lrs.pedestal.interceptor :as i]
+            [lrsql.spec.config :as cs]
+            [lrsql.system.util :refer [assert-config]]))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -30,6 +33,7 @@
   component/Lifecycle
   (start
    [this]
+   (assert-config ::cs/webserver "webserver" config)
    (if server
      (do (log/info "Webserver already started; do nothing.")
          (log/tracef "Server map: %s" server)
