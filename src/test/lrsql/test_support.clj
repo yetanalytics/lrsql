@@ -40,13 +40,12 @@
        res))))
 
 ;; TODO: This function is unused - remove or use
-#_{:clj-kondo/ignore [:unused-binding]} ; for `title` and `status`
 (defn tests-seq
   "Given nested xapi conformance logs, flatten them into a seq"
   [logs]
   (mapcat
-   (fn splode [{:keys [title
-                       status
+   (fn splode [{:keys [_title
+                       _status
                        tests]
                 :as test}
                & {:keys [depth]

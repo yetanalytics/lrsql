@@ -3,7 +3,6 @@
             [lrsql.system :as system])
   (:gen-class))
 
-#_{:clj-kondo/ignore [:unused-binding]}
-(defn -main [& args]
+(defn -main [& _]
   (-> (system/system)
       component/start))
