@@ -77,7 +77,7 @@
    (let [conn   (lrs-conn lrs)
          config (:config lrs)
          inputs (->> params
-                     (stmt-util/add-db-host-port config)
+                     (stmt-util/add-more-url-prefix config)
                      (stmt-util/ensure-default-max-limit config)
                      stmt-input/statement-query-input)]
      (jdbc/with-transaction [tx conn]
