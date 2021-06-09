@@ -4,7 +4,7 @@
             [aero.core :as aero]
             [clojure.spec.alpha :as s]
             [clojure.java.io    :as io]
-            [clojure.data.json  :as json])
+            [cheshire.core      :as cjson])
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]))
@@ -16,17 +16,17 @@
 (defmacro wrap-parse-fn
   "Wrap `(parse-fn s)` in an exception such that on parse failure, the
    folloiwing error data is thrown:
-     :type      ::parse-failure
-     :data      `data`
-     :str-type  `str-type`"
+     :type       ::parse-failure
+     :data       `data`
+     :data-type  `data-type`"
   [parse-fn data-type data]
   `(try (~parse-fn ~data)
         (catch Exception e#
           (throw (ex-info (format "Cannot parse nil or invalid %s"
                                   ~data-type)
-                          {:type     ::parse-failure
-                           :data     ~data
-                           :daa-type ~data-type})))))
+                          {:type      ::parse-failure
+                           :data      ~data
+                           :data-type ~data-type})))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Config
@@ -202,46 +202,53 @@
 ;; JSON
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn read-str-strict
-  "Reads one JSON value from input String. Throws if there are more."
-  [string & {:as options}]
-  (let [rdr (PushbackReader. (StringReader. string) 64)
-        obj (apply json/read
-                   rdr
-                   (mapcat identity options))]
-    (if (apply json/read
-               rdr
-               (mapcat identity
-                       (assoc options :eof-error? false)))
-      (throw (ex-info "More input after JSON object"
-                      {:type ::extra-input
-                       :json string}))
-      obj)))
+;; Overall approach is taken from lrs:
+;; https://github.com/yetanalytics/lrs/blob/master/src/main/com/yetanalytics/lrs/xapi/document.cljc
+;; Reimplemented here as functions instead of dynamic vars in order to avoid
+;; issues with AOT compliation.
 
 (defn- parse-json*
+  "Read a JSON string or byte array `data`."
   [data]
-  (cond
-    (string? data)
-    (read-str-strict data)
-    (bytes? data) ; H2 returns JSON data as a byte array
-    (read-str-strict (String.  data))))
-;; ^"[B"
+  (let [string (if (bytes? data) (String. ^"[B" data) data)]
+    (with-open [rdr (PushbackReader. (StringReader. string) 64)]
+      (doall (cjson/parsed-seq rdr)))))
 
 (defn parse-json
-  "Parse `data` into JSON format. `data` may be a string or a byte array."
-  [data]
-  (wrap-parse-fn parse-json* "JSON" data))
+  "Read a JSON string or byte array `data`. `data` must only consist of one
+   JSON object, array, or scalar; in addition, `data` must be an object by
+   default. To parse JSON arrays or scalars, set `:object?` to false."
+  [data & {:keys [object?] :or {object? true}}]
+  (let [[result & ?more] (wrap-parse-fn parse-json* "JSON" data)]
+    (cond
+      ?more
+      (throw (ex-info "More input after first JSON data!"
+                      {:type  ::extra-json-input
+                       :first result
+                       :rest  ?more}))
+      (and object? (not (map? result)))
+      (throw (ex-info "Parsed JSON result is not an object!"
+                      {:type   ::not-json-object
+                       :result result}))
+      :else
+      result)))
 
 (defn write-json
-  "Write `jsn` to a string."
-  [jsn]
-  (json/write-str jsn))
+  "Write `jsn` to a byte array."
+  ([jsn]
+   (let [out (ByteArrayOutputStream. 4096)]
+     (.toByteArray ^ByteArrayOutputStream (write-json out jsn))))
+  ([out jsn]
+   (with-open [wtr (io/writer out)]
+     (cjson/generate-stream jsn wtr)
+     out)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Bytes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn data->bytes
+  "Convert `data` into a byte array."
   [data]
   (if (bytes? data)
     data
