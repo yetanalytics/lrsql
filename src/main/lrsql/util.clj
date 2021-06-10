@@ -79,10 +79,16 @@
 ;; is taken from the ULID specification:
 ;; https://github.com/ulid/spec
 
-(def ^{:private true :const true} bit-mask-12 0x0000000000000FFF)
-(def ^{:private true :const true} bit-mask-16 0x000000000000FFFF)
-(def ^{:private true :const true} bit-mask-36 0x0000FFFFFFFFFFFF)
-(def ^{:private true :const true} bit-mask-61 0x1FFFFFFFFFFFFFFF)
+(def ^{:private true :const true} bit-mask-12
+  (unchecked-long 0x0000000000000FFF))
+(def ^{:private true :const true} bit-mask-16
+  (unchecked-long 0x000000000000FFFF))
+(def ^{:private true :const true} bit-mask-36
+  (unchecked-long 0x0000FFFFFFFFFFFF))
+(def ^{:private true :const true} bit-mask-61
+  (unchecked-long 0x1FFFFFFFFFFFFFFF))
+(def ^{:private true :const true} bit-mask-64
+  (unchecked-long 0xFFFFFFFFFFFFFFFF))
 
 (def max-time (java-time/instant bit-mask-36))
 
@@ -192,6 +198,16 @@
   "Parse a string into an UUID."
   [uuid-str]
   (wrap-parse-fn UUID/fromString "UUID" uuid-str))
+
+(defn time->uuid
+  "Convert a java.util.Instant timestamp to a UUID. The upper 48 bits represent
+   the timestamp, while the lower 80 bits are set to be all 1s."
+  [^Instant ts]
+  (let [ts-long  (time->millis ts)
+        uuid-msb (bit-or (bit-shift-left ts-long 16)
+                         bit-mask-16)
+        uuid-lsb bit-mask-64]
+    (UUID. uuid-msb uuid-lsb)))
 
 (defn uuid->str
   "Convert a UUID into a string."

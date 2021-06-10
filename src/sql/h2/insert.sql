@@ -8,7 +8,6 @@ INSERT INTO xapi_statement SET
 id = :primary-key,
 statement_id = :statement-id,
 statement_ref_id = :statement-ref-id,
-stored = :stored,
 registration = :registration,
 verb_iri = :verb-iri,
 is_voided = :voided?,

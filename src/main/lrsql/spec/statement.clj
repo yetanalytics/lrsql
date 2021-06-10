@@ -46,8 +46,8 @@
 (s/def ::related-actors? boolean?)
 (s/def ::related-activities? boolean?)
 
-(s/def ::since inst?)
-(s/def ::until inst?)
+(s/def ::since uuid? #_inst?)
+(s/def ::until uuid? #_inst?)
 (s/def ::from uuid?)
 
 (s/def ::limit nat-int?)
@@ -66,7 +66,6 @@
 ;; - id:               SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - statement_id:     UUID NOT NULL UNIQUE KEY
 ;; - statement_ref_id: UUID
-;; - stored:           TIMESTAMP NOT NULL
 ;; - registration:     UUID
 ;; - verb_iri:         STRING NOT NULL
 ;; - is_voided:        BOOLEAN NOT NULL DEFAULT FALSE
@@ -76,7 +75,6 @@
   (s/keys :req-un [::c/primary-key
                    ::statement-id
                    ::statement-ref-id ; nilable
-                   ::stored
                    ::registration     ; nilable
                    ::verb-iri
                    ::voided?

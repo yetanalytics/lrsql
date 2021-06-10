@@ -38,7 +38,7 @@ WHERE statement_id = :statement-id
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
-SELECT DISTINCT stmt.id, stmt.stored, stmt.payload
+SELECT DISTINCT stmt.id, stmt.payload
 FROM xapi_statement stmt
   LEFT JOIN statement_to_statement
     ON stmt.statement_id = statement_to_statement.ancestor_id
@@ -60,8 +60,8 @@ FROM xapi_statement stmt
   ~*/
 WHERE stmt.is_voided = FALSE
   --~ (when (:from params)  "AND stmt.id >= :from")
-  --~ (when (:since params) "AND stmt.stored > :since")
-  --~ (when (:until params) "AND stmt.stored <= :until")
+  --~ (when (:since params) "AND stmt.id > :since")
+  --~ (when (:until params) "AND stmt.id <= :until")
   AND ((
     1
     --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
@@ -84,8 +84,8 @@ WHERE stmt.is_voided = FALSE
           "AND stmt_desc_activ.usage = 'Object'") ~*/
   ))
 /*~ (if (:ascending? params)
-      "ORDER BY stmt.stored ASC, stmt.id ASC"
-      "ORDER BY stmt.stored DESC, stmt.id DESC") ~*/
+      "ORDER BY stmt.id ASC"
+      "ORDER BY stmt.id DESC") ~*/
 LIMIT :limit
 
 /* Statement Object Queries */
