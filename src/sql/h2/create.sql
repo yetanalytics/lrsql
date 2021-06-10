@@ -13,6 +13,21 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   payload          JSON NOT NULL
 )
 
+-- :name create-statement-id-index!
+-- :command :execute
+-- :doc Create a separate index on `xapi_statement.id` in descending order.
+CREATE INDEX ON xapi_statement(id DESC)
+
+-- :name create-statement-verb-index!
+-- :command :execute
+-- :doc Set `xapi_statement.verb_iri` as an index.
+CREATE INDEX ON xapi_statement(verb_iri)
+
+-- :name create-statement-registration-index!
+-- :command :execute
+-- :doc Set `xapi_statement.registration` as an index.
+CREATE INDEX ON xapi_statement(registration)
+
 -- :name create-actor-table!
 -- :command :execute
 -- :doc Create the `actor` table if it does not exist yet.

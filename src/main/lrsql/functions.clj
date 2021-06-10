@@ -18,6 +18,11 @@
 (declare create-statement-to-activity-table!)
 (declare create-statement-to-statement-table!)
 
+;; Statement Indexes
+(declare create-statement-id-index!)
+(declare create-statement-verb-index!)
+(declare create-statement-registration-index!)
+
 ;; Document Tables
 (declare create-state-document-table!)
 (declare create-agent-profile-document-table!)

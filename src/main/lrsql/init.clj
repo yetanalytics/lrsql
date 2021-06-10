@@ -31,6 +31,9 @@
   "Execute SQL commands to create tables if they do not exist."
   [conn]
   (f/create-statement-table! conn)
+  (f/create-statement-id-index! conn)
+  (f/create-statement-verb-index! conn)
+  (f/create-statement-registration-index! conn)
   (f/create-actor-table! conn)
   (f/create-activity-table! conn)
   (f/create-attachment-table! conn)

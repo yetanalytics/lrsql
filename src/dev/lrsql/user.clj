@@ -16,12 +16,13 @@
   (def ds (-> sys' :lrs :connection :conn-pool))
 
   (jdbc/execute! ds ["SET TRACE_LEVEL_FILE 2"])
-  
+
   (crit/bench
    (do (lrsp/-get-statements lrs {} {} #{})
-       (lrsp/-get-statements lrs {} {:ascending true} #{})
-       (lrsp/-get-statements lrs {} {:since "2000-01-01T01:00:00Z"} #{})
-       (lrsp/-get-statements lrs {} {:until "3000-01-01T01:00:00Z"} #{})))
+       (lrsp/-get-statements lrs {} {:verb "https://w3id.org/xapi/video/verbs/seeked"} #{})
+       #_(lrsp/-get-statements lrs {} {:ascending true} #{})
+       #_(lrsp/-get-statements lrs {} {:ascending true :since "2000-01-01T01:00:00Z"} #{})
+       #_(lrsp/-get-statements lrs {} {:ascending true :until "3000-01-01T01:00:00Z"} #{})))
 
   (-> (jdbc/execute! ds ["EXPLAIN ANALYZE
                           SELECT DISTINCT stmt.id, stmt.payload
@@ -29,14 +30,12 @@
                           LEFT JOIN statement_to_statement ON stmt.statement_id = statement_to_statement.ancestor_id
                           LEFT JOIN xapi_statement stmt_desc ON stmt_desc.statement_id = statement_to_statement.descendant_id
                           WHERE stmt.is_voided = TRUE
-                          AND stmt.id > ?
-                          AND stmt.id <= ?
                           AND ((1) OR (1))
-                          ORDER BY stmt.id DESC
+                          ORDER BY stmt.id ASC
                           LIMIT ?
                           "
-                         (util/time->uuid (util/str->time "2000-01-01T01:00:00Z"))
-                         (util/time->uuid (util/str->time "3000-01-01T01:00:00Z"))
+                         #_(util/time->uuid (util/str->time "2000-01-01T01:00:00Z"))
+                         #_(util/time->uuid (util/str->time "3000-01-01T01:00:00Z"))
                          10])
       first
       :PLAN
