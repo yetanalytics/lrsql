@@ -5,7 +5,7 @@
           :db-host   "localhost"
           :db-port   8080
           :db-schema "lrsql"}
-   :default {:db-type   #or [#env DB_TYPE "h2:mem"]
+   :default {:db-type   #or [#env DB_TYPE "h2"] ; DEBUG: switch back to h2:mem
              :db-name   #or [#env DB_NAME "example"]
              :db-host   #or [#env DB_HOST "localhost"]
              :db-port   #or [#env DB_PORT 8080]

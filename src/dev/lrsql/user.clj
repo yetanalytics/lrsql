@@ -7,31 +7,54 @@
   (require '[next.jdbc :as jdbc]
            '[com.yetanalytics.lrs.protocol :as lrsp]
            '[lrsql.util :as util]
-           '[lrsql.lrs-test :refer [stmt-1' stmt-2' stmt-3' stmt-4 stmt-4-attach]])
+           '[criterium.core :as crit])
 
   (def sys (system/system))
   (def sys' (component/start sys))
 
-  (into {} sys)
-
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
 
-  (lrsp/-store-statements lrs {} [stmt-1' stmt-2' stmt-3' stmt-4] [stmt-4-attach])
+  (jdbc/execute! ds ["SET TRACE_LEVEL_FILE 2"])
+  
+  (crit/bench
+   (do (lrsp/-get-statements lrs {} {} #{})
+       (lrsp/-get-statements lrs {} {:ascending true} #{})
+       (lrsp/-get-statements lrs {} {:since "2000-01-01T01:00:00Z"} #{})
+       (lrsp/-get-statements lrs {} {:until "3000-01-01T01:00:00Z"} #{})))
 
-  (lrsp/-get-statements lrs {} {} #{})
-  (doseq [cmd [;; Drop document tables
-               "DROP TABLE IF EXISTS state_document"
-               "DROP TABLE IF EXISTS agent_profile_document"
-               "DROP TABLE IF EXISTS activity_profile_document"
+  (-> (jdbc/execute! ds ["EXPLAIN ANALYZE
+                          SELECT DISTINCT stmt.id, stmt.payload
+                          FROM xapi_statement stmt
+                          LEFT JOIN statement_to_statement ON stmt.statement_id = statement_to_statement.ancestor_id
+                          LEFT JOIN xapi_statement stmt_desc ON stmt_desc.statement_id = statement_to_statement.descendant_id
+                          WHERE stmt.is_voided = TRUE
+                          AND stmt.id > ?
+                          AND stmt.id <= ?
+                          AND ((1) OR (1))
+                          ORDER BY stmt.id DESC
+                          LIMIT ?
+                          "
+                         (util/time->uuid (util/str->time "2000-01-01T01:00:00Z"))
+                         (util/time->uuid (util/str->time "3000-01-01T01:00:00Z"))
+                         10])
+      first
+      :PLAN
+      print)
+
+  (do
+    (doseq [cmd [;; Drop document tables
+                 "DROP TABLE IF EXISTS state_document"
+                 "DROP TABLE IF EXISTS agent_profile_document"
+                 "DROP TABLE IF EXISTS activity_profile_document"
                ;; Drop statement tables
-               "DROP TABLE IF EXISTS statement_to_statement"
-               "DROP TABLE IF EXISTS statement_to_activity"
-               "DROP TABLE IF EXISTS statement_to_actor"
-               "DROP TABLE IF EXISTS attachment"
-               "DROP TABLE IF EXISTS activity"
-               "DROP TABLE IF EXISTS actor"
-               "DROP TABLE IF EXISTS xapi_statement"]]
-    (jdbc/execute! ds [cmd]))
+                 "DROP TABLE IF EXISTS statement_to_statement"
+                 "DROP TABLE IF EXISTS statement_to_activity"
+                 "DROP TABLE IF EXISTS statement_to_actor"
+                 "DROP TABLE IF EXISTS attachment"
+                 "DROP TABLE IF EXISTS activity"
+                 "DROP TABLE IF EXISTS actor"
+                 "DROP TABLE IF EXISTS xapi_statement"]]
+      (jdbc/execute! ds [cmd]))
 
-  (component/stop sys'))
+    (component/stop sys')))
