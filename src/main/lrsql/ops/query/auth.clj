@@ -2,13 +2,16 @@
   (:require [lrsql.functions :as f]
             [lrsql.util.auth :as ua]))
 
-(defn query-api-keys
+(defn query-authentication
+  "Query an API key and its secret key and return a result map containing
+   the scope and auth key map. If the credentials are not found, return a
+   sentinel to indicate that the webserver will return 401 Forbidden."
   [tx input]
   (if-some [scopes (some->> (f/query-credential-scopes tx input)
                             (map :scope)
                             not-empty)]
     ;; Credentials found - return result map
-    (let [{:keys [api-key secret-api-key]}
+    (let [{:keys [api-key secret-key]}
           input
           scope-set (if (every? nil? scopes)
                       ;; Credentials not associated with any scope.
@@ -25,6 +28,6 @@
       {:result {:scopes scope-set
                 :prefix ""
                 :auth   {:username api-key
-                         :password secret-api-key}}})
+                         :password secret-key}}})
     ;; Credentials not found - uh oh!
     {:result :com.yetanalytics.lrs.auth/forbidden}))

@@ -127,5 +127,5 @@ contents = :contents
 INSERT INTO lrs_credential SET
 id = :primary-key,
 api_key = :api-key,
-secret_api_key = :secret-api-key,
+secret_key = :secret-key,
 scope = :scope

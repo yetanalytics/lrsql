@@ -8,7 +8,7 @@
 
 (defn insert-credentials!
   "Insert a seq of credential inputs, each which may have a different scope
-   (but should have the same api keys)."
+   (but should have the same API keys)."
   [tx inputs]
   (doall (map (partial insert-credential! tx)
               inputs)))

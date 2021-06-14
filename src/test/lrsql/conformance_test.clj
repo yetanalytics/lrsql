@@ -18,10 +18,10 @@
               sys' (component/start sys)]
           (auth-cmd/insert-credential! ; Seed the credentials table
            (-> sys' :lrs :connection :conn-pool)
-           {:primary-key    (u/generate-squuid)
-            :api-key        "yeti"
-            :secret-api-key "swordfish"
-            :scope          "all"})
+           {:primary-key (u/generate-squuid)
+            :api-key     "yeti"
+            :secret-key  "swordfish"
+            :scope       "all"})
           (is (conf/conformant?
                "-e" "http://localhost:8080/xapi" "-b" "-z" "-a"
                "-u" "yeti"

@@ -13,8 +13,8 @@
              [username
               password] (cstr/split decoded
                                     #":")]
-         {:api-key        username
-          :secret-api-key password})
+         {:api-key    username
+          :secret-key password})
        (catch Exception _
          (throw (ex-info "Cannot decode authentication header!"
                          {:type ::invalid-auth-header
