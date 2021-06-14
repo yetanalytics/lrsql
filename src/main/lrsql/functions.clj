@@ -23,6 +23,9 @@
 (declare create-agent-profile-document-table!)
 (declare create-activity-profile-document-table!)
 
+;; Credentials
+(declare create-credential-table!)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insert
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -98,4 +101,4 @@
 (declare query-activity-profile-document-ids)
 
 ;; Credentials
-(declare query-credential)
+(declare query-credential-scopes)

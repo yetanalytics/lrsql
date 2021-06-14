@@ -123,8 +123,9 @@ contents = :contents
 -- :name insert-credential!
 -- :command :insert
 -- :result :affected
--- :doc Given an API key, a secret API key, and its scope, insert it into the credential table.
+-- :doc Given API keys and an associated scope, insert it into the credential table.
 INSERT INTO lrs_credential SET
+id = :primary-key,
 api_key = :api-key,
 secret_api_key = :secret-api-key,
 scope = :scope

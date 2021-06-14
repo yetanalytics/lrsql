@@ -39,4 +39,5 @@
   (f/create-statement-to-statement-table! conn)
   (f/create-state-document-table! conn)
   (f/create-agent-profile-document-table! conn)
-  (f/create-activity-profile-document-table! conn))
+  (f/create-activity-profile-document-table! conn)
+  (f/create-credential-table! conn))

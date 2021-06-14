@@ -4,14 +4,13 @@
 
 (defn query-api-keys
   [tx input]
-  (if-some [scopes (some->> (f/query-credential tx input)
+  (if-some [scopes (some->> (f/query-credential-scopes tx input)
                             (map :scope)
                             not-empty)]
     ;; Credentials found - return result map
     (let [{:keys [api-key secret-api-key]}
           input
-          scope-set (into #{} scopes)
-          scope-set (if (= #{nil} scope-set)
+          scope-set (if (every? nil? scopes)
                       ;; Credentials not associated with any scope.
                       ;; The LRS MUST assume a requested scope of
                       ;; "statements/write" and "statements/read/mine"
@@ -19,11 +18,13 @@
                       #{:scopes/statements.write
                         :scopes/statements.read.mine}
                       ;; Return scope set
-                      (->> (disj scope-set nil)
-                           (map ua/scope-str->kw)))]
+                      (->> scopes
+                           (filter some?)
+                           (map ua/scope-str->kw)
+                           (into #{})))]
       {:result {:scopes scope-set
                 :prefix ""
                 :auth   {:username api-key
                          :password secret-api-key}}})
     ;; Credentials not found - uh oh!
-    :com.yetanalytics.lrs.auth/forbidden))
+    {:result :com.yetanalytics.lrs.auth/forbidden}))

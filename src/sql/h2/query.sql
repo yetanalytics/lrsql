@@ -185,7 +185,7 @@ WHERE activity_iri = :activity-iri
 -- :name query-credential-scopes
 -- :command :query
 -- :result :many
--- :doc Given an API key and a secret API key, return all authorized scopes (including NULL).
+-- :doc Given an API key and a secret API key, return all authorized scopes (including NULL). Returns an empty coll if the credential is not present.
 SELECT scope FROM lrs_credential
 WHERE api_key = :api-key
 AND secret_api_key = :secret-api-key

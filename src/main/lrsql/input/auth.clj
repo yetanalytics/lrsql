@@ -2,16 +2,16 @@
   (:require [clojure.string :as cstr])
   (:import [java.util Base64 Base64$Decoder]))
 
-(def decoder (Base64/getDecoder))
+(def ^Base64$Decoder decoder (Base64/getDecoder))
 
 (defn auth-input
   [^String auth-header]
-  (try (let [auth-part  (subs auth-header 6)
+  (try (let [auth-part  (subs auth-header 6) ; Remove "Basic " prefix
+             decoded    (String. (.decode    ; Base64 -> "username:password"
+                                  decoder
+                                  auth-part))
              [username
-              password] (cstr/split (String. (.decode
-                                              ^Base64$Decoder
-                                              decoder
-                                              auth-part))
+              password] (cstr/split decoded
                                     #":")]
          {:api-key        username
           :secret-api-key password})

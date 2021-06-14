@@ -33,13 +33,13 @@
     :as _auth-identity}]
   {:result
    (or (contains? scopes :scope/all)
-       (and (contains? scopes :scope.all/read)
+       (and (contains? scopes :scope/all/read)
             (#{:get :head} request-method))
        (and (.endsWith ^String path-info "statements")
             (or (and (#{:get :head} request-method)
-                     (contains? scopes :scope.statements/read))
+                     (contains? scopes :scope/statements.read))
                 (and (#{:put :post} request-method)
-                     (contains? scopes :scope.statements/write))))
+                     (contains? scopes :scope/statements.write))))
        ;; TODO: this could be implemented much faster
        ;; TODO: implement scopes: statements/read/mine, state, define, profile
        false)})
