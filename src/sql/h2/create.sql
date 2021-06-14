@@ -130,3 +130,23 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
   content_length INTEGER NOT NULL,
   contents       BINARY NOT NULL
 )
+
+/* Credential Table */
+
+-- TODO: Create (non-unique) index on api_key and secret_api_key
+-- :name create-credential-table!
+-- :command :execute
+-- :doc Create the `lrs_credential` table if it does not exist yet.
+CREATE TABLE IF NOT EXISTS lrs_credential (
+  id             UUID NOT NULL PRIMARY KEY,
+  api_key        VARCHAR(255) NOT NULL,
+  secret_api_key VARCHAR(255) NOT NULL,
+  scope          ENUM('statements/write',
+                      'statements/read/mine',
+                      'statements/read',
+                      'state',
+                      'define',
+                      'profile',
+                      'all/read',
+                      'all') -- nullable
+)

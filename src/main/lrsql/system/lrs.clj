@@ -1,22 +1,24 @@
 (ns lrsql.system.lrs
-  (:require [clojure.spec.alpha :as s]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.init :as init]
             [lrsql.input.actor     :as agent-input]
             [lrsql.input.activity  :as activity-input]
+            [lrsql.input.auth      :as auth-input]
             [lrsql.input.statement :as stmt-input]
             [lrsql.input.document  :as doc-input]
             [lrsql.ops.command.document  :as doc-cmd]
             [lrsql.ops.command.statement :as stmt-cmd]
             [lrsql.ops.query.actor     :as actor-q]
             [lrsql.ops.query.activity  :as activ-q]
+            [lrsql.ops.query.auth      :as auth-q]
             [lrsql.ops.query.document  :as doc-q]
             [lrsql.ops.query.statement :as stmt-q]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
+            [lrsql.util.auth :as auth-util]
             [lrsql.util.statement :as stmt-util]
             [lrsql.util :as u])
   (:import [java.time Instant]))
@@ -43,7 +45,7 @@
 
   lrsp/AboutResource
   (-get-about
-   [lrs auth-identity]
+   [_lrs _auth-identity]
    ;; TODO: Add 2.X.X versions
    {:body {:version ["1.0.0" "1.0.1" "1.0.2" "1.0.3"]}})
 
@@ -145,7 +147,11 @@
   lrsp/LRSAuth
   (-authenticate
     [lrs ctx]
-    )
+    (let [conn   (lrs-conn lrs)
+          header (get-in ctx [:request :headers "authorization"])
+          input  (auth-input/auth-input header)]
+      (jdbc/with-transaction [tx conn]
+        (auth-q/query-api-keys tx input))))
   (-authorize
-   [lrs ctx auth-identity]
-   {:result true}))
+   [_lrs ctx auth-identity]
+   (auth-util/authorize-action ctx auth-identity)))

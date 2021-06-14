@@ -117,3 +117,14 @@ last_modified = :last-modified,
 content_type = :content-type,
 content_length = :content-length,
 contents = :contents
+
+/* Credentials */
+
+-- :name insert-credential!
+-- :command :insert
+-- :result :affected
+-- :doc Given an API key, a secret API key, and its scope, insert it into the credential table.
+INSERT INTO lrs_credential SET
+api_key = :api-key,
+secret_api_key = :secret-api-key,
+scope = :scope
