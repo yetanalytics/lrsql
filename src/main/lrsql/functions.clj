@@ -79,6 +79,7 @@
 ;; Statements
 (declare query-statement)
 (declare query-statements)
+(declare query-statements-2)
 (declare query-statement-exists)
 
 ;; Statement Objects

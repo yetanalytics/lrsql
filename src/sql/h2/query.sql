@@ -88,6 +88,70 @@ WHERE stmt.is_voided = FALSE
       "ORDER BY stmt.id DESC") ~*/
 LIMIT :limit
 
+-- :name query-statements-2
+-- :command :query
+-- :result :many
+-- :doc Query for one or more statements using statement resource parameters.
+SELECT DISTINCT id, payload FROM (
+  SELECT stmt.id, stmt.payload
+  FROM xapi_statement AS stmt
+  /*~
+    (when (:actor-ifi params)
+      (str "INNER JOIN statement_to_actor stmt_actor"
+           "\nON stmt.statement_id = stmt_actor.statement_id"
+           "\nAND stmt_actor.actor_ifi = :actor-ifi"
+           (when-not (:related-actors? params)
+             "\nAND stmt_actor.usage = 'Actor'")))
+  ~*/
+  /*~
+    (when (:activity-iri params)
+      (str "INNER JOIN statement_to_activity stmt_activ"
+           "\nON stmt.statement_id = stmt_activ.statement_id"
+           "\nAND stmt_activ.activity_iri = :activity-iri"
+           (when-not (:related-activities? params)
+             "\nAND stmt_activ.usage = 'Object'")))
+  ~*/
+  WHERE stmt.is_voided = FALSE
+  --~ (when (:from params)  "AND stmt.id >= :from")
+  --~ (when (:since params) "AND stmt.id > :since")
+  --~ (when (:until params) "AND stmt.id <= :until")
+  --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
+  --~ (when (:registration params) "AND stmt.registration = :registration")
+) UNION (
+  SELECT DISTINCT stmt_ans.id, stmt_ans.payload
+  FROM xapi_statement AS stmt_ans
+  INNER JOIN statement_to_statement
+    ON stmt_ans.statement_id = statement_to_statement.ancestor_id
+  INNER JOIN xapi_statement stmt_desc
+    ON stmt_desc.statement_id = statement_to_statement.descendant_id
+  /*~
+    (when (:actor-ifi params)
+      (str "INNER JOIN statement_to_actor stmt_desc_actor"
+           "\nON stmt_desc.statement_id = stmt_desc_actor.statement_id"
+           "\nAND stmt_desc_actor.actor_ifi = :actor-ifi"
+           (when-not (:related-actors? params)
+             "\nAND stmt_desc_actor.usage = 'Actor'")))
+  ~*/
+  /*~
+    (when (:activity-iri params)
+      (str "INNER JOIN statement_to_activity stmt_desc_activ"
+           "\nON stmt_desc.statement_id = stmt_desc_activ.statement_id"
+           "\nAND stmt_desc_activ.activity_iri = :activity-iri"
+           (when-not (:related-activities? params)
+             "\nAND stmt_desc_activ.usage = 'Object'")))
+  ~*/
+  WHERE 1
+  --~ (when (:from params)  "AND stmt_ans.id >= :from")
+  --~ (when (:since params) "AND stmt_ans.id > :since")
+  --~ (when (:until params) "AND stmt_ans.id <= :until")
+  --~ (when (:verb-iri params)     "AND stmt_desc.verb_iri = :verb-iri")
+  --~ (when (:registration params) "AND stmt_desc.registration = :registration")
+)
+/*~ (if (:ascending? params)
+      "ORDER BY id ASC"
+      "ORDER BY id DESC") ~*/
+LIMIT :limit
+
 /* Statement Object Queries */
 
 -- :name query-actor
