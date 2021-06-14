@@ -1,5 +1,6 @@
 (ns lrsql.util.auth
-  (:require [clojure.set :as cset]))
+  (:require [clojure.set :as cset]
+            [clojure.tools.logging :as log]))
 
 (def scope-str-kw-map
   {"all"                  :scope/all
@@ -22,6 +23,8 @@
   [scope-kw]
   (get scope-kw-str-map scope-kw))
 
+;; Mostly copied from the third LRS:
+;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc
 (defn authorize-action
   "Given a pedestal context and an auth identity, authorize or deny."
   [{{:keys [request-method path-info]} :request
@@ -33,13 +36,21 @@
     :as _auth-identity}]
   {:result
    (or (contains? scopes :scope/all)
-       (and (contains? scopes :scope/all/read)
+       (and (contains? scopes :scope/all.read)
             (#{:get :head} request-method))
        (and (.endsWith ^String path-info "statements")
             (or (and (#{:get :head} request-method)
                      (contains? scopes :scope/statements.read))
                 (and (#{:put :post} request-method)
                      (contains? scopes :scope/statements.write))))
-       ;; TODO: this could be implemented much faster
        ;; TODO: implement scopes: statements/read/mine, state, define, profile
-       false)})
+       (do
+         (let [scopes' (dissoc scopes
+                               :scope/all
+                               :scope/all.read
+                               :scope/statements.read
+                               :scope/statements.write)]
+           (when (not-empty scopes')
+             (log/errorf "Scopes not currently implemented: %s"
+                         (->> scopes' (map scope-kw->str) vec))))
+         false))})
