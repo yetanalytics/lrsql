@@ -46,11 +46,13 @@
 
 (defn insert-default-creds!
   "Seed the credential table with the default API key and secret, which are
-   set by the environmental variables. The scope of the default credentials is
-   hardcoded as \"all\"."
-  [conn username password]
-  (let [input {:primary-key (u/generate-squuid)
-               :api-key     username
-               :secret-key  password
-               :scope       "all"}]
-    (auth-cmd/insert-credential! conn input)))
+   set by the environmental variables. The scope of the default credentials
+   would be hardcoded as \"all\". Does not seed the table when the username
+   or password is nil."
+  [conn ?username ?password]
+  (when (and ?username ?password)
+    (let [input {:primary-key (u/generate-squuid)
+                 :api-key     ?username
+                 :secret-key  ?password
+                 :scope       "all"}]
+      (auth-cmd/insert-credential! conn input))))

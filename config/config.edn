@@ -16,10 +16,10 @@
  {:database             #ref [:database]
   :api-key-default      #profile
                          {:test "username"
-                          :default #or [#env API_KEY "username"]}
+                          :default #or [#env API_KEY nil]}
   :api-secret-default   #profile
                          {:test "password"
-                          :default #or [#env API_SECRET_KEY "password"]}
+                          :default #or [#env API_SECRET nil]}
   :stmt-more-url-prefix #profile
                          {:test    ""
                           :default #or [#env STATEMENT_MORE_URL_PREFIX ""]}
