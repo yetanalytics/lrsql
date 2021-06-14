@@ -4,6 +4,7 @@
             [lrsql.input.actor      :as i-ac]
             [lrsql.input.activity   :as i-av]
             [lrsql.input.attachment :as i-at]
+            [lrsql.input.auth       :as i-auth]
             [lrsql.input.statement  :as i-stmt]
             [lrsql.input.document   :as i-doc]))
 
@@ -35,3 +36,8 @@
     (is (nil? (check-validate `i-doc/document-input)))
     (is (nil? (check-validate `i-doc/document-ids-input)))
     (is (nil? (check-validate `i-doc/document-multi-input)))))
+
+(deftest test-auth
+  (testing "authentication inputs"
+    (is (nil? (check-validate i-auth/auth-input)))
+    (is (nil? (check-validate i-auth/auth-scope-inputs)))))
