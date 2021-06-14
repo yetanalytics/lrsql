@@ -49,7 +49,7 @@
 
   lrsp/StatementsResource
   (-store-statements
-   [lrs auth-identity statements attachments]
+   [lrs _auth-identity statements attachments]
    (let [conn
          (lrs-conn lrs)
          stmts
@@ -77,7 +77,7 @@
                               (map u/uuid->str)
                               vec)}))))
   (-get-statements
-   [lrs auth-identity params ltags]
+   [lrs _auth-identity params ltags]
    (let [conn   (lrs-conn lrs)
          config (:config lrs)
          inputs (->> params
@@ -87,14 +87,14 @@
      (jdbc/with-transaction [tx conn]
        (stmt-q/query-statements tx inputs ltags))))
   (-consistent-through
-   [this ctx auth-identity]
+   [_lrs _ctx _auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want
     ;; to use the tx-inst pattern and set it to that
     (.toString (Instant/now)))
 
   lrsp/DocumentResource
   (-set-document
-   [lrs auth-identity params document merge?]
+   [lrs _auth-identity params document merge?]
    (let [conn  (lrs-conn lrs)
          input (doc-input/document-insert-input params document)]
      (jdbc/with-transaction [tx conn]
@@ -102,25 +102,25 @@
          (doc-cmd/update-document! tx input)
          (doc-cmd/insert-document! tx input)))))
   (-get-document
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (doc-input/document-input params)]
      (jdbc/with-transaction [tx conn]
        (doc-q/query-document tx input))))
   (-get-document-ids
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (doc-input/document-ids-input params)]
      (jdbc/with-transaction [tx conn]
        (doc-q/query-document-ids tx input))))
   (-delete-document
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (doc-input/document-input params)]
      (jdbc/with-transaction [tx conn]
        (doc-cmd/delete-document! tx input))))
   (-delete-documents
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (doc-input/document-multi-input params)]
      (jdbc/with-transaction [tx conn]
@@ -128,7 +128,7 @@
 
   lrsp/AgentInfoResource
   (-get-person
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (agent-input/agent-query-input params)]
      (jdbc/with-transaction [tx conn]
@@ -136,7 +136,7 @@
 
   lrsp/ActivityInfoResource
   (-get-activity
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (activity-input/activity-query-input params)]
      (jdbc/with-transaction [tx conn]
@@ -144,12 +144,8 @@
 
   lrsp/LRSAuth
   (-authenticate
-    [this ctx]
-    ;; TODO: Actual auth
-    {:result
-     {:scopes #{:scope/all}
-      :prefix ""
-      :auth {:no-op {}}}})
+    [lrs ctx]
+    )
   (-authorize
-   [this ctx auth-identity]
+   [lrs ctx auth-identity]
    {:result true}))
