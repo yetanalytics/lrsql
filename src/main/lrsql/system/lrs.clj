@@ -32,12 +32,17 @@
   component/Lifecycle
   (start
    [lrs]
-   (assert-config ::cs/lrs "LRS" config)
-   (init/init-hugsql-adapter!)
-   (init/init-hugsql-fns! (-> config :database :db-type))
-   (init/create-tables! (:conn-pool connection))
-   (log/info "Starting new LRS")
-   (assoc lrs :connection connection))
+   (let [db-type (-> config :database :db-type)
+         conn    (-> connection :conn-pool)
+         uname   (-> config :api-key-default)
+         pass    (-> config :api-secret-default)]
+     (assert-config ::cs/lrs "LRS" config)
+     (init/init-hugsql-adapter!)
+     (init/init-hugsql-fns! db-type)
+     (init/create-tables! conn)
+     (init/insert-default-creds! conn uname pass)
+     (log/info "Starting new LRS")
+     (assoc lrs :connection connection)))
   (stop
    [lrs]
    (log/info "Stopping LRS...")
