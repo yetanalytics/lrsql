@@ -39,5 +39,5 @@
 
 (deftest test-auth
   (testing "authentication inputs"
-    (is (nil? (check-validate i-auth/auth-input)))
-    (is (nil? (check-validate i-auth/auth-scope-inputs)))))
+    (is (nil? (check-validate `i-auth/auth-input)))
+    (is (nil? (check-validate `i-auth/auth-scope-inputs)))))
