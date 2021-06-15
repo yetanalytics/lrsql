@@ -1,8 +1,8 @@
 (ns lrsql.conformance-test
   (:require [clojure.test :as t :refer [deftest testing is]]
             [com.stuartsierra.component :as component]
-            [lrsql.system :as system]
             [com.yetanalytics.lrs.test-runner :as conf]
+            [lrsql.system :as system]
             [lrsql.test-support :as support]))
 
 (t/use-fixtures :each support/fresh-db-fixture)
@@ -15,5 +15,7 @@
         (let [sys  (system/system :test)
               sys' (component/start sys)]
           (is (conf/conformant?
-               "-e" "http://localhost:8080/xapi" "-b" "-z"))
+               "-e" "http://localhost:8080/xapi" "-b" "-z" "-a"
+               "-u" "username"
+               "-p" "password"))
           (component/stop sys'))))))

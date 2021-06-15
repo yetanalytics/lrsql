@@ -179,3 +179,13 @@ WHERE agent_ifi = :agent-ifi
 SELECT profile_id FROM activity_profile_document
 WHERE activity_iri = :activity-iri
 --~ (when (:since params) "AND last_modified > :since")
+
+/* Credentials */
+
+-- :name query-credential-scopes
+-- :command :query
+-- :result :many
+-- :doc Given an API key and a secret API key, return all authorized scopes (including NULL). Returns an empty coll if the credential is not present.
+SELECT scope FROM lrs_credential
+WHERE api_key = :api-key
+AND secret_key = :secret-key
