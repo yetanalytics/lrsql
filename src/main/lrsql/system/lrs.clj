@@ -1,22 +1,24 @@
 (ns lrsql.system.lrs
-  (:require [clojure.spec.alpha :as s]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as component]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.init :as init]
             [lrsql.input.actor     :as agent-input]
             [lrsql.input.activity  :as activity-input]
+            [lrsql.input.auth      :as auth-input]
             [lrsql.input.statement :as stmt-input]
             [lrsql.input.document  :as doc-input]
             [lrsql.ops.command.document  :as doc-cmd]
             [lrsql.ops.command.statement :as stmt-cmd]
             [lrsql.ops.query.actor     :as actor-q]
             [lrsql.ops.query.activity  :as activ-q]
+            [lrsql.ops.query.auth      :as auth-q]
             [lrsql.ops.query.document  :as doc-q]
             [lrsql.ops.query.statement :as stmt-q]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
+            [lrsql.util.auth :as auth-util]
             [lrsql.util.statement :as stmt-util]
             [lrsql.util :as u])
   (:import [java.time Instant]))
@@ -30,12 +32,17 @@
   component/Lifecycle
   (start
    [lrs]
-   (assert-config ::cs/lrs "LRS" config)
-   (init/init-hugsql-adapter!)
-   (init/init-hugsql-fns! (-> config :database :db-type))
-   (init/create-tables! (:conn-pool connection))
-   (log/info "Starting new LRS")
-   (assoc lrs :connection connection))
+   (let [db-type (-> config :database :db-type)
+         conn    (-> connection :conn-pool)
+         uname   (-> config :api-key-default)
+         pass    (-> config :api-secret-default)]
+     (assert-config ::cs/lrs "LRS" config)
+     (init/init-hugsql-adapter!)
+     (init/init-hugsql-fns! db-type)
+     (init/create-tables! conn)
+     (init/insert-default-creds! conn uname pass)
+     (log/info "Starting new LRS")
+     (assoc lrs :connection connection)))
   (stop
    [lrs]
    (log/info "Stopping LRS...")
@@ -43,13 +50,13 @@
 
   lrsp/AboutResource
   (-get-about
-   [lrs auth-identity]
+   [_lrs _auth-identity]
    ;; TODO: Add 2.X.X versions
    {:body {:version ["1.0.0" "1.0.1" "1.0.2" "1.0.3"]}})
 
   lrsp/StatementsResource
   (-store-statements
-   [lrs auth-identity statements attachments]
+   [lrs _auth-identity statements attachments]
    (let [conn
          (lrs-conn lrs)
          stmts
@@ -77,7 +84,7 @@
                               (map u/uuid->str)
                               vec)}))))
   (-get-statements
-   [lrs auth-identity params ltags]
+   [lrs _auth-identity params ltags]
    (let [conn   (lrs-conn lrs)
          config (:config lrs)
          inputs (->> params
@@ -87,14 +94,14 @@
      (jdbc/with-transaction [tx conn]
        (stmt-q/query-statements tx inputs ltags))))
   (-consistent-through
-   [this ctx auth-identity]
+   [_lrs _ctx _auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want
     ;; to use the tx-inst pattern and set it to that
     (.toString (Instant/now)))
 
   lrsp/DocumentResource
   (-set-document
-   [lrs auth-identity params document merge?]
+   [lrs _auth-identity params document merge?]
    (let [conn  (lrs-conn lrs)
          input (doc-input/document-insert-input params document)]
      (jdbc/with-transaction [tx conn]
@@ -102,25 +109,25 @@
          (doc-cmd/update-document! tx input)
          (doc-cmd/insert-document! tx input)))))
   (-get-document
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (doc-input/document-input params)]
      (jdbc/with-transaction [tx conn]
        (doc-q/query-document tx input))))
   (-get-document-ids
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (doc-input/document-ids-input params)]
      (jdbc/with-transaction [tx conn]
        (doc-q/query-document-ids tx input))))
   (-delete-document
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (doc-input/document-input params)]
      (jdbc/with-transaction [tx conn]
        (doc-cmd/delete-document! tx input))))
   (-delete-documents
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (doc-input/document-multi-input params)]
      (jdbc/with-transaction [tx conn]
@@ -128,7 +135,7 @@
 
   lrsp/AgentInfoResource
   (-get-person
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (agent-input/agent-query-input params)]
      (jdbc/with-transaction [tx conn]
@@ -136,7 +143,7 @@
 
   lrsp/ActivityInfoResource
   (-get-activity
-   [lrs auth-identity params]
+   [lrs _auth-identity params]
    (let [conn  (lrs-conn lrs)
          input (activity-input/activity-query-input params)]
      (jdbc/with-transaction [tx conn]
@@ -144,12 +151,12 @@
 
   lrsp/LRSAuth
   (-authenticate
-    [this ctx]
-    ;; TODO: Actual auth
-    {:result
-     {:scopes #{:scope/all}
-      :prefix ""
-      :auth {:no-op {}}}})
+    [lrs ctx]
+    (let [conn   (lrs-conn lrs)
+          header (get-in ctx [:request :headers "authorization"])
+          input  (auth-input/auth-input header)]
+      (jdbc/with-transaction [tx conn]
+        (auth-q/query-authentication tx input))))
   (-authorize
-   [this ctx auth-identity]
-   {:result true}))
+   [_lrs ctx auth-identity]
+   (auth-util/authorize-action ctx auth-identity)))
