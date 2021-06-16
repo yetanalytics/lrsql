@@ -151,12 +151,12 @@
 
   lrsp/LRSAuth
   (-authenticate
-    [lrs ctx]
-    (let [conn   (lrs-conn lrs)
-          header (get-in ctx [:request :headers "authorization"])
-          input  (auth-input/auth-input header)]
-      (jdbc/with-transaction [tx conn]
-        (auth-q/query-authentication tx input))))
+   [lrs ctx]
+   (let [conn   (lrs-conn lrs)
+         header (get-in ctx [:request :headers "authorization"])
+         input  (auth-input/auth-input header)]
+     (jdbc/with-transaction [tx conn]
+       (auth-q/query-authentication tx input))))
   (-authorize
    [_lrs ctx auth-identity]
    (auth-util/authorize-action ctx auth-identity)))

@@ -7,23 +7,24 @@
   (require '[next.jdbc :as jdbc]
            '[com.yetanalytics.lrs.protocol :as lrsp]
            '[lrsql.util :as util]
-           '[criterium.core :as crit])
+           '[criterium.core :as crit]
+           '[lrsql.ops.query.auth :as qa])
 
   (def sys (system/system))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
-
+  
   (jdbc/execute! ds ["SET TRACE_LEVEL_FILE 2"])
 
   (count (:statements (:statement-result (lrsp/-get-statements lrs {} {:limit 50} #{}))))
 
   (crit/bench
    (do (lrsp/-get-statements lrs {} {} #{})
-       (lrsp/-get-statements lrs {} {:registration "21a65d8b-c708-4a86-9f39-72f1c023c832"} #{})
+       #_(lrsp/-get-statements lrs {} {:registration "21a65d8b-c708-4a86-9f39-72f1c023c832"} #{})
        #_(lrsp/-get-statements lrs {} {:verb "https://w3id.org/xapi/video/verbs/seeked"} #{})
-       #_(lrsp/-get-statements lrs {} {:ascending true} #{})
+       (lrsp/-get-statements lrs {} {:ascending true} #{})
        #_(lrsp/-get-statements lrs {} {:ascending true :since "2000-01-01T01:00:00Z"} #{})
        #_(lrsp/-get-statements lrs {} {:ascending true :until "3000-01-01T01:00:00Z"} #{})))
 
@@ -37,6 +38,7 @@
   (-> (jdbc/execute! ds ["EXPLAIN ANALYZE
                           SELECT stmt.id, stmt.payload
                           FROM xapi_statement stmt
+                          USE INDEX (stmt_id_desc, verb_idx)
                           LEFT JOIN statement_to_statement ON stmt.statement_id = statement_to_statement.ancestor_id
                           LEFT JOIN xapi_statement stmt_desc ON stmt_desc.statement_id = statement_to_statement.descendant_id
                           "
@@ -130,7 +132,7 @@
       print)
   
   (-> (jdbc/execute! ds ["EXPLAIN ANALYZE
-                          SELECT id FROM
+                          SELECT id FROM USE INDEX
                           (SELECT t_ans.id FROM tbl_1 AS t_ans
                            WHERE t_ans.num = 4)
                           UNION
@@ -148,7 +150,9 @@
     (jdbc/execute! ds ["DROP TABLE tbl_1"]))
 
   (do
-    (doseq [cmd [;; Drop document tables
+    (doseq [cmd [;; Drop credentials table
+                 "DROP TABLE IF EXISTS lrs_credential"
+                 ;; Drop document tables
                  "DROP TABLE IF EXISTS state_document"
                  "DROP TABLE IF EXISTS agent_profile_document"
                  "DROP TABLE IF EXISTS activity_profile_document"
