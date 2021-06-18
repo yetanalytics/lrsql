@@ -8,7 +8,8 @@
   io.pedestal/pedestal.jetty             {:mvn/version "0.5.7"}
   com.mchange/c3p0                       {:mvn/version "0.9.5.5"}
   com.github.seancorfield/next.jdbc      {:mvn/version "1.2.659"}
-  com.layerware/hugsql                   {:mvn/version "0.5.1"}
+  ;; com.layerware/hugsql                   {:mvn/version "0.5.1"}
+  com.yetanalytics/hugsql                {:mvn/version "0.6.0-SNAPSHOT"}
   com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
   com.stuartsierra/component             {:mvn/version "1.0.0"}
   org.clojure/tools.logging              {:mvn/version "1.1.0"}
