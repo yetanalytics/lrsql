@@ -44,45 +44,10 @@ FROM xapi_statement stmt
     ON stmt.statement_id = statement_to_statement.ancestor_id
   LEFT JOIN xapi_statement stmt_desc
     ON stmt_desc.statement_id = statement_to_statement.descendant_id
-  /*~
-  (when (:actor-ifi params)
-    (str "  LEFT JOIN statement_to_actor stmt_actor\n"
-         "    ON stmt.statement_id = stmt_actor.statement_id\n"
-         "  LEFT JOIN statement_to_actor stmt_desc_actor\n"
-         "    ON stmt_desc.statement_id = stmt_desc_actor.statement_id"))
-  ~*/
-  /*~
-  (when (:activity-iri params)
-    (str "  LEFT JOIN statement_to_activity stmt_activ\n"
-         "    ON stmt.statement_id = stmt_activ.statement_id\n"
-         "  LEFT JOIN statement_to_activity stmt_desc_activ\n"
-         "    ON stmt_desc.statement_id = stmt_desc_activ.statement_id"))
-  ~*/
 WHERE stmt.is_voided = FALSE
   --~ (when (:from params)  "AND stmt.id >= :from")
   --~ (when (:since params) "AND stmt.id > :since")
   --~ (when (:until params) "AND stmt.id <= :until")
-  AND ((
-    1
-    --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
-    --~ (when (:registration params) "AND stmt.registration = :registration")
-    --~ (when (:actor-ifi params)    "AND stmt_actor.actor_ifi = :actor-ifi")
-    --~ (when (:activity-iri params) "AND stmt_activ.activity_iri = :activity-iri")
-    /*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
-          "AND stmt_actor.usage = 'Actor'") ~*/
-    /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
-          "AND stmt_activ.usage = 'Object'") ~*/
-  ) OR (
-    1
-    --~ (when (:verb-iri params)     "AND stmt_desc.verb_iri = :verb-iri")
-    --~ (when (:registration params) "AND stmt_desc.registration = :registration")
-    --~ (when (:actor-ifi params)    "AND stmt_desc_actor.actor_ifi = :actor-ifi")
-    --~ (when (:activity-iri params) "AND stmt_desc_activ.activity_iri = :activity-iri")
-    /*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
-          "AND stmt_desc_actor.usage = 'Actor'") ~*/
-    /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
-          "AND stmt_desc_activ.usage = 'Object'") ~*/
-  ))
 /*~ (if (:ascending? params)
       "ORDER BY stmt.id ASC"
       "ORDER BY stmt.id DESC") ~*/
