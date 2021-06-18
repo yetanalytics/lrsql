@@ -6,7 +6,6 @@
 CREATE TABLE IF NOT EXISTS xapi_statement (
   id               UUID NOT NULL PRIMARY KEY,
   statement_id     UUID NOT NULL UNIQUE,
-  statement_ref_id UUID,
   registration     UUID,
   verb_iri         VARCHAR(255) NOT NULL,
   is_voided        BOOLEAN DEFAULT FALSE NOT NULL,
