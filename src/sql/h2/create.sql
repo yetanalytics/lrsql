@@ -151,4 +151,5 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
                   'profile', -- unimplemented
                   'all/read',
                   'all') -- enum is nullable
-)
+);
+CREATE INDEX ON lrs_credential(api_key, secret_key)
