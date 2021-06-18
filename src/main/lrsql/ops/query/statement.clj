@@ -40,13 +40,7 @@
   [tx input ltags]
   (let [{:keys [format limit attachments? query-params]} input
         input'        (if limit (update input :limit inc) input)
-        query-fn      (if (or (contains? input :verb-iri)
-                              (contains? input :actor-ifi)
-                              (contains? input :activity-iri)
-                              (contains? input :registration))
-                        f/query-statements-2
-                        f/query-statements)
-        query-results (query-fn tx input')
+        query-results (f/query-statements tx input')
         ?next-cursor  (when (and limit
                                  (= (inc limit) (count query-results)))
                         (-> query-results last :id u/uuid->str))
