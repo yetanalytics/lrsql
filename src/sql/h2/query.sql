@@ -45,28 +45,29 @@ WHERE statement_id = :statement-id
 --~ (when (:since params) "AND stmt.id > :since")
 --~ (when (:until params) "AND stmt.id <= :until")
 
--- :frag no-param-stmts-query-frag
-SELECT DISTINCT stmt.id, stmt.payload
-FROM xapi_statement stmt
-LEFT JOIN statement_to_statement
-  ON stmt.statement_id = statement_to_statement.ancestor_id
-LEFT JOIN xapi_statement stmt_desc
-  ON stmt_desc.statement_id = statement_to_statement.descendant_id
-WHERE stmt.is_voided = FALSE
-:frag:from-since-until-frag
---~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
-
 -- :frag stmts-actor-join-frag
 INNER JOIN statement_to_actor stmt_actor
-ON stmt.statement_id = stmt_actor.statement_id
-AND stmt_actor.actor_ifi = :actor-ifi
---~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'")
+  ON stmt.statement_id = stmt_actor.statement_id
+  AND stmt_actor.actor_ifi = :actor-ifi
+--~ (when-not (:related-actors? params) "  AND stmt_actor.usage = 'Actor'")
 
 -- :frag stmts-activ-join-frag
 INNER JOIN statement_to_activity stmt_activ
-ON stmt.statement_id = stmt_activ.statement_id
-AND stmt_activ.activity_iri = :activity-iri
---~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'")
+  ON stmt.statement_id = stmt_activ.statement_id
+  AND stmt_activ.activity_iri = :activity-iri
+--~ (when-not (:related-activities? params) "  AND stmt_activ.usage = 'Object'")
+
+-- :frag stmt-desc-actor-join-frag
+INNER JOIN statement_to_actor stmt_desc_actor
+  ON stmt_desc.statement_id = stmt_desc_actor.statement_id
+  AND stmt_desc_actor.actor_ifi = :actor-ifi
+--~ (when-not (:related-actors? params) "  AND stmt_desc_actor.usage = 'Actor'")
+
+-- :frag stmt-desc-activ-join-frag
+INNER JOIN statement_to_activity stmt_desc_activ
+  ON stmt_desc.statement_id = stmt_desc_activ.statement_id
+  AND stmt_desc_activ.activity_iri = :activity-iri
+--~ (when-not (:related-activities? params) "  AND stmt_desc_activ.usage = 'Object'")
 
 -- :frag stmt-subquery-frag
 SELECT stmt.id, stmt.payload
@@ -77,18 +78,6 @@ WHERE stmt.is_voided = FALSE
 :frag:from-since-until-frag
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt.registration = :registration")
-
--- :frag stmt-desc-actor-join-frag
-INNER JOIN statement_to_actor stmt_desc_actor
-ON stmt_desc.statement_id = stmt_desc_actor.statement_id
-AND stmt_desc_actor.actor_ifi = :actor-ifi
---~ (when-not (:related-actors? params) "AND stmt_desc_actor.usage = 'Actor'")
-
--- :frag stmt-desc-activ-join-frag
-INNER JOIN statement_to_activity stmt_desc_activ
-ON stmt_desc.statement_id = stmt_desc_activ.statement_id
-AND stmt_desc_activ.activity_iri = :activity-iri
---~ (when-not (:related-activities? params) "AND stmt_desc_activ.usage = 'Object'")
 
 -- :frag stmt-desc-subquery-frag
 SELECT DISTINCT stmt.id, stmt.payload
@@ -105,24 +94,36 @@ WHERE 1
 --~ (when (:registration params) "AND stmt_desc.registration = :registration")
 
 -- :frag params-stmt-query-frag
-SELECT DISTINCT id, payload
-FROM (:frag:stmt-subquery-frag)
-UNION (:frag:stmt-desc-subquery-frag)
+SELECT DISTINCT id, payload FROM (
+  :frag:stmt-subquery-frag) UNION (
+  :frag:stmt-desc-subquery-frag)
 --~ (if (:ascending? params) "ORDER BY id ASC" "ORDER BY id DESC")
+LIMIT :limit
+
+-- :frag no-param-stmts-query-frag
+SELECT DISTINCT stmt.id, stmt.payload
+FROM xapi_statement stmt
+LEFT JOIN statement_to_statement
+  ON stmt.statement_id = statement_to_statement.ancestor_id
+LEFT JOIN xapi_statement stmt_desc
+  ON stmt_desc.statement_id = statement_to_statement.descendant_id
+WHERE stmt.is_voided = FALSE
+:frag:from-since-until-frag
+--~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
+LIMIT :limit
 
 -- :name query-statements
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
 /*~
-(if-not (or (:actor-ifi params)
-            (:activity-iri params)
-            (:verb-iri params)
-            (:registration params))
-  ":frag:no-param-stmts-query-frag"
-  ":frag:params-stmt-query-frag")
+(if (or (:actor-ifi params)
+        (:activity-iri params)
+        (:verb-iri params)
+        (:registration params))
+  ":frag:params-stmt-query-frag"
+  ":frag:no-param-stmts-query-frag")
 ~*/
-LIMIT :limit
 
 /* Statement Object Queries */
 
