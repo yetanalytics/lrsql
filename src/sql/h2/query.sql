@@ -78,6 +78,7 @@ WHERE stmt.is_voided = FALSE
 :frag:from-since-until-frag
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt.registration = :registration")
+LIMIT :limit
 
 -- :frag stmt-desc-subquery-frag
 SELECT DISTINCT stmt.id, stmt.payload
@@ -92,10 +93,11 @@ WHERE 1
 :frag:from-since-until-frag
 --~ (when (:verb-iri params)     "AND stmt_desc.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt_desc.registration = :registration")
+LIMIT :limit
 
 -- :frag params-stmt-query-frag
 SELECT DISTINCT id, payload FROM (
-  :frag:stmt-subquery-frag) UNION (
+  :frag:stmt-subquery-frag) UNION ALL (
   :frag:stmt-desc-subquery-frag)
 --~ (if (:ascending? params) "ORDER BY id ASC" "ORDER BY id DESC")
 LIMIT :limit
