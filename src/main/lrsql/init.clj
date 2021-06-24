@@ -43,8 +43,10 @@
   (f/create-statement-to-statement-table! conn)
   (f/create-state-document-table! conn)
   (f/create-agent-profile-document-table! conn)
-  (f/create-activity-profile-document-table! conn)
-  (f/create-credential-table! conn))
+  (f/create-activity-profile-document-table! conn) 
+  (f/create-admin-account-table! conn)
+  (f/create-credential-table! conn)
+  (f/create-credential-to-scope-table! conn))
 
 (defn insert-default-creds!
   "Seed the credential table with the default API key and secret, which are
