@@ -147,5 +147,6 @@ account_id = :account-id
 -- :doc TODO
 INSERT INTO credential_to_scope SET
 id = :primary-key,
-credential_id = :credential-id,
+api_key = :api-key,
+secret_key = :secret-key,
 scope = :scope

@@ -210,4 +210,5 @@ WHERE account_id = :account-id
 -- :result :many
 -- :doc Given an API key and a secret API key, return all authorized scopes (including NULL). Returns an empty coll if the credential is not present.
 SELECT scope FROM lrs_credential
-WHERE credential_id = :credential-id
+WHERE api_key = :api-key
+AND secret_key = :secret-key

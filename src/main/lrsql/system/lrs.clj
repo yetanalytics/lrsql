@@ -202,11 +202,14 @@
    [this account-id scopes]
    (let [conn     (lrs-conn this)
          key-pair (auth-util/generate-key-pair)
-         input    (auth-input/insert-credential-input account-id
-                                                      key-pair
-                                                      scopes)]
+         cred-in  (auth-input/insert-credential-input account-id
+                                                      key-pair)
+         scope-in (auth-input/insert-credential-scopes-input
+                   key-pair
+                   scopes)]
      (jdbc/with-transaction [tx conn]
-       (auth-cmd/insert-credential! tx input))))
+       (auth-cmd/insert-credential! tx cred-in)
+       (auth-cmd/insert-credential-scopes! tx scope-in))))
   (-get-api-keys
    [this account-id]
    (let [conn  (lrs-conn this)
@@ -221,15 +224,19 @@
        (let [scopes'    (auth-q/query-credential-scopes tx input)
              add-scopes (cset/difference scopes scopes')
              del-scopes (cset/difference scopes' scopes)
-             add-inputs (auth-input/update-credential-scopes-input key-pair
-                                                                   add-scopes)
-             del-inputs (auth-input/update-credential-scopes-input key-pair
-                                                                   del-scopes)]
+             add-inputs (auth-input/insert-credential-scopes-input
+                         key-pair
+                         add-scopes)
+             del-inputs (auth-input/delete-credential-scopes-input
+                         key-pair
+                         del-scopes)]
          (auth-cmd/insert-credential-scopes! tx add-inputs)
          (auth-cmd/delete-credential-scopes! tx del-inputs)))))
   (-delete-api-keys
    [this account-id key-pair]
-   (let [conn  (lrs-conn this)
-         input (auth-input/delete-credentials-input account-id key-pair)]
+   (let [conn     (lrs-conn this)
+         cred-in  (auth-input/delete-credentials-input
+                   account-id
+                   key-pair)]
      (jdbc/with-transaction [tx conn]
-       (auth-cmd/delete-credential! tx input)))))
+       (auth-cmd/delete-credential! tx cred-in)))))

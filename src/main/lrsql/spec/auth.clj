@@ -3,8 +3,13 @@
             [clojure.spec.gen.alpha :as sgen]
             [xapi-schema.spec :as xs]
             [xapi-schema.spec.regex :as xsr]
-            [lrsql.spec.common :as c])
+            [lrsql.spec.common :as c]
+            [lrsql.spec.admin :as as])
   (:import [java.util Base64 Base64$Encoder]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; CURL
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def auth-header-spec
   (s/with-gen
@@ -21,6 +26,10 @@
                  (sgen/fmap xs/into-str
                             (sgen/vector (sgen/char-alpha) 3 16))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Axioms
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (s/def ::api-key string?)
 (s/def ::secret-key string?)
 
@@ -36,17 +45,56 @@
     "all/read"
     "all"})
 
-(def auth-insert-spec
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Basic Specs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def key-pair-spec
+  (s/keys :req-un [::api-key ::secret-key]))
+
+(def scopes-spec
+  (s/coll-of ::scope :min-count 1 :gen-max 5 :distinct true))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Insert
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def cred-insert-spec
+  (s/keys :req-un [::c/primary-key
+                   ::api-key
+                   ::secret-key
+                   ::as/account-id]))
+
+(def cred-scope-insert-spec
   (s/keys :req-un [::c/primary-key
                    ::api-key
                    ::secret-key
                    ::scope]))
 
-(def auth-scopes-query-spec
-  (s/keys :req-un [::c/primary-key
-                   ::api-key
-                   ::secret-key]))
+(def cred-scopes-insert-spec
+  (s/coll-of cred-scope-insert-spec :min-count 1 :gen-max 5))
 
-(def auth-keys-query-spec
-  (s/keys :req-un [::c/primary-key
-                   ::account-id]))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Delete
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def cred-delete-spec
+  (s/keys :req-un [::api-key
+                   ::secret-key
+                   ::as/account-id]))
+
+(def cred-scope-delete-spec
+  (s/keys :req-un [::api-key
+                   ::secret-key
+                   ::scope]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Query
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def creds-query-spec
+  (s/keys :req-un [::as/account-id]))
+
+(def cred-scopes-query-spec
+  (s/keys :req-un [::api-key
+                   ::secret-key]))
