@@ -179,8 +179,8 @@
        {:result (admin-cmd/insert-admin! tx input)})))
   (-authenticate-account
    [this username password]
-   (let [conn (lrs-conn this)
-         input (admin-input/admin-input username)]
+   (let [conn  (lrs-conn this)
+         input (admin-input/admin-query-input username)]
      (jdbc/with-transaction [tx conn]
        (let [res (admin-q/query-admin tx input)]
          (cond
@@ -193,7 +193,7 @@
   (-delete-account
    [this account-id]
    (let [conn  (lrs-conn this)
-         input (admin-input/admin-input account-id)]
+         input (admin-input/admin-delete-input account-id)]
      (jdbc/with-transaction [tx conn]
        {:result (admin-cmd/delete-admin! tx input)})))
   

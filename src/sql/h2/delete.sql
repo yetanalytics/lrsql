@@ -38,7 +38,7 @@ AND activity_iri = :activity-iri
 -- :name delete-admin-account!
 -- :command :execute
 -- :result :affected
--- :doc TODO
+-- :doc Delete the admin account associated with `:account-id`.
 DELETE FROM admin_account
 WHERE id = :account-id
 
@@ -78,7 +78,7 @@ DELETE FROM credential_to_scope AS cts
 INNER JOIN lrs_credential AS cred
   ON cred.api_key = cts.api_key
   AND cred.secret_key = cts.secret_key
-WHERE cred.account_id = :account_id;
+WHERE cred.account_id = :account-id;
 
 DELETE FROM lrs_credential
 WHERE account_id = :account-id

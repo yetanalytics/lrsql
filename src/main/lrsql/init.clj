@@ -56,17 +56,17 @@
   [tx ?username ?password]
   (when (and ?username ?password)
     ;; TODO: Default admin also from config vars?
-    (let [admin-id   (merge {:primary-key (u/generate-squuid)
+    (let [admin-in   (merge {:primary-key (u/generate-squuid)
                              :username    "username"}
                             (ua/hash-password "password"))
           cred-input {:primary-key (u/generate-squuid)
                       :api-key     ?username
                       :secret-key  ?password
-                      :account-id  (:primary-key admin-id)}
+                      :account-id  (:primary-key admin-in)}
           scope-input {:primary-key (u/generate-squuid)
                        :api-key     ?username
                        :secret-key  ?password
                        :scope       "all"}]
-      (admin-cmd/insert-admin! tx admin-id)
+      (admin-cmd/insert-admin! tx admin-in)
       (auth-cmd/insert-credential! tx cred-input)
       (auth-cmd/insert-credential-scopes! tx [scope-input]))))
