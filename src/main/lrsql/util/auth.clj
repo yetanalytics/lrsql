@@ -1,8 +1,10 @@
 (ns lrsql.util.auth
   (:require [clojure.set :as cset]
+            [clojure.string :as cstr]
             [clojure.tools.logging :as log]
             [buddy.core.codecs :refer [bytes->hex]]
-            [buddy.core.nonce  :refer [random-bytes]]))
+            [buddy.core.nonce  :refer [random-bytes]])
+  (:import [java.util Base64 Base64$Decoder]))
 
 (def scope-str-kw-map
   {"all"                  :scope/all
@@ -25,7 +27,28 @@
   [scope-kw]
   (get scope-kw-str-map scope-kw))
 
-(defn create-tokens
+(def ^Base64$Decoder decoder (Base64/getDecoder))
+
+(defn header->key-pair
+  "Given a Base64 authentication header, return a map with the keys
+   `:api-key` and `:secret-key`. The map can then be used as the input to
+   `query-authentication`."
+  [^String auth-header]
+  (try (let [auth-part  (subs auth-header 6) ; Remove "Basic " prefix
+             decoded    (String. (.decode    ; Base64 -> "username:password"
+                                  decoder
+                                  auth-part))
+             [username
+              password] (cstr/split decoded
+                                    #":")]
+         {:api-key    username
+          :secret-key password})
+       (catch Exception _
+         (throw (ex-info "Cannot decode authentication header!"
+                         {:type ::invalid-auth-header
+                          :auth-header auth-header})))))
+
+(defn generate-key-pair
   "Generate a pair of credentials for lrsql: an API key (the \"username\") and
    a secret API key (the \"password\"). Compatiable as `query-authentication`
    input."

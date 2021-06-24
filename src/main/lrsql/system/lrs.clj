@@ -1,24 +1,31 @@
 (ns lrsql.system.lrs
-  (:require [clojure.tools.logging :as log]
-            [com.stuartsierra.component :as component]
+  (:require [clojure.set :as cset]
+            [clojure.tools.logging :as log]
+            [com.stuartsierra.component :as cmp]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.admin.protocol :as adp]
             [lrsql.init :as init]
             [lrsql.input.actor     :as agent-input]
             [lrsql.input.activity  :as activity-input]
+            [lrsql.input.admin     :as admin-input]
             [lrsql.input.auth      :as auth-input]
             [lrsql.input.statement :as stmt-input]
             [lrsql.input.document  :as doc-input]
+            [lrsql.ops.command.admin     :as admin-cmd]
+            [lrsql.ops.command.auth      :as auth-cmd]
             [lrsql.ops.command.document  :as doc-cmd]
             [lrsql.ops.command.statement :as stmt-cmd]
             [lrsql.ops.query.actor     :as actor-q]
             [lrsql.ops.query.activity  :as activ-q]
+            [lrsql.ops.query.admin     :as admin-q]
             [lrsql.ops.query.auth      :as auth-q]
             [lrsql.ops.query.document  :as doc-q]
             [lrsql.ops.query.statement :as stmt-q]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
-            [lrsql.util.auth :as auth-util]
+            [lrsql.util.admin     :as admin-util]
+            [lrsql.util.auth      :as auth-util]
             [lrsql.util.statement :as stmt-util]
             [lrsql.util :as u])
   (:import [java.time Instant]))
@@ -29,7 +36,7 @@
   (-> lrs :connection :conn-pool))
 
 (defrecord LearningRecordStore [connection config]
-  component/Lifecycle
+  cmp/Lifecycle
   (start
    [lrs]
    (let [db-type (-> config :database :db-type)
@@ -154,9 +161,75 @@
     [lrs ctx]
     (let [conn   (lrs-conn lrs)
           header (get-in ctx [:request :headers "authorization"])
-          input  (auth-input/auth-input header)]
+          input  (-> header
+                     auth-util/header->key-pair
+                     auth-input/query-cred-scopes-input)]
       (jdbc/with-transaction [tx conn]
-        (auth-q/query-authentication tx input))))
+        (auth-q/query-credential-scopes tx input))))
   (-authorize
    [_lrs ctx auth-identity]
-   (auth-util/authorize-action ctx auth-identity)))
+   (auth-util/authorize-action ctx auth-identity))
+  
+  adp/AdminAccountManager
+  (-create-account
+   [this username password]
+   (let [conn  (lrs-conn this)
+         input (admin-input/admin-insert-input username password)]
+     (jdbc/with-transaction [tx conn]
+       {:result (admin-cmd/insert-admin! tx input)})))
+  (-authenticate-account
+   [this username password]
+   (let [conn (lrs-conn this)
+         input (admin-input/admin-input username)]
+     (jdbc/with-transaction [tx conn]
+       (let [res (admin-q/query-admin tx input)]
+         (cond
+           (= :lrsql.admin/missing-account-error res)
+           {:result res}
+           (admin-util/valid-password? password res)
+           {:result :lrsql.admin/authenticated}
+           ;; Else
+           {:result :lrsql.admin/invalid-password-error})))))
+  (-delete-account
+   [this account-id]
+   (let [conn  (lrs-conn this)
+         input (admin-input/admin-input account-id)]
+     (jdbc/with-transaction [tx conn]
+       {:result (admin-cmd/delete-admin! tx input)})))
+  
+  adp/APIKeyManager
+  (-create-api-keys
+   [this account-id scopes]
+   (let [conn     (lrs-conn this)
+         key-pair (auth-util/generate-key-pair)
+         input    (auth-input/insert-credential-input account-id
+                                                      key-pair
+                                                      scopes)]
+     (jdbc/with-transaction [tx conn]
+       (auth-cmd/insert-credential! tx input))))
+  (-get-api-keys
+   [this account-id]
+   (let [conn  (lrs-conn this)
+         input (auth-input/query-credentials-input account-id)]
+     (jdbc/with-transaction [tx conn]
+       (auth-q/query-credentials tx input))))
+  (-update-api-keys
+   [this _account-id key-pair scopes]
+   (let [conn  (lrs-conn this)
+         input (auth-input/query-credential-scopes-input key-pair)]
+     (jdbc/with-transaction [tx conn]
+       (let [scopes'    (auth-q/query-credential-scopes tx input)
+             add-scopes (cset/difference scopes scopes')
+             del-scopes (cset/difference scopes' scopes)
+             add-inputs (auth-input/insert-credential-scopes-input key-pair
+                                                                   add-scopes)
+             del-inputs (auth-input/insert-credential-scopes-input key-pair
+                                                                   del-scopes)]
+         (auth-cmd/insert-credential-scopes! tx add-inputs)
+         (auth-cmd/delete-credential-scopes! tx del-inputs)))))
+  (-delete-api-keys
+   [this account-id key-pair]
+   (let [conn  (lrs-conn this)
+         input (auth-input/delete-credentials-input account-id key-pair)]
+     (jdbc/with-transaction [tx conn]
+       (auth-cmd/delete-credential! tx input)))))

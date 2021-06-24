@@ -1,8 +1,9 @@
 (ns lrsql.ops.query.auth
-  (:require [lrsql.functions :as f]
+  (:require [clojure.string :as cstr]
+            [lrsql.functions :as f]
             [lrsql.util.auth :as ua]))
 
-(defn query-authentication
+(defn query-credential-scopes
   "Query an API key and its secret key and return a result map containing
    the scope and auth key map. If the credentials are not found, return a
    sentinel to indicate that the webserver will return 401 Forbidden."
@@ -31,3 +32,14 @@
                          :password secret-key}}})
     ;; Credentials not found - uh oh!
     {:result :com.yetanalytics.lrs.auth/forbidden}))
+
+(defn query-credentials
+  [tx input]
+  (->> (f/query-credentials tx input)
+       (map (fn [{scopes :scopes :as res}]
+              (if (string? scopes) ; For SQLite
+                (update res :scopes #(-> % (cstr/split ",") set))
+                (update res :scopes set))))
+       (map (fn [{ak :api_key
+                  sk :secret_key}]
+              {:api-key ak :secret-key sk}))))

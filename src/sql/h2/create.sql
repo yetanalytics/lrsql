@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS admin_account (
   id             UUID NOT NULL PRIMARY KEY,
   username       VARCHAR(255) NOT NULL UNIQUE,
   password_hash  VARCHAR(255) NOT NULL,
-  password_salt  VARCHAR(255) NOT NULL,
+  password_salt  VARCHAR(255) NOT NULL
 )
 
 -- TODO: Create (non-unique) index on api_key and secret_key
@@ -150,6 +150,17 @@ CREATE TABLE IF NOT EXISTS admin_account (
 -- :command :execute
 -- :doc Create the `lrs_credential` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS lrs_credential (
+  id         UUID NOT NULL PRIMARY KEY,
+  api_key    VARCHAR(255) NOT NULL,
+  secret_key VARCHAR(255) NOT NULL,
+  account_id UUID NOT NULL,
+  FOREIGN KEY (account_id) REFERENCES admin_account(id)
+)
+
+-- :name create-credential-to-scope-table!
+-- :command :execute
+-- :doc TODO
+CREATE TABLE IF NOT EXISTS credential_to_scope (
   id         UUID NOT NULL PRIMARY KEY,
   api_key    VARCHAR(255) NOT NULL,
   secret_key VARCHAR(255) NOT NULL,
@@ -161,6 +172,5 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
                   'profile', -- unimplemented
                   'all/read',
                   'all'), -- enum is nullable
-  username   VARCHAR(255) NOT NULL,
-  FOREIGN KEY (username) REFERENCES admin_account(username)
+  FOREIGN KEY (api_key, secret_key) REFERENCES lrs_credential(api_key, secret_key)
 )

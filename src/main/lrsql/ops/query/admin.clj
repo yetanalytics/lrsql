@@ -3,9 +3,9 @@
 
 (defn query-admin
   [tx input]
-  (if-some [res (f/query-account tx input)]
-    res
-    (let [uname (:username input)]
-      (throw (ex-info (format "Account %s does not exist!" uname)
-                      {:type     ::missing-account
-                       :username uname})))))
+  (if-some [{pass-hash :password_hash
+             pass-salt :password_salt}
+            (f/query-account tx input)]
+    {:password-hash pass-hash
+     :password-salt pass-salt}
+    :lrsql.auth/missing-account-error))

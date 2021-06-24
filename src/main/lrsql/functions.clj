@@ -112,7 +112,8 @@
 (declare query-activity-profile-document-ids)
 
 ;; Credentials
-(declare query-credential-scopes)
+(declare query-credential-by-key)
+(declare query-credentials-by-account)
 
 ;; Admin Accounts
 (declare query-account)

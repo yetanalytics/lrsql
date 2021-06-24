@@ -24,6 +24,8 @@
 (s/def ::api-key string?)
 (s/def ::secret-key string?)
 
+(s/def ::account-id ::c/primary-key)
+
 (s/def ::scope
   #{"statements/write"
     "statements/read/mine"
@@ -40,7 +42,11 @@
                    ::secret-key
                    ::scope]))
 
-(def auth-query-spec
+(def auth-keys-query-spec
   (s/keys :req-un [::c/primary-key
                    ::api-key
                    ::secret-key]))
+
+(def auth-account-query-spec
+  (s/keys :req-un [::c/primary-key
+                   ::account-id]))
