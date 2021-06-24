@@ -1,8 +1,5 @@
 (ns lrsql.input.auth
-  (:require [clojure.spec.alpha :as s]
-            [clojure.string     :as cstr]
-            [lrsql.spec.auth    :as as]
-            [lrsql.util         :as u]))
+  (:require [lrsql.util :as u]))
 
 (defn insert-credential-input
   [account-id key-pair]

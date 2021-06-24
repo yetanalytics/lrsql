@@ -180,7 +180,7 @@ SELECT profile_id FROM activity_profile_document
 WHERE activity_iri = :activity-iri
 --~ (when (:since params) "AND last_modified > :since")
 
-/* Account */
+/* Admin Accounts */
 
 -- :name query-account
 -- :command :query
@@ -198,11 +198,11 @@ WHERE username = :username
 
 /* Credentials */
 
--- :name query-credential
+-- :name query-credentials
 -- :command :query
--- :result :one
--- :doc TODO
-SELECT id, api_key, secret_key FROM lrs_credential
+-- :result :many
+-- :doc Query all credentials associated with `:account-id`.
+SELECT api_key, secret_key FROM lrs_credential
 WHERE account_id = :account-id
 
 -- :name query-credential-scopes

@@ -163,7 +163,7 @@
           header (get-in ctx [:request :headers "authorization"])
           input  (-> header
                      auth-util/header->key-pair
-                     auth-input/query-cred-scopes-input)]
+                     auth-input/query-credential-scopes-input)]
       (jdbc/with-transaction [tx conn]
         (auth-q/query-credential-scopes tx input))))
   (-authorize
@@ -188,7 +188,7 @@
            {:result res}
            (admin-util/valid-password? password res)
            {:result :lrsql.admin/authenticated}
-           ;; Else
+           :else
            {:result :lrsql.admin/invalid-password-error})))))
   (-delete-account
    [this account-id]
@@ -214,16 +214,16 @@
      (jdbc/with-transaction [tx conn]
        (auth-q/query-credentials tx input))))
   (-update-api-keys
-   [this _account-id key-pair scopes]
+   [this _account-id key-pair scopes] ; TODO: Verify the key pair is associated with the account ID
    (let [conn  (lrs-conn this)
          input (auth-input/query-credential-scopes-input key-pair)]
      (jdbc/with-transaction [tx conn]
        (let [scopes'    (auth-q/query-credential-scopes tx input)
              add-scopes (cset/difference scopes scopes')
              del-scopes (cset/difference scopes' scopes)
-             add-inputs (auth-input/insert-credential-scopes-input key-pair
+             add-inputs (auth-input/update-credential-scopes-input key-pair
                                                                    add-scopes)
-             del-inputs (auth-input/insert-credential-scopes-input key-pair
+             del-inputs (auth-input/update-credential-scopes-input key-pair
                                                                    del-scopes)]
          (auth-cmd/insert-credential-scopes! tx add-inputs)
          (auth-cmd/delete-credential-scopes! tx del-inputs)))))

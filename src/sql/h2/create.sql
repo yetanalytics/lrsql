@@ -131,13 +131,11 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
   contents       BINARY NOT NULL
 )
 
-/* Credential Table */
-
 /* Admin Account Table */
 
 -- :name create-admin-account-table!
 -- :command :execute
--- :doc Create the `admin_account` table if it does not xist yet.
+-- :doc Create the `admin_account` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS admin_account (
   id             UUID NOT NULL PRIMARY KEY,
   username       VARCHAR(255) NOT NULL UNIQUE,
@@ -145,7 +143,8 @@ CREATE TABLE IF NOT EXISTS admin_account (
   password_salt  VARCHAR(255) NOT NULL
 )
 
--- TODO: Create (non-unique) index on api_key and secret_key
+/* Credential Tables */
+
 -- :name create-credential-table!
 -- :command :execute
 -- :doc Create the `lrs_credential` table if it does not exist yet.
@@ -159,7 +158,7 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
 
 -- :name create-credential-to-scope-table!
 -- :command :execute
--- :doc TODO
+-- :doc Create the `credential_to_scope` link table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS credential_to_scope (
   id         UUID NOT NULL PRIMARY KEY,
   api_key    VARCHAR(255) NOT NULL,

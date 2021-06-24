@@ -23,11 +23,10 @@
 (declare create-agent-profile-document-table!)
 (declare create-activity-profile-document-table!)
 
-;; Credentials
-(declare create-credential-table!)
-
-;; Admin Accounts
+;; Account + Credential Tables
 (declare create-admin-account-table!)
+(declare create-credential-table!)
+(declare create-credential-to-scope-table!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insert
@@ -47,11 +46,10 @@
 (declare insert-agent-profile-document!)
 (declare insert-activity-profile-document!)
 
-;; Credentials
-(declare insert-credential!)
-
-;; Admin Accounts
+;; Credentials + Admin Accounts
 (declare insert-admin-account!)
+(declare insert-credential!)
+(declare insert-credential-scope!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Update
@@ -79,9 +77,10 @@
 (declare delete-agent-profile-document!)
 (declare delete-activity-profile-document!)
 
-;; Credentials + Accounts
+;; Credentials + Admin Accounts
+(declare delete-credential-scope!)
 (declare delete-credential!)
-(declare delete-credentials-by-account!)
+(declare delete-admin-credentials!)
 (declare delete-admin-account!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -111,10 +110,10 @@
 (declare query-agent-profile-document-ids)
 (declare query-activity-profile-document-ids)
 
-;; Credentials
-(declare query-credential-by-key)
-(declare query-credentials-by-account)
-
 ;; Admin Accounts
 (declare query-account)
 (declare query-account-exists)
+
+;; Credentials
+(declare query-credentials)
+(declare query-credential-scopes)
