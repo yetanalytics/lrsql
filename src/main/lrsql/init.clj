@@ -5,6 +5,8 @@
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.functions :as f]
             [lrsql.util :as u]
+            [lrsql.util.admin :as ua]
+            [lrsql.ops.command.admin :as admin-cmd]
             [lrsql.ops.command.auth :as auth-cmd]))
 
 (defn init-hugsql-adapter!
@@ -49,10 +51,20 @@
    set by the environmental variables. The scope of the default credentials
    would be hardcoded as \"all\". Does not seed the table when the username
    or password is nil."
-  [conn ?username ?password]
+  [tx ?username ?password]
   (when (and ?username ?password)
-    (let [input {:primary-key (u/generate-squuid)
-                 :api-key     ?username
-                 :secret-key  ?password
-                 :scope       "all"}]
-      (auth-cmd/insert-credential! conn input))))
+    ;; TODO: Default admin also from config vars?
+    (let [admin-id   (merge {:primary-key (u/generate-squuid)
+                             :username    "username"}
+                            (ua/hash-password "password"))
+          cred-input {:primary-key (u/generate-squuid)
+                      :api-key     ?username
+                      :secret-key  ?password
+                      :account-id  (:primary-key admin-id)}
+          scope-input {:primary-key (u/generate-squuid)
+                       :api-key     ?username
+                       :secret-key  ?password
+                       :scope       "all"}]
+      (admin-cmd/insert-admin! tx admin-id)
+      (auth-cmd/insert-credential! tx cred-input)
+      (auth-cmd/insert-credential-scopes! tx [scope-input]))))

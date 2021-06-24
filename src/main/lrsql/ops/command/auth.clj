@@ -22,7 +22,3 @@
 (defn delete-credential!
   [tx input]
   (f/delete-credential! tx input))
-
-(defn delete-admin-credentials!
-  [tx input]
-  (f/delete-admin-credentials! tx input))

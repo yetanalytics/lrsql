@@ -42,11 +42,11 @@
                    ::secret-key
                    ::scope]))
 
-(def auth-keys-query-spec
+(def auth-scopes-query-spec
   (s/keys :req-un [::c/primary-key
                    ::api-key
                    ::secret-key]))
 
-(def auth-account-query-spec
+(def auth-keys-query-spec
   (s/keys :req-un [::c/primary-key
                    ::account-id]))
