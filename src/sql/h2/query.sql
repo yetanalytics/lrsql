@@ -189,3 +189,19 @@ WHERE activity_iri = :activity-iri
 SELECT scope FROM lrs_credential
 WHERE api_key = :api-key
 AND secret_key = :secret-key
+
+/* Account */
+
+-- :name query-account
+-- :command :query
+-- :result :one
+-- :doc Given an account `username`, return the hashed password and salt, which can be used to verify the account.
+SELECT password_hash, password_salt FROM admin_account
+WHERE username = :username
+
+-- :name query-account-exists
+-- :command :query
+-- :result :one
+-- :doc Given an account `username`, return whether the account exists in the table.
+SELECT 1 FROM admin_account
+WHERE username = :username

@@ -128,4 +128,16 @@ INSERT INTO lrs_credential SET
 id = :primary-key,
 api_key = :api-key,
 secret_key = :secret-key,
-scope = :scope
+scope = :scope,
+username = :username
+
+/* Accounts */
+
+-- :name insert-admin-account!
+-- :command :insert
+-- :result :affected
+INSERT INTO admin_account SET
+id = :primary-key,
+username = :username,
+password_hash = :password-hash,
+password_salt = :password-salt

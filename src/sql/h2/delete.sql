@@ -32,3 +32,27 @@ AND agent_ifi = :agent-ifi
 DELETE FROM activity_profile_document
 WHERE profile_id = :profile-id
 AND activity_iri = :activity-iri
+
+/* Account + Creds */
+
+-- :name delete-credential!
+-- :command :execute
+-- :result :affected
+-- :doc TODO
+DELETE FROM lrs_credential
+WHERE api_key = :api-key
+AND secret_key = :secret-key
+
+-- :name delete-credentials-by-admin-account!
+-- :command :execute
+-- :result :affected
+-- :doc TODO
+DELETE FROM lrs_credential
+WHERE username = :username
+
+-- :name delete-admin-account!
+-- :command :execute
+-- :result :affected
+-- :doc TODO
+DELETE FROM admin_account
+WHERE username = :username
