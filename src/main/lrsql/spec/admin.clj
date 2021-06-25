@@ -5,14 +5,12 @@
 (s/def ::account-id ::c/primary-key)
 (s/def ::username string?)
 (s/def ::password string?)
-(s/def ::password-hash string?) ; TODO: Hex string
-(s/def ::password-salt string?) ; TODO: Hex string
+(s/def ::passhash string?) ; format may vary by password lib
 
 (def admin-insert-spec
   (s/keys :req-un [::c/primary-key
                    ::username
-                   ::password-hash
-                   ::password-salt]))
+                   ::passhash]))
 
 (def admin-query-spec
   (s/keys :req-un [::username]))

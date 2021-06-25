@@ -126,8 +126,7 @@ contents = :contents
 INSERT INTO admin_account SET
 id = :primary-key,
 username = :username,
-password_hash = :password-hash,
-password_salt = :password-salt
+passhash = :passhash
 
 /* Credentials */
 

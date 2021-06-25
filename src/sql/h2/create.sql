@@ -137,10 +137,9 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
 -- :command :execute
 -- :doc Create the `admin_account` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS admin_account (
-  id             UUID NOT NULL PRIMARY KEY,
-  username       VARCHAR(255) NOT NULL UNIQUE,
-  password_hash  VARCHAR(255) NOT NULL,
-  password_salt  VARCHAR(255) NOT NULL
+  id       UUID NOT NULL PRIMARY KEY,
+  username VARCHAR(255) NOT NULL UNIQUE,
+  passhash VARCHAR(255) NOT NULL
 )
 
 /* Credential Tables */

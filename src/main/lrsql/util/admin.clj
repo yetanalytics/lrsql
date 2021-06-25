@@ -1,8 +1,5 @@
 (ns lrsql.util.admin
-  (:require [buddy.core.bytes  :as bb]
-            [buddy.core.codecs :as bc]
-            [buddy.core.hash   :as bh]
-            [buddy.core.nonce  :as bn]
+  (:require [buddy.hashers     :as bh]
             [buddy.sign.jwt    :as bj]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -10,19 +7,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn hash-password
+  "Encrypt and hash `password` and return a passhash string. Uses BCrypt's
+   SHA-512 algorithm and a random 16-byte salt under the hood."
   [password]
-  (let [salt-bytes (bn/random-bytes 32)
-        pass-bytes (bh/blake2b password 32)
-        hash-bytes (bb/concat pass-bytes salt-bytes)]
-    {:password-hash (bc/bytes->hex hash-bytes)
-     :password-salt (bc/bytes->hex salt-bytes)}))
+  (bh/derive password))
 
 (defn valid-password?
-  [password {:keys [password-hash password-salt]}]
-  (let [salt-bytes (bc/hex->bytes password-salt)
-        pass-bytes (bh/blake2b password 32)]
-    (= password-hash
-       (bc/bytes->hex (bb/concat pass-bytes salt-bytes)))))
+  "Verifies that `password` hashes to `passhash` and returns a boolean."
+  [password passhash]
+  (:valid (bh/verify password passhash))) ; TODO: Deal with :update property
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; JSON Web Tokens

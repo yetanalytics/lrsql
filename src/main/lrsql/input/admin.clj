@@ -10,9 +10,9 @@
 
 (defn admin-insert-input
   [username password]
-  (merge {:primary-key (u/generate-squuid)
-          :username    username}
-         (ua/hash-password password)))
+  {:primary-key (u/generate-squuid)
+   :username    username
+   :passhash    (ua/hash-password password)})
 
 (s/fdef admin-query-input
   :args (s/cat :username ::as/username)

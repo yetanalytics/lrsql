@@ -49,6 +49,6 @@
 
 (deftest test-admin
   (testing "admin account inputs"
-    (is (nil? (check-validate `i-admin/admin-insert-input)))
+    (is (nil? (check-validate `i-admin/admin-insert-input 3)))
     (is (nil? (check-validate `i-admin/admin-query-input)))
     (is (nil? (check-validate `i-admin/admin-delete-input)))))

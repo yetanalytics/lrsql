@@ -186,7 +186,7 @@
          (cond
            (= :lrsql.admin/missing-account-error res)
            {:result res}
-           (admin-util/valid-password? password res)
+           (admin-util/valid-password? password (:passhash res))
            {:result (:account-id res)}
            :else
            {:result :lrsql.admin/invalid-password-error})))))

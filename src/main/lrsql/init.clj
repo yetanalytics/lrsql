@@ -4,6 +4,8 @@
             [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.functions :as f]
+            [lrsql.input.admin :as admin-input]
+            [lrsql.input.auth  :as auth-input]
             [lrsql.util :as u]
             [lrsql.util.admin :as ua]
             [lrsql.ops.command.admin :as admin-cmd]
@@ -56,17 +58,17 @@
   [tx ?username ?password]
   (when (and ?username ?password)
     ;; TODO: Default admin also from config vars?
-    (let [admin-in   (merge {:primary-key (u/generate-squuid)
-                             :username    "username"}
-                            (ua/hash-password "password"))
-          cred-input {:primary-key (u/generate-squuid)
-                      :api-key     ?username
-                      :secret-key  ?password
-                      :account-id  (:primary-key admin-in)}
-          scope-input {:primary-key (u/generate-squuid)
-                       :api-key     ?username
-                       :secret-key  ?password
-                       :scope       "all"}]
+    (let [admin-in    (admin-input/admin-insert-input
+                       ?username
+                       ?password)
+          key-pair    {:api-key    ?username
+                       :secret-key ?password}
+          cred-input  (auth-input/insert-credential-input
+                       (:primary-key admin-in)
+                       key-pair)
+          scope-input (auth-input/insert-credential-scopes-input
+                       key-pair
+                       #{"all"})]
       (admin-cmd/insert-admin! tx admin-in)
       (auth-cmd/insert-credential! tx cred-input)
-      (auth-cmd/insert-credential-scopes! tx [scope-input]))))
+      (auth-cmd/insert-credential-scopes! tx scope-input))))

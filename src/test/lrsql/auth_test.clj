@@ -34,14 +34,14 @@
               :result
               (= :lrsql.admin/missing-account-error))))
     (testing "Admin account deletion"
-        (let [account-id (-> (adp/-authenticate-account lrs
-                                                        test-username
-                                                        test-password)
-                             :result)]
-          (adp/-delete-account lrs account-id)
-          (is (-> (adp/-authenticate-account lrs test-username test-password)
-                  :result
-                  (= :lrsql.admin/missing-account-error)))))
+      (let [account-id (-> (adp/-authenticate-account lrs
+                                                      test-username
+                                                      test-password)
+                           :result)]
+        (adp/-delete-account lrs account-id)
+        (is (-> (adp/-authenticate-account lrs test-username test-password)
+                :result
+                (= :lrsql.admin/missing-account-error)))))
     (component/stop sys')))
 
 (deftest auth-test
@@ -59,12 +59,12 @@
                 :secret-key secret-key
                 :scopes     #{"all" "all/read"}}
                key-pair))
-        (testing "Credential retrieval"
+        (testing "and credential retrieval"
           (is (= [{:api-key    api-key
                    :secret-key secret-key
                    :scopes     #{"all" "all/read"}}]
                  (adp/-get-api-keys lrs acc-id))))
-        (testing "Credential update"
+        (testing "and credential update"
           (is (= {:api-key    api-key
                   :secret-key secret-key
                   :scopes     #{"all/read" "statements/read"}}
@@ -77,7 +77,7 @@
                    :secret-key secret-key
                    :scopes     #{"all/read" "statements/read"}}]
                  (adp/-get-api-keys lrs acc-id))))
-        (testing "Credential deletion"
+        (testing "and credential deletion"
           (adp/-delete-api-keys lrs acc-id key-pair)
           (is (= []
                  (adp/-get-api-keys lrs acc-id))))))

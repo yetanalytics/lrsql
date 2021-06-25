@@ -185,8 +185,8 @@ WHERE activity_iri = :activity-iri
 -- :name query-account
 -- :command :query
 -- :result :one
--- :doc Given an account `username`, return the ID and the hashed password and salt, which can be used to verify the account.
-SELECT id, password_hash, password_salt FROM admin_account
+-- :doc Given an account `username`, return the ID and the hashed password, which can be used to verify the account.
+SELECT id, passhash FROM admin_account
 WHERE username = :username
 
 -- :name query-account-exists
