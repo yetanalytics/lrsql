@@ -8,7 +8,7 @@
   (-authenticate-account [this username password]
     "Authenticate by looking up if the account exists in the account table.")
   (-delete-account [this account-id]
-    "Delete the account and all associated tokens. Assumes the account has already been authenticated."))
+    "Delete the account and all associated creds. Assumes the account has already been authenticated."))
 
 (defprotocol APIKeyManager
   (-create-api-keys [this account-id scopes]

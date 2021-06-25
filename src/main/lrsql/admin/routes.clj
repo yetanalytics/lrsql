@@ -25,34 +25,34 @@
                                         li/authenticate-admin
                                         li/generate-jwt)
      :route-name :lrsql.admin.account/login]
-     ;; Delete account (and associated tokens)
+     ;; Delete account (and associated credentials)
     ["/admin/account" :delete (conj comm-interceptors
                                     li/authenticate-admin
                                     li/delete-admin)
      :route-name :lrsql.admin.account/delete]})
 
-(defn admin-token-routes
+(defn admin-cred-routes
   [comm-interceptors]
   #{;; Create new API key pair w/ scope set
-    ["/admin/token" :put (conj comm-interceptors
+    ["/admin/creds" :put (conj comm-interceptors
                                li/validate-jwt
                                li/create-api-keys)
-     :route-name :lrsql.admin.token/put]
+     :route-name :lrsql.admin.creds/put]
      ;; Create or update new keys w/ scope set
-    ["/admin/token" :post (conj comm-interceptors
+    ["/admin/creds" :post (conj comm-interceptors
                                 li/validate-jwt
                                 li/update-api-keys)
-     :route-name :lrsql.admin.token/post]
+     :route-name :lrsql.admin.creds/post]
      ;; Get current keys + scopes associated w/ account
-    ["/admin/token" :get (conj comm-interceptors
+    ["/admin/creds" :get (conj comm-interceptors
                                li/validate-jwt
                                li/read-api-keys)
-     :route-name :lrsql.admin.token/get]
+     :route-name :lrsql.admin.creds/get]
      ;; Delete API key pair and associated scopes
-    ["/admin/token" :delete (conj i/common-interceptors
+    ["/admin/creds" :delete (conj i/common-interceptors
                                   li/validate-jwt
                                   li/delete-api-keys)
-     :route-name :lrsql.admin.token/delete]})
+     :route-name :lrsql.admin.creds/delete]})
 
 ;; TODO: Add additional interceptors
 (defn add-admin-routes
@@ -63,4 +63,4 @@
   (let [common-i (common-interceptors lrs)]
     (cset/union routes
                 (admin-account-routes common-i)
-                (admin-token-routes common-i))))
+                (admin-cred-routes common-i))))
