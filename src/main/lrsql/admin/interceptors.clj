@@ -60,7 +60,9 @@
       (let [{:keys [account-id]}
             (get-in ctx [:request :params :body])]
         (adp/-delete-account lrs account-id)
-        ctx))}))
+        (assoc ctx
+               :response
+               {:status 200 :body "Deletion successful!"})))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; JSON Web Tokens
