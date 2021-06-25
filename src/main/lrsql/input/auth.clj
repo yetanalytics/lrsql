@@ -8,21 +8,21 @@
 ;; Credentials Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef insert-credential-input
+(s/fdef credential-insert-input
   :args (s/cat :account-id ::ads/account-id :key-pair as/key-pair-spec)
   :ret as/cred-insert-spec)
 
-(defn insert-credential-input
+(defn credential-insert-input
   [account-id key-pair]
   (assoc key-pair
          :primary-key (u/generate-squuid)
          :account-id account-id))
 
-(s/fdef insert-credential-scopes-input
+(s/fdef credential-scopes-insert-input
   :args (s/cat :key-pair as/key-pair-spec :scopes as/scopes-spec)
   :ret as/cred-scopes-insert-spec)
 
-(defn insert-credential-scopes-input
+(defn credential-scopes-insert-input
   [key-pair scopes]
   (->> scopes
        (map (partial assoc key-pair :scope))
@@ -32,20 +32,20 @@
 ;; Credentials Deletion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef delete-credentials-input
+(s/fdef credentials-delete-input
   :args (s/cat :account-id ::ads/account-id :key-pair as/key-pair-spec)
   :ret as/cred-delete-spec)
 
-(defn delete-credentials-input
+(defn credentials-delete-input
   [account-id key-pair]
   (assoc key-pair
          :account-id account-id))
 
-(s/fdef delete-credential-scopes-input
+(s/fdef credential-scopes-delete-input
   :args (s/cat :key-pair as/key-pair-spec :scopes as/scopes-spec)
   :ret as/cred-scopes-delete-spec)
 
-(defn delete-credential-scopes-input
+(defn credential-scopes-delete-input
   [key-pair scopes]
   (->> scopes
        (map (partial assoc key-pair :scope))))
@@ -54,18 +54,18 @@
 ;; Credentials Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef query-credentials-input
+(s/fdef credentials-query-input
   :args (s/cat :account-id ::ads/account-id)
   :ret as/creds-query-spec)
 
-(defn query-credentials-input
+(defn credentials-query-input
   [account-id]
   {:account-id account-id})
 
-(s/fdef query-credential-scopes-input
+(s/fdef credential-query-scopes-input
   :args (s/cat :key-pair as/key-pair-spec)
   :ret as/cred-scopes-query-spec)
 
-(defn query-credential-scopes-input
+(defn credential-query-scopes-input
   [key-pair]
   key-pair)

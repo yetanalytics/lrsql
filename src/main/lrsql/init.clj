@@ -6,8 +6,6 @@
             [lrsql.functions :as f]
             [lrsql.input.admin :as admin-input]
             [lrsql.input.auth  :as auth-input]
-            [lrsql.util :as u]
-            [lrsql.util.admin :as ua]
             [lrsql.ops.command.admin :as admin-cmd]
             [lrsql.ops.command.auth :as auth-cmd]))
 
@@ -58,17 +56,17 @@
   [tx ?username ?password]
   (when (and ?username ?password)
     ;; TODO: Default admin also from config vars?
-    (let [admin-in    (admin-input/admin-insert-input
-                       ?username
-                       ?password)
-          key-pair    {:api-key    ?username
-                       :secret-key ?password}
-          cred-input  (auth-input/insert-credential-input
-                       (:primary-key admin-in)
-                       key-pair)
-          scope-input (auth-input/insert-credential-scopes-input
-                       key-pair
-                       #{"all"})]
+    (let [admin-in (admin-input/admin-insert-input
+                    ?username
+                    ?password)
+          key-pair {:api-key    ?username
+                    :secret-key ?password}
+          cred-in  (auth-input/credential-insert-input
+                    (:primary-key admin-in)
+                    key-pair)
+          scope-in (auth-input/credential-scopes-insert-input
+                    key-pair
+                    #{"all"})]
       (admin-cmd/insert-admin! tx admin-in)
-      (auth-cmd/insert-credential! tx cred-input)
-      (auth-cmd/insert-credential-scopes! tx scope-input))))
+      (auth-cmd/insert-credential! tx cred-in)
+      (auth-cmd/insert-credential-scopes! tx scope-in))))

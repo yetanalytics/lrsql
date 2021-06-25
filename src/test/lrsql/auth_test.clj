@@ -1,7 +1,6 @@
 (ns lrsql.auth-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [com.stuartsierra.component    :as component]
-            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.admin.protocol :as adp]
             [lrsql.system         :as system]
             [lrsql.test-support   :as support]))

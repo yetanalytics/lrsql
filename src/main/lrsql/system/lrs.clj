@@ -163,7 +163,7 @@
           header (get-in ctx [:request :headers "authorization"])
           input  (-> header
                      auth-util/header->key-pair
-                     auth-input/query-credential-scopes-input)]
+                     auth-input/credential-query-scopes-input)]
       (jdbc/with-transaction [tx conn]
         (auth-q/query-credential-scopes tx input))))
   (-authorize
@@ -202,9 +202,9 @@
    [this account-id scopes]
    (let [conn     (lrs-conn this)
          key-pair (auth-util/generate-key-pair)
-         cred-in  (auth-input/insert-credential-input account-id
+         cred-in  (auth-input/credential-insert-input account-id
                                                       key-pair)
-         scope-in (auth-input/insert-credential-scopes-input
+         scope-in (auth-input/credential-scopes-insert-input
                    key-pair
                    scopes)]
      (jdbc/with-transaction [tx conn]
@@ -214,21 +214,21 @@
   (-get-api-keys
    [this account-id]
    (let [conn  (lrs-conn this)
-         input (auth-input/query-credentials-input account-id)]
+         input (auth-input/credentials-query-input account-id)]
      (jdbc/with-transaction [tx conn]
        (auth-q/query-credentials tx input))))
   (-update-api-keys
    [this _account-id key-pair scopes] ; TODO: Verify the key pair is associated with the account ID
    (let [conn  (lrs-conn this)
-         input (auth-input/query-credential-scopes-input key-pair)]
+         input (auth-input/credential-query-scopes-input key-pair)]
      (jdbc/with-transaction [tx conn]
        (let [scopes'    (set (auth-q/query-credential-scopes* tx input))
              add-scopes (cset/difference scopes scopes')
              del-scopes (cset/difference scopes' scopes)
-             add-inputs (auth-input/insert-credential-scopes-input
+             add-inputs (auth-input/credential-scopes-insert-input
                          key-pair
                          add-scopes)
-             del-inputs (auth-input/delete-credential-scopes-input
+             del-inputs (auth-input/credential-scopes-delete-input
                          key-pair
                          del-scopes)]
          (auth-cmd/insert-credential-scopes! tx add-inputs)
@@ -237,7 +237,7 @@
   (-delete-api-keys
    [this account-id key-pair]
    (let [conn     (lrs-conn this)
-         cred-in  (auth-input/delete-credentials-input
+         cred-in  (auth-input/credentials-delete-input
                    account-id
                    key-pair)]
      (jdbc/with-transaction [tx conn]
