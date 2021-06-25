@@ -4,6 +4,7 @@
             [lrsql.input.actor      :as i-ac]
             [lrsql.input.activity   :as i-av]
             [lrsql.input.attachment :as i-at]
+            [lrsql.input.admin      :as i-admin]
             [lrsql.input.auth       :as i-auth]
             [lrsql.input.statement  :as i-stmt]
             [lrsql.input.document   :as i-doc]))
@@ -39,5 +40,15 @@
 
 (deftest test-auth
   (testing "authentication inputs"
-    #_(is (nil? (check-validate `i-auth/auth-input)))
-    #_(is (nil? (check-validate `i-auth/query-cred-scopes-input)))))
+    (is (nil? (check-validate `i-auth/insert-credential-input)))
+    (is (nil? (check-validate `i-auth/insert-credential-scopes-input)))
+    (is (nil? (check-validate `i-auth/delete-credentials-input)))
+    (is (nil? (check-validate `i-auth/delete-credential-scopes-input)))
+    (is (nil? (check-validate `i-auth/query-credentials-input)))
+    (is (nil? (check-validate `i-auth/query-credential-scopes-input)))))
+
+(deftest test-admin
+  (testing "admin account inputs"
+    (is (nil? (check-validate `i-admin/admin-insert-input)))
+    (is (nil? (check-validate `i-admin/admin-query-input)))
+    (is (nil? (check-validate `i-admin/admin-delete-input)))))

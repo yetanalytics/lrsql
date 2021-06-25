@@ -1,11 +1,8 @@
 (ns lrsql.input.admin
   (:require [clojure.spec.alpha :as s]
             [lrsql.spec.admin :as as]
-            [lrsql.util.admin :as ua]))
-
-(defn admin-input
-  [username]
-  {:username username})
+            [lrsql.util.admin :as ua]
+            [lrsql.util :as u]))
 
 (s/fdef admin-insert-input
   :args (s/cat :username ::as/username :password ::as/password)
@@ -13,7 +10,8 @@
 
 (defn admin-insert-input
   [username password]
-  (merge (admin-input username)
+  (merge {:primary-key (u/generate-squuid)
+          :username    username}
          (ua/hash-password password)))
 
 (s/fdef admin-query-input
@@ -24,7 +22,7 @@
   [username]
   {:username username})
 
-(s/fdef admin-delete-spec
+(s/fdef admin-delete-input
   :args (s/cat :account-id ::as/account-id)
   :ret as/admin-delete-spec)
 

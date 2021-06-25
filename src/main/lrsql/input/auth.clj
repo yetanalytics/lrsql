@@ -20,13 +20,13 @@
 
 (s/fdef insert-credential-scopes-input
   :args (s/cat :key-pair as/key-pair-spec :scopes as/scopes-spec)
-  :ret as/cred-scope-insert-spec)
+  :ret as/cred-scopes-insert-spec)
 
 (defn insert-credential-scopes-input
   [key-pair scopes]
   (->> scopes
-       (map (partial assoc key-pair))
-       (map #(assoc % :primary-key (u/generate-squuid)))))
+       (map (partial assoc key-pair :scope))
+       (map (fn [skp] (assoc skp :primary-key (u/generate-squuid))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credentials Deletion
@@ -34,7 +34,7 @@
 
 (s/fdef delete-credentials-input
   :args (s/cat :account-id ::ads/account-id :key-pair as/key-pair-spec)
-  :ret as/cred-scope-delete-spec)
+  :ret as/cred-delete-spec)
 
 (defn delete-credentials-input
   [account-id key-pair]
@@ -43,12 +43,12 @@
 
 (s/fdef delete-credential-scopes-input
   :args (s/cat :key-pair as/key-pair-spec :scopes as/scopes-spec)
-  :ret as/cred-scope-delete-spec)
+  :ret as/cred-scopes-delete-spec)
 
 (defn delete-credential-scopes-input
   [key-pair scopes]
   (->> scopes
-       (map (partial assoc key-pair))))
+       (map (partial assoc key-pair :scope))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credentials Query
