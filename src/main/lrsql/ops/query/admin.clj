@@ -10,4 +10,4 @@
     {:account-id    account-id
      :password-hash pass-hash
      :password-salt pass-salt}
-    :lrsql.auth/missing-account-error))
+    :lrsql.admin/missing-account-error))

@@ -11,18 +11,18 @@
 
 (defn hash-password
   [password]
-  (let [pass-salt (bn/random-bytes 32)
-        pass-hash (bh/blake2b password 32)]
-    {:password-hash (bc/bytes->hex (bb/concat pass-hash pass-salt))
-     :password-salt (bc/bytes->hex pass-salt)}))
+  (let [salt-bytes (bn/random-bytes 32)
+        pass-bytes (bh/blake2b password 32)
+        hash-bytes (bb/concat pass-bytes salt-bytes)]
+    {:password-hash (bc/bytes->hex hash-bytes)
+     :password-salt (bc/bytes->hex salt-bytes)}))
 
 (defn valid-password?
   [password {:keys [password-hash password-salt]}]
-  (let [pass-bytes (bh/blake2b password 32)
-        hash-bytes (bc/hex->bytes password-hash)
-        salt-bytes (bc/hex->bytes password-salt)]
-    (= hash-bytes
-       (bb/concat pass-bytes salt-bytes))))
+  (let [salt-bytes (bc/hex->bytes password-salt)
+        pass-bytes (bh/blake2b password 32)]
+    (= password-hash
+       (bc/bytes->hex (bb/concat pass-bytes salt-bytes)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; JSON Web Tokens
