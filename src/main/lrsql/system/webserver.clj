@@ -4,6 +4,7 @@
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
+            [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]))
 
@@ -11,7 +12,7 @@
   "Create a new service map for the webserver."
   [lrs config]
   {:env                 :prod
-   ::http/routes        (build {:lrs lrs})
+   ::http/routes        (-> {:lrs lrs} build add-admin-routes)
    ::http/resource-path "/public"
    ::http/type          :jetty
    ::http/host          (:http-host config "0.0.0.0")

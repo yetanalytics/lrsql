@@ -7,33 +7,40 @@
   #{;; Create new account
     ["/admin/account/create" :post (conj i/common-interceptors
                                          li/create-admin
-                                         li/generate-jwt)]
+                                         li/generate-jwt)
+     :route-name :lrsql.admin.account/create]
      ;; Log into an existing account
     ["/admin/account/login" :post (conj i/common-interceptors
                                         li/authenticate-admin
-                                        li/generate-jwt)]
+                                        li/generate-jwt)
+     :route-name :lrsql.admin.account/login]
      ;; Delete account (and associated tokens)
     ["/admin/account" :delete (conj i/common-interceptors
                                     li/authenticate-admin
-                                    li/delete-admin)]})
+                                    li/delete-admin)
+     :route-name :lrsql.admin.account/delete]})
 
 (def admin-token-routes
   #{;; Create new tokens w/ scope
     ["/admin/token" :put (conj i/common-interceptors
                                li/validate-jwt
-                               li/create-api-keys)]
+                               li/create-api-keys)
+     :route-name :lrsql.admin.token/put]
      ;; Create or update new tokens w/ scope
     ["/admin/token" :post (conj i/common-interceptors
                                 li/validate-jwt
-                                li/update-api-keys)]
+                                li/update-api-keys)
+     :route-name :lrsql.admin.token/post]
      ;; Get current tokens + scope associated w/ account
     ["/admin/token" :get (conj i/common-interceptors
                                li/validate-jwt
-                               li/read-api-keys)]
+                               li/read-api-keys)
+     :route-name :lrsql.admin.token/get]
      ;; Delete tokens
     ["/admin/token" :delete (conj i/common-interceptors
                                   li/validate-jwt
-                                  li/delete-api-keys)]})
+                                  li/delete-api-keys)
+     :route-name :lrsql.admin.token/delete]})
 
 ;; TODO: Add additional interceptors
 (defn add-admin-routes
