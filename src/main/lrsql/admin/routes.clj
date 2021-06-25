@@ -6,38 +6,45 @@
 (def admin-account-routes
   #{;; Create new account
     ["/admin/account/create" :post (conj i/common-interceptors
+                                         i/lrs-interceptor
                                          li/create-admin
                                          li/generate-jwt)
      :route-name :lrsql.admin.account/create]
      ;; Log into an existing account
     ["/admin/account/login" :post (conj i/common-interceptors
+                                        i/lrs-interceptor
                                         li/authenticate-admin
                                         li/generate-jwt)
      :route-name :lrsql.admin.account/login]
      ;; Delete account (and associated tokens)
     ["/admin/account" :delete (conj i/common-interceptors
+                                    i/lrs-interceptor
                                     li/authenticate-admin
                                     li/delete-admin)
      :route-name :lrsql.admin.account/delete]})
 
 (def admin-token-routes
-  #{;; Create new tokens w/ scope
+  #{;; Create new API key pair w/ scope set
     ["/admin/token" :put (conj i/common-interceptors
+                               i/lrs-interceptor
                                li/validate-jwt
                                li/create-api-keys)
      :route-name :lrsql.admin.token/put]
-     ;; Create or update new tokens w/ scope
+     ;; Create or update new keys w/ scope set
     ["/admin/token" :post (conj i/common-interceptors
+                                i/lrs-interceptor
                                 li/validate-jwt
                                 li/update-api-keys)
      :route-name :lrsql.admin.token/post]
-     ;; Get current tokens + scope associated w/ account
+     ;; Get current keys + scopes associated w/ account
     ["/admin/token" :get (conj i/common-interceptors
+                               i/lrs-interceptor
                                li/validate-jwt
                                li/read-api-keys)
      :route-name :lrsql.admin.token/get]
-     ;; Delete tokens
+     ;; Delete API key pair and associated scopes
     ["/admin/token" :delete (conj i/common-interceptors
+                                  i/lrs-interceptor
                                   li/validate-jwt
                                   li/delete-api-keys)
      :route-name :lrsql.admin.token/delete]})
