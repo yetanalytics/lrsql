@@ -16,7 +16,7 @@
     :enter
     (fn create-admin [{lrs :com.yetanalytics/lrs :as ctx}]
       (let [{:keys [username password]}
-            (get-in ctx [:request :params :body])
+            (get-in ctx [:request :json-params])
             {:keys [result]}
             (adp/-create-account lrs username password)]
         (cond
@@ -35,7 +35,7 @@
     :enter
     (fn authenticate-admin [{lrs :com.yetanalytics/lrs :as ctx}]
       (let [{:keys [username password]}
-            (get-in ctx [:request :params :body]) 
+            (get-in ctx [:request :json-params]) 
             {:keys [result]}
             (adp/-authenticate-account lrs username password)]
         (cond

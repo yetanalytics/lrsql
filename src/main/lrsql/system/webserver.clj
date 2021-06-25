@@ -12,7 +12,7 @@
   "Create a new service map for the webserver."
   [lrs config]
   {:env                 :prod
-   ::http/routes        (-> {:lrs lrs} build add-admin-routes)
+   ::http/routes        (->> (build {:lrs lrs}) (add-admin-routes lrs))
    ::http/resource-path "/public"
    ::http/type          :jetty
    ::http/host          (:http-host config "0.0.0.0")

@@ -173,6 +173,7 @@
   adp/AdminAccountManager
   (-create-account
    [this username password]
+   (log/errorf "username: %s" username)
    (let [conn  (lrs-conn this)
          input (admin-input/admin-insert-input username password)]
      (jdbc/with-transaction [tx conn]
