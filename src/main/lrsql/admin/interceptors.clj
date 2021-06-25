@@ -72,7 +72,7 @@
     :enter
     (fn generate-jwt [ctx]
       (let [{:keys [account-id]} (get-in ctx [:request :params :body])
-            json-web-token     (au/account-id->jwt account-id)]
+            json-web-token       (au/account-id->jwt account-id)]
         (assoc ctx
                :response
                {:status 200 :body json-web-token})))}))

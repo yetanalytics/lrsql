@@ -1,6 +1,7 @@
 (ns lrsql.util.admin
-  (:require [buddy.hashers     :as bh]
-            [buddy.sign.jwt    :as bj]))
+  (:require [buddy.hashers  :as bh]
+            [buddy.sign.jwt :as bj]
+            [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Passwords
@@ -37,6 +38,6 @@
   [tok]
   (try
     ;; TODO: algorithm
-    (-> tok (bj/unsign secret) :account-id)
+    (-> tok (bj/unsign secret) :account-id u/str->uuid)
     ;; TODO: Keep throwing an exception for certain values of `:cause`?
     (catch clojure.lang.ExceptionInfo _ nil)))
