@@ -46,11 +46,9 @@
   :ret as/cred-scope-delete-spec)
 
 (defn delete-credential-scopes-input
-  ([key-pair]
-   key-pair)
-  ([key-pair scopes]
-   (->> scopes
-        (map (partial assoc key-pair)))))
+  [key-pair scopes]
+  (->> scopes
+       (map (partial assoc key-pair))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credentials Query

@@ -3,9 +3,11 @@
 
 (defn query-admin
   [tx input]
-  (if-some [{pass-hash :password_hash
-             pass-salt :password_salt}
+  (if-some [{account-id :id
+             pass-hash  :password_hash
+             pass-salt  :password_salt}
             (f/query-account tx input)]
-    {:password-hash pass-hash
+    {:account-id    account-id
+     :password-hash pass-hash
      :password-salt pass-salt}
     :lrsql.auth/missing-account-error))

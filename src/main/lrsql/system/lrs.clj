@@ -187,7 +187,7 @@
            (= :lrsql.admin/missing-account-error res)
            {:result res}
            (admin-util/valid-password? password res)
-           {:result :lrsql.admin/authenticated}
+           {:result (:account-id res)}
            :else
            {:result :lrsql.admin/invalid-password-error})))))
   (-delete-account

@@ -8,7 +8,7 @@
   (if-not (f/query-account-exists tx (select-keys input [:username]))
     (do
       (f/insert-admin-account! tx input)
-      :lrsql.admin/success)
+      (:primary-key input))
     :lrsql.admin/existing-account-error))
 
 (defn delete-admin!
