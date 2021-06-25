@@ -43,3 +43,42 @@
                   :result
                   (= :lrsql.admin/missing-account-error)))))
     (component/stop sys')))
+
+(deftest auth-test
+  (let [_      (support/assert-in-mem-db)
+        sys    (system/system :test)
+        sys'   (component/start sys)
+        lrs    (:lrs sys')
+        acc-id (:result (adp/-create-account lrs test-username test-password))        ]
+    (testing "Credential creation"
+      (let [{:keys [api-key secret-key] :as key-pair}
+            (adp/-create-api-keys lrs acc-id #{"all" "all/read"})]
+        (is (string? api-key))
+        (is (string? secret-key))
+        (is (= {:api-key    api-key
+                :secret-key secret-key
+                :scopes     #{"all" "all/read"}}
+               key-pair))
+        (testing "Credential retrieval"
+          (is (= [{:api-key    api-key
+                   :secret-key secret-key
+                   :scopes     #{"all" "all/read"}}]
+                 (adp/-get-api-keys lrs acc-id))))
+        (testing "Credential update"
+          (is (= {:api-key    api-key
+                  :secret-key secret-key
+                  :scopes     #{"all/read" "statements/read"}}
+                 (adp/-update-api-keys
+                  lrs
+                  acc-id
+                  (dissoc key-pair :scopes)
+                  #{"all/read" "statements/read"})))
+          (is (= [{:api-key    api-key
+                   :secret-key secret-key
+                   :scopes     #{"all/read" "statements/read"}}]
+                 (adp/-get-api-keys lrs acc-id))))
+        (testing "Credential deletion"
+          (adp/-delete-api-keys lrs acc-id key-pair)
+          (is (= []
+                 (adp/-get-api-keys lrs acc-id))))))
+    (component/stop sys')))

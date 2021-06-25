@@ -209,7 +209,8 @@
                    scopes)]
      (jdbc/with-transaction [tx conn]
        (auth-cmd/insert-credential! tx cred-in)
-       (auth-cmd/insert-credential-scopes! tx scope-in))))
+       (auth-cmd/insert-credential-scopes! tx scope-in)
+       (assoc key-pair :scopes scopes))))
   (-get-api-keys
    [this account-id]
    (let [conn  (lrs-conn this)
@@ -221,7 +222,7 @@
    (let [conn  (lrs-conn this)
          input (auth-input/query-credential-scopes-input key-pair)]
      (jdbc/with-transaction [tx conn]
-       (let [scopes'    (auth-q/query-credential-scopes tx input)
+       (let [scopes'    (set (auth-q/query-credential-scopes* tx input))
              add-scopes (cset/difference scopes scopes')
              del-scopes (cset/difference scopes' scopes)
              add-inputs (auth-input/insert-credential-scopes-input
@@ -231,7 +232,8 @@
                          key-pair
                          del-scopes)]
          (auth-cmd/insert-credential-scopes! tx add-inputs)
-         (auth-cmd/delete-credential-scopes! tx del-inputs)))))
+         (auth-cmd/delete-credential-scopes! tx del-inputs)
+         (assoc key-pair :scopes scopes)))))
   (-delete-api-keys
    [this account-id key-pair]
    (let [conn     (lrs-conn this)

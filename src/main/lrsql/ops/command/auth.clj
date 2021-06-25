@@ -2,6 +2,7 @@
   (:require [lrsql.functions :as f]))
 
 ;; Insertion
+  ;; TODO: Dupe checking
 
 (defn insert-credential!
   [tx input]
@@ -14,6 +15,7 @@
   (doall (map (partial f/insert-credential-scope! tx) inputs)))
 
 ;; Deletion
+;; TODO: Existence checking
 
 (defn delete-credential-scopes!
   [tx inputs]

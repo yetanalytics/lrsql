@@ -59,7 +59,7 @@ AND scope = :scope
 -- :doc Delete the credential and it scopes specified by `:account-id` and a key pair.
 DELETE FROM credential_to_scope
 WHERE (api_key, secret_key) IN (
-  SELECT (cred.api_key, cred.secret_key)
+  SELECT cred.api_key, cred.secret_key
   FROM lrs_credential AS cred
   INNER JOIN credential_to_scope
     ON cred.api_key = :api-key
@@ -77,7 +77,7 @@ AND secret_key = :secret-key
 -- :doc Delete all credentials and their scopes associated with `account-id`.
 DELETE FROM credential_to_scope
 WHERE (api_key, secret_key) IN (
-  SELECT (cred.api_key, cred.secret_key)
+  SELECT cred.api_key, cred.secret_key
   FROM lrs_credential AS cred
   INNER JOIN credential_to_scope AS cts
     ON cred.api_key = cts.api_key
