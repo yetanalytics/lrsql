@@ -24,7 +24,6 @@
             [lrsql.ops.query.statement :as stmt-q]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
-            [lrsql.util.admin     :as admin-util]
             [lrsql.util.auth      :as auth-util]
             [lrsql.util.statement :as stmt-util]
             [lrsql.util :as u])
@@ -176,26 +175,19 @@
    (let [conn  (lrs-conn this)
          input (admin-input/admin-insert-input username password)]
      (jdbc/with-transaction [tx conn]
-       {:result (admin-cmd/insert-admin! tx input)})))
+       (admin-cmd/insert-admin! tx input))))
   (-authenticate-account
    [this username password]
    (let [conn  (lrs-conn this)
-         input (admin-input/admin-query-input username)]
+         input (admin-input/admin-validate-input username password)]
      (jdbc/with-transaction [tx conn]
-       (let [res (admin-q/query-admin tx input)]
-         (cond
-           (= :lrsql.admin/missing-account-error res)
-           {:result res}
-           (admin-util/valid-password? password (:passhash res))
-           {:result (:account-id res)}
-           :else
-           {:result :lrsql.admin/invalid-password-error})))))
+       (admin-q/validate-admin tx input))))
   (-delete-account
    [this account-id]
    (let [conn  (lrs-conn this)
          input (admin-input/admin-delete-input account-id)]
      (jdbc/with-transaction [tx conn]
-       {:result (admin-cmd/delete-admin! tx input)})))
+       (admin-cmd/delete-admin! tx input))))
   
   adp/APIKeyManager
   (-create-api-keys

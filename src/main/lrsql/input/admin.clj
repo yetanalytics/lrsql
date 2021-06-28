@@ -14,13 +14,14 @@
    :username    username
    :passhash    (ua/hash-password password)})
 
-(s/fdef admin-query-input
-  :args (s/cat :username ::as/username)
-  :ret as/admin-query-spec)
+(s/fdef admin-validate-input
+  :args (s/cat :username ::as/username :password ::as/password)
+  :ret as/admin-validate-spec)
 
-(defn admin-query-input
-  [username]
-  {:username username})
+(defn admin-validate-input
+  [username password]
+  {:username username
+   :password password})
 
 (s/fdef admin-delete-input
   :args (s/cat :account-id ::as/account-id)

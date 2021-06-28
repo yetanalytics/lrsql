@@ -12,10 +12,10 @@
 (def test-password "iLoveSql")
 
 (deftest admin-test
-  (let [_     (support/assert-in-mem-db)
-        sys   (system/system :test)
-        sys'  (component/start sys)
-        lrs   (:lrs sys')]
+  (let [_    (support/assert-in-mem-db)
+        sys  (system/system :test)
+        sys' (component/start sys)
+        lrs  (:lrs sys')]
     (testing "Admin account insertion"
       (is (-> (adp/-create-account lrs test-username test-password)
               :result

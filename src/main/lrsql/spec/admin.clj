@@ -15,5 +15,9 @@
 (def admin-query-spec
   (s/keys :req-un [::username]))
 
+(def admin-validate-spec
+  (s/keys :req-un [::username
+                   ::password]))
+
 (def admin-delete-spec
   (s/keys :req-un [::account-id]))
