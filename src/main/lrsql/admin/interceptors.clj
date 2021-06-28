@@ -120,17 +120,26 @@
    {:name ::validate-jwt
     :enter
     (fn validate-jwt [ctx]
-      (let [{tok :token} (get-in ctx [:header :token])]
-        (if-some [account-id (au/jwt->account-id tok)]
+      (let [{tok :token} (get-in ctx [:header :token])
+            result       (au/jwt->account-id tok)]
+        (cond
           ;; Success - pass the account ID in the body
+          (uuid? result)
           (assoc ctx
                  :response
-                 {:status 200 :body {:account-id account-id}})
-          ;; Failure!
-          ;; TODO: Different error messages?
+                 {:status 200 :body {:account-id result}})
+
+          ;; Failure - the token has expired
+          (= :lrsql.admin/expired-token-error result)
           (assoc (chain/terminate ctx)
                  :response
-                 {:status 401 :body "Invalid token!"}))))}))
+                 {:status 401 :body "Expired token!"})
+
+          ;; Failure - the token is invalid
+          (= :lrsql.admin/invalid-token-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400 :body "Invalid, missing, or malformed token!"}))))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; API Keys

@@ -56,5 +56,5 @@
     (catch clojure.lang.ExceptionInfo e
       (if (and (#{:validation} (:type e))
                (#{:exp}) (:cause e))
-        :expired-token-error
-        :invalid-token-error))))
+        :lrsql.admin/expired-token-error
+        :lrsql.admin/invalid-token-error))))

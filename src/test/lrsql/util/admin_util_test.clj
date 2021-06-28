@@ -17,5 +17,5 @@
       (is (re-matches #".*\..*\..*" (ua/account-id->jwt test-id)))
       (is (= test-id
              (-> test-id ua/account-id->jwt ua/jwt->account-id)))
-      (is (= :invalid-token-error
+      (is (= :lrsql.admin/invalid-token-error
              (ua/jwt->account-id "not-a-jwt"))))))
