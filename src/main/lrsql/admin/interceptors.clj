@@ -19,21 +19,14 @@
     (fn verify-admin-info [ctx]
       (let [{?username :username ?password :password}
             (get-in ctx [:request :json-params])]
-        (cond
-          ;; Missing username or password
-          (or (nil? ?username) (nil? ?password))
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400 :body "Missing username or password in body!"})
-
-          ;; Non-string username or password
-          (or (not (string? ?username)) (not (string? ?password)))
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400 :body "Username or password must be string!"})
-
-          ;; We're good
-          :else
+        (if-some [emsg
+                  (cond
+                    (nil? ?username) "Missing username in body!"
+                    (nil? ?password) "Missing password in body!"
+                    (not (string? ?username)) "Username is not string!"
+                    (not (string? ?password)) "Password is not string!"
+                    :else nil)]
+          (assoc (chain/terminate ctx) :response {:status 400 :body emsg})
           ctx)))}))
 
 (def create-admin
@@ -158,27 +151,22 @@
     (fn validate-key-pair [ctx]
       (let [{?api-key :api-key ?secret-key :secret-key}
             (get-in ctx [:request :json-params])]
-        (cond
-          ;; Missing API keys
-          (or (nil? ?api-key) (nil? ?secret-key))
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400 :body "API keys are not present!"})
-          
-          ;; Keys are not strings
-          (not (and (string? ?api-key) (string? ?secret-key)))
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400 :body "API keys are not strings!"})
-          
-          ;; Keys are not in Base64 format
-          (not (and (re-matches Base64RegEx ?api-key)
-                    (re-matches Base64RegEx ?secret-key)))
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400 :body "API keys are not in Base64 format!"})
-          
-          :else
+        (if-some [emsg (cond
+                         (nil? ?api-key)
+                         "API key is not present!"
+                         (nil? ?secret-key)
+                         "Secret key is not present!"
+                         (not (string? ?api-key))
+                         "API key is not a string!"
+                         (not (string? ?secret-key))
+                         "Secret key is not present"
+                         (not (re-matches Base64RegEx ?api-key))
+                         "API key is not in Base64 format!"
+                         (not (re-matches Base64RegEx ?secret-key))
+                         "Secret key is not in Base64 format!"
+                         :else
+                         nil)]
+          (assoc (chain/terminate ctx) :response {:status 400 :body emsg})
           ctx)))}))
 
 (def validate-scopes
@@ -187,21 +175,14 @@
     :enter
     (fn validate-scopes [ctx]
       (let [{?scopes :scopes} (get-in ctx [:request :json-params])]
-        (cond
-          ;; Missing scopes
-          (nil? ?scopes)
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400 :body "Scopes are not present!"})
-          
-          ;; Invalid scopes
-          (not (every? (partial contains? auth-u/scope-str-kw-map)
-                       ?scopes))
-          (assoc (chain/terminate)
-                 :response
-                 {:status 400 :body "Invalid scopes present!"})
-          
-          :else
+        (if-some [emsg
+                  (cond
+                    (nil? ?scopes)
+                    "Scopes are not present!"
+                    (not (every? (partial contains? auth-u/scope-str-kw-map)
+                                 ?scopes))
+                    "Invalid scopes are present!")]
+          (assoc (chain/terminate ctx) :response {:status 400 :body emsg})
           ctx)))}))
 
 (def create-api-keys
