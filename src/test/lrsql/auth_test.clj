@@ -48,7 +48,7 @@
         sys    (system/system :test)
         sys'   (component/start sys)
         lrs    (:lrs sys')
-        acc-id (:result (adp/-create-account lrs test-username test-password))        ]
+        acc-id (:result (adp/-create-account lrs test-username test-password))]
     (testing "Credential creation"
       (let [{:keys [api-key secret-key] :as key-pair}
             (adp/-create-api-keys lrs acc-id #{"all" "all/read"})]
@@ -70,14 +70,15 @@
                  (adp/-update-api-keys
                   lrs
                   acc-id
-                  (dissoc key-pair :scopes)
+                  api-key
+                  secret-key
                   #{"all/read" "statements/read"})))
           (is (= [{:api-key    api-key
                    :secret-key secret-key
                    :scopes     #{"all/read" "statements/read"}}]
                  (adp/-get-api-keys lrs acc-id))))
         (testing "and credential deletion"
-          (adp/-delete-api-keys lrs acc-id key-pair)
+          (adp/-delete-api-keys lrs acc-id api-key secret-key)
           (is (= []
                  (adp/-get-api-keys lrs acc-id))))))
     (component/stop sys')))

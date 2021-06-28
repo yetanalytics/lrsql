@@ -150,10 +150,9 @@
    {:name ::create-api-keys
     :enter
     (fn create-api-keys [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [account-id scopes]}
-            (get-in ctx [:request :params :body])
-            api-key-res
-            (adp/-create-api-keys lrs account-id scopes)]
+      (let [{:keys [account-id]} (get-in ctx [:response :body])
+            {:keys [scopes]}     (get-in ctx [:request :json-params])
+            api-key-res          (adp/-create-api-keys lrs account-id scopes)]
         (assoc ctx
                :response
                {:status 200 :body api-key-res})))}))
@@ -163,10 +162,8 @@
    {:name ::read-api-keys
     :enter
     (fn read-api-keys [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [account-id]}
-            (get-in ctx [:request :params :body])
-            api-key-res
-            (adp/-get-api-keys lrs account-id)]
+      (let [{:keys [account-id]} (get-in ctx [:response :body])
+            api-key-res          (adp/-get-api-keys lrs account-id)]
         (assoc ctx
                :response
                {:status 200 :body api-key-res})))}))
@@ -176,10 +173,12 @@
    {:name ::update-api-keys
     :enter
     (fn update-api-keys [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [account-id key-pair scopes]}
-            (get-in ctx [:request :params :body])
+      (let [{:keys [account-id]}
+            (get-in ctx [:response :body])
+            {:keys [api-key secret-key scopes]}
+            (get-in ctx [:request :json-params])
             api-key-res
-            (adp/-update-api-keys lrs account-id key-pair scopes)]
+            (adp/-update-api-keys lrs account-id api-key secret-key scopes)]
         (assoc ctx
                :response
                {:status 200 :body api-key-res})))}))
@@ -189,10 +188,12 @@
    {:name ::delete-api-keys
     :enter
     (fn delete-api-keys [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [account-id key-pair]}
-            (get-in ctx [:request :params :body])
+      (let [{:keys [account-id]}
+            (get-in ctx [:response :body])
+            {:keys [api-key secret-key]}
+            (get-in ctx [:request :json-params])
             api-key-res
-            (adp/-delete-api-keys lrs account-id key-pair)]
+            (adp/-delete-api-keys lrs account-id api-key secret-key)]
         (assoc ctx
                :response
                {:status 200 :body api-key-res})))}))

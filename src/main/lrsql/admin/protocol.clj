@@ -15,7 +15,7 @@
     "Create a new API key pair with the associated scopes.")
   (-get-api-keys [this account-id]
     "Get all API key pairs associated with the account.")
-  (-update-api-keys [this account-id key-pair scopes]
+  (-update-api-keys [this account-id api-key secret-key scopes]
     "Update the key pair associated with the account with new scopes.")
-  (-delete-api-keys [this account-id key-pair]
+  (-delete-api-keys [this account-id api-key secret-key]
     "Delete the key pair associated with the account."))

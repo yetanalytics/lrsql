@@ -45,7 +45,7 @@
     (is (nil? (check-validate `i-auth/credentials-delete-input)))
     (is (nil? (check-validate `i-auth/credential-scopes-delete-input)))
     (is (nil? (check-validate `i-auth/credentials-query-input)))
-    (is (nil? (check-validate `i-auth/credential-query-scopes-input)))))
+    (is (nil? (check-validate `i-auth/credential-scopes-query-input)))))
 
 (deftest test-admin
   (testing "admin account inputs"
