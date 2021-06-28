@@ -62,7 +62,7 @@
     (catch Exception e ; Calls non-ExceptionInfo error on nil token
       (if-some [ed (ex-data e)]
         (if (and (#{:validation} (:type ed))
-                 (#{:exp}) (:cause ed))
+                 (#{:exp} (:cause ed)))
           :lrsql.admin/expired-token-error
           :lrsql.admin/invalid-token-error)
         :lrsql.admin/invalid-token-error))))
