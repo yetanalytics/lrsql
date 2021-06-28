@@ -17,16 +17,19 @@
   [comm-interceptors]
   #{;; Create new account
     ["/admin/account/create" :post (conj comm-interceptors
+                                         li/verify-admin-info
                                          li/create-admin
                                          li/generate-jwt)
      :route-name :lrsql.admin.account/create]
      ;; Log into an existing account
     ["/admin/account/login" :post (conj comm-interceptors
+                                        li/verify-admin-info
                                         li/authenticate-admin
                                         li/generate-jwt)
      :route-name :lrsql.admin.account/login]
      ;; Delete account (and associated credentials)
     ["/admin/account" :delete (conj comm-interceptors
+                                    li/verify-admin-info
                                     li/authenticate-admin
                                     li/delete-admin)
      :route-name :lrsql.admin.account/delete]})

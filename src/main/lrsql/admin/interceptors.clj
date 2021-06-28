@@ -10,6 +10,30 @@
 ;; Admin Accounts
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def verify-admin-info
+  (interceptor
+   {:name ::verify-admin-info
+    :enter
+    (fn verify-admin-info [ctx]
+      (let [{?username :username ?password :password}
+            (get-in ctx [:request :json-params])]
+        (cond
+          ;; Missing username or password
+          (or (nil? ?username) (nil? ?password))
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400 :body "Missing username or password in body!"})
+          
+          ;; Non-string username or password
+          (or (not (string? ?username)) (not (string? ?password)))
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400 :body "Username or password must be string!"})
+          
+          ;; We're good
+          :else
+          ctx)))}))
+
 (def create-admin
   (interceptor
    {:name ::create-admin
@@ -20,14 +44,18 @@
             {:keys [result]}
             (adp/-create-account lrs username password)]
         (cond
-          (uuid? result) ; The result is the account ID
-          (assoc-in ctx
-                    [:request :params :body :account-id]
-                    result)
+          ;; The result is the account ID - success!
+          (uuid? result)
+          (assoc ctx
+                 :response
+                 {:status 200 :body {:account-id result}})
+
+          ;; The account already exists
           (= :lrsql.admin/existing-account-error result)
           (assoc (chain/terminate ctx)
                  :response
-                 {:status 409 :body "ADMIN ACCOUNT CONFLICT"}))))}))
+                 {:status 409 :body (format "An account \"%s\" already exists!"
+                                            username)}))))}))
 
 (def authenticate-admin
   (interceptor
@@ -39,30 +67,40 @@
             {:keys [result]}
             (adp/-authenticate-account lrs username password)]
         (cond
-          (uuid? result) ; The result is the account ID
-          (assoc-in ctx
-                    [:request :params :body :account-id]
-                    result)
+          ;; The result is the account ID - success!
+          (uuid? result) 
+          (assoc ctx
+                 :response
+                 {:status 200 :body {:account-id result}})
+          
+          ;; The account cannot be found
           (= :lrsql.admin/missing-account-error result)
           (assoc (chain/terminate ctx)
                  :response
-                 {:status 404 :body "ADMIN ACCOUNT NOT FOUND"})
+                 {:status 404 :body (format "Account \"%s\" not found!"
+                                            username)})
+          
+          ;; The password was invalid
           (= :lrsql.admin/invalid-password-error result)
           (assoc (chain/terminate ctx)
                  :response
-                 {:status 401 :body "ADMIN ACCOUNT FORBIDDEN"}))))}))
+                 {:status 401 :body (format "Incorrect password for \"%s\"!"
+                                            username)}))))}))
 
 (def delete-admin
   (interceptor
    {:name ::delete-admin
     :enter
     (fn delete-admin [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [account-id]}
-            (get-in ctx [:request :params :body])]
+      (let [{:keys [username]}
+            (get-in ctx [:request :json-params])
+            {:keys [account-id]}
+            (get-in ctx [:response :body])] ; From `authenticate-admin`
         (adp/-delete-account lrs account-id)
         (assoc ctx
                :response
-               {:status 200 :body "Deletion successful!"})))}))
+               {:status 200 :body (format "Successfully deleted \"%s\"!"
+                                          username)})))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; JSON Web Tokens
@@ -73,11 +111,9 @@
    {:name ::generate-jwt
     :enter
     (fn generate-jwt [ctx]
-      (let [{:keys [account-id]} (get-in ctx [:request :params :body])
+      (let [{:keys [account-id]} (get-in ctx [:response :body])
             json-web-token       (au/account-id->jwt account-id)]
-        (assoc ctx
-               :response
-               {:status 200 :body json-web-token})))}))
+        (assoc-in ctx [:response :body :jwt] json-web-token)))}))
 
 (def validate-jwt
   (interceptor
@@ -86,10 +122,15 @@
     (fn validate-jwt [ctx]
       (let [{tok :token} (get-in ctx [:header :token])]
         (if-some [account-id (au/jwt->account-id tok)]
-          (assoc-in ctx [:request :params :body :account-id] account-id)
+          ;; Success - pass the account ID in the body
+          (assoc ctx
+                 :response
+                 {:status 200 :body {:account-id account-id}})
+          ;; Failure!
+          ;; TODO: Different error messages?
           (assoc (chain/terminate ctx)
                  :response
-                 {:status 401 :body "INVALID TOKEN FORBIDDEN"}))))}))
+                 {:status 401 :body "Invalid token!"}))))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; API Keys
