@@ -6,8 +6,6 @@
             [lrsql.util.admin :as admin-u]
             [lrsql.util.auth :as auth-u]))
 
-;; TODO: Expand current placeholder interceptors
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Admin Accounts
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -122,11 +120,11 @@
                        admin-u/header->jwt)
             result (admin-u/jwt->account-id token)]
         (cond
-          ;; Success - pass the account ID in the body
+          ;; Success - pass the account ID in the request body
           (uuid? result)
-          (assoc ctx
-                 :response
-                 {:status 200 :body {:account-id result}})
+          (assoc-in ctx
+                    [:request :json-params :account-id]
+                    result)
 
           ;; Failure - the token has expired
           (= :lrsql.admin/expired-token-error result)
@@ -190,8 +188,7 @@
    {:name ::create-api-keys
     :enter
     (fn create-api-keys [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [account-id]} (get-in ctx [:response :body])
-            {:keys [scopes]}    (get-in ctx [:request :json-params])
+      (let [{:keys [account-id scopes]} (get-in ctx [:request :json-params])
             scope-set   (set scopes)
             api-key-res (adp/-create-api-keys lrs account-id scope-set)]
         (assoc ctx
@@ -203,7 +200,7 @@
    {:name ::read-api-keys
     :enter
     (fn read-api-keys [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [account-id]} (get-in ctx [:response :body])
+      (let [{:keys [account-id]} (get-in ctx [:request :json-params])
             api-key-res          (adp/-get-api-keys lrs account-id)]
         (assoc ctx
                :response
@@ -214,9 +211,7 @@
    {:name ::update-api-keys
     :enter
     (fn update-api-keys [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [account-id]}
-            (get-in ctx [:response :body])
-            {:keys [api-key secret-key scopes]}
+      (let [{:keys [account-id api-key secret-key scopes]}
             (get-in ctx [:request :json-params])
             scope-set
             (set scopes)
@@ -231,9 +226,7 @@
    {:name ::delete-api-keys
     :enter
     (fn delete-api-keys [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [account-id]}
-            (get-in ctx [:response :body])
-            {:keys [api-key secret-key]}
+      (let [{:keys [account-id api-key secret-key]}
             (get-in ctx [:request :json-params])
             api-key-res
             (adp/-delete-api-keys lrs account-id api-key secret-key)]
