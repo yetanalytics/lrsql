@@ -113,7 +113,9 @@
     (fn generate-jwt [ctx]
       (let [{:keys [account-id]} (get-in ctx [:response :body])
             json-web-token       (au/account-id->jwt account-id)]
-        (assoc-in ctx [:response :body :jwt] json-web-token)))}))
+        (assoc-in ctx
+                  [:response :body :json-web-token]
+                  json-web-token)))}))
 
 (def validate-jwt
   (interceptor

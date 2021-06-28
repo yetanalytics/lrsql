@@ -24,7 +24,7 @@
         (is (try (u/str->uuid (get edn-body "account-id"))
                  (catch Exception _ false)))
         (is (re-matches #".*\..*\..*"
-                        (get edn-body "jwt"))))
+                        (get edn-body "json-web-token"))))
       (try
         (curl/post "http://0.0.0.0:8080/admin/account/create"
                    data)
@@ -47,7 +47,7 @@
         (is (try (u/str->uuid (get edn-body "account-id"))
                  (catch Exception _ false)))
         (is (re-matches #".*\..*\..*"
-                        (get edn-body "jwt"))))
+                        (get edn-body "json-web-token"))))
       (try
         (curl/post
          "http://0.0.0.0:8080/admin/account/login"
@@ -78,6 +78,12 @@
             (curl/delete "http://0.0.0.0:8080/admin/account"
                          data)]
         (is (= 200 (:status delete-res))))
+      (try
+        (curl/delete "http://0.0.0.0:8080/admin/account"
+                     data)
+        (catch clojure.lang.ExceptionInfo e
+          ;; Not Found status code
+          (is (= 404 (-> e ex-data :status)))))
       (try
         (curl/delete
          "http://0.0.0.0:8080/admin/account"
