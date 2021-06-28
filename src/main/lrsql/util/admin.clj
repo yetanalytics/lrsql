@@ -42,6 +42,12 @@
                :exp (quot (u/time->millis etime) 1000)}]
     (bj/sign claim secret))) ; TODO: algorithm
 
+(defn header->jwt
+  "Given an authentication header whose value is a JSON Web Token, return
+   the encoded JWT."
+  [auth-header]
+  (second (re-matches #"Bearer\s+(.*)" auth-header)))
+
 (defn jwt->account-id
   "Given the JSON Web Token `tok`, return the account ID if valid.
    Otherwise return one of the following errors:
@@ -53,8 +59,10 @@
     ;; TODO: leeway in config vars
     (let [ctime (-> (u/current-time) u/time->millis (quot 1000))]
       (-> tok (bj/unsign secret {:now ctime}) :acc u/str->uuid))
-    (catch clojure.lang.ExceptionInfo e
-      (if (and (#{:validation} (:type e))
-               (#{:exp}) (:cause e))
-        :lrsql.admin/expired-token-error
+    (catch Exception e ; Calls non-ExceptionInfo error on nil token
+      (if-some [ed (ex-data e)]
+        (if (and (#{:validation} (:type ed))
+                 (#{:exp}) (:cause ed))
+          :lrsql.admin/expired-token-error
+          :lrsql.admin/invalid-token-error)
         :lrsql.admin/invalid-token-error))))

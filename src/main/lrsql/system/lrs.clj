@@ -247,4 +247,6 @@
                    api-key
                    secret-key)]
      (jdbc/with-transaction [tx conn]
-       (auth-cmd/delete-credential! tx cred-in)))))
+       (auth-cmd/delete-credential! tx cred-in)
+       {:api-key    api-key
+        :secret-key secret-key}))))

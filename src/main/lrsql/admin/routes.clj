@@ -39,11 +39,14 @@
   #{;; Create new API key pair w/ scope set
     ["/admin/creds" :put (conj comm-interceptors
                                li/validate-jwt
+                               li/validate-scopes
                                li/create-api-keys)
      :route-name :lrsql.admin.creds/put]
      ;; Create or update new keys w/ scope set
     ["/admin/creds" :post (conj comm-interceptors
                                 li/validate-jwt
+                                li/validate-key-pair
+                                li/validate-scopes
                                 li/update-api-keys)
      :route-name :lrsql.admin.creds/post]
      ;; Get current keys + scopes associated w/ account
@@ -52,8 +55,9 @@
                                li/read-api-keys)
      :route-name :lrsql.admin.creds/get]
      ;; Delete API key pair and associated scopes
-    ["/admin/creds" :delete (conj i/common-interceptors
+    ["/admin/creds" :delete (conj comm-interceptors
                                   li/validate-jwt
+                                  li/validate-key-pair
                                   li/delete-api-keys)
      :route-name :lrsql.admin.creds/delete]})
 

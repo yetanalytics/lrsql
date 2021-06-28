@@ -1,8 +1,10 @@
 (ns lrsql.admin.interceptors
   (:require [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
+            [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
-            [lrsql.util.admin :as au]))
+            [lrsql.util.admin :as admin-u]
+            [lrsql.util.auth :as auth-u]))
 
 ;; TODO: Expand current placeholder interceptors
 
@@ -23,13 +25,13 @@
           (assoc (chain/terminate ctx)
                  :response
                  {:status 400 :body "Missing username or password in body!"})
-          
+
           ;; Non-string username or password
           (or (not (string? ?username)) (not (string? ?password)))
           (assoc (chain/terminate ctx)
                  :response
                  {:status 400 :body "Username or password must be string!"})
-          
+
           ;; We're good
           :else
           ctx)))}))
@@ -63,23 +65,23 @@
     :enter
     (fn authenticate-admin [{lrs :com.yetanalytics/lrs :as ctx}]
       (let [{:keys [username password]}
-            (get-in ctx [:request :json-params]) 
+            (get-in ctx [:request :json-params])
             {:keys [result]}
             (adp/-authenticate-account lrs username password)]
         (cond
           ;; The result is the account ID - success!
-          (uuid? result) 
+          (uuid? result)
           (assoc ctx
                  :response
                  {:status 200 :body {:account-id result}})
-          
+
           ;; The account cannot be found
           (= :lrsql.admin/missing-account-error result)
           (assoc (chain/terminate ctx)
                  :response
                  {:status 404 :body (format "Account \"%s\" not found!"
                                             username)})
-          
+
           ;; The password was invalid
           (= :lrsql.admin/invalid-password-error result)
           (assoc (chain/terminate ctx)
@@ -112,7 +114,7 @@
     :enter
     (fn generate-jwt [ctx]
       (let [{:keys [account-id]} (get-in ctx [:response :body])
-            json-web-token       (au/account-id->jwt account-id)]
+            json-web-token       (admin-u/account-id->jwt account-id)]
         (assoc-in ctx
                   [:response :body :json-web-token]
                   json-web-token)))}))
@@ -122,8 +124,10 @@
    {:name ::validate-jwt
     :enter
     (fn validate-jwt [ctx]
-      (let [{tok :token} (get-in ctx [:header :token])
-            result       (au/jwt->account-id tok)]
+      (let [token  (-> ctx
+                       (get-in [:request :headers "authorization"])
+                       admin-u/header->jwt)
+            result (admin-u/jwt->account-id token)]
         (cond
           ;; Success - pass the account ID in the body
           (uuid? result)
@@ -147,14 +151,68 @@
 ;; API Keys
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def validate-key-pair
+  (interceptor
+   {:name ::validate-key-pair
+    :enter
+    (fn validate-key-pair [ctx]
+      (let [{?api-key :api-key ?secret-key :secret-key}
+            (get-in ctx [:request :json-params])]
+        (cond
+          ;; Missing API keys
+          (or (nil? ?api-key) (nil? ?secret-key))
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400 :body "API keys are not present!"})
+          
+          ;; Keys are not strings
+          (not (and (string? ?api-key) (string? ?secret-key)))
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400 :body "API keys are not strings!"})
+          
+          ;; Keys are not in Base64 format
+          (not (and (re-matches Base64RegEx ?api-key)
+                    (re-matches Base64RegEx ?secret-key)))
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400 :body "API keys are not in Base64 format!"})
+          
+          :else
+          ctx)))}))
+
+(def validate-scopes
+  (interceptor
+   {:name ::validate-scopes
+    :enter
+    (fn validate-scopes [ctx]
+      (let [{?scopes :scopes} (get-in ctx [:request :json-params])]
+        (cond
+          ;; Missing scopes
+          (nil? ?scopes)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400 :body "Scopes are not present!"})
+          
+          ;; Invalid scopes
+          (not (every? (partial contains? auth-u/scope-str-kw-map)
+                       ?scopes))
+          (assoc (chain/terminate)
+                 :response
+                 {:status 400 :body "Invalid scopes present!"})
+          
+          :else
+          ctx)))}))
+
 (def create-api-keys
   (interceptor
    {:name ::create-api-keys
     :enter
     (fn create-api-keys [{lrs :com.yetanalytics/lrs :as ctx}]
       (let [{:keys [account-id]} (get-in ctx [:response :body])
-            {:keys [scopes]}     (get-in ctx [:request :json-params])
-            api-key-res          (adp/-create-api-keys lrs account-id scopes)]
+            {:keys [scopes]}    (get-in ctx [:request :json-params])
+            scope-set   (set scopes)
+            api-key-res (adp/-create-api-keys lrs account-id scope-set)]
         (assoc ctx
                :response
                {:status 200 :body api-key-res})))}))
@@ -179,8 +237,10 @@
             (get-in ctx [:response :body])
             {:keys [api-key secret-key scopes]}
             (get-in ctx [:request :json-params])
+            scope-set
+            (set scopes)
             api-key-res
-            (adp/-update-api-keys lrs account-id api-key secret-key scopes)]
+            (adp/-update-api-keys lrs account-id api-key secret-key scope-set)]
         (assoc ctx
                :response
                {:status 200 :body api-key-res})))}))
