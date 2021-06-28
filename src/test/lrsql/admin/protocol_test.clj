@@ -1,4 +1,5 @@
-(ns lrsql.auth-test
+(ns lrsql.admin.protocol-test
+  "Test the protocol fns of `AdminAccountManager` and `APIKeyManager` directly."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [com.stuartsierra.component    :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]

@@ -1,4 +1,4 @@
-(ns lrsql.admin.admin-test
+(ns lrsql.admin.route-test
   "Test for admin-related interceptors + routes
    (as opposed to just the protocol)."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
