@@ -14,7 +14,8 @@
 (deftest jwt-test
   (let [test-id (u/str->uuid "00000000-0000-0000-0000-000000000001")]
     (testing "JSON web tokens"
-      (is (re-matches #"\w*\.\w*\.\w*" (ua/account-id->jwt test-id)))
+      (is (re-matches #".*\..*\..*" (ua/account-id->jwt test-id)))
       (is (= test-id
              (-> test-id ua/account-id->jwt ua/jwt->account-id)))
-      (is (nil? (ua/jwt->account-id "not-a-jwt"))))))
+      (is (= :invalid-token-error
+             (ua/jwt->account-id "not-a-jwt"))))))

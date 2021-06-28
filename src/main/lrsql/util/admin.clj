@@ -28,16 +28,33 @@
 (def secret "sandwich") ; TODO: Actual public + private keys
 
 (defn account-id->jwt
-  "Generate a new signed JSON Web Token with `account-id` in the claim."
+  "Generate a new signed JSON Web Token with `account-id` in the claim
+   as a custom `:acc` field. The issued-at and expiration time are given as
+   `:iat` and `:exp`, respectively."
   [account-id]
-  (bj/sign {:account-id account-id} secret)) ; TODO: algorithm
+  (let [ctime (u/current-time)
+        etime (u/offset-time ctime 1 :hours) ; TODO: offset amount and units in config
+        claim {:acc account-id
+               ;; Time values MUST be a number containing a NumericDate value
+               ;; ie. a JSON numeric value representing the number of seconds
+               ;; (not milliseconds!) from the 1970 UTC start.
+               :iat (quot (u/time->millis ctime) 1000)
+               :exp (quot (u/time->millis etime) 1000)}]
+    (bj/sign claim secret))) ; TODO: algorithm
 
 (defn jwt->account-id
-  "Given the JSON Web Token `tok`, return nil if it is is invalid (e.g. if
-   the token has expired), otherwise return the account ID."
+  "Given the JSON Web Token `tok`, return the account ID if valid.
+   Otherwise return one of the following errors:
+     `:expired-token-error` - if the token was expired.
+     `:invalid-token-error` - every other error."
   [tok]
   (try
     ;; TODO: algorithm
-    (-> tok (bj/unsign secret) :account-id u/str->uuid)
-    ;; TODO: Keep throwing an exception for certain values of `:cause`?
-    (catch clojure.lang.ExceptionInfo _ nil)))
+    ;; TODO: leeway in config vars
+    (let [ctime (-> (u/current-time) u/time->millis (quot 1000))]
+      (-> tok (bj/unsign secret {:now ctime}) :acc u/str->uuid))
+    (catch clojure.lang.ExceptionInfo e
+      (if (and (#{:validation} (:type e))
+               (#{:exp}) (:cause e))
+        :expired-token-error
+        :invalid-token-error))))
