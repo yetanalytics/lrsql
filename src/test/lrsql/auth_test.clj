@@ -1,6 +1,7 @@
 (ns lrsql.auth-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [com.stuartsierra.component    :as component]
+            [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
             [lrsql.system         :as system]
             [lrsql.test-support   :as support]))
@@ -52,8 +53,8 @@
     (testing "Credential creation"
       (let [{:keys [api-key secret-key] :as key-pair}
             (adp/-create-api-keys lrs acc-id #{"all" "all/read"})]
-        (is (string? api-key))
-        (is (string? secret-key))
+        (is (re-matches Base64RegEx api-key))
+        (is (re-matches Base64RegEx secret-key))
         (is (= {:api-key    api-key
                 :secret-key secret-key
                 :scopes     #{"all" "all/read"}}

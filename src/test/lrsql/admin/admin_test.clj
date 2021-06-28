@@ -4,6 +4,7 @@
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [babashka.curl :as curl]
             [com.stuartsierra.component :as component]
+            [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.system :as system]
             [lrsql.test-support :as support]
             [lrsql.util :as u]))
@@ -120,9 +121,8 @@
             {:strs [api-key secret-key scopes]}
             (u/parse-json body)]
         (is (= 200 status))
-        ;; TODO: Base64 strings
-        (is (string? api-key))
-        (is (string? secret-key))
+        (is (re-matches Base64RegEx api-key))
+        (is (re-matches Base64RegEx secret-key))
         (is (= #{"all" "all/read"}
                (set scopes)))
         (testing "and reading"
