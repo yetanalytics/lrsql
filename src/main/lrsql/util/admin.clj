@@ -62,7 +62,7 @@
       ;; TODO: algorithm
       (-> tok (bj/unsign secret {:leeway leeway}) :acc u/str->uuid)
       (catch clojure.lang.ExceptionInfo e
-        (let [{:keys [type cause]} e]
+        (let [{:keys [type cause]} (ex-data e)]
           (if (and (#{:validation} type)
                    (#{:exp} cause))
             :lrsql.admin/expired-token-error
