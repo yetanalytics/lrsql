@@ -99,18 +99,20 @@
 ;; JSON Web Tokens
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def generate-jwt
+(defn generate-jwt
+  [exp]
   (interceptor
    {:name ::generate-jwt
     :enter
     (fn generate-jwt [ctx]
       (let [{:keys [account-id]} (get-in ctx [:response :body])
-            json-web-token       (admin-u/account-id->jwt account-id)]
+            json-web-token       (admin-u/account-id->jwt account-id exp)]
         (assoc-in ctx
                   [:response :body :json-web-token]
                   json-web-token)))}))
 
-(def validate-jwt
+(defn validate-jwt
+  [leeway]
   (interceptor
    {:name ::validate-jwt
     :enter
@@ -118,7 +120,7 @@
       (let [token  (-> ctx
                        (get-in [:request :headers "authorization"])
                        admin-u/header->jwt)
-            result (admin-u/jwt->account-id token)]
+            result (admin-u/jwt->account-id token leeway)]
         (cond
           ;; Success - pass the account ID in the request body
           (uuid? result)

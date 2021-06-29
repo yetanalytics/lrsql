@@ -5,7 +5,7 @@
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors :as li]))
 
-(defn- common-interceptors
+(defn- make-common-interceptors
   [lrs]
   [i/x-forwarded-for-interceptor
    json-body
@@ -14,49 +14,49 @@
    (i/lrs-interceptor lrs)])
 
 (defn admin-account-routes
-  [comm-interceptors]
+  [common-interceptors jwt-exp]
   #{;; Create new account
-    ["/admin/account/create" :post (conj comm-interceptors
+    ["/admin/account/create" :post (conj common-interceptors
                                          li/verify-admin-info
                                          li/create-admin
-                                         li/generate-jwt)
+                                         (li/generate-jwt jwt-exp))
      :route-name :lrsql.admin.account/create]
      ;; Log into an existing account
-    ["/admin/account/login" :post (conj comm-interceptors
+    ["/admin/account/login" :post (conj common-interceptors
                                         li/verify-admin-info
                                         li/authenticate-admin
-                                        li/generate-jwt)
+                                        (li/generate-jwt jwt-exp))
      :route-name :lrsql.admin.account/login]
      ;; Delete account (and associated credentials)
-    ["/admin/account" :delete (conj comm-interceptors
+    ["/admin/account" :delete (conj common-interceptors
                                     li/verify-admin-info
                                     li/authenticate-admin
                                     li/delete-admin)
      :route-name :lrsql.admin.account/delete]})
 
 (defn admin-cred-routes
-  [comm-interceptors]
+  [common-interceptors jwt-leeway]
   #{;; Create new API key pair w/ scope set
-    ["/admin/creds" :put (conj comm-interceptors
-                               li/validate-jwt
+    ["/admin/creds" :put (conj common-interceptors
+                               (li/validate-jwt jwt-leeway)
                                li/validate-scopes
                                li/create-api-keys)
      :route-name :lrsql.admin.creds/put]
      ;; Create or update new keys w/ scope set
-    ["/admin/creds" :post (conj comm-interceptors
-                                li/validate-jwt
+    ["/admin/creds" :post (conj common-interceptors
+                                (li/validate-jwt jwt-leeway)
                                 li/validate-key-pair
                                 li/validate-scopes
                                 li/update-api-keys)
      :route-name :lrsql.admin.creds/post]
      ;; Get current keys + scopes associated w/ account
-    ["/admin/creds" :get (conj comm-interceptors
-                               li/validate-jwt
+    ["/admin/creds" :get (conj common-interceptors
+                               (li/validate-jwt jwt-leeway)
                                li/read-api-keys)
      :route-name :lrsql.admin.creds/get]
      ;; Delete API key pair and associated scopes
-    ["/admin/creds" :delete (conj comm-interceptors
-                                  li/validate-jwt
+    ["/admin/creds" :delete (conj common-interceptors
+                                  (li/validate-jwt jwt-leeway)
                                   li/validate-key-pair
                                   li/delete-api-keys)
      :route-name :lrsql.admin.creds/delete]})
@@ -66,8 +66,8 @@
   "Given a set of routes `routes` for a default LRS implementation,
    add additional routes specific to creating and updating admin
    accounts."
-  [lrs routes]
-  (let [common-i (common-interceptors lrs)]
+  [{:keys [lrs exp leeway]} routes]
+  (let [common-interceptors (make-common-interceptors lrs)]
     (cset/union routes
-                (admin-account-routes common-i)
-                (admin-cred-routes common-i))))
+                (admin-account-routes common-interceptors exp)
+                (admin-cred-routes common-interceptors leeway))))

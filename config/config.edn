@@ -20,6 +20,12 @@
   :api-secret-default   #profile
                          {:test "password"
                           :default #or [#env API_SECRET nil]}
+  :jwt-expiration-time   #profile
+                         {:test 3600
+                          :default #or [#env JWT_EXPIRATION_TIME 3600]}
+  :jwt-expiration-leeway #profile
+                          {:test 10
+                           :default #or [#env JWT_EXPIRATION_LEEWAY 10]}
   :stmt-more-url-prefix #profile
                          {:test    ""
                           :default #or [#env STATEMENT_MORE_URL_PREFIX ""]}

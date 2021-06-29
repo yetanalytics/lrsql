@@ -30,10 +30,11 @@
 (defn account-id->jwt
   "Generate a new signed JSON Web Token with `account-id` in the claim
    as a custom `:acc` field. The issued-at and expiration time are given as
-   `:iat` and `:exp`, respectively."
-  [account-id]
+   `:iat` and `:exp`, respectively; the expiration time offset is given by
+   `exp` in seconds."
+  [account-id exp]
   (let [ctime (u/current-time)
-        etime (u/offset-time ctime 1 :hours) ; TODO: offset amount and units in config
+        etime (u/offset-time ctime exp :seconds)
         claim {:acc account-id
                ;; Time values MUST be a number containing a NumericDate value
                ;; ie. a JSON numeric value representing the number of seconds
@@ -52,17 +53,18 @@
   "Given the JSON Web Token `tok`, return the account ID if valid.
    Otherwise return one of the following errors:
      `:expired-token-error` - if the token was expired.
-     `:invalid-token-error` - every other error."
-  [tok]
-  (try
-    ;; TODO: algorithm
-    ;; TODO: leeway in config vars
-    (let [ctime (-> (u/current-time) u/time->millis (quot 1000))]
-      (-> tok (bj/unsign secret {:now ctime}) :acc u/str->uuid))
-    (catch Exception e ; Calls non-ExceptionInfo error on nil token
-      (if-some [ed (ex-data e)]
-        (if (and (#{:validation} (:type ed))
-                 (#{:exp} (:cause ed)))
-          :lrsql.admin/expired-token-error
-          :lrsql.admin/invalid-token-error)
-        :lrsql.admin/invalid-token-error))))
+     `:invalid-token-error` - every other error (ie. parse failure).
+   `leeway` is a time amount (in seconds) provided to compensate for
+   clock drift."
+  [tok leeway]
+  (if tok ; Avoid encountering a null pointer exception
+    (try
+      ;; TODO: algorithm
+      (-> tok (bj/unsign secret {:leeway leeway}) :acc u/str->uuid)
+      (catch clojure.lang.ExceptionInfo e
+        (let [{:keys [type cause]} e]
+          (if (and (#{:validation} type)
+                   (#{:exp} cause))
+            :lrsql.admin/expired-token-error
+            :lrsql.admin/invalid-token-error))))
+    :lrsql.admin/invalid-token-error))

@@ -11,20 +11,25 @@
 (defn- service-map
   "Create a new service map for the webserver."
   [lrs config]
-  {:env                 :prod
-   ::http/routes        (->> (build {:lrs lrs}) (add-admin-routes lrs))
-   ::http/resource-path "/public"
-   ::http/type          :jetty
-   ::http/host          (:http-host config "0.0.0.0")
-   ::http/port          (:http-port config 8080)
-   ::http/join?         false
-   ::http/allowed-origins
-   {:creds           true
-    :allowed-origins (constantly true)}
-   ::http/container-options
-   {:h2c? true
-    :h2?  false
-    :ssl? false}})
+  (let [jwt-exp (-> config :lrs :jwt-expiration-time)
+        jwt-lwy (-> config :lrs :jwt-expiration-leeway)]
+    {:env                 :prod
+     ::http/routes        (->> (build {:lrs lrs})
+                               (add-admin-routes {:lrs    lrs
+                                                  :exp    jwt-exp
+                                                  :leeway jwt-lwy}))
+     ::http/resource-path "/public"
+     ::http/type          :jetty
+     ::http/host          (:http-host config "0.0.0.0")
+     ::http/port          (:http-port config 8080)
+     ::http/join?         false
+     ::http/allowed-origins
+     {:creds           true
+      :allowed-origins (constantly true)}
+     ::http/container-options
+     {:h2c? true
+      :h2?  false
+      :ssl? false}}))
 
 (defrecord Webserver [service
                       server
