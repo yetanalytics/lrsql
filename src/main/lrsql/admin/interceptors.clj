@@ -38,10 +38,11 @@
             (adp/-create-account lrs username password)]
         (cond
           ;; The result is the account ID - success!
+          ;; Pass it along as an intermediate value
           (uuid? result)
-          (assoc ctx
-                 :response
-                 {:status 200 :body {:account-id result}})
+          (assoc-in ctx
+                    [:request :json-params :account-id]
+                    result)
 
           ;; The account already exists
           (= :lrsql.admin/existing-account-error result)
@@ -61,10 +62,11 @@
             (adp/-authenticate-account lrs username password)]
         (cond
           ;; The result is the account ID - success!
+          ;; Pass it along as an intermediate value
           (uuid? result)
-          (assoc ctx
-                 :response
-                 {:status 200 :body {:account-id result}})
+          (assoc-in ctx
+                    [:request :json-params :account-id]
+                    result)
 
           ;; The account cannot be found
           (= :lrsql.admin/missing-account-error result)
@@ -85,15 +87,14 @@
    {:name ::delete-admin
     :enter
     (fn delete-admin [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [username]}
-            (get-in ctx [:request :json-params])
-            {:keys [account-id]}
-            (get-in ctx [:response :body])] ; From `authenticate-admin`
+      (let [{:keys [account-id username]} ; From `authenticate-admin`
+            (get-in ctx [:request :json-params])] 
         (adp/-delete-account lrs account-id)
         (assoc ctx
                :response
-               {:status 200 :body (format "Successfully deleted \"%s\"!"
-                                          username)})))}))
+               {:status 200
+                :body   (format "Successfully deleted account \"%s\"!"
+                                username)})))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; JSON Web Tokens
@@ -105,11 +106,13 @@
    {:name ::generate-jwt
     :enter
     (fn generate-jwt [ctx]
-      (let [{:keys [account-id]} (get-in ctx [:response :body])
+      (let [{:keys [account-id]} (get-in ctx [:request :json-params])
             json-web-token       (admin-u/account-id->jwt account-id exp)]
-        (assoc-in ctx
-                  [:response :body :json-web-token]
-                  json-web-token)))}))
+        (assoc ctx
+               :response
+               {:status 200
+                :body   {:account-id     account-id
+                         :json-web-token json-web-token}})))}))
 
 (defn validate-jwt
   [leeway]

@@ -11,8 +11,8 @@
 (defn- service-map
   "Create a new service map for the webserver."
   [lrs config]
-  (let [jwt-exp (-> config :lrs :jwt-expiration-time)
-        jwt-lwy (-> config :lrs :jwt-expiration-leeway)]
+  (let [jwt-exp (:jwt-expiration-time config)
+        jwt-lwy (:jwt-expiration-leeway config)]
     {:env                 :prod
      ::http/routes        (->> (build {:lrs lrs})
                                (add-admin-routes {:lrs    lrs

@@ -40,11 +40,8 @@
                     pool-max-size 15}}]
            (<= pool-min-size pool-max-size))))
 
-(s/def ::api-key-default string?)
-(s/def ::api-secret-default string?)
-
-(s/def ::jwt-expiration-time pos-int?)
-(s/def ::jwt-expiration-leeway nat-int?)
+(s/def ::api-key-default (s/nilable string?))
+(s/def ::api-secret-default (s/nilable string?))
 
 (s/def ::stmt-more-url-prefix string?)
 (s/def ::stmt-get-default pos-int?)
@@ -54,8 +51,6 @@
   (s/keys :req-un [::database
                    ::api-key-default
                    ::api-secret-default
-                   ::jwt-expiration-time
-                   ::jwt-expiration-leeway
                    ::stmt-more-url-prefix
                    ::stmt-get-default
                    ::stmt-get-max]))
@@ -63,9 +58,14 @@
 (s/def ::http-host string?)
 (s/def ::http-port nat-int?)
 
+(s/def ::jwt-expiration-time pos-int?)
+(s/def ::jwt-expiration-leeway nat-int?)
+
 (s/def ::webserver
   (s/keys :req-un [::http-host
-                   ::http-port]))
+                   ::http-port
+                   ::jwt-expiration-time
+                   ::jwt-expiration-leeway]))
 
 (def config-spec
   (s/keys :req-un [::database
