@@ -11,8 +11,15 @@
 (defn- service-map
   "Create a new service map for the webserver."
   [lrs config]
-  (let [jwt-exp (:jwt-expiration-time config)
-        jwt-lwy (:jwt-expiration-leeway config)]
+  (let [{jwt-exp   :jwt-expiration-time
+         jwt-lwy   :jwt-expiration-leeway
+         http2?    :http2?
+         http-host :http-host
+         http-port :http-port
+         ssl-port  :ssl-port
+         keystore  :keystore
+         keypass   :key-password}
+        config]
     {:env                 :prod
      ::http/routes        (->> (build {:lrs lrs})
                                (add-admin-routes {:lrs    lrs
@@ -20,19 +27,19 @@
                                                   :leeway jwt-lwy}))
      ::http/resource-path "/public"
      ::http/type          :jetty
-     ::http/host          (:http-host config "0.0.0.0")
-     ::http/port          (:http-port config 8080)
+     ::http/host          http-host
+     ::http/port          http-port
      ::http/join?         false
      ::http/allowed-origins
      {:creds           true
       :allowed-origins (constantly true)}
      ::http/container-options
      {:h2c?         true
-      :h2?          true
+      :h2?          http2?
       :ssl?         true
-      :ssl-port     8443
-      :keystore     "config/keystore.jks"
-      :key-password "lrsql_pass"}}))
+      :ssl-port     ssl-port
+      :keystore     keystore
+      :key-password keypass}}))
 
 (defrecord Webserver [service
                       server
