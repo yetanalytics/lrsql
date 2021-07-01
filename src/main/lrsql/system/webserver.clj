@@ -27,9 +27,12 @@
      {:creds           true
       :allowed-origins (constantly true)}
      ::http/container-options
-     {:h2c? true
-      :h2?  false
-      :ssl? false}}))
+     {:h2c?         true
+      :h2?          true
+      :ssl?         true
+      :ssl-port     8443
+      :keystore     "config/keystore.jks"
+      :key-password "lrsql_pass"}}))
 
 (defrecord Webserver [service
                       server
