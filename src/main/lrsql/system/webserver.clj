@@ -11,7 +11,8 @@
 (defn- service-map
   "Create a new service map for the webserver."
   [lrs config]
-  (let [{jwt-exp   :jwt-expiration-time
+  (let [;; Destructure webserver config
+        {jwt-exp   :jwt-expiration-time
          jwt-lwy   :jwt-expiration-leeway
          http2?    :http2?
          http-host :http-host
@@ -19,12 +20,15 @@
          ssl-port  :ssl-port
          keystore  :keystore
          keypass   :key-password}
-        config]
+        config
+        ;; Make routes
+        routes
+        (->> (build {:lrs lrs})
+             (add-admin-routes {:lrs    lrs
+                                :exp    jwt-exp
+                                :leeway jwt-lwy}))]
     {:env                 :prod
-     ::http/routes        (->> (build {:lrs lrs})
-                               (add-admin-routes {:lrs    lrs
-                                                  :exp    jwt-exp
-                                                  :leeway jwt-lwy}))
+     ::http/routes        routes
      ::http/resource-path "/public"
      ::http/type          :jetty
      ::http/host          http-host
