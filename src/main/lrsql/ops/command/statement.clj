@@ -45,8 +45,7 @@
           {new-name "name"}    new-actor]
       (when-not (= old-name new-name)
         (f/update-actor! tx (prepare-input input))))
-    (f/insert-actor! tx (prepare-input input)))
-  nil)
+    (f/insert-actor! tx (prepare-input input))))
 
 (defn- insert-activity-input!
   [tx input]
@@ -59,30 +58,25 @@
         (let [activity' (ua/merge-activities old-activ new-activ)
               input'    (assoc input :payload activity')]
           (f/update-activity! tx (prepare-input input')))))
-    (f/insert-activity! tx (prepare-input input)))
-  nil)
+    (f/insert-activity! tx (prepare-input input))))
 
 (defn- insert-attachment-input!
   [tx input]
-  (f/insert-attachment! tx input)
-  nil)
+  (f/insert-attachment! tx input))
 
 (defn- insert-stmt-actor-input!
   [tx input]
-  (f/insert-statement-to-actor! tx input)
-  nil)
+  (f/insert-statement-to-actor! tx input))
 
 (defn- insert-stmt-activity-input!
   [tx input]
-  (f/insert-statement-to-activity! tx input)
-  nil)
+  (f/insert-statement-to-activity! tx input))
 
 (defn- insert-stmt-stmt-input!
   [tx input]
   (let [input' {:statement-id (:descendant-id input)}
         exists (f/query-statement-exists tx input')]
-    (when exists (f/insert-statement-to-statement! tx input)))
-  nil)
+    (when exists (f/insert-statement-to-statement! tx input))))
 
 (defn insert-statement!
   [tx {:keys [statement-input
@@ -93,11 +87,11 @@
               stmt-activity-inputs
               stmt-stmt-inputs]}]
   (let [?stmt-id (insert-statement-input! tx statement-input)]
-    (doall (map (partial insert-actor-input! tx) actor-inputs))
-    (doall (map (partial insert-activity-input! tx) activity-inputs))
-    (doall (map (partial insert-stmt-actor-input! tx) stmt-actor-inputs))
-    (doall (map (partial insert-stmt-activity-input! tx) stmt-activity-inputs))
-    (doall (map (partial insert-stmt-stmt-input! tx) stmt-stmt-inputs))
-    (doall (map (partial insert-attachment-input! tx) attachment-inputs))
+    (dorun (map (partial insert-actor-input! tx) actor-inputs))
+    (dorun (map (partial insert-activity-input! tx) activity-inputs))
+    (dorun (map (partial insert-stmt-actor-input! tx) stmt-actor-inputs))
+    (dorun (map (partial insert-stmt-activity-input! tx) stmt-activity-inputs))
+    (dorun (map (partial insert-stmt-stmt-input! tx) stmt-stmt-inputs))
+    (dorun (map (partial insert-attachment-input! tx) attachment-inputs))
     ;; Return the statement ID (or nil on failure)
     ?stmt-id))
