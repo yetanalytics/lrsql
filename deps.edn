@@ -6,6 +6,9 @@
   danlentz/clj-uuid                      {:mvn/version "0.1.9"}
   aero/aero                              {:mvn/version "1.1.6"}
   io.pedestal/pedestal.jetty             {:mvn/version "0.5.7"}
+  buddy/buddy-core                       {:mvn/version "1.10.1"}
+  buddy/buddy-sign                       {:mvn/version "3.4.1"}
+  buddy/buddy-hashers                    {:mvn/version "1.8.1"}
   com.mchange/c3p0                       {:mvn/version "0.9.5.5"}
   com.github.seancorfield/next.jdbc      {:mvn/version "1.2.659"}
   com.layerware/hugsql                   {:mvn/version "0.5.1"}
@@ -31,6 +34,7 @@
   :test
   {:extra-paths ["src/test"]
    :extra-deps {org.clojure/test.check {:mvn/version "1.0.0"}
+                babashka/babashka.curl {:mvn/version "0.0.3"}
                 io.github.cognitect-labs/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner.git"
                  :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}

@@ -4,7 +4,9 @@
             [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.functions :as f]
-            [lrsql.util :as u]
+            [lrsql.input.admin :as admin-input]
+            [lrsql.input.auth  :as auth-input]
+            [lrsql.ops.command.admin :as admin-cmd]
             [lrsql.ops.command.auth :as auth-cmd]))
 
 (defn init-hugsql-adapter!
@@ -41,18 +43,30 @@
   (f/create-statement-to-statement-table! conn)
   (f/create-state-document-table! conn)
   (f/create-agent-profile-document-table! conn)
-  (f/create-activity-profile-document-table! conn)
-  (f/create-credential-table! conn))
+  (f/create-activity-profile-document-table! conn) 
+  (f/create-admin-account-table! conn)
+  (f/create-credential-table! conn)
+  (f/create-credential-to-scope-table! conn))
 
 (defn insert-default-creds!
   "Seed the credential table with the default API key and secret, which are
    set by the environmental variables. The scope of the default credentials
    would be hardcoded as \"all\". Does not seed the table when the username
    or password is nil."
-  [conn ?username ?password]
+  [tx ?username ?password]
   (when (and ?username ?password)
-    (let [input {:primary-key (u/generate-squuid)
-                 :api-key     ?username
-                 :secret-key  ?password
-                 :scope       "all"}]
-      (auth-cmd/insert-credential! conn input))))
+    ;; TODO: Default admin also from config vars?
+    (let [admin-in (admin-input/admin-insert-input
+                    ?username
+                    ?password)
+          key-pair {:api-key    ?username
+                    :secret-key ?password}
+          cred-in  (auth-input/credential-insert-input
+                    (:primary-key admin-in)
+                    key-pair)
+          scope-in (auth-input/credential-scopes-insert-input
+                    key-pair
+                    #{"all"})]
+      (admin-cmd/insert-admin! tx admin-in)
+      (auth-cmd/insert-credential! tx cred-in)
+      (auth-cmd/insert-credential-scopes! tx scope-in))))

@@ -180,12 +180,35 @@ SELECT profile_id FROM activity_profile_document
 WHERE activity_iri = :activity-iri
 --~ (when (:since params) "AND last_modified > :since")
 
+/* Admin Accounts */
+
+-- :name query-account
+-- :command :query
+-- :result :one
+-- :doc Given an account `username`, return the ID and the hashed password, which can be used to verify the account.
+SELECT id, passhash FROM admin_account
+WHERE username = :username
+
+-- :name query-account-exists
+-- :command :query
+-- :result :one
+-- :doc Given an account `username`, return whether the account exists in the table.
+SELECT 1 FROM admin_account
+WHERE username = :username
+
 /* Credentials */
+
+-- :name query-credentials
+-- :command :query
+-- :result :many
+-- :doc Query all credentials associated with `:account-id`.
+SELECT api_key, secret_key FROM lrs_credential
+WHERE account_id = :account-id
 
 -- :name query-credential-scopes
 -- :command :query
 -- :result :many
 -- :doc Given an API key and a secret API key, return all authorized scopes (including NULL). Returns an empty coll if the credential is not present.
-SELECT scope FROM lrs_credential
+SELECT scope FROM credential_to_scope
 WHERE api_key = :api-key
 AND secret_key = :secret-key
