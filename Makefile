@@ -1,6 +1,7 @@
 .phony: keystore, ci, ephemeral
 
 keystore:
+	rm -f config/keystore.jks
 	keytool -genkey -noprompt \
 		-alias lrsql_keystore \
 		-dname "CN=com.yetanalytics.lrsql, OU=Dev, O=Yet Analytics, L=Baltimore, S=Maryland, C=US" \
@@ -9,7 +10,7 @@ keystore:
 		-storepass lrsql_pass \
 		-keystore config/keystore.jks
 
-ci:
+ci: keystore
 	clojure -Xdb-h2:test
 
 ephemeral:
