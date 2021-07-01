@@ -1,29 +1,32 @@
 (ns lrsql.admin.interceptors.account
-  (:require [io.pedestal.interceptor :refer [interceptor]]
+  (:require [clojure.spec.alpha :as s]
+            [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
+            [lrsql.spec.admin :as ads]
             [lrsql.util.admin :as admin-u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Validation Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def validate-admin-info
+(def validate-params
+  "Validate that the JSON params contain the params `username` and `password`."
   (interceptor
-   {:name ::verify-admin-info
+   {:name ::validate-params
     :enter
-    (fn verify-admin-info [ctx]
-      (let [{?username :username ?password :password}
-            (get-in ctx [:request :json-params])]
-        (if-some [emsg
-                  (cond
-                    (nil? ?username) "Missing username in body!"
-                    (nil? ?password) "Missing password in body!"
-                    (not (string? ?username)) "Username is not string!"
-                    (not (string? ?password)) "Password is not string!"
-                    :else nil)]
-          (assoc (chain/terminate ctx) :response {:status 400 :body emsg})
-          ctx)))}))
+    (fn validate-params [ctx]
+      (let [params (get-in ctx [:request :json-params])]
+        (if-some [err (s/explain-data ads/admin-params-spec params)]
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400
+                  :body   (format "Invalid parameters:\n%s"
+                                  (-> err s/explain-out with-out-str))})
+          (let [acc-info (select-keys params [:username :password])]
+            (-> ctx
+                (assoc :account-info acc-info)
+                (assoc-in [:request :session :account-info] acc-info))))))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Intermediate Interceptors
@@ -33,18 +36,19 @@
   (interceptor
    {:name ::create-admin
     :enter
-    (fn create-admin [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [username password]}
-            (get-in ctx [:request :json-params])
+    (fn create-admin [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [username password]} :account-info}
+            ctx
             {:keys [result]}
             (adp/-create-account lrs username password)]
         (cond
           ;; The result is the account ID - success!
           ;; Pass it along as an intermediate value
           (uuid? result)
-          (assoc-in ctx
-                    [:request :json-params :account-id]
-                    result)
+          (-> ctx
+              (assoc-in [:account-info :account-id] result)
+              (assoc-in [:request :session :account-info :account-id] result))
 
           ;; The account already exists
           (= :lrsql.admin/existing-account-error result)
@@ -57,18 +61,19 @@
   (interceptor
    {:name ::authenticate-admin
     :enter
-    (fn authenticate-admin [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [username password]}
-            (get-in ctx [:request :json-params])
+    (fn authenticate-admin [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [username password]} :account-info}
+            ctx
             {:keys [result]}
             (adp/-authenticate-account lrs username password)]
         (cond
           ;; The result is the account ID - success!
           ;; Pass it along as an intermediate value
           (uuid? result)
-          (assoc-in ctx
-                    [:request :json-params :account-id]
-                    result)
+          (-> ctx
+              (assoc-in [:account-info :account-id] result)
+              (assoc-in [:request :session :account-info :account-id] result))
 
           ;; The account cannot be found
           (= :lrsql.admin/missing-account-error result)
@@ -92,9 +97,10 @@
   (interceptor
    {:name ::delete-admin
     :enter
-    (fn delete-admin [{lrs :com.yetanalytics/lrs :as ctx}]
-      (let [{:keys [account-id username]} ; From `authenticate-admin`
-            (get-in ctx [:request :json-params])]
+    (fn delete-admin [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [username account-id]} :account-info}
+            ctx]
         (adp/-delete-account lrs account-id)
         (assoc ctx
                :response
@@ -108,8 +114,10 @@
    {:name ::generate-jwt
     :enter
     (fn generate-jwt [ctx]
-      (let [{:keys [account-id]} (get-in ctx [:request :json-params])
-            json-web-token       (admin-u/account-id->jwt account-id exp)]
+      (let [{{:keys [account-id]} :account-info}
+            ctx
+            json-web-token
+            (admin-u/account-id->jwt account-id exp)]
         (assoc ctx
                :response
                {:status 200

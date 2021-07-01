@@ -26,7 +26,7 @@
 
 (s/fdef credential-scopes-insert-input
   :args (s/cat :key-pair as/key-pair-args-spec
-               :scopes   as/scopes-spec)
+               :scopes   ::as/scopes)
   :ret as/cred-scopes-insert-spec)
 
 (defn credential-scopes-insert-input
@@ -58,7 +58,7 @@
 
 (s/fdef credential-scopes-delete-input
   :args (s/cat :key-pair as/key-pair-args-spec
-               :scopes   as/scopes-spec)
+               :scopes   ::as/scopes)
   :ret as/cred-scopes-delete-spec)
 
 (defn credential-scopes-delete-input
