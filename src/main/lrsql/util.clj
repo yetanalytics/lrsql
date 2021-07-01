@@ -1,7 +1,6 @@
 (ns lrsql.util
   (:require [clj-uuid]
             [java-time]
-            [java-time.repl]
             [aero.core :as aero]
             [clojure.spec.alpha :as s]
             [clojure.java.io    :as io]
