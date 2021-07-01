@@ -47,7 +47,7 @@
                                   (f/query-credential-scopes tx)
                                   (map :scope)))
                            creds))]
-    (map (fn [cred cred-scopes]
-           (assoc cred :scopes (set cred-scopes)))
-         creds
-         scopes)))
+    (mapv (fn [cred cred-scopes]
+            (assoc cred :scopes (set cred-scopes)))
+          creds
+          scopes)))
