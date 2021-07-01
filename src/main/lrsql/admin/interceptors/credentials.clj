@@ -31,8 +31,8 @@
                                               :secret-key
                                               :scopes])]
            (-> ctx
-               (assoc :cred-info cred-info)
-               (assoc-in [:request :session :cred-info] cred-info))))))})
+               (assoc ::data cred-info)
+               (assoc-in [:request :session ::data] cred-info))))))})
 
 (defn validate-jwt
   "Validate that the header JWT is valid (e.g. not expired)."
@@ -49,8 +49,8 @@
           ;; Success - assoc the account ID as an intermediate value
           (uuid? result)
           (-> ctx
-              (assoc-in [:cred-info :account-id] result)
-              (assoc-in [:request :session :cred-info :account-id] result))
+              (assoc-in [::data :account-id] result)
+              (assoc-in [:request :session ::data :account-id] result))
 
           ;; Failure - the token has expired
           (= :lrsql.admin/expired-token-error result)
@@ -74,7 +74,7 @@
     :enter
     (fn create-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id scopes]} :cred-info}
+             {:keys [account-id scopes]} ::data}
             ctx
             api-key-res
             (adp/-create-api-keys lrs
@@ -90,7 +90,7 @@
     :enter
     (fn read-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id]} :cred-info}
+             {:keys [account-id]} ::data}
             ctx
             api-key-res
             (adp/-get-api-keys lrs
@@ -105,7 +105,7 @@
     :enter
     (fn update-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id api-key secret-key scopes]} :cred-info}
+             {:keys [account-id api-key secret-key scopes]} ::data}
             ctx
             api-key-res
             (adp/-update-api-keys lrs
@@ -123,7 +123,7 @@
     :enter
     (fn delete-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id api-key secret-key]} :cred-info}
+             {:keys [account-id api-key secret-key]} ::data}
             ctx
             api-key-res
             (adp/-delete-api-keys lrs

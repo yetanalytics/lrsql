@@ -25,8 +25,8 @@
                                   (-> err s/explain-out with-out-str))})
           (let [acc-info (select-keys params [:username :password])]
             (-> ctx
-                (assoc :account-info acc-info)
-                (assoc-in [:request :session :account-info] acc-info))))))}))
+                (assoc ::data acc-info)
+                (assoc-in [:request :session ::data] acc-info))))))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Intermediate Interceptors
@@ -38,7 +38,7 @@
     :enter
     (fn create-admin [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [username password]} :account-info}
+             {:keys [username password]} ::data}
             ctx
             {:keys [result]}
             (adp/-create-account lrs username password)]
@@ -47,8 +47,8 @@
           ;; Pass it along as an intermediate value
           (uuid? result)
           (-> ctx
-              (assoc-in [:account-info :account-id] result)
-              (assoc-in [:request :session :account-info :account-id] result))
+              (assoc-in [::data :account-id] result)
+              (assoc-in [:request :session ::data :account-id] result))
 
           ;; The account already exists
           (= :lrsql.admin/existing-account-error result)
@@ -63,7 +63,7 @@
     :enter
     (fn authenticate-admin [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [username password]} :account-info}
+             {:keys [username password]} ::data}
             ctx
             {:keys [result]}
             (adp/-authenticate-account lrs username password)]
@@ -72,8 +72,8 @@
           ;; Pass it along as an intermediate value
           (uuid? result)
           (-> ctx
-              (assoc-in [:account-info :account-id] result)
-              (assoc-in [:request :session :account-info :account-id] result))
+              (assoc-in [::data :account-id] result)
+              (assoc-in [:request :session ::data :account-id] result))
 
           ;; The account cannot be found
           (= :lrsql.admin/missing-account-error result)
@@ -99,7 +99,7 @@
     :enter
     (fn delete-admin [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [username account-id]} :account-info}
+             {:keys [username account-id]} ::data}
             ctx]
         (adp/-delete-account lrs account-id)
         (assoc ctx
@@ -114,7 +114,7 @@
    {:name ::generate-jwt
     :enter
     (fn generate-jwt [ctx]
-      (let [{{:keys [account-id]} :account-info}
+      (let [{{:keys [account-id]} ::data}
             ctx
             json-web-token
             (admin-u/account-id->jwt account-id exp)]
