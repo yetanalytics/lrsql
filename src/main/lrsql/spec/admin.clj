@@ -7,6 +7,10 @@
 (s/def ::password string?)
 (s/def ::passhash string?) ; format may vary by password lib
 
+(def admin-params-spec
+  (s/keys :req-un [::username
+                   ::password]))
+
 (def admin-insert-spec
   (s/keys :req-un [::c/primary-key
                    ::username

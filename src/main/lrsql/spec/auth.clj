@@ -47,6 +47,9 @@
     "all/read"
     "all"})
 
+(s/def ::scopes
+  (s/coll-of ::scope :min-count 1 :gen-max 5 :distinct true))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Basic Specs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -54,13 +57,18 @@
 (def key-pair-spec
   (s/keys :req-un [::api-key ::secret-key]))
 
+(def scopes-spec
+  (s/keys :req-un [::scopes]))
+
+(def scoped-key-pair-spec
+  (s/keys :req-un [::api-key
+                   ::secret-key
+                   ::scopes]))
+
 (def key-pair-args-spec
   (s/alt :map  key-pair-spec
          :args (s/cat :api-key    ::api-key
                       :secret-key ::secret-key)))
-
-(def scopes-spec
-  (s/coll-of ::scope :min-count 1 :gen-max 5 :distinct true))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insert

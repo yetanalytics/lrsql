@@ -49,13 +49,13 @@
                              (butlast query-results)
                              query-results))
         att-results   (if attachments?
-                        (->> (doall (map (fn [stmt]
+                        (doall (->> (map (fn [stmt]
                                            (->> (get stmt "id")
                                                 (assoc {} :statement-id)
                                                 (f/query-attachments tx)))
-                                         stmt-results))
-                             (apply concat)
-                             (mapv conform-attachment-res))
+                                         stmt-results)
+                                    (apply concat)
+                                    (map conform-attachment-res)))
                         [])]
     {:statement-result
      {:statements (vec stmt-results)
