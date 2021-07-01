@@ -32,21 +32,17 @@
 (defn header->key-pair
   "Given a Base64 authentication header, return a map with the keys
    `:api-key` and `:secret-key`. The map can then be used as the input to
-   `query-authentication`."
+   `query-authentication`. Return `nil` if the header cannot be decoded."
   [^String auth-header]
   (try (let [auth-part  (subs auth-header 6) ; Remove "Basic " prefix
              decoded    (String. (.decode    ; Base64 -> "username:password"
                                   decoder
                                   auth-part))
-             [username
-              password] (cstr/split decoded
-                                    #":")]
-         {:api-key    username
-          :secret-key password})
-       (catch Exception _
-         (throw (ex-info "Cannot decode authentication header!"
-                         {:type ::invalid-auth-header
-                          :auth-header auth-header})))))
+             [?api-key
+              ?srt-key] (cstr/split decoded #":")]
+         {:api-key    (if ?api-key ?api-key "")
+          :secret-key (if ?srt-key ?srt-key "")})
+       (catch Exception _ nil)))
 
 (defn generate-key-pair
   "Generate a pair of credentials for lrsql: an API key (the \"username\") and

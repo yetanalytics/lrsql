@@ -159,12 +159,12 @@
   (-authenticate
     [lrs ctx]
     (let [conn   (lrs-conn lrs)
-          header (get-in ctx [:request :headers "authorization"])
-          input  (-> header
-                     auth-util/header->key-pair
-                     auth-input/credential-scopes-query-input)]
-      (jdbc/with-transaction [tx conn]
-        (auth-q/query-credential-scopes tx input))))
+          header (get-in ctx [:request :headers "authorization"])]
+      (if-some [key-pr (auth-util/header->key-pair header)]
+        (let [input (auth-input/credential-scopes-query-input key-pr)]
+          (jdbc/with-transaction [tx conn]
+            (auth-q/query-credential-scopes tx input)))
+        :com.yetanalytics.lrs.auth/forbidden)))
   (-authorize
    [_lrs ctx auth-identity]
    (auth-util/authorize-action ctx auth-identity))
