@@ -14,7 +14,7 @@
 (deftest admin-routes-test
   (let [_    (support/assert-in-mem-db)
         sys  (system/system)
-        sys'  (component/start sys)
+        sys' (component/start sys)
         data {:headers {"Content-Type" "application/json"}
               :body    (String. (u/write-json {"username" "myname"
                                                "password" "swordfish"}))}]
