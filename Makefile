@@ -1,4 +1,4 @@
-.phony: keystore, secret, ci, ephemeral
+.phony: keystore, ci, ephemeral
 
 config/keystore.jks:
 	keytool -genkey -noprompt \
@@ -9,14 +9,9 @@ config/keystore.jks:
 		-storepass lrsql_pass \
 		-keystore config/keystore.jks
 
-config/jwt_secret.key:
-	openssl rand 128 > config/jwt_secret.key
-
 keystore: config/keystore.jks
 
-secret: config/jwt_secret.key
-
-ci: keystore secret 
+ci: keystore 
 	clojure -Xdb-h2:test
 
 ephemeral:
