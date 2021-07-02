@@ -58,7 +58,7 @@
 (s/def ::http-host string?)
 (s/def ::http-port nat-int?)
 (s/def ::ssl-port nat-int?)
-(s/def :http2? boolean?)
+(s/def ::http2? boolean?)
 
 (s/def ::jwt-expiration-time pos-int?)
 (s/def ::jwt-expiration-leeway nat-int?)
