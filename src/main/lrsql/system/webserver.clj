@@ -1,5 +1,8 @@
 (ns lrsql.system.webserver
   (:require [clojure.tools.logging :as log]
+            [clojure.java.io :refer [input-stream]]
+            [jdk.security.KeyStore :as ks]
+            [jdk.security.Key :as k]
             [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
@@ -8,14 +11,18 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]))
 
-(defn- read-jwt-secret
-  "Read the symmetric secret key for JWT signing and unsigning at `path`."
-  [path]
-  (try (slurp path)
-       (catch Exception _
-         (ex-info (format "Cannot read JWT secret at the path '%s'" path)
-                  {:type ::invalid-jwt-secret-path
-                   :path path}))))
+(defn- read-private-key
+  "Read the private key at the keystore stored at `ks-path`, defined by
+   `key-alias` and protected by `ks-pass`. Returns a string that can be
+   then used as a JWT secret."
+  [ks-path key-alias ks-pass]
+  (let [istream  (input-stream ks-path)
+        pass     (char-array ks-pass)
+        kstore   (doto (ks/*get-instance (ks/*get-default-type))
+                   (ks/load istream pass))
+        priv-key (ks/get-key kstore key-alias pass)]
+    ;; `slurp` turns byte array into string
+    (slurp (k/get-encoded priv-key))))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -23,21 +30,24 @@
   (let [;; Destructure webserver config
         {jwt-exp   :jwt-expiration-time
          jwt-lwy   :jwt-expiration-leeway
-         jwt-path  :jwt-secret
          http2?    :http2?
          http-host :http-host
          http-port :http-port
          ssl-port  :ssl-port
          keystore  :keystore
+         keyalias  :key-alias
          keypass   :key-password}
         config
+        ;; Make JWT secret from the TSL private key
+        jwt-secret
+        (read-private-key keystore keyalias keypass)
         ;; Make routes
         routes
         (->> (build {:lrs lrs})
              (add-admin-routes {:lrs    lrs
                                 :exp    jwt-exp
                                 :leeway jwt-lwy
-                                :secret (read-jwt-secret jwt-path)}))]
+                                :secret jwt-secret}))]
     {:env                 :prod
      ::http/routes        routes
      ::http/resource-path "/public"

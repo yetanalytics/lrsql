@@ -29,6 +29,9 @@
  {:keystore     #profile
                  {:test "config/keystore.jks"
                   :default #or [#env KEYSTORE "config/keystore.jks"]}
+  :key-alias    #profile
+                 {:test "lrsql_keystore"
+                  :default #or [#env KEY_ALIAS "lrsql_keystore"]}
   :key-password #profile
                  {:test "lrsql_pass"
                   :default #or [#env KEY_PASSWORD "lrsql_pass"]}

@@ -1,6 +1,7 @@
 {:paths ["src/main" "config"]
  :deps
  {org.clojure/clojure                      {:mvn/version "1.10.3"}
+  clojure-interop/java.security            {:mvn/version "1.0.5"}
   cheshire/cheshire                        {:mvn/version "5.10.0"}
   clojure.java-time/clojure.java-time      {:mvn/version "0.3.2"}
   danlentz/clj-uuid                        {:mvn/version "0.1.9"}
