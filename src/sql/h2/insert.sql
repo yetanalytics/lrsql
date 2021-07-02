@@ -116,13 +116,33 @@ content_type = :content-type,
 content_length = :content-length,
 contents = :contents
 
+/* Accounts */
+
+-- :name insert-admin-account!
+-- :command :insert
+-- :result :affected
+INSERT INTO admin_account SET
+id = :primary-key,
+username = :username,
+passhash = :passhash
+
 /* Credentials */
 
 -- :name insert-credential!
 -- :command :insert
 -- :result :affected
--- :doc Given API keys and an associated scope, insert it into the credential table.
+-- :doc Given API keys and `:account-id`, insert the credentials into the credential table.
 INSERT INTO lrs_credential SET
+id = :primary-key,
+api_key = :api-key,
+secret_key = :secret-key,
+account_id = :account-id
+
+-- :name insert-credential-scope!
+-- :command :insert
+-- :result :affected
+-- :doc TODO
+INSERT INTO credential_to_scope SET
 id = :primary-key,
 api_key = :api-key,
 secret_key = :secret-key,

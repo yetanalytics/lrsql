@@ -132,13 +132,34 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
   contents       BINARY NOT NULL
 )
 
-/* Credential Table */
+/* Admin Account Table */
 
--- TODO: Create (non-unique) index on api_key and secret_key
+-- :name create-admin-account-table!
+-- :command :execute
+-- :doc Create the `admin_account` table if it does not exist yet.
+CREATE TABLE IF NOT EXISTS admin_account (
+  id       UUID NOT NULL PRIMARY KEY,
+  username VARCHAR(255) NOT NULL UNIQUE,
+  passhash VARCHAR(255) NOT NULL
+)
+
+/* Credential Tables */
+
 -- :name create-credential-table!
 -- :command :execute
 -- :doc Create the `lrs_credential` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS lrs_credential (
+  id         UUID NOT NULL PRIMARY KEY,
+  api_key    VARCHAR(255) NOT NULL,
+  secret_key VARCHAR(255) NOT NULL,
+  account_id UUID NOT NULL,
+  FOREIGN KEY (account_id) REFERENCES admin_account(id)
+)
+
+-- :name create-credential-to-scope-table!
+-- :command :execute
+-- :doc Create the `credential_to_scope` link table if it does not exist yet.
+CREATE TABLE IF NOT EXISTS credential_to_scope (
   id         UUID NOT NULL PRIMARY KEY,
   api_key    VARCHAR(255) NOT NULL,
   secret_key VARCHAR(255) NOT NULL,
@@ -149,6 +170,6 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
                   'define',  -- unimplemented
                   'profile', -- unimplemented
                   'all/read',
-                  'all') -- enum is nullable
-);
-CREATE INDEX ON lrs_credential(api_key, secret_key)
+                  'all'), -- enum is nullable
+  FOREIGN KEY (api_key, secret_key) REFERENCES lrs_credential(api_key, secret_key)
+)

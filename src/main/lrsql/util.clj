@@ -51,6 +51,14 @@
   []
   (java-time/instant))
 
+(defn offset-time
+  "Given a java.util.Instant timestamp `ts` and the offset given by the
+   `offset-amt` int and the `offset-unit` keyword, return another timestamp
+   that was offset by the given amount. Valid units are given by
+   `java-time.repl/show-units`."
+  [^Instant ts offset-amt offset-unit]
+  (.plus ts offset-amt (java-time/unit offset-unit)))
+
 (defn str->time
   "Parse a string into a java.util.Instant timestamp."
   [ts-str]
