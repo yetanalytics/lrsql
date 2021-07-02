@@ -13,12 +13,18 @@
 (deftest jwt-test
   (let [test-id (u/str->uuid "00000000-0000-0000-0000-000000000001")]
     (testing "JSON web tokens"
-      (is (re-matches #".*\..*\..*" (ua/account-id->jwt test-id 3600)))
+      (is (re-matches #".*\..*\..*" (ua/account-id->jwt test-id "secret" 3600)))
       (is (= test-id
-             (-> test-id (ua/account-id->jwt 3600) (ua/jwt->account-id 1))))
+             (-> test-id
+                 (ua/account-id->jwt "secret" 3600)
+                 (ua/jwt->account-id "secret" 1))))
       (is (= :lrsql.admin/invalid-token-error
-             (ua/jwt->account-id "not-a-jwt" 3600)))
+             (ua/jwt->account-id "not-a-jwt" "secret" 3600)))
+      (is (= :lrsql.admin/invalid-token-error
+             (-> test-id
+                 (ua/account-id->jwt "secret" 3600)
+                 (ua/jwt->account-id "different-secret" 1))))
       (is (= :lrsql.admin/expired-token-error
-             (let [tok (ua/account-id->jwt test-id 1)
+             (let [tok (ua/account-id->jwt test-id "secret" 1)
                    _   (Thread/sleep 1001)]
-                 (ua/jwt->account-id tok 0)))))))
+                 (ua/jwt->account-id tok "secret" 0)))))))

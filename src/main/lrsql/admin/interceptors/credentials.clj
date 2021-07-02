@@ -36,7 +36,7 @@
 
 (defn validate-jwt
   "Validate that the header JWT is valid (e.g. not expired)."
-  [leeway]
+  [secret leeway]
   (interceptor
    {:name ::validate-jwt
     :enter
@@ -44,7 +44,7 @@
       (let [token  (-> ctx
                        (get-in [:request :headers "authorization"])
                        admin-u/header->jwt)
-            result (admin-u/jwt->account-id token leeway)]
+            result (admin-u/jwt->account-id token secret leeway)]
         (cond
           ;; Success - assoc the account ID as an intermediate value
           (uuid? result)

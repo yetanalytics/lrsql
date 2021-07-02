@@ -32,6 +32,9 @@
   :key-password #profile
                  {:test "lrsql_pass"
                   :default #or [#env KEY_PASSWORD "lrsql_pass"]}
+  :jwt-secret   #profile
+                 {:test "config/jwt_secret.key"
+                  :default #or [#env JWT_SECRET "config/jwt_secret.key"]}
   :jwt-expiration-time   #profile
                           {:test 3600
                            :default #or [#env JWT_EXPIRATION_TIME 3600]}

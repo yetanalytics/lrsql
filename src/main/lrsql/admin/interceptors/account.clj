@@ -109,7 +109,7 @@
                                 username)})))}))
 
 (defn generate-jwt
-  [exp]
+  [secret exp]
   (interceptor
    {:name ::generate-jwt
     :enter
@@ -117,7 +117,7 @@
       (let [{{:keys [account-id]} ::data}
             ctx
             json-web-token
-            (admin-u/account-id->jwt account-id exp)]
+            (admin-u/account-id->jwt account-id secret exp)]
         (assoc ctx
                :response
                {:status 200

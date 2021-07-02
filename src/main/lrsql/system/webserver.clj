@@ -8,12 +8,22 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]))
 
+(defn- read-jwt-secret
+  "Read the symmetric secret key for JWT signing and unsigning at `path`."
+  [path]
+  (try (slurp path)
+       (catch Exception _
+         (ex-info (format "Cannot read JWT secret at the path '%s'" path)
+                  {:type ::invalid-jwt-secret-path
+                   :path path}))))
+
 (defn- service-map
   "Create a new service map for the webserver."
   [lrs config]
   (let [;; Destructure webserver config
         {jwt-exp   :jwt-expiration-time
          jwt-lwy   :jwt-expiration-leeway
+         jwt-path  :jwt-secret
          http2?    :http2?
          http-host :http-host
          http-port :http-port
@@ -26,7 +36,8 @@
         (->> (build {:lrs lrs})
              (add-admin-routes {:lrs    lrs
                                 :exp    jwt-exp
-                                :leeway jwt-lwy}))]
+                                :leeway jwt-lwy
+                                :secret (read-jwt-secret jwt-path)}))]
     {:env                 :prod
      ::http/routes        routes
      ::http/resource-path "/public"
