@@ -11,43 +11,48 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]))
 
-(defn- read-private-key
-  "Read the private key at the keystore stored at `ks-path`, defined by
-   `key-alias` and protected by `ks-pass`. Returns a string that can be
-   then used as a JWT secret."
-  [ks-path key-alias ks-pass]
-  (let [istream  (input-stream ks-path)
-        pass     (char-array ks-pass)
-        kstore   (doto (ks/*get-instance (ks/*get-default-type))
-                   (ks/load istream pass))
-        priv-key (ks/get-key kstore key-alias pass)]
-    ;; `slurp` turns byte array into string
-    (slurp (k/get-encoded priv-key))))
+(defn- file->keystore
+  "Return a `java.security.KeyStore` instance from `filepath`, protected
+   by the keystore `password`."
+  [filepath password]
+  (let [istream (input-stream filepath)
+        pass    (char-array password)]
+    (doto (ks/*get-instance (ks/*get-default-type))
+      (ks/load istream pass))))
+
+(defn- keystore->private-key
+  "Return a string representation of the private key stored in `keystore`
+   denoted by `alias` and protected by `password`."
+  [keystore alias password]
+  (-> keystore
+      (ks/get-key alias (char-array password))
+      k/get-encoded
+      slurp))
 
 (defn- service-map
   "Create a new service map for the webserver."
   [lrs config]
   (let [;; Destructure webserver config
-        {jwt-exp   :jwt-expiration-time
-         jwt-lwy   :jwt-expiration-leeway
-         http2?    :http2?
-         http-host :http-host
-         http-port :http-port
-         ssl-port  :ssl-port
-         keystore  :keystore
-         keyalias  :key-alias
-         keypass   :key-password}
+        {:keys [http2?
+                http-host
+                http-port
+                ssl-port
+                key-file
+                key-alias
+                key-password]
+         jwt-exp :jwt-expiration-time
+         jwt-lwy :jwt-expiration-leeway}
         config
-        ;; Make JWT secret from the TSL private key
-        jwt-secret
-        (read-private-key keystore keyalias keypass)
+        ;; Keystore and private key
+        ;; The private key is used as the JWT symmetric secret
+        keystore    (file->keystore key-file key-password)
+        private-key (keystore->private-key keystore key-alias key-password)
         ;; Make routes
-        routes
-        (->> (build {:lrs lrs})
-             (add-admin-routes {:lrs    lrs
-                                :exp    jwt-exp
-                                :leeway jwt-lwy
-                                :secret jwt-secret}))]
+        routes (->> (build {:lrs lrs})
+                    (add-admin-routes {:lrs    lrs
+                                       :exp    jwt-exp
+                                       :leeway jwt-lwy
+                                       :secret private-key}))]
     {:env                 :prod
      ::http/routes        routes
      ::http/resource-path "/public"
@@ -64,7 +69,7 @@
       :ssl?         true
       :ssl-port     ssl-port
       :keystore     keystore
-      :key-password keypass}}))
+      :key-password key-password}}))
 
 (defrecord Webserver [service
                       server

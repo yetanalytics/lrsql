@@ -26,7 +26,7 @@
   :stmt-get-default     #or [#env STATEMENT_GET_DEFAULT 50]
   :stmt-get-max         #or [#env STATEMENT_GET_MAX 50]}
  :webserver
- {:keystore     #profile
+ {:key-file     #profile
                  {:test "config/keystore.jks"
                   :default #or [#env KEYSTORE "config/keystore.jks"]}
   :key-alias    #profile

@@ -63,7 +63,8 @@
 (s/def ::jwt-expiration-time pos-int?)
 (s/def ::jwt-expiration-leeway nat-int?)
 
-(s/def ::keystore string?) ; TODO: correct file extension/path?
+(s/def ::key-file string?) ; TODO: correct file extension/path?
+(s/def ::key-alias string?)
 (s/def ::key-password string?)
 
 (s/def ::webserver
@@ -71,7 +72,8 @@
                    ::http-port
                    ::ssl-port
                    ::http2?
-                   ::keystore
+                   ::key-file
+                   ::key-alias
                    ::key-password
                    ::jwt-expiration-time
                    ::jwt-expiration-leeway]))
