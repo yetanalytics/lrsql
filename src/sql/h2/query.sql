@@ -97,7 +97,7 @@ LIMIT :limit
 
 -- :frag params-stmt-query-frag
 SELECT DISTINCT id, payload FROM (
-  :frag:stmt-subquery-frag) UNION ALL (
+  :frag:stmt-subquery-frag) UNION (
   :frag:stmt-desc-subquery-frag)
 --~ (if (:ascending? params) "ORDER BY id ASC" "ORDER BY id DESC")
 LIMIT :limit
