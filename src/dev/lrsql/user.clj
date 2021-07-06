@@ -22,7 +22,7 @@
      "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
                "display" {"en-US" "answered"}}
      "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
-  
+
   (def stmt-1'
     {"id"     "00000000-0000-0000-0000-000000000002"
      "actor"  {"mbox"       "mailto:sample.1@example.com"
@@ -38,7 +38,7 @@
                "display" {"en-US" "answered"}}
      "object" {"objectType" "StatementRef"
                "id" "00000000-0000-0000-0000-000000000001"}})
-  
+
   (def stmt-3'
     {"actor"  {"mbox"       "mailto:sample.3@example.com"
                "objectType" "Agent"}
@@ -46,14 +46,14 @@
                "display" {"en-US" "answered"}}
      "object" {"objectType" "StatementRef"
                "id" "00000000-0000-0000-0000-000000000002"}})
-  
+
   (def stmt-4'
     {"actor"  {"mbox"       "mailto:sample.4@example.com"
                "objectType" "Agent"}
      "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
                "display" {"en-US" "answered"}}
      "object" {"id" "http://www.example.com/tincan/activities/multipart-3"}})
-  
+
   (def x
     (lrsp/-store-statements lrs
                             {}
@@ -61,18 +61,17 @@
                                     (repeatedly 100000 (fn [] stmt-3'))
                                     (repeatedly 100000 (fn [] stmt-4')))
                             {}))
-  
-  
-  (dotimes [_ 1]
+
+
+  (dotimes [_ 30]
     ;; Descending
     (lrsp/-get-statements lrs
                           {}
                           {}
-                          {})`
-    (lrsp/-get-statements lrs
-                          {}
-                          {:since "2020-02-10T11:38:40.219768Z"}
-                          {})
+                          {}) `(lrsp/-get-statements lrs
+                                                     {}
+                                                     {:since "2020-02-10T11:38:40.219768Z"}
+                                                     {})
     (lrsp/-get-statements lrs
                           {}
                           {:verb "https://w3id.org/xapi/video/verbs/played"}
@@ -264,7 +263,7 @@
       first
       :PLAN
       print)
-  
+
   (-> (jdbc/execute! ds ["EXPLAIN ANALYZE
                           SELECT DISTINCT stmt_id, stmt_payload
                           FROM (
@@ -294,9 +293,65 @@
       :PLAN
       print)
 
+  (-> (jdbc/execute! ds ["
+  WITH actors AS (SELECT stmt_actor.actor_ifi, stmt_actor.statement_id
+                         FROM statement_to_actor stmt_actor
+                         WHERE stmt_actor.usage = 'Actor'
+                         AND stmt_actor.actor_ifi = ?)
+  SELECT stmt.id, stmt.payload
+  FROM xapi_statement stmt
+  INNER JOIN actors stmt_actors ON stmt.statement_id = stmt_actors.statement_id
+  UNION
+  SELECT stmt_a.id, stmt_a.payload
+  FROM xapi_statement stmt_d
+  INNER JOIN actors stmt_d_actors ON stmt_d.statement_id = stmt_d_actors.statement_id
+  INNER JOIN statement_to_statement sts ON stmt_d.statement_id = sts.descendant_id
+  INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
+                          "
+                         , "mbox::mailto:sample.1@example.com"])
+      first
+      :PLAN
+      print)
+
+  (-> (jdbc/execute! ds ["
+                          WITH activs AS (
+  SELECT stmt_activ.activity_iri, stmt_activ.statement_id
+  FROM statement_to_activity stmt_activ
+  WHERE stmt_activ.activity_iri = ?
+  AND stmt_activ.usage = 'Object'
+)
+SELECT id, payload FROM
+((SELECT stmt.id, stmt.payload
+FROM xapi_statement stmt
+INNER JOIN activs stmt_activs ON stmt.statement_id = stmt_activs.statement_id
+WHERE stmt.is_voided = FALSE
+ORDER BY stmt.id DESC
+LIMIT ?
+) UNION (SELECT stmt_a.id, stmt_a.payload
+FROM xapi_statement stmt_d
+INNER JOIN activs stmt_d_activs ON stmt_d.statement_id = stmt_d_activs.statement_id
+INNER JOIN statement_to_statement sts ON stmt_d.statement_id = sts.descendant_id
+INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
+WHERE 1
+ORDER BY stmt_a.id DESC
+LIMIT ?
+))
+ORDER BY id DESC
+LIMIT ? [90012-200]
+                          "
+                         "http://example.org/my-activity-type"
+                         51
+                         51
+                         51])
+      first
+      :PLAN
+      print)
+  
   (do
     (doseq [cmd [;; Drop credentials table
+                 "DROP TABLE IF EXISTS credential_to_scope"
                  "DROP TABLE IF EXISTS lrs_credential"
+                 "DROP TABLE IF EXISTS admin_account"
                  ;; Drop document tables
                  "DROP TABLE IF EXISTS state_document"
                  "DROP TABLE IF EXISTS agent_profile_document"
