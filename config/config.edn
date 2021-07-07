@@ -62,7 +62,8 @@
              :key-password          #or [#env KEY_PASSWORD "lrsql_pass"]
              :jwt-expiration-time   #or [#env JWT_EXPIRATION_TIME 3600]
              :jwt-expiration-leeway #or [#env JWT_EXPIRATION_LEEWAY 1]
-             :http2?                #or [#env USE_HTTP2 true]
-             :ssl-port              #or [#env SSL_PORT 8443]
+             :http?                 #or [#env ENABLE_HTTP true]
+             :http2?                #or [#env ENABLE_HTTP2 true]
              :http-host             #or [#env HTTP_HOST "0.0.0.0"]
-             :http-port             #or [#env HTTP_PORT nil]}}}
+             :http-port             #or [#env HTTP_PORT 8080]
+             :ssl-port              #or [#env SSL_PORT 8443]}}}

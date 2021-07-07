@@ -55,10 +55,12 @@
                    ::stmt-get-default
                    ::stmt-get-max]))
 
-(s/def ::http-host string?)
-(s/def ::http-port (s/nilable nat-int?)) ; nil = HTTP unavailable, HTTPS only
-(s/def ::ssl-port nat-int?)
+(s/def ::http? boolean?)
 (s/def ::http2? boolean?)
+
+(s/def ::http-host string?)
+(s/def ::http-port nat-int?)
+(s/def ::ssl-port nat-int?)
 
 (s/def ::jwt-expiration-time pos-int?)
 (s/def ::jwt-expiration-leeway nat-int?)
