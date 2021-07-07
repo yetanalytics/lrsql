@@ -22,17 +22,12 @@
 ;; JSON Web Tokens
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (def private-key "foo" #_(bk/private-key ""))
-;; (def public-key "bar" #_(bk/public-key ""))
-
-(def secret "sandwich") ; TODO: Actual public + private keys
-
 (defn account-id->jwt
   "Generate a new signed JSON Web Token with `account-id` in the claim
    as a custom `:acc` field. The issued-at and expiration time are given as
    `:iat` and `:exp`, respectively; the expiration time offset is given by
    `exp` in seconds."
-  [account-id exp]
+  [account-id secret exp]
   (let [ctime (u/current-time)
         etime (u/offset-time ctime exp :seconds)
         claim {:acc account-id
@@ -56,7 +51,7 @@
      `:invalid-token-error` - every other error (ie. parse failure).
    `leeway` is a time amount (in seconds) provided to compensate for
    clock drift."
-  [tok leeway]
+  [tok secret leeway]
   (if tok ; Avoid encountering a null pointer exception
     (try
       ;; TODO: algorithm

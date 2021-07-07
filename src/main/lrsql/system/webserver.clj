@@ -1,5 +1,8 @@
 (ns lrsql.system.webserver
   (:require [clojure.tools.logging :as log]
+            [clojure.java.io :refer [input-stream]]
+            [jdk.security.KeyStore :as ks]
+            [jdk.security.Key :as k]
             [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
@@ -8,28 +11,66 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]))
 
+(defn- file->keystore
+  "Return a `java.security.KeyStore` instance from `filepath`, protected
+   by the keystore `password`."
+  [filepath password]
+  (let [istream (input-stream filepath)
+        pass    (char-array password)]
+    (doto (ks/*get-instance (ks/*get-default-type))
+      (ks/load istream pass))))
+
+(defn- keystore->private-key
+  "Return a string representation of the private key stored in `keystore`
+   denoted by `alias` and protected by `password`."
+  [keystore alias password]
+  (-> keystore
+      (ks/get-key alias (char-array password))
+      k/get-encoded
+      slurp))
+
 (defn- service-map
   "Create a new service map for the webserver."
   [lrs config]
-  (let [jwt-exp (:jwt-expiration-time config)
-        jwt-lwy (:jwt-expiration-leeway config)]
+  (let [;; Destructure webserver config
+        {:keys [http?
+                http2?
+                http-host
+                http-port
+                ssl-port
+                key-file
+                key-alias
+                key-password]
+         jwt-exp :jwt-expiration-time
+         jwt-lwy :jwt-expiration-leeway}
+        config
+        ;; Keystore and private key
+        ;; The private key is used as the JWT symmetric secret
+        keystore    (file->keystore key-file key-password)
+        private-key (keystore->private-key keystore key-alias key-password)
+        ;; Make routes
+        routes (->> (build {:lrs lrs})
+                    (add-admin-routes {:lrs    lrs
+                                       :exp    jwt-exp
+                                       :leeway jwt-lwy
+                                       :secret private-key}))]
     {:env                 :prod
-     ::http/routes        (->> (build {:lrs lrs})
-                               (add-admin-routes {:lrs    lrs
-                                                  :exp    jwt-exp
-                                                  :leeway jwt-lwy}))
+     ::http/routes        routes
      ::http/resource-path "/public"
      ::http/type          :jetty
-     ::http/host          (:http-host config "0.0.0.0")
-     ::http/port          (:http-port config 8080)
+     ::http/host          http-host
+     ::http/port          (when http? http-port) ; nil = no HTTP
      ::http/join?         false
      ::http/allowed-origins
      {:creds           true
       :allowed-origins (constantly true)}
      ::http/container-options
-     {:h2c? true
-      :h2?  false
-      :ssl? false}}))
+     {:h2c?         (and http? http2?)
+      :h2?          http2?
+      :ssl?         true
+      :ssl-port     ssl-port
+      :keystore     keystore
+      :key-password key-password}}))
 
 (defrecord Webserver [service
                       server
@@ -50,10 +91,20 @@
                          i/xapi-default-interceptors
                          http/create-server
                          http/start)]
-         (log/infof "Starting new webserver at host %s and port %s"
-                    (::http/host service)
-                    (::http/port service))
+         ;; Logging
+         (let [{{ssl-port :ssl-port} ::http/container-options
+                http-port ::http/port
+                host ::http/host} service]
+           (if http-port
+             (log/infof "Starting new webserver at host %s, HTTP port %s, and SSL port %s"
+                        host
+                        http-port
+                        ssl-port)
+             (log/infof "Starting new webserver at host %s and SSL port %s"
+                        host
+                        ssl-port)))
          (log/tracef "Server map: %s" server)
+         ;; Return new webserver
          (assoc this
                 :service service
                 :server server))

@@ -13,6 +13,8 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 *.db
+config/*.jks
+config/*.key
 results/
 Test.java
 

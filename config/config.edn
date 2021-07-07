@@ -13,7 +13,7 @@
    :default {:db-type   #or [#env DB_TYPE "h2:mem"]
              :db-name   #or [#env DB_NAME "example"]
              :db-host   #or [#env DB_HOST "localhost"]
-             :db-port   #or [#env DB_PORT 8080]
+             :db-port   #long #or [#env DB_PORT 8080]
              :db-schema #or [#env DB_SCHEMA "lrsql"]}}
  :connection
  {:database #ref [:database]}
@@ -34,20 +34,38 @@
    :default {:database             #ref [:database]
              :api-key-default      #or [#env API_KEY nil]
              :api-secret-default   #or [#env API_SECRET nil]
-             :stmt-more-url-prefix ""
-             :stmt-get-default     50
-             :stmt-get-max         50}}
+             :stmt-more-url-prefix #or [#env STMT_MORE_URL_PREFIX ""]
+             :stmt-get-default     #long #or [#env STMT_GET_DEFAULT 50]
+             :stmt-get-max         #long #or [#env STMT_GET_MAX 50]}}
  :webserver
  #profile
-  {:test    {:jwt-expiration-time   3600
+  {:test    {:key-file              "config/keystore.jks"
+             :key-alias             "lrsql_keystore"
+             :key-password          "lrsql_pass"
+             :jwt-expiration-time   3600
              :jwt-expiration-leeway 1
+             :http?                 true
+             :http2?                true
+             :ssl-port              8443
              :http-host             "0.0.0.0"
              :http-port             8080}
-   :dev     {:jwt-expiration-time   3600
+   :dev     {:key-file              "config/keystore.jks"
+             :key-alias             "lrsql_keystore"
+             :key-password          "lrsql_pass"
+             :jwt-expiration-time   3600
              :jwt-expiration-leeway 1
+             :http?                 true
+             :http2?                true
+             :ssl-port              8443
              :http-host             "0.0.0.0"
              :http-port             8080}
-   :default {:jwt-expiration-time   #or [#env JWT_EXPIRATION_TIME 3600]
-             :jwt-expiration-leeway #or [#env JWT_EXPIRATION_LEEWAY 1]
+   :default {:key-file              #or [#env KEY_FILE "config/keystore.jks"]
+             :key-alias             #or [#env KEY_ALIAS "lrsql_keystore"]
+             :key-password          #or [#env KEY_PASSWORD "lrsql_pass"]
+             :jwt-expiration-time   #long #or [#env JWT_EXPIRATION_TIME 3600]
+             :jwt-expiration-leeway #long #or [#env JWT_EXPIRATION_LEEWAY 1]
+             :http?                 #boolean #or [#env ENABLE_HTTP true]
+             :http2?                #boolean #or [#env ENABLE_HTTP2 true]
              :http-host             #or [#env HTTP_HOST "0.0.0.0"]
-             :http-port             #or [#env HTTP_PORT 8080]}}}
+             :http-port             #long #or [#env HTTP_PORT 8080]
+             :ssl-port              #long #or [#env SSL_PORT 8443]}}}

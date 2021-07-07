@@ -55,15 +55,28 @@
                    ::stmt-get-default
                    ::stmt-get-max]))
 
+(s/def ::http? boolean?)
+(s/def ::http2? boolean?)
+
 (s/def ::http-host string?)
 (s/def ::http-port nat-int?)
+(s/def ::ssl-port nat-int?)
 
 (s/def ::jwt-expiration-time pos-int?)
 (s/def ::jwt-expiration-leeway nat-int?)
 
+(s/def ::key-file string?) ; TODO: correct file extension/path?
+(s/def ::key-alias string?)
+(s/def ::key-password string?)
+
 (s/def ::webserver
   (s/keys :req-un [::http-host
                    ::http-port
+                   ::ssl-port
+                   ::http2?
+                   ::key-file
+                   ::key-alias
+                   ::key-password
                    ::jwt-expiration-time
                    ::jwt-expiration-leeway]))
 

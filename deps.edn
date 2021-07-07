@@ -1,23 +1,24 @@
 {:paths ["src/main" "config"]
  :deps
- {org.clojure/clojure                    {:mvn/version "1.10.3"}
-  cheshire/cheshire                      {:mvn/version "5.10.0"}
-  clojure.java-time/clojure.java-time    {:mvn/version "0.3.2"}
-  danlentz/clj-uuid                      {:mvn/version "0.1.9"}
-  aero/aero                              {:mvn/version "1.1.6"}
-  io.pedestal/pedestal.jetty             {:mvn/version "0.5.7"}
-  buddy/buddy-core                       {:mvn/version "1.10.1"}
-  buddy/buddy-sign                       {:mvn/version "3.4.1"}
-  buddy/buddy-hashers                    {:mvn/version "1.8.1"}
-  com.mchange/c3p0                       {:mvn/version "0.9.5.5"}
-  com.github.seancorfield/next.jdbc      {:mvn/version "1.2.659"}
+ {org.clojure/clojure                      {:mvn/version "1.10.3"}
+  clojure-interop/java.security            {:mvn/version "1.0.5"}
+  cheshire/cheshire                        {:mvn/version "5.10.0"}
+  clojure.java-time/clojure.java-time      {:mvn/version "0.3.2"}
+  danlentz/clj-uuid                        {:mvn/version "0.1.9"}
+  aero/aero                                {:mvn/version "1.1.6"}
+  io.pedestal/pedestal.jetty               {:mvn/version "0.5.7"}
+  org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.18.v20190429"}
+  buddy/buddy-core                         {:mvn/version "1.10.1"}
+  buddy/buddy-sign                         {:mvn/version "3.4.1"}
+  buddy/buddy-hashers                      {:mvn/version "1.8.1"}
+  com.mchange/c3p0                         {:mvn/version "0.9.5.5"}
+  com.github.seancorfield/next.jdbc        {:mvn/version "1.2.659"}
   ;; com.layerware/hugsql                   {:mvn/version "0.5.1"}
-  com.yetanalytics/hugsql                {:mvn/version "0.6.0-SNAPSHOT"}
-  com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
-  com.stuartsierra/component             {:mvn/version "1.0.0"}
-  org.clojure/tools.logging              {:mvn/version "1.1.0"}
-  ch.qos.logback/logback-classic         {:mvn/version "1.2.3"}
-  criterium/criterium                    {:mvn/version "0.4.6"} ; dev only
+  com.yetanalytics/hugsql                  {:mvn/version "0.6.0-SNAPSHOT"}
+  com.layerware/hugsql-adapter-next-jdbc   {:mvn/version "0.5.1"}
+  com.stuartsierra/component               {:mvn/version "1.0.0"}
+  org.clojure/tools.logging                {:mvn/version "1.1.0"}
+  ch.qos.logback/logback-classic           {:mvn/version "1.2.3"}
   com.yetanalytics/lrs
   {:git/url    "git@github.com:yetanalytics/lrs.git"
    :sha        "a23237e1c76dc4e4251ff13c3532c975bc2b722c"
@@ -27,22 +28,22 @@
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
    :sha        "77f78d1713e50e7b8610f58b5137695b0fccddaa"
    :exclusions [org.clojure/clojure]}}
- :aliases
- {:db-h2
-  {:extra-paths ["src/sql"]
-   :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
+  :aliases
+  {:db-h2
+   {:extra-paths ["src/sql"]
+    :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
   ;; :db-sqlite
   ;; {:extra-deps {}}
-  :test
-  {:extra-paths ["src/test"]
-   :extra-deps {org.clojure/test.check {:mvn/version "1.0.0"}
-                babashka/babashka.curl {:mvn/version "0.0.3"}
-                io.github.cognitect-labs/test-runner
-                {:git/url "https://github.com/cognitect-labs/test-runner.git"
-                 :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
-                com.yetanalytics.lrs/test-runner
-                {:git/url "git@github.com:yetanalytics/lrs-test-runner.git"
-                 :sha "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
-                 :exclusions [org.clojure/data.json]}}
-   :exec-fn cognitect.test-runner.api/test
-   :exec-args {:dirs ["src/test"]}}}}
+   :test
+   {:extra-paths ["src/test"]
+    :extra-deps {org.clojure/test.check {:mvn/version "1.0.0"}
+                 babashka/babashka.curl {:mvn/version "0.0.3"}
+                 io.github.cognitect-labs/test-runner
+                 {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                  :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
+                 com.yetanalytics.lrs/test-runner
+                 {:git/url "git@github.com:yetanalytics/lrs-test-runner.git"
+                  :sha "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
+                  :exclusions [org.clojure/data.json]}}
+    :exec-fn cognitect.test-runner.api/test
+    :exec-args {:dirs ["src/test"]}}}}
