@@ -1,5 +1,28 @@
 /* Statement Queries */
 
+/* 
+ The strategy of `query-statements` is to use multiple joins to form a
+ Cartesian product over statements, agents, and activities:
+   
+ (stmt, stmt_desc, stmt_actor, stmt_desc_actor, stmt_activity, stmt_desc_activity)
+   
+ Because we only want to return properties of `stmt`, which may be identical
+ across multiple such tuples, we apply SELECT DISTINCT at the top level.
+*/
+
+/*
+ `id` (the primary key) is a SQUUID with guarenteed monotonicity. This is
+ important for the following:
+ - As a cursor to the next page of query results when `limit` is applied.
+   `id` thus must always be sequential; otherwise, for instance, new
+   statements may be inserted mid-page instead of appended.
+ - As a secondary sort property for query results; we cannot only apply
+   `stored` as the only property since it only has millisecond resolution,
+   which is not good enough for deterministic results.
+*/
+
+/* Single-statement query */
+
 -- :name query-statement
 -- :command :query
 -- :result :one
@@ -15,77 +38,63 @@ AND is_voided = :voided?
 SELECT 1 FROM xapi_statement
 WHERE statement_id = :statement-id
 
-/* The strategy of `query-statements` is to use multiple joins to form a
-   Cartesian product over statements, agents, and activities:
-   
-     (stmt, stmt_desc, stmt_actor, stmt_desc_actor, stmt_activity, stmt_desc_activity)
-   
-   Because we only want to return properties of `stmt`, which may be identical
-   across multiple such tuples, we apply SELECT DISTINCT at the top level.
-*/
+/* Multi-statement query */
 
-/* `id` (the primary key) is a SQUUID with guarenteed monotonicity. This is
-   important for the following:
-   - As a cursor to the next page of query results when `limit` is applied.
-     `id` thus must always be sequential; otherwise, for instance, new
-     statements may be inserted mid-page instead of appended.
-   - As a secondary sort property for query results; we cannot only apply
-     `stored` as the only property since it only has millisecond resolution,
-     which is not good enough for deterministic results.
-*/
+-- :frag actors-table-frag
+WITH actors AS (
+  SELECT stmt_actor.actor_ifi, stmt_actor.statement_id
+  FROM statement_to_actor stmt_actor
+  WHERE stmt_actor.actor_ifi = :actor-ifi
+  --~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'")
+)
+
+-- :frag activities-table-frag
+WITH activs AS (
+  SELECT stmt_activ.activity_iri, stmt_activ.statement_id
+  FROM statement_to_activity stmt_activ
+  WHERE stmt_activ.activity_iri = :activity-iri
+  --~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'")
+)
+
+-- :frag stmt-no-ref-subquery-frag
+SELECT stmt.id, stmt.payload
+FROM xapi_statement stmt
+--~ (when (:actor-ifi params)    "INNER JOIN actors stmt_actors ON stmt.statement_id = stmt_actors.statement_id")
+--~ (when (:activity-iri params) "INNER JOIN activs stmt_activs ON stmt.statement_id = stmt_activs.statement_id")
+WHERE stmt.is_voided = FALSE
+--~ (when (:from params)         "AND stmt.id >= :from")
+--~ (when (:since params)        "AND stmt.id > :since")
+--~ (when (:until params)        "AND stmt.id <= :until")
+--~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
+--~ (when (:registration params) "AND stmt.registration = :registration")
+--~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
+LIMIT :limit
+
+-- :frag stmt-ref-subquery-frag
+SELECT stmt_a.id, stmt_a.payload
+FROM xapi_statement stmt_d
+--~ (when (:actor-ifi params)    "INNER JOIN actors stmt_d_actors ON stmt_d.statement_id = stmt_d_actors.statement_id")
+--~ (when (:activity-iri params) "INNER JOIN activs stmt_d_activs ON stmt_d.statement_id = stmt_d_activs.statement_id")
+INNER JOIN statement_to_statement sts ON stmt_d.statement_id = sts.descendant_id
+INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
+WHERE 1
+--~ (when (:from params)         "AND stmt_a.id >= :from")
+--~ (when (:since params)        "AND stmt_a.id > :since")
+--~ (when (:until params)        "AND stmt_a.id <= :until")
+--~ (when (:verb-iri params)     "AND stmt_d.verb_iri = :verb-iri")
+--~ (when (:registration params) "AND stmt_d.registration = :registration")
+--~ (if (:ascending? params) "ORDER BY stmt_a.id ASC" "ORDER BY stmt_a.id DESC")
+LIMIT :limit
 
 -- :name query-statements
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
-SELECT DISTINCT stmt.id, stmt.stored, stmt.payload
-FROM xapi_statement stmt
-  LEFT JOIN statement_to_statement
-    ON stmt.statement_id = statement_to_statement.ancestor_id
-  LEFT JOIN xapi_statement stmt_desc
-    ON stmt_desc.statement_id = statement_to_statement.descendant_id
-  /*~
-  (when (:actor-ifi params)
-    (str "  LEFT JOIN statement_to_actor stmt_actor\n"
-         "    ON stmt.statement_id = stmt_actor.statement_id\n"
-         "  LEFT JOIN statement_to_actor stmt_desc_actor\n"
-         "    ON stmt_desc.statement_id = stmt_desc_actor.statement_id"))
-  ~*/
-  /*~
-  (when (:activity-iri params)
-    (str "  LEFT JOIN statement_to_activity stmt_activ\n"
-         "    ON stmt.statement_id = stmt_activ.statement_id\n"
-         "  LEFT JOIN statement_to_activity stmt_desc_activ\n"
-         "    ON stmt_desc.statement_id = stmt_desc_activ.statement_id"))
-  ~*/
-WHERE stmt.is_voided = FALSE
-  --~ (when (:from params)  "AND stmt.id >= :from")
-  --~ (when (:since params) "AND stmt.stored > :since")
-  --~ (when (:until params) "AND stmt.stored <= :until")
-  AND ((
-    1
-    --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
-    --~ (when (:registration params) "AND stmt.registration = :registration")
-    --~ (when (:actor-ifi params)    "AND stmt_actor.actor_ifi = :actor-ifi")
-    --~ (when (:activity-iri params) "AND stmt_activ.activity_iri = :activity-iri")
-    /*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
-          "AND stmt_actor.usage = 'Actor'") ~*/
-    /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
-          "AND stmt_activ.usage = 'Object'") ~*/
-  ) OR (
-    1
-    --~ (when (:verb-iri params)     "AND stmt_desc.verb_iri = :verb-iri")
-    --~ (when (:registration params) "AND stmt_desc.registration = :registration")
-    --~ (when (:actor-ifi params)    "AND stmt_desc_actor.actor_ifi = :actor-ifi")
-    --~ (when (:activity-iri params) "AND stmt_desc_activ.activity_iri = :activity-iri")
-    /*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
-          "AND stmt_desc_actor.usage = 'Actor'") ~*/
-    /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
-          "AND stmt_desc_activ.usage = 'Object'") ~*/
-  ))
-/*~ (if (:ascending? params)
-      "ORDER BY stmt.stored ASC, stmt.id ASC"
-      "ORDER BY stmt.stored DESC, stmt.id DESC") ~*/
+--~ (when (:actor-ifi params)    ":frag:actors-table-frag")
+--~ (when (:activity-iri params) ":frag:activities-table-frag")
+SELECT id, payload FROM
+((:frag:stmt-no-ref-subquery-frag) UNION (:frag:stmt-ref-subquery-frag))
+--~ (if (:ascending? params) "ORDER BY id ASC" "ORDER BY id DESC")
 LIMIT :limit
 
 /* Statement Object Queries */

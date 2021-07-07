@@ -11,11 +11,13 @@
   buddy/buddy-hashers                    {:mvn/version "1.8.1"}
   com.mchange/c3p0                       {:mvn/version "0.9.5.5"}
   com.github.seancorfield/next.jdbc      {:mvn/version "1.2.659"}
-  com.layerware/hugsql                   {:mvn/version "0.5.1"}
+  ;; com.layerware/hugsql                   {:mvn/version "0.5.1"}
+  com.yetanalytics/hugsql                {:mvn/version "0.6.0-SNAPSHOT"}
   com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
   com.stuartsierra/component             {:mvn/version "1.0.0"}
   org.clojure/tools.logging              {:mvn/version "1.1.0"}
   ch.qos.logback/logback-classic         {:mvn/version "1.2.3"}
+  criterium/criterium                    {:mvn/version "0.4.6"} ; dev only
   com.yetanalytics/lrs
   {:git/url    "git@github.com:yetanalytics/lrs.git"
    :sha        "a23237e1c76dc4e4251ff13c3532c975bc2b722c"

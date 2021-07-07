@@ -180,10 +180,9 @@
    `insert-statement!`."
   [statement]
   (let [;; Destructuring
-        ;; `id`, `stored`, and `authority` should have already been
-        ;; set by `prepare-statement`.
+        ;; `id` and `authority` should have already been set by
+        ;; `prepare-statement`.
         {stmt-id    "id"
-         stmt-stor  "stored"
          stmt-act   "actor"
          stmt-vrb   "verb"
          stmt-obj   "object"
@@ -203,7 +202,6 @@
         ;; Revised Statement Properties
         stmt-pk      (-> statement meta :primary-key)
         stmt-id      (u/str->uuid stmt-id)
-        stmt-stored  (u/str->time stmt-stor)
         ?stmt-reg    (when ?stmt-reg
                        (u/str->uuid ?stmt-reg))
         ?stmt-ref-id (when (= "StatementRef" stmt-obj-type)
@@ -222,7 +220,6 @@
                     :primary-key       stmt-pk
                     :statement-id      stmt-id
                     :statement-ref-id  ?stmt-ref-id
-                    :stored            stmt-stored
                     :registration      ?stmt-reg
                     :attachment-shas   att-shas
                     :verb-iri          stmt-vrb-id
@@ -421,8 +418,8 @@
         ?actor-ifi  (when ?actor (ua/actor->ifi ?actor))
         ?reg        (when ?reg (u/str->uuid ?reg))
         ?from       (when ?from (u/str->uuid ?from))
-        ?since      (when ?since (u/str->time ?since))
-        ?until      (when ?until (u/str->time ?until))
+        ?since      (when ?since (u/time->uuid (u/str->time ?since)))
+        ?until      (when ?until (u/time->uuid (u/str->time ?until)))
         rel-actors? (boolean ?rel-actors?) 
         rel-activs? (boolean ?rel-activs?)
         asc?        (boolean ?asc?)

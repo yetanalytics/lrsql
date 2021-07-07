@@ -13,6 +13,8 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 *.db
+results/
+Test.java
 
 # VSCode
 .calva/
