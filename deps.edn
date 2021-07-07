@@ -12,7 +12,7 @@
   buddy/buddy-sign                         {:mvn/version "3.4.1"}
   buddy/buddy-hashers                      {:mvn/version "1.8.1"}
   com.mchange/c3p0                         {:mvn/version "0.9.5.5"}
-  com.github.seancorfield/next.jdbc        {:mvn/version "1.2.659"}
+  com.github.seancorfield/next.jdbc        {:mvn/version "1.2.674"}
   ;; com.layerware/hugsql                   {:mvn/version "0.5.1"}
   com.yetanalytics/hugsql                  {:mvn/version "0.6.0-SNAPSHOT"}
   com.layerware/hugsql-adapter-next-jdbc   {:mvn/version "0.5.1"}
