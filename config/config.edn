@@ -65,4 +65,4 @@
              :http2?                #or [#env USE_HTTP2 true]
              :ssl-port              #or [#env SSL_PORT 8443]
              :http-host             #or [#env HTTP_HOST "0.0.0.0"]
-             :http-port             #or [#env HTTP_PORT 8080]}}}
+             :http-port             #or [#env HTTP_PORT nil]}}}
