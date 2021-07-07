@@ -29,11 +29,11 @@
       ?jdbc-url
       (assoc :jdbcUrl ?jdbc-url)
       (not ?jdbc-url)
-      (assoc :dbtype db-type
-             :dbname db-name
-             :host   host
-             :port   port
-             #_:schema #_schema)
+      (assoc :jdbcUrl (jdbc-conn/jdbc-url
+                       {:dbtype db-type
+                        :dbname db-name
+                        :host   host
+                        :port   port}))
       ;; Additional specs
       ?user
       (assoc :user ?user)
