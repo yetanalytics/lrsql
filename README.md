@@ -45,7 +45,7 @@ To use lrsql, a user needs to be authorized by an admin. Admin accounts can be c
 ## Makefile Targets
 
 - `ci`: Called when running continuous integration; runs all test cases.
-- `keystore`: Alias for the `config/keystore.jks`, which generates a Java Keystore file with the default alias, password, file path, and credentials. This is called during CI and is not recommended to generate keystores in production.
+- `keystore`: Alias for the `config/keystore.jks`, which generates a Java Keystore file with the default alias, password, and file path, as well as a self-signed certificates. This is called during CI and is not recommended for keystore generation in production.
 - `ephemeral`: Makes an in-memory H2 database with the seed API key `username` and seed API secret `password`. This can then be used during development to test/bench lrsql functionality.
 
 ## REST API
