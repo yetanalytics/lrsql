@@ -34,9 +34,9 @@
    :default {:database             #ref [:database]
              :api-key-default      #or [#env API_KEY nil]
              :api-secret-default   #or [#env API_SECRET nil]
-             :stmt-more-url-prefix ""
-             :stmt-get-default     50
-             :stmt-get-max         50}}
+             :stmt-more-url-prefix #or [#env STMT_MORE_URL_PREFIX ""]
+             :stmt-get-default     #or [#env STMT_GET_DEFAULT 50]
+             :stmt-get-max         #or [#env STMT_GET_MAX 50]}}
  :webserver
  #profile
   {:test    {:key-file              "config/keystore.jks"
