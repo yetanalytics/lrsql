@@ -58,13 +58,13 @@
      ::http/resource-path "/public"
      ::http/type          :jetty
      ::http/host          http-host
-     ::http/port          http-port
+     ::http/port          http-port ; nil = HTTP unavailable
      ::http/join?         false
      ::http/allowed-origins
      {:creds           true
       :allowed-origins (constantly true)}
      ::http/container-options
-     {:h2c?         true
+     {:h2c?         (and http-port http2?) ; HTTP-only option
       :h2?          http2?
       :ssl?         true
       :ssl-port     ssl-port

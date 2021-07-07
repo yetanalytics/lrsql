@@ -56,7 +56,7 @@
                    ::stmt-get-max]))
 
 (s/def ::http-host string?)
-(s/def ::http-port nat-int?)
+(s/def ::http-port (s/nilable nat-int?)) ; nil = HTTP unavailable, HTTPS only
 (s/def ::ssl-port nat-int?)
 (s/def ::http2? boolean?)
 
