@@ -6,7 +6,7 @@
             [com.yetanalytics.lrs.protocol :as lrsp]))
 
 (comment
-  (def sys (system/system))
+  (def sys (system/system :dev))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
