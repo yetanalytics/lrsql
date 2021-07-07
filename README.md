@@ -31,7 +31,7 @@ To use lrsql, a user needs to be authorized by an admin. Admin accounts can be c
 - `STMT_GET_MAX`: The maxiumum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overriden.
 
 ### Webserver
-- `KEY_FILE`: The path to the Java Keystore file that contains the key pair and credentials. Default value is `config/keystore.jks`.
+- `KEY_FILE`: The path to the Java Keystore file that contains the key pair and credentials, which are used for HTTPS as well as JWT signing and verification. Default value is `config/keystore.jks`.
 - `KEY_ALIAS`: The alias of the private key. Default value is `lrsql_keystore`.
 - `KEY_PASSWORD`: The password protecting the keystore. Default value is `lrsql_pass`. **It is highly recommended that you override this value.**
 - `JWT_EXPIRATION_TIME`: The amount of time, in seconds, after a JWT is created when it should expire. Set to `3600` (one hour) by default.
