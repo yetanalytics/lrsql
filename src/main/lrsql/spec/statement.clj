@@ -46,8 +46,8 @@
 (s/def ::related-actors? boolean?)
 (s/def ::related-activities? boolean?)
 
-(s/def ::since uuid? #_inst?)
-(s/def ::until uuid? #_inst?)
+(s/def ::since uuid?)
+(s/def ::until uuid?)
 (s/def ::from uuid?)
 
 (s/def ::limit nat-int?)
