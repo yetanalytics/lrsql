@@ -96,6 +96,7 @@ SELECT id, payload FROM
 ((:frag:stmt-no-ref-subquery-frag) UNION (:frag:stmt-ref-subquery-frag))
 --~ (if (:ascending? params) "ORDER BY id ASC" "ORDER BY id DESC")
 LIMIT :limit
+
 /* Statement Object Queries */
 
 -- :name query-actor

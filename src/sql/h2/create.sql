@@ -11,9 +11,9 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   is_voided        BOOLEAN DEFAULT FALSE NOT NULL,
   payload          JSON NOT NULL
 );
-CREATE INDEX ON xapi_statement(id DESC);
-CREATE INDEX ON xapi_statement(verb_iri);
-CREATE INDEX ON xapi_statement(registration)
+CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
+CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri);
+CREATE INDEX IF NOT EXISTS registration_idx ON xapi_statement(registration)
 
 -- :name create-actor-table!
 -- :command :execute
