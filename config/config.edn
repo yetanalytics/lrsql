@@ -44,6 +44,7 @@
              :key-password          "lrsql_pass"
              :jwt-expiration-time   3600
              :jwt-expiration-leeway 1
+             :http?                 true
              :http2?                true
              :ssl-port              8443
              :http-host             "0.0.0.0"
@@ -53,6 +54,7 @@
              :key-password          "lrsql_pass"
              :jwt-expiration-time   3600
              :jwt-expiration-leeway 1
+             :http?                 true
              :http2?                true
              :ssl-port              8443
              :http-host             "0.0.0.0"
