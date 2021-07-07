@@ -16,37 +16,46 @@ To use lrsql, a user needs to be authorized by an admin. Admin accounts can be c
 
 ### Database
 
-- `LRSQL_DB_TYPE`: The DBMS that lrsql will use. Currently supported values are `h2:mem` (default) and `h2`.
-- `LRSQL_DB_NAME`: The name of the database. Default value is `example`.
-- `LRSQL_DB_HOST`: The host that the database will run on. Default value is `localhost`.
-- `LRSQL_DB_PORT`: The port that the database is open to. Default value is `8080`.
-- `LRSQL_DB_SCHEMA`: The schema of all database tables. Default value is `lrsql`.
+| Variable | Description | Default |
+| --- | --- | --- |
+| `LRSQL_DB_TYPE` | The DBMS that lrsql will use. Currently supports `h2:mem` and `h2`. | `h2:mem` |
+| `LRSQL_DB_NAME` | The name of the database. | `example` |
+| `LRSQL_DB_HOST` | The host that the database will run on. | `localhost` |
+| `LRSQL_DB_PORT` | The port that the database is open to. | `8080` |
+| `LRSQL_DB_SCHEMA` | The schema of all database tables. | `lrsql` |
 
 ### LRS
 
-- `LRSQL_SEED_API_KEY`: The public API key that seeds the credential table, ie. added to the table upon initialization. Optional and not set by default; this is primarily used for testing and development.
-- `LRSQL_SEED_SECRET_KEY`: The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and not set by default; this is primarily used for testing and development.
-- `LRSQL_STMT_MORE_URL_PREFIX`: A string that prefixes the fragment in the `more` URL returned by a multi-statement query. Default value is the empty string.
-- `LRSQL_STMT_GET_DEFAULT`: The default `limit` value in a statement query. Queries default to this value if not explicitly set.
-- `LRSQL_STMT_GET_MAX`: The maxiumum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overriden.
+| Variable | Description | Default |
+| --- | --- | --- |
+| `LRSQL_SEED_API_KEY` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
+| `LRSQL_SEED_SECRET_KEY` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
+| `LRSQL_STMT_MORE_URL_PREFIX` | A string that prefixes the fragment in the `more` URL returned by a multi-statement query. | Empty string |
+| `LRSQL_STMT_GET_DEFAULT` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` | 
+| `LRSQL_STMT_GET_MAX` | The maxiumum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overriden. | `50` |
 
 ### Webserver
-- `LRSQL_KEY_FILE`: The path to the Java Keystore file that contains the key pair and credentials, which are used for HTTPS as well as JWT signing and verification. Default value is `config/keystore.jks`.
-- `LRSQL_KEY_ALIAS`: The alias of the private key. Default value is `lrsql_keystore`.
-- `LRSQL_KEY_PASSWORD`: The password protecting the keystore. Default value is `lrsql_pass`. **It is highly recommended that you override this value.**
-- `LRSQL_JWT_EXPIRATION_TIME`: The amount of time, in seconds, after a JWT is created when it should expire. Set to `3600` (one hour) by default.
-- `LRSQL_JWT_EXPIRATION_LEEWAY`: The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. Set to `1` (one second) by default.
-- `LRSQL_ENABLE_HTTP`: Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). Default value is `true`.
-- `LRSQL_ENABLE_HTTP2`: Whether HTTP/2 is supported or not. Default value is `true`.
-- `LRSQL_HTTP_HOST`: The host that the webserver will run on. Default value is `0.0.0.0` (i.e. localhost).
-- `LRSQL_HTTP_PORT`: The HTTP port that the webserver will be open on. Default value is `8080`.
-- `LRSQL_SSL_PORT`: The HTTPS port that the webserver will be open on. Default value is `8443`.
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `LRSQL_KEY_FILE` | The path to the Java Keystore file that contains the key pair and credentials, which are used for HTTPS as well as JWT signing and verification. | `config/keystore.jks` |
+| `LRSQL_KEY_ALIAS` | The alias of the private key. | `lrsql_keystore` |
+| `LRSQL_KEY_PASSWORD` | The password protecting the keystore. **It is highly recommended that you override the default value.** | `lrsql_pass` |
+| `LRSQL_JWT_EXPIRATION_TIME` | The amount of time, in seconds, after a JWT is created when it should expire. | `3600` (one hour) |
+| `LRSQL_JWT_EXPIRATION_LEEWAY` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
+| `LRSQL_ENABLE_HTTP` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
+| `LRSQL_ENABLE_HTTP2` | Whether HTTP/2 is supported or not. | `true` |
+| `LRSQL_HTTP_HOST` | The host that the webserver will run on. | `0.0.0.0` (localhost) |
+| `LRSQL_HTTP_PORT` | The HTTP port that the webserver will be open on. | `8080` |
+| `LRSQL_SSL_PORT` | The HTTPS port that the webserver will be open on. | `8443` |
 
 ## Makefile Targets
 
-- `ci`: Called when running continuous integration; runs all test cases.
-- `keystore`: Alias for the `config/keystore.jks`, which generates a Java Keystore file with the default alias, password, and file path, as well as a self-signed certificates. This is called during CI and is not recommended for keystore generation in production.
-- `ephemeral`: Makes an in-memory H2 database with the seed API key `username` and seed API secret `password`. This can then be used during development to test/bench lrsql functionality.
+| Target | Description |
+| --- | --- |
+| `ci` | Called when running continuous integration; runs all test cases. |
+| `keystore` | Alias for the `config/keystore.jks`, which generates a Java Keystore file with the default alias, password, and file path, as well as a self-signed certificates. This is called during CI and is not recommended for production keystore generation production. |
+| `ephemeral` | Makes an in-memory H2 database with the seed API key `username` and seed API secret `password`. This can then be used during development to test/bench lrsql functionality. |
 
 ## REST API
 
