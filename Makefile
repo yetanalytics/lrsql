@@ -18,6 +18,6 @@ ephemeral:
 	ENV=:dev \
         LRSQL_DB_TYPE=h2:mem \
         LRSQL_DB_NAME=ephemeral \
-        LRSQL_API_KEY=username \
-        LRSQL_API_SECRET=password \
+        LRSQL_SEED_API_KEY=username \
+        LRSQL_SEED_API_SECRET=password \
         clojure -Mdb-h2 -m lrsql.main
