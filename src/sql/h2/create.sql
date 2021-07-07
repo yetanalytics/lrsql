@@ -6,13 +6,14 @@
 CREATE TABLE IF NOT EXISTS xapi_statement (
   id               UUID NOT NULL PRIMARY KEY,
   statement_id     UUID NOT NULL UNIQUE,
-  statement_ref_id UUID,
-  stored           TIMESTAMP NOT NULL,
   registration     UUID,
   verb_iri         VARCHAR(255) NOT NULL,
   is_voided        BOOLEAN DEFAULT FALSE NOT NULL,
   payload          JSON NOT NULL
-)
+);
+CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
+CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri);
+CREATE INDEX IF NOT EXISTS registration_idx ON xapi_statement(registration)
 
 -- :name create-actor-table!
 -- :command :execute
