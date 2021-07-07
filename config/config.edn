@@ -57,7 +57,7 @@
              :ssl-port              8443
              :http-host             "0.0.0.0"
              :http-port             8080}
-   :default {:key-file              #or [#env KEYSTORE "config/keystore.jks"]
+   :default {:key-file              #or [#env KEY_FILE "config/keystore.jks"]
              :key-alias             #or [#env KEY_ALIAS "lrsql_keystore"]
              :key-password          #or [#env KEY_PASSWORD "lrsql_pass"]
              :jwt-expiration-time   #or [#env JWT_EXPIRATION_TIME 3600]
