@@ -42,6 +42,12 @@ To use lrsql, a user needs to be authorized by an admin. Admin accounts can be c
 - `LRSQL_HTTP_PORT`: The HTTP port that the webserver will be open on. Default value is `8080`.
 - `LRSQL_SSL_PORT`: The HTTPS port that the webserver will be open on. Default value is `8443`.
 
+## Makefile Targets
+
+- `ci`: Called when running continuous integration; runs all test cases.
+- `keystore`: Alias for the `config/keystore.jks`, which generates a Java Keystore file with the default alias, password, file path, and credentials. This is called during CI and is not recommended to generate keystores in production.
+- `ephemeral`: Makes an in-memory H2 database with the seed API key `username` and seed API secret `password`. This can then be used during development to test/bench lrsql functionality.
+
 ## REST API
 
 The HTTP methods that are LRS-specific are given in [the xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#datatransfer). Requests to the LRS (which are denoted by the `xapi` path prefix) must contain a Base64 encoded, colon-separated private and secret key in the `authorization` field of the header. For example (assuming `http://example` is the URL body), `http://example.org/xapi/statements` is the URL at which the user inserts and queries xAPI statements; other URLs are used to insert and query documents, agents, and activities.
