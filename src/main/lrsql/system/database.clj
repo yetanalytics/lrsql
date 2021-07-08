@@ -1,10 +1,21 @@
 (ns lrsql.system.database
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.string :as cstr]
+            [clojure.walk :as w]
+            [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
+
+(defn- parse-db-props
+  "Given `prop-str` of the form \"key:value,key:value,...\", return a
+   keyword-key map of property names to values."
+  [prop-str]
+  (->> (cstr/split prop-str #",")
+       (mapv #(cstr/split % #":"))
+       (into {})
+       w/keywordize-keys))
 
 (defn- coerce-conn-config
   [conn-config]
@@ -14,6 +25,7 @@
           host      :db-host
           port      :db-port
           schema    :db-schema
+          ?props    :db-properties
           ?jdbc-url :db-jdbc-url}
          :database
          ?user      :user
@@ -29,11 +41,14 @@
       ?jdbc-url
       (assoc :jdbcUrl ?jdbc-url)
       (not ?jdbc-url)
-      (assoc :jdbcUrl (jdbc-conn/jdbc-url
-                       {:dbtype db-type
-                        :dbname db-name
-                        :host   host
-                        :port   port}))
+      (assoc :jdbcUrl (cond-> {:dbtype db-type
+                               :dbname db-name
+                               :host   host
+                               :port   port}
+                        ?props
+                        (merge (parse-db-props ?props))
+                        true
+                        jdbc-conn/jdbc-url))
       ;; Additional specs
       ?user
       (assoc :user ?user)

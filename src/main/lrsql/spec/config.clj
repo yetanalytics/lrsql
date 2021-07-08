@@ -8,15 +8,18 @@
 (s/def ::db-host string?)
 (s/def ::db-port nat-int?)
 (s/def ::db-schema string?)
+
+(s/def ::db-properties
+  (s/and string? (partial re-matches #"(?:(?:\w+:\w+)(?:,\w+:\w+)*)?")))
 (s/def ::db-jdbc-url ::xs/iri)
 
 (s/def ::database
   (s/keys :req-un [::db-type
                    ::db-name
                    ::db-host
-                   ::db-port
-                   ::db-schema]
-          :opt-un [::db-jdbc-url]))
+                   ::db-port]
+          :opt-un [::db-properties
+                   ::db-jdbc-url]))
 
 (s/def ::user string?)
 (s/def ::password string?)
