@@ -14,6 +14,9 @@
   (s/and string? (partial re-matches #"(?:(?:\w+:\w+)(?:,\w+:\w+)*)?")))
 (s/def ::db-jdbc-url ::xs/iri)
 
+(s/def ::db-user string?)
+(s/def ::db-password string?)
+
 (s/def ::database
   (s/and (s/conformer remove-nil-vals)
          (s/or :no-jdbc-url
@@ -29,8 +32,6 @@
                        :opt-un [::db-user
                                 ::db-password]))))
 
-(s/def ::conn-user string?)
-(s/def ::conn-password string?)
 (s/def ::pool-init-size nat-int?)
 (s/def ::pool-min-size nat-int?)
 (s/def ::pool-inc nat-int?)
