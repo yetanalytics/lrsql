@@ -13,10 +13,12 @@
 
 ;; Table
 ;; Also found in other input maps, but these are only necessary for documents
-(s/def ::table
-  #{:state-document
-    :agent-profile-document
-    :activity-profile-document})
+(s/def :lrsql.spec.document.state/table
+  #{:state-document})
+(s/def :lrsql.spec.document.agent-profile/table
+  #{:agent-profile-document})
+(s/def :lrsql.spec.document.activity-profile/table
+  #{:activity-profile-document})
 
 ;; Parameters
 ;; NOTE: Profile ID should be IRI, but xapi-schema defines it only as a string
@@ -64,7 +66,7 @@
 
 (def state-doc-insert-spec
   (s/keys :req-un [::c/primary-key
-                   ::table
+                   :lrsql.spec.document.state/table
                    ::state-id
                    ::hs-activ/activity-iri
                    ::hs-actor/agent-ifi
@@ -85,7 +87,7 @@
 
 (def agent-profile-doc-insert-spec
   (s/keys :req-un [::c/primary-key
-                   ::table
+                   :lrsql.spec.document.agent-profile/table
                    ::profile-id
                    ::hs-actor/agent-ifi
                    ::last-modified
@@ -104,7 +106,7 @@
 
 (def activity-profile-doc-insert-spec
   (s/keys :req-un [::c/primary-key
-                   ::table
+                   :lrsql.spec.document.activity-profile/table
                    ::profile-id
                    ::hs-activ/activity-iri
                    ::last-modified
@@ -129,19 +131,19 @@
 
 (def state-doc-input-spec
   (s/keys :req-un [::state-id
-                   ::table
+                   :lrsql.spec.document.state/table
                    ::hs-activ/activity-iri
                    ::hs-actor/agent-ifi]
           :opt-un [::hs-stmt/registration]))
 
 (def agent-profile-doc-input-spec
   (s/keys :req-un [::hs-actor/agent-ifi
-                   ::table
+                   :lrsql.spec.document.agent-profile/table
                    ::profile-id]))
 
 (def activity-profile-doc-input-spec
   (s/keys :req-un [::hs-activ/activity-iri
-                   ::table
+                   :lrsql.spec.document.activity-profile/table
                    ::profile-id]))
 
 (def document-input-spec
@@ -153,7 +155,7 @@
 ;; Document multi-query/delete
 
 (def state-doc-multi-input-spec
-  (s/keys :req-un [::table
+  (s/keys :req-un [:lrsql.spec.document.state/table
                    ::hs-activ/activity-iri
                    ::hs-actor/agent-ifi]
           :opt-un [::hs-stmt/registration]))
@@ -161,19 +163,19 @@
 ;; Document ID queries
 
 (def state-doc-ids-input-spec
-  (s/keys :req-un [::table
+  (s/keys :req-un [:lrsql.spec.document.state/table
                    ::hs-activ/activity-iri
                    ::hs-actor/agent-ifi]
           :opt-un [::hs-stmt/registration
                    ::since]))
 
 (def agent-profile-doc-ids-input-spec
-  (s/keys :req-un [::table
+  (s/keys :req-un [:lrsql.spec.document.agent-profile/table
                    ::hs-actor/agent-ifi]
           :opt-un [::since]))
 
 (def activity-profile-doc-ids-input-spec
-  (s/keys :req-un [::table
+  (s/keys :req-un [:lrsql.spec.document.activity-profile/table
                    ::hs-activ/activity-iri]
           :opt-un [::since]))
 
