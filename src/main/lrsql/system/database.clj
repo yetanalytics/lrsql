@@ -24,7 +24,6 @@
           db-name   :db-name
           host      :db-host
           port      :db-port
-          schema    :db-schema
           ?props    :db-properties
           ?jdbc-url :db-jdbc-url}
          :database
