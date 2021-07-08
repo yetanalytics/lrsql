@@ -1,5 +1,6 @@
 (ns lrsql.test-support
   (:require [clojure.spec.test.alpha :as stest]
+            [orchestra.spec.test :as otest]
             [lrsql.util :as u])
   (:import [java.util UUID]))
 
@@ -11,12 +12,12 @@
 (defn instrument-lrsql
   "Instrument all instrumentable functions defined in lrsql."
   []
-  (stest/instrument (lrsql-syms)))
+  (otest/instrument (lrsql-syms)))
 
 (defn unstrument-lrsql
   "Unnstrument all instrumentable functions defined in lrsql."
   []
-  (stest/unstrument (lrsql-syms)))
+  (otest/unstrument (lrsql-syms)))
 
 (defn fresh-db-fixture
   [f]

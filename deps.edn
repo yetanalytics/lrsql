@@ -38,6 +38,7 @@
    {:extra-paths ["src/test"]
     :extra-deps {org.clojure/test.check {:mvn/version "1.0.0"}
                  babashka/babashka.curl {:mvn/version "0.0.3"}
+                 orchestra/orchestra    {:mvn/version "2021.01.01-1"}
                  io.github.cognitect-labs/test-runner
                  {:git/url "https://github.com/cognitect-labs/test-runner.git"
                   :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
