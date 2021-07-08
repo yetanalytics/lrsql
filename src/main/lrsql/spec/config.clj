@@ -14,12 +14,14 @@
 (s/def ::db-jdbc-url ::xs/iri)
 
 (s/def ::database
-  (s/keys :req-un [::db-type
-                   ::db-name
-                   ::db-host
-                   ::db-port]
-          :opt-un [::db-properties
-                   ::db-jdbc-url]))
+  (s/or :no-jdbc-url
+        (s/keys :req-un [::db-type
+                         ::db-name
+                         ::db-host
+                         ::db-port]
+                :opt-un [::db-properties])
+        :jdbc-url
+        (s/keys :req-un [::db-jdbc-url])))
 
 (s/def ::user string?)
 (s/def ::password string?)
