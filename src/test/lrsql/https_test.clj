@@ -5,6 +5,8 @@
             [lrsql.test-support :as support]
             [lrsql.system :as system]))
 
+(support/instrument-lrsql)
+
 (deftest https-test
   (testing "HTTPS connection"
     (let [_    (support/assert-in-mem-db)

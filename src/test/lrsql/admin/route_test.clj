@@ -9,6 +9,8 @@
             [lrsql.test-support :as support]
             [lrsql.util :as u]))
 
+(support/instrument-lrsql)
+
 (use-fixtures :each support/fresh-db-fixture)
 
 (deftest admin-routes-test

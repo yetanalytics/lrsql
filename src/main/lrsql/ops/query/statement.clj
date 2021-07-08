@@ -83,12 +83,13 @@
    references given by `:statement-ref-id`, it returns ancestral
    references, i.e. not only the Statement referenced by `:statement-ref-id`,
    but the Statement referenced by that ID, and so on. The return value
-   is a seq of the descendant statemnet IDs; these are later added to the
+   is a vec of the descendant statement IDs; these are later added to the
    input map."
   [tx input]
-  (when-some [?sref-id (-> input :statement-input :statement-ref-id)]
+  (if-some [?sref-id (-> input :statement-input :statement-ref-id)]
     (->> {:ancestor-id ?sref-id}
          (f/query-statement-descendants tx)
          (map :descendant_id)
          (concat [?sref-id])
-         vec)))
+         vec)
+    []))

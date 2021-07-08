@@ -279,7 +279,7 @@
 
 (s/fdef descendant-insert-input
   :args (s/cat :statement-id ::ss/statement-id
-               :desceendant-id ::ss/statement-id)
+               :descendant-id ::ss/statement-id)
   :ret ::ss/stmt-stmt-input)
 
 (defn descendant-insert-input

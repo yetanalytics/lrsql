@@ -3,6 +3,21 @@
             [lrsql.util :as u])
   (:import [java.util UUID]))
 
+(defn- lrsql-syms
+  []
+  (set (filter #(->> % namespace (re-matches #"lrsql\..*"))
+               (stest/instrumentable-syms))))
+
+(defn instrument-lrsql
+  "Instrument all instrumentable functions defined in lrsql."
+  []
+  (stest/instrument (lrsql-syms)))
+
+(defn unstrument-lrsql
+  "Unnstrument all instrumentable functions defined in lrsql."
+  []
+  (stest/unstrument (lrsql-syms)))
+
 (defn fresh-db-fixture
   [f]
   (let [id-str (str (UUID/randomUUID))

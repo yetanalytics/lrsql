@@ -5,6 +5,8 @@
             [lrsql.system :as system]
             [lrsql.test-support :as support]))
 
+(support/instrument-lrsql)
+
 (t/use-fixtures :each support/fresh-db-fixture)
 
 (deftest conformance-test

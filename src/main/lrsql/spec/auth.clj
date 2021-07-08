@@ -30,10 +30,8 @@
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/def ::api-key
-  (s/and string? (partial re-matches xsr/Base64RegEx)))
-(s/def ::secret-key
-  (s/and string? (partial re-matches xsr/Base64RegEx)))
+(s/def ::api-key string?)
+(s/def ::secret-key string?)
 
 (s/def ::account-id ::c/primary-key)
 
