@@ -50,8 +50,8 @@
                     pool-max-size 15}}]
            (<= pool-min-size pool-max-size))))
 
-(s/def ::api-key-default (s/nilable string?))
-(s/def ::api-secret-default (s/nilable string?))
+(s/def ::api-key-default string?)
+(s/def ::api-secret-default string?)
 
 (s/def ::stmt-more-url-prefix string?)
 (s/def ::stmt-get-default pos-int?)
@@ -60,11 +60,11 @@
 (s/def ::lrs
   (s/and (s/conformer remove-nil-vals)
          (s/keys :req-un [::database
-                          ::api-key-default
-                          ::api-secret-default
                           ::stmt-more-url-prefix
                           ::stmt-get-default
-                          ::stmt-get-max])))
+                          ::stmt-get-max]
+                 :opt-un [::api-key-default
+                          ::api-secret-default])))
 
 (s/def ::http? boolean?)
 (s/def ::http2? boolean?)
