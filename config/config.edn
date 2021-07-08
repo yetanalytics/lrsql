@@ -13,9 +13,19 @@
              :db-host       #or [#env LRSQL_DB_HOST "localhost"]
              :db-port       #long #or [#env LRSQL_DB_PORT 8080]
              :db-properties #or [#env LRSQL_DB_PROPERTIES nil]
-             :db-jdbc-url   #or [#env LRSQL_DB_JDBC_URL nil]}}
+             :db-jdbc-url   #or [#env LRSQL_DB_JDBC_URL nil]
+             :db-user       #or [#env LRSQL_DB_USER nil]
+             :db-password   #or [#env LRSQL_DB_PASSWORD nil]}}
  :connection
- {:database #ref [:database]}
+ #profile
+  {:test {:database #ref [:database]}
+   :dev  {:database #ref [:database]}
+   :default {:database       #ref [:database]
+             :pool-init-size #or [#env LRSQL_POOL_INIT_SIZE nil]
+             :pool-min-size  #or [#env LRSQL_POOL_MIN_SIZE nil]
+             :pool-inc       #or [#env LRSQL_POOL_INC nil]
+             :pool-max-size  #or [#env LRSQL_POOL_MAX_SIZE nil]
+             :pool-max-stmts #or [#env LRSQL_POOL_MAX_STMTS nil]}}
  :lrs
  #profile
   {:test    {:database             #ref [:database]

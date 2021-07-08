@@ -1,6 +1,7 @@
 (ns lrsql.spec.config
   (:require [clojure.spec.alpha :as s]
-            [xapi-schema.spec :as xs]))
+            [xapi-schema.spec :as xs]
+            [lrsql.spec.util :refer [remove-nil-vals]]))
 
 ;; TODO: Add SQLite and Postgres at the very least
 (s/def ::db-type #{"h2" "h2:mem"})
@@ -14,17 +15,22 @@
 (s/def ::db-jdbc-url ::xs/iri)
 
 (s/def ::database
-  (s/or :no-jdbc-url
-        (s/keys :req-un [::db-type
-                         ::db-name
-                         ::db-host
-                         ::db-port]
-                :opt-un [::db-properties])
-        :jdbc-url
-        (s/keys :req-un [::db-jdbc-url])))
+  (s/and (s/conformer remove-nil-vals)
+         (s/or :no-jdbc-url
+               (s/keys :req-un [::db-type
+                                ::db-name
+                                ::db-host
+                                ::db-port]
+                       :opt-un [::db-properties
+                                ::db-user
+                                ::db-password])
+               :jdbc-url
+               (s/keys :req-un [::db-jdbc-url]
+                       :opt-un [::db-user
+                                ::db-password]))))
 
-(s/def ::user string?)
-(s/def ::password string?)
+(s/def ::conn-user string?)
+(s/def ::conn-password string?)
 (s/def ::pool-init-size nat-int?)
 (s/def ::pool-min-size nat-int?)
 (s/def ::pool-inc nat-int?)
@@ -32,10 +38,9 @@
 (s/def ::pool-max-stmts nat-int?)
 
 (s/def ::connection
-  (s/and (s/keys :req-un [::database]
-                 :opt-un [::user
-                          ::password
-                          ::pool-init-size
+  (s/and (s/conformer remove-nil-vals)
+         (s/keys :req-un [::database]
+                 :opt-un [::pool-init-size
                           ::pool-min-size
                           ::pool-inc
                           ::pool-max-size
@@ -53,12 +58,13 @@
 (s/def ::stmt-get-max pos-int?)
 
 (s/def ::lrs
-  (s/keys :req-un [::database
-                   ::api-key-default
-                   ::api-secret-default
-                   ::stmt-more-url-prefix
-                   ::stmt-get-default
-                   ::stmt-get-max]))
+  (s/and (s/conformer remove-nil-vals)
+         (s/keys :req-un [::database
+                          ::api-key-default
+                          ::api-secret-default
+                          ::stmt-more-url-prefix
+                          ::stmt-get-default
+                          ::stmt-get-max])))
 
 (s/def ::http? boolean?)
 (s/def ::http2? boolean?)
@@ -74,7 +80,7 @@
 (s/def ::key-alias string?)
 (s/def ::key-password string?)
 
-(s/def ::webserver
+(s/def ::webserver ; no nilable values here
   (s/keys :req-un [::http-host
                    ::http-port
                    ::ssl-port

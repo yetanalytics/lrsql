@@ -23,6 +23,20 @@ To use lrsql, a user needs to be authorized by an admin. Admin accounts can be c
 | `LRSQL_DB_HOST` | The host that the database will run on. | `localhost` |
 | `LRSQL_DB_PROPERTIES` | Optional additional database properties. Must be a string of comma-separated `key:value` pairs if set. Supported properties will depend on the DBMS. | Not set |
 | `LRSQL_DB_JDBC_URL` | Optional JDBC URL; this will override the above properties if set. URL syntax will depend on the DBMS. | Not set |
+| `LRSQL_DB_USER` | The DB user. Optional. | Not set |
+| `LRSQL_DB_PASSWORD` | The DB password. Optional. | Not set |
+
+### Connection
+
+The following environment variables are aliases for c3p0 properties, each of which has their respective link to the c3p0 documentation. All of these variables are optional and are not set by default (in which case c3p0 uses its own default values).
+
+| Variable | c3p0 Property |
+| --- | --- |
+| `LRSQL_POOL_INIT_SIZE` | [initialPoolSize](https://www.mchange.com/projects/c3p0/#initialPoolSize) |
+| `LRSQL_POOL_MIN_SIZE` | [minPoolSize](https://www.mchange.com/projects/c3p0/#minPoolSize) |
+| `LRSQL_POOL_INC` | [acquireIncrement](https://www.mchange.com/projects/c3p0/#acquireIncrement) |
+| `LRSQL_POOL_MAX_SIZE` | [maxPoolSize](https://www.mchange.com/projects/c3p0/#maxPoolSize) |
+| `LRSQL_POOL_MAX_STMTS` | [maxStatements](https://www.mchange.com/projects/c3p0/#maxStatements) |
 
 ### LRS
 

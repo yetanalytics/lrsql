@@ -24,11 +24,11 @@
           db-name   :db-name
           host      :db-host
           port      :db-port
+          ?user     :db-user
+          ?password :db-password
           ?props    :db-properties
           ?jdbc-url :db-jdbc-url}
          :database
-         ?user      :user
-         ?password  :password
          ?init-size :pool-init-size
          ?min-size  :pool-min-size
          ?inc       :pool-inc
