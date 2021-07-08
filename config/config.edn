@@ -3,18 +3,17 @@
   {:test    {:db-type   "h2:mem"
              :db-name   "example"
              :db-host   "localhost"
-             :db-port   8080
-             :db-schema "lrsql"}
+             :db-port   8080}
    :dev     {:db-type   "h2"
              :db-name   "example"
              :db-host   "localhost"
-             :db-port   8080
-             :db-schema "lrsql"}
-   :default {:db-type   #or [#env LRSQL_DB_TYPE "h2:mem"]
-             :db-name   #or [#env LRSQL_DB_NAME "example"]
-             :db-host   #or [#env LRSQL_DB_HOST "localhost"]
-             :db-port   #long #or [#env LRSQL_DB_PORT 8080]
-             :db-schema #or [#env LRSQL_DB_SCHEMA "lrsql"]}}
+             :db-port   8080}
+   :default {:db-type       #or [#env LRSQL_DB_TYPE "h2:mem"]
+             :db-name       #or [#env LRSQL_DB_NAME "example"]
+             :db-host       #or [#env LRSQL_DB_HOST "localhost"]
+             :db-port       #long #or [#env LRSQL_DB_PORT 8080]
+             :db-properties #or [#env LRSQL_DB_PROPERTIES nil]
+             :db-jdbc-url   #or [#env LRSQL_DB_JDBC_URL nil]}}
  :connection
  {:database #ref [:database]}
  :lrs
