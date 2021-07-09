@@ -27,7 +27,7 @@
                 (assoc-in [:connection :database :db-name] id-str)
                 (assoc-in [:lrs :database :db-name] id-str))]
     (with-redefs
-      [u/read-config (constantly cfg)]
+     [u/read-config (constantly cfg)]
       (f))))
 
 ;; TODO: Switch to io/resource for reading config file

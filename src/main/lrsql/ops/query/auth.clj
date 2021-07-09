@@ -24,7 +24,7 @@
 
 (s/fdef query-credential-scopes
   :args (s/cat :tx transaction? :input as/cred-scopes-query-spec)
-  :ret (s/keys :req-un [::lrs-auth/authenticate-result]))
+  :ret as/cred-scopes-query-ret-spec)
 
 (defn query-credential-scopes
   "Like `query-credential-scopes*` except that its return value conforms
@@ -51,8 +51,8 @@
                  (into #{})))]
       {:result {:scopes scope-set
                 :prefix ""
-                :auth   {:username api-key
-                         :password secret-key}}})
+                :auth   {:basic {:username api-key
+                                 :password secret-key}}}})
     ;; Credentials not found - uh oh!
     {:result :com.yetanalytics.lrs.auth/forbidden}))
 
