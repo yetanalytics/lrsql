@@ -4,7 +4,8 @@
             [aero.core :as aero]
             [clojure.spec.alpha :as s]
             [clojure.java.io    :as io]
-            [cheshire.core      :as cjson])
+            [cheshire.core      :as cjson]
+            [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize normalize-inst]])
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]))
@@ -65,9 +66,9 @@
   (wrap-parse-fn java-time/instant "timestamp" ts-str))
 
 (defn time->str
-  "Convert a java.util.Instant timestamp into a string."
+  "Convert a java.util.Instant timestamp into a normalized string."
   [ts]
-  (java-time/format ts))
+  (normalize (java-time/format ts)))
 
 (defn time->millis
   "Convert a java.util.Instant timestamp into a number representing the

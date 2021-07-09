@@ -1,12 +1,19 @@
 (ns lrsql.ops.command.document
-  (:require [clojure.string :as cstr]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as cstr]
             [lrsql.functions :as f]
+            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.spec.document :as ds]
             [lrsql.util :as u]
             [lrsql.ops.util :refer [throw-invalid-table-ex]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef insert-document!
+  :args (s/cat :tx transaction? :input ds/document-insert-spec)
+  :ret ds/document-command-res-spec)
 
 (defn insert-document!
   "Insert a new document into the DB. Returns an empty map."
@@ -26,6 +33,10 @@
 ;; Document Deletion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(s/fdef delete-document!
+  :args (s/cat :tx transaction? :input ds/document-input-spec)
+  :ret ds/document-command-res-spec)
+
 (defn delete-document!
   "Delete a single document from the DB. Returns an empty map."
   [tx {:keys [table] :as input}]
@@ -39,6 +50,10 @@
     ;; Else
     (throw-invalid-table-ex "delete-document!" input))
   {})
+
+(s/fdef delete-documents!
+  :args (s/cat :tx transaction? :input ds/state-doc-multi-input-spec)
+  :ret ds/document-command-res-spec)
 
 (defn delete-documents!
   "Delete multiple documents from the DB. Returns an empty map."
@@ -133,6 +148,10 @@
         ;; Regular data - directly insert
         (do (insert-fn! tx input)
             {})))))
+
+(s/fdef update-document!
+  :args (s/cat :tx transaction? :input ds/document-insert-spec)
+  :ret ds/document-command-res-spec)
 
 (defn update-document!
   "Update the document given by `input` if found, inserts a new document

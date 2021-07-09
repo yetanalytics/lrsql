@@ -184,3 +184,19 @@
    (s/or :state state-doc-ids-input-spec
          :agent-profile agent-profile-doc-ids-input-spec
          :activity-profile activity-profile-doc-ids-input-spec)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Document Result Specs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def document-command-res-spec
+  (s/or :success #{{}}
+        :failure ::lrsp/error-ret))
+
+(def document-query-res-spec
+  (s/or :success (s/keys :req-un [:get-document-ret/document])
+        :failure ::lrsp/error-ret))
+
+(def document-ids-query-res-spec
+  (s/or :success (s/keys :req-un [:get-document-ids-ret/document-ids])
+        :failure ::lrsp/error-ret))

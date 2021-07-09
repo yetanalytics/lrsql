@@ -1,6 +1,7 @@
 (ns lrsql.init
   "Initialize HugSql functions and state."
   (:require [clojure.string :as cstr]
+            [next.jdbc.date-time :as next-dt]
             [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.functions :as f]
@@ -12,7 +13,9 @@
 (defn init-hugsql-adapter!
   "Initialize HugSql to use the next-jdbc adapter."
   []
-  (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc)))
+  (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc))
+  ;; Any time queried from a DB will now be read as an Instant.
+  (next-dt/read-as-instant))
 
 ;; TODO: instead of using `db-type'`, we could rely entirely on the paths
 ;; in deps.edn
@@ -43,7 +46,7 @@
   (f/create-statement-to-statement-table! conn)
   (f/create-state-document-table! conn)
   (f/create-agent-profile-document-table! conn)
-  (f/create-activity-profile-document-table! conn) 
+  (f/create-activity-profile-document-table! conn)
   (f/create-admin-account-table! conn)
   (f/create-credential-table! conn)
   (f/create-credential-to-scope-table! conn))

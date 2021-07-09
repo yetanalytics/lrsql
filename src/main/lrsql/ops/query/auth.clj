@@ -1,6 +1,5 @@
 (ns lrsql.ops.query.auth
   (:require [clojure.spec.alpha :as s]
-            [com.yetanalytics.lrs.auth :as lrs-auth]
             [lrsql.functions :as f]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.auth :as as]

@@ -1,7 +1,14 @@
 (ns lrsql.ops.query.document
-  (:require [lrsql.functions :as f]
+  (:require [clojure.spec.alpha :as s]
+            [lrsql.functions :as f]
+            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.spec.document :as ds]
             [lrsql.util :as u]
             [lrsql.ops.util :refer [throw-invalid-table-ex]]))
+
+(s/fdef query-document
+  :args (s/cat :tx transaction? :input ds/document-input-spec)
+  :ret ds/document-query-res-spec)
 
 (defn query-document
   "Query a single document from the DB. Returns either a map containing the
@@ -28,6 +35,10 @@
         :content-type   content-type
         :id             (or state-id profile-id)
         :updated        (u/time->str updated)}})))
+
+(s/fdef query-document-ids
+  :args (s/cat :tx transaction? :input ds/document-ids-query-spec)
+  :ret ds/document-ids-query-res-spec)
 
 ;; TODO: The LRS should also return last modified info.
 ;; However, this is not supported in Milt's LRS spec.
