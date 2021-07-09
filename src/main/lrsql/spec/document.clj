@@ -193,10 +193,6 @@
   (s/or :success #{{}}
         :failure ::lrsp/error-ret))
 
-(def document-query-res-spec
-  (s/or :success (s/keys :req-un [:get-document-ret/document])
-        :failure ::lrsp/error-ret))
-
-(def document-ids-query-res-spec
-  (s/or :success (s/keys :req-un [:get-document-ids-ret/document-ids])
-        :failure ::lrsp/error-ret))
+;; lrs.protocol spec aliases
+(def document-query-res-spec ::lrsp/get-document-ret)
+(def document-ids-query-res-spec ::lrsp/get-document-ids-ret)

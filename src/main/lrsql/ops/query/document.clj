@@ -8,33 +8,37 @@
 
 (s/fdef query-document
   :args (s/cat :tx transaction? :input ds/document-input-spec)
-  :ret any? #_ds/document-query-res-spec)
+  :ret ds/document-query-res-spec)
 
 (defn query-document
-  "Query a single document from the DB. Returns either a map containing the
-   document as a byte array, or nil if not found."
+  "Query a single document from the DB. Returns a map where the value of
+   `:document` is either a map with the contents as a byte array, or `nil`
+   if not found."
   [tx {:keys [table] :as input}]
-  (when-some [res (case table
-                    :state-document
-                    (f/query-state-document tx input)
-                    :agent-profile-document
-                    (f/query-agent-profile-document tx input)
-                    :activity-profile-document
-                    (f/query-activity-profile-document tx input)
-                    ;; Else
-                    (throw-invalid-table-ex "query-document" input))]
+  (if-some [res (case table
+                  :state-document
+                  (f/query-state-document tx input)
+                  :agent-profile-document
+                  (f/query-agent-profile-document tx input)
+                  :activity-profile-document
+                  (f/query-activity-profile-document tx input)
+                  ;; Else
+                  (throw-invalid-table-ex "query-document" input))]
     (let [{contents     :contents
            content-type :content_type
            content-len  :content_length
            state-id     :state_id
            profile-id   :profile_id
-           updated      :last_modified} res]
+           updated      :last_modified}
+          res]
       {:document
        {:contents       contents
         :content-length content-len
         :content-type   content-type
         :id             (or state-id profile-id)
-        :updated        (u/time->str updated)}})))
+        :updated        (u/time->str updated)}})
+    ;; Not found
+    {:document nil}))
 
 (s/fdef query-document-ids
   :args (s/cat :tx transaction? :input ds/document-ids-query-spec)

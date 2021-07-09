@@ -2,7 +2,6 @@
   (:require [clojure.test :as t :refer [deftest testing is]]
             [com.stuartsierra.component :as component]
             [com.yetanalytics.lrs.test-runner :as conf]
-            [next.jdbc.date-time]
             [lrsql.system :as system]
             [lrsql.test-support :as support]))
 
