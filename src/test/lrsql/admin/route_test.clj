@@ -119,7 +119,7 @@
             (curl/put "http://0.0.0.0:8080/admin/creds"
                       {:headers hdr
                        :body (String. (u/write-json
-                                       {"scopes" #{"all" "all/read"}}))})
+                                       {"scopes" ["all" "all/read"]}))})
             {:strs [api-key secret-key scopes]}
             (u/parse-json body)]
         (is (= 200 status))
@@ -146,7 +146,7 @@
                          (u/write-json
                           {"api-key"    api-key
                            "secret-key" secret-key
-                           "scopes"     #{"all/read" "statements/read"}}))})
+                           "scopes"     ["all/read" "statements/read"]}))})
                 {:strs [scopes]}
                 (u/parse-json body)]
             (is (= 200 status))
