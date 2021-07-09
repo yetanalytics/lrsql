@@ -1,4 +1,4 @@
-(ns lrsql.util.admin-util-test
+(ns lrsql.util.admin-test
   (:require [clojure.test :refer [deftest testing is]]
             [lrsql.util.admin :as ua]
             [lrsql.util :as u]))
@@ -11,7 +11,7 @@
       (is (not (ua/valid-password? "pass" pass-hash-m))))))
 
 (deftest jwt-test
-  (let [test-id (u/str->uuid "00000000-0000-0000-0000-000000000001")]
+  (let [test-id (u/str->uuid "00000000-0000-1000-0000-000000000001")]
     (testing "JSON web tokens"
       (is (re-matches #".*\..*\..*" (ua/account-id->jwt test-id "secret" 3600)))
       (is (= test-id
