@@ -1,11 +1,14 @@
 (ns lrsql.util
   (:require [clj-uuid]
             [java-time]
+            [java-time.properties :as jt-props]
             [aero.core :as aero]
             [clojure.spec.alpha :as s]
             [clojure.java.io    :as io]
             [cheshire.core      :as cjson]
-            [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize normalize-inst]])
+            [xapi-schema.spec :as xs]
+            [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
+            [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]])
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]))
@@ -47,28 +50,54 @@
 ;; Timestamps
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(s/fdef current-time
+  :args (s/cat)
+  :ret inst?)
+
 (defn current-time
   "Return the current time as a java.util.Instant timestamp."
   []
   (java-time/instant))
 
+(def valid-units
+  (set (map jt-props/unit-key jt-props/predefined-units)))
+
+(s/fdef offset-time
+  :args (s/cat :ts inst?
+               :offset-amt nat-int?
+               :offset-unit valid-units)
+  :ret inst?)
+
 (defn offset-time
   "Given a java.util.Instant timestamp `ts` and the offset given by the
-   `offset-amt` int and the `offset-unit` keyword, return another timestamp
+   `offset-amount` int and the `offset-unit` keyword, return another timestamp
    that was offset by the given amount. Valid units are given by
    `java-time.repl/show-units`."
-  [^Instant ts offset-amt offset-unit]
-  (.plus ts offset-amt (java-time/unit offset-unit)))
+  [^Instant ts offset-amount offset-unit]
+  (.plus ts offset-amount (java-time/unit offset-unit)))
+
+(s/fdef str->time
+  :args (s/cat :ts-str ::xs/timestamp)
+  :ret inst?)
 
 (defn str->time
   "Parse a string into a java.util.Instant timestamp."
   [ts-str]
   (wrap-parse-fn java-time/instant "timestamp" ts-str))
 
+(s/fdef time->str
+  :args (s/cat :ts inst?)
+  :ret ::xs/timestamp)
+
 (defn time->str
-  "Convert a java.util.Instant timestamp into a normalized string."
+  "Convert a java.util.Instant timestamp into a string. Said string is
+   normalized according to the requirements of the lrs library."
   [ts]
   (normalize (java-time/format ts)))
+
+(s/fdef time->millis
+  :args (s/cat :ts inst?)
+  :ret nat-int?)
 
 (defn time->millis
   "Convert a java.util.Instant timestamp into a number representing the
@@ -203,10 +232,18 @@
   []
   (:squuid (generate-squuid*)))
 
+(s/fdef str->uuid
+  :args (s/cat :uuid-str ::xs/uuid)
+  :ret uuid?)
+
 (defn str->uuid
   "Parse a string into an UUID."
   [uuid-str]
   (wrap-parse-fn UUID/fromString "UUID" uuid-str))
+
+(s/fdef time->uuid
+  :args (s/cat :ts inst?)
+  :ret uuid?)
 
 (defn time->uuid
   "Convert a java.util.Instant timestamp to a UUID. The upper 48 bits represent
@@ -217,6 +254,10 @@
                          bit-mask-16)
         uuid-lsb bit-mask-64]
     (UUID. uuid-msb uuid-lsb)))
+
+(s/fdef uuid->str
+  :args (s/cat :uuid uuid?)
+  :ret ::xs/uuid)
 
 (defn uuid->str
   "Convert a UUID into a string."
@@ -239,6 +280,15 @@
     (with-open [rdr (PushbackReader. (StringReader. string) 64)]
       (doall (cjson/parsed-seq rdr)))))
 
+(s/def ::object? boolean?)
+
+(s/fdef parse-json
+  :args (s/cat :data (s/with-gen
+                       (s/or :string string? :bytes bytes?)
+                       json-bytes-gen-fn)
+               :kwargs (s/keys* :opt-un [::object?]))
+  :ret ::xs/any-json)
+
 (defn parse-json
   "Read a JSON string or byte array `data`. `data` must only consist of one
    JSON object, array, or scalar; in addition, `data` must be an object by
@@ -258,19 +308,33 @@
       :else
       result)))
 
+(defn- write-json*
+  "Write `jsn` to an output stream."
+  [out-stream jsn]
+  (with-open [wtr (io/writer out-stream)]
+    (cjson/generate-stream jsn wtr)
+    out-stream))
+
+(s/fdef write-json
+  :args (s/cat :jsn ::xs/any-json)
+  :ret bytes?)
+
 (defn write-json
   "Write `jsn` to a byte array."
-  ([jsn]
-   (let [out (ByteArrayOutputStream. 4096)]
-     (.toByteArray ^ByteArrayOutputStream (write-json out jsn))))
-  ([out jsn]
-   (with-open [wtr (io/writer out)]
-     (cjson/generate-stream jsn wtr)
-     out)))
+  [jsn]
+  (let [out-stream (ByteArrayOutputStream. 4096)]
+    (.toByteArray ^ByteArrayOutputStream (write-json* out-stream jsn))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Bytes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; IOFactory predicate taken from lrs.xapi.statements.attachment/content
+(s/fdef data->bytes ; TODO: Add more options if need be
+  :args (s/cat :data (s/or :string string?
+                           :bytes bytes?
+                           :io-factory #(satisfies? clojure.java.io/IOFactory %)))
+  :ret bytes?)
 
 (defn data->bytes
   "Convert `data` into a byte array."
