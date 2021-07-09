@@ -4,7 +4,7 @@
             [xapi-schema.spec :as xs]
             [xapi-schema.spec.regex :as xsr]
             [lrsql.spec.common :as c]
-            [lrsql.spec.admin :as as])
+            [lrsql.spec.admin :as ads])
   (:import [java.util Base64 Base64$Encoder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -76,7 +76,7 @@
   (s/keys :req-un [::c/primary-key
                    ::api-key
                    ::secret-key
-                   ::as/account-id]))
+                   ::ads/account-id]))
 
 (def cred-scope-insert-spec
   (s/keys :req-un [::c/primary-key
@@ -94,7 +94,7 @@
 (def cred-delete-spec
   (s/keys :req-un [::api-key
                    ::secret-key
-                   ::as/account-id]))
+                   ::ads/account-id]))
 
 (def cred-scope-delete-spec
   (s/keys :req-un [::api-key
@@ -109,7 +109,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def creds-query-spec
-  (s/keys :req-un [::as/account-id]))
+  (s/keys :req-un [::ads/account-id]))
 
 (def cred-scopes-query-spec
   (s/keys :req-un [::api-key

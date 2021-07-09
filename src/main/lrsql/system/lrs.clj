@@ -181,7 +181,7 @@
    (let [conn  (lrs-conn this)
          input (admin-input/admin-validate-input username password)]
      (jdbc/with-transaction [tx conn]
-       (admin-q/validate-admin tx input))))
+       (admin-q/query-validate-admin tx input))))
   (-delete-account
    [this account-id]
    (let [conn  (lrs-conn this)

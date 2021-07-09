@@ -116,4 +116,5 @@
 
 ;; Credentials
 (declare query-credentials)
+(declare query-credential-exists)
 (declare query-credential-scopes)

@@ -16,7 +16,7 @@
 
 (s/fdef admin-validate-input
   :args (s/cat :username ::as/username :password ::as/password)
-  :ret as/admin-validate-spec)
+  :ret as/admin-query-validate-spec)
 
 (defn admin-validate-input
   [username password]
