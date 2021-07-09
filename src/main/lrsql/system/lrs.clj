@@ -112,7 +112,7 @@
          input (doc-input/document-insert-input params document)]
      (jdbc/with-transaction [tx conn]
        (if merge?
-         (doc-cmd/update-document! tx input)
+         (doc-cmd/upsert-document! tx input)
          (doc-cmd/insert-document! tx input)))))
   (-get-document
    [lrs _auth-identity params]
