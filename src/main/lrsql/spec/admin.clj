@@ -16,12 +16,33 @@
                    ::username
                    ::passhash]))
 
-(def admin-query-spec
-  (s/keys :req-un [::username]))
-
-(def admin-validate-spec
+(def admin-query-validate-spec
   (s/keys :req-un [::username
                    ::password]))
 
 (def admin-delete-spec
   (s/keys :req-un [::account-id]))
+
+;; Results
+
+(s/def :lrsql.spec.admin.insert/result
+  (s/nonconforming
+   (s/or :success uuid?
+         :failure #{:lrsql.admin/existing-account-error})))
+
+(def admin-insert-res-spec
+  (s/keys :req-un [:lrsql.spec.admin.insert/result]))
+
+(s/def :lrsql.spec.admin.delete/result uuid?)
+
+(def admin-delete-res-spec
+  (s/keys :req-un [:lrsql.spec.admin.delete/result]))
+
+(s/def :lrsql.spec.admin.query/result
+  (s/nonconforming
+   (s/or :success uuid?
+         :failure #{:lrsql.admin/missing-account-error
+                    :lrsql.admin/invalid-password-error})))
+
+(def admin-query-validate-res-spec
+  (s/keys :req-un [:lrsql.spec.admin.query/result]))
