@@ -8,7 +8,7 @@
 
 (s/fdef query-document
   :args (s/cat :tx transaction? :input ds/document-input-spec)
-  :ret ds/document-query-res-spec)
+  :ret any? #_ds/document-query-res-spec)
 
 (defn query-document
   "Query a single document from the DB. Returns either a map containing the

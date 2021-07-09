@@ -1,5 +1,8 @@
 (ns lrsql.ops.command.statement
-  (:require [lrsql.functions :as f]
+  (:require [clojure.spec.alpha :as s]
+            [lrsql.functions :as f]
+            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.spec.statement :as ss]
             [lrsql.util :as u]
             [lrsql.util.activity :as ua]
             [lrsql.util.statement :as us]))
@@ -77,6 +80,10 @@
   (let [input' {:statement-id (:descendant-id input)}
         exists (f/query-statement-exists tx input')]
     (when exists (f/insert-statement-to-statement! tx input))))
+
+(s/fdef insert-statement!
+  :args (s/cat :tx transaction? :inputs ss/statement-insert-map-spec)
+  :ret (s/nilable ::ss/statement-id))
 
 (defn insert-statement!
   [tx {:keys [statement-input

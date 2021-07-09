@@ -1,5 +1,8 @@
 (ns lrsql.ops.query.statement
-  (:require [lrsql.functions :as f]
+  (:require [clojure.spec.alpha :as s]
+            [lrsql.functions :as f]
+            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.spec.statement :as ss]
             [lrsql.util :as u]
             [lrsql.util.statement :as us]))
 
@@ -64,6 +67,12 @@
                     "")}
      :attachments att-results}))
 
+(s/fdef query-statements
+  :args (s/cat :tx transaction?
+               :input ss/statement-query-spec
+               :ltags ss/lang-tags-spec)
+  :ret ss/statement-query-ret-spec)
+
 (defn query-statements
   "Query statements from the DB. Return a map containing a singleton
    `:statement` if a statement ID is included in the query, or a
@@ -77,6 +86,11 @@
     (if ?stmt-id
       (query-one-statement tx input ltags)
       (query-many-statements tx input ltags))))
+
+(s/fdef query-descendants
+  :args (s/cat :tx transaction?
+               :input ss/statement-insert-map-spec)
+  :ret (s/coll-of ::ss/descendant-id :kind vector? :gen-max 5))
 
 (defn query-descendants
   "Query Statement References from the DB. In addition to the immediate

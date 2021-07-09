@@ -58,6 +58,9 @@
 
 (s/def ::more-url-prefix string?)
 
+(def lang-tags-spec
+  (s/coll-of ::xs/language-tag :gen-max 5))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insertion spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -184,5 +187,8 @@
                    ::until]))
 
 (def statement-query-spec
-  (s/or :one  statement-query-one-spec
-        :many statement-query-many-spec))
+  (s/or :single   statement-query-one-spec
+        :multiple statement-query-many-spec))
+
+(def statement-query-ret-spec
+  ::lrsp/get-statements-ret)
