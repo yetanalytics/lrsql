@@ -486,13 +486,16 @@
              (lrsp/-delete-document lrs
                                     {}
                                     activity-prof-id-params)))
-      (is (nil? (lrsp/-get-document lrs
-                                    {}
-                                    state-id-params)))
-      (is (nil? (lrsp/-get-document lrs
-                                    {}
-                                    agent-prof-id-params)))
-      (is (nil? (lrsp/-get-document lrs
-                                    {}
-                                    activity-prof-id-params))))
+      (is (= {:document nil}
+             (lrsp/-get-document lrs
+                                 {}
+                                 state-id-params)))
+      (is (= {:document nil}
+             (lrsp/-get-document lrs
+                                 {}
+                                 agent-prof-id-params)))
+      (is (= {:document nil}
+             (lrsp/-get-document lrs
+                                 {}
+                                 activity-prof-id-params))))
     (component/stop sys')))
