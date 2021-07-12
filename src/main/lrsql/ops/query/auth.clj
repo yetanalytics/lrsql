@@ -1,5 +1,6 @@
 (ns lrsql.ops.query.auth
   (:require [clojure.spec.alpha :as s]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.functions :as f]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.auth :as as]
@@ -23,7 +24,7 @@
 
 (s/fdef query-credential-scopes
   :args (s/cat :tx transaction? :input as/cred-scopes-query-spec)
-  :ret as/cred-scopes-query-ret-spec)
+  :ret ::lrsp/authenticate-ret)
 
 (defn query-credential-scopes
   "Like `query-credential-scopes*` except that its return value conforms

@@ -115,9 +115,3 @@
 (def cred-scopes-query-spec
   (s/keys :req-un [::api-key
                    ::secret-key]))
-
-(s/def :lrsql.spec.auth.query/result
-  ::lrs-auth/authenticate-result)
-
-(def cred-scopes-query-ret-spec
-  (s/keys :req-un [:lrsql.spec.auth.query/result]))

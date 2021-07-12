@@ -330,9 +330,11 @@
 (def ^:private attachment-mismatch-type
   :com.yetanalytics.lrs.pedestal.interceptor.xapi.statements.attachment/statement-attachment-mismatch)
 
-;; SHA2 hashes may result in hash collisions with otherwise different binary
-;; data, though this should be very rare. For now, emit an warning message if
-;; this occurs.
+;; We may have duplicate SHA2 hashes because:
+;; 1. Duplicate attachments are technically allowed.
+;; 2. SHA2 collisions are relatively common compared to better algorithns
+;; (though still rare in absolute terms).
+;; For now, emit an warning message if duplicate hashes occur.
 
 (defn- warn-on-dupe-shas
   [attachments shas]

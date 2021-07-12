@@ -1,11 +1,16 @@
 (ns lrsql.ops.command.statement
   (:require [clojure.spec.alpha :as s]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.functions :as f]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.statement :as ss]
             [lrsql.util :as u]
             [lrsql.util.activity :as ua]
             [lrsql.util.statement :as us]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Insertion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- prepare-input
   "Prepare the input for insertion. In particular, convert the payload into a
@@ -25,6 +30,7 @@
                          (f/query-statement tx {:statement-id stmt-id
                                                 :voided?      true}))
             old-stmt (-> old-data :payload u/parse-json)]
+        ;; Return nil if the statements aren't actually equal
         (when-not (us/statement-equal? old-stmt new-stmt)
           (throw
            (ex-info "Statement Conflict!"
@@ -83,7 +89,7 @@
 
 (s/fdef insert-statement!
   :args (s/cat :tx transaction? :inputs ss/statement-insert-map-spec)
-  :ret (s/nilable ::ss/statement-id))
+  :ret ::lrsp/store-statements-ret)
 
 (defn insert-statement!
   [tx {:keys [statement-input
@@ -92,7 +98,8 @@
               attachment-inputs
               stmt-actor-inputs
               stmt-activity-inputs
-              stmt-stmt-inputs]}]
+              stmt-stmt-inputs]
+       :as input}]
   (let [?stmt-id (insert-statement-input! tx statement-input)]
     (dorun (map (partial insert-actor-input! tx) actor-inputs))
     (dorun (map (partial insert-activity-input! tx) activity-inputs))
@@ -100,5 +107,9 @@
     (dorun (map (partial insert-stmt-activity-input! tx) stmt-activity-inputs))
     (dorun (map (partial insert-stmt-stmt-input! tx) stmt-stmt-inputs))
     (dorun (map (partial insert-attachment-input! tx) attachment-inputs))
-    ;; Return the statement ID (or nil on failure)
-    ?stmt-id))
+    ;; Return the statement ID on success, error on failure
+    (if ?stmt-id
+      {:statement-ids [(u/uuid->str ?stmt-id)]}
+      {:error (ex-info "Could not insert statement."
+                       {:type  ::statement-insertion-error
+                        :input input})})))

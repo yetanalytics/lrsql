@@ -123,13 +123,11 @@
       (is (= {:statement-ids [id-4]}
              (lrsp/-store-statements lrs {} [stmt-4] [stmt-4-attach]))))
     (testing "statement conflicts"
-      (is (= {:statement-ids []}
-             (lrsp/-store-statements lrs {} [stmt-1 stmt-1] [])))
+      (is (some? (:error (lrsp/-store-statements lrs {} [stmt-1 stmt-1] []))))
       (let [stmt-1' (assoc-in stmt-1
                               ["verb" "display" "en-US"]
                               "ANSWERED")]
-        (is (= {:statement-ids []}
-               (lrsp/-store-statements lrs {} [stmt-1'] []))))
+        (is (some? (:error (lrsp/-store-statements lrs {} [stmt-1'] [])))))
       (let [stmt-1'' (assoc-in stmt-1
                                ["actor" "mbox"]
                                "mailto:sample.agent.boo@example.com")]

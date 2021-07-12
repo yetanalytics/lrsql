@@ -1,10 +1,15 @@
 (ns lrsql.ops.query.statement
   (:require [clojure.spec.alpha :as s]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.functions :as f]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.statement :as ss]
             [lrsql.util :as u]
             [lrsql.util.statement :as us]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Querying
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- query-res->statement
   [format ltags query-res]
@@ -71,7 +76,7 @@
   :args (s/cat :tx transaction?
                :input ss/statement-query-spec
                :ltags ss/lang-tags-spec)
-  :ret ss/statement-query-ret-spec)
+  :ret ::lrsp/get-statements-ret)
 
 (defn query-statements
   "Query statements from the DB. Return a map containing a singleton
@@ -86,6 +91,10 @@
     (if ?stmt-id
       (query-one-statement tx input ltags)
       (query-many-statements tx input ltags))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Descendant Querying
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef query-descendants
   :args (s/cat :tx transaction?

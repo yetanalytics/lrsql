@@ -189,6 +189,3 @@
 (def statement-query-spec
   (s/or :single   statement-query-one-spec
         :multiple statement-query-many-spec))
-
-(def statement-query-ret-spec
-  ::lrsp/get-statements-ret)

@@ -1,5 +1,6 @@
 (ns lrsql.ops.query.document
   (:require [clojure.spec.alpha :as s]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.functions :as f]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
@@ -8,7 +9,7 @@
 
 (s/fdef query-document
   :args (s/cat :tx transaction? :input ds/document-input-spec)
-  :ret ds/document-query-res-spec)
+  :ret ::lrsp/get-document-ret)
 
 (defn query-document
   "Query a single document from the DB. Returns a map where the value of
@@ -42,7 +43,7 @@
 
 (s/fdef query-document-ids
   :args (s/cat :tx transaction? :input ds/document-ids-query-spec)
-  :ret ds/document-ids-query-res-spec)
+  :ret ::lrsp/get-document-ids-ret)
 
 ;; TODO: The LRS should also return last modified info.
 ;; However, this is not supported in Milt's LRS spec.

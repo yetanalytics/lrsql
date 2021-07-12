@@ -190,9 +190,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def document-command-res-spec
-  (s/or :success #{{}}
-        :failure ::lrsp/error-ret))
-
-;; lrs.protocol spec aliases
-(def document-query-res-spec ::lrsp/get-document-ret)
-(def document-ids-query-res-spec ::lrsp/get-document-ids-ret)
+  "Alias for `(lrsp/or-error #{{}})`, which is the common spec shared
+   for all document commands."
+  (lrsp/or-error #{{}}))
