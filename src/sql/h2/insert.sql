@@ -141,7 +141,7 @@ account_id = :account-id
 -- :name insert-credential-scope!
 -- :command :insert
 -- :result :affected
--- :doc TODO
+-- :doc Given API keys and a `:scope` value, insert the cred-scope relation into the `credential_to_scope` link table.
 INSERT INTO credential_to_scope SET
 id = :primary-key,
 api_key = :api-key,

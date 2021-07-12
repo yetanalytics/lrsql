@@ -27,7 +27,7 @@
 (s/def ::descendant-id ::statement-id)
 
 ;; Timestamp
-(s/def ::stored inst?)
+(s/def ::stored c/instant-spec)
 
 ;; Registration
 ;; TODO: Make a separate nilable version
@@ -57,6 +57,9 @@
 (s/def ::attachments? boolean?)
 
 (s/def ::more-url-prefix string?)
+
+(def lang-tags-spec
+  (s/coll-of ::xs/language-tag :gen-max 5))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Insertion spec
@@ -96,7 +99,7 @@
 
 ;; Putting it all together
 
-(def statement-insert-map-spec
+(def insert-statement-input-spec
   (s/keys :req-un [::statement-input
                    ::hs-actor/actor-inputs
                    ::hs-activ/activity-inputs
@@ -137,7 +140,7 @@
 
 (def stmt-input-attachments-spec*
   (s/cat :statement-inputs
-         (s/coll-of statement-insert-map-spec :min-count 1 :gen-max 5)
+         (s/coll-of insert-statement-input-spec :min-count 1 :gen-max 5)
          :attachments
          (s/coll-of ::ss/attachment :gen-max 2)))
 
@@ -184,5 +187,5 @@
                    ::until]))
 
 (def statement-query-spec
-  (s/or :one  statement-query-one-spec
-        :many statement-query-many-spec))
+  (s/or :single   statement-query-one-spec
+        :multiple statement-query-many-spec))

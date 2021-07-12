@@ -1,7 +1,6 @@
 (ns lrsql.spec.actor
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec   :as xs]
-            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.spec.common :as c]
             [lrsql.spec.util :refer [make-str-spec]]))
 
@@ -93,17 +92,10 @@
   (s/coll-of ::stmt-actor-input :gen-max 5))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Query params spec
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def get-agent-params
-  ::lrsp/get-person-params)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def agent-query-spec
+(def query-agent-spec
   (s/and (s/keys :req-un [::actor-ifi
                           ::actor-type])
          #(= "Agent" (:actor-type %))))

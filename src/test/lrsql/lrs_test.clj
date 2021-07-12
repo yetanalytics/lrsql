@@ -32,7 +32,7 @@
              "name"       "Sample Agent 2"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/voided"
-             "display" "Voided"}
+             "display" {"en-US" "Voided"}}
    "object" {"objectType" "StatementRef"
              "id"         "5c9cbcb0-18c0-46de-bed1-c622c03163a1"}})
 
@@ -92,6 +92,10 @@
       (dissoc "authority")
       (dissoc "version")))
 
+;; Instrument
+(support/instrument-lrsql)
+
+;; New DB config
 (use-fixtures :each support/fresh-db-fixture)
 
 (deftest test-statement-fns
@@ -119,20 +123,18 @@
       (is (= {:statement-ids [id-4]}
              (lrsp/-store-statements lrs {} [stmt-4] [stmt-4-attach]))))
     (testing "statement conflicts"
-      (is (= {:statement-ids []}
-             (lrsp/-store-statements lrs {} [stmt-1 stmt-1] [])))
+      (is (some? (:error (lrsp/-store-statements lrs {} [stmt-1 stmt-1] []))))
       (let [stmt-1' (assoc-in stmt-1
                               ["verb" "display" "en-US"]
                               "ANSWERED")]
-        (is (= {:statement-ids []}
-               (lrsp/-store-statements lrs {} [stmt-1'] []))))
+        (is (some? (:error (lrsp/-store-statements lrs {} [stmt-1'] [])))))
       (let [stmt-1'' (assoc-in stmt-1
                                ["actor" "mbox"]
                                "mailto:sample.agent.boo@example.com")]
         (try (lrsp/-store-statements lrs {} [stmt-1''] [])
              (catch clojure.lang.ExceptionInfo e
-                    (is (= :com.yetanalytics.lrs.protocol/statement-conflict
-                           (-> e ex-data :type)))))))
+               (is (= :com.yetanalytics.lrs.protocol/statement-conflict
+                      (-> e ex-data :type)))))))
     (testing "statement ID queries"
       ;; Statement ID queries
       (is (= {:statement stmt-0}
@@ -269,10 +271,13 @@
                          "definition" {"name"        {"en-US" "Multi Part Activity"}
                                        "description" {"en-US" "Multi Part Activity Description"}}}}
              (lrsp/-get-activity lrs {} {:activityId act-1}))))
-    (component/stop sys')))
+    (component/stop sys')
+    (support/unstrument-lrsql)))
+
+;; Need to have a non-zero UUID version, or else xapi-schema gets angry
 
 (def stmt-1'
-  {"id"     "00000000-0000-0000-0000-000000000001"
+  {"id"     "00000000-0000-4000-0000-000000000001"
    "actor"  {"mbox"       "mailto:sample.0@example.com"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
@@ -280,22 +285,22 @@
    "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
 
 (def stmt-2'
-  {"id"     "00000000-0000-0000-0000-000000000002"
+  {"id"     "00000000-0000-4000-0000-000000000002"
    "actor"  {"mbox"       "mailto:sample.1@example.com"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
              "display" {"en-US" "answered"}}
    "object" {"objectType" "StatementRef"
-             "id" "00000000-0000-0000-0000-000000000001"}})
+             "id" "00000000-0000-4000-0000-000000000001"}})
 
 (def stmt-3'
-  {"id"     "00000000-0000-0000-0000-000000000003"
+  {"id"     "00000000-0000-4000-0000-000000000003"
    "actor"  {"mbox"       "mailto:sample.2@example.com"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
              "display" {"en-US" "answered"}}
    "object" {"objectType" "StatementRef"
-             "id" "00000000-0000-0000-0000-000000000002"}})
+             "id" "00000000-0000-4000-0000-000000000002"}})
 
 (deftest test-statement-ref-fns
   (let [_     (support/assert-in-mem-db)
@@ -303,9 +308,9 @@
         sys'  (component/start sys)
         lrs   (:lrs sys')]
     (testing "statement insertions"
-      (is (= {:statement-ids ["00000000-0000-0000-0000-000000000001"
-                              "00000000-0000-0000-0000-000000000002"
-                              "00000000-0000-0000-0000-000000000003"]}
+      (is (= {:statement-ids ["00000000-0000-4000-0000-000000000001"
+                              "00000000-0000-4000-0000-000000000002"
+                              "00000000-0000-4000-0000-000000000003"]}
              (lrsp/-store-statements lrs {} [stmt-1' stmt-2' stmt-3'] []))))
     (testing "statement queries"
       (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
@@ -479,13 +484,16 @@
              (lrsp/-delete-document lrs
                                     {}
                                     activity-prof-id-params)))
-      (is (nil? (lrsp/-get-document lrs
-                                    {}
-                                    state-id-params)))
-      (is (nil? (lrsp/-get-document lrs
-                                    {}
-                                    agent-prof-id-params)))
-      (is (nil? (lrsp/-get-document lrs
-                                    {}
-                                    activity-prof-id-params))))
+      (is (= {:document nil}
+             (lrsp/-get-document lrs
+                                 {}
+                                 state-id-params)))
+      (is (= {:document nil}
+             (lrsp/-get-document lrs
+                                 {}
+                                 agent-prof-id-params)))
+      (is (= {:document nil}
+             (lrsp/-get-document lrs
+                                 {}
+                                 activity-prof-id-params))))
     (component/stop sys')))

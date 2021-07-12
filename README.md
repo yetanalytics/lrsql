@@ -6,7 +6,7 @@ A SQL-based Learning Record Store.
 
 ## Overview
 
-A Learning Record Store (LRS) is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in [Part 3 of the xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#partthree). lrsql is distinct from other LRSs developed at Yet Analytics for being entirely implemented in SQL, and supporting multiple SQL database management systems (DBMSs) like H2, SQLite, and Postgresql.
+A Learning Record Store (LRS) is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in [Part 3 of the xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#partthree). lrsql is distinct from other LRSs developed at Yet Analytics for being SQL-based and supporting multiple SQL database management systems (DBMSs) like H2, SQLite, and Postgresql.
 
 Currently, lrsql is installed by pulling the latest commit from its GitHub repo. In the future it will be available in public repositories like Clojars.
 
@@ -68,7 +68,7 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | Target | Description |
 | --- | --- |
 | `ci` | Called when running continuous integration; runs all test cases. |
-| `keystore` | Alias for the `config/keystore.jks`, which generates a Java Keystore file with the default alias, password, and file path, as well as a self-signed certificates. This is called during CI and is not recommended for production keystore generation production. |
+| `keystore` | Alias for the `config/keystore.jks`, which generates a Java Keystore file with the default alias, password, and file path, as well as a self-signed certificates. This is called during CI and is not recommended for keystore generation in production. |
 | `ephemeral` | Makes an in-memory H2 database with the seed API key `username` and seed API secret `password`. This can then be used during development to test/bench lrsql functionality. |
 
 ## REST API

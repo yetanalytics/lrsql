@@ -37,4 +37,3 @@
 
 (s/def ::attachment-inputs
   (s/coll-of ::attachment-input :gen-max 5))
-

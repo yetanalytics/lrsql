@@ -7,6 +7,8 @@
             [lrsql.system         :as system]
             [lrsql.test-support   :as support]))
 
+(support/instrument-lrsql)
+
 (use-fixtures :each support/fresh-db-fixture)
 
 (def test-username "DonaldChamberlin123") ; co-inventor of SQL

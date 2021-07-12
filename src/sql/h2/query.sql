@@ -214,6 +214,14 @@ WHERE username = :username
 SELECT api_key, secret_key FROM lrs_credential
 WHERE account_id = :account-id
 
+-- :name query-credential-exists
+-- :command :query
+-- :result :one
+-- :doc Query whether a credential with the associated `:api-key` and `:secret-key` exists.
+SELECT 1 FROM lrs_credential
+WHERE api_key = :api-key
+AND secret_key = :secret-key
+
 -- :name query-credential-scopes
 -- :command :query
 -- :result :many

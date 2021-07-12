@@ -4,7 +4,7 @@
             [xapi-schema.spec :as xs]
             [xapi-schema.spec.regex :as xsr]
             [lrsql.spec.common :as c]
-            [lrsql.spec.admin :as as])
+            [lrsql.spec.admin :as ads])
   (:import [java.util Base64 Base64$Encoder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -30,10 +30,8 @@
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/def ::api-key
-  (s/and string? (partial re-matches xsr/Base64RegEx)))
-(s/def ::secret-key
-  (s/and string? (partial re-matches xsr/Base64RegEx)))
+(s/def ::api-key string?)
+(s/def ::secret-key string?)
 
 (s/def ::account-id ::c/primary-key)
 
@@ -74,45 +72,45 @@
 ;; Insert
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def cred-insert-spec
+(def insert-cred-input-spec
   (s/keys :req-un [::c/primary-key
                    ::api-key
                    ::secret-key
-                   ::as/account-id]))
+                   ::ads/account-id]))
 
-(def cred-scope-insert-spec
+(def insert-cred-scope-input-spec
   (s/keys :req-un [::c/primary-key
                    ::api-key
                    ::secret-key
                    ::scope]))
 
-(def cred-scopes-insert-spec
-  (s/coll-of cred-scope-insert-spec :min-count 1 :gen-max 5))
+(def insert-cred-scopes-input-spec
+  (s/coll-of insert-cred-scope-input-spec :min-count 1 :gen-max 5))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Delete
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def cred-delete-spec
+(def delete-cred-input-spec
   (s/keys :req-un [::api-key
                    ::secret-key
-                   ::as/account-id]))
+                   ::ads/account-id]))
 
-(def cred-scope-delete-spec
+(def delete-cred-scope-input-spec
   (s/keys :req-un [::api-key
                    ::secret-key
                    ::scope]))
 
-(def cred-scopes-delete-spec
-  (s/coll-of cred-scope-delete-spec :min-count 1 :gen-max 5))
+(def delete-cred-scopes-input-spec
+  (s/coll-of delete-cred-scope-input-spec :min-count 1 :gen-max 5))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def creds-query-spec
-  (s/keys :req-un [::as/account-id]))
+(def query-creds-input-spec
+  (s/keys :req-un [::ads/account-id]))
 
-(def cred-scopes-query-spec
+(def query-cred-scopes-input-spec
   (s/keys :req-un [::api-key
                    ::secret-key]))

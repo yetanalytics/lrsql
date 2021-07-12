@@ -8,7 +8,6 @@
 (s/def ::db-name string?)
 (s/def ::db-host string?)
 (s/def ::db-port nat-int?)
-(s/def ::db-schema string?)
 
 (s/def ::db-properties
   (s/and string? (partial re-matches #"(?:(?:\w+:\w+)(?:,\w+:\w+)*)?")))

@@ -1,7 +1,15 @@
 (ns lrsql.ops.query.statement
-  (:require [lrsql.functions :as f]
+  (:require [clojure.spec.alpha :as s]
+            [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.functions :as f]
+            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.spec.statement :as ss]
             [lrsql.util :as u]
             [lrsql.util.statement :as us]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Querying
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- query-res->statement
   [format ltags query-res]
@@ -64,6 +72,12 @@
                     "")}
      :attachments att-results}))
 
+(s/fdef query-statements
+  :args (s/cat :tx transaction?
+               :input ss/statement-query-spec
+               :ltags ss/lang-tags-spec)
+  :ret ::lrsp/get-statements-ret)
+
 (defn query-statements
   "Query statements from the DB. Return a map containing a singleton
    `:statement` if a statement ID is included in the query, or a
@@ -78,17 +92,27 @@
       (query-one-statement tx input ltags)
       (query-many-statements tx input ltags))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Descendant Querying
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef query-descendants
+  :args (s/cat :tx transaction?
+               :input ss/insert-statement-input-spec)
+  :ret (s/coll-of ::ss/descendant-id :kind vector? :gen-max 5))
+
 (defn query-descendants
   "Query Statement References from the DB. In addition to the immediate
    references given by `:statement-ref-id`, it returns ancestral
    references, i.e. not only the Statement referenced by `:statement-ref-id`,
    but the Statement referenced by that ID, and so on. The return value
-   is a seq of the descendant statemnet IDs; these are later added to the
+   is a vec of the descendant statement IDs; these are later added to the
    input map."
   [tx input]
-  (when-some [?sref-id (-> input :statement-input :statement-ref-id)]
+  (if-some [?sref-id (-> input :statement-input :statement-ref-id)]
     (->> {:ancestor-id ?sref-id}
          (f/query-statement-descendants tx)
          (map :descendant_id)
          (concat [?sref-id])
-         vec)))
+         vec)
+    []))

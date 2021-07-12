@@ -1,8 +1,16 @@
 (ns lrsql.ops.command.statement
-  (:require [lrsql.functions :as f]
+  (:require [clojure.spec.alpha :as s]
+            [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.functions :as f]
+            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.spec.statement :as ss]
             [lrsql.util :as u]
-            [lrsql.util.activity :as ua]
-            [lrsql.util.statement :as us]))
+            [lrsql.util.activity :as au]
+            [lrsql.util.statement :as su]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Insertion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- prepare-input
   "Prepare the input for insertion. In particular, convert the payload into a
@@ -22,7 +30,8 @@
                          (f/query-statement tx {:statement-id stmt-id
                                                 :voided?      true}))
             old-stmt (-> old-data :payload u/parse-json)]
-        (when-not (us/statement-equal? old-stmt new-stmt)
+        ;; Return nil if the statements aren't actually equal
+        (when-not (su/statement-equal? old-stmt new-stmt)
           (throw
            (ex-info "Statement Conflict!"
                     {:type :com.yetanalytics.lrs.protocol/statement-conflict
@@ -55,7 +64,7 @@
                                u/parse-json)]
     (let [{new-activ :payload} input]
       (when-not (= old-activ new-activ)
-        (let [activity' (ua/merge-activities old-activ new-activ)
+        (let [activity' (au/merge-activities old-activ new-activ)
               input'    (assoc input :payload activity')]
           (f/update-activity! tx (prepare-input input')))))
     (f/insert-activity! tx (prepare-input input))))
@@ -78,14 +87,22 @@
         exists (f/query-statement-exists tx input')]
     (when exists (f/insert-statement-to-statement! tx input))))
 
+(s/fdef insert-statement!
+  :args (s/cat :tx transaction? :inputs ss/insert-statement-input-spec)
+  :ret ::lrsp/store-statements-ret)
+
 (defn insert-statement!
+  "Insert the statement and auxillary objects and attachments that are given
+   by `input`. Returns a map with the property `:statement-ids` on success,
+   or one with the `:error` property on failure."
   [tx {:keys [statement-input
               actor-inputs
               activity-inputs
               attachment-inputs
               stmt-actor-inputs
               stmt-activity-inputs
-              stmt-stmt-inputs]}]
+              stmt-stmt-inputs]
+       :as input}]
   (let [?stmt-id (insert-statement-input! tx statement-input)]
     (dorun (map (partial insert-actor-input! tx) actor-inputs))
     (dorun (map (partial insert-activity-input! tx) activity-inputs))
@@ -93,5 +110,9 @@
     (dorun (map (partial insert-stmt-activity-input! tx) stmt-activity-inputs))
     (dorun (map (partial insert-stmt-stmt-input! tx) stmt-stmt-inputs))
     (dorun (map (partial insert-attachment-input! tx) attachment-inputs))
-    ;; Return the statement ID (or nil on failure)
-    ?stmt-id))
+    ;; Return the statement ID on success, error on failure
+    (if ?stmt-id
+      {:statement-ids [(u/uuid->str ?stmt-id)]}
+      {:error (ex-info "Could not insert statement."
+                       {:type  ::statement-insertion-error
+                        :input input})})))

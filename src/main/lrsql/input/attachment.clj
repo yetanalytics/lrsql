@@ -15,9 +15,9 @@
   :ret ::as/attachment-input)
 
 (defn attachment-insert-input
-  "Given `statement-id` and `attachment`, construct the input for
-   `functions/insert-attachment!`. `statement-id` will be associated with
-   `attachment` as a foreign key reference."
+  "Given `statement-id` and `attachment`, construct an entry in the
+   `:stmt-stmt-inputs` vec in the `insert-statement!` input param map.
+   `statement-id` will serve as a foreign key reference in the DB."
   [statement-id attachment]
   (let [{contents     :content
          content-type :contentType

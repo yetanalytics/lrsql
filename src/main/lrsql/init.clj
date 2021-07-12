@@ -1,6 +1,7 @@
 (ns lrsql.init
   "Initialize HugSql functions and state."
   (:require [clojure.string :as cstr]
+            [next.jdbc.date-time :as next-dt]
             [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.functions :as f]
@@ -12,7 +13,9 @@
 (defn init-hugsql-adapter!
   "Initialize HugSql to use the next-jdbc adapter."
   []
-  (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc)))
+  (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc))
+  ;; Any time queried from a DB will now be read as an Instant.
+  (next-dt/read-as-instant))
 
 ;; TODO: instead of using `db-type'`, we could rely entirely on the paths
 ;; in deps.edn
@@ -25,7 +28,7 @@
   (let [db-type' (cstr/replace db-type #":.*" "")] ; h2:mem -> h2
     (binding [*ns* (create-ns `lrsql.functions)]
       ;; Follow the CRUD acronym: Create, Read, Update, Delete
-      (hugsql/def-db-fns (str db-type' "/create.sql"))
+      (hugsql/def-db-fns (str db-type' "/ddl.sql"))
       (hugsql/def-db-fns (str db-type' "/insert.sql"))
       (hugsql/def-db-fns (str db-type' "/query.sql"))
       (hugsql/def-db-fns (str db-type' "/update.sql"))
@@ -43,7 +46,7 @@
   (f/create-statement-to-statement-table! conn)
   (f/create-state-document-table! conn)
   (f/create-agent-profile-document-table! conn)
-  (f/create-activity-profile-document-table! conn) 
+  (f/create-activity-profile-document-table! conn)
   (f/create-admin-account-table! conn)
   (f/create-credential-table! conn)
   (f/create-credential-to-scope-table! conn))
@@ -56,15 +59,15 @@
   [tx ?username ?password]
   (when (and ?username ?password)
     ;; TODO: Default admin also from config vars?
-    (let [admin-in (admin-input/admin-insert-input
+    (let [admin-in (admin-input/insert-admin-input
                     ?username
                     ?password)
           key-pair {:api-key    ?username
                     :secret-key ?password}
-          cred-in  (auth-input/credential-insert-input
+          cred-in  (auth-input/insert-credential-input
                     (:primary-key admin-in)
                     key-pair)
-          scope-in (auth-input/credential-scopes-insert-input
+          scope-in (auth-input/insert-credential-scopes-input
                     key-pair
                     #{"all"})]
       (admin-cmd/insert-admin! tx admin-in)

@@ -2,8 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.xapi.document]
             [lrsql.util  :as u]
-            [lrsql.util.actor :as ua]
-            [lrsql.util.document :as ud]
+            [lrsql.util.actor :as au]
+            [lrsql.util.document :as du]
             [lrsql.spec.document :as ds]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11,10 +11,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- state-document-basics
-  "Common properties for state document inputs. `state-id?` controls whether
-   the state ID property is added (true for singleton queries, false for
-   array-valued queries). `add-registration?` controls whether a registration
-   is added even if it is not present (in which case `nil` is assoc'd)."
+  "Common properties for state document inputs.
+   - `state-id?` controls whether the state ID property is added (true for
+   singleton queries, false for array-valued queries).
+   - `add-registration?` controls whether a registration is added even if it
+   is not present (in which case `nil` is assoc'd)."
   [{?state-id     :stateId
     activity-id   :activityId
     agent         :agent
@@ -23,28 +24,28 @@
    add-registration?]
   (cond-> {:table         :state-document
            :activity-iri  activity-id
-           :agent-ifi     (ua/actor->ifi agent)}
+           :agent-ifi     (au/actor->ifi agent)}
     state-id?
     (assoc :state-id ?state-id)
     (or add-registration? ?registration)
     (assoc :registration (when ?registration (u/str->uuid ?registration)))))
 
 (defn- agent-profile-document-basics
-  "Common properties for agent profile document inputs. `profile-id?` controls
-   whether the profile ID property is added (true for singleton queries, false
-   for array-valued queries)."
+  "Common properties for agent profile document inputs.
+   - `profile-id?` controls whether the profile ID property is added
+   (true for singleton queries, false for array-valued queries)."
   [{?profile-id :profileId
     agent       :agent}
    profile-id?]
   (cond-> {:table     :agent-profile-document
-           :agent-ifi (ua/actor->ifi agent)}
+           :agent-ifi (au/actor->ifi agent)}
     profile-id?
     (assoc :profile-id ?profile-id)))
 
 (defn- activity-profile-document-basics
-  "Common properties for activity profile document inputs. `profile-id?`
-   controls whether the profile ID property is added (true for singleton
-   queries, false for array-valued queries)."
+  "Common properties for activity profile document inputs.
+   - `profile-id?` controls whether the profile ID property is added
+   (true for singleton queries, false for array-valued queries)."
   [{?profile-id :profileId
     activity-id :activityId}
    profile-id?]
@@ -57,7 +58,7 @@
 ;; Document Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- document-insert-basics
+(defn- insert-document-basics
   "Common properties for insertion inputs, including the primary key, the last
    modified time, and `document`"
   [document]
@@ -69,33 +70,33 @@
                (select-keys [:content-type :content-length :contents])
                (update :contents u/data->bytes)))))
 
-(s/fdef document-insert-input
+(s/fdef insert-document-input
   :args (s/cat :params ds/set-document-params
                :document :com.yetanalytics.lrs.xapi/document)
-  :ret ds/document-insert-spec
+  :ret ds/insert-document-spec
   :fn (fn [{:keys [args ret]}]
-        (= (ud/document-dispatch (:params args)) (:table ret))))
+        (= (du/document-dispatch (:params args)) (:table ret))))
 
-(defmulti document-insert-input
-  "Given `params` and `document`, construct the input for `insert-document!`
-   and `update-document!`"
+(defmulti insert-document-input
+  "Given `params` and `document`, construct the input param map for
+   `insert-document!` and `update-document!`"
   {:arglists '([params document])}
-  (fn [params _] (ud/document-dispatch params)))
+  (fn [params _] (du/document-dispatch params)))
 
-(defmethod document-insert-input :state-document
+(defmethod insert-document-input :state-document
   [params document]
   (merge (state-document-basics params true true)
-         (document-insert-basics document)))
+         (insert-document-basics document)))
 
-(defmethod document-insert-input :agent-profile-document
+(defmethod insert-document-input :agent-profile-document
   [params document]
   (merge (agent-profile-document-basics params true)
-         (document-insert-basics document)))
+         (insert-document-basics document)))
 
-(defmethod document-insert-input :activity-profile-document
+(defmethod insert-document-input :activity-profile-document
   [params document]
   (merge (activity-profile-document-basics params true)
-         (document-insert-basics document)))
+         (insert-document-basics document)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Query + Deletion
@@ -107,13 +108,13 @@
   :args (s/cat :params ds/get-or-delete-document-params)
   :ret ds/document-input-spec
   :fn (fn [{:keys [args ret]}]
-        (= (ud/document-dispatch (:params args)) (:table ret))))
+        (= (du/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-input
-  "Given `params`, construct the input for `query-document` and
+  "Given `params`, construct the input param map for `query-document` and
    `delete-document!`"
   {:arglists '([params])}
-  ud/document-dispatch)
+  du/document-dispatch)
 
 (defmethod document-input :state-document
   [params]
@@ -135,7 +136,7 @@
   :ret ds/state-doc-multi-input-spec)
 
 (defn document-multi-input
-  "Given params, construct the input for `delete-documents!`"
+  "Given params, construct the input param map for `delete-documents!`"
   [params]
   (assert (and (:activityId params) (:agent params))) ; for testing
   (state-document-basics params false false))
@@ -152,12 +153,12 @@
   :args (s/cat :params ds/get-document-ids-params)
   :ret ds/document-ids-query-spec
   :fn (fn [{:keys [args ret]}]
-        (= (ud/document-dispatch (:params args)) (:table ret))))
+        (= (du/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-ids-input
-  "Given `params`, return the input for `query-document-ids`."
+  "Given `params`, construct the input param map for `query-document-ids`."
   {:arglist '([params])}
-  ud/document-dispatch)
+  du/document-dispatch)
 
 (defmethod document-ids-input :state-document
   [params]

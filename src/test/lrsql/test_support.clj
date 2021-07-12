@@ -1,7 +1,23 @@
 (ns lrsql.test-support
   (:require [clojure.spec.test.alpha :as stest]
+            [orchestra.spec.test :as otest]
             [lrsql.util :as u])
   (:import [java.util UUID]))
+
+(defn- lrsql-syms
+  []
+  (set (filter #(->> % namespace (re-matches #"lrsql\..*"))
+               (stest/instrumentable-syms))))
+
+(defn instrument-lrsql
+  "Instrument all instrumentable functions defined in lrsql."
+  []
+  (otest/instrument (lrsql-syms)))
+
+(defn unstrument-lrsql
+  "Unnstrument all instrumentable functions defined in lrsql."
+  []
+  (otest/unstrument (lrsql-syms)))
 
 (defn fresh-db-fixture
   [f]
@@ -11,7 +27,7 @@
                 (assoc-in [:connection :database :db-name] id-str)
                 (assoc-in [:lrs :database :db-name] id-str))]
     (with-redefs
-      [u/read-config (constantly cfg)]
+     [u/read-config (constantly cfg)]
       (f))))
 
 ;; TODO: Switch to io/resource for reading config file
