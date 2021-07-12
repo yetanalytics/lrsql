@@ -3,7 +3,6 @@
             [clojure.spec.gen.alpha :as sgen]
             [xapi-schema.spec :as xs]
             [xapi-schema.spec.regex :as xsr]
-            [com.yetanalytics.lrs.auth :as lrs-auth]
             [lrsql.spec.common :as c]
             [lrsql.spec.admin :as ads])
   (:import [java.util Base64 Base64$Encoder]))

@@ -1,7 +1,15 @@
 (ns lrsql.ops.query.actor
-  (:require [lrsql.functions :as f]
+  (:require [clojure.spec.alpha :as s]
+            [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.functions :as f]
+            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.spec.actor :as as]
             [lrsql.util :as u]
             [lrsql.util.actor :as ua]))
+
+(s/fdef query-agent
+  :args (s/cat :tx transaction? :input as/agent-query-spec)
+  :ret ::lrsp/get-person-ret)
 
 (defn query-agent
   "Query an Agent from the DB. Returns a map between `:person` and the
