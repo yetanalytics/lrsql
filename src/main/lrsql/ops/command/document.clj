@@ -79,7 +79,7 @@
 (defn- upsert-update-document!
   "Update an existing document when upserting `input`."
   [tx input old-doc update-fn!]
-  (let [{old-ctype :content-type} old-doc
+  (let [{old-ctype :content_type} old-doc
         {new-ctype :content-type} input
         ?old-json (and (json-content-type? old-ctype)
                        (doc->json old-doc))
