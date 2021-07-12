@@ -141,7 +141,7 @@
   (-get-person
     [lrs _auth-identity params]
     (let [conn  (lrs-conn lrs)
-          input (agent-input/agent-query-input params)]
+          input (agent-input/query-agent-input params)]
       (jdbc/with-transaction [tx conn]
         (actor-q/query-agent tx input))))
 
@@ -177,7 +177,7 @@
   (-authenticate-account
     [this username password]
     (let [conn  (lrs-conn this)
-          input (admin-input/validate-admin-input username password)]
+          input (admin-input/query-validate-admin-input username password)]
       (jdbc/with-transaction [tx conn]
         (admin-q/query-validate-admin tx input))))
   (-delete-account

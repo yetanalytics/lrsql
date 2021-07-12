@@ -11,10 +11,10 @@
 
 (deftest test-insert-inputs
   (testing "statement object insertion inputs"
-    (is (nil? (check-validate `i-ac/actor-insert-input)))
-    (is (nil? (check-validate `i-ac/group-insert-input)))
+    (is (nil? (check-validate `i-ac/insert-actor-input)))
+    (is (nil? (check-validate `i-ac/insert-group-input)))
     (is (nil? (check-validate `i-av/insert-activity-input)))
-    (is (nil? (check-validate `i-ac/statement-to-actor-insert-input)))
+    (is (nil? (check-validate `i-ac/insert-statement-to-actor-input)))
     (is (nil? (check-validate `i-av/insert-statement-to-activity-input))))
   (testing "statement insertion inputs"
     (is (nil? (check-validate `i-stmt/insert-statement-input 10)))
@@ -31,7 +31,7 @@
 (deftest test-query-inputs
   (testing "statement query inputs"
     (is (nil? (check-validate `i-stmt/query-statement-input)))
-    (is (nil? (check-validate `i-ac/agent-query-input)))
+    (is (nil? (check-validate `i-ac/query-agent-input)))
     (is (nil? (check-validate `i-av/query-activity-input))))
   (testing "document query inputs"
     (is (nil? (check-validate `i-doc/document-input)))
@@ -50,5 +50,5 @@
 (deftest test-admin
   (testing "admin account inputs"
     (is (nil? (check-validate `i-admin/insert-admin-input 3)))
-    (is (nil? (check-validate `i-admin/validate-admin-input)))
+    (is (nil? (check-validate `i-admin/query-validate-admin-input)))
     (is (nil? (check-validate `i-admin/delete-admin-input)))))
