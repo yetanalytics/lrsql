@@ -331,42 +331,53 @@
   :com.yetanalytics.lrs.pedestal.interceptor.xapi.statements.attachment/statement-attachment-mismatch)
 
 ;; SHA2 hashes may result in hash collisions with otherwise different binary
-;; data, though this should be very rare. For now, emit an error message if
+;; data, though this should be very rare. For now, emit an warning message if
 ;; this occurs.
+
+(defn- warn-on-dupe-shas
+  [attachments shas]
+  (when (not= (count attachments) (count shas))
+    (log/warnf "%s\nAttachments: %s"
+               duplicate-sha-emsg
+               (mapv #(dissoc % :content) attachments))))
 
 (defn add-attachment-insert-inputs
   "Given `input-maps` and `attachments`, add each attachment to the appropriate
    input map, i.e. the one that contains the attachment's SHA2 hash."
-  [input-maps attachments]
-  (if (not-empty attachments)
+  [stmt-input attachments]
+  (if (empty? attachments)
+    ;; No attachments - don't bother
+    stmt-input
+    ;; Attachments present - add to inputs
     (let [sha-att-m
           (into {} (map (fn [{sha :sha2 :as att}] [sha att]) attachments))
           shas
           (set (keys sha-att-m))
           _
-          (when (not= (count attachments) (count shas))
-            (log/warnf "%s\nAttachments: %s"
-                       duplicate-sha-emsg
-                       (map #(dissoc % :content) attachments)))
+          (warn-on-dupe-shas attachments shas)
+          add-att-to-stmt-in
+          (fn [stmt-in sha]
+            (let [att     (sha-att-m sha)
+                  stmt-id (-> stmt-in :statement-input :statement-id)
+                  att-in  (i-at/attachment-insert-input
+                           stmt-id
+                           att)]
+              (update stmt-in
+                      :attachment-inputs
+                      conj
+                      att-in)))
           result
-          (for [imap input-maps
-                :let [stmt-id    (-> imap :statement-input :statement-id)
-                      ?att-shas  (-> imap :statement-input :attachment-shas)
-                      ?stmt-shas (and ?att-shas
-                                      (cset/intersection shas ?att-shas))
-                      new-imap   (reduce
-                                  (fn [imap sha]
-                                    (let [att    (sha-att-m sha)
-                                          att-in (i-at/attachment-insert-input
-                                                  stmt-id
-                                                  att)]
-                                      (update imap
-                                              :attachment-inputs
-                                              conj
-                                              att-in)))
-                                  imap
-                                  ?stmt-shas)]]
-            [new-imap ?stmt-shas])
+          (for [stmt-in stmt-input
+                :let [?att-shas    (-> stmt-in
+                                       :statement-input
+                                       :attachment-shas)
+                      ?stmt-shas   (and ?att-shas
+                                        (cset/intersection shas ?att-shas))
+                      new-stmt-ins (reduce
+                                    add-att-to-stmt-in
+                                    stmt-in
+                                    ?stmt-shas)]]
+            [new-stmt-ins ?stmt-shas])
           added-shas
           (->> result (map second) (filter some?) (apply cset/union))]
       (if-some [diff-sha (not-empty (cset/difference shas
@@ -376,10 +387,9 @@
                         {:type         attachment-mismatch-type
                          :attachments  attachments
                          :invalid-shas diff-sha
-                         :stmt-inputs  input-maps}))
+                         :stmt-inputs  stmt-input}))
         ;; All attachments were included - return new stmt inputs
-        (map first result)))
-    input-maps))
+        (map first result)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Query
