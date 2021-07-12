@@ -15,7 +15,8 @@
   :ret ::as/activity-input)
 
 (defn insert-activity-input
-  "Given `activity`, construct the input for `functions/insert-activity!`."
+  "Given the xAPI `activity`, construct an entry for the `:activity-inputs`
+   vec in the `insert-statement!` input param map."
   [activity]
   {:table        :activity
    :primary-key  (u/generate-squuid)
@@ -29,9 +30,9 @@
   :ret ::as/stmt-activity-input)
 
 (defn insert-statement-to-activity-input
-  "Given `statement-id`, `activity-usage` and the return value of
-   `activity-insert-input`, return the input for
-   `functions/insert-statement-to-activity!`."
+  "Given `statement-id`, `activity-usage` (e.g. \"Object\"), and the return
+   value of `activity-insert-input`, construct an entry for the
+   `:stmt-activity-inputs` vec in the `insert-statement!` input param map."
   [statement-id activity-usage {activity-id :activity-iri}]
   {:table        :statement-to-activity
    :primary-key  (u/generate-squuid)
@@ -48,6 +49,7 @@
   :ret as/query-activity-spec)
 
 (defn query-activity-input
-  "Construct an input for `query-activity!`"
+  "Given activity query params, construct the input param map for
+   `query-activity`."
   [{activity-id :activityId}]
   {:activity-iri activity-id})

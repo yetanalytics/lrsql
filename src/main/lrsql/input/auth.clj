@@ -14,6 +14,8 @@
   :ret as/insert-cred-input-spec)
 
 (defn insert-credential-input
+  "Given `account-id` and either a `key-pair` map or separate `api-key` and
+   `secret-key` args, construct the input param map for `insert-credential!`"
   ([account-id key-pair]
    (assoc key-pair
           :primary-key (u/generate-squuid)
@@ -30,6 +32,9 @@
   :ret as/insert-cred-scopes-input-spec)
 
 (defn insert-credential-scopes-input
+  "Given a coll of `scopes` and either a `key-pair` map or separate
+   `api-key` and `secret-key` args, construct the input param map for
+   `insert-credential-scopes!`"
   ([key-pair scopes]
    (->> scopes
         (map (partial assoc key-pair :scope))
@@ -49,6 +54,8 @@
   :ret as/delete-cred-input-spec)
 
 (defn delete-credentials-input
+  "Given `account-id` and either a `key-pair` map or separate `api-key` and
+   `secret-key` args, construct the input param map for `delete-credential!`"
   ([account-id key-pair]
    (assoc key-pair :account-id account-id))
   ([account-id api-key secret-key]
@@ -62,6 +69,9 @@
   :ret as/delete-cred-scopes-input-spec)
 
 (defn delete-credential-scopes-input
+  "Given a coll of `scopes` and either a `key-pair` map or separate
+   `api-key` and `secret-key` args, construct the input param map for
+   `delete-credential-scopes!`"
   ([key-pair scopes]
    (->> scopes
         (map (partial assoc key-pair :scope))))
@@ -79,6 +89,8 @@
   :ret as/query-creds-input-spec)
 
 (defn query-credentials-input
+  "Given `account-id`, construct the input param map for `query-credential`
+   to query the keys associated with the account."
   [account-id]
   {:account-id account-id})
 
@@ -87,6 +99,8 @@
   :ret as/query-cred-scopes-input-spec)
 
 (defn query-credential-scopes-input
+  "Given either a `key-pair` map or separate `api-key` and `secret-key` args,
+   construct the input param map for `query-credential-scopes(*)`."
   ([key-pair]
    key-pair)
   ([api-key secret-key]

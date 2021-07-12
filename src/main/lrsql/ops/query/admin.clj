@@ -22,10 +22,9 @@
   :ret ads/query-validate-admin-ret-spec)
 
 (defn query-validate-admin
-  "Validate the admin account info by querying the admin by `username`,
-   then validating that `password` hashes into the same passhash stored
-   in the account table. Returns the account ID on success or an error
-   keyword on failure."
+  "Queries the admin account table by `:username`, then validates that
+   `:password` hashes into the same passhash stored in the account table.
+   Returns the account ID on success or an error keyword on failure."
   [tx input]
   (let [res (query-admin tx input)]
     (cond

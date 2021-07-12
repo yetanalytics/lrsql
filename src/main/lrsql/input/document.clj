@@ -11,10 +11,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- state-document-basics
-  "Common properties for state document inputs. `state-id?` controls whether
-   the state ID property is added (true for singleton queries, false for
-   array-valued queries). `add-registration?` controls whether a registration
-   is added even if it is not present (in which case `nil` is assoc'd)."
+  "Common properties for state document inputs.
+   - `state-id?` controls whether the state ID property is added (true for
+   singleton queries, false for array-valued queries).
+   - `add-registration?` controls whether a registration is added even if it
+   is not present (in which case `nil` is assoc'd)."
   [{?state-id     :stateId
     activity-id   :activityId
     agent         :agent
@@ -30,9 +31,9 @@
     (assoc :registration (when ?registration (u/str->uuid ?registration)))))
 
 (defn- agent-profile-document-basics
-  "Common properties for agent profile document inputs. `profile-id?` controls
-   whether the profile ID property is added (true for singleton queries, false
-   for array-valued queries)."
+  "Common properties for agent profile document inputs.
+   - `profile-id?` controls whether the profile ID property is added
+   (true for singleton queries, false for array-valued queries)."
   [{?profile-id :profileId
     agent       :agent}
    profile-id?]
@@ -42,9 +43,9 @@
     (assoc :profile-id ?profile-id)))
 
 (defn- activity-profile-document-basics
-  "Common properties for activity profile document inputs. `profile-id?`
-   controls whether the profile ID property is added (true for singleton
-   queries, false for array-valued queries)."
+  "Common properties for activity profile document inputs.
+   - `profile-id?` controls whether the profile ID property is added
+   (true for singleton queries, false for array-valued queries)."
   [{?profile-id :profileId
     activity-id :activityId}
    profile-id?]
@@ -77,8 +78,8 @@
         (= (du/document-dispatch (:params args)) (:table ret))))
 
 (defmulti insert-document-input
-  "Given `params` and `document`, construct the input for `insert-document!`
-   and `update-document!`"
+  "Given `params` and `document`, construct the input param map for
+   `insert-document!` and `update-document!`"
   {:arglists '([params document])}
   (fn [params _] (du/document-dispatch params)))
 
@@ -110,7 +111,7 @@
         (= (du/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-input
-  "Given `params`, construct the input for `query-document` and
+  "Given `params`, construct the input param map for `query-document` and
    `delete-document!`"
   {:arglists '([params])}
   du/document-dispatch)
@@ -135,7 +136,7 @@
   :ret ds/state-doc-multi-input-spec)
 
 (defn document-multi-input
-  "Given params, construct the input for `delete-documents!`"
+  "Given params, construct the input param map for `delete-documents!`"
   [params]
   (assert (and (:activityId params) (:agent params))) ; for testing
   (state-document-basics params false false))
@@ -155,7 +156,7 @@
         (= (du/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-ids-input
-  "Given `params`, return the input for `query-document-ids`."
+  "Given `params`, construct the input param map for `query-document-ids`."
   {:arglist '([params])}
   du/document-dispatch)
 

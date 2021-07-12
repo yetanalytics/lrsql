@@ -22,8 +22,8 @@
 ;; in version 2.0
 
 (defn- insert-stmt-actor-inputs
-  "Helper to construct the `functions/insert-actor!` inputs for a statement's
-   Agents and Groups."
+  "Helper to construct the value for `:actor-inputs` in the statement input
+   param map."
   [stmt-id stmt-act stmt-obj ?stmt-auth ?stmt-inst ?stmt-team sql-enums]
   (let [;; Destructuring
         {:keys [act-enum obj-enum auth-enum inst-enum team-enum]}
@@ -34,17 +34,17 @@
         actor-obj?
         (boolean (#{"Agent" "Group"} stmt-obj-type))
         ;; Statement Actors
-        ?act-input  (i-ac/actor-insert-input stmt-act)
-        ?obj-input  (when actor-obj? (i-ac/actor-insert-input stmt-obj))
-        ?auth-input (when ?stmt-auth (i-ac/actor-insert-input ?stmt-auth))
-        ?inst-input (when ?stmt-inst (i-ac/actor-insert-input ?stmt-inst))
-        ?team-input (when ?stmt-team (i-ac/actor-insert-input ?stmt-team))
+        ?act-input  (i-ac/insert-actor-input stmt-act)
+        ?obj-input  (when actor-obj? (i-ac/insert-actor-input stmt-obj))
+        ?auth-input (when ?stmt-auth (i-ac/insert-actor-input ?stmt-auth))
+        ?inst-input (when ?stmt-inst (i-ac/insert-actor-input ?stmt-inst))
+        ?team-input (when ?stmt-team (i-ac/insert-actor-input ?stmt-team))
         ;; Member Actors
-        ?act-mem-inputs  (i-ac/group-insert-input stmt-act)
-        ?obj-mem-inputs  (when actor-obj? (i-ac/group-insert-input stmt-obj))
-        ?auth-mem-inputs (when ?stmt-auth (i-ac/group-insert-input ?stmt-auth))
-        ?inst-mem-inputs (when ?stmt-inst (i-ac/group-insert-input ?stmt-inst))
-        ?team-mem-inputs (when ?stmt-team (i-ac/group-insert-input ?stmt-team))
+        ?act-mem-inputs  (i-ac/insert-group-input stmt-act)
+        ?obj-mem-inputs  (when actor-obj? (i-ac/insert-group-input stmt-obj))
+        ?auth-mem-inputs (when ?stmt-auth (i-ac/insert-group-input ?stmt-auth))
+        ?inst-mem-inputs (when ?stmt-inst (i-ac/insert-group-input ?stmt-inst))
+        ?team-mem-inputs (when ?stmt-team (i-ac/insert-group-input ?stmt-team))
         ;; Actor Inputs
         actor-inputs (cond-> []
                        ;; Statememt Actors
@@ -60,7 +60,7 @@
                        ?inst-mem-inputs (concat ?inst-mem-inputs)
                        ?team-mem-inputs (concat ?team-mem-inputs))
         ;; Statement to Actor Inputs
-        actor->link (partial i-ac/statement-to-actor-insert-input stmt-id)
+        actor->link (partial i-ac/insert-statement-to-actor-input stmt-id)
         stmt-actors (cond-> []
                       ;; Statement Actors
                       ?act-input
@@ -92,8 +92,8 @@
     [actor-inputs stmt-actors]))
 
 (defn- insert-stmt-activity-inputs
-  "Helper to construct the `functions/insert-activity!` inputs for a statement's
-   Activities."
+  "Helper to construct the value for `:activity-inputs` in the statement input
+   param map."
   [stmt-id stmt-obj ?stmt-ctx-acts sql-enums]
   (let [;; Destructuring
         {:keys [obj-enum cat-enum grp-enum prt-enum oth-enum]}
@@ -137,6 +137,8 @@
     [act-inputs stmt-acts]))
 
 (defn- insert-sub-stmt-inputs
+  "Helper to create inputs for `sub-statement`, where `stmt-id` is the ID
+   of the parent statement."
   [stmt-id sub-statement]
   (let [;; SubStatement Properties
         {sub-stmt-act  "actor"
@@ -176,8 +178,8 @@
   :ret ss/insert-statement-input-spec)
 
 (defn insert-statement-input
-  "Given `statement`, return a map of HugSql inputs that serve as the input for
-   `insert-statement!`."
+  "Given `statement`, return the input param map for `insert-statement!` with
+   all values except for `:attachment-inputs` and `:stmt-stmt-inputs` set."
   [statement]
   (let [;; Destructuring
         ;; `id` and `authority` should have already been set by
@@ -268,8 +270,8 @@
   :ret (s/coll-of ss/insert-statement-input-spec :min-count 1))
 
 (defn insert-statement-batch-input
-  "Given the coll `statements`, return a seq of input maps that can each be
-   passed to `insert-statement!`"
+  "Given the coll `statements`, return a seq of input param maps that will
+   each be passed to `insert-statement!`"
   [statements]
   (map insert-statement-input statements))
 
@@ -283,9 +285,8 @@
   :ret ::ss/stmt-stmt-input)
 
 (defn insert-descendant-input
-  "Given `statement-id` and `attachment`, construct the input for
-   `functions/insert-statement-to-statement!`. `statement-id` will serve as
-   the ancestor ID."
+  "Given `statement-id` and `attachment`, construct an entry in the
+   `:stmt-stmt-inputs` vec in the `insert-statement!` input param map."
   [statement-id descendant-id]
   {:table         :statement-to-statement
    :primary-key   (u/generate-squuid)
@@ -344,8 +345,9 @@
                (mapv #(dissoc % :content) attachments))))
 
 (defn add-insert-attachment-inputs
-  "Given `input-maps` and `attachments`, add each attachment to the appropriate
-   input map, i.e. the one that contains the attachment's SHA2 hash."
+  "Given `input-maps` and `attachments`, conj each attachment to the
+   `:attachment-inputs` vec in the appropriate input param map, i.e. the one
+   whose statement contains the attachment's SHA2 hash."
   [stmt-input attachments]
   (if (empty? attachments)
     ;; No attachments - don't bother
@@ -406,8 +408,9 @@
   :ret ss/statement-query-spec)
 
 (defn query-statement-input
-  "Construct the input for `query-statement!`. Returns either an input for
-   singleton or multi-statement query."
+  "Given `params`, construct the input for `query-statement!`. The input can be
+   for a single-statement query (if it has a statement ID), or a multi-statement
+   query (if not)."
   [{?stmt-id     :statementId
     ?vstmt-id    :voidedStatementId
     ?verb-iri    :verb

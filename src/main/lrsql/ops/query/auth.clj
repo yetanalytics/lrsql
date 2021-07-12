@@ -28,9 +28,9 @@
 
 (defn query-credential-scopes
   "Like `query-credential-scopes*` except that its return value conforms
-   to what is expected by the lrs library. In particular, it returns a result
+   to the expectations of the lrs lib. In particular, returns a result
    map containins the scope and auth key map on success. If the credentials
-   are not found, return a sentinel to indicate that the webserver will
+   are not found, return a keyword to indicate that the webserver will
    return 401 Forbidden."
   [tx input]
   (if-some [scopes (query-credential-scopes* tx input)]
@@ -61,7 +61,7 @@
   :ret (s/coll-of as/scoped-key-pair-spec :gen-max 5))
 
 (defn query-credentials
-  "Given an input containing an account ID, return all creds (and their
+  "Given an input containing `:account-id`, return all creds (and their
    associated scopes) that are associated with that account."
   [tx input]
   (let [creds  (->> input

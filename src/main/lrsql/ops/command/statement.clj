@@ -92,6 +92,9 @@
   :ret ::lrsp/store-statements-ret)
 
 (defn insert-statement!
+  "Insert the statement and auxillary objects and attachments that are given
+   by `input`. Returns a map with the property `:statement-ids` on success,
+   or one with the `:error` property on failure."
   [tx {:keys [statement-input
               actor-inputs
               activity-inputs

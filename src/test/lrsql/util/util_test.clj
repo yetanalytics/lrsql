@@ -43,4 +43,3 @@
   (testing "writing JSON"
     (is (= "{\"foo\":\"bar\"}"
            (String. ^"[B" (util/write-json {"foo" "bar"}))))))
-

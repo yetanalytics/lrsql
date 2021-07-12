@@ -11,14 +11,15 @@
 ;; Actor Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef actor-insert-input
+(s/fdef insert-actor-input
   :args (s/cat :actor (s/alt :agent ::xs/agent
                              :group ::xs/group))
   :ret (s/nilable ::as/actor-input))
 
-(defn actor-insert-input
-  "Given `actor`, construct the input for `functions/insert-actor!`, or nil
-   if it does not have an IFI."
+(defn insert-actor-input
+  "Given the xAPI `actor`, construct an entry for the `:actor-inputs` vec in
+   the `insert-statement!` input param map, or `nil` if `actor` does not have
+   an IFI."
   [actor]
   (when-some [ifi-str (au/actor->ifi actor)]
     {:table       :actor
@@ -27,31 +28,31 @@
      :actor-type  (get actor "objectType" "Agent")
      :payload     actor}))
 
-(s/fdef group-insert-input
+(s/fdef insert-group-input
   :args (s/cat :actor (s/alt :agent ::xs/agent
                              :group ::xs/group))
   :ret (s/nilable ::as/actor-inputs))
 
-(defn group-insert-input
-  "Given `actor`, return a coll of actor inputs, or nil if `actor` is not
-   a Group or has no members. Both Anonymous and Identified Group members
-   count."
+(defn insert-group-input
+  "Given the xAPI `actor`, return a coll of `:actor-inputs` entries for its
+   member actors, or nil if `actor` is not a Group or has no members. Both
+   Anonymous and Identified Group members count."
   [actor]
   ;; Use let-binding in order to avoid cluttering args list
   (let [{obj-type "objectType" members  "member"} actor]
     (when (and (= "Group" obj-type) (not-empty members))
-      (map actor-insert-input members))))
+      (map insert-actor-input members))))
 
-(s/fdef statement-to-actor-insert-input
+(s/fdef insert-statement-to-actor-input
   :args (s/cat :statement-id ::c/statement-id
                :actor-usage ::as/usage
                :actor-input ::as/actor-input)
   :ret ::as/stmt-actor-input)
 
-(defn statement-to-actor-insert-input
-  "Given `statement-id`, `actor-usage` and the return value of
-   `actor-insert-input`, return the input for
-   `functions/insert-statement-to-actor!`."
+(defn insert-statement-to-actor-input
+  "Given `statement-id`, `actor-usage` (e.g. \"Actor\") and the return value
+   of `actor-insert-input`, return the input param map for
+   `f/insert-statement-to-actor!`."
   [statement-id actor-usage {:keys [actor-ifi actor-type]}]
   {:table        :statement-to-actor
    :primary-key  (u/generate-squuid)
@@ -64,12 +65,12 @@
 ;; Actor Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef agent-query-input
+(s/fdef query-agent-input
   :args (s/cat :params ::lrsp/get-person-params)
   :ret as/query-agent-spec)
 
-(defn agent-query-input
-  "Construct an input for `query-agent!`"
+(defn query-agent-input
+  "Given agent query params, create the input param map for `query-agent`."
   [{agent :agent}]
   {:actor-ifi  (au/actor->ifi agent)
    :actor-type "Agent"}) ; Cannot query Groups
