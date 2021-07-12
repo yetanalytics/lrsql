@@ -5,8 +5,8 @@
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.statement :as ss]
             [lrsql.util :as u]
-            [lrsql.util.activity :as ua]
-            [lrsql.util.statement :as us]))
+            [lrsql.util.activity :as au]
+            [lrsql.util.statement :as su]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertion
@@ -31,7 +31,7 @@
                                                 :voided?      true}))
             old-stmt (-> old-data :payload u/parse-json)]
         ;; Return nil if the statements aren't actually equal
-        (when-not (us/statement-equal? old-stmt new-stmt)
+        (when-not (su/statement-equal? old-stmt new-stmt)
           (throw
            (ex-info "Statement Conflict!"
                     {:type :com.yetanalytics.lrs.protocol/statement-conflict
@@ -64,7 +64,7 @@
                                u/parse-json)]
     (let [{new-activ :payload} input]
       (when-not (= old-activ new-activ)
-        (let [activity' (ua/merge-activities old-activ new-activ)
+        (let [activity' (au/merge-activities old-activ new-activ)
               input'    (assoc input :payload activity')]
           (f/update-activity! tx (prepare-input input')))))
     (f/insert-activity! tx (prepare-input input))))

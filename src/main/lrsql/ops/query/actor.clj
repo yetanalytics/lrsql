@@ -5,7 +5,7 @@
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.actor :as as]
             [lrsql.util :as u]
-            [lrsql.util.actor :as ua]))
+            [lrsql.util.actor :as au]))
 
 (s/fdef query-agent
   :args (s/cat :tx transaction? :input as/query-agent-spec)
@@ -22,4 +22,4 @@
                                        u/parse-json)]
                 result
                 (:payload input))]
-    {:person (->> agent ua/actor->person)}))
+    {:person (->> agent au/actor->person)}))

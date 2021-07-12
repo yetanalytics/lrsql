@@ -5,7 +5,7 @@
             [lrsql.spec.common :as c]
             [lrsql.spec.actor :as as]
             [lrsql.util :as u]
-            [lrsql.util.actor :as ua]))
+            [lrsql.util.actor :as au]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Actor Insertion
@@ -20,7 +20,7 @@
   "Given `actor`, construct the input for `functions/insert-actor!`, or nil
    if it does not have an IFI."
   [actor]
-  (when-some [ifi-str (ua/actor->ifi actor)]
+  (when-some [ifi-str (au/actor->ifi actor)]
     {:table       :actor
      :primary-key (u/generate-squuid)
      :actor-ifi   ifi-str
@@ -71,5 +71,5 @@
 (defn agent-query-input
   "Construct an input for `query-agent!`"
   [{agent :agent}]
-  {:actor-ifi  (ua/actor->ifi agent)
+  {:actor-ifi  (au/actor->ifi agent)
    :actor-type "Agent"}) ; Cannot query Groups

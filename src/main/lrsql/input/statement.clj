@@ -10,7 +10,7 @@
             [lrsql.input.attachment :as i-at]
             ;; Utils
             [lrsql.util :as u]
-            [lrsql.util.actor :as ua]))
+            [lrsql.util.actor :as au]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -427,7 +427,7 @@
     :as          params}]
   (let [?stmt-id    (when ?stmt-id (u/str->uuid ?stmt-id))
         ?vstmt-id   (when ?vstmt-id (u/str->uuid ?vstmt-id))
-        ?actor-ifi  (when ?actor (ua/actor->ifi ?actor))
+        ?actor-ifi  (when ?actor (au/actor->ifi ?actor))
         ?reg        (when ?reg (u/str->uuid ?reg))
         ?from       (when ?from (u/str->uuid ?from))
         ?since      (when ?since (u/time->uuid (u/str->time ?since)))

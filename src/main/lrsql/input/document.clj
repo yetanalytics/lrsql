@@ -2,8 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.xapi.document]
             [lrsql.util  :as u]
-            [lrsql.util.actor :as ua]
-            [lrsql.util.document :as ud]
+            [lrsql.util.actor :as au]
+            [lrsql.util.document :as du]
             [lrsql.spec.document :as ds]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -23,7 +23,7 @@
    add-registration?]
   (cond-> {:table         :state-document
            :activity-iri  activity-id
-           :agent-ifi     (ua/actor->ifi agent)}
+           :agent-ifi     (au/actor->ifi agent)}
     state-id?
     (assoc :state-id ?state-id)
     (or add-registration? ?registration)
@@ -37,7 +37,7 @@
     agent       :agent}
    profile-id?]
   (cond-> {:table     :agent-profile-document
-           :agent-ifi (ua/actor->ifi agent)}
+           :agent-ifi (au/actor->ifi agent)}
     profile-id?
     (assoc :profile-id ?profile-id)))
 
@@ -74,13 +74,13 @@
                :document :com.yetanalytics.lrs.xapi/document)
   :ret ds/insert-document-spec
   :fn (fn [{:keys [args ret]}]
-        (= (ud/document-dispatch (:params args)) (:table ret))))
+        (= (du/document-dispatch (:params args)) (:table ret))))
 
 (defmulti insert-document-input
   "Given `params` and `document`, construct the input for `insert-document!`
    and `update-document!`"
   {:arglists '([params document])}
-  (fn [params _] (ud/document-dispatch params)))
+  (fn [params _] (du/document-dispatch params)))
 
 (defmethod insert-document-input :state-document
   [params document]
@@ -107,13 +107,13 @@
   :args (s/cat :params ds/get-or-delete-document-params)
   :ret ds/document-input-spec
   :fn (fn [{:keys [args ret]}]
-        (= (ud/document-dispatch (:params args)) (:table ret))))
+        (= (du/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-input
   "Given `params`, construct the input for `query-document` and
    `delete-document!`"
   {:arglists '([params])}
-  ud/document-dispatch)
+  du/document-dispatch)
 
 (defmethod document-input :state-document
   [params]
@@ -152,12 +152,12 @@
   :args (s/cat :params ds/get-document-ids-params)
   :ret ds/document-ids-query-spec
   :fn (fn [{:keys [args ret]}]
-        (= (ud/document-dispatch (:params args)) (:table ret))))
+        (= (du/document-dispatch (:params args)) (:table ret))))
 
 (defmulti document-ids-input
   "Given `params`, return the input for `query-document-ids`."
   {:arglist '([params])}
-  ud/document-dispatch)
+  du/document-dispatch)
 
 (defmethod document-ids-input :state-document
   [params]

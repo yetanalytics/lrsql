@@ -4,7 +4,7 @@
             [lrsql.functions :as f]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.auth :as as]
-            [lrsql.util.auth :as ua]))
+            [lrsql.util.auth :as au]))
 
 (s/fdef query-credential-scopes*
   :args (s/cat :tx transaction? :input as/query-cred-scopes-input-spec)
@@ -47,7 +47,7 @@
               :scopes/statements.read.mine}
             ;; Return scope set
             (->> scopes
-                 (map ua/scope-str->kw)
+                 (map au/scope-str->kw)
                  (into #{})))]
       {:result {:scopes scope-set
                 :prefix ""
