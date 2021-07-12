@@ -7,7 +7,7 @@
             [lrsql.util :as u]))
 
 (s/fdef query-activity
-  :args (s/cat :tx transaction? :input as/activity-query-spec)
+  :args (s/cat :tx transaction? :input as/query-activity-spec)
   :ret ::lrsp/get-activity-ret)
 
 (defn query-activity

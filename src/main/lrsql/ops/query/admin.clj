@@ -18,8 +18,8 @@
     :lrsql.admin/missing-account-error))
 
 (s/fdef query-validate-admin
-  :args (s/cat :tx transaction? :input ads/admin-query-validate-spec)
-  :ret ads/admin-query-validate-res-spec)
+  :args (s/cat :tx transaction? :input ads/query-validate-admin-input-spec)
+  :ret ads/query-validate-admin-ret-spec)
 
 (defn query-validate-admin
   "Validate the admin account info by querying the admin by `username`,

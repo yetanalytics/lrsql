@@ -13,26 +13,26 @@
   (testing "statement object insertion inputs"
     (is (nil? (check-validate `i-ac/actor-insert-input)))
     (is (nil? (check-validate `i-ac/group-insert-input)))
-    (is (nil? (check-validate `i-av/activity-insert-input)))
+    (is (nil? (check-validate `i-av/insert-activity-input)))
     (is (nil? (check-validate `i-ac/statement-to-actor-insert-input)))
-    (is (nil? (check-validate `i-av/statement-to-activity-insert-input))))
+    (is (nil? (check-validate `i-av/insert-statement-to-activity-input))))
   (testing "statement insertion inputs"
-    (is (nil? (check-validate `i-stmt/statement-insert-inputs 10)))
-    (is (nil? (check-validate `i-stmt/statements-insert-inputs 5))))
+    (is (nil? (check-validate `i-stmt/insert-statement-input 10)))
+    (is (nil? (check-validate `i-stmt/insert-statement-batch-input 5))))
   (testing "descendant insertion inputs"
-    (is (nil? (check-validate `i-stmt/descendant-insert-input)))
-    (is (nil? (check-validate `i-stmt/add-descendant-insert-inputs 10))))
+    (is (nil? (check-validate `i-stmt/insert-descendant-input)))
+    (is (nil? (check-validate `i-stmt/add-insert-descendant-inputs 10))))
   (testing "attachment insertion inputs"
     (is (nil? (check-validate `i-at/attachment-insert-input)))
-    (is (nil? (check-validate `i-stmt/add-attachment-insert-inputs 10))))
+    (is (nil? (check-validate `i-stmt/add-insert-attachment-inputs 10))))
   (testing "document insertion inputs"
-    (is (nil? (check-validate `i-doc/document-insert-input)))))
+    (is (nil? (check-validate `i-doc/insert-document-input)))))
 
 (deftest test-query-inputs
   (testing "statement query inputs"
-    (is (nil? (check-validate `i-stmt/statement-query-input)))
+    (is (nil? (check-validate `i-stmt/query-statement-input)))
     (is (nil? (check-validate `i-ac/agent-query-input)))
-    (is (nil? (check-validate `i-av/activity-query-input))))
+    (is (nil? (check-validate `i-av/query-activity-input))))
   (testing "document query inputs"
     (is (nil? (check-validate `i-doc/document-input)))
     (is (nil? (check-validate `i-doc/document-ids-input)))
@@ -40,15 +40,15 @@
 
 (deftest test-auth
   (testing "authentication inputs"
-    (is (nil? (check-validate `i-auth/credential-insert-input)))
-    (is (nil? (check-validate `i-auth/credential-scopes-insert-input)))
-    (is (nil? (check-validate `i-auth/credentials-delete-input)))
-    (is (nil? (check-validate `i-auth/credential-scopes-delete-input)))
-    (is (nil? (check-validate `i-auth/credentials-query-input)))
-    (is (nil? (check-validate `i-auth/credential-scopes-query-input)))))
+    (is (nil? (check-validate `i-auth/insert-credential-input)))
+    (is (nil? (check-validate `i-auth/insert-credential-scopes-input)))
+    (is (nil? (check-validate `i-auth/delete-credentials-input)))
+    (is (nil? (check-validate `i-auth/delete-credential-scopes-input)))
+    (is (nil? (check-validate `i-auth/query-credentials-input)))
+    (is (nil? (check-validate `i-auth/query-credential-scopes-input)))))
 
 (deftest test-admin
   (testing "admin account inputs"
-    (is (nil? (check-validate `i-admin/admin-insert-input 3)))
-    (is (nil? (check-validate `i-admin/admin-validate-input)))
-    (is (nil? (check-validate `i-admin/admin-delete-input)))))
+    (is (nil? (check-validate `i-admin/insert-admin-input 3)))
+    (is (nil? (check-validate `i-admin/validate-admin-input)))
+    (is (nil? (check-validate `i-admin/delete-admin-input)))))

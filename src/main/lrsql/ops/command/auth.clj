@@ -11,7 +11,7 @@
 ;; TODO: Dupe checking
 
 (s/fdef insert-credential!
-  :args (s/cat :tx transaction? :input as/cred-insert-spec)
+  :args (s/cat :tx transaction? :input as/insert-cred-input-spec)
   :ret nil?)
 
 (defn insert-credential!
@@ -20,7 +20,7 @@
   nil)
 
 (s/fdef insert-credential-scopes!
-  :args (s/cat :tx transaction? :inputs as/cred-scopes-insert-spec)
+  :args (s/cat :tx transaction? :inputs as/insert-cred-scopes-input-spec)
   :ret nil?)
 
 (defn insert-credential-scopes!
@@ -36,7 +36,7 @@
 ;; TODO: Existence checking
 
 (s/fdef delete-credential-scopes!
-  :args (s/cat :tx transaction? :inputs as/cred-scopes-delete-spec)
+  :args (s/cat :tx transaction? :inputs as/delete-cred-scopes-input-spec)
   :ret nil?)
 
 (defn delete-credential-scopes!
@@ -44,7 +44,7 @@
   (dorun (map (partial f/delete-credential-scope! tx) inputs)))
 
 (s/fdef delete-credential!
-  :args (s/cat :tx transaction? :input as/cred-delete-spec)
+  :args (s/cat :tx transaction? :input as/delete-cred-input-spec)
   :ret nil?)
 
 (defn delete-credential!

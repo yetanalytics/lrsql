@@ -99,7 +99,7 @@
 
 ;; Putting it all together
 
-(def statement-insert-map-spec
+(def insert-statement-input-spec
   (s/keys :req-un [::statement-input
                    ::hs-actor/actor-inputs
                    ::hs-activ/activity-inputs
@@ -140,7 +140,7 @@
 
 (def stmt-input-attachments-spec*
   (s/cat :statement-inputs
-         (s/coll-of statement-insert-map-spec :min-count 1 :gen-max 5)
+         (s/coll-of insert-statement-input-spec :min-count 1 :gen-max 5)
          :attachments
          (s/coll-of ::ss/attachment :gen-max 2)))
 

@@ -64,7 +64,7 @@
 ;; - content_length: INTEGER NOT NULL
 ;; - contents:       BINARY NOT NULL
 
-(def state-doc-insert-spec
+(def insert-state-doc-input-spec
   (s/keys :req-un [::c/primary-key
                    :lrsql.spec.document.state/table
                    ::state-id
@@ -85,7 +85,7 @@
 ;; - content_length: INTEGER NOT NULL
 ;; - contents:       BINARY NOT NULL
 
-(def agent-profile-doc-insert-spec
+(def insert-agent-profile-doc-input-spec
   (s/keys :req-un [::c/primary-key
                    :lrsql.spec.document.agent-profile/table
                    ::profile-id
@@ -104,7 +104,7 @@
 ;; - content_length: INTEGER NOT NULL
 ;; - contents:       BINARY NOT NULL
 
-(def activity-profile-doc-insert-spec
+(def insert-activity-profile-doc-spec
   (s/keys :req-un [::c/primary-key
                    :lrsql.spec.document.activity-profile/table
                    ::profile-id
@@ -117,11 +117,11 @@
 ;; Putting it all together
 ;; NOTE: need to call s/nonconforming to make it work with s/fdef's :fn
 
-(def document-insert-spec
+(def insert-document-spec
   (s/nonconforming
-   (s/or :state state-doc-insert-spec
-         :agent-profile agent-profile-doc-insert-spec
-         :activity-profile activity-profile-doc-insert-spec)))
+   (s/or :state insert-state-doc-input-spec
+         :agent-profile insert-agent-profile-doc-input-spec
+         :activity-profile insert-activity-profile-doc-spec)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Queries + Deletions

@@ -8,12 +8,12 @@
 ;; Credentials Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef credential-insert-input
+(s/fdef insert-credential-input
   :args (s/cat :account-id ::ads/account-id
                :key-pair   as/key-pair-args-spec)
-  :ret as/cred-insert-spec)
+  :ret as/insert-cred-input-spec)
 
-(defn credential-insert-input
+(defn insert-credential-input
   ([account-id key-pair]
    (assoc key-pair
           :primary-key (u/generate-squuid)
@@ -24,12 +24,12 @@
     :secret-key  secret-key
     :account-id  account-id}))
 
-(s/fdef credential-scopes-insert-input
+(s/fdef insert-credential-scopes-input
   :args (s/cat :key-pair as/key-pair-args-spec
                :scopes   ::as/scopes)
-  :ret as/cred-scopes-insert-spec)
+  :ret as/insert-cred-scopes-input-spec)
 
-(defn credential-scopes-insert-input
+(defn insert-credential-scopes-input
   ([key-pair scopes]
    (->> scopes
         (map (partial assoc key-pair :scope))
@@ -37,18 +37,18 @@
   ([api-key secret-key scopes]
    (let [key-pair {:api-key    api-key
                    :secret-key secret-key}]
-     (credential-scopes-insert-input key-pair scopes))))
+     (insert-credential-scopes-input key-pair scopes))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credentials Deletion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef credentials-delete-input
+(s/fdef delete-credentials-input
   :args (s/cat :account-id ::ads/account-id
                :key-pair   as/key-pair-args-spec)
-  :ret as/cred-delete-spec)
+  :ret as/delete-cred-input-spec)
 
-(defn credentials-delete-input
+(defn delete-credentials-input
   ([account-id key-pair]
    (assoc key-pair :account-id account-id))
   ([account-id api-key secret-key]
@@ -56,37 +56,37 @@
     :secret-key secret-key
     :account-id account-id}))
 
-(s/fdef credential-scopes-delete-input
+(s/fdef delete-credential-scopes-input
   :args (s/cat :key-pair as/key-pair-args-spec
                :scopes   ::as/scopes)
-  :ret as/cred-scopes-delete-spec)
+  :ret as/delete-cred-scopes-input-spec)
 
-(defn credential-scopes-delete-input
+(defn delete-credential-scopes-input
   ([key-pair scopes]
    (->> scopes
         (map (partial assoc key-pair :scope))))
   ([api-key secret-key scopes]
    (let [key-pair {:api-key    api-key
                    :secret-key secret-key}]
-     (credential-scopes-delete-input key-pair scopes))))
+     (delete-credential-scopes-input key-pair scopes))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credentials Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef credentials-query-input
+(s/fdef query-credentials-input
   :args (s/cat :account-id ::ads/account-id)
-  :ret as/creds-query-spec)
+  :ret as/query-creds-input-spec)
 
-(defn credentials-query-input
+(defn query-credentials-input
   [account-id]
   {:account-id account-id})
 
-(s/fdef credential-scopes-query-input
+(s/fdef query-credential-scopes-input
   :args (s/cat :key-pair as/key-pair-args-spec)
-  :ret as/cred-scopes-query-spec)
+  :ret as/query-cred-scopes-input-spec)
 
-(defn credential-scopes-query-input
+(defn query-credential-scopes-input
   ([key-pair]
    key-pair)
   ([api-key secret-key]

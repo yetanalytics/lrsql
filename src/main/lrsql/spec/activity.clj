@@ -1,7 +1,6 @@
 (ns lrsql.spec.activity
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec   :as xs]
-            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.spec.common :as c]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -52,15 +51,8 @@
   (s/coll-of ::stmt-activity-input :gen-max 5))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Query params spec
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def get-activity-params
-  ::lrsp/get-activity-params)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query spec
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def activity-query-spec
+(def query-activity-spec
   (s/keys :req-un [::activity-iri]))

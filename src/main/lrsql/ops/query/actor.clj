@@ -8,7 +8,7 @@
             [lrsql.util.actor :as ua]))
 
 (s/fdef query-agent
-  :args (s/cat :tx transaction? :input as/agent-query-spec)
+  :args (s/cat :tx transaction? :input as/query-agent-spec)
   :ret ::lrsp/get-person-ret)
 
 (defn query-agent

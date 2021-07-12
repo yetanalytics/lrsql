@@ -7,7 +7,7 @@
             [lrsql.util.auth :as ua]))
 
 (s/fdef query-credential-scopes*
-  :args (s/cat :tx transaction? :input as/cred-scopes-query-spec)
+  :args (s/cat :tx transaction? :input as/query-cred-scopes-input-spec)
   :ret (s/nilable (s/coll-of ::as/scope
                              :min-count 1
                              :gen-max 5)))
@@ -23,7 +23,7 @@
              vec)))
 
 (s/fdef query-credential-scopes
-  :args (s/cat :tx transaction? :input as/cred-scopes-query-spec)
+  :args (s/cat :tx transaction? :input as/query-cred-scopes-input-spec)
   :ret ::lrsp/authenticate-ret)
 
 (defn query-credential-scopes
@@ -57,7 +57,7 @@
     {:result :com.yetanalytics.lrs.auth/forbidden}))
 
 (s/fdef query-credentials
-  :args (s/cat :tx transaction? :input as/creds-query-spec)
+  :args (s/cat :tx transaction? :input as/query-creds-input-spec)
   :ret (s/coll-of as/scoped-key-pair-spec :gen-max 5))
 
 (defn query-credentials

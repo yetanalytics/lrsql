@@ -4,29 +4,29 @@
             [lrsql.util.admin :as ua]
             [lrsql.util :as u]))
 
-(s/fdef admin-insert-input
+(s/fdef insert-admin-input
   :args (s/cat :username ::as/username :password ::as/password)
-  :ret as/admin-insert-spec)
+  :ret as/insert-admin-input-spec)
 
-(defn admin-insert-input
+(defn insert-admin-input
   [username password]
   {:primary-key (u/generate-squuid)
    :username    username
    :passhash    (ua/hash-password password)})
 
-(s/fdef admin-validate-input
+(s/fdef validate-admin-input
   :args (s/cat :username ::as/username :password ::as/password)
-  :ret as/admin-query-validate-spec)
+  :ret as/query-validate-admin-input-spec)
 
-(defn admin-validate-input
+(defn validate-admin-input
   [username password]
   {:username username
    :password password})
 
-(s/fdef admin-delete-input
+(s/fdef delete-admin-input
   :args (s/cat :account-id ::as/account-id)
-  :ret as/admin-delete-spec)
+  :ret as/delete-admin-input-spec)
 
-(defn admin-delete-input
+(defn delete-admin-input
   [account-id]
   {:account-id account-id})

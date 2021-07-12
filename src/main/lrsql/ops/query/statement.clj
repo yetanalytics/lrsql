@@ -98,7 +98,7 @@
 
 (s/fdef query-descendants
   :args (s/cat :tx transaction?
-               :input ss/statement-insert-map-spec)
+               :input ss/insert-statement-input-spec)
   :ret (s/coll-of ::ss/descendant-id :kind vector? :gen-max 5))
 
 (defn query-descendants

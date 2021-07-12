@@ -88,7 +88,7 @@
     (when exists (f/insert-statement-to-statement! tx input))))
 
 (s/fdef insert-statement!
-  :args (s/cat :tx transaction? :inputs ss/statement-insert-map-spec)
+  :args (s/cat :tx transaction? :inputs ss/insert-statement-input-spec)
   :ret ::lrsp/store-statements-ret)
 
 (defn insert-statement!

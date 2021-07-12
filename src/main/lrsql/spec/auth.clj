@@ -72,45 +72,45 @@
 ;; Insert
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def cred-insert-spec
+(def insert-cred-input-spec
   (s/keys :req-un [::c/primary-key
                    ::api-key
                    ::secret-key
                    ::ads/account-id]))
 
-(def cred-scope-insert-spec
+(def insert-cred-scope-input-spec
   (s/keys :req-un [::c/primary-key
                    ::api-key
                    ::secret-key
                    ::scope]))
 
-(def cred-scopes-insert-spec
-  (s/coll-of cred-scope-insert-spec :min-count 1 :gen-max 5))
+(def insert-cred-scopes-input-spec
+  (s/coll-of insert-cred-scope-input-spec :min-count 1 :gen-max 5))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Delete
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def cred-delete-spec
+(def delete-cred-input-spec
   (s/keys :req-un [::api-key
                    ::secret-key
                    ::ads/account-id]))
 
-(def cred-scope-delete-spec
+(def delete-cred-scope-input-spec
   (s/keys :req-un [::api-key
                    ::secret-key
                    ::scope]))
 
-(def cred-scopes-delete-spec
-  (s/coll-of cred-scope-delete-spec :min-count 1 :gen-max 5))
+(def delete-cred-scopes-input-spec
+  (s/coll-of delete-cred-scope-input-spec :min-count 1 :gen-max 5))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def creds-query-spec
+(def query-creds-input-spec
   (s/keys :req-un [::ads/account-id]))
 
-(def cred-scopes-query-spec
+(def query-cred-scopes-input-spec
   (s/keys :req-un [::api-key
                    ::secret-key]))

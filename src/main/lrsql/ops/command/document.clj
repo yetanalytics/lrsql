@@ -12,7 +12,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef insert-document!
-  :args (s/cat :tx transaction? :input ds/document-insert-spec)
+  :args (s/cat :tx transaction? :input ds/insert-document-spec)
   :ret ds/document-command-res-spec)
 
 (defn insert-document!
@@ -120,7 +120,7 @@
       (upsert-insert-document! tx input insert-fn!))))
 
 (s/fdef upsert-document!
-  :args (s/cat :tx transaction? :input ds/document-insert-spec)
+  :args (s/cat :tx transaction? :input ds/insert-document-spec)
   :ret ds/document-command-res-spec)
 
 (defn upsert-document!

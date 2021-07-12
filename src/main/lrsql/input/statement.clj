@@ -21,7 +21,7 @@
 ;; TODO: Deal with contextAgents, contextGroups, and any other properties
 ;; in version 2.0
 
-(defn- statement-actor-insert-inputs
+(defn- insert-stmt-actor-inputs
   "Helper to construct the `functions/insert-actor!` inputs for a statement's
    Agents and Groups."
   [stmt-id stmt-act stmt-obj ?stmt-auth ?stmt-inst ?stmt-team sql-enums]
@@ -91,7 +91,7 @@
                                    ?team-mem-inputs)))]
     [actor-inputs stmt-actors]))
 
-(defn- statement-activity-insert-inputs
+(defn- insert-stmt-activity-inputs
   "Helper to construct the `functions/insert-activity!` inputs for a statement's
    Activities."
   [stmt-id stmt-obj ?stmt-ctx-acts sql-enums]
@@ -109,11 +109,11 @@
         activity-obj?
         (boolean (#{"Activity"} stmt-obj-type))
         ;; Statement Activities
-        ?obj-act-in  (when activity-obj? (i-av/activity-insert-input stmt-obj))
-        ?cat-acts-in (when ?cat-acts (map i-av/activity-insert-input ?cat-acts))
-        ?grp-acts-in (when ?grp-acts (map i-av/activity-insert-input ?grp-acts))
-        ?prt-acts-in (when ?prt-acts (map i-av/activity-insert-input ?prt-acts))
-        ?oth-acts-in (when ?oth-acts (map i-av/activity-insert-input ?oth-acts))
+        ?obj-act-in  (when activity-obj? (i-av/insert-activity-input stmt-obj))
+        ?cat-acts-in (when ?cat-acts (map i-av/insert-activity-input ?cat-acts))
+        ?grp-acts-in (when ?grp-acts (map i-av/insert-activity-input ?grp-acts))
+        ?prt-acts-in (when ?prt-acts (map i-av/insert-activity-input ?prt-acts))
+        ?oth-acts-in (when ?oth-acts (map i-av/insert-activity-input ?oth-acts))
         ;; Activity Inputs
         act-inputs (cond-> []
                      ?obj-act-in  (conj ?obj-act-in)
@@ -122,7 +122,7 @@
                      ?prt-acts-in (concat ?prt-acts-in)
                      ?oth-acts-in (concat ?oth-acts-in))
         ;; Statement to Activity Enums
-        act->link (partial i-av/statement-to-activity-insert-input stmt-id)
+        act->link (partial i-av/insert-statement-to-activity-input stmt-id)
         stmt-acts (cond-> []
                     ?obj-act-in
                     (conj (act->link obj-enum ?obj-act-in))
@@ -136,7 +136,7 @@
                     (concat (map (partial act->link oth-enum) ?oth-acts-in)))]
     [act-inputs stmt-acts]))
 
-(defn- sub-statement-insert-inputs
+(defn- insert-sub-stmt-inputs
   [stmt-id sub-statement]
   (let [;; SubStatement Properties
         {sub-stmt-act  "actor"
@@ -149,7 +149,7 @@
         ?sub-stmt-ctx
         ;; Actor Inputs
         [actor-inputs stmt-actor-inputs]
-        (statement-actor-insert-inputs stmt-id
+        (insert-stmt-actor-inputs stmt-id
                                        sub-stmt-act
                                        sub-stmt-obj
                                        nil ; No Authority for SubStatements
@@ -161,7 +161,7 @@
                                         :team-enum "SubTeam"})
         ;; Activity Inputs
         [activity-inputs stmt-activity-inputs]
-        (statement-activity-insert-inputs stmt-id
+        (insert-stmt-activity-inputs stmt-id
                                           sub-stmt-obj
                                           ?sub-stmt-ctx-acts
                                           {:obj-enum "SubObject"
@@ -171,11 +171,11 @@
                                            :oth-enum "SubOther"})]
     [actor-inputs activity-inputs stmt-actor-inputs stmt-activity-inputs]))
 
-(s/fdef statement-insert-inputs
+(s/fdef insert-statement-input
   :args (s/cat :statement ss/prepared-statement-spec)
-  :ret ss/statement-insert-map-spec)
+  :ret ss/insert-statement-input-spec)
 
-(defn statement-insert-inputs
+(defn insert-statement-input
   "Given `statement`, return a map of HugSql inputs that serve as the input for
    `insert-statement!`."
   [statement]
@@ -228,7 +228,7 @@
                     :payload           statement}
         ;; Actor HugSql Inputs
         [actor-inputs stmt-actor-inputs]
-        (statement-actor-insert-inputs stmt-id
+        (insert-stmt-actor-inputs stmt-id
                                        stmt-act
                                        stmt-obj
                                        ?stmt-auth
@@ -241,7 +241,7 @@
                                         :team-enum "Team"})
         ;; Activity HugSql Inputs
         [activ-inputs stmt-activ-inputs]
-        (statement-activity-insert-inputs stmt-id
+        (insert-stmt-activity-inputs stmt-id
                                           stmt-obj
                                           ?stmt-ctx-acts
                                           {:obj-enum "Object"
@@ -252,7 +252,7 @@
         ;; SubStatement HugSql Inputs
         [sactor-inputs sactiv-inputs sstmt-actor-inputs sstmt-activ-inputs]
         (when (= "SubStatement" stmt-obj-type)
-          (sub-statement-insert-inputs stmt-id stmt-obj))]
+          (insert-sub-stmt-inputs stmt-id stmt-obj))]
     {:statement-input      stmt-input
      :actor-inputs         (concat actor-inputs sactor-inputs)
      :activity-inputs      (concat activ-inputs sactiv-inputs)
@@ -261,28 +261,28 @@
      :stmt-stmt-inputs     []
      :attachment-inputs    []}))
 
-(s/fdef statements-insert-inputs
+(s/fdef insert-statement-batch-input
   :args (s/cat :statements (s/coll-of ss/prepared-statement-spec
                                       :min-count 1
                                       :gen-max 5))
-  :ret (s/coll-of ss/statement-insert-map-spec :min-count 1))
+  :ret (s/coll-of ss/insert-statement-input-spec :min-count 1))
 
-(defn statements-insert-inputs
+(defn insert-statement-batch-input
   "Given the coll `statements`, return a seq of input maps that can each be
    passed to `insert-statement!`"
   [statements]
-  (map statement-insert-inputs statements))
+  (map insert-statement-input statements))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertion w/ Descendants
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef descendant-insert-input
+(s/fdef insert-descendant-input
   :args (s/cat :statement-id ::ss/statement-id
                :descendant-id ::ss/statement-id)
   :ret ::ss/stmt-stmt-input)
 
-(defn descendant-insert-input
+(defn insert-descendant-input
   "Given `statement-id` and `attachment`, construct the input for
    `functions/insert-statement-to-statement!`. `statement-id` will serve as
    the ancestor ID."
@@ -292,12 +292,12 @@
    :descendant-id descendant-id
    :ancestor-id   statement-id})
 
-(s/fdef add-descendant-insert-inputs
-  :args (s/cat :input-map ss/statement-insert-map-spec
+(s/fdef add-insert-descendant-inputs
+  :args (s/cat :input-map ss/insert-statement-input-spec
                :desc-ids  (s/coll-of uuid?))
-  :ret  ss/statement-insert-map-spec)
+  :ret  ss/insert-statement-input-spec)
 
-(defn add-descendant-insert-inputs
+(defn add-insert-descendant-inputs
   "Given `input-map` and `descendant-ids`, add any descendant IDs to the input
    map in order to be passed to `functions/insert-statement-to-statement!`"
   [input-map descendant-ids]
@@ -306,7 +306,7 @@
               (update input-map'
                       :stmt-stmt-inputs
                       conj
-                      (descendant-insert-input stmt-id desc-id)))
+                      (insert-descendant-input stmt-id desc-id)))
             input-map
             descendant-ids)))
 
@@ -317,9 +317,9 @@
 ;; NOTE: Assume that the LRS has already validated that every statement
 ;; attachment object has a fileUrl or valid SHA2 value.
 
-(s/fdef add-attachment-insert-inputs
+(s/fdef add-insert-attachment-inputs
   :args ss/stmt-input-attachments-spec
-  :ret (s/coll-of ss/statement-insert-map-spec))
+  :ret (s/coll-of ss/insert-statement-input-spec))
 
 (def ^:private duplicate-sha-emsg
   "Some Attachments provided have duplicate SHA2 hashes. Some Attachments may not be stored in the DB successfully.")
@@ -343,7 +343,7 @@
                duplicate-sha-emsg
                (mapv #(dissoc % :content) attachments))))
 
-(defn add-attachment-insert-inputs
+(defn add-insert-attachment-inputs
   "Given `input-maps` and `attachments`, add each attachment to the appropriate
    input map, i.e. the one that contains the attachment's SHA2 hash."
   [stmt-input attachments]
@@ -401,11 +401,11 @@
 ;; voidedStatementId property, or singleton queries with extra params,
 ;; would have been filtered out earlier by interceptors.
 
-(s/fdef statement-query-input
+(s/fdef query-statement-input
   :args (s/cat :params ::ss/query-params)
   :ret ss/statement-query-spec)
 
-(defn statement-query-input
+(defn query-statement-input
   "Construct the input for `query-statement!`. Returns either an input for
    singleton or multi-statement query."
   [{?stmt-id     :statementId

@@ -59,15 +59,15 @@
   [tx ?username ?password]
   (when (and ?username ?password)
     ;; TODO: Default admin also from config vars?
-    (let [admin-in (admin-input/admin-insert-input
+    (let [admin-in (admin-input/insert-admin-input
                     ?username
                     ?password)
           key-pair {:api-key    ?username
                     :secret-key ?password}
-          cred-in  (auth-input/credential-insert-input
+          cred-in  (auth-input/insert-credential-input
                     (:primary-key admin-in)
                     key-pair)
-          scope-in (auth-input/credential-scopes-insert-input
+          scope-in (auth-input/insert-credential-scopes-input
                     key-pair
                     #{"all"})]
       (admin-cmd/insert-admin! tx admin-in)

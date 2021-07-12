@@ -1,6 +1,7 @@
 (ns lrsql.input.actor
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec :as xs]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.spec.common :as c]
             [lrsql.spec.actor :as as]
             [lrsql.util :as u]
@@ -64,8 +65,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef agent-query-input
-  :args (s/cat :params as/get-agent-params)
-  :ret as/agent-query-spec)
+  :args (s/cat :params ::lrsp/get-person-params)
+  :ret as/query-agent-spec)
 
 (defn agent-query-input
   "Construct an input for `query-agent!`"

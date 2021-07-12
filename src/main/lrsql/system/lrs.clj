@@ -68,8 +68,8 @@
           (map stmt-util/prepare-statement
                statements)
           stmt-inputs
-          (-> (map stmt-input/statement-insert-inputs stmts)
-              (stmt-input/add-attachment-insert-inputs
+          (-> (map stmt-input/insert-statement-input stmts)
+              (stmt-input/add-insert-attachment-inputs
                attachments))]
       (jdbc/with-transaction [tx conn]
         (let [stmt-results
@@ -77,7 +77,7 @@
                      (let [stmt-descs  (stmt-q/query-descendants
                                         tx
                                         stmt-input)
-                           stmt-input' (stmt-input/add-descendant-insert-inputs
+                           stmt-input' (stmt-input/add-insert-descendant-inputs
                                         stmt-input
                                         stmt-descs)]
                        (stmt-cmd/insert-statement!
@@ -94,7 +94,7 @@
           inputs (->> params
                       (stmt-util/add-more-url-prefix config)
                       (stmt-util/ensure-default-max-limit config)
-                      stmt-input/statement-query-input)]
+                      stmt-input/query-statement-input)]
       (jdbc/with-transaction [tx conn]
         (stmt-q/query-statements tx inputs ltags))))
   (-consistent-through
@@ -107,7 +107,7 @@
   (-set-document
     [lrs _auth-identity params document merge?]
     (let [conn  (lrs-conn lrs)
-          input (doc-input/document-insert-input params document)]
+          input (doc-input/insert-document-input params document)]
       (jdbc/with-transaction [tx conn]
         (if merge?
           (doc-cmd/upsert-document! tx input)
@@ -149,7 +149,7 @@
   (-get-activity
     [lrs _auth-identity params]
     (let [conn  (lrs-conn lrs)
-          input (activity-input/activity-query-input params)]
+          input (activity-input/query-activity-input params)]
       (jdbc/with-transaction [tx conn]
         (activ-q/query-activity tx input))))
 
@@ -159,7 +159,7 @@
     (let [conn   (lrs-conn lrs)
           header (get-in ctx [:request :headers "authorization"])]
       (if-some [key-pr (auth-util/header->key-pair header)]
-        (let [input (auth-input/credential-scopes-query-input key-pr)]
+        (let [input (auth-input/query-credential-scopes-input key-pr)]
           (jdbc/with-transaction [tx conn]
             (auth-q/query-credential-scopes tx input)))
         :com.yetanalytics.lrs.auth/forbidden)))
@@ -171,19 +171,19 @@
   (-create-account
     [this username password]
     (let [conn  (lrs-conn this)
-          input (admin-input/admin-insert-input username password)]
+          input (admin-input/insert-admin-input username password)]
       (jdbc/with-transaction [tx conn]
         (admin-cmd/insert-admin! tx input))))
   (-authenticate-account
     [this username password]
     (let [conn  (lrs-conn this)
-          input (admin-input/admin-validate-input username password)]
+          input (admin-input/validate-admin-input username password)]
       (jdbc/with-transaction [tx conn]
         (admin-q/query-validate-admin tx input))))
   (-delete-account
     [this account-id]
     (let [conn  (lrs-conn this)
-          input (admin-input/admin-delete-input account-id)]
+          input (admin-input/delete-admin-input account-id)]
       (jdbc/with-transaction [tx conn]
         (admin-cmd/delete-admin! tx input))))
 
@@ -192,9 +192,9 @@
     [this account-id scopes]
     (let [conn     (lrs-conn this)
           key-pair (auth-util/generate-key-pair)
-          cred-in  (auth-input/credential-insert-input account-id
+          cred-in  (auth-input/insert-credential-input account-id
                                                        key-pair)
-          scope-in (auth-input/credential-scopes-insert-input
+          scope-in (auth-input/insert-credential-scopes-input
                     key-pair
                     scopes)]
       (jdbc/with-transaction [tx conn]
@@ -204,23 +204,23 @@
   (-get-api-keys
     [this account-id]
     (let [conn  (lrs-conn this)
-          input (auth-input/credentials-query-input account-id)]
+          input (auth-input/query-credentials-input account-id)]
       (jdbc/with-transaction [tx conn]
         (auth-q/query-credentials tx input))))
   (-update-api-keys
    ;; TODO: Verify the key pair is associated with the account ID
     [this _account-id api-key secret-key scopes]
     (let [conn  (lrs-conn this)
-          input (auth-input/credential-scopes-query-input api-key secret-key)]
+          input (auth-input/query-credential-scopes-input api-key secret-key)]
       (jdbc/with-transaction [tx conn]
         (let [scopes'    (set (auth-q/query-credential-scopes* tx input))
               add-scopes (cset/difference scopes scopes')
               del-scopes (cset/difference scopes' scopes)
-              add-inputs (auth-input/credential-scopes-insert-input
+              add-inputs (auth-input/insert-credential-scopes-input
                           api-key
                           secret-key
                           add-scopes)
-              del-inputs (auth-input/credential-scopes-delete-input
+              del-inputs (auth-input/delete-credential-scopes-input
                           api-key
                           secret-key
                           del-scopes)]
@@ -232,7 +232,7 @@
   (-delete-api-keys
     [this account-id api-key secret-key]
     (let [conn     (lrs-conn this)
-          cred-in  (auth-input/credentials-delete-input
+          cred-in  (auth-input/delete-credentials-input
                     account-id
                     api-key
                     secret-key)]

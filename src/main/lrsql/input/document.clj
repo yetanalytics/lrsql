@@ -57,7 +57,7 @@
 ;; Document Insertion 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- document-insert-basics
+(defn- insert-document-basics
   "Common properties for insertion inputs, including the primary key, the last
    modified time, and `document`"
   [document]
@@ -69,33 +69,33 @@
                (select-keys [:content-type :content-length :contents])
                (update :contents u/data->bytes)))))
 
-(s/fdef document-insert-input
+(s/fdef insert-document-input
   :args (s/cat :params ds/set-document-params
                :document :com.yetanalytics.lrs.xapi/document)
-  :ret ds/document-insert-spec
+  :ret ds/insert-document-spec
   :fn (fn [{:keys [args ret]}]
         (= (ud/document-dispatch (:params args)) (:table ret))))
 
-(defmulti document-insert-input
+(defmulti insert-document-input
   "Given `params` and `document`, construct the input for `insert-document!`
    and `update-document!`"
   {:arglists '([params document])}
   (fn [params _] (ud/document-dispatch params)))
 
-(defmethod document-insert-input :state-document
+(defmethod insert-document-input :state-document
   [params document]
   (merge (state-document-basics params true true)
-         (document-insert-basics document)))
+         (insert-document-basics document)))
 
-(defmethod document-insert-input :agent-profile-document
+(defmethod insert-document-input :agent-profile-document
   [params document]
   (merge (agent-profile-document-basics params true)
-         (document-insert-basics document)))
+         (insert-document-basics document)))
 
-(defmethod document-insert-input :activity-profile-document
+(defmethod insert-document-input :activity-profile-document
   [params document]
   (merge (activity-profile-document-basics params true)
-         (document-insert-basics document)))
+         (insert-document-basics document)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Query + Deletion
