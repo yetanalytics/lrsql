@@ -24,11 +24,11 @@
 ;; NOTE: Profile ID should be IRI, but xapi-schema defines it only as a string
 (s/def ::state-id string?)
 (s/def ::profile-id string?)
-(s/def ::last-modified inst?)
+(s/def ::last-modified c/instant-spec)
 (s/def ::contents bytes?)
 
 ;; Query-specific params
-(s/def ::since inst?)
+(s/def ::since c/instant-spec)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params specs

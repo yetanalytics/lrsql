@@ -27,7 +27,7 @@
 (s/def ::descendant-id ::statement-id)
 
 ;; Timestamp
-(s/def ::stored inst?)
+(s/def ::stored c/instant-spec)
 
 ;; Registration
 ;; TODO: Make a separate nilable version

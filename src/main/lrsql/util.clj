@@ -8,7 +8,8 @@
             [cheshire.core      :as cjson]
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
-            [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]])
+            [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
+            [lrsql.spec.common :refer [instant-spec]])
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]))
@@ -52,7 +53,7 @@
 
 (s/fdef current-time
   :args (s/cat)
-  :ret inst?)
+  :ret instant-spec)
 
 (defn current-time
   "Return the current time as a java.util.Instant timestamp."
@@ -63,10 +64,10 @@
   (set (map jt-props/unit-key jt-props/predefined-units)))
 
 (s/fdef offset-time
-  :args (s/cat :ts inst?
+  :args (s/cat :ts instant-spec
                :offset-amt nat-int?
                :offset-unit valid-units)
-  :ret inst?)
+  :ret instant-spec)
 
 (defn offset-time
   "Given a java.util.Instant timestamp `ts` and the offset given by the
@@ -78,7 +79,7 @@
 
 (s/fdef str->time
   :args (s/cat :ts-str ::xs/timestamp)
-  :ret inst?)
+  :ret instant-spec)
 
 (defn str->time
   "Parse a string into a java.util.Instant timestamp."
@@ -86,7 +87,7 @@
   (wrap-parse-fn java-time/instant "timestamp" ts-str))
 
 (s/fdef time->str
-  :args (s/cat :ts inst?)
+  :args (s/cat :ts instant-spec)
   :ret ::xs/timestamp)
 
 (defn time->str
@@ -96,7 +97,7 @@
   (normalize (java-time/format ts)))
 
 (s/fdef time->millis
-  :args (s/cat :ts inst?)
+  :args (s/cat :ts instant-spec)
   :ret nat-int?)
 
 (defn time->millis
@@ -104,6 +105,10 @@
    number of milliseconds since January 1, 1970."
   [^Instant ts]
   (.toEpochMilli ts))
+
+(comment
+  (def t #inst "2021")
+  (normalize (java-time/format t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UUIDs
@@ -181,7 +186,7 @@
          :base-uuid (clj-uuid/v0)
          :squuid    (clj-uuid/v0)}))
 
-(s/def ::timestamp inst?)
+(s/def ::timestamp instant-spec)
 (s/def ::base-uuid uuid?)
 (s/def ::squuid uuid?)
 
@@ -242,7 +247,7 @@
   (wrap-parse-fn UUID/fromString "UUID" uuid-str))
 
 (s/fdef time->uuid
-  :args (s/cat :ts inst?)
+  :args (s/cat :ts instant-spec)
   :ret uuid?)
 
 (defn time->uuid
