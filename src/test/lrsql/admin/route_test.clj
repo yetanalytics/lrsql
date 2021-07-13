@@ -122,7 +122,7 @@
               "Authorization" (str "Bearer " jwt)}]
     (testing "credential creation"
       (let [{:keys [status body]}
-            (curl/put "http://0.0.0.0:8080/admin/creds"
+            (curl/post "http://0.0.0.0:8080/admin/creds"
                       {:headers hdr
                        :body (String. (u/write-json
                                        {"scopes" ["all" "all/read"]}))})
@@ -145,7 +145,7 @@
                    (first (u/parse-json body :object? false))))))
         (testing "and updating"
           (let [{:keys [status body]}
-                (curl/post
+                (curl/put
                  "http://0.0.0.0:8080/admin/creds"
                  {:headers hdr
                   :body (String.

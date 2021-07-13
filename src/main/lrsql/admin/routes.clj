@@ -38,13 +38,13 @@
 (defn admin-cred-routes
   [common-interceptors jwt-secret jwt-leeway]
   #{;; Create new API key pair w/ scope set
-    ["/admin/creds" :put (conj common-interceptors
+    ["/admin/creds" :post (conj common-interceptors
                                (ci/validate-params {:scopes? true})
                                (ci/validate-jwt jwt-secret jwt-leeway)
                                ci/create-api-keys)
      :route-name :lrsql.admin.creds/put]
     ;; Create or update new keys w/ scope set
-    ["/admin/creds" :post (conj common-interceptors
+    ["/admin/creds" :put (conj common-interceptors
                                 (ci/validate-params {:key-pair? true
                                                      :scopes?   true})
                                 (ci/validate-jwt jwt-secret jwt-leeway)
