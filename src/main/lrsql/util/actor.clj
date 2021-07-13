@@ -4,7 +4,7 @@
 ;; NOTE: Actors and Groups are encoded without any intention of being parsed
 ;; back, hence this sort of simple encoding is sufficient.
 (defn actor->ifi
-  "Returns string of the format \"<ifi-type>::<ifi-value>\".
+  "Returns string of the format `<ifi-type>::<ifi-value>`.
    Returns `nil` if `actor` doesn't have an IFI (e.g. Anonymous Group)."
   [actor]
   (let [{?mbox    "mbox"

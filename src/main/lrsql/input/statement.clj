@@ -363,7 +363,7 @@
           (fn [stmt-in sha]
             (let [att     (sha-att-m sha)
                   stmt-id (-> stmt-in :statement-input :statement-id)
-                  att-in  (i-at/attachment-insert-input
+                  att-in  (i-at/insert-attachment-input
                            stmt-id
                            att)]
               (update stmt-in

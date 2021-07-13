@@ -16,15 +16,20 @@
   :ret ds/document-command-res-spec)
 
 (defn insert-document!
-  "Insert a new document into the DB. Returns an empty map."
+  "Insert a new document into the DB. Returns an empty map. If the document
+   already exists, does nothing; to update existing documents, use
+   `upsert-document!` instead."
   [tx {:keys [table] :as input}]
   (case table
     :state-document
-    (f/insert-state-document! tx input)
+    (when-not (f/query-state-document-exists tx input)
+      (f/insert-state-document! tx input))
     :agent-profile-document
-    (f/insert-agent-profile-document! tx input)
+    (when-not (f/query-agent-profile-document-exists tx input)
+      (f/insert-agent-profile-document! tx input))
     :activity-profile-document
-    (f/insert-activity-profile-document! tx input)
+    (when-not (f/query-activity-profile-document-exists tx input)
+      (f/insert-activity-profile-document! tx input))
     ;; Else
     (throw-invalid-table-ex "insert-document!" input))
   {})
