@@ -40,9 +40,11 @@
 
 (defn header->jwt
   "Given an authentication header whose value is a JSON Web Token, return
-   the encoded JWT."
+   the encoded JWT. Returns nil if the header itself is nil or cannot be
+   parsed."
   [auth-header]
-  (second (re-matches #"Bearer\s+(.*)" auth-header)))
+  (when auth-header
+    (second (re-matches #"Bearer\s+(.*)" auth-header))))
 
 (defn jwt->account-id
   "Given the JSON Web Token `tok`, return the account ID if valid.
