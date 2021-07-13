@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS state_document (
   id             UUID NOT NULL PRIMARY KEY,
   state_id       VARCHAR(255) NOT NULL,
   activity_iri   VARCHAR(255) NOT NULL,
-  agent_ifi      JSON NOT NULL,
+  agent_ifi      VARCHAR(255) NOT NULL,
   registration   UUID DEFAULT NULL,
   last_modified  TIMESTAMP NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
