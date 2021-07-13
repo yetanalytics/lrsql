@@ -105,6 +105,11 @@
 (declare query-agent-profile-document)
 (declare query-activity-profile-document)
 
+;; Document Existence
+(declare query-state-document-exists)
+(declare query-agent-profile-document-exists)
+(declare query-activity-profile-document-exists)
+
 ;; Document IDs
 (declare query-state-document-ids)
 (declare query-agent-profile-document-ids)

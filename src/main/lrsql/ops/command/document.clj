@@ -22,13 +22,13 @@
   [tx {:keys [table] :as input}]
   (case table
     :state-document
-    (when-not (f/query-state-document tx input)
+    (when-not (f/query-state-document-exists tx input)
       (f/insert-state-document! tx input))
     :agent-profile-document
-    (when-not (f/query-agent-profile-document tx input)
+    (when-not (f/query-agent-profile-document-exists tx input)
       (f/insert-agent-profile-document! tx input))
     :activity-profile-document
-    (when-not (f/query-activity-profile-document tx input)
+    (when-not (f/query-activity-profile-document-exists tx input)
       (f/insert-activity-profile-document! tx input))
     ;; Else
     (throw-invalid-table-ex "insert-document!" input))
