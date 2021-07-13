@@ -9,12 +9,12 @@
 ;; Attachment Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef attachment-insert-input
+(s/fdef insert-attachment-input
   :args (s/cat :statement-id ::c/statement-id
                :attachment ::ss/attachment)
   :ret ::as/attachment-input)
 
-(defn attachment-insert-input
+(defn insert-attachment-input
   "Given `statement-id` and `attachment`, construct an entry in the
    `:stmt-stmt-inputs` vec in the `insert-statement!` input param map.
    `statement-id` will serve as a foreign key reference in the DB."
