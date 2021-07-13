@@ -43,6 +43,7 @@
           pass    (-> config :api-secret-default)]
       (assert-config ::cs/lrs "LRS" config)
       (init/init-hugsql-adapter!)
+      (init/init-settable-params! db-type)
       (init/init-hugsql-fns! db-type)
       (init/create-tables! conn)
       (init/insert-default-creds! conn uname pass)

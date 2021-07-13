@@ -14,7 +14,18 @@
 
   (jdbc/execute! ds ["SET TRACE_LEVEL_FILE 0"])
   (jdbc/execute! ds ["SET TRACE_LEVEL_FILE 2"])
+
+  (def stmt
+    {"id"     "5c9cbcb0-18c0-46de-bed1-c622c03163a1"
+     "actor"  {"mbox"       "mailto:sample.foo@example.com"
+               "objectType" "Agent"}
+     "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
+               "display" {"en-US" "answered"}}
+     "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
   
+  (lrsp/-store-statements lrs {} [stmt] [])
+  (lrsp/-get-statements lrs {} {:statementId "5c9cbcb0-18c0-46de-bed1-c622c03163a1"} #{})
+
   (do
     (doseq [cmd [;; Drop credentials table
                  "DROP TABLE IF EXISTS credential_to_scope"
@@ -34,4 +45,5 @@
                  "DROP TABLE IF EXISTS xapi_statement"]]
       (jdbc/execute! ds [cmd]))
 
-    (component/stop sys')))
+    (component/stop sys'))
+  )

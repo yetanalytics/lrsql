@@ -12,7 +12,7 @@
 ;; Statement Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- prepare-input
+#_(defn- prepare-input
   "Prepare the input for insertion. In particular, convert the payload into a
    JSON string."
   [input]
@@ -38,7 +38,7 @@
                      :extant-statement old-stmt
                      :statement        new-stmt}))))
       (do
-        (f/insert-statement! tx (prepare-input input))
+        (f/insert-statement! tx input #_(prepare-input input))
         (when (:voiding? input) (f/void-statement! tx {:statement-id sref-id}))
         stmt-id))))
 
@@ -53,8 +53,8 @@
           {old-name "name"}    old-actor
           {new-name "name"}    new-actor]
       (when-not (= old-name new-name)
-        (f/update-actor! tx (prepare-input input))))
-    (f/insert-actor! tx (prepare-input input))))
+        (f/update-actor! tx input #_(prepare-input input))))
+    (f/insert-actor! tx input #_(prepare-input input))))
 
 (defn- insert-activity!
   [tx input]
@@ -66,8 +66,8 @@
       (when-not (= old-activ new-activ)
         (let [activity' (au/merge-activities old-activ new-activ)
               input'    (assoc input :payload activity')]
-          (f/update-activity! tx (prepare-input input')))))
-    (f/insert-activity! tx (prepare-input input))))
+          (f/update-activity! tx input' #_(prepare-input input')))))
+    (f/insert-activity! tx input #_(prepare-input input))))
 
 (defn- insert-attachment!
   [tx input]
