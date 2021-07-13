@@ -23,7 +23,7 @@
     (is (nil? (check-validate `i-stmt/insert-descendant-input)))
     (is (nil? (check-validate `i-stmt/add-insert-descendant-inputs 10))))
   (testing "attachment insertion inputs"
-    (is (nil? (check-validate `i-at/attachment-insert-input)))
+    (is (nil? (check-validate `i-at/insert-attachment-input)))
     (is (nil? (check-validate `i-stmt/add-insert-attachment-inputs 10))))
   (testing "document insertion inputs"
     (is (nil? (check-validate `i-doc/insert-document-input)))))
