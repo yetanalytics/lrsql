@@ -103,7 +103,8 @@ CREATE TABLE IF NOT EXISTS state_document (
   last_modified  TIMESTAMP NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  contents       BINARY NOT NULL
+  contents       BINARY NOT NULL,
+  UNIQUE (state_id, activity_iri, agent_ifi, registration)
 )
 
 -- :name create-agent-profile-document-table!
@@ -116,7 +117,8 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
   last_modified  TIMESTAMP NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  contents       BINARY NOT NULL
+  contents       BINARY NOT NULL,
+  UNIQUE (profile_id, agent_ifi)
 )
 
 -- :name create-activity-profile-document-table!
@@ -129,7 +131,8 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
   last_modified  TIMESTAMP NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  contents       BINARY NOT NULL
+  contents       BINARY NOT NULL,
+  UNIQUE (profile_id, activity_iri)
 )
 
 /* Admin Account Table */
