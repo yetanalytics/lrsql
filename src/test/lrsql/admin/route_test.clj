@@ -41,7 +41,13 @@
         (curl/post "http://0.0.0.0:8080/admin/account/create"
                    (assoc data :body ""))
         (catch clojure.lang.ExceptionInfo e
-          ;; Bad Request status code
+          ;; Bad Request status code (invalid body)
+          (is (= 400 (-> e ex-data :status)))))
+      (try
+        (curl/post "http://0.0.0.0:8080/admin/account/create"
+                   (assoc data :headers nil))
+        (catch clojure.lang.ExceptionInfo e
+          ;; Bad Request status code (missing header and jwt)
           (is (= 400 (-> e ex-data :status))))))
     (testing "admin account login"
       (let [{:keys [status body]}
