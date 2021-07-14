@@ -1,69 +1,33 @@
 (ns lrsql.init
   "Initialize HugSql functions and state."
   (:require [clojure.string :as cstr]
-            [xapi-schema.spec.regex :as xsr]
-            [next.jdbc.date-time :as next-dt]
-            [next.jdbc.prepare :refer [SettableParameter]]
-            [next.jdbc.result-set :refer [ReadableColumn]]
             [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.functions :as f]
+            [lrsql.interface :as inf]
             [lrsql.input.admin :as admin-input]
             [lrsql.input.auth  :as auth-input]
             [lrsql.ops.command.admin :as admin-cmd]
-            [lrsql.ops.command.auth :as auth-cmd]
-            [lrsql.util :as u])
-  (:import [java.sql PreparedStatement ResultSetMetaData]))
+            [lrsql.ops.command.auth :as auth-cmd]))
 
 (defn init-hugsql-adapter!
   "Initialize HugSql to use the next-jdbc adapter."
   []
   (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc)))
 
-(defmacro byte-array-class
-  []
-  (class (byte-array [])))
-
 (defn init-settable-params!
+  "Set conversion functions for DB reading and writing depending on `db-type`."
   [db-type]
-  ;; Any time queried from a DB will now be read as an Instant.
-  (next-dt/read-as-instant)
-
-  ;; JSON data will always be stored as a byte array
-  ;; TODO: Update for postgres
-  (extend-protocol SettableParameter
-    clojure.lang.IPersistentMap
-    (set-parameter [^clojure.lang.IPersistentMap m ^PreparedStatement s ^long i]
-      (.setBytes s i (u/write-json m))))
-  (extend-protocol ReadableColumn
-    (byte-array-class)
-    (read-column-by-label [^"[B" b label]
-      (if (#{"payload"} label) (u/parse-json b) b))
-    (read-column-by-index [^"[B" b rsmeta i]
-      (if (#{"payload"} (.getColumnLabel ^ResultSetMetaData rsmeta i))
-        (u/parse-json b)
-        b)))
-
-  ;; SQLite does not support UUIDs, timestamps, or even booleans natively
-  (when (#{"sqlite"} db-type)
-    (extend-protocol SettableParameter
-      java.util.UUID
-      (set-parameter [^java.util.UUID u ^PreparedStatement s ^long i]
-        (.setString s i (u/uuid->str u)))
-      java.time.Instant
-      (set-parameter [^java.time.Instant ts ^PreparedStatement s ^long i]
-        (.setString s i (u/time->str ts)))
-      java.lang.Boolean
-      (set-parameter [^java.lang.Boolean b ^PreparedStatement s ^long i]
-        (.setInt s i (if b 1 0))))
-    (extend-protocol ReadableColumn
-      java.sql.Blob
-      (read-column-by-label [^java.sql.Blob b])
-      java.lang.String
-      (read-column-by-label [^java.lang.String s _]
-        (if (re-matches xsr/UuidRegEx s) (u/str->uuid s) s))
-      (read-column-by-index [^java.lang.String s _ _]
-        (if (re-matches xsr/UuidRegEx s) (u/str->uuid s) s)))))
+  (cond
+    ;; H2
+    (#{"h2" "h2:mem"} db-type)
+    (do (inf/set-h2-read)
+        (inf/set-h2-write))
+    
+    ;; SQLite
+    (#{"sqlite"} db-type)
+    (do (inf/set-sqlite-read)
+        (inf/set-sqlite-write))))
 
 ;; TODO: instead of using `db-type'`, we could rely entirely on the paths
 ;; in deps.edn
