@@ -3,8 +3,8 @@
             [xapi-schema.spec :as xs]
             [lrsql.spec.util :refer [remove-nil-vals]]))
 
-;; TODO: Add SQLite and Postgres at the very least
-(s/def ::db-type #{"h2" "h2:mem"})
+;; TODO: Add Postgres
+(s/def ::db-type #{"h2" "h2:mem" "sqlite"})
 (s/def ::db-name string?)
 (s/def ::db-host string?)
 (s/def ::db-port nat-int?)
@@ -21,9 +21,10 @@
          (s/or :no-jdbc-url
                (s/keys :req-un [::db-type
                                 ::db-name
-                                ::db-host
-                                ::db-port]
+                                ]
                        :opt-un [::db-properties
+                                ::db-host
+                                ::db-port
                                 ::db-user
                                 ::db-password])
                :jdbc-url

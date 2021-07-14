@@ -4,10 +4,11 @@
              :db-name   "example"
              :db-host   "localhost"
              :db-port   8080}
-   :dev     {:db-type   "h2"
-             :db-name   "example"
-             :db-host   "localhost"
-             :db-port   8080}
+   :dev     {:db-type   "sqlite"
+             :db-name   "example.sqlite"
+            ;;  :db-host   "localhost"
+            ;;  :db-port   8080
+             }
    :default {:db-type       #or [#env LRSQL_DB_TYPE "h2:mem"]
              :db-name       #or [#env LRSQL_DB_NAME "example"]
              :db-host       #or [#env LRSQL_DB_HOST "localhost"]
