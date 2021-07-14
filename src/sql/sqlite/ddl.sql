@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
 CREATE TABLE IF NOT EXISTS admin_account (
   id       TEXT NOT NULL PRIMARY KEY, -- uuid
   username TEXT NOT NULL UNIQUE,      -- string
-  passhash TEXT NOT NULL,             -- string
+  passhash TEXT NOT NULL              -- string
 )
 
 /* Credential Tables */

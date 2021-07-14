@@ -18,7 +18,7 @@ WHERE statement_id = :statement-id
 /* Multi-statement query */
 
 -- :frag actors-table-frag
-WITH actors AS (
+actors AS (
   SELECT stmt_actor.actor_ifi, stmt_actor.statement_id
   FROM statement_to_actor stmt_actor
   WHERE stmt_actor.actor_ifi = :actor-ifi
@@ -26,7 +26,7 @@ WITH actors AS (
 )
 
 -- :frag activities-table-frag
-WITH activs AS (
+activs AS (
   SELECT stmt_activ.activity_iri, stmt_activ.statement_id
   FROM statement_to_activity stmt_activ
   WHERE stmt_activ.activity_iri = :activity-iri
@@ -44,8 +44,6 @@ WHERE stmt.is_voided = 0
 --~ (when (:until params)        "AND stmt.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt.registration = :registration")
---~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
-LIMIT :limit
 
 -- :frag stmt-ref-subquery-frag
 SELECT stmt_a.id, stmt_a.payload
@@ -60,17 +58,16 @@ WHERE 1
 --~ (when (:until params)        "AND stmt_a.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt_d.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt_d.registration = :registration")
---~ (if (:ascending? params) "ORDER BY stmt_a.id ASC" "ORDER BY stmt_a.id DESC")
-LIMIT :limit
 
 -- :name query-statements
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
---~ (when (:actor-ifi params)    ":frag:actors-table-frag")
---~ (when (:activity-iri params) ":frag:activities-table-frag")
+--~ (when (and (:actor-ifi params) (:activity-iri params)) "WITH :frag:actors-table-frag, :frag:activities-table-frag")
+--~ (when (and (:actor-ifi params) (not (:activity-iri params))) "WITH :frag:actors-table-frag")
+--~ (when (and (not (:actor-ifi params)) (:activity-iri params)) "WITH :frag:activities-table-frag")
 SELECT id, payload FROM
-((:frag:stmt-no-ref-subquery-frag) UNION (:frag:stmt-ref-subquery-frag))
+(:frag:stmt-no-ref-subquery-frag UNION :frag:stmt-ref-subquery-frag)
 --~ (if (:ascending? params) "ORDER BY id ASC" "ORDER BY id DESC")
 LIMIT :limit
 

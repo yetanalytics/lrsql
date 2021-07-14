@@ -103,7 +103,7 @@
       ;; TODO: the only place where timestamps are queried is in document
       ;; queries, where they are immediately re-converted to strings.
       ;; Should this be skipped then?
-      (#{"last_modified" label})
+      (#{"last_modified"} label)
       (u/str->time s)
       :else
       s)))
@@ -111,7 +111,7 @@
 (defn- parse-sqlite-int
   [n label]
   (let [label (cstr/lower-case label)]
-    (if (#{"is_voided" label})
+    (if (#{"is_voided"} label)
       ;; Booleans
       (not (zero? n))
       ;; Integers
