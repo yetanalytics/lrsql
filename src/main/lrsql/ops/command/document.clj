@@ -91,6 +91,8 @@
         ?new-json (and (json-content-type? new-ctype)
                        (doc->json input))]
     (if (and ?old-json ?new-json)
+      ;; Write the map to binary directly since we need to get the length
+      ;; of binary data.
       (let [new-data  (->> (merge ?old-json ?new-json)
                            u/write-json)
             new-input (-> input

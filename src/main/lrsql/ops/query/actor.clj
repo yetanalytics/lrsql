@@ -4,7 +4,6 @@
             [lrsql.functions :as f]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.actor :as as]
-            [lrsql.util :as u]
             [lrsql.util.actor :as au]))
 
 (s/fdef query-agent
@@ -17,9 +16,7 @@
    query Groups."
   [tx input]
   ;; If agent is not found, return the original input
-  (let [agent (if-some [result (some-> (f/query-actor tx input)
-                                       :payload
-                                       u/parse-json)]
+  (let [agent (if-some [{result :payload} (f/query-actor tx input)]
                 result
                 (:payload input))]
     {:person (->> agent au/actor->person)}))

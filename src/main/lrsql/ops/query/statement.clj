@@ -13,13 +13,7 @@
 
 (defn- query-res->statement
   [format ltags query-res]
-  #_(let [payload (:payload query-res)]
-    (clojure.tools.logging/errorf "Statement Type: %s" (type payload))
-    (us/format-statement (u/parse-json payload) format ltags))
-  (-> query-res
-      :payload
-      u/parse-json
-      (us/format-statement format ltags)))
+  (-> query-res :payload (us/format-statement format ltags)))
 
 (defn- conform-attachment-res
   [{att-sha      :attachment_sha
