@@ -33,7 +33,7 @@ DELETE FROM activity_profile_document
 WHERE profile_id = :profile-id
 AND activity_iri = :activity-iri
 
-/* Admin Account */
+/* Admin Accounts + Credentials */
 
 -- :name delete-admin-account!
 -- :command :execute
@@ -41,23 +41,6 @@ AND activity_iri = :activity-iri
 -- :doc Delete the admin account associated with `:account-id`.
 DELETE FROM admin_account
 WHERE id = :account-id
-
-/* Credentials */
-
-/*
-  Note: Due to a bug in sqlite-jdbc, we must separate out each delete
-  command into its own separate function.
-  Link: https://github.com/xerial/sqlite-jdbc/issues/277
-*/
-
--- :name delete-credential-scope!
--- :command :execute
--- :result :affected
--- :doc Delete the specified credential scope.
-DELETE FROM credential_to_scope
-WHERE api_key = :api-key
-AND secret_key = :secret-key
-AND scope = :scope
 
 -- :name delete-credential!
 -- :command :execute
@@ -68,37 +51,11 @@ WHERE account_id = :account-id
 AND api_key = :api-key
 AND secret_key = :secret-key
 
--- :name delete-credential-scopes!
+-- :name delete-credential-scope!
 -- :command :execute
 -- :result :affected
--- :doc Delete all credential scopes associated with `:account-id` and a key pair.
+-- :doc Delete the specified credential scope.
 DELETE FROM credential_to_scope
-WHERE (api_key, secret_key) IN (
-  SELECT cred.api_key, cred.secret_key
-  FROM lrs_credential AS cred
-  INNER JOIN credential_to_scope
-    ON cred.api_key = :api-key
-    AND cred.secret_key = :secret-key
-  WHERE account_id = :account-id
-)
-
--- :name delete-admin-credentials!
--- :command :execute
--- :result :affected
--- :doc Delete all credentials and their scopes associated with `account-id`.
-DELETE FROM lrs_credential
-WHERE account_id = :account-id
-
--- :name delete-admin-credential-scopes!
--- :command :execute
--- :result :affected
--- :doc Delete all credential scopes associated with `:account-id`.
-DELETE FROM credential_to_scope
-WHERE (api_key, secret_key) IN (
-  SELECT cred.api_key, cred.secret_key
-  FROM lrs_credential AS cred
-  INNER JOIN credential_to_scope AS cts
-    ON cred.api_key = cts.api_key
-    AND cred.secret_key = cts.secret_key
-  WHERE account_id = :account-id
-)
+WHERE api_key = :api-key
+AND secret_key = :secret-key
+AND scope = :scope

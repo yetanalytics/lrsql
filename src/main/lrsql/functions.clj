@@ -6,8 +6,11 @@
 ;; reference.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Create Tables
+;; DDL
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; DB Properties
+(declare ensure-foreign-keys!) ; SQLite Only
 
 ;; Statement + Attachment Tables
 (declare create-statement-table!)

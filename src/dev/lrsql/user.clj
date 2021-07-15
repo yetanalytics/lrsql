@@ -4,7 +4,8 @@
             [lrsql.system :as system]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.admin.protocol :as adp]))
+            [lrsql.admin.protocol :as adp]
+            [lrsql.init :as init]))
 
 (comment
   (def sys (system/system :dev-sqlite))
@@ -12,6 +13,15 @@
 
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
+
+  (.executeUpdate
+   (.prepareStatement (.getConnection ds)
+                      "
+                      CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
+                      CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri);
+                      CREATE INDEX IF NOT EXISTS registration_idex ON xapi_statement(registration)
+                      "))
+
 
   (def stmt-1
     {"id"     "5c9cbcb0-18c0-46de-bed1-c622c03163a1"
@@ -41,11 +51,29 @@
                          :limit 1}
                         #{})
 
+  (jdbc/execute! ds ["PRAGMA index_list(xapi_statement)"])
+
+  (jdbc/execute-batch! ds
+                       "
+                        CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
+                        CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri);
+                        CREATE INDEX IF NOT EXISTS registration_idex ON xapi_statement(registration)
+                        "
+                       [[] [] []]
+                       {})
+
   (adp/-create-account lrs "DonaldChamberlin123" "iLoveSql")
 
-  (adp/-authenticate-account lrs "DonaldChamberlin123" "iLoveSql")
+  (def account-id
+    (:result (adp/-authenticate-account lrs "DonaldChamberlin123" "iLoveSql")))
 
-  (adp/-delete-account lrs (:result (adp/-authenticate-account lrs "DonaldChamberlin123" "iLoveSql")))
+  (adp/-create-api-keys lrs account-id #{"all"})
+  
+  (jdbc/execute! ds ["SELECT * FROM admin_account"])
+  (jdbc/execute! ds ["SELECT * FROM lrs_credential"])
+  (jdbc/execute! ds ["SELECT * FROM credential_to_scope"])
+  
+  (adp/-delete-account lrs account-id)
 
   (jdbc/execute! ds ["WITH actors AS (
                       SELECT stmt_actor.actor_ifi, stmt_actor.statement_id

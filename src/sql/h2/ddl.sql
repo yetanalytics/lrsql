@@ -156,7 +156,9 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
   api_key    VARCHAR(255) NOT NULL,
   secret_key VARCHAR(255) NOT NULL,
   account_id UUID NOT NULL,
-  FOREIGN KEY (account_id) REFERENCES admin_account(id)
+  FOREIGN KEY (account_id)
+    REFERENCES admin_account(id)
+    ON DELETE CASCADE
 )
 
 -- :name create-credential-to-scope-table!
@@ -174,5 +176,7 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
                   'profile', -- unimplemented
                   'all/read',
                   'all'), -- enum is nullable
-  FOREIGN KEY (api_key, secret_key) REFERENCES lrs_credential(api_key, secret_key)
+  FOREIGN KEY (api_key, secret_key)
+    REFERENCES lrs_credential(api_key, secret_key)
+    ON DELETE CASCADE
 )

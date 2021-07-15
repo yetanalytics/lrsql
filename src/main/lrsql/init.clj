@@ -1,7 +1,6 @@
 (ns lrsql.init
   "Initialize HugSql functions and state."
-  (:require [clojure.string :as cstr]
-            [hugsql.core :as hugsql]
+  (:require [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.functions :as f]
             [lrsql.interface :as inf]
@@ -31,24 +30,35 @@
 
 ;; TODO: instead of using `db-type'`, we could rely entirely on the paths
 ;; in deps.edn
+;; TODO: Adding the unbinding seems to massively slow down everything...
 (defn init-hugsql-fns!
   "Define the HugSql functions defined in the `hugsql.functions` ns.
    The .sql files that HugSql reads from will depend on `db-type`."
   [db-type]
   ;; Hack the namespace binding or else the hugsql fn namespaces
   ;; will be whatever ns `init-hugsql-fns!` was called from.
-  (let [db-type' (cstr/replace db-type #":.*" "")] ; h2:mem -> h2
+  (let [db-type'   (if (#{"h2:mem"} db-type) "h2" db-type)]
     (binding [*ns* (create-ns `lrsql.functions)]
-      ;; Follow the CRUD acronym: Create, Read, Update, Delete
-      (hugsql/def-db-fns (str db-type' "/ddl.sql"))
-      (hugsql/def-db-fns (str db-type' "/insert.sql"))
-      (hugsql/def-db-fns (str db-type' "/query.sql"))
-      (hugsql/def-db-fns (str db-type' "/update.sql"))
-      (hugsql/def-db-fns (str db-type' "/delete.sql")))))
+      (let [fns (ns-publics *ns*)] ; map from fn syms to vars
+        ;; Reset function namespace before redefining
+        (dorun (map #(.unbindRoot (second %)) fns))
+        ;; Define HugSql functions
+        ;; Follow the CRUD acronym: Create, Read, Update, Delete
+        (hugsql/def-db-fns (str db-type' "/ddl.sql"))
+        (hugsql/def-db-fns (str db-type' "/insert.sql"))
+        (hugsql/def-db-fns (str db-type' "/query.sql"))
+        (hugsql/def-db-fns (str db-type' "/update.sql"))
+        (hugsql/def-db-fns (str db-type' "/delete.sql"))
+        ;; Define any remaining unbound fns as no-ops
+        (dorun (map #(intern *ns* (first %) identity)
+                    (filter #(-> % second bound? not) fns)))))))
 
-(defn create-tables!
+(defn init-ddl!
   "Execute SQL commands to create tables if they do not exist."
   [conn]
+  ;; Init properties
+  (f/ensure-foreign-keys! conn)
+  ;; Create tables
   (f/create-statement-table! conn)
   (f/create-actor-table! conn)
   (f/create-activity-table! conn)

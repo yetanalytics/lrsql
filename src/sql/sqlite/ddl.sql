@@ -1,3 +1,10 @@
+/* Pragmas */
+
+-- :name ensure-foreign-keys!
+-- :command :execute
+-- :doc Allow foreign keys. SQLite only.
+PRAGMA foreign_keys = ON
+
 /* Statement + Attachment Tables */
 
 -- :name create-statement-table!
@@ -10,10 +17,12 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   verb_iri     TEXT NOT NULL,                  -- iri string
   is_voided    INTEGER DEFAULT FALSE NOT NULL, -- boolean
   payload      BLOB NOT NULL                   -- json
-);
+)
+/* TODO: Re-add indexes for optimization (but w/ separate fns)
 CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
 CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri);
 CREATE INDEX IF NOT EXISTS registration_idex ON xapi_statement(registration)
+*/
 
 -- :name create-actor-table!
 -- :command :execute
@@ -161,7 +170,10 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
   api_key    TEXT NOT NULL,             -- hex string
   secret_key TEXT NOT NULL,             -- hex string
   account_id TEXT NOT NULL,             -- uuid
-  FOREIGN KEY (account_id) REFERENCES admin_account(id)
+  UNIQUE (api_key, secret_key),
+  FOREIGN KEY (account_id)
+    REFERENCES admin_account(id)
+    ON DELETE CASCADE
 )
 
 -- :name create-credential-to-scope-table!
@@ -181,5 +193,7 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
                          'all/read',
                          'all'
              )),                        -- enum
-  FOREIGN KEY (api_key, secret_key) REFERENCES lrs_credential(api_key, secret_key)
+  FOREIGN KEY (api_key, secret_key)
+    REFERENCES lrs_credential(api_key, secret_key)
+    ON DELETE CASCADE
 )

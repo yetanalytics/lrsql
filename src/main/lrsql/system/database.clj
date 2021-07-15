@@ -1,6 +1,6 @@
 (ns lrsql.system.database
   (:require [clojure.string :as cstr]
-            [clojure.walk :as w]
+            [clojure.walk :refer [keywordize-keys]]
             [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
@@ -15,7 +15,7 @@
   (->> (cstr/split prop-str #",")
        (mapv #(cstr/split % #":"))
        (into {})
-       w/keywordize-keys))
+       keywordize-keys))
 
 (defn- coerce-conn-config
   [conn-config]

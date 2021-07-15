@@ -45,7 +45,7 @@
       (init/init-hugsql-adapter!)
       (init/init-settable-params! db-type)
       (init/init-hugsql-fns! db-type)
-      (init/create-tables! conn)
+      (init/init-ddl! conn)
       (init/insert-default-creds! conn uname pass)
       (log/info "Starting new LRS")
       (assoc lrs :connection connection)))
