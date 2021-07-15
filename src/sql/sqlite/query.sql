@@ -63,7 +63,7 @@ WHERE 1
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
---~ (when (and (:actor-ifi params) (:activity-iri params)) "WITH :frag:actors-table-frag, :frag:activities-table-frag")
+--~ (when (and (:actor-ifi params) (:activity-iri params))       "WITH :frag:actors-table-frag, :frag:activities-table-frag")
 --~ (when (and (:actor-ifi params) (not (:activity-iri params))) "WITH :frag:actors-table-frag")
 --~ (when (and (not (:actor-ifi params)) (:activity-iri params)) "WITH :frag:activities-table-frag")
 SELECT id, payload FROM
