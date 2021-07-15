@@ -3,7 +3,8 @@
   (:require [com.stuartsierra.component :as component]
             [lrsql.system :as system]
             [next.jdbc :as jdbc]
-            [com.yetanalytics.lrs.protocol :as lrsp]))
+            [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.admin.protocol :as adp]))
 
 (comment
   (def sys (system/system :dev))
@@ -31,16 +32,21 @@
      "object" {"objectType" "StatementRef"
                "id"         "5c9cbcb0-18c0-46de-bed1-c622c03163a1"}})
 
-  (lrsp/-store-statements lrs {} [stmt-1 #_stmt-2] [])
+  (lrsp/-store-statements lrs {} [stmt-1 stmt-2] [])
   (lrsp/-get-statements lrs {} {:statementId "3f5f3c7d-c786-4496-a3a8-6d6e4461aa9d"} #{})
   (lrsp/-get-statements lrs
                         {}
-                        {
-                         :agent {"mbox" "mailto:sample.foo@example.com"}
+                        {:agent {"mbox" "mailto:sample.foo@example.com"}
                          :activity "http://www.example.com/tincan/activities/multipart"
                          :limit 1}
                         #{})
-  
+
+  (adp/-create-account lrs "DonaldChamberlin123" "iLoveSql")
+
+  (adp/-authenticate-account lrs "DonaldChamberlin123" "iLoveSql")
+
+  (adp/-delete-account lrs (:result (adp/-authenticate-account lrs "DonaldChamberlin123" "iLoveSql")))
+
   (jdbc/execute! ds ["WITH actors AS (
                       SELECT stmt_actor.actor_ifi, stmt_actor.statement_id
                       FROM statement_to_actor stmt_actor
@@ -69,10 +75,10 @@
                       )
                       ORDER BY id DESC
                       LIMIT ?"
-                      "mbox::mailt:example@gmail.com"
-                      "https://example.org"
-                      2])
-  
+                     "mbox::mailt:example@gmail.com"
+                     "https://example.org"
+                     2])
+
   (jdbc/execute! ds ["
                       WITH actors AS (
                       SELECT stmt_actor.actor_ifi, stmt_actor.statement_id

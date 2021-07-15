@@ -38,7 +38,7 @@
   []
   (extend-protocol ReadableColumn
     ;; Note: due to a long-standing bug, the byte array extension needs to come
-    ;; first: https://stackoverflow.com/questions/13924842/extend-clojure-protocol-to-a-primitive-array
+    ;; first: https://clojure.atlassian.net/browse/CLJ-1381#icft=CLJ-1381
 
     (Class/forName "[B") ; Byte arrays
     (read-column-by-label [^"[B" b ^String label]
@@ -82,7 +82,16 @@
   (extend-protocol SettableParameter
     UUID
     (set-parameter [^UUID u ^PreparedStatement s ^long i]
-      (.setString s i (u/uuid->str u)))
+      (try
+        (.setString s i (u/uuid->str u))
+        (catch Exception _
+          (throw (ex-info (format "Index %d out of bounds in PreparedStatement %s"
+                                  i
+                                  (.toString s))
+                          {:type ::cannot-set-string
+                           :uuid u
+                           :prepared-stmt s
+                           :long i})))))
     Instant
     (set-parameter [^Instant ts ^PreparedStatement s ^long i]
       (.setString s i (u/time->str ts)))

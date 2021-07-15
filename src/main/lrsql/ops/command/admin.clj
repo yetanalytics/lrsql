@@ -35,6 +35,7 @@
   "Delete the admin account and any associated credentials. Returns a map
    where `:result` is the account ID."
   [tx input]
+  (f/delete-admin-credential-scopes! tx input)
   (f/delete-admin-credentials! tx input)
   (f/delete-admin-account! tx input)
   {:result (:account-id input)})
