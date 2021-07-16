@@ -8,7 +8,7 @@
             [lrsql.init :as init]))
 
 (comment
-  (def sys (system/system :dev-h2-mem))
+  (def sys (system/system :dev-sqlite))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
@@ -68,7 +68,7 @@
     (:result (adp/-authenticate-account lrs "DonaldChamberlin123" "iLoveSql")))
 
   (adp/-create-api-keys lrs account-id #{"all"})
-
+  
   (jdbc/execute! ds ["SELECT * FROM admin_account"])
   (jdbc/execute! ds ["SELECT * FROM lrs_credential"])
   (jdbc/execute! ds ["SELECT * FROM credential_to_scope"])

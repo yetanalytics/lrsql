@@ -30,10 +30,10 @@
    :exclusions [org.clojure/clojure]}}
   :aliases
   {:db-h2
-   {:extra-paths ["src/sql/h2"]
+   {:extra-paths ["src/sql"]
     :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
   :db-sqlite
-  {:extra-paths ["src/sql/sqlite"]
+  {:extra-paths ["src/sql"]
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
    :test
    {:extra-paths ["src/test"]
