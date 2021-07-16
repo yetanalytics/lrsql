@@ -2,5 +2,5 @@
 ;;; For more information see (info "(emacs) Directory Variables")
 
 ((nil .
-      ((cider-clojure-cli-global-options . "-A:db-h2:test")
+      ((cider-clojure-cli-global-options . "-A:db-h2:db-sqlite:test")
        )))
