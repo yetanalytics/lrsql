@@ -28,30 +28,29 @@
     (do (inf/set-sqlite-read)
         (inf/set-sqlite-write))))
 
-;; TODO: instead of using `db-type'`, we could rely entirely on the paths
-;; in deps.edn
-;; TODO: Adding the unbinding seems to massively slow down everything...
 (defn init-hugsql-fns!
   "Define the HugSql functions defined in the `hugsql.functions` ns.
-   The .sql files that HugSql reads from will depend on `db-type`."
-  [db-type]
+   The .sql files that HugSql reads from will depend on what src/sql/
+   directory is loaded in the classpath."
+  []
   ;; Hack the namespace binding or else the hugsql fn namespaces
   ;; will be whatever ns `init-hugsql-fns!` was called from.
-  (let [db-type'   (if (#{"h2:mem"} db-type) "h2" db-type)]
-    (binding [*ns* (create-ns `lrsql.functions)]
-      (let [fns (ns-publics *ns*)] ; map from fn syms to vars
-        ;; Reset function namespace before redefining
-        (dorun (map #(.unbindRoot (second %)) fns))
-        ;; Define HugSql functions
-        ;; Follow the CRUD acronym: Create, Read, Update, Delete
-        (hugsql/def-db-fns (str db-type' "/ddl.sql"))
-        (hugsql/def-db-fns (str db-type' "/insert.sql"))
-        (hugsql/def-db-fns (str db-type' "/query.sql"))
-        (hugsql/def-db-fns (str db-type' "/update.sql"))
-        (hugsql/def-db-fns (str db-type' "/delete.sql"))
-        ;; Define any remaining unbound fns as no-ops
-        (dorun (map #(intern *ns* (first %) identity)
-                    (filter #(-> % second bound? not) fns)))))))
+  (binding [*ns* (create-ns `lrsql.functions)]
+    (let [fns (ns-publics *ns*)] ; map from fn syms to vars
+      ;; Define HugSql functions.
+      ;; Follow the CRUD acronym: Create, Read, Update, Delete
+      ;; Note: we have already ensured that only one sql dir exists
+      ;; in database.clj.
+      (hugsql/def-db-fns "ddl.sql")
+      (hugsql/def-db-fns "insert.sql")
+      (hugsql/def-db-fns "query.sql")
+      (hugsql/def-db-fns "update.sql")
+      (hugsql/def-db-fns "delete.sql")
+      ;; Define any remaining unbound fns as no-ops.
+      ;; Note: undefined behavior may result if this function is called
+      ;; multiple times and db fns were added or removed.
+      (dorun (map #(intern *ns* (first %) identity)
+                  (filter #(-> % second bound? not) fns))))))
 
 (defn init-ddl!
   "Execute SQL commands to create tables if they do not exist."
