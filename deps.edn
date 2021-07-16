@@ -47,4 +47,7 @@
                   :sha "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
                   :exclusions [org.clojure/data.json]}}
     :exec-fn cognitect.test-runner.api/test
-    :exec-args {:dirs ["src/test"]}}}}
+    :exec-args {:dirs ["src/test"]}}
+   :uberjar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
+             :exec-fn hf.depstar/uberjar
+             :exec-args {:aot true}}}}

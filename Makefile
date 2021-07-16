@@ -21,3 +21,6 @@ ephemeral:
         LRSQL_SEED_API_KEY=username \
         LRSQL_SEED_API_SECRET=password \
         clojure -Mdb-h2 -m lrsql.main
+
+lrsql.jar:
+	clojure -X:uberjar :jar lrsql.jar :main-class lrsql.main :aliases '[:db-h2]'
