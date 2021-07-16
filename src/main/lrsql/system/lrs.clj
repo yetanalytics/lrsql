@@ -163,7 +163,7 @@
         (let [input (auth-input/query-credential-scopes-input key-pr)]
           (jdbc/with-transaction [tx conn]
             (auth-q/query-credential-scopes tx input)))
-        :com.yetanalytics.lrs.auth/forbidden)))
+        {:result :com.yetanalytics.lrs.auth/forbidden})))
   (-authorize
     [_lrs ctx auth-identity]
     (auth-util/authorize-action ctx auth-identity))
