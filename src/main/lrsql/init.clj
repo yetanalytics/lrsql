@@ -20,13 +20,13 @@
   (cond
     ;; H2
     (#{"h2" "h2:mem"} db-type)
-    (do (inf/set-h2-read)
-        (inf/set-h2-write))
+    (do (inf/set-h2-read!)
+        (inf/set-h2-write!))
     
     ;; SQLite
     (#{"sqlite"} db-type)
-    (do (inf/set-sqlite-read)
-        (inf/set-sqlite-write))))
+    (do (inf/set-sqlite-read!)
+        (inf/set-sqlite-write!))))
 
 (defn init-hugsql-fns!
   "Define the HugSql functions defined in the `hugsql.functions` ns.

@@ -22,7 +22,7 @@
   (let [label (cstr/lower-case label)]
     (if (#{"payload"} label) (u/parse-json b) b)))
 
-(defn- write-as-bytes
+(defn- set-json-write!
   "Extend the SettableParameter protocol to write Clojure maps (i.e. JSON/EDN)
    as bytes."
   []
@@ -31,7 +31,7 @@
     (set-parameter [^IPersistentMap m ^PreparedStatement s ^long i]
       (.setBytes s i (u/write-json m)))))
 
-(defn- read-as-json
+(defn- set-json-read!
   "Extend the ReadableColumn protocol to read `payload` bytes as Clojure maps
    (i.e. JSON/EDN). All instances of java.sql.Blob are converted to byte
    arrays if they are not JSON."
@@ -57,41 +57,41 @@
 ;; H2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn set-h2-write
+(defn set-h2-write!
+  "Set write behavior for H2 DBs:
+   - Write JSON to byte arrays"
   []
   ;; JSON
-  (write-as-bytes))
+  (set-json-write!))
 
-(defn set-h2-read
+(defn set-h2-read!
+  "Set read behavior for H2 DBs:
+   - Read JSON from byte arrays (if the column label is `payload`)
+   - Read java.time.Instants from java.sql.Dates"
   []
   ;; Timestamps
   (read-as-instant)
   ;; JSON
-  (read-as-json))
+  (set-json-read!))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; SQLite
 ;; SQLite does not support UUIDs, timestamps, or even booleans natively
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn set-sqlite-write
+(defn set-sqlite-write!
+  "Set write behavior for SQLite DBs:
+   - Writing JSON as BLOBs
+   - Writing UUIDs and Instants as TEXTs
+   - Writing Booleans as INTEGERs"
   []
   ;; JSON
-  (write-as-bytes)
+  (set-json-write!)
   ;; SQLite-specific
   (extend-protocol SettableParameter
     UUID
     (set-parameter [^UUID u ^PreparedStatement s ^long i]
-      (try
-        (.setString s i (u/uuid->str u))
-        (catch Exception _
-          (throw (ex-info (format "Index %d out of bounds in PreparedStatement %s"
-                                  i
-                                  (.toString s))
-                          {:type ::cannot-set-string
-                           :uuid u
-                           :prepared-stmt s
-                           :long i})))))
+      (.setString s i (u/uuid->str u)))
     Instant
     (set-parameter [^Instant ts ^PreparedStatement s ^long i]
       (.setString s i (u/time->str ts)))
@@ -126,10 +126,15 @@
       ;; Integers
       n)))
 
-(defn set-sqlite-read
+(defn set-sqlite-read!
+  "Set read behavior for SQLite DBs:
+   - Reading JSON from BLOBs
+   - Reading UUIDs and Instants from TEXTs
+   - Reading Booleans from INTEGERs
+   All of the above behavior depends on the label of the column being read."
   []
   ;; JSON
-  (read-as-json)
+  (set-json-read!)
   ;; SQLite-specific
   (extend-protocol ReadableColumn
     String

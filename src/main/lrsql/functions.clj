@@ -81,12 +81,9 @@
 (declare delete-activity-profile-document!)
 
 ;; Credentials + Admin Accounts
+(declare delete-admin-account!)
 (declare delete-credential!)
 (declare delete-credential-scope!)
-(declare delete-credential-scopes!)
-(declare delete-admin-account!)
-(declare delete-admin-credentials!)
-(declare delete-admin-credential-scopes!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query
