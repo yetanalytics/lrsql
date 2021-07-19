@@ -7,7 +7,8 @@
             [lrsql.admin.protocol :as adp]))
 
 (comment
-  (def sys (system/system :dev-sqlite))
+  (def sys (system/system :dev-h2-mem))
+
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))

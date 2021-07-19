@@ -320,10 +320,10 @@
              "id" "00000000-0000-4000-0000-000000000002"}})
 
 (deftest test-statement-ref-fns
-  (let [_     (support/assert-in-mem-db)
-        sys   (system/system :test)
-        sys'  (component/start sys)
-        lrs   (:lrs sys')]
+  (let [_    (support/assert-in-mem-db)
+        sys  (system/system :test)
+        sys' (component/start sys)
+        lrs  (:lrs sys')]
     (testing "statement insertions"
       (is (= {:statement-ids ["00000000-0000-4000-0000-000000000001"
                               "00000000-0000-4000-0000-000000000002"

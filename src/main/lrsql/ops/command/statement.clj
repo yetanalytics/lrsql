@@ -102,7 +102,7 @@
            stmt-activity-inputs
            stmt-stmt-inputs]
     :as input}]
-  (let [?stmt-id (insert-statement!* interface  tx statement-input)]
+  (let [?stmt-id (insert-statement!* interface tx statement-input)]
     (dorun (map (partial insert-actor! interface tx) actor-inputs))
     (dorun (map (partial insert-activity! interface tx) activity-inputs))
     (dorun (map (partial insert-stmt-actor! interface tx) stmt-actor-inputs))

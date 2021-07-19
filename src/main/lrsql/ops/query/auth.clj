@@ -61,7 +61,9 @@
     {:result :com.yetanalytics.lrs.auth/forbidden}))
 
 (s/fdef query-credentials
-  :args (s/cat :tx transaction? :input as/query-creds-input-spec)
+  :args (s/cat :interface c/query-interface?
+               :tx transaction?
+               :input as/query-creds-input-spec)
   :ret (s/coll-of as/scoped-key-pair-spec :gen-max 5))
 
 (defn query-credentials

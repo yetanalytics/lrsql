@@ -32,7 +32,7 @@
   "Insert `input`, a seq of maps where each API key pair is associated
    with a different scope."
   [interface tx input]
-  (dorun (map (partial ip/-insert-credential! interface tx) input)))
+  (dorun (map (partial ip/-insert-credential-scope! interface tx) input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credential Deletion

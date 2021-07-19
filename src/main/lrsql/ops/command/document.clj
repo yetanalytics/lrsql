@@ -119,7 +119,7 @@
   "Common functionality for all cases in `upsert-document!`"
   [interface tx input query-fn insert-fn! update-fn!]
   (let [query-in (dissoc input :last-modified :contents)]
-    (if-some [old-doc (query-fn tx query-in)]
+    (if-some [old-doc (query-fn interface tx query-in)]
       ;; We have a pre-existing document in the store - update
       (upsert-update-document! interface tx input old-doc update-fn!)
       ;; We don't have a pre-existing document - insert

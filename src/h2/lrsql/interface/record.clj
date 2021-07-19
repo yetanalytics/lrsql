@@ -1,5 +1,6 @@
 (ns lrsql.interface.record
-  (:require [hugsql.core :as hugsql]
+  (:require [com.stuartsierra.component :as cmp]
+            [hugsql.core :as hugsql]
             [lrsql.interface.protocol :as ip]))
 
 ;; Init HugSql functions
@@ -13,14 +14,18 @@
  ;; Define record
 
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
-(defrecord DBInterface []
+(defrecord H2Interface []
+  cmp/Lifecycle
+  (start [this] this)
+  (stop [this] this)
+
   ip/DDLInterface
   (-create-all! [_ tx]
     (create-statement-table! tx)
     (create-actor-table! tx)
     (create-activity-table! tx)
     (create-attachment-table! tx)
-    (create-statement-to-actor-table!)
+    (create-statement-to-actor-table! tx)
     (create-statement-to-activity-table! tx)
     (create-statement-to-statement-table! tx)
     (create-state-document-table! tx)

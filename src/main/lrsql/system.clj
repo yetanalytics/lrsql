@@ -1,5 +1,6 @@
 (ns lrsql.system
   (:require [com.stuartsierra.component :as component]
+            [lrsql.interface.record :as ir]
             [lrsql.system.database :as db]
             [lrsql.system.lrs :as lrs]
             [lrsql.system.webserver :as webserver]
@@ -11,19 +12,26 @@
   ([]
    (system :default))
   ([profile]
-   (let [initial-sys ; init without configuration
+   (let [config
+         (u/read-config profile)
+         db-type
+         (-> config :database :db-type)
+         initial-sys ; init without configuration
          (component/system-map
           :connection (component/using
                        (db/map->Connection {})
                        [])
-          :lrs       (component/using
-                      (lrs/map->LearningRecordStore {})
-                      [:connection])
-          :webserver (component/using
-                      (webserver/map->Webserver {})
-                      [:lrs]))
-         config
-         (u/read-config profile)
+          :interface  (component/using
+                       (cond
+                         (#{"h2" "h2:mem"} db-type)
+                         (ir/map->H2Interface {}))
+                       [])
+          :lrs        (component/using
+                       (lrs/map->LearningRecordStore {})
+                       [:connection :interface])
+          :webserver  (component/using
+                       (webserver/map->Webserver {})
+                       [:lrs]))
          assoc-config
          (fn [m config-m] (assoc m :config config-m))]
      (-> (merge-with assoc-config initial-sys config)

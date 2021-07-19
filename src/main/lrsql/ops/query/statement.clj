@@ -70,7 +70,8 @@
      :attachments att-results}))
 
 (s/fdef query-statements
-  :args (s/cat :tx transaction?
+  :args (s/cat :interface c/query-interface?
+               :tx transaction?
                :input ss/statement-query-spec
                :ltags ss/lang-tags-spec)
   :ret ::lrsp/get-statements-ret)
@@ -94,7 +95,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef query-descendants
-  :args (s/cat :tx transaction?
+  :args (s/cat :interface c/query-interface?
+               :tx transaction?
                :input ss/insert-statement-input-spec)
   :ret (s/coll-of ::ss/descendant-id :kind vector? :gen-max 5))
 
