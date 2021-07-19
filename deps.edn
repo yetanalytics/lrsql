@@ -32,9 +32,9 @@
   {:db-h2
    {:extra-paths ["src/sql"]
     :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
-  :db-sqlite
-  {:extra-paths ["src/sql"]
-   :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
+   :db-sqlite
+   {:extra-paths ["src/sql"]
+    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
    :test
    {:extra-paths ["src/test"]
     :extra-deps {org.clojure/test.check {:mvn/version "1.0.0"}
@@ -48,4 +48,10 @@
                   :sha "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
                   :exclusions [org.clojure/data.json]}}
     :exec-fn cognitect.test-runner.api/test
-    :exec-args {:dirs ["src/test"]}}}}
+    :exec-args {:dirs ["src/test"]}}
+   :uberjar {:replace-deps
+             {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
+             :exec-fn hf.depstar/uberjar
+             :exec-args {:aot true
+                         :jar "Lrsql.jar"
+                         :main-class "lrsql.main"}}}}

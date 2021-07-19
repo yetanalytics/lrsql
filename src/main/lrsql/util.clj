@@ -39,7 +39,7 @@
 
 (defn read-config*
   "Read `config/config.edn` with the given value of `profile`. Valid
-   profiles are `:test` and `:default`."
+   profiles are `:test`, `:dev-[db-name]`, and `:default`."
   [profile]
   (aero/read-config (io/resource "config.edn") {:profile profile}))
 

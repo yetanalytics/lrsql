@@ -9,24 +9,28 @@
             [lrsql.ops.command.admin :as admin-cmd]
             [lrsql.ops.command.auth :as auth-cmd]))
 
+(def ^{:private true :dynamic true} *aot-compiled* false)
+
 (defn init-hugsql-adapter!
   "Initialize HugSql to use the next-jdbc adapter."
   []
-  (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc)))
+  (when-not *aot-compiled*
+    (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc))))
 
 (defn init-settable-params!
   "Set conversion functions for DB reading and writing depending on `db-type`."
   [db-type]
-  (cond
-    ;; H2
-    (#{"h2" "h2:mem"} db-type)
-    (do (inf/set-h2-read!)
-        (inf/set-h2-write!))
-    
-    ;; SQLite
-    (#{"sqlite"} db-type)
-    (do (inf/set-sqlite-read!)
-        (inf/set-sqlite-write!))))
+  (when-not *aot-compiled*
+    (cond
+      ;; H2
+      (#{"h2" "h2:mem"} db-type)
+      (do (inf/set-h2-read!)
+          (inf/set-h2-write!))
+
+      ;; SQLite
+      (#{"sqlite"} db-type)
+      (do (inf/set-sqlite-read!)
+          (inf/set-sqlite-write!)))))
 
 ;; TODO: instead of using `db-type'`, we could rely entirely on the paths
 ;; in deps.edn
@@ -35,23 +39,35 @@
   "Define the HugSql functions defined in the `hugsql.functions` ns.
    The .sql files that HugSql reads from will depend on `db-type`."
   [db-type]
-  ;; Hack the namespace binding or else the hugsql fn namespaces
-  ;; will be whatever ns `init-hugsql-fns!` was called from.
-  (let [db-type'   (if (#{"h2:mem"} db-type) "h2" db-type)]
-    (binding [*ns* (create-ns `lrsql.functions)]
-      (let [fns (ns-publics *ns*)] ; map from fn syms to vars
-        ;; Reset function namespace before redefining
-        (dorun (map #(.unbindRoot (second %)) fns))
-        ;; Define HugSql functions
-        ;; Follow the CRUD acronym: Create, Read, Update, Delete
-        (hugsql/def-db-fns (str db-type' "/ddl.sql"))
-        (hugsql/def-db-fns (str db-type' "/insert.sql"))
-        (hugsql/def-db-fns (str db-type' "/query.sql"))
-        (hugsql/def-db-fns (str db-type' "/update.sql"))
-        (hugsql/def-db-fns (str db-type' "/delete.sql"))
-        ;; Define any remaining unbound fns as no-ops
-        (dorun (map #(intern *ns* (first %) identity)
-                    (filter #(-> % second bound? not) fns)))))))
+  (when-not *aot-compiled*
+    ;; Hack the namespace binding or else the hugsql fn namespaces
+    ;; will be whatever ns `init-hugsql-fns!` was called from.
+    (let [db-type' (if (#{"h2:mem"} db-type) "h2" db-type)]
+      (binding [*ns* (create-ns `lrsql.functions)]
+        (let [fns (ns-publics *ns*)] ; map from fn syms to vars
+          ;; Reset function namespace before redefining
+          (dorun (map #(.unbindRoot (second %)) fns))
+          ;; Define HugSql functions
+          ;; Follow the CRUD acronym: Create, Read, Update, Delete
+          (hugsql/def-db-fns (str db-type' "/ddl.sql"))
+          (hugsql/def-db-fns (str db-type' "/insert.sql"))
+          (hugsql/def-db-fns (str db-type' "/query.sql"))
+          (hugsql/def-db-fns (str db-type' "/update.sql"))
+          (hugsql/def-db-fns (str db-type' "/delete.sql"))
+          ;; Define any remaining unbound fns as no-ops
+          (dorun (map #(intern *ns* (first %) identity)
+                      (filter #(-> % second bound? not) fns))))))))
+
+(defn init-aot-compilation
+  "Set the HugSql adapter, HugSql DB functions, and settable params during
+   AOT compilation. If called, then `init-hugsql-adapter!`,
+   `init-settable-params!`, and `init-hugsql-fns!` will do nothing
+   on subsequent calls."
+  [db-type]
+  (init-hugsql-adapter!)
+  (init-hugsql-fns! db-type)
+  (init-settable-params! db-type)
+  (alter-var-root #'*aot-compiled* (constantly true)))
 
 (defn init-ddl!
   "Execute SQL commands to create tables if they do not exist."
