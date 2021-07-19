@@ -32,9 +32,9 @@
   {:db-h2
    {:extra-paths ["src/sql"]
     :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
-  :db-sqlite
-  {:extra-paths ["src/sql"]
-   :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
+  ;; :db-sqlite
+  ;; {:extra-paths ["src/sql"]
+  ;;  :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
    :test
    {:extra-paths ["src/test"]
     :extra-deps {org.clojure/test.check {:mvn/version "1.0.0"}
