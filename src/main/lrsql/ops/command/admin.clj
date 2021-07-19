@@ -1,7 +1,7 @@
 (ns lrsql.ops.command.admin
   (:require [clojure.spec.alpha :as s]
-            [lrsql.functions :as f]
-            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.interface.protocol :as ip]
+            [lrsql.spec.common :as c]
             [lrsql.spec.admin :as ads]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9,17 +9,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef insert-admin!
-  :args (s/cat :tx transaction? :input ads/insert-admin-input-spec)
+  :args (s/cat :interface (s/and c/query-interface? c/insert-interface?)
+               :tx c/transaction?
+               :input ads/insert-admin-input-spec)
   :ret ads/insert-admin-ret-spec)
 
 (defn insert-admin!
   "Insert a new admin username, hashed password, and the hash salt into the
    `admin_account` table. Returns a map with `:result` either being the
    account ID on success or an error keyword on failure."
-  [tx input]
-  (if-not (f/query-account-exists tx (select-keys input [:username]))
+  [interface tx input]
+  (if-not (ip/-query-account-exists
+           interface
+           tx
+           (select-keys input [:username]))
     (do
-      (f/insert-admin-account! tx input)
+      (ip/-insert-admin-account! interface tx input)
       {:result (:primary-key input)})
     {:result :lrsql.admin/existing-account-error}))
 
@@ -28,12 +33,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef delete-admin!
-  :args (s/cat :tx transaction? :input ads/delete-admin-input-spec)
+  :args (s/cat :interface c/delete-interface?
+               :tx c/transaction?
+               :input ads/delete-admin-input-spec)
   :ret ads/delete-admin-ret-spec)
 
 (defn delete-admin!
   "Delete the admin account and any associated credentials. Returns a map
    where `:result` is the account ID."
-  [tx input]
-  (f/delete-admin-account! tx input)
+  [interface tx input]
+  (ip/-delete-admin-account! interface tx input)
   {:result (:account-id input)})

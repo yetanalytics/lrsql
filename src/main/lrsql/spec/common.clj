@@ -12,9 +12,21 @@
 
 ;; DB Interface
 
-(defn db-interface?
+(defn insert-interface?
   [int]
-  (satisfies? ip/LrsqlDDL int))
+  (satisfies? ip/InsertInterface int))
+
+(defn update-interface?
+  [int]
+  (satisfies? ip/UpdateInterface int))
+
+(defn delete-interface?
+  [int]
+  (satisfies? ip/DeleteInterface int))
+
+(defn query-interface?
+  [int]
+  (satisfies? ip/QueryInterface int))
 
 ;; Transactions
 

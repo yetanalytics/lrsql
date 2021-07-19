@@ -61,4 +61,13 @@
   ;; Documents
   (-query-state-document [this tx input])
   (-query-agent-profile-document [this tx input])
-  (-query-activity-profile-document [this tx input]))
+  (-query-activity-profile-document [this tx input])
+  (-query-state-document-ids [this tx input])
+  (-query-agent-profile-document-ids [this tx input])
+  (-query-activity-profile-document-ids [this tx input])
+  ;; Credentials + Admin Accounts
+  (-query-account [this tx input])
+  (-query-account-exists [this tx input])
+  (-query-credentials [this tx input])
+  (-query-credential-exists [this tx input])
+  (-query-credential-scopes [this tx input]))

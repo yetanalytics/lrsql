@@ -1,6 +1,6 @@
 (ns lrsql.interface.record
   (:require [hugsql.core :as hugsql]
-            [lrsql.protocol :as p]))
+            [lrsql.interface.protocol :as ip]))
 
 ;; Init HugSql functions
 
@@ -14,7 +14,7 @@
 
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
 (defrecord DBInterface []
-  p/LrsqlDDL
+  ip/DDLInterface
   (-create-all! [_ tx]
     (create-statement-table! tx)
     (create-actor-table! tx)
@@ -33,7 +33,7 @@
     ;; TODO
     nil)
 
-  p/LrsqlInsert
+  ip/InsertInterface
   ;; Statements + Statement Objects
   (-insert-statement! [_ tx input]
     (insert-statement! tx input))
@@ -68,7 +68,7 @@
   (-insert-credential-scope! [_ tx input]
     (insert-credential-scope! tx input))
 
-  p/LrsqlUpdate
+  ip/UpdateInterface
   ;; Actors + Activities
   (-update-actor! [_ tx input]
     (update-actor! tx input))
@@ -85,7 +85,7 @@
   (-update-activity-profile-document! [_ tx input]
     (update-activity-profile-document! tx input))
 
-  p/LrsqlDelete
+  ip/DeleteInterface
   ;; Documents
   (-delete-state-document! [_ tx input]
     (delete-state-document! tx input))
@@ -103,7 +103,7 @@
   (-delete-credential-scope! [_ tx input]
     (delete-credential-scope! tx input))
 
-  p/LrsqlQuery
+  ip/QueryInterface
   ;; Statement
   (-query-statement [_ tx input]
     (query-statement tx input))
@@ -127,4 +127,22 @@
   (-query-agent-profile-document [_ tx input]
     (query-agent-profile-document tx input))
   (-query-activity-profile-document [_ tx input]
-    (query-activity-profile-document tx input)))
+    (query-activity-profile-document tx input))
+  (-query-state-document-ids [_ tx input]
+    (query-state-document-ids tx input))
+  (-query-agent-profile-document-ids [_ tx input]
+    (query-agent-profile-document-ids tx input))
+  (-query-activity-profile-document-ids [_ tx input]
+    (query-activity-profile-document-ids tx input))
+
+  ;; Credentials
+  (-query-account [_ tx input]
+    (query-account tx input))
+  (-query-account-exists [_ tx input]
+    (query-account-exists tx input))
+  (-query-credentials [_ tx input]
+    (query-credentials tx input))
+  (-query-credential-exists [_ tx input]
+    (query-credential-exists tx input))
+  (-query-credential-scopes [_ tx input]
+    (query-credential-scopes tx input)))

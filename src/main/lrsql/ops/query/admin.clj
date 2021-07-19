@@ -1,7 +1,7 @@
 (ns lrsql.ops.query.admin
   (:require [clojure.spec.alpha :as s]
-            [lrsql.functions :as f]
-            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.interface.protocol :as ip]
+            [lrsql.spec.common :as c]
             [lrsql.spec.admin :as ads]
             [lrsql.util.admin :as au]))
 
@@ -9,24 +9,26 @@
   "Query an admin account with the given username and password. Returns
    a map containing `:account-id` and `:passhash` on success, or
    `:lrsql.admin/missing-account-error` on failure."
-  [tx input]
+  [interface tx input]
   (if-some [{account-id :id
              passhash   :passhash}
-            (f/query-account tx input)]
+            (ip/-query-account interface tx input)]
     {:account-id account-id
      :passhash   passhash}
     :lrsql.admin/missing-account-error))
 
 (s/fdef query-validate-admin
-  :args (s/cat :tx transaction? :input ads/query-validate-admin-input-spec)
+  :args (s/cat :interface c/query-interface?
+               :tx c/transaction?
+               :input ads/query-validate-admin-input-spec)
   :ret ads/query-validate-admin-ret-spec)
 
 (defn query-validate-admin
   "Queries the admin account table by `:username`, then validates that
    `:password` hashes into the same passhash stored in the account table.
    Returns the account ID on success or an error keyword on failure."
-  [tx input]
-  (let [res (query-admin tx input)]
+  [interface tx input]
+  (let [res (query-admin interface tx input)]
     (cond
       (= :lrsql.admin/missing-account-error res)
       {:result res}
