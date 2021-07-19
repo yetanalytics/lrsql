@@ -13,6 +13,7 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 *.db
+*.sqlite
 config/*.jks
 config/*.key
 results/

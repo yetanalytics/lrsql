@@ -3,18 +3,16 @@
   (:require [com.stuartsierra.component :as component]
             [lrsql.system :as system]
             [next.jdbc :as jdbc]
-            [com.yetanalytics.lrs.protocol :as lrsp]))
+            [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.admin.protocol :as adp]))
 
 (comment
-  (def sys (system/system :dev))
+  (def sys (system/system :dev-sqlite))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
 
-  (jdbc/execute! ds ["SET TRACE_LEVEL_FILE 0"])
-  (jdbc/execute! ds ["SET TRACE_LEVEL_FILE 2"])
-  
   (do
     (doseq [cmd [;; Drop credentials table
                  "DROP TABLE IF EXISTS credential_to_scope"
@@ -34,4 +32,5 @@
                  "DROP TABLE IF EXISTS xapi_statement"]]
       (jdbc/execute! ds [cmd]))
 
-    (component/stop sys')))
+    (component/stop sys'))
+  )

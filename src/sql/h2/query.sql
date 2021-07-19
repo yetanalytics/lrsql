@@ -1,15 +1,5 @@
 /* Statement Queries */
 
-/* 
- The strategy of `query-statements` is to use multiple joins to form a
- Cartesian product over statements, agents, and activities:
-   
- (stmt, stmt_desc, stmt_actor, stmt_desc_actor, stmt_activity, stmt_desc_activity)
-   
- Because we only want to return properties of `stmt`, which may be identical
- across multiple such tuples, we apply SELECT DISTINCT at the top level.
-*/
-
 /*
  `id` (the primary key) is a SQUUID with guarenteed monotonicity. This is
  important for the following:
@@ -41,7 +31,7 @@ WHERE statement_id = :statement-id
 /* Multi-statement query */
 
 -- :frag actors-table-frag
-WITH actors AS (
+actors AS (
   SELECT stmt_actor.actor_ifi, stmt_actor.statement_id
   FROM statement_to_actor stmt_actor
   WHERE stmt_actor.actor_ifi = :actor-ifi
@@ -49,7 +39,7 @@ WITH actors AS (
 )
 
 -- :frag activities-table-frag
-WITH activs AS (
+activs AS (
   SELECT stmt_activ.activity_iri, stmt_activ.statement_id
   FROM statement_to_activity stmt_activ
   WHERE stmt_activ.activity_iri = :activity-iri
@@ -90,8 +80,9 @@ LIMIT :limit
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
---~ (when (:actor-ifi params)    ":frag:actors-table-frag")
---~ (when (:activity-iri params) ":frag:activities-table-frag")
+--~ (when (and (:actor-ifi params) (:activity-iri params))       "WITH :frag:actors-table-frag, :frag:activities-table-frag")
+--~ (when (and (:actor-ifi params) (not (:activity-iri params))) "WITH :frag:actors-table-frag")
+--~ (when (and (not (:actor-ifi params)) (:activity-iri params)) "WITH :frag:activities-table-frag")
 SELECT id, payload FROM
 ((:frag:stmt-no-ref-subquery-frag) UNION (:frag:stmt-ref-subquery-frag))
 --~ (if (:ascending? params) "ORDER BY id ASC" "ORDER BY id DESC")

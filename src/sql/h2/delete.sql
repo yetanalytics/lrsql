@@ -33,7 +33,7 @@ DELETE FROM activity_profile_document
 WHERE profile_id = :profile-id
 AND activity_iri = :activity-iri
 
-/* Admin Account */
+/* Admin Account + Credentials */
 
 -- :name delete-admin-account!
 -- :command :execute
@@ -42,7 +42,14 @@ AND activity_iri = :activity-iri
 DELETE FROM admin_account
 WHERE id = :account-id
 
-/* Credentials */
+-- :name delete-credential!
+-- :command :execute
+-- :result :affected
+-- :doc Delete the credential specified by `:account-id` and a key pair.
+DELETE FROM lrs_credential
+WHERE account_id = :account-id
+AND api_key = :api-key
+AND secret_key = :secret-key
 
 -- :name delete-credential-scope!
 -- :command :execute
@@ -52,37 +59,3 @@ DELETE FROM credential_to_scope
 WHERE api_key = :api-key
 AND secret_key = :secret-key
 AND scope = :scope
-
--- :name delete-credential!
--- :command :execute
--- :result :affected
--- :doc Delete the credential and it scopes specified by `:account-id` and a key pair.
-DELETE FROM credential_to_scope
-WHERE (api_key, secret_key) IN (
-  SELECT cred.api_key, cred.secret_key
-  FROM lrs_credential AS cred
-  INNER JOIN credential_to_scope
-    ON cred.api_key = :api-key
-    AND cred.secret_key = :secret-key
-  WHERE account_id = :account-id
-);
-DELETE FROM lrs_credential
-WHERE account_id = :account-id
-AND api_key = :api-key
-AND secret_key = :secret-key
-
--- :name delete-admin-credentials!
--- :command :execute
--- :result :affected
--- :doc Delete all credentials and their scopes associated with `account-id`.
-DELETE FROM credential_to_scope
-WHERE (api_key, secret_key) IN (
-  SELECT cred.api_key, cred.secret_key
-  FROM lrs_credential AS cred
-  INNER JOIN credential_to_scope AS cts
-    ON cred.api_key = cts.api_key
-    AND cred.secret_key = cts.secret_key
-  WHERE account_id = :account-id
-);
-DELETE FROM lrs_credential
-WHERE account_id = :account-id

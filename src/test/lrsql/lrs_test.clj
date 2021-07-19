@@ -207,6 +207,23 @@
               :attachments      []}
              (-> (lrsp/-get-statements lrs {} {:activity act-1 :related_activities true} #{})
                  (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      ;; Query with both activities and agents
+      (is (= {:statement-result {:statements [stmt-1] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs {} {:activity act-1 :agent agt-1} #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements lrs
+                                       {}
+                                       {:activity           act-1
+                                        :agent              agt-1
+                                        :related_activities true
+                                        :related_agents     true}
+                                       #{})
+                 (update-in [:statement-result :statements]
                             (partial map remove-props))))))
     (testing "querying with limits"
       (is (= {:statement-result

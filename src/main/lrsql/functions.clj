@@ -6,7 +6,7 @@
 ;; reference.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Create Tables
+;; DDL
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Statement + Attachment Tables
@@ -78,10 +78,9 @@
 (declare delete-activity-profile-document!)
 
 ;; Credentials + Admin Accounts
-(declare delete-credential-scope!)
-(declare delete-credential!)
-(declare delete-admin-credentials!)
 (declare delete-admin-account!)
+(declare delete-credential!)
+(declare delete-credential-scope!)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query

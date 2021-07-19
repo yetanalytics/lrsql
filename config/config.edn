@@ -1,80 +1,58 @@
 {:database
  #profile
-  {:test    {:db-type   "h2:mem"
-             :db-name   "example"
-             :db-host   "localhost"
-             :db-port   8080}
-   :dev     {:db-type   "h2"
-             :db-name   "example"
-             :db-host   "localhost"
-             :db-port   8080}
-   :default {:db-type       #or [#env LRSQL_DB_TYPE "h2:mem"]
-             :db-name       #or [#env LRSQL_DB_NAME "example"]
-             :db-host       #or [#env LRSQL_DB_HOST "localhost"]
-             :db-port       #long #or [#env LRSQL_DB_PORT 8080]
-             :db-properties #or [#env LRSQL_DB_PROPERTIES nil]
-             :db-jdbc-url   #or [#env LRSQL_DB_JDBC_URL nil]
-             :db-user       #or [#env LRSQL_DB_USER nil]
-             :db-password   #or [#env LRSQL_DB_PASSWORD nil]}}
+  {:test       {:db-type "h2:mem"
+                :db-name "example"}
+   :dev-h2-mem {:db-type "h2:mem"
+                :db-name "example.h2"}
+   :dev-h2     {:db-type "h2"
+                :db-name "example.h2"}
+;;    :dev-sqlite {:db-type "sqlite"
+;;                 :db-name "example.sqlite"}
+   :default    {:db-type       #or [#env LRSQL_DB_TYPE "h2:mem"]
+                :db-name       #or [#env LRSQL_DB_NAME "example"]
+                :db-host       #or [#env LRSQL_DB_HOST "localhost"]
+                :db-port       #long #or [#env LRSQL_DB_PORT 8080]
+                :db-properties #or [#env LRSQL_DB_PROPERTIES nil]
+                :db-jdbc-url   #or [#env LRSQL_DB_JDBC_URL nil]
+                :db-user       #or [#env LRSQL_DB_USER nil]
+                :db-password   #or [#env LRSQL_DB_PASSWORD nil]}}
  :connection
  #profile
-  {:test {:database #ref [:database]}
-   :dev  {:database #ref [:database]}
-   :default {:database       #ref [:database]
-             :pool-init-size #or [#env LRSQL_POOL_INIT_SIZE nil]
-             :pool-min-size  #or [#env LRSQL_POOL_MIN_SIZE nil]
-             :pool-inc       #or [#env LRSQL_POOL_INC nil]
-             :pool-max-size  #or [#env LRSQL_POOL_MAX_SIZE nil]
-             :pool-max-stmts #or [#env LRSQL_POOL_MAX_STMTS nil]}}
+  {:test       {:database #ref [:database]}
+   :dev-h2-mem {:database #ref [:database]}
+   :dev-h2     {:database #ref [:database]}
+;;    :dev-sqlite {:database #ref [:database]}
+   :default    {:database       #ref [:database]
+                :pool-init-size #or [#env LRSQL_POOL_INIT_SIZE nil]
+                :pool-min-size  #or [#env LRSQL_POOL_MIN_SIZE nil]
+                :pool-inc       #or [#env LRSQL_POOL_INC nil]
+                :pool-max-size  #or [#env LRSQL_POOL_MAX_SIZE nil]
+                :pool-max-stmts #or [#env LRSQL_POOL_MAX_STMTS nil]}}
  :lrs
  #profile
-  {:test    {:database             #ref [:database]
-             :api-key-default      "username"
-             :api-secret-default   "password"
-             :stmt-more-url-prefix ""
-             :stmt-get-default     50
-             :stmt-get-max         50}
-   :dev     {:database             #ref [:database]
-             :api-key-default      "username"
-             :api-secret-default   "password"
-             :stmt-more-url-prefix ""
-             :stmt-get-default     50
-             :stmt-get-max         50}
-   :default {:database             #ref [:database]
-             :api-key-default      #or [#env LRSQL_SEED_API_KEY nil]
-             :api-secret-default   #or [#env LRSQL_SEED_API_SECRET nil]
-             :stmt-more-url-prefix #or [#env LRSQL_STMT_MORE_URL_PREFIX ""]
-             :stmt-get-default     #long #or [#env LRSQL_STMT_GET_DEFAULT 50]
-             :stmt-get-max         #long #or [#env LRSQL_STMT_GET_MAX 50]}}
+  {:test       #merge [{:database #ref [:database]} #include "base/lrs.edn"]
+   :dev-h2-mem #merge [{:database #ref [:database]} #include "base/lrs.edn"]
+   :dev-h2     #merge [{:database #ref [:database]} #include "base/lrs.edn"]
+;;    :dev-sqlite #merge [{:database #ref [:database]} #include "base/lrs.edn"]
+   :default    {:database             #ref [:database]
+                :api-key-default      #or [#env LRSQL_SEED_API_KEY nil]
+                :api-secret-default   #or [#env LRSQL_SEED_API_SECRET nil]
+                :stmt-more-url-prefix #or [#env LRSQL_STMT_MORE_URL_PREFIX ""]
+                :stmt-get-default     #long #or [#env LRSQL_STMT_GET_DEFAULT 50]
+                :stmt-get-max         #long #or [#env LRSQL_STMT_GET_MAX 50]}}
  :webserver
  #profile
-  {:test    {:key-file              "config/keystore.jks"
-             :key-alias             "lrsql_keystore"
-             :key-password          "lrsql_pass"
-             :jwt-expiration-time   3600
-             :jwt-expiration-leeway 1
-             :http?                 true
-             :http2?                true
-             :ssl-port              8443
-             :http-host             "0.0.0.0"
-             :http-port             8080}
-   :dev     {:key-file              "config/keystore.jks"
-             :key-alias             "lrsql_keystore"
-             :key-password          "lrsql_pass"
-             :jwt-expiration-time   3600
-             :jwt-expiration-leeway 1
-             :http?                 true
-             :http2?                true
-             :ssl-port              8443
-             :http-host             "0.0.0.0"
-             :http-port             8080}
-   :default {:key-file              #or [#env LRSQL_KEY_FILE "config/keystore.jks"]
-             :key-alias             #or [#env LRSQL_KEY_ALIAS "lrsql_keystore"]
-             :key-password          #or [#env LRSQL_KEY_PASSWORD "lrsql_pass"]
-             :jwt-expiration-time   #long #or [#env LRSQL_JWT_EXPIRATION_TIME 3600]
-             :jwt-expiration-leeway #long #or [#env LRSQL_JWT_EXPIRATION_LEEWAY 1]
-             :http?                 #boolean #or [#env LRSQL_ENABLE_HTTP true]
-             :http2?                #boolean #or [#env LRSQL_ENABLE_HTTP2 true]
-             :http-host             #or [#env LRSQL_HTTP_HOST "0.0.0.0"]
-             :http-port             #long #or [#env LRSQL_HTTP_PORT 8080]
-             :ssl-port              #long #or [#env LRSQL_SSL_PORT 8443]}}}
+  {:test       #include "base/webserver.edn"
+   :dev-h2-mem #include "base/webserver.edn"
+   :dev-h2     #include "base/webserver.edn"
+;;    :dev-sqlite #include "base/webserver.edn"
+   :default    {:key-file              #or [#env LRSQL_KEY_FILE "config/keystore.jks"]
+                :key-alias             #or [#env LRSQL_KEY_ALIAS "lrsql_keystore"]
+                :key-password          #or [#env LRSQL_KEY_PASSWORD "lrsql_pass"]
+                :jwt-expiration-time   #long #or [#env LRSQL_JWT_EXPIRATION_TIME 3600]
+                :jwt-expiration-leeway #long #or [#env LRSQL_JWT_EXPIRATION_LEEWAY 1]
+                :http?                 #boolean #or [#env LRSQL_ENABLE_HTTP true]
+                :http2?                #boolean #or [#env LRSQL_ENABLE_HTTP2 true]
+                :http-host             #or [#env LRSQL_HTTP_HOST "0.0.0.0"]
+                :http-port             #long #or [#env LRSQL_HTTP_PORT 8080]
+                :ssl-port              #long #or [#env LRSQL_SSL_PORT 8443]}}}

@@ -51,8 +51,8 @@
   :ret nil?)
 
 (defn delete-credential!
-  "Delete the credential associated with the key pair in `input`. Returns
-   `nil`."
+  "Delete the credential and all of its scopes associated with the key pair
+   in `input`. Returns `nil`."
   [tx input]
   (f/delete-credential! tx input)
   nil)
