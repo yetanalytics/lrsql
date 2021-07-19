@@ -1,4 +1,4 @@
-(ns lrsql.record
+(ns lrsql.interface.record
   (:require [hugsql.core :as hugsql]
             [lrsql.protocol :as p]))
 
@@ -13,7 +13,7 @@
  ;; Define record
 
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
-(defrecord LrsqlDBInterface []
+(defrecord DBInterface []
   p/LrsqlDDL
   (-create-all! [_ tx]
     (create-statement-table! tx)

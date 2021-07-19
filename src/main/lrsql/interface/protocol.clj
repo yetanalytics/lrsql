@@ -1,13 +1,13 @@
-(ns lrsql.protocol
+(ns lrsql.interface.protocol
   "Protocols that serve as a low-level interface for DB functions.")
 
-(defprotocol LrsqlDDL
+(defprotocol DDLInterface
   (-create-all! [this tx]
     "Create all tables and indexes.")
   (-drop-all! [this tx]
     "Drop all tables and delete all indexes."))
 
-(defprotocol LrsqlInsert
+(defprotocol InsertInterface
   ;; Statements + Statement Objects
   (-insert-statement! [this tx input])
   (-insert-actor! [this tx input])
@@ -25,7 +25,7 @@
   (-insert-credential! [this tx input])
   (-insert-credential-scope! [this tx input]))
 
-(defprotocol LrsqlUpdate
+(defprotocol UpdateInterface
   ;; Actor + Activities
   (-update-actor! [this tx input])
   (-update-activity! [this tx input])
@@ -36,7 +36,7 @@
   (-update-agent-profile-document! [this tx input])
   (-update-activity-profile-document! [this tx input]))
 
-(defprotocol LrsqlDelete
+(defprotocol DeleteInterface
   ;; Documents
   (-delete-state-document! [this tx input])
   (-delete-state-documents! [this tx input])
@@ -47,7 +47,7 @@
   (-delete-credential! [this tx input])
   (-delete-credential-scope! [this tx input]))
 
-(defprotocol LrsqlQuery
+(defprotocol QueryInterface
   ;; Statements
   (-query-statement [this tx input])
   (-query-statements [this tx input])

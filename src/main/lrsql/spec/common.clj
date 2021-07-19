@@ -1,13 +1,20 @@
 (ns lrsql.spec.common
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
-            [next.jdbc.protocols :as jp])
+            [next.jdbc.protocols :as jp]
+            [lrsql.interface.protocol :as ip])
   (:import [java.time Instant]))
 
 ;; UUIDs
 
 (s/def ::primary-key uuid?)
 (s/def ::statement-id uuid?)
+
+;; DB Interface
+
+(defn db-interface?
+  [int]
+  (satisfies? ip/LrsqlDDL int))
 
 ;; Transactions
 
