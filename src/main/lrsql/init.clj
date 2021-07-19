@@ -32,27 +32,19 @@
   [db-type]
   ;; Hack the namespace binding or else the hugsql fn namespaces
   ;; will be whatever ns `init-hugsql-fns!` was called from.
-  (let [db-type'   (if (#{"h2:mem"} db-type) "h2" db-type)]
+  (let [db-type' (if (#{"h2:mem"} db-type) "h2" db-type)]
     (binding [*ns* (create-ns `lrsql.functions)]
-      (let [fns (ns-publics *ns*)] ; map from fn syms to vars
-        ;; Reset function namespace before redefining
-        (dorun (map #(.unbindRoot (second %)) fns))
-        ;; Define HugSql functions
-        ;; Follow the CRUD acronym: Create, Read, Update, Delete
-        (hugsql/def-db-fns (str db-type' "/ddl.sql"))
-        (hugsql/def-db-fns (str db-type' "/insert.sql"))
-        (hugsql/def-db-fns (str db-type' "/query.sql"))
-        (hugsql/def-db-fns (str db-type' "/update.sql"))
-        (hugsql/def-db-fns (str db-type' "/delete.sql"))
-        ;; Define any remaining unbound fns as no-ops
-        (dorun (map #(intern *ns* (first %) identity)
-                    (filter #(-> % second bound? not) fns)))))))
+      ;; Define HugSql functions
+      ;; Follow the CRUD acronym: Create, Read, Update, Delete
+      (hugsql/def-db-fns (str db-type' "/ddl.sql"))
+      (hugsql/def-db-fns (str db-type' "/insert.sql"))
+      (hugsql/def-db-fns (str db-type' "/query.sql"))
+      (hugsql/def-db-fns (str db-type' "/update.sql"))
+      (hugsql/def-db-fns (str db-type' "/delete.sql")))))
 
 (defn init-ddl!
   "Execute SQL commands to create tables if they do not exist."
   [conn]
-  ;; Init properties
-  (f/ensure-foreign-keys! conn)
   ;; Create tables
   (f/create-statement-table! conn)
   (f/create-actor-table! conn)
