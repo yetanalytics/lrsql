@@ -21,12 +21,7 @@
     ;; H2
     (#{"h2" "h2:mem"} db-type)
     (do (inf/set-h2-read!)
-        (inf/set-h2-write!))
-    
-    ;; SQLite
-    (#{"sqlite"} db-type)
-    (do (inf/set-sqlite-read!)
-        (inf/set-sqlite-write!))))
+        (inf/set-h2-write!))))
 
 ;; TODO: instead of using `db-type'`, we could rely entirely on the paths
 ;; in deps.edn
