@@ -45,9 +45,9 @@
     (insert-attachment! tx input))
   (-insert-statement-to-actor! [_ tx input]
     (insert-statement-to-actor! tx input))
-  (-insert-statement-to-activity [_ tx input]
+  (-insert-statement-to-activity! [_ tx input]
     (insert-statement-to-activity! tx input))
-  (-insert-statement-to-statement [_ tx input]
+  (-insert-statement-to-statement! [_ tx input]
     (insert-statement-to-statement! tx input))
   ;; Documents
   ;; Need to query first since H2 doesn't have dupe checking on insert
@@ -100,8 +100,8 @@
     (delete-admin-account! tx input))
   (-delete-credential! [_ tx input]
     (delete-credential! tx input))
-  (-delete-credential-scopes! [_ tx input]
-    (delete-credential-scopes! tx input))
+  (-delete-credential-scope! [_ tx input]
+    (delete-credential-scope! tx input))
 
   p/LrsqlQuery
   ;; Statement

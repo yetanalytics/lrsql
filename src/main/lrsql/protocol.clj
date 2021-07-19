@@ -19,7 +19,7 @@
   ;; Documents
   (-insert-state-document! [this tx input])
   (-insert-agent-profile-document! [this tx input])
-  (-insert-activity-protocol-document! [this tx input])
+  (-insert-activity-profile-document! [this tx input])
   ;; Credentials + Admin Accounts
   (-insert-admin-account! [this tx input])
   (-insert-credential! [this tx input])
@@ -45,7 +45,7 @@
   ;; Credentials + Admin Accounts
   (-delete-admin-account! [this tx input])
   (-delete-credential! [this tx input])
-  (-delete-credential-scopes! [this tx input]))
+  (-delete-credential-scope! [this tx input]))
 
 (defprotocol LrsqlQuery
   ;; Statements
