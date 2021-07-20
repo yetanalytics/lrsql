@@ -1,15 +1,15 @@
-(ns lrsql.interface.record
+(ns lrsql.h2.record
   (:require [com.stuartsierra.component :as cmp]
             [hugsql.core :as hugsql]
             [lrsql.interface.protocol :as ip]))
 
 ;; Init HugSql functions
 
-(hugsql/def-db-fns "lrsql/sql/ddl.sql")
-(hugsql/def-db-fns "lrsql/sql/insert.sql")
-(hugsql/def-db-fns "lrsql/sql/query.sql")
-(hugsql/def-db-fns "lrsql/sql/update.sql")
-(hugsql/def-db-fns "lrsql/sql/delete.sql")
+(hugsql/def-db-fns "lrsql/h2/sql/ddl.sql")
+(hugsql/def-db-fns "lrsql/h2/sql/insert.sql")
+(hugsql/def-db-fns "lrsql/h2/sql/query.sql")
+(hugsql/def-db-fns "lrsql/h2/sql/update.sql")
+(hugsql/def-db-fns "lrsql/h2/sql/delete.sql")
 
  ;; Define record
 
