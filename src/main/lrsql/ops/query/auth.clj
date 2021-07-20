@@ -7,7 +7,7 @@
             [lrsql.util.auth :as au]))
 
 (s/fdef query-credential-scopes*
-  :args (s/cat :interface c/query-interface?
+  :args (s/cat :inf c/query-interface?
                :tx transaction?
                :input as/query-cred-scopes-input-spec)
   :ret (s/nilable (s/coll-of ::as/scope
@@ -17,15 +17,15 @@
 (defn query-credential-scopes*
   "Return a vec of scopes associated with an API key and secret if it
    exists in the credential table; return nil if not."
-  [interface tx input]
-  (when (ip/-query-credential-exists interface tx input)
-    (some->> (ip/-query-credential-scopes interface tx input)
+  [inf tx input]
+  (when (ip/-query-credential-exists inf tx input)
+    (some->> (ip/-query-credential-scopes inf tx input)
              (map :scope)
              (filter some?)
              vec)))
 
 (s/fdef query-credential-scopes
-  :args (s/cat :interface c/query-interface?
+  :args (s/cat :inf c/query-interface?
                :tx transaction?
                :input as/query-cred-scopes-input-spec)
   :ret ::lrsp/authenticate-ret)
@@ -36,8 +36,8 @@
    map containins the scope and auth key map on success. If the credentials
    are not found, return a keyword to indicate that the webserver will
    return 401 Forbidden."
-  [interface tx input]
-  (if-some [scopes (query-credential-scopes* interface tx input)]
+  [inf tx input]
+  (if-some [scopes (query-credential-scopes* inf tx input)]
     ;; Credentials found - return result map
     (let [{:keys [api-key secret-key]}
           input
@@ -61,7 +61,7 @@
     {:result :com.yetanalytics.lrs.auth/forbidden}))
 
 (s/fdef query-credentials
-  :args (s/cat :interface c/query-interface?
+  :args (s/cat :inf c/query-interface?
                :tx transaction?
                :input as/query-creds-input-spec)
   :ret (s/coll-of as/scoped-key-pair-spec :gen-max 5))
@@ -69,14 +69,14 @@
 (defn query-credentials
   "Given an input containing `:account-id`, return all creds (and their
    associated scopes) that are associated with that account."
-  [interface tx input]
+  [inf tx input]
   (let [creds  (->> input
-                    (ip/-query-credentials interface tx)
+                    (ip/-query-credentials inf tx)
                     (map (fn [{ak :api_key sk :secret_key}]
                            {:api-key ak :secret-key sk})))
         scopes (doall (map (fn [cred]
                              (->> cred
-                                  (ip/-query-credential-scopes interface tx)
+                                  (ip/-query-credential-scopes inf tx)
                                   (map :scope)))
                            creds))]
     (mapv (fn [cred cred-scopes]

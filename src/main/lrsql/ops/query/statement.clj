@@ -27,14 +27,14 @@
 
 (defn- query-one-statement
   "Query a single statement from the DB, using the `:statement-id` parameter."
-  [interface tx input ltags]
+  [inf tx input ltags]
   (let [{:keys [format attachments?]} input
-        query-result (ip/-query-statement interface tx input)
+        query-result (ip/-query-statement inf tx input)
         statement   (when query-result
                       (query-res->statement format ltags query-result))
         attachments (when (and statement attachments?)
                       (->> {:statement-id (get statement "id")}
-                           (ip/-query-attachments interface tx)
+                           (ip/-query-attachments inf tx)
                            (mapv conform-attachment-res)))]
     (cond-> {}
       statement   (assoc :statement statement)
@@ -42,10 +42,10 @@
 
 (defn- query-many-statements
   "Query potentially multiple statements from the DB."
-  [interface tx input ltags]
+  [inf tx input ltags]
   (let [{:keys [format limit attachments? query-params]} input
         input'        (if limit (update input :limit inc) input)
-        query-results (ip/-query-statements interface tx input')
+        query-results (ip/-query-statements inf tx input')
         ?next-cursor  (when (and limit
                                  (= (inc limit) (count query-results)))
                         (-> query-results last :id u/uuid->str))
@@ -57,7 +57,7 @@
                         (doall (->> (map (fn [stmt]
                                            (->> (get stmt "id")
                                                 (assoc {} :statement-id)
-                                                (ip/-query-attachments interface tx)))
+                                                (ip/-query-attachments inf tx)))
                                          stmt-results)
                                     (apply concat)
                                     (map conform-attachment-res)))
@@ -70,7 +70,7 @@
      :attachments att-results}))
 
 (s/fdef query-statements
-  :args (s/cat :interface c/query-interface?
+  :args (s/cat :inf c/query-interface?
                :tx transaction?
                :input ss/statement-query-spec
                :ltags ss/lang-tags-spec)
@@ -84,18 +84,18 @@
    language tag-value pairs are returned when `:format` is `:canonical`.
    Note that the `:more` property of `:statement-result` returned is a
    statement PK, NOT the full URL."
-  [interface tx input ltags]
+  [inf tx input ltags]
   (let [{?stmt-id :statement-id} input]
     (if ?stmt-id
-      (query-one-statement interface tx input ltags)
-      (query-many-statements interface tx input ltags))))
+      (query-one-statement inf tx input ltags)
+      (query-many-statements inf tx input ltags))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Descendant Querying
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef query-descendants
-  :args (s/cat :interface c/query-interface?
+  :args (s/cat :inf c/query-interface?
                :tx transaction?
                :input ss/insert-statement-input-spec)
   :ret (s/coll-of ::ss/descendant-id :kind vector? :gen-max 5))
@@ -107,10 +107,10 @@
    but the Statement referenced by that ID, and so on. The return value
    is a vec of the descendant statement IDs; these are later added to the
    input map."
-  [interface tx input]
+  [inf tx input]
   (if-some [?sref-id (-> input :statement-input :statement-ref-id)]
     (->> {:ancestor-id ?sref-id}
-         (ip/-query-statement-descendants interface tx)
+         (ip/-query-statement-descendants inf tx)
          (map :descendant_id)
          (concat [?sref-id])
          vec)

@@ -7,7 +7,7 @@
             [lrsql.util.actor :as au]))
 
 (s/fdef query-agent
-  :args (s/cat :interface c/query-interface?
+  :args (s/cat :inf c/query-interface?
                :tx c/transaction?
                :input as/query-agent-spec)
   :ret ::lrsp/get-person-ret)
@@ -16,9 +16,9 @@
   "Query an Agent from the DB. Returns a map between `:person` and the
    resulting Person object. Throws an exception if not found. Does not
    query Groups."
-  [interface tx input]
+  [inf tx input]
   ;; If agent is not found, return the original input
-  (let [agent (if-some [{result :payload} (ip/-query-actor interface tx input)]
+  (let [agent (if-some [{result :payload} (ip/-query-actor inf tx input)]
                 result
                 (:payload input))]
     {:person (->> agent au/actor->person)}))

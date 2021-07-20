@@ -8,7 +8,7 @@
             [lrsql.ops.util :refer [throw-invalid-table-ex]]))
 
 (s/fdef query-document
-  :args (s/cat :interface c/query-interface?
+  :args (s/cat :inf c/query-interface?
                :tx transaction?
                :input ds/document-input-spec)
   :ret ::lrsp/get-document-ret)
@@ -17,14 +17,14 @@
   "Query a single document from the DB. Returns a map where the value of
    `:document` is either a map with the contents as a byte array, or `nil`
    if not found."
-  [interface tx {:keys [table] :as input}]
+  [inf tx {:keys [table] :as input}]
   (if-some [res (case table
                   :state-document
-                  (ip/-query-state-document interface tx input)
+                  (ip/-query-state-document inf tx input)
                   :agent-profile-document
-                  (ip/-query-agent-profile-document interface tx input)
+                  (ip/-query-agent-profile-document inf tx input)
                   :activity-profile-document
-                  (ip/-query-activity-profile-document interface tx input)
+                  (ip/-query-activity-profile-document inf tx input)
                   ;; Else
                   (throw-invalid-table-ex "query-document" input))]
     (let [{contents     :contents
@@ -44,7 +44,7 @@
     {:document nil}))
 
 (s/fdef query-document-ids
-  :args (s/cat :interface c/query-interface?
+  :args (s/cat :inf c/query-interface?
                :tx transaction?
                :input ds/document-ids-query-spec)
   :ret ::lrsp/get-document-ids-ret)
@@ -54,19 +54,19 @@
 (defn query-document-ids
   "Query multiple document IDs from the DB. Returns a map containing the
    vector of IDs."
-  [interface tx {:keys [table] :as input}]
+  [inf tx {:keys [table] :as input}]
   (let [ids (case table
               :state-document
               (->> input
-                   (ip/-query-state-document-ids interface tx)
+                   (ip/-query-state-document-ids inf tx)
                    (map :state_id))
               :agent-profile-document
               (->> input
-                   (ip/-query-agent-profile-document-ids interface tx)
+                   (ip/-query-agent-profile-document-ids inf tx)
                    (map :profile_id))
               :activity-profile-document
               (->> input
-                   (ip/-query-activity-profile-document-ids interface tx)
+                   (ip/-query-activity-profile-document-ids inf tx)
                    (map :profile_id))
               ;; Else
               (throw-invalid-table-ex "query-document-ids" input))]
