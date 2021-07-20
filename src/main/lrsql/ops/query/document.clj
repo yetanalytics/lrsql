@@ -2,13 +2,13 @@
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.interface.protocol :as ip]
-            [lrsql.spec.common :as c :refer [transaction?]]
+            [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
             [lrsql.util :as u]
             [lrsql.ops.util :refer [throw-invalid-table-ex]]))
 
 (s/fdef query-document
-  :args (s/cat :inf c/query-interface?
+  :args (s/cat :inf ds/document-interface?
                :tx transaction?
                :input ds/document-input-spec)
   :ret ::lrsp/get-document-ret)
@@ -44,7 +44,7 @@
     {:document nil}))
 
 (s/fdef query-document-ids
-  :args (s/cat :inf c/query-interface?
+  :args (s/cat :inf ds/document-interface?
                :tx transaction?
                :input ds/document-ids-query-spec)
   :ret ::lrsp/get-document-ids-ret)

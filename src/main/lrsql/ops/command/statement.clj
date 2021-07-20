@@ -2,8 +2,11 @@
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.interface.protocol :as ip]
-            [lrsql.spec.common :as c :refer [transaction?]]
-            [lrsql.spec.statement :as ss]
+            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.spec.actor :refer [actor-interface?]]
+            [lrsql.spec.activity :refer [activity-interface?]]
+            [lrsql.spec.attachment :refer [attachment-interface?]]
+            [lrsql.spec.statement :as ss :refer [statement-interface?]]
             [lrsql.util :as u]
             [lrsql.util.activity :as au]
             [lrsql.util.statement :as su]))
@@ -83,7 +86,10 @@
     (when exists (ip/-insert-statement-to-statement! inf tx input))))
 
 (s/fdef insert-statement!
-  :args (s/cat :inf c/insert-interface?
+  :args (s/cat :inf (s/and statement-interface?
+                           actor-interface?
+                           activity-interface?
+                           attachment-interface?)
                :tx transaction?
                :inputs ss/insert-statement-input-spec)
   :ret ::lrsp/store-statements-ret)

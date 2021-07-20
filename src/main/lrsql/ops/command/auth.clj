@@ -1,7 +1,7 @@
 (ns lrsql.ops.command.auth
   (:require [clojure.spec.alpha :as s]
             [lrsql.interface.protocol :as ip]
-            [lrsql.spec.common :as c]
+            [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.auth :as as]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11,8 +11,8 @@
 ;; TODO: Dupe checking
 
 (s/fdef insert-credential!
-  :args (s/cat :inf c/insert-interface?
-               :tx c/transaction?
+  :args (s/cat :inf as/credential-interface?
+               :tx transaction?
                :input as/insert-cred-input-spec)
   :ret nil?)
 
@@ -23,8 +23,8 @@
   nil)
 
 (s/fdef insert-credential-scopes!
-  :args (s/cat :inf c/insert-interface?
-               :tx c/transaction?
+  :args (s/cat :inf as/credential-interface?
+               :tx transaction?
                :inputs as/insert-cred-scopes-input-spec)
   :ret nil?)
 
@@ -41,8 +41,8 @@
 ;; TODO: Existence checking
 
 (s/fdef delete-credential-scopes!
-  :args (s/cat :inf c/delete-interface?
-               :tx c/transaction?
+  :args (s/cat :inf as/credential-interface?
+               :tx transaction?
                :inputs as/delete-cred-scopes-input-spec)
   :ret nil?)
 
@@ -53,8 +53,8 @@
   (dorun (map (partial ip/-delete-credential-scope! inf tx) input)))
 
 (s/fdef delete-credential!
-  :args (s/cat :inf c/delete-interface?
-               :tx c/transaction?
+  :args (s/cat :inf as/credential-interface?
+               :tx transaction?
                :input as/delete-cred-input-spec)
   :ret nil?)
 

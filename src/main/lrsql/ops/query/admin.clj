@@ -1,7 +1,7 @@
 (ns lrsql.ops.query.admin
   (:require [clojure.spec.alpha :as s]
             [lrsql.interface.protocol :as ip]
-            [lrsql.spec.common :as c]
+            [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.admin :as ads]
             [lrsql.util.admin :as au]))
 
@@ -18,8 +18,8 @@
     :lrsql.admin/missing-account-error))
 
 (s/fdef query-validate-admin
-  :args (s/cat :inf c/query-interface?
-               :tx c/transaction?
+  :args (s/cat :inf ads/admin-interface?
+               :tx transaction?
                :input ads/query-validate-admin-input-spec)
   :ret ads/query-validate-admin-ret-spec)
 

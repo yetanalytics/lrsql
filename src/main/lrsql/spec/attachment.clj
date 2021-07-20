@@ -1,7 +1,16 @@
 (ns lrsql.spec.attachment
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec]
+            [lrsql.interface.protocol :as ip]
             [lrsql.spec.common :as c]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn attachment-interface?
+  [inf]
+  (satisfies? ip/AttachmentInterface inf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

@@ -2,13 +2,13 @@
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.interface.protocol :as ip]
-            [lrsql.spec.common :as c]
+            [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.actor :as as]
             [lrsql.util.actor :as au]))
 
 (s/fdef query-agent
-  :args (s/cat :inf c/query-interface?
-               :tx c/transaction?
+  :args (s/cat :inf as/actor-interface?
+               :tx transaction?
                :input as/query-agent-spec)
   :ret ::lrsp/get-person-ret)
 

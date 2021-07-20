@@ -2,12 +2,12 @@
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.interface.protocol :as ip]
-            [lrsql.spec.common :as c :refer [transaction?]]
+            [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.auth :as as]
             [lrsql.util.auth :as au]))
 
 (s/fdef query-credential-scopes*
-  :args (s/cat :inf c/query-interface?
+  :args (s/cat :inf as/credential-interface?
                :tx transaction?
                :input as/query-cred-scopes-input-spec)
   :ret (s/nilable (s/coll-of ::as/scope
@@ -25,7 +25,7 @@
              vec)))
 
 (s/fdef query-credential-scopes
-  :args (s/cat :inf c/query-interface?
+  :args (s/cat :inf as/credential-interface?
                :tx transaction?
                :input as/query-cred-scopes-input-spec)
   :ret ::lrsp/authenticate-ret)
@@ -61,7 +61,7 @@
     {:result :com.yetanalytics.lrs.auth/forbidden}))
 
 (s/fdef query-credentials
-  :args (s/cat :inf c/query-interface?
+  :args (s/cat :inf as/credential-interface?
                :tx transaction?
                :input as/query-creds-input-spec)
   :ret (s/coll-of as/scoped-key-pair-spec :gen-max 5))

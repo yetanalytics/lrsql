@@ -1,11 +1,20 @@
 (ns lrsql.spec.actor
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec   :as xs]
+            [lrsql.interface.protocol :as ip]
             [lrsql.spec.common :as c]
             [lrsql.spec.util :refer [make-str-spec]]))
 
 ;; In this context, "Actor" is a catch-all term to refer to both Agents and
 ;; Identified Groups, not the Actor object within Statements.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn actor-interface?
+  [inf]
+  (satisfies? ip/ActorInterface inf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

@@ -1,7 +1,16 @@
 (ns lrsql.spec.activity
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec   :as xs]
+            [lrsql.interface.protocol :as ip]
             [lrsql.spec.common :as c]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn activity-interface?
+  [inf]
+  (satisfies? ip/ActivityInterface inf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

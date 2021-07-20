@@ -2,10 +2,21 @@
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.document :as lrs-doc]
+            [lrsql.interface.protocol :as ip]
             [lrsql.spec.common    :as c]
             [lrsql.spec.activity  :as hs-activ]
             [lrsql.spec.actor     :as hs-actor]
             [lrsql.spec.statement :as hs-stmt]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn document-interface?
+  [inf]
+  (or (satisfies? ip/StateDocumentInterface inf)
+      (satisfies? ip/AgentProfileDocumentInterface inf)
+      (satisfies? ip/ActivityProfileDocumentInterface inf)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

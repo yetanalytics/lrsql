@@ -3,6 +3,7 @@
             [clojure.spec.gen.alpha :as sgen]
             [xapi-schema.spec :as xs]
             [xapi-schema.spec.regex :as xsr]
+            [lrsql.interface.protocol :as ip]
             [lrsql.spec.common :as c]
             [lrsql.spec.admin :as ads])
   (:import [java.util Base64 Base64$Encoder]))
@@ -16,15 +17,23 @@
     (s/and string?
            (s/conformer #(subs % 6))
            (partial re-matches xsr/Base64RegEx))
-   #(sgen/fmap
-     (fn [[username password]]
-       (let [up   (str username ":" password)
-             byts (.encode ^Base64$Encoder (Base64/getEncoder) (.getBytes up))]
-         (str "Basic " (String. byts))))
-     (sgen/tuple (sgen/fmap xs/into-str
-                            (sgen/vector (sgen/char-alpha) 3 16))
-                 (sgen/fmap xs/into-str
-                            (sgen/vector (sgen/char-alpha) 3 16))))))
+    #(sgen/fmap
+      (fn [[username password]]
+        (let [up   (str username ":" password)
+              byts (.encode ^Base64$Encoder (Base64/getEncoder) (.getBytes up))]
+          (str "Basic " (String. byts))))
+      (sgen/tuple (sgen/fmap xs/into-str
+                             (sgen/vector (sgen/char-alpha) 3 16))
+                  (sgen/fmap xs/into-str
+                             (sgen/vector (sgen/char-alpha) 3 16))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn credential-interface?
+  [inf]
+  (satisfies? ip/CredentialInterface inf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

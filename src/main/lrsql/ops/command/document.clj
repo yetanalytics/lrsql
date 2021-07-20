@@ -2,7 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as cstr]
             [lrsql.interface.protocol :as ip]
-            [lrsql.spec.common :as c :refer [transaction?]]
+            [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
             [lrsql.util :as u]
             [lrsql.ops.util :refer [throw-invalid-table-ex]]))
@@ -12,7 +12,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef insert-document!
-  :args (s/cat :inf c/insert-interface?
+  :args (s/cat :inf ds/document-interface?
                :tx transaction?
                :input ds/insert-document-spec)
   :ret ds/document-command-res-spec)
@@ -126,7 +126,7 @@
       (upsert-insert-document! inf tx input insert-fn!))))
 
 (s/fdef upsert-document!
-  :args (s/cat :inf (or c/insert-interface? c/update-interface?)
+  :args (s/cat :inf ds/document-interface?
                :tx transaction? :input ds/insert-document-spec)
   :ret ds/document-command-res-spec)
 
@@ -165,7 +165,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef delete-document!
-  :args (s/cat :inf c/delete-interface?
+  :args (s/cat :inf ds/document-interface?
                :tx transaction?
                :input ds/document-input-spec)
   :ret ds/document-command-res-spec)
@@ -185,7 +185,7 @@
   {})
 
 (s/fdef delete-documents!
-  :args (s/cat :inf c/delete-interface?
+  :args (s/cat :inf ds/document-interface?
                :tx transaction?
                :input ds/state-doc-multi-input-spec)
   :ret ds/document-command-res-spec)

@@ -2,7 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.interface.protocol :as ip]
-            [lrsql.spec.common :as c :refer [transaction?]]
+            [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.statement :as ss]
             [lrsql.util :as u]
             [lrsql.util.statement :as us]))
@@ -70,7 +70,7 @@
      :attachments att-results}))
 
 (s/fdef query-statements
-  :args (s/cat :inf c/query-interface?
+  :args (s/cat :inf ss/statement-interface?
                :tx transaction?
                :input ss/statement-query-spec
                :ltags ss/lang-tags-spec)
@@ -95,7 +95,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef query-descendants
-  :args (s/cat :inf c/query-interface?
+  :args (s/cat :inf ss/statement-interface?
                :tx transaction?
                :input ss/insert-statement-input-spec)
   :ret (s/coll-of ::ss/descendant-id :kind vector? :gen-max 5))

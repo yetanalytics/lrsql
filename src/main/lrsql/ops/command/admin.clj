@@ -1,7 +1,7 @@
 (ns lrsql.ops.command.admin
   (:require [clojure.spec.alpha :as s]
             [lrsql.interface.protocol :as ip]
-            [lrsql.spec.common :as c]
+            [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.admin :as ads]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9,8 +9,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef insert-admin!
-  :args (s/cat :inf (s/and c/query-interface? c/insert-interface?)
-               :tx c/transaction?
+  :args (s/cat :inf ads/admin-interface?
+               :tx transaction?
                :input ads/insert-admin-input-spec)
   :ret ads/insert-admin-ret-spec)
 
@@ -30,8 +30,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef delete-admin!
-  :args (s/cat :inf c/delete-interface?
-               :tx c/transaction?
+  :args (s/cat :inf ads/admin-interface?
+               :tx transaction?
                :input ads/delete-admin-input-spec)
   :ret ads/delete-admin-ret-spec)
 

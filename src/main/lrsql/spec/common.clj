@@ -1,32 +1,13 @@
 (ns lrsql.spec.common
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
-            [next.jdbc.protocols :as jp]
-            [lrsql.interface.protocol :as ip])
+            [next.jdbc.protocols :as jp])
   (:import [java.time Instant]))
 
 ;; UUIDs
 
 (s/def ::primary-key uuid?)
 (s/def ::statement-id uuid?)
-
-;; DB Interface
-
-(defn insert-interface?
-  [int]
-  (satisfies? ip/InsertInterface int))
-
-(defn update-interface?
-  [int]
-  (satisfies? ip/UpdateInterface int))
-
-(defn delete-interface?
-  [int]
-  (satisfies? ip/DeleteInterface int))
-
-(defn query-interface?
-  [int]
-  (satisfies? ip/QueryInterface int))
 
 ;; Transactions
 
