@@ -19,7 +19,7 @@
 -- :doc Query for one statement using statement IDs.
 SELECT payload FROM xapi_statement
 WHERE statement_id = :statement-id
---~ (if (:voided? params) "AND is_voided = :voided?")
+AND is_voided = :voided?
 
 -- :name query-statement-exists
 -- :command :query
