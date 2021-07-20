@@ -19,23 +19,16 @@
   [inf tx input]
   (let [{stmt-id  :statement-id
          sref-id  :statement-ref-id
-         new-stmt :payload} input
-        exists (ip/-query-statement-exists inf
-                                           tx
-                                           {:statement-id stmt-id})]
-    (if exists
-      (let [{old-stmt :payload}
-            (or (ip/-query-statement inf tx {:statement-id stmt-id
-                                                   :voided?      false})
-                (ip/-query-statement inf tx {:statement-id stmt-id
-                                                   :voided?      true}))]
-        ;; Return nil if the statements aren't actually equal
-        (when-not (su/statement-equal? old-stmt new-stmt)
-          (throw
-           (ex-info "Statement Conflict!"
-                    {:type :com.yetanalytics.lrs.protocol/statement-conflict
-                     :extant-statement old-stmt
-                     :statement        new-stmt}))))
+         new-stmt :payload} input]
+    (if-some [{old-stmt :payload}
+              (ip/-query-statement inf tx {:statement-id stmt-id})]
+      ;; Return nil if the statements aren't actually equal
+      (when-not (su/statement-equal? old-stmt new-stmt)
+        (throw
+         (ex-info "Statement Conflict!"
+                  {:type :com.yetanalytics.lrs.protocol/statement-conflict
+                   :extant-statement old-stmt
+                   :statement        new-stmt})))
       (do
         (ip/-insert-statement! inf tx input)
         (when (:voiding? input)
