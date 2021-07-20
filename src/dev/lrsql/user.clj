@@ -7,12 +7,15 @@
             [lrsql.admin.protocol :as adp]))
 
 (comment
+  (require '[lrsql.lrs-test :refer :all])
   (def sys (system/system :dev-h2-mem))
 
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
+  
+  (lrsp/-store-statements lrs {} [stmt-4] [stmt-4-attach])
 
   (do
     (doseq [cmd [;; Drop credentials table

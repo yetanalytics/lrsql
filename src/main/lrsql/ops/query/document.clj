@@ -8,7 +8,9 @@
             [lrsql.ops.util :refer [throw-invalid-table-ex]]))
 
 (s/fdef query-document
-  :args (s/cat :tx transaction? :input ds/document-input-spec)
+  :args (s/cat :interface c/query-interface?
+               :tx transaction?
+               :input ds/document-input-spec)
   :ret ::lrsp/get-document-ret)
 
 (defn query-document
@@ -42,7 +44,9 @@
     {:document nil}))
 
 (s/fdef query-document-ids
-  :args (s/cat :tx transaction? :input ds/document-ids-query-spec)
+  :args (s/cat :interface c/query-interface?
+               :tx transaction?
+               :input ds/document-ids-query-spec)
   :ret ::lrsp/get-document-ids-ret)
 
 ;; TODO: The LRS should also return last modified info.
