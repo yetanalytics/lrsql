@@ -34,9 +34,6 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
-  (-drop-all! [_ _tx]
-    ;; TODO
-    nil)
 
   ip/StatementInterface
   (-insert-statement! [_ tx input]

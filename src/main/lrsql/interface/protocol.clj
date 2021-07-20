@@ -3,9 +3,7 @@
 
 (defprotocol DDLInterface
   (-create-all! [this tx]
-    "Create all tables and indexes.")
-  (-drop-all! [this tx]
-    "Drop all tables and delete all indexes."))
+    "Create all tables and indexes."))
 
 (defprotocol StatementInterface
   ;; Commands
