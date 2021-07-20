@@ -112,5 +112,3 @@
       {:error (ex-info "Could not insert statement."
                        {:type  ::statement-insertion-error
                         :input input})})))
-
-(when (some? (:voided? {:statement-id 2})) "AND is_voided = :voided?")
