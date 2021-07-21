@@ -6,10 +6,11 @@
 
 (def h2-interface (ir/map->H2Interface {}))
 
-;; TODO: Add an option to pass `:prod-h2` instead, for persistent instead of
-;; ephemeral H2 DB.
-;; This should be passed as an arg to the main function, though I'm not sure
-;; about main arg best practices in Clojure.
-(defn -main [& _]
-  (-> (system/system h2-interface :prod-h2-mem)
-      component/start))
+(defn -main
+  "Main entrypoint for H2-backed LRSQL instances. Passing `--persistent true`
+   in the CLI will spin up a persistent H2 instance on disk; otherwise,
+   an in-mem, ephemeral H2 instance will init instead."
+  [& {persistent? "--persistent" :as _args}]
+  (let [profile (if persistent? :prod-h2 :prod-h2-mem)]
+    (-> (system/system h2-interface profile)
+        component/start)))
