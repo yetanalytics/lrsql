@@ -1,6 +1,6 @@
 (ns lrsql.test-support-test
   (:require [clojure.test :refer [deftest testing is]]
-            [lrsql.test-support :refer [h2-system fresh-db-fixture]]
+            [lrsql.test-support :refer [test-system fresh-db-fixture]]
             [lrsql.util :as u]))
 
 (defn- get-db-name
@@ -29,5 +29,5 @@
      (not= "example" ; TODO: this will come from env, check against that
            (get-in
             (fresh-db-fixture
-             #(h2-system))
+             #(test-system))
             [:database :db-name])))))
