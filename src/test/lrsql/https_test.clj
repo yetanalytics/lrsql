@@ -8,8 +8,7 @@
 
 (deftest https-test
   (testing "HTTPS connection"
-    (let [_    (support/assert-in-mem-db)
-          sys  (support/test-system)
+    (let [sys  (support/test-system)
           sys' (component/start sys)]
       ;; We need to pass the `--insecure` arg because curl would otherwise
       ;; not accept our generate selfie certs

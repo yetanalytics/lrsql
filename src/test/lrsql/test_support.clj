@@ -40,16 +40,6 @@
   []
   (system/system (ir/map->H2Interface {}) :test-h2-mem))
 
-;; TODO: Switch to io/resource for reading config file
-(defn assert-in-mem-db
-  []
-  (let [env     (u/read-config :test-h2-mem)
-        db-type (-> env :database :db-type)]
-    (when (not= "h2:mem" db-type)
-      (throw (ex-info "Test can only be run on in-memory H2 database!"
-                      {:type    ::non-mem-db
-                       :db-type db-type})))))
-
 ;; Copied from training-commons.xapi.statement-gen-test
 (defn check-validate
   "Given the function name `fname`, returns `nil` if its generative
