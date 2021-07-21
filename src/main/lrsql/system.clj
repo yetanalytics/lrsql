@@ -1,6 +1,5 @@
 (ns lrsql.system
   (:require [com.stuartsierra.component :as component]
-            [lrsql.interface.record :as ir]
             [lrsql.system.database :as db]
             [lrsql.system.lrs :as lrs]
             [lrsql.system.webserver :as webserver]
@@ -9,9 +8,9 @@
 (defn system
   "Return a lrsql system with configuration specified by the `profile`
    keyword (set to `:default` if not given)."
-  ([]
-   (system :default))
-  ([profile]
+  ([iface]
+   (system iface :default))
+  ([iface profile]
    (let [config
          (u/read-config profile)
          db-type
@@ -24,7 +23,7 @@
           :interface  (component/using
                        (cond
                          (#{"h2" "h2:mem"} db-type)
-                         (ir/map->H2Interface {}))
+                         iface)
                        [])
           :lrs        (component/using
                        (lrs/map->LearningRecordStore {})
