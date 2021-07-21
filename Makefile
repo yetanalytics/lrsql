@@ -12,7 +12,7 @@ config/keystore.jks:
 keystore: config/keystore.jks
 
 ci: keystore 
-	clojure -Xdb-h2:test
+	clojure -X:test
 
 ephemeral:
 	ENV=:dev \
