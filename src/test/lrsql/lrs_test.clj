@@ -100,7 +100,7 @@
 
 (deftest test-statement-fns
   (let [_     (support/assert-in-mem-db)
-        sys   (system/system :test)
+        sys   (system/h2-system :test)
         sys'  (component/start sys)
         lrs   (:lrs sys')
         id-0  (get stmt-0 "id")
@@ -321,7 +321,7 @@
 
 (deftest test-statement-ref-fns
   (let [_    (support/assert-in-mem-db)
-        sys  (system/system :test)
+        sys  (system/h2-system :test)
         sys' (component/start sys)
         lrs  (:lrs sys')]
     (testing "statement insertions"
@@ -420,7 +420,7 @@
 
 (deftest test-document-fns
   (let [_    (support/assert-in-mem-db)
-        sys  (system/system :test)
+        sys  (system/h2-system :test)
         sys' (component/start sys)
         lrs  (:lrs sys')]
     (testing "document insertion"
