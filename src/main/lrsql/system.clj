@@ -7,31 +7,29 @@
 
 (defn system
   "Return a lrsql system with configuration specified by the `profile`
-   keyword (set to `:default` if not given)."
-  ([iface]
-   (system iface :default))
-  ([iface profile]
-   (let [config
-         (u/read-config profile)
-         db-type
-         (-> config :database :db-type)
-         initial-sys ; init without configuration
-         (component/system-map
-          :connection (component/using
-                       (db/map->Connection {})
-                       [])
-          :interface  (component/using
-                       (cond
-                         (#{"h2" "h2:mem"} db-type)
-                         iface)
-                       [])
-          :lrs        (component/using
-                       (lrs/map->LearningRecordStore {})
-                       [:connection :interface])
-          :webserver  (component/using
-                       (webserver/map->Webserver {})
-                       [:lrs]))
-         assoc-config
-         (fn [m config-m] (assoc m :config config-m))]
-     (-> (merge-with assoc-config initial-sys config)
-         (component/system-using {})))))
+   keyword."
+  [iface profile]
+  (let [config
+        (u/read-config profile)
+        db-type
+        (-> config :database :db-type)
+        initial-sys ; init without configuration
+        (component/system-map
+         :connection (component/using
+                      (db/map->Connection {})
+                      [])
+         :interface  (component/using
+                      (cond
+                        (#{"h2" "h2:mem"} db-type)
+                        iface)
+                      [])
+         :lrs        (component/using
+                      (lrs/map->LearningRecordStore {})
+                      [:connection :interface])
+         :webserver  (component/using
+                      (webserver/map->Webserver {})
+                      [:lrs]))
+        assoc-config
+        (fn [m config-m] (assoc m :config config-m))]
+    (-> (merge-with assoc-config initial-sys config)
+        (component/system-using {}))))
