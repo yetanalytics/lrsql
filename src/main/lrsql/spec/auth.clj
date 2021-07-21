@@ -33,7 +33,7 @@
 
 (defn credential-interface?
   [inf]
-  (satisfies? ip/CredentialInterface inf))
+  (satisfies? ip/Credential inf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

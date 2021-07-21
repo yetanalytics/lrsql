@@ -9,7 +9,7 @@
 
 (defn admin-interface?
   [inf]
-  (satisfies? ip/AdminAccountInterface inf))
+  (satisfies? ip/AdminAccount inf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

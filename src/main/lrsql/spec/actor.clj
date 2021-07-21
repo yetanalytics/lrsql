@@ -14,7 +14,7 @@
 
 (defn actor-interface?
   [inf]
-  (satisfies? ip/ActorInterface inf))
+  (satisfies? ip/Actor inf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

@@ -10,7 +10,7 @@
 
 (defn attachment-interface?
   [inf]
-  (satisfies? ip/AttachmentInterface inf))
+  (satisfies? ip/Attachment inf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

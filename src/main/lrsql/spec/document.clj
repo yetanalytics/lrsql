@@ -14,9 +14,9 @@
 
 (defn document-interface?
   [inf]
-  (or (satisfies? ip/StateDocumentInterface inf)
-      (satisfies? ip/AgentProfileDocumentInterface inf)
-      (satisfies? ip/ActivityProfileDocumentInterface inf)))
+  (or (satisfies? ip/StateDocument inf)
+      (satisfies? ip/AgentProfileDocument inf)
+      (satisfies? ip/ActivityProfileDocument inf)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

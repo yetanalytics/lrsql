@@ -19,7 +19,7 @@
   (start [this] this)
   (stop [this] this)
 
-  ip/DDLInterface
+  ip/DDL
   (-create-all! [_ tx]
     (create-statement-table! tx)
     (create-actor-table! tx)
@@ -35,7 +35,7 @@
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
 
-  ip/StatementInterface
+  ip/Statement
   (-insert-statement! [_ tx input]
     (insert-statement! tx input))
   (-insert-statement-to-statement! [_ tx input]
@@ -51,7 +51,7 @@
   (-query-statement-descendants [_ tx input]
     (query-statement-descendants tx input))
 
-  ip/ActorInterface
+  ip/Actor
   (-insert-actor! [_ tx input]
     (insert-actor! tx input))
   (-insert-statement-to-actor! [_ tx input]
@@ -61,7 +61,7 @@
   (-query-actor [_ tx input]
     (query-actor tx input))
 
-  ip/ActivityInterface
+  ip/Activity
   (-insert-activity! [_ tx input]
     (insert-activity! tx input))
   (-insert-statement-to-activity! [_ tx input]
@@ -71,7 +71,7 @@
   (-query-activity [_ tx input]
     (query-activity tx input))
 
-  ip/AttachmentInterface
+  ip/Attachment
   (-insert-attachment! [_ tx input]
     (insert-attachment! tx input))
   (-query-attachments [_ tx input]
@@ -80,7 +80,7 @@
   ;; When inserting documents, we need to query first since H2 doesn't have
   ;; dupe checking on insert.
 
-  ip/StateDocumentInterface
+  ip/StateDocument
   (-insert-state-document! [_ tx input]
     (when-not (query-state-document-exists tx input)
       (insert-state-document! tx input)))
@@ -95,8 +95,7 @@
   (-query-state-document-ids [_ tx input]
     (query-state-document-ids tx input))
 
-
-  ip/AgentProfileDocumentInterface
+  ip/AgentProfileDocument
   (-insert-agent-profile-document! [_ tx input]
     (when-not (query-agent-profile-document-exists tx input)
       (insert-agent-profile-document! tx input)))
@@ -109,7 +108,7 @@
   (-query-agent-profile-document-ids [_ tx input]
     (query-agent-profile-document-ids tx input))
 
-  ip/ActivityProfileDocumentInterface
+  ip/ActivityProfileDocument
   (-insert-activity-profile-document! [_ tx input]
     (when-not (query-activity-profile-document-exists tx input)
       (insert-activity-profile-document! tx input)))
@@ -122,7 +121,7 @@
   (-query-activity-profile-document-ids [_ tx input]
     (query-activity-profile-document-ids tx input))
 
-  ip/AdminAccountInterface
+  ip/AdminAccount
   (-insert-admin-account! [_ tx input]
     (insert-admin-account! tx input))
   (-delete-admin-account! [_ tx input]
@@ -132,7 +131,7 @@
   (-query-account-exists [_ tx input]
     (query-account-exists tx input))
 
-  ip/CredentialInterface
+  ip/Credential
   (-insert-credential! [_ tx input]
     (insert-credential! tx input))
   (-insert-credential-scope! [_ tx input]

@@ -20,7 +20,7 @@
 
 (defn statement-interface?
   [inf]
-  (satisfies? ip/StatementInterface inf))
+  (satisfies? ip/Statement inf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

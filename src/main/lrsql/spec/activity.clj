@@ -10,7 +10,7 @@
 
 (defn activity-interface?
   [inf]
-  (satisfies? ip/ActivityInterface inf))
+  (satisfies? ip/Activity inf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms
