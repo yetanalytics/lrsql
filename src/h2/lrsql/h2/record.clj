@@ -1,6 +1,5 @@
 (ns lrsql.h2.record
   (:require [com.stuartsierra.component :as cmp]
-            [clojure.tools.logging :as log]
             [hugsql.core :as hugsql]
             [lrsql.interface.protocol :as ip]))
 

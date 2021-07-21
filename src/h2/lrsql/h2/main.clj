@@ -5,5 +5,5 @@
   (:gen-class))
 
 (defn -main [& _]
-  (-> (system/h2-system)
+  (-> (system/system (ir/map->H2Interface {}))
       component/start))

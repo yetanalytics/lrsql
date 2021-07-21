@@ -30,5 +30,5 @@
      (not= "example" ; TODO: this will come from env, check against that
            (get-in
             (fresh-db-fixture
-             #(system/h2-system))
+             #(system/system))
             [:database :db-name])))))

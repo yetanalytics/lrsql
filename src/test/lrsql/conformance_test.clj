@@ -14,7 +14,7 @@
   (conf/with-test-suite
     (binding [conf/*print-logs* true]
       (testing "no regressions"
-        (let [sys  (system/h2-system :test)
+        (let [sys  (system/system :test)
               sys' (component/start sys)]
           (is (conf/conformant?
                "-e" "http://localhost:8080/xapi" "-b" "-z" "-a"
