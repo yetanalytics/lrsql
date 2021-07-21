@@ -24,7 +24,7 @@
 (defn fresh-db-fixture
   [f]
   (let [id-str (str (UUID/randomUUID))
-        cfg (-> (u/read-config :test)
+        cfg (-> (u/read-config :test-h2-mem)
                 (assoc-in [:database :db-name] id-str)
                 (assoc-in [:connection :database :db-name] id-str)
                 (assoc-in [:lrs :database :db-name] id-str))]
@@ -36,14 +36,14 @@
 (defn test-system
   "Create a lrsql system specifically for tests:
    - Uses the (in-mem) H2 DB interface
-   - Uses the `:test` profile"
+   - Uses the `:test-h2-mem` profile"
   []
-  (system/system (ir/map->H2Interface {}) :test))
+  (system/system (ir/map->H2Interface {}) :test-h2-mem))
 
 ;; TODO: Switch to io/resource for reading config file
 (defn assert-in-mem-db
   []
-  (let [env     (u/read-config :test)
+  (let [env     (u/read-config :test-h2-mem)
         db-type (-> env :database :db-type)]
     (when (not= "h2:mem" db-type)
       (throw (ex-info "Test can only be run on in-memory H2 database!"
