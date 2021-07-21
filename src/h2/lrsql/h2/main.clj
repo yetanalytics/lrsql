@@ -4,6 +4,8 @@
             [lrsql.h2.record :as ir])
   (:gen-class))
 
+(def h2-interface (ir/map->H2Interface {}))
+
 (defn -main [& _]
-  (-> (system/system (ir/map->H2Interface {}))
+  (-> (system/system h2-interface)
       component/start))

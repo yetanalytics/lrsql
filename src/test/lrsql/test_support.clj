@@ -1,6 +1,8 @@
 (ns lrsql.test-support
   (:require [clojure.spec.test.alpha :as stest]
             [orchestra.spec.test :as otest]
+            [lrsql.h2.record :as ir]
+            [lrsql.system :as system]
             [lrsql.util :as u])
   (:import [java.util UUID]))
 
@@ -29,6 +31,14 @@
     (with-redefs
      [u/read-config (constantly cfg)]
       (f))))
+
+;; TODO: Somehow allow other DMBSs to be tested
+(defn h2-system
+  "Create a system that uses an H2 DB interface."
+  ([]
+   (system/system (ir/map->H2Interface {})))
+  ([profile]
+   (system/system (ir/map->H2Interface {}) profile)))
 
 ;; TODO: Switch to io/resource for reading config file
 (defn assert-in-mem-db
