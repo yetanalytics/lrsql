@@ -191,8 +191,8 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
 -- :doc Create the `credential_to_scope` link table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS credential_to_scope (
   id         TEXT NOT NULL PRIMARY KEY, -- uuid
-  api_key    TEXT NOT NULL,             -- uuid
-  secret_key TEXT NOT NULL,             -- uuid
+  api_key    TEXT NOT NULL,             -- string
+  secret_key TEXT NOT NULL,             -- string
   scope      TEXT CHECK (
                scope IN ('statements/write',
                          'statements/read/mine', -- unimplemented

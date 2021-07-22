@@ -1,5 +1,6 @@
 (ns lrsql.h2.record
   (:require [com.stuartsierra.component :as cmp]
+            [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
             [lrsql.util :as u]))
 
@@ -147,9 +148,9 @@
   (-query-credential-scopes [_ tx input]
     (query-credential-scopes tx input))
 
-  ;; TODO
   bp/BackendIOSetter
   (-set-read! [_]
-    nil)
+    (bd/set-read-time->instant!)
+    (bd/set-read-bytes->json! #{"payload"}))
   (-set-write! [_]
-    nil))
+    (bd/set-write-json->bytes!)))

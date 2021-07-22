@@ -1,6 +1,8 @@
 (ns lrsql.sqlite.record
   (:require [com.stuartsierra.component :as cmp]
             [lrsql.backend.protocol :as bp]
+            [lrsql.backend.data :as bd]
+            [lrsql.sqlite.data :as sd]
             [lrsql.util :as u]))
 
 ;; Init HugSql functions
@@ -145,9 +147,16 @@
   (-query-credential-scopes [_ tx input]
     (query-credential-scopes tx input))
 
-  ;; TODO
   bp/BackendIOSetter
   (-set-read! [_]
-    nil)
+    (bd/set-read-time->instant!)
+    (bd/set-read-blob->json!
+     #{"payload"})
+    (sd/set-read-str->uuid-or-inst!
+     #{"id" "statement_id" "registration" "ancestor_id" "descendant_id" "account_id"}
+     #{"last_modified"}))
   (-set-write! [_]
-    nil))
+    (bd/set-write-json->bytes!)
+    (sd/set-write-uuid->str!)
+    (sd/set-write-inst->str!)
+    (sd/set-write-bool->int!)))
