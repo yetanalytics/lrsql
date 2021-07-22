@@ -18,11 +18,21 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   is_voided    INTEGER DEFAULT FALSE NOT NULL, -- boolean
   payload      BLOB NOT NULL                   -- json
 )
-/* TODO: Re-add indexes for optimization (but w/ separate fns)
-CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
-CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri);
+
+-- :name create-desc-id-index!
+-- :command :execute
+-- :doc Create a second, descending index on the statement primary key.
+CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC)
+
+-- :name create-verb-iri-index!
+-- :command :execute
+-- :doc Create an index on the `xapi_statement.verb_iri` column.
+CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri)
+
+-- :name create-registration-index!
+-- :command :execute
+-- :doc Create an index on the `xapi_statement.registration` column.
 CREATE INDEX IF NOT EXISTS registration_idex ON xapi_statement(registration)
-*/
 
 -- :name create-actor-table!
 -- :command :execute
@@ -118,7 +128,7 @@ CREATE TABLE IF NOT EXISTS state_document (
   content_type   TEXT NOT NULL,             -- string
   content_length INTEGER NOT NULL,          -- integer
   contents       BLOB NOT NULL,             -- binary data
-  UNIQUE (state_id, activity_iri, agent_ifi, registration)
+  UNIQUE (state_id, activity_iri, agent_ifi, registration) ON CONFLICT IGNORE
 )
 
 -- :name create-agent-profile-document-table!
@@ -132,7 +142,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
   content_type   TEXT NOT NULL,             -- string
   content_length INTEGER NOT NULL,          -- integer
   contents       BLOB NOT NULL,             -- binary data
-  UNIQUE (profile_id, agent_ifi)
+  UNIQUE (profile_id, agent_ifi) ON CONFLICT IGNORE
 )
 
 -- :name create-activity-profile-document-table!
@@ -146,7 +156,7 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
   content_type   TEXT NOT NULL,             -- string
   content_length INTEGER NOT NULL,          -- integer
   contents       BLOB NOT NULL,             -- binary data
-  UNIQUE (profile_id, activity_iri)
+  UNIQUE (profile_id, activity_iri) ON CONFLICT IGNORE
 )
 
 /* Admin Account Table */
