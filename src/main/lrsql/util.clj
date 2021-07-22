@@ -121,10 +121,6 @@
   [^Instant ts]
   (.toEpochMilli ts))
 
-(comment
-  (def t #inst "2021")
-  (normalize (java-time/format t)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UUIDs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -141,14 +137,12 @@
   (unchecked-long 0x0000000000000FFF))
 (def ^{:private true :const true} bit-mask-16
   (unchecked-long 0x000000000000FFFF))
-(def ^{:private true :const true} bit-mask-36
+(def ^{:private true :const true} bit-mask-48
   (unchecked-long 0x0000FFFFFFFFFFFF))
 (def ^{:private true :const true} bit-mask-61
   (unchecked-long 0x1FFFFFFFFFFFFFFF))
-(def ^{:private true :const true} bit-mask-64
-  (unchecked-long 0xFFFFFFFFFFFFFFFF))
 
-(def max-time (java-time/instant bit-mask-36))
+(def max-time (java-time/instant bit-mask-48))
 
 (def ^:private max-time-emsg
   (str "Cannot generate SQUUID past August 2, 10889."
@@ -265,14 +259,18 @@
   :args (s/cat :ts instant-spec)
   :ret uuid?)
 
+;; TODO: These are labeled as Version 1 UUIDs but actually don't conform to
+;; the spec. Either we conform to the spec or we dispense with the version
+;; numbers altogether (and ditch xapi-schema's UUID regex).
 (defn time->uuid
   "Convert a java.util.Instant timestamp to a UUID. The upper 48 bits represent
-   the timestamp, while the lower 80 bits are set to be all 1s."
+   the timestamp, while the lower 80 bits are `1FFF-1FFF-FFFFFFFFFFFF`."
   [^Instant ts]
   (let [ts-long  (time->millis ts)
         uuid-msb (bit-or (bit-shift-left ts-long 16)
-                         bit-mask-16)
-        uuid-lsb bit-mask-64]
+                         0x1FFF)
+        uuid-lsb (bit-or (bit-shift-left 0x1FFF 48)
+                         bit-mask-48)]
     (UUID. uuid-msb uuid-lsb)))
 
 (s/fdef uuid->str
