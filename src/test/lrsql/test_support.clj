@@ -1,6 +1,8 @@
 (ns lrsql.test-support
   (:require [clojure.spec.test.alpha :as stest]
             [orchestra.spec.test :as otest]
+            [lrsql.h2.record :as ir]
+            [lrsql.system :as system]
             [lrsql.util :as u])
   (:import [java.util UUID]))
 
@@ -22,7 +24,7 @@
 (defn fresh-db-fixture
   [f]
   (let [id-str (str (UUID/randomUUID))
-        cfg (-> (u/read-config :test)
+        cfg (-> (u/read-config :test-h2-mem)
                 (assoc-in [:database :db-name] id-str)
                 (assoc-in [:connection :database :db-name] id-str)
                 (assoc-in [:lrs :database :db-name] id-str))]
@@ -30,15 +32,13 @@
      [u/read-config (constantly cfg)]
       (f))))
 
-;; TODO: Switch to io/resource for reading config file
-(defn assert-in-mem-db
+;; TODO: Somehow allow other DMBSs to be tested
+(defn test-system
+  "Create a lrsql system specifically for tests:
+   - Uses the (in-mem) H2 DB backend
+   - Uses the `:test-h2-mem` profile"
   []
-  (let [env     (u/read-config :test)
-        db-type (-> env :database :db-type)]
-    (when (not= "h2:mem" db-type)
-      (throw (ex-info "Test can only be run on in-memory H2 database!"
-                      {:type    ::non-mem-db
-                       :db-type db-type})))))
+  (system/system (ir/map->H2Backend {}) :test-h2-mem))
 
 ;; Copied from training-commons.xapi.statement-gen-test
 (defn check-validate

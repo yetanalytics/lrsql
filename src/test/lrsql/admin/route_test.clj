@@ -5,7 +5,6 @@
             [babashka.curl :as curl]
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
-            [lrsql.system :as system]
             [lrsql.test-support :as support]
             [lrsql.util :as u]))
 
@@ -14,8 +13,7 @@
 (use-fixtures :each support/fresh-db-fixture)
 
 (deftest admin-routes-test
-  (let [_    (support/assert-in-mem-db)
-        sys  (system/system)
+  (let [sys  (support/test-system)
         sys' (component/start sys)
         data {:headers {"Content-Type" "application/json"}
               :body    (String. (u/write-json {"username" "myname"
@@ -106,8 +104,7 @@
     (component/stop sys')))
 
 (deftest auth-routes-test
-  (let [_    (support/assert-in-mem-db)
-        sys  (system/system)
+  (let [sys  (support/test-system)
         sys' (component/start sys)
         jwt  (->
               (curl/post "http://0.0.0.0:8080/admin/account/create"

@@ -1,7 +1,6 @@
 (ns lrsql.test-support-test
   (:require [clojure.test :refer [deftest testing is]]
-            [lrsql.test-support :refer [fresh-db-fixture]]
-            [lrsql.system :as system]
+            [lrsql.test-support :refer [test-system fresh-db-fixture]]
             [lrsql.util :as u]))
 
 (defn- get-db-name
@@ -15,20 +14,20 @@
       (java.util.UUID/fromString
        (get-db-name
         (fresh-db-fixture
-         #(u/read-config :test)))))))
+         #(u/read-config :test-h2-mem)))))))
   (testing "changes db-name"
     (is
      (not=
       (get-db-name
        (fresh-db-fixture
-        #(u/read-config :test)))
+        #(u/read-config :test-h2-mem)))
       (get-db-name
        (fresh-db-fixture
-        #(u/read-config :test))))))
+        #(u/read-config :test-h2-mem))))))
   (testing "sets system db-name"
     (is
      (not= "example" ; TODO: this will come from env, check against that
            (get-in
             (fresh-db-fixture
-             #(system/system))
+             #(test-system))
             [:database :db-name])))))

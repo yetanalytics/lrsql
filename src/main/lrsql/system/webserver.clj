@@ -41,8 +41,8 @@
                 key-file
                 key-alias
                 key-password]
-         jwt-exp :jwt-expiration-time
-         jwt-lwy :jwt-expiration-leeway}
+         jwt-exp :jwt-exp-time
+         jwt-lwy :jwt-exp-leeway}
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret

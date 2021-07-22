@@ -1,6 +1,6 @@
 (ns lrsql.ops.command.auth
   (:require [clojure.spec.alpha :as s]
-            [lrsql.functions :as f]
+            [lrsql.backend.protocol :as ip]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.auth :as as]))
 
@@ -11,24 +11,28 @@
 ;; TODO: Dupe checking
 
 (s/fdef insert-credential!
-  :args (s/cat :tx transaction? :input as/insert-cred-input-spec)
+  :args (s/cat :bk as/credential-backend?
+               :tx transaction?
+               :input as/insert-cred-input-spec)
   :ret nil?)
 
 (defn insert-credential!
   "Insert the credential keys in `input` into the DB. Returns `nil`."
-  [tx input]
-  (f/insert-credential! tx input)
+  [bk tx input]
+  (ip/-insert-credential! bk tx input)
   nil)
 
 (s/fdef insert-credential-scopes!
-  :args (s/cat :tx transaction? :inputs as/insert-cred-scopes-input-spec)
+  :args (s/cat :bk as/credential-backend?
+               :tx transaction?
+               :inputs as/insert-cred-scopes-input-spec)
   :ret nil?)
 
 (defn insert-credential-scopes!
   "Insert `input`, a seq of maps where each API key pair is associated
    with a different scope."
-  [tx input]
-  (dorun (map (partial f/insert-credential-scope! tx) input)))
+  [bk tx input]
+  (dorun (map (partial ip/-insert-credential-scope! bk tx) input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credential Deletion
@@ -37,22 +41,26 @@
 ;; TODO: Existence checking
 
 (s/fdef delete-credential-scopes!
-  :args (s/cat :tx transaction? :inputs as/delete-cred-scopes-input-spec)
+  :args (s/cat :bk as/credential-backend?
+               :tx transaction?
+               :inputs as/delete-cred-scopes-input-spec)
   :ret nil?)
 
 (defn delete-credential-scopes!
   "Delete the scopes associated with the credential in the `input` seq
    Returns `nil`."
-  [tx input]
-  (dorun (map (partial f/delete-credential-scope! tx) input)))
+  [bk tx input]
+  (dorun (map (partial ip/-delete-credential-scope! bk tx) input)))
 
 (s/fdef delete-credential!
-  :args (s/cat :tx transaction? :input as/delete-cred-input-spec)
+  :args (s/cat :bk as/credential-backend?
+               :tx transaction?
+               :input as/delete-cred-input-spec)
   :ret nil?)
 
 (defn delete-credential!
   "Delete the credential and all of its scopes associated with the key pair
    in `input`. Returns `nil`."
-  [tx input]
-  (f/delete-credential! tx input)
+  [bk tx input]
+  (ip/-delete-credential! bk tx input)
   nil)

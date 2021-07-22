@@ -1,4 +1,4 @@
-(ns lrsql.interface
+(ns lrsql.backend.data
   "Namespace for type conversions between SQL and Clojure datatypes
    during DB interaction. All public functions extend either
    the SettableParameter or ResultColumn protocols from next.jdbc

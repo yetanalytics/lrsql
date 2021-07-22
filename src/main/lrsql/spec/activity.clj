@@ -1,7 +1,16 @@
 (ns lrsql.spec.activity
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec   :as xs]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :as c]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn activity-backend?
+  [bk]
+  (satisfies? bp/ActivityBackend bk))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

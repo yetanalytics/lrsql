@@ -4,7 +4,6 @@
             [com.stuartsierra.component    :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
-            [lrsql.system         :as system]
             [lrsql.test-support   :as support]))
 
 (support/instrument-lrsql)
@@ -15,8 +14,7 @@
 (def test-password "iLoveSql")
 
 (deftest admin-test
-  (let [_    (support/assert-in-mem-db)
-        sys  (system/system :test)
+  (let [sys  (support/test-system)
         sys' (component/start sys)
         lrs  (:lrs sys')]
     (testing "Admin account insertion"
@@ -48,8 +46,7 @@
     (component/stop sys')))
 
 (deftest auth-test
-  (let [_      (support/assert-in-mem-db)
-        sys    (system/system :test)
+  (let [sys    (support/test-system)
         sys'   (component/start sys)
         lrs    (:lrs sys')
         acc-id (:result (adp/-create-account lrs test-username test-password))]

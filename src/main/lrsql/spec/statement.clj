@@ -4,6 +4,7 @@
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.statements :as ss]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common     :as c]
             [lrsql.spec.activity   :as hs-activ]
             [lrsql.spec.actor      :as hs-actor]
@@ -12,6 +13,14 @@
 
 ;; TODO: Deal with different encodings for JSON types (e.g. payloads,
 ;; actor ifi), instead of just H2 strings.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn statement-backend?
+  [bk]
+  (satisfies? bp/StatementBackend bk))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

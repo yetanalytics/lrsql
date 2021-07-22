@@ -74,8 +74,8 @@
 (s/def ::http-port nat-int?)
 (s/def ::ssl-port nat-int?)
 
-(s/def ::jwt-expiration-time pos-int?)
-(s/def ::jwt-expiration-leeway nat-int?)
+(s/def ::jwt-exp-time pos-int?)
+(s/def ::jwt-exp-leeway nat-int?)
 
 (s/def ::key-file string?) ; TODO: correct file extension/path?
 (s/def ::key-alias string?)
@@ -89,8 +89,8 @@
                    ::key-file
                    ::key-alias
                    ::key-password
-                   ::jwt-expiration-time
-                   ::jwt-expiration-leeway]))
+                   ::jwt-exp-time
+                   ::jwt-exp-leeway]))
 
 (def config-spec
   (s/keys :req-un [::database

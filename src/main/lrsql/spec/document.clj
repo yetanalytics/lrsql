@@ -2,10 +2,21 @@
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.xapi.document :as lrs-doc]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common    :as c]
             [lrsql.spec.activity  :as hs-activ]
             [lrsql.spec.actor     :as hs-actor]
             [lrsql.spec.statement :as hs-stmt]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interface
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn document-backend?
+  [bk]
+  (or (satisfies? bp/StateDocumentBackend bk)
+      (satisfies? bp/AgentProfileDocumentBackend bk)
+      (satisfies? bp/ActivityProfileDocumentBackend bk)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

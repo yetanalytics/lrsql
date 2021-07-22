@@ -2,7 +2,6 @@
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [com.stuartsierra.component    :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.system :as system]
             [lrsql.test-support :as support]))
 
 (def stmt-0
@@ -99,8 +98,7 @@
 (use-fixtures :each support/fresh-db-fixture)
 
 (deftest test-statement-fns
-  (let [_     (support/assert-in-mem-db)
-        sys   (system/system :test)
+  (let [sys   (support/test-system)
         sys'  (component/start sys)
         lrs   (:lrs sys')
         id-0  (get stmt-0 "id")
@@ -320,10 +318,9 @@
              "id" "00000000-0000-4000-0000-000000000002"}})
 
 (deftest test-statement-ref-fns
-  (let [_     (support/assert-in-mem-db)
-        sys   (system/system :test)
-        sys'  (component/start sys)
-        lrs   (:lrs sys')]
+  (let [sys  (support/test-system)
+        sys' (component/start sys)
+        lrs  (:lrs sys')]
     (testing "statement insertions"
       (is (= {:statement-ids ["00000000-0000-4000-0000-000000000001"
                               "00000000-0000-4000-0000-000000000002"
@@ -419,8 +416,7 @@
    :contents      (.getBytes "Example Document 2")})
 
 (deftest test-document-fns
-  (let [_    (support/assert-in-mem-db)
-        sys  (system/system :test)
+  (let [sys  (support/test-system)
         sys' (component/start sys)
         lrs  (:lrs sys')]
     (testing "document insertion"

@@ -7,11 +7,20 @@
             [lrsql.admin.protocol :as adp]))
 
 (comment
-  (def sys (system/system :dev-sqlite))
+  (require 
+   '[lrsql.h2.record :as ir]
+   '[lrsql.lrs-test :refer [stmt-4]])
+  
+  (def sys (system/system (ir/map->H2Interface {}) :test-h2-mem))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
+
+
+  (lrsp/-get-statements lrs {} {:statementId (get stmt-4 "id")} {})
+
+  (lrsp/-store-statements lrs {} [stmt-4] [])
 
   (do
     (doseq [cmd [;; Drop credentials table

@@ -7,24 +7,25 @@
 
 (defn system
   "Return a lrsql system with configuration specified by the `profile`
-   keyword (set to `:default` if not given)."
-  ([]
-   (system :default))
-  ([profile]
-   (let [initial-sys ; init without configuration
-         (component/system-map
-          :connection (component/using
-                       (db/map->Connection {})
-                       [])
-          :lrs       (component/using
+   keyword."
+  [backend profile]
+  (let [config
+        (u/read-config profile)
+        initial-sys ; init without configuration
+        (component/system-map
+         :backend    (component/using
+                      backend
+                      [])
+         :connection (component/using
+                      (db/map->Connection {})
+                      [])
+         :lrs        (component/using
                       (lrs/map->LearningRecordStore {})
-                      [:connection])
-          :webserver (component/using
+                      [:connection :backend])
+         :webserver  (component/using
                       (webserver/map->Webserver {})
                       [:lrs]))
-         config
-         (u/read-config profile)
-         assoc-config
-         (fn [m config-m] (assoc m :config config-m))]
-     (-> (merge-with assoc-config initial-sys config)
-         (component/system-using {})))))
+        assoc-config
+        (fn [m config-m] (assoc m :config config-m))]
+    (-> (merge-with assoc-config initial-sys config)
+        (component/system-using {}))))
