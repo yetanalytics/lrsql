@@ -2,10 +2,13 @@
   (:require [com.stuartsierra.component :as cmp]
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.data :as bd]
+            [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.sqlite.data :as sd]
             [lrsql.util :as u]))
 
 ;; Init HugSql functions
+
+(init-hugsql-adapter!)
 
 (u/def-hugsql-db-fns "lrsql/sqlite/sql/ddl.sql")
 (u/def-hugsql-db-fns "lrsql/sqlite/sql/insert.sql")

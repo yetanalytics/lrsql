@@ -41,9 +41,7 @@
           uname (-> config :api-key-default)
           pass  (-> config :api-secret-default)]
       (assert-config ::cs/lrs "LRS" config)
-      (init/init-hugsql-adapter!)
-      (init/init-settable-params! backend)
-      (init/init-ddl! backend conn)
+      (init/init-backend! backend conn)
       (init/insert-default-creds! backend conn uname pass)
       (log/info "Starting new LRS")
       (assoc lrs :connection connection)))

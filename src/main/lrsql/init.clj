@@ -8,20 +8,20 @@
             [lrsql.ops.command.admin :as admin-cmd]
             [lrsql.ops.command.auth :as auth-cmd]))
 
+;; TODO: Use a dynamic var to indicate when the adapter has already been set?
 (defn init-hugsql-adapter!
   "Initialize HugSql to use the next-jdbc adapter."
   []
   (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc)))
 
-(defn init-settable-params!
-  "Set conversion functions for DB reading and writing depending on `backend`."
-  [backend]
-  (ip/-set-read! backend)
-  (ip/-set-write! backend))
-
-(defn init-ddl!
-  "Execute SQL commands to create tables if they do not exist."
+(defn init-backend!
+  "Init the functionality of `backend`, including IO data conversion and
+   setting up the DB tables and indexes."
   [backend tx]
+  ;; Init IO data conversion
+  (ip/-set-read! backend)
+  (ip/-set-write! backend)
+  ;; Init DDL
   (ip/-create-all! backend tx))
 
 (defn insert-default-creds!

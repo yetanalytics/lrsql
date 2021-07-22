@@ -4,6 +4,7 @@
             [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
+            [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
