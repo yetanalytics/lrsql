@@ -4,7 +4,7 @@
             [lrsql.h2.record :as ir])
   (:gen-class))
 
-(def h2-interface (ir/map->H2Interface {}))
+(def h2-backend (ir/map->H2Backend {}))
 
 (defn -main
   "Main entrypoint for H2-backed LRSQL instances. Passing `--persistent true`
@@ -14,5 +14,5 @@
   (let [{?per-str "--persistent"} args
         persistent? (Boolean/parseBoolean ?per-str)
         profile     (if persistent? :prod-h2 :prod-h2-mem)]
-    (-> (system/system h2-interface profile)
+    (-> (system/system h2-backend profile)
         component/start)))

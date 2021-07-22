@@ -35,7 +35,7 @@
 ;; TODO: Somehow allow other DMBSs to be tested
 (defn test-system
   "Create a lrsql system specifically for tests:
-   - Uses the (in-mem) H2 DB interface
+   - Uses the (in-mem) H2 DB backend
    - Uses the `:test-h2-mem` profile"
   []
   (system/system (ir/map->H2Interface {}) :test-h2-mem))

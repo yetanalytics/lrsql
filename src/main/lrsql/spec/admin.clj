@@ -1,15 +1,15 @@
 (ns lrsql.spec.admin
   (:require [clojure.spec.alpha :as s]
-            [lrsql.interface.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :as c]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn admin-interface?
-  [inf]
-  (satisfies? ip/AdminAccount inf))
+(defn admin-backend?
+  [bk]
+  (satisfies? bp/AdminAccountBackend bk))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

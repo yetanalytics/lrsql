@@ -18,14 +18,14 @@
          :connection (component/using
                       (db/map->Connection {})
                       [])
-         :interface  (component/using
+         :backend  (component/using
                       (cond
                         (#{"h2" "h2:mem"} db-type)
                         iface)
                       [])
          :lrs        (component/using
                       (lrs/map->LearningRecordStore {})
-                      [:connection :interface])
+                      [:connection :backend])
          :webserver  (component/using
                       (webserver/map->Webserver {})
                       [:lrs]))
