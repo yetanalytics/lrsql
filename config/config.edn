@@ -1,12 +1,18 @@
 {:database
  #profile
   {;; Test/Dev
-   :test-h2-mem {:db-type "h2:mem" :db-name "example.h2"}
-   :test-h2     {:db-type "h2" :db-name "example.h2"}
+   :test-h2-mem {:db-type "h2:mem"
+                 :db-name "example.h2"}
+   :test-h2     {:db-type "h2"
+                 :db-name "example.h2"
+                 :db-host "localhost"
+                 :db-port 9001}
    ;; Production
    :prod-h2-mem #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2:mem"]}
                         #include "prod/database.edn"]
-   :prod-h2     #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2"]}
+   :prod-h2     #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2"]
+                         :db-host #or [#env LRSQL_DB_HOST "localhost"]
+                         :db-port #or [#env LRSQL_DB_PORT 9001]}
                         #include "prod/database.edn"]}
  :connection
  #profile
