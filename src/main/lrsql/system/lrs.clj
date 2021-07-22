@@ -37,10 +37,9 @@
   cmp/Lifecycle
   (start
     [lrs]
-    (let [db-type (-> config :database :db-type)
-          conn    (-> connection :conn-pool)
-          uname   (-> config :api-key-default)
-          pass    (-> config :api-secret-default)]
+    (let [conn  (-> connection :conn-pool)
+          uname (-> config :api-key-default)
+          pass  (-> config :api-secret-default)]
       (assert-config ::cs/lrs "LRS" config)
       (init/init-hugsql-adapter!)
       (init/init-settable-params! backend)

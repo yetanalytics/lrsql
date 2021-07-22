@@ -3,7 +3,6 @@
   (:require [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.backend.protocol :as ip]
-            [lrsql.backend.data :as i-data]
             [lrsql.input.admin :as admin-input]
             [lrsql.input.auth  :as auth-input]
             [lrsql.ops.command.admin :as admin-cmd]
@@ -15,17 +14,10 @@
   (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc)))
 
 (defn init-settable-params!
-  "Set conversion functions for DB reading and writing depending on `db-type`."
-  [db-type]
-  (cond
-    ;; H2
-    (#{"h2" "h2:mem"} db-type)
-    (do (i-data/set-h2-read!)
-        (i-data/set-h2-write!))
-    
-    (#{"sqlite"} db-type)
-    (do (i-data/set-sqlite-read!)
-        (i-data/set-sqlite-write!))))
+  "Set conversion functions for DB reading and writing depending on `backend`."
+  [backend]
+  (ip/-set-read! backend)
+  (ip/-set-write! backend))
 
 (defn init-ddl!
   "Execute SQL commands to create tables if they do not exist."
