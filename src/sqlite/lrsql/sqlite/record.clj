@@ -143,4 +143,11 @@
   (-query-credential-exists [_ tx input]
     (query-credential-exists tx input))
   (-query-credential-scopes [_ tx input]
-    (query-credential-scopes tx input)))
+    (query-credential-scopes tx input))
+
+  ;; TODO
+  bp/BackendIOSetter
+  (-set-read! [_]
+    nil)
+  (-set-write! [_]
+    nil))

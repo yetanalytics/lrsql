@@ -5,6 +5,12 @@
   (-create-all! [this tx]
     "Create all tables and indexes."))
 
+(defprotocol BackendIOSetter
+  (-set-read! [this]
+    "Set data conversion behavior when reading from the backend.")
+  (-set-write! [this]
+    "Set data conversion behavior when writing from the backend."))
+
 (defprotocol StatementBackend
   ;; Commands
   (-insert-statement! [this tx input])
