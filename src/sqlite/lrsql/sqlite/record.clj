@@ -150,8 +150,8 @@
   bp/BackendIOSetter
   (-set-read! [_]
     (bd/set-read-time->instant!)
-    (bd/set-read-blob->json!
-     #{"payload"})
+    (bd/set-read-bytes->json! ; SQLite returns JSON data as byte arrays even
+     #{"payload"})            ; though the data type is "BLOB"
     (sd/set-read-str->uuid-or-inst!
      #{"id" "statement_id" "registration" "ancestor_id" "descendant_id" "account_id"}
      #{"last_modified"}))
