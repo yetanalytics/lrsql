@@ -33,7 +33,7 @@
   [lrs]
   (-> lrs :connection :conn-pool))
 
-(defrecord LearningRecordStore [connection interface config]
+(defrecord LearningRecordStore [connection backend config]
   cmp/Lifecycle
   (start
     [lrs]
@@ -44,8 +44,8 @@
       (assert-config ::cs/lrs "LRS" config)
       (init/init-hugsql-adapter!)
       (init/init-settable-params! db-type)
-      (init/init-ddl! interface conn)
-      (init/insert-default-creds! interface conn uname pass)
+      (init/init-ddl! backend conn)
+      (init/insert-default-creds! backend conn uname pass)
       (log/info "Starting new LRS")
       (assoc lrs :connection connection)))
   (stop
@@ -76,7 +76,7 @@
               (map (fn [stmt-input]
                      (let [stmt-descs
                            (stmt-q/query-descendants
-                            interface
+                            backend
                             tx
                             stmt-input)
                            stmt-input'
@@ -84,7 +84,7 @@
                             stmt-input
                             stmt-descs)]
                        (stmt-cmd/insert-statement!
-                        interface
+                        backend
                         tx
                         stmt-input')))
                    stmt-inputs)]
@@ -100,7 +100,7 @@
                       (stmt-util/ensure-default-max-limit config)
                       stmt-input/query-statement-input)]
       (jdbc/with-transaction [tx conn]
-        (stmt-q/query-statements interface tx inputs ltags))))
+        (stmt-q/query-statements backend tx inputs ltags))))
   (-consistent-through
     [_lrs _ctx _auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want
@@ -114,32 +114,32 @@
           input (doc-input/insert-document-input params document)]
       (jdbc/with-transaction [tx conn]
         (if merge?
-          (doc-cmd/upsert-document! interface tx input)
-          (doc-cmd/insert-document! interface tx input)))))
+          (doc-cmd/upsert-document! backend tx input)
+          (doc-cmd/insert-document! backend tx input)))))
   (-get-document
     [lrs _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-input params)]
       (jdbc/with-transaction [tx conn]
-        (doc-q/query-document interface tx input))))
+        (doc-q/query-document backend tx input))))
   (-get-document-ids
     [lrs _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-ids-input params)]
       (jdbc/with-transaction [tx conn]
-        (doc-q/query-document-ids interface tx input))))
+        (doc-q/query-document-ids backend tx input))))
   (-delete-document
     [lrs _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-input params)]
       (jdbc/with-transaction [tx conn]
-        (doc-cmd/delete-document! interface tx input))))
+        (doc-cmd/delete-document! backend tx input))))
   (-delete-documents
     [lrs _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-multi-input params)]
       (jdbc/with-transaction [tx conn]
-        (doc-cmd/delete-documents! interface tx input))))
+        (doc-cmd/delete-documents! backend tx input))))
 
   lrsp/AgentInfoResource
   (-get-person
@@ -147,7 +147,7 @@
     (let [conn  (lrs-conn lrs)
           input (agent-input/query-agent-input params)]
       (jdbc/with-transaction [tx conn]
-        (actor-q/query-agent interface tx input))))
+        (actor-q/query-agent backend tx input))))
 
   lrsp/ActivityInfoResource
   (-get-activity
@@ -155,7 +155,7 @@
     (let [conn  (lrs-conn lrs)
           input (activity-input/query-activity-input params)]
       (jdbc/with-transaction [tx conn]
-        (activ-q/query-activity interface tx input))))
+        (activ-q/query-activity backend tx input))))
 
   lrsp/LRSAuth
   (-authenticate
@@ -165,7 +165,7 @@
       (if-some [key-pr (auth-util/header->key-pair header)]
         (let [input (auth-input/query-credential-scopes-input key-pr)]
           (jdbc/with-transaction [tx conn]
-            (auth-q/query-credential-scopes interface tx input)))
+            (auth-q/query-credential-scopes backend tx input)))
         {:result :com.yetanalytics.lrs.auth/forbidden})))
   (-authorize
     [_lrs ctx auth-identity]
@@ -177,19 +177,19 @@
     (let [conn  (lrs-conn this)
           input (admin-input/insert-admin-input username password)]
       (jdbc/with-transaction [tx conn]
-        (admin-cmd/insert-admin! interface tx input))))
+        (admin-cmd/insert-admin! backend tx input))))
   (-authenticate-account
     [this username password]
     (let [conn  (lrs-conn this)
           input (admin-input/query-validate-admin-input username password)]
       (jdbc/with-transaction [tx conn]
-        (admin-q/query-validate-admin interface tx input))))
+        (admin-q/query-validate-admin backend tx input))))
   (-delete-account
     [this account-id]
     (let [conn  (lrs-conn this)
           input (admin-input/delete-admin-input account-id)]
       (jdbc/with-transaction [tx conn]
-        (admin-cmd/delete-admin! interface tx input))))
+        (admin-cmd/delete-admin! backend tx input))))
 
   adp/APIKeyManager
   (-create-api-keys
@@ -203,15 +203,15 @@
                     key-pair
                     scopes)]
       (jdbc/with-transaction [tx conn]
-        (auth-cmd/insert-credential! interface tx cred-in)
-        (auth-cmd/insert-credential-scopes! interface tx scope-in)
+        (auth-cmd/insert-credential! backend tx cred-in)
+        (auth-cmd/insert-credential-scopes! backend tx scope-in)
         (assoc key-pair :scopes scopes))))
   (-get-api-keys
     [this account-id]
     (let [conn  (lrs-conn this)
           input (auth-input/query-credentials-input account-id)]
       (jdbc/with-transaction [tx conn]
-        (auth-q/query-credentials interface tx input))))
+        (auth-q/query-credentials backend tx input))))
   (-update-api-keys
    ;; TODO: Verify the key pair is associated with the account ID
     [this _account-id api-key secret-key scopes]
@@ -219,7 +219,7 @@
           input (auth-input/query-credential-scopes-input api-key secret-key)]
       (jdbc/with-transaction [tx conn]
         (let [scopes'    (set (auth-q/query-credential-scopes*
-                               interface
+                               backend
                                tx
                                input))
               add-scopes (cset/difference scopes scopes')
@@ -232,8 +232,8 @@
                           api-key
                           secret-key
                           del-scopes)]
-          (auth-cmd/insert-credential-scopes! interface tx add-inputs)
-          (auth-cmd/delete-credential-scopes! interface tx del-inputs)
+          (auth-cmd/insert-credential-scopes! backend tx add-inputs)
+          (auth-cmd/delete-credential-scopes! backend tx del-inputs)
           {:api-key    api-key
            :secret-key secret-key
            :scopes     scopes}))))
@@ -245,6 +245,6 @@
                     api-key
                     secret-key)]
       (jdbc/with-transaction [tx conn]
-        (auth-cmd/delete-credential! interface tx cred-in)
+        (auth-cmd/delete-credential! backend tx cred-in)
         {:api-key    api-key
          :secret-key secret-key}))))

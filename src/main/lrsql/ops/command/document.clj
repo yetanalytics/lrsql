@@ -1,7 +1,7 @@
 (ns lrsql.ops.command.document
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as cstr]
-            [lrsql.interface.protocol :as ip]
+            [lrsql.backend.protocol :as ip]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
             [lrsql.util :as u]
@@ -12,7 +12,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef insert-document!
-  :args (s/cat :inf ds/document-interface?
+  :args (s/cat :bk ds/document-backend?
                :tx transaction?
                :input ds/insert-document-spec)
   :ret ds/document-command-res-spec)
@@ -21,14 +21,14 @@
   "Insert a new document into the DB. Returns an empty map. If the document
    already exists, does nothing; to update existing documents, use
    `upsert-document!` instead."
-  [inf tx {:keys [table] :as input}]
+  [bk tx {:keys [table] :as input}]
   (case table
     :state-document
-    (ip/-insert-state-document! inf tx input)
+    (ip/-insert-state-document! bk tx input)
     :agent-profile-document
-    (ip/-insert-agent-profile-document! inf tx input)
+    (ip/-insert-agent-profile-document! bk tx input)
     :activity-profile-document
-    (ip/-insert-activity-profile-document! inf tx input)
+    (ip/-insert-activity-profile-document! bk tx input)
     ;; Else
     (throw-invalid-table-ex "insert-document!" input))
   {})
@@ -82,7 +82,7 @@
 
 (defn- upsert-update-document!
   "Update an existing document when upserting `input`."
-  [inf tx input old-doc update-fn!]
+  [bk tx input old-doc update-fn!]
   (let [{old-ctype :content_type} old-doc
         {new-ctype :content-type} input
         ?old-json (and (json-content-type? old-ctype)
@@ -97,36 +97,36 @@
             new-input (-> input
                           (assoc :contents new-data)
                           (assoc :content-length (count new-data)))]
-        (update-fn! inf tx new-input) ; implicit do
+        (update-fn! bk tx new-input) ; implicit do
         {})
       ;; One or both documents are not JSON
       (invalid-merge-error old-doc input))))
 
 (defn- upsert-insert-document!
   "Insert a new document when upserting `input`."
-  [inf tx {new-ctype :content-type :as input} insert-fn!]
+  [bk tx {new-ctype :content-type :as input} insert-fn!]
   (if (and new-ctype
            (json-content-type? new-ctype))
     ;; XAPI-00314 - must check if doc contents are JSON if
     ;; content type is application/json
     (if-some [_ (doc->json input)]
-      (do (insert-fn! inf tx input) {})
+      (do (insert-fn! bk tx input) {})
       (json-read-error input))
     ;; Non-JSON data - directly insert
-    (do (insert-fn! inf tx input) {})))
+    (do (insert-fn! bk tx input) {})))
 
 (defn- upsert-document!*
   "Common functionality for all cases in `upsert-document!`"
-  [inf tx input query-fn insert-fn! update-fn!]
+  [bk tx input query-fn insert-fn! update-fn!]
   (let [query-in (dissoc input :last-modified :contents)]
-    (if-some [old-doc (query-fn inf tx query-in)]
+    (if-some [old-doc (query-fn bk tx query-in)]
       ;; We have a pre-existing document in the store - update
-      (upsert-update-document! inf tx input old-doc update-fn!)
+      (upsert-update-document! bk tx input old-doc update-fn!)
       ;; We don't have a pre-existing document - insert
-      (upsert-insert-document! inf tx input insert-fn!))))
+      (upsert-insert-document! bk tx input insert-fn!))))
 
 (s/fdef upsert-document!
-  :args (s/cat :inf ds/document-interface?
+  :args (s/cat :bk ds/document-backend?
                :tx transaction? :input ds/insert-document-spec)
   :ret ds/document-command-res-spec)
 
@@ -134,24 +134,24 @@
   "Upsert the document given by `input`, i.e. inserts a new document if it
    does not exist in the DB yet, updates the existing document otherwise.
    Performs merging on JSON documents in particular. Returns an empty map."
-  [inf tx {:keys [table] :as input}]
+  [bk tx {:keys [table] :as input}]
   (case table
     :state-document
-    (upsert-document!* inf
+    (upsert-document!* bk
                        tx
                        input
                        ip/-query-state-document
                        ip/-insert-state-document!
                        ip/-update-state-document!)
     :agent-profile-document
-    (upsert-document!* inf
+    (upsert-document!* bk
                        tx
                        input
                        ip/-query-agent-profile-document
                        ip/-insert-agent-profile-document!
                        ip/-update-agent-profile-document!)
     :activity-profile-document
-    (upsert-document!* inf
+    (upsert-document!* bk
                        tx
                        input
                        ip/-query-activity-profile-document
@@ -165,37 +165,37 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef delete-document!
-  :args (s/cat :inf ds/document-interface?
+  :args (s/cat :bk ds/document-backend?
                :tx transaction?
                :input ds/document-input-spec)
   :ret ds/document-command-res-spec)
 
 (defn delete-document!
   "Delete a single document from the DB. Returns an empty map."
-  [inf tx {:keys [table] :as input}]
+  [bk tx {:keys [table] :as input}]
   (case table
     :state-document
-    (ip/-delete-state-document! inf tx input)
+    (ip/-delete-state-document! bk tx input)
     :agent-profile-document
-    (ip/-delete-agent-profile-document! inf tx input)
+    (ip/-delete-agent-profile-document! bk tx input)
     :activity-profile-document
-    (ip/-delete-activity-profile-document! inf tx input)
+    (ip/-delete-activity-profile-document! bk tx input)
     ;; Else
     (throw-invalid-table-ex "delete-document!" input))
   {})
 
 (s/fdef delete-documents!
-  :args (s/cat :inf ds/document-interface?
+  :args (s/cat :bk ds/document-backend?
                :tx transaction?
                :input ds/state-doc-multi-input-spec)
   :ret ds/document-command-res-spec)
 
 (defn delete-documents!
   "Delete multiple documents from the DB. Returns an empty map."
-  [inf tx {:keys [table] :as input}]
+  [bk tx {:keys [table] :as input}]
   (case table
     :state-document
-    (ip/-delete-state-documents! inf tx input)
+    (ip/-delete-state-documents! bk tx input)
     ;; Else
     (throw-invalid-table-ex "delete-documents!" input))
   {})

@@ -3,7 +3,7 @@
             [clojure.spec.gen.alpha :as sgen]
             [xapi-schema.spec :as xs]
             [xapi-schema.spec.regex :as xsr]
-            [lrsql.interface.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :as c]
             [lrsql.spec.admin :as ads])
   (:import [java.util Base64 Base64$Encoder]))
@@ -31,9 +31,9 @@
 ;; Interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn credential-interface?
-  [inf]
-  (satisfies? ip/Credential inf))
+(defn credential-backend?
+  [bk]
+  (satisfies? bp/CredentialBackend bk))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

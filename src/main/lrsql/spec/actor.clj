@@ -1,7 +1,7 @@
 (ns lrsql.spec.actor
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec   :as xs]
-            [lrsql.interface.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :as c]
             [lrsql.spec.util :refer [make-str-spec]]))
 
@@ -12,9 +12,9 @@
 ;; Interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn actor-interface?
-  [inf]
-  (satisfies? ip/Actor inf))
+(defn actor-backend?
+  [bk]
+  (satisfies? bp/ActorBackend bk))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

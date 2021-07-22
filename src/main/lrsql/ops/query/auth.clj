@@ -1,13 +1,13 @@
 (ns lrsql.ops.query.auth
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.interface.protocol :as ip]
+            [lrsql.backend.protocol :as ip]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.auth :as as]
             [lrsql.util.auth :as au]))
 
 (s/fdef query-credential-scopes*
-  :args (s/cat :inf as/credential-interface?
+  :args (s/cat :bk as/credential-backend?
                :tx transaction?
                :input as/query-cred-scopes-input-spec)
   :ret (s/nilable (s/coll-of ::as/scope
@@ -17,15 +17,15 @@
 (defn query-credential-scopes*
   "Return a vec of scopes associated with an API key and secret if it
    exists in the credential table; return nil if not."
-  [inf tx input]
-  (when (ip/-query-credential-exists inf tx input)
-    (some->> (ip/-query-credential-scopes inf tx input)
+  [bk tx input]
+  (when (ip/-query-credential-exists bk tx input)
+    (some->> (ip/-query-credential-scopes bk tx input)
              (map :scope)
              (filter some?)
              vec)))
 
 (s/fdef query-credential-scopes
-  :args (s/cat :inf as/credential-interface?
+  :args (s/cat :bk as/credential-backend?
                :tx transaction?
                :input as/query-cred-scopes-input-spec)
   :ret ::lrsp/authenticate-ret)
@@ -36,8 +36,8 @@
    map containins the scope and auth key map on success. If the credentials
    are not found, return a keyword to indicate that the webserver will
    return 401 Forbidden."
-  [inf tx input]
-  (if-some [scopes (query-credential-scopes* inf tx input)]
+  [bk tx input]
+  (if-some [scopes (query-credential-scopes* bk tx input)]
     ;; Credentials found - return result map
     (let [{:keys [api-key secret-key]}
           input
@@ -61,7 +61,7 @@
     {:result :com.yetanalytics.lrs.auth/forbidden}))
 
 (s/fdef query-credentials
-  :args (s/cat :inf as/credential-interface?
+  :args (s/cat :bk as/credential-backend?
                :tx transaction?
                :input as/query-creds-input-spec)
   :ret (s/coll-of as/scoped-key-pair-spec :gen-max 5))
@@ -69,14 +69,14 @@
 (defn query-credentials
   "Given an input containing `:account-id`, return all creds (and their
    associated scopes) that are associated with that account."
-  [inf tx input]
+  [bk tx input]
   (let [creds  (->> input
-                    (ip/-query-credentials inf tx)
+                    (ip/-query-credentials bk tx)
                     (map (fn [{ak :api_key sk :secret_key}]
                            {:api-key ak :secret-key sk})))
         scopes (doall (map (fn [cred]
                              (->> cred
-                                  (ip/-query-credential-scopes inf tx)
+                                  (ip/-query-credential-scopes bk tx)
                                   (map :scope)))
                            creds))]
     (mapv (fn [cred cred-scopes]

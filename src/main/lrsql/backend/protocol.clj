@@ -1,11 +1,11 @@
-(ns lrsql.interface.protocol
-  "Protocols that serve as a low-level interface for DB functions.")
+(ns lrsql.backend.protocol
+  "Protocols that serve as a low-level backend for DB functions.")
 
-(defprotocol DDL
+(defprotocol BackendInit
   (-create-all! [this tx]
     "Create all tables and indexes."))
 
-(defprotocol Statement
+(defprotocol StatementBackend
   ;; Commands
   (-insert-statement! [this tx input])
   (-insert-statement-to-statement! [this tx input])
@@ -16,7 +16,7 @@
   (-query-statement-exists [this tx input])
   (-query-statement-descendants [this tx input]))
 
-(defprotocol Actor
+(defprotocol ActorBackend
   ;; Commands
   (-insert-actor! [this tx input])
   (-insert-statement-to-actor! [this tx input])
@@ -24,7 +24,7 @@
   ;; Queries
   (-query-actor [this tx input]))
 
-(defprotocol Activity
+(defprotocol ActivityBackend
   ;; Commands
   (-insert-activity! [this tx input])
   (-insert-statement-to-activity! [this tx input])
@@ -32,13 +32,13 @@
   ;; Queries
   (-query-activity [this tx input]))
 
-(defprotocol Attachment
+(defprotocol AttachmentBackend
   ;; Commands
   (-insert-attachment! [this tx input])
   ;; Queries
   (-query-attachments [this tx input]))
 
-(defprotocol StateDocument
+(defprotocol StateDocumentBackend
   ;; Commands
   (-insert-state-document! [this tx input])
   (-update-state-document! [this tx input])
@@ -48,7 +48,7 @@
   (-query-state-document [this tx input])
   (-query-state-document-ids [this tx input]))
 
-(defprotocol AgentProfileDocument
+(defprotocol AgentProfileDocumentBackend
   ;; Commands
   (-insert-agent-profile-document! [this tx input])
   (-update-agent-profile-document! [this tx input])
@@ -57,7 +57,7 @@
   (-query-agent-profile-document [this tx input])
   (-query-agent-profile-document-ids [this tx input]))
 
-(defprotocol ActivityProfileDocument
+(defprotocol ActivityProfileDocumentBackend
   ;; Commands
   (-insert-activity-profile-document! [this tx input])
   (-update-activity-profile-document! [this tx input])
@@ -66,7 +66,7 @@
   (-query-activity-profile-document [this tx input])
   (-query-activity-profile-document-ids [this tx input]))
 
-(defprotocol AdminAccount
+(defprotocol AdminAccountBackend
   ;; Commands
   (-insert-admin-account! [this tx input])
   (-delete-admin-account! [this tx input])
@@ -74,7 +74,7 @@
   (-query-account [this tx input])
   (-query-account-exists [this tx input]))
 
-(defprotocol Credential
+(defprotocol CredentialBackend
   ;; Commands
   (-insert-credential! [this tx input])
   (-insert-credential-scope! [this tx input])

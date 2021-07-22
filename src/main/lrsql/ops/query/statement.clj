@@ -1,7 +1,7 @@
 (ns lrsql.ops.query.statement
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.interface.protocol :as ip]
+            [lrsql.backend.protocol :as ip]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.statement :as ss]
             [lrsql.util :as u]
@@ -27,14 +27,14 @@
 
 (defn- query-one-statement
   "Query a single statement from the DB, using the `:statement-id` parameter."
-  [inf tx input ltags]
+  [bk tx input ltags]
   (let [{:keys [format attachments?]} input
-        query-result (ip/-query-statement inf tx input)
+        query-result (ip/-query-statement bk tx input)
         statement   (when query-result
                       (query-res->statement format ltags query-result))
         attachments (when (and statement attachments?)
                       (->> {:statement-id (get statement "id")}
-                           (ip/-query-attachments inf tx)
+                           (ip/-query-attachments bk tx)
                            (mapv conform-attachment-res)))]
     (cond-> {}
       statement   (assoc :statement statement)
@@ -42,10 +42,10 @@
 
 (defn- query-many-statements
   "Query potentially multiple statements from the DB."
-  [inf tx input ltags]
+  [bk tx input ltags]
   (let [{:keys [format limit attachments? query-params]} input
         input'        (if limit (update input :limit inc) input)
-        query-results (ip/-query-statements inf tx input')
+        query-results (ip/-query-statements bk tx input')
         ?next-cursor  (when (and limit
                                  (= (inc limit) (count query-results)))
                         (-> query-results last :id u/uuid->str))
@@ -57,7 +57,7 @@
                         (doall (->> (map (fn [stmt]
                                            (->> (get stmt "id")
                                                 (assoc {} :statement-id)
-                                                (ip/-query-attachments inf tx)))
+                                                (ip/-query-attachments bk tx)))
                                          stmt-results)
                                     (apply concat)
                                     (map conform-attachment-res)))
@@ -70,7 +70,7 @@
      :attachments att-results}))
 
 (s/fdef query-statements
-  :args (s/cat :inf ss/statement-interface?
+  :args (s/cat :bk ss/statement-backend?
                :tx transaction?
                :input ss/statement-query-spec
                :ltags ss/lang-tags-spec)
@@ -84,18 +84,18 @@
    language tag-value pairs are returned when `:format` is `:canonical`.
    Note that the `:more` property of `:statement-result` returned is a
    statement PK, NOT the full URL."
-  [inf tx input ltags]
+  [bk tx input ltags]
   (let [{?stmt-id :statement-id} input]
     (if ?stmt-id
-      (query-one-statement inf tx input ltags)
-      (query-many-statements inf tx input ltags))))
+      (query-one-statement bk tx input ltags)
+      (query-many-statements bk tx input ltags))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Descendant Querying
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef query-descendants
-  :args (s/cat :inf ss/statement-interface?
+  :args (s/cat :bk ss/statement-backend?
                :tx transaction?
                :input ss/insert-statement-input-spec)
   :ret (s/coll-of ::ss/descendant-id :kind vector? :gen-max 5))
@@ -107,10 +107,10 @@
    but the Statement referenced by that ID, and so on. The return value
    is a vec of the descendant statement IDs; these are later added to the
    input map."
-  [inf tx input]
+  [bk tx input]
   (if-some [?sref-id (-> input :statement-input :statement-ref-id)]
     (->> {:ancestor-id ?sref-id}
-         (ip/-query-statement-descendants inf tx)
+         (ip/-query-statement-descendants bk tx)
          (map :descendant_id)
          (concat [?sref-id])
          vec)
