@@ -8,7 +8,7 @@ A SQL-based Learning Record Store.
 
 A Learning Record Store (LRS) is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in [Part 3 of the xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#partthree). lrsql is distinct from other LRSs developed at Yet Analytics for being SQL-based and supporting multiple SQL database management systems (DBMSs) like H2, SQLite, and Postgresql.
 
-Currently, lrsql is installed by pulling the latest commit from its GitHub repo. In the future it will be available in public repositories like Clojars.
+Currently, lrsql is installed by pulling the latest commit from its GitHub repo. In the future it will be available as a closed-source software download available via the purchase of a license.
 
 To use lrsql, a user needs to be authorized by an admin. Admin accounts can be created using special RESTful HTTP methods (described later in the README); logging into them will return a JSON Web Token (JWT), a temporary token that can then be used to create or access lrsql credentials. These credentials, which consist of a public API key (the "username"), a secret API key (the "password"), and their scopes ([described in the xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#42-oauth-10-authorization-scope)), are then used as headers for LRS-specific methods to authenticate and authorize the request sender.
 
@@ -18,7 +18,7 @@ To use lrsql, a user needs to be authorized by an admin. Admin accounts can be c
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `LRSQL_DB_TYPE` | The DBMS that lrsql will use. Currently supports `h2:mem` and `h2`. | `h2:mem` |
+| `LRSQL_DB_TYPE` | The DBMS that lrsql will use. Currently supports `h2:mem` and `h2`. The default value used depends on the `main` entry point used, e.g. `lrsql.sqlite.main/-main` will use `sqlite` by default, so overriding the default is **not** recommended. | Varies |
 | `LRSQL_DB_NAME` | The name of the database. | `example` |
 | `LRSQL_DB_HOST` | The host that the database will run on. | `localhost` |
 | `LRSQL_DB_PROPERTIES` | Optional additional database properties. Must be a string of comma-separated `key:value` pairs if set. Supported properties will depend on the DBMS. | Not set |
@@ -55,7 +55,7 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_KEY_FILE` | The path to the Java Keystore file that contains the key pair and credentials, which are used for HTTPS as well as JWT signing and verification. | `config/keystore.jks` |
 | `LRSQL_KEY_ALIAS` | The alias of the private key. | `lrsql_keystore` |
 | `LRSQL_KEY_PASSWORD` | The password protecting the keystore. **It is highly recommended that you override the default value.** | `lrsql_pass` |
-| `LRSQL_JWT_EXPIRATION_TIME` | The amount of time, in seconds, after a JWT is created when it should expire. | `3600` (one hour) |
+| `LRSQL_JWT_EXPIRATION_TIME` | The amount of time, in seconds, after a JWT is created when it should expire. Since JWTs are not revocable, **this this time should be short** (eg. one hour or less). | `3600` (one hour) |
 | `LRSQL_JWT_EXPIRATION_LEEWAY` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
 | `LRSQL_ENABLE_HTTP` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
 | `LRSQL_ENABLE_HTTP2` | Whether HTTP/2 is supported or not. | `true` |
