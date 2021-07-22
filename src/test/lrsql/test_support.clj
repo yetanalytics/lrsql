@@ -38,7 +38,7 @@
    - Uses the (in-mem) H2 DB backend
    - Uses the `:test-h2-mem` profile"
   []
-  (system/system (ir/map->H2Interface {}) :test-h2-mem))
+  (system/system (ir/map->H2Backend {}) :test-h2-mem))
 
 ;; Copied from training-commons.xapi.statement-gen-test
 (defn check-validate
