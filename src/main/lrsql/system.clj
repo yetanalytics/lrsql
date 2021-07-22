@@ -11,17 +11,13 @@
   [backend profile]
   (let [config
         (u/read-config profile)
-        db-type
-        (-> config :database :db-type)
         initial-sys ; init without configuration
         (component/system-map
+         :backend    (component/using
+                      backend
+                      [])
          :connection (component/using
                       (db/map->Connection {})
-                      [])
-         :backend  (component/using
-                      (cond
-                        (#{"h2" "h2:mem"} db-type)
-                        backend)
                       [])
          :lrs        (component/using
                       (lrs/map->LearningRecordStore {})
