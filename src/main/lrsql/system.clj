@@ -8,7 +8,7 @@
 (defn system
   "Return a lrsql system with configuration specified by the `profile`
    keyword."
-  [iface profile]
+  [backend profile]
   (let [config
         (u/read-config profile)
         db-type
@@ -21,7 +21,7 @@
          :backend  (component/using
                       (cond
                         (#{"h2" "h2:mem"} db-type)
-                        iface)
+                        backend)
                       [])
          :lrs        (component/using
                       (lrs/map->LearningRecordStore {})
