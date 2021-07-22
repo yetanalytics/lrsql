@@ -21,7 +21,11 @@
     ;; H2
     (#{"h2" "h2:mem"} db-type)
     (do (i-data/set-h2-read!)
-        (i-data/set-h2-write!))))
+        (i-data/set-h2-write!))
+    
+    (#{"sqlite"} db-type)
+    (do (i-data/set-sqlite-read!)
+        (i-data/set-sqlite-write!))))
 
 (defn init-ddl!
   "Execute SQL commands to create tables if they do not exist."
