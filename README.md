@@ -6,7 +6,7 @@ A SQL-based Learning Record Store.
 
 ## Overview
 
-A Learning Record Store (LRS) is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in [Part 3 of the xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#partthree). lrsql is distinct from other LRSs developed at Yet Analytics for being SQL-based and supporting multiple SQL database management systems (DBMSs) like H2, SQLite, and Postgresql.
+A Learning Record Store (LRS) is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in [Part 3 of the xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#partthree). lrsql is distinct from other LRSs developed at Yet Analytics for being SQL-based and supporting multiple SQL database management systems (DBMSs) like H2, SQLite, and PostgreSQL.
 
 Currently, lrsql is installed by pulling the latest commit from its GitHub repo. In the future it will be available as a closed-source software download available via the purchase of a license.
 
@@ -46,7 +46,7 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_SEED_SECRET_KEY` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
 | `LRSQL_STMT_MORE_URL_PREFIX` | A string that prefixes the fragment in the `more` URL returned by a multi-statement query. | Empty string |
 | `LRSQL_STMT_GET_DEFAULT` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` | 
-| `LRSQL_STMT_GET_MAX` | The maxiumum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overriden. | `50` |
+| `LRSQL_STMT_GET_MAX` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |
 
 ### Webserver
 
@@ -92,5 +92,5 @@ The following examples use `http://example.org` as the URL body. All methods req
 
 - `POST http://example.org/creds`: Create a new credential pair, with the specified scope values given by the `scopes` property in the request body.
 - `PUT http://example.org/creds`: Update an existing credential pair, given by `api-key` and `secret-key` properties in the request body, with the new scopes given by the `scopes` property.
-- `GET http://example.org/creds`: Read all credential pairs and their associated scopes for a particular account (dentoed by the JWT).
+- `GET http://example.org/creds`: Read all credential pairs and their associated scopes for a particular account (denoted by the JWT).
 - `DELETE http://example.org/creds`: Delete an existing credential pair, given by the `api-key` and `secret-key` properties in the request body, as well as any associated scopes.
