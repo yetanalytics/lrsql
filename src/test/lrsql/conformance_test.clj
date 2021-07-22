@@ -9,7 +9,6 @@
 (t/use-fixtures :each support/fresh-db-fixture)
 
 (deftest conformance-test
-  (support/assert-in-mem-db)
   (conf/with-test-suite
     (binding [conf/*print-logs* true]
       (testing "no regressions"

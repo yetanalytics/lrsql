@@ -1,0 +1,5 @@
+{:api-key-default      #or [#env LRSQL_SEED_API_KEY nil]
+ :api-secret-default   #or [#env LRSQL_SEED_API_SECRET nil]
+ :stmt-more-url-prefix #or [#env LRSQL_STMT_MORE_URL_PREFIX ""]
+ :stmt-get-default     #long #or [#env LRSQL_STMT_GET_DEFAULT 50]
+ :stmt-get-max         #long #or [#env LRSQL_STMT_GET_MAX 50]}

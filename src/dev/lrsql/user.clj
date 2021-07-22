@@ -7,9 +7,11 @@
             [lrsql.admin.protocol :as adp]))
 
 (comment
-  (require '[lrsql.lrs-test :refer [stmt-4]])
-  (def sys (system/system :dev-h2-mem))
-
+  (require 
+   '[lrsql.h2.record :as ir]
+   '[lrsql.lrs-test :refer [stmt-4]])
+  
+  (def sys (system/system (ir/map->H2Interface {}) :test-h2-mem))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))

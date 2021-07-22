@@ -1,4 +1,4 @@
-.phony: keystore, ci, ephemeral
+.phony: keystore, ci, ephemeral, persistent
 
 config/keystore.jks:
 	keytool -genkey -noprompt \
@@ -15,8 +15,13 @@ ci: keystore
 	clojure -X:test
 
 ephemeral: keystore
-	LRSQL_DB_TYPE=h2:mem \
-        LRSQL_DB_NAME=ephemeral \
-        LRSQL_SEED_API_KEY=username \
-        LRSQL_SEED_API_SECRET=password \
-        clojure -Mdb-h2 -m lrsql.h2.main
+	LRSQL_DB_NAME=ephemeral \
+		LRSQL_SEED_API_KEY=username \
+		LRSQL_SEED_API_SECRET=password \
+		clojure -M:db-h2 -m lrsql.h2.main --persistent false
+
+persistent: keystore
+	LRSQL_DB_NAME=persistent \
+		LRSQL_SEED_API_KEY=username \
+		LRSQL_SEED_API_SECRET=password \
+		clojure -M:db-h2 -m lrsql.h2.main --persistent true

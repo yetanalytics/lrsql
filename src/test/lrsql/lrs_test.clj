@@ -98,8 +98,7 @@
 (use-fixtures :each support/fresh-db-fixture)
 
 (deftest test-statement-fns
-  (let [_     (support/assert-in-mem-db)
-        sys   (support/test-system)
+  (let [sys   (support/test-system)
         sys'  (component/start sys)
         lrs   (:lrs sys')
         id-0  (get stmt-0 "id")
@@ -319,8 +318,7 @@
              "id" "00000000-0000-4000-0000-000000000002"}})
 
 (deftest test-statement-ref-fns
-  (let [_    (support/assert-in-mem-db)
-        sys  (support/test-system)
+  (let [sys  (support/test-system)
         sys' (component/start sys)
         lrs  (:lrs sys')]
     (testing "statement insertions"
@@ -418,8 +416,7 @@
    :contents      (.getBytes "Example Document 2")})
 
 (deftest test-document-fns
-  (let [_    (support/assert-in-mem-db)
-        sys  (support/test-system)
+  (let [sys  (support/test-system)
         sys' (component/start sys)
         lrs  (:lrs sys')]
     (testing "document insertion"
