@@ -55,8 +55,8 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_KEY_FILE` | The path to the Java Keystore file that contains the key pair and credentials, which are used for HTTPS as well as JWT signing and verification. | `config/keystore.jks` |
 | `LRSQL_KEY_ALIAS` | The alias of the private key. | `lrsql_keystore` |
 | `LRSQL_KEY_PASSWORD` | The password protecting the keystore. **It is highly recommended that you override the default value.** | `lrsql_pass` |
-| `LRSQL_JWT_EXPIRATION_TIME` | The amount of time, in seconds, after a JWT is created when it should expire. Since JWTs are not revocable, **this this time should be short** (eg. one hour or less). | `3600` (one hour) |
-| `LRSQL_JWT_EXPIRATION_LEEWAY` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
+| `LRSQL_JWT_EXP_TIME` | The amount of time, in seconds, after a JWT is created when it should expire. Since JWTs are not revocable, **this this time should be short** (eg. one hour or less). | `3600` (one hour) |
+| `LRSQL_JWT_EXP_LEEWAY` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
 | `LRSQL_ENABLE_HTTP` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
 | `LRSQL_ENABLE_HTTP2` | Whether HTTP/2 is supported or not. | `true` |
 | `LRSQL_HTTP_HOST` | The host that the webserver will run on. | `0.0.0.0` (localhost) |
