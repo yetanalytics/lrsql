@@ -4,8 +4,10 @@
    :test-h2-mem {:db-type "h2:mem" :db-name "example.h2"}
    :test-h2     {:db-type "h2" :db-name "example.h2"}
    ;; Production
-   :prod-h2-mem #merge [{:db-type "h2:mem"} #include "prod/database.edn"]
-   :prod-h2     #merge [{:db-type "h2"} #include "prod/database.edn"]}
+   :prod-h2-mem #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2:mem"]}
+                        #include "prod/database.edn"]
+   :prod-h2     #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2"]}
+                        #include "prod/database.edn"]}
  :connection
  #profile
   {;; Test/Dev
