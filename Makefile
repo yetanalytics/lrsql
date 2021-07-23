@@ -1,4 +1,4 @@
-.phony: keystore, ci, ephemeral, persistent, clean, run-jar-h2, run-jar-sqlite
+.phony: keystore, ci, ephemeral, persistent, clean, run-jar-h2, run-jar-sqlite, bundle
 
 config/keystore.jks:
 	keytool -genkey -noprompt \
@@ -26,19 +26,33 @@ persistent: keystore
 		LRSQL_SEED_API_SECRET=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent true
 
+# Build
 clean:
 	rm -rf target
 
+# Compile and make Uberjar
 target/bundle/lrsql.jar:
 	clojure -Xbuild uber
 
+# Copy scripts
+target/bundle/bin:
+	mkdir -p target/bundle
+	cp -r bin target/bundle/bin
+	chmod +x target/bundle/bin/*.sh
+
+# entire bundle
+target/bundle: target/bundle/lrsql.jar target/bundle/bin
+
+bundle: target/bundle
+
+# dev build testing stuff
 # copy dev keystore in to try build
 target/bundle/config/keystore.jks: keystore
 	mkdir -p target/bundle/config
 	cp config/keystore.jks target/bundle/config/keystore.jks
 
-run-jar-h2: target/bundle/lrsql.jar target/bundle/config/keystore.jks
-	cd target/bundle; LRSQL_SEED_API_KEY=username LRSQL_SEED_API_SECRET=password java -cp lrsql.jar clojure.main -m lrsql.h2.main
+run-jar-h2: target/bundle target/bundle/config/keystore.jks
+	cd target/bundle; LRSQL_SEED_API_KEY=username LRSQL_SEED_API_SECRET=password bin/run_h2.sh
 
-run-jar-sqlite: target/bundle/lrsql.jar target/bundle/config/keystore.jks
-	cd target/bundle; LRSQL_SEED_API_KEY=username LRSQL_SEED_API_SECRET=password java -cp lrsql.jar clojure.main -m lrsql.sqlite.main
+run-jar-sqlite: target/bundle target/bundle/config/keystore.jks
+	cd target/bundle; LRSQL_SEED_API_KEY=username LRSQL_SEED_API_SECRET=password bin/run_sqlite.sh
