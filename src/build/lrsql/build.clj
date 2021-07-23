@@ -22,7 +22,8 @@
       (depstar/uberjar)))
 
 (defn uber-manual
-  "All backends, as an uberjar, manually"
+  "All backends, as an uberjar, manually
+  Ensure that target dir is empty prior to use"
   [params]
   (-> (merge uber-params
              {:target-dir "target"})
