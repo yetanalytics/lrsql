@@ -2,13 +2,12 @@
   "Initialize HugSql functions and state."
   (:require [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
-            [lrsql.backend.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.input.admin :as admin-input]
             [lrsql.input.auth  :as auth-input]
             [lrsql.ops.command.admin :as admin-cmd]
             [lrsql.ops.command.auth :as auth-cmd]))
 
-;; TODO: Use a dynamic var to indicate when the adapter has already been set?
 (defn init-hugsql-adapter!
   "Initialize HugSql to use the next-jdbc adapter."
   []
@@ -19,10 +18,10 @@
    setting up the DB tables and indexes."
   [backend tx]
   ;; Init IO data conversion
-  (ip/-set-read! backend)
-  (ip/-set-write! backend)
+  (bp/-set-read! backend)
+  (bp/-set-write! backend)
   ;; Init DDL
-  (ip/-create-all! backend tx))
+  (bp/-create-all! backend tx))
 
 (defn insert-default-creds!
   "Seed the credential table with the default API key and secret, which are

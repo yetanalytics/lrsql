@@ -1,7 +1,7 @@
 (ns lrsql.ops.query.statement
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.backend.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.statement :as ss]
             [lrsql.util :as u]
@@ -29,12 +29,12 @@
   "Query a single statement from the DB, using the `:statement-id` parameter."
   [bk tx input ltags]
   (let [{:keys [format attachments?]} input
-        query-result (ip/-query-statement bk tx input)
+        query-result (bp/-query-statement bk tx input)
         statement   (when query-result
                       (query-res->statement format ltags query-result))
         attachments (when (and statement attachments?)
                       (->> {:statement-id (get statement "id")}
-                           (ip/-query-attachments bk tx)
+                           (bp/-query-attachments bk tx)
                            (mapv conform-attachment-res)))]
     (cond-> {}
       statement   (assoc :statement statement)
@@ -45,7 +45,7 @@
   [bk tx input ltags]
   (let [{:keys [format limit attachments? query-params]} input
         input'        (if limit (update input :limit inc) input)
-        query-results (ip/-query-statements bk tx input')
+        query-results (bp/-query-statements bk tx input')
         ?next-cursor  (when (and limit
                                  (= (inc limit) (count query-results)))
                         (-> query-results last :id u/uuid->str))
@@ -57,7 +57,7 @@
                         (doall (->> (map (fn [stmt]
                                            (->> (get stmt "id")
                                                 (assoc {} :statement-id)
-                                                (ip/-query-attachments bk tx)))
+                                                (bp/-query-attachments bk tx)))
                                          stmt-results)
                                     (apply concat)
                                     (map conform-attachment-res)))
@@ -110,7 +110,7 @@
   [bk tx input]
   (if-some [?sref-id (-> input :statement-input :statement-ref-id)]
     (->> {:ancestor-id ?sref-id}
-         (ip/-query-statement-descendants bk tx)
+         (bp/-query-statement-descendants bk tx)
          (map :descendant_id)
          (concat [?sref-id])
          vec)

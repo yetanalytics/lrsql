@@ -1,7 +1,7 @@
 (ns lrsql.ops.command.document
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as cstr]
-            [lrsql.backend.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
             [lrsql.util :as u]
@@ -24,11 +24,11 @@
   [bk tx {:keys [table] :as input}]
   (case table
     :state-document
-    (ip/-insert-state-document! bk tx input)
+    (bp/-insert-state-document! bk tx input)
     :agent-profile-document
-    (ip/-insert-agent-profile-document! bk tx input)
+    (bp/-insert-agent-profile-document! bk tx input)
     :activity-profile-document
-    (ip/-insert-activity-profile-document! bk tx input)
+    (bp/-insert-activity-profile-document! bk tx input)
     ;; Else
     (throw-invalid-table-ex "insert-document!" input))
   {})
@@ -140,23 +140,23 @@
     (upsert-document!* bk
                        tx
                        input
-                       ip/-query-state-document
-                       ip/-insert-state-document!
-                       ip/-update-state-document!)
+                       bp/-query-state-document
+                       bp/-insert-state-document!
+                       bp/-update-state-document!)
     :agent-profile-document
     (upsert-document!* bk
                        tx
                        input
-                       ip/-query-agent-profile-document
-                       ip/-insert-agent-profile-document!
-                       ip/-update-agent-profile-document!)
+                       bp/-query-agent-profile-document
+                       bp/-insert-agent-profile-document!
+                       bp/-update-agent-profile-document!)
     :activity-profile-document
     (upsert-document!* bk
                        tx
                        input
-                       ip/-query-activity-profile-document
-                       ip/-insert-activity-profile-document!
-                       ip/-update-activity-profile-document!)
+                       bp/-query-activity-profile-document
+                       bp/-insert-activity-profile-document!
+                       bp/-update-activity-profile-document!)
     ;; Else
     (throw-invalid-table-ex "upsert-document!" input)))
 
@@ -175,11 +175,11 @@
   [bk tx {:keys [table] :as input}]
   (case table
     :state-document
-    (ip/-delete-state-document! bk tx input)
+    (bp/-delete-state-document! bk tx input)
     :agent-profile-document
-    (ip/-delete-agent-profile-document! bk tx input)
+    (bp/-delete-agent-profile-document! bk tx input)
     :activity-profile-document
-    (ip/-delete-activity-profile-document! bk tx input)
+    (bp/-delete-activity-profile-document! bk tx input)
     ;; Else
     (throw-invalid-table-ex "delete-document!" input))
   {})
@@ -195,7 +195,7 @@
   [bk tx {:keys [table] :as input}]
   (case table
     :state-document
-    (ip/-delete-state-documents! bk tx input)
+    (bp/-delete-state-documents! bk tx input)
     ;; Else
     (throw-invalid-table-ex "delete-documents!" input))
   {})

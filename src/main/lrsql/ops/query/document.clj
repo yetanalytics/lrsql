@@ -1,7 +1,7 @@
 (ns lrsql.ops.query.document
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.backend.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
             [lrsql.util :as u]
@@ -20,11 +20,11 @@
   [bk tx {:keys [table] :as input}]
   (if-some [res (case table
                   :state-document
-                  (ip/-query-state-document bk tx input)
+                  (bp/-query-state-document bk tx input)
                   :agent-profile-document
-                  (ip/-query-agent-profile-document bk tx input)
+                  (bp/-query-agent-profile-document bk tx input)
                   :activity-profile-document
-                  (ip/-query-activity-profile-document bk tx input)
+                  (bp/-query-activity-profile-document bk tx input)
                   ;; Else
                   (throw-invalid-table-ex "query-document" input))]
     (let [{contents     :contents
@@ -58,15 +58,15 @@
   (let [ids (case table
               :state-document
               (->> input
-                   (ip/-query-state-document-ids bk tx)
+                   (bp/-query-state-document-ids bk tx)
                    (map :state_id))
               :agent-profile-document
               (->> input
-                   (ip/-query-agent-profile-document-ids bk tx)
+                   (bp/-query-agent-profile-document-ids bk tx)
                    (map :profile_id))
               :activity-profile-document
               (->> input
-                   (ip/-query-activity-profile-document-ids bk tx)
+                   (bp/-query-activity-profile-document-ids bk tx)
                    (map :profile_id))
               ;; Else
               (throw-invalid-table-ex "query-document-ids" input))]

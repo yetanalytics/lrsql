@@ -1,6 +1,6 @@
 (ns lrsql.ops.command.admin
   (:require [clojure.spec.alpha :as s]
-            [lrsql.backend.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.admin :as ads]))
 
@@ -19,9 +19,9 @@
    `admin_account` table. Returns a map with `:result` either being the
    account ID on success or an error keyword on failure."
   [bk tx input]
-  (if-not (ip/-query-account-exists bk tx (select-keys input [:username]))
+  (if-not (bp/-query-account-exists bk tx (select-keys input [:username]))
     (do
-      (ip/-insert-admin-account! bk tx input)
+      (bp/-insert-admin-account! bk tx input)
       {:result (:primary-key input)})
     {:result :lrsql.admin/existing-account-error}))
 
@@ -39,5 +39,5 @@
   "Delete the admin account and any associated credentials. Returns a map
    where `:result` is the account ID."
   [bk tx input]
-  (ip/-delete-admin-account! bk tx input)
+  (bp/-delete-admin-account! bk tx input)
   {:result (:account-id input)})

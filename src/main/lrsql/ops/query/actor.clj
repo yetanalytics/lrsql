@@ -1,7 +1,7 @@
 (ns lrsql.ops.query.actor
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.backend.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.actor :as as]
             [lrsql.util.actor :as au]))
@@ -18,7 +18,7 @@
    query Groups."
   [bk tx input]
   ;; If agent is not found, return the original input
-  (let [agent (if-some [{result :payload} (ip/-query-actor bk tx input)]
+  (let [agent (if-some [{result :payload} (bp/-query-actor bk tx input)]
                 result
                 (:payload input))]
     {:person (->> agent au/actor->person)}))

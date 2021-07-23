@@ -1,10 +1,10 @@
 (ns lrsql.h2.main
   (:require [com.stuartsierra.component :as component]
             [lrsql.system :as system]
-            [lrsql.h2.record :as ir])
+            [lrsql.h2.record :as hr])
   (:gen-class))
 
-(def h2-backend (ir/map->H2Backend {}))
+(def h2-backend (hr/map->H2Backend {}))
 
 (defn -main
   "Main entrypoint for H2-backed LRSQL instances. Passing `--persistent true`

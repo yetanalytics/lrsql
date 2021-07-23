@@ -1,6 +1,6 @@
 (ns lrsql.ops.command.auth
   (:require [clojure.spec.alpha :as s]
-            [lrsql.backend.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.auth :as as]))
 
@@ -19,7 +19,7 @@
 (defn insert-credential!
   "Insert the credential keys in `input` into the DB. Returns `nil`."
   [bk tx input]
-  (ip/-insert-credential! bk tx input)
+  (bp/-insert-credential! bk tx input)
   nil)
 
 (s/fdef insert-credential-scopes!
@@ -32,7 +32,7 @@
   "Insert `input`, a seq of maps where each API key pair is associated
    with a different scope."
   [bk tx input]
-  (dorun (map (partial ip/-insert-credential-scope! bk tx) input)))
+  (dorun (map (partial bp/-insert-credential-scope! bk tx) input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credential Deletion
@@ -50,7 +50,7 @@
   "Delete the scopes associated with the credential in the `input` seq
    Returns `nil`."
   [bk tx input]
-  (dorun (map (partial ip/-delete-credential-scope! bk tx) input)))
+  (dorun (map (partial bp/-delete-credential-scope! bk tx) input)))
 
 (s/fdef delete-credential!
   :args (s/cat :bk as/credential-backend?
@@ -62,5 +62,5 @@
   "Delete the credential and all of its scopes associated with the key pair
    in `input`. Returns `nil`."
   [bk tx input]
-  (ip/-delete-credential! bk tx input)
+  (bp/-delete-credential! bk tx input)
   nil)

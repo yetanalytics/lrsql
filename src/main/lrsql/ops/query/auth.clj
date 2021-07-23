@@ -1,7 +1,7 @@
 (ns lrsql.ops.query.auth
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.backend.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.auth :as as]
             [lrsql.util.auth :as au]))
@@ -18,8 +18,8 @@
   "Return a vec of scopes associated with an API key and secret if it
    exists in the credential table; return nil if not."
   [bk tx input]
-  (when (ip/-query-credential-exists bk tx input)
-    (some->> (ip/-query-credential-scopes bk tx input)
+  (when (bp/-query-credential-exists bk tx input)
+    (some->> (bp/-query-credential-scopes bk tx input)
              (map :scope)
              (filter some?)
              vec)))
@@ -71,12 +71,12 @@
    associated scopes) that are associated with that account."
   [bk tx input]
   (let [creds  (->> input
-                    (ip/-query-credentials bk tx)
+                    (bp/-query-credentials bk tx)
                     (map (fn [{ak :api_key sk :secret_key}]
                            {:api-key ak :secret-key sk})))
         scopes (doall (map (fn [cred]
                              (->> cred
-                                  (ip/-query-credential-scopes bk tx)
+                                  (bp/-query-credential-scopes bk tx)
                                   (map :scope)))
                            creds))]
     (mapv (fn [cred cred-scopes]
