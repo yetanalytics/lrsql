@@ -4,12 +4,12 @@
 -- :command :execute
 -- :doc Create the `statement` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS xapi_statement (
-  id               UUID NOT NULL PRIMARY KEY,
-  statement_id     UUID NOT NULL UNIQUE,
-  registration     UUID,
-  verb_iri         VARCHAR(255) NOT NULL,
-  is_voided        BOOLEAN DEFAULT FALSE NOT NULL,
-  payload          JSON NOT NULL
+  id           UUID NOT NULL PRIMARY KEY,
+  statement_id UUID NOT NULL UNIQUE,
+  registration UUID,
+  verb_iri     VARCHAR(255) NOT NULL,
+  is_voided    BOOLEAN DEFAULT FALSE NOT NULL,
+  payload      JSON NOT NULL
 );
 CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
 CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri);
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS statement_to_actor (
                     'SubActor', 'SubObject', 'SubInstructor', 'SubTeam')
                NOT NULL,
   actor_ifi    VARCHAR(255) NOT NULL,
-  actor_type   ENUM('Agent', 'Group'),
+  actor_type   ENUM('Agent', 'Group') NOT NULL,
   FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
   FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 )
