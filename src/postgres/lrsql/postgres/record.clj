@@ -1,5 +1,6 @@
 (ns lrsql.postgres.record
   (:require [com.stuartsierra.component :as cmp]
+            [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.postgres.data :as pd]
@@ -24,8 +25,10 @@
 
   bp/BackendInit
   (-create-all! [_ tx]
+    ;; Enums
+    (create-enums! tx)
+    ;; Tables
     (create-statement-table! tx)
-    (create-actor-type-enum! tx)
     (create-actor-table! tx)
     (create-activity-table! tx)
     (create-attachment-table! tx)

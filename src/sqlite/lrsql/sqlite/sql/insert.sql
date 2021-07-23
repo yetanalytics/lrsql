@@ -82,7 +82,7 @@ INSERT INTO state_document (
 ) VALUES (
   :primary-key, :state-id, :activity-iri, :agent-ifi, :registration,
   :last-modified, :content-type, :content-length, :contents
-) ON CONFLICT state_doc_idx DO NOTHING
+)
 
 -- :name insert-agent-profile-document!
 -- :command :insert
@@ -94,7 +94,7 @@ INSERT INTO agent_profile_document (
 ) VALUES (
   :primary-key, :profile-id, :agent-ifi,
   :last-modified, :content-type, :content-length, :contents
-) ON CONFLICT agent_profile_doc_idx DO NOTHING
+)
 
 -- :name insert-activity-profile-document!
 -- :command :insert
@@ -106,7 +106,7 @@ INSERT INTO activity_profile_document (
 ) VALUES (
   :primary-key, :profile-id, :activity-iri,
   :last-modified, :content-type, :content-length, :contents
-) ON CONFLICT activity_profile_doc_idx DO NOTHING
+)
 
 /* Accounts */
 

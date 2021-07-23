@@ -1,3 +1,35 @@
+/* Enums */
+
+-- :name create-enums!
+-- :command :execute
+-- :doc Create all enum types.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'actor_type_enum') THEN
+    CREATE TYPE actor_type_enum AS ENUM('Agent', 'Group');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'actor_usage_enum') THEN
+    CREATE TYPE actor_usage_enum AS ENUM (
+      'Actor', 'Object', 'Authority', 'Instructor', 'Team',
+      'SubActor', 'SubObject', 'SubInstructor', 'SubTeam');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'activity_usage_enum') THEN
+    CREATE TYPE activity_usage_enum AS ENUM (
+      'Object', 'Category', 'Grouping', 'Parent', 'Other',
+      'SubObject', 'SubCategory', 'SubGrouping', 'SubParent', 'SubOther');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'scope_enum') THEN
+    CREATE TYPE scope_enum AS ENUM (
+      'statements/write',
+      'statements/read/mine', -- unimplemented
+      'statements/read',
+      'state',   -- unimplemented
+      'define',  -- unimplemented
+      'profile', -- unimplemented
+      'all/read',
+      'all');
+  END IF;
+END $$
+
 /* Statement + Attachment Tables */
 
 -- :name create-statement-table!
@@ -11,14 +43,9 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   is_voided    BOOLEAN DEFAULT FALSE NOT NULL,
   payload      JSON NOT NULL -- faster read/write than JSONB
 );
-CREATE INDEX desc_id_idx ON xapi_statement(id) DESC;
-CREATE INDEX verb_iri_idx ON xapi_statement(verb_iri);
-CREATE INDEX registration ON xapi_statement(registration)
-
--- :name create-actor-type-enum!
--- :command :execute
--- :doc Create an enum over the actor types 'Actor' and 'Group'.
-CREATE TYPE actor_type_enum AS ENUM('Agent', 'Group');
+CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
+CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri);
+CREATE INDEX IF NOT EXISTS registration ON xapi_statement(registration);
 
 -- :name create-actor-table!
 -- :command :execute
@@ -29,7 +56,7 @@ CREATE TABLE IF NOT EXISTS actor (
   actor_type actor_type_enum NOT NULL,
   payload    JSON NOT NULL,
   CONSTRAINT actor_idx UNIQUE (actor_ifi, actor_type)
-)
+);
 
 -- :name create-activity-table!
 -- :command :execute
@@ -38,7 +65,7 @@ CREATE TABLE IF NOT EXISTS activity (
   id           UUID PRIMARY KEY,
   activity_iri VARCHAR(255) NOT NULL UNIQUE,
   payload      JSON NOT NULL
-)
+);
 
 -- :name create-attachment-table!
 -- :command :execute
@@ -52,34 +79,26 @@ CREATE TABLE IF NOT EXISTS attachment (
   contents       BYTEA NOT NULL,
   CONSTRAINT statement_fk
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
-)
+);
 
 -- :name create-statement-to-actor-table!
 -- :command :execute
 -- :doc Create the `statement_to_actor` link table if it doesn't exist yet.
-CREATE TYPE actor_usage_enum AS ENUM (
-  'Actor', 'Object', 'Authority', 'Instructor', 'Team',
-  'SubActor', 'SubObject', 'SubInstructor', 'SubTeam'
-);
 CREATE TABLE IF NOT EXISTS statement_to_actor (
   id           UUID PRIMARY KEY,
   statement_id UUID NOT NULL,
   usage        actor_usage_enum NOT NULL,
   actor_ifi    VARCHAR(255) NOT NULL,
-  actor_type   ENUM('Agent', 'Group'),
+  actor_type   actor_type_enum NOT NULL,
   CONSTRAINT statement_fk
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
   CONSTRAINT actor_fk
     FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
-)
+);
 
 -- :name create-statement-to-activity-table!
 -- :command :execute
 -- :doc Create the `statement_to_activity` link table if it doesn't exist yet.
-CREATE TYPE activity_usage_enum AS ENUM (
-  'Object', 'Category', 'Grouping', 'Parent', 'Other',
-  'SubObject', 'SubCategory', 'SubGrouping', 'SubParent', 'SubOther'
-);
 CREATE TABLE IF NOT EXISTS statement_to_activity (
   id           UUID PRIMARY KEY,
   statement_id UUID NOT NULL,
@@ -89,7 +108,7 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
   CONSTRAINT activity_fk
     FOREIGN KEY (activity_iri) REFERENCES activity(activity_iri)
-)
+);
 
 -- :name create-statement-to-statement-table!
 -- :command :execute
@@ -102,7 +121,7 @@ CREATE TABLE IF NOT EXISTS statement_to_statement (
     FOREIGN KEY (ancestor_id) REFERENCES xapi_statement(statement_id),
   CONSTRAINT descendant_fk
     FOREIGN KEY (descendant_id) REFERENCES xapi_statement(statement_id)
-)
+);
 
 /* Document Tables */
 
@@ -121,7 +140,7 @@ CREATE TABLE IF NOT EXISTS state_document (
   contents       BYTEA NOT NULL,
   CONSTRAINT state_doc_idx
     UNIQUE (state_id, activity_iri, agent_ifi, registration)
-)
+);
 
 -- :name create-agent-profile-document-table!
 -- :command :execute
@@ -136,7 +155,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
   contents       BYTEA NOT NULL,
   CONSTRAINT agent_profile_doc_idx
     UNIQUE (profile_id, agent_ifi)
-)
+);
 
 -- :name create-activity-profile-document-table!
 -- :command :execute
@@ -151,7 +170,7 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
   contents       BYTEA NOT NULL,
   CONSTRAINT activity_profile_doc_idx
     UNIQUE (profile_id, activity_iri)
-)
+);
 
 /* Admin Account Table */
 
@@ -162,7 +181,7 @@ CREATE TABLE IF NOT EXISTS admin_account (
   id       UUID PRIMARY KEY,
   username VARCHAR(255) NOT NULL UNIQUE,
   passhash VARCHAR(255) NOT NULL
-)
+);
 
 /* Credential Tables */
 
@@ -174,25 +193,17 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
   api_key    VARCHAR(255) NOT NULL,
   secret_key VARCHAR(255) NOT NULL,
   account_id UUID NOT NULL,
+  CONSTRAINT credential_idx
+    UNIQUE (api_key, secret_key),
   CONSTRAINT account_fk
     FOREIGN KEY (account_id)
     REFERENCES admin_account(id)
     ON DELETE CASCADE
-)
+);
 
 -- :name create-credential-to-scope-table!
 -- :command :execute
 -- :doc Create the `credential_to_scope` link table if it does not exist yet.
-CREATE TYPE scope_enum AS ENUM (
-  'statements/write',
-  'statements/read/mine', -- unimplemented
-  'statements/read',
-  'state',   -- unimplemented
-  'define',  -- unimplemented
-  'profile', -- unimplemented
-  'all/read',
-  'all'
-);
 CREATE TABLE IF NOT EXISTS credential_to_scope (
   id         UUID PRIMARY KEY,
   api_key    VARCHAR(255) NOT NULL,
@@ -202,4 +213,4 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
     FOREIGN KEY (api_key, secret_key)
     REFERENCES lrs_credential(api_key, secret_key)
     ON DELETE CASCADE
-)
+);

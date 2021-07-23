@@ -44,7 +44,7 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | Variable | Description | Default |
 | --- | --- | --- |
 | `LRSQL_SEED_API_KEY` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
-| `LRSQL_SEED_SECRET_KEY` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
+| `LRSQL_SEED_API_SECRET` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
 | `LRSQL_STMT_MORE_URL_PREFIX` | A string that prefixes the fragment in the `more` URL returned by a multi-statement query. | Empty string |
 | `LRSQL_STMT_GET_DEFAULT` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` | 
 | `LRSQL_STMT_GET_MAX` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |

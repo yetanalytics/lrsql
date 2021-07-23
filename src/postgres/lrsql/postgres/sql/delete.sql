@@ -7,6 +7,7 @@ WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 AND state_id = :state-id
 --~ (when (:registration params) "AND registration = :registration" "AND registration IS NULL")
+;
 
 -- :name delete-state-documents!
 -- :command :execute
@@ -16,6 +17,7 @@ DELETE FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 --~ (when (:registration params) "AND registration = :registration" "AND registration IS NULL")
+;
 
 -- :name delete-agent-profile-document!
 -- :command :execute
@@ -23,7 +25,7 @@ AND agent_ifi = :agent-ifi
 -- :doc Delete a single agent profile document using resource params.
 DELETE FROM agent_profile_document
 WHERE profile_id = :profile-id
-AND agent_ifi = :agent-ifi
+AND agent_ifi = :agent-ifi;
 
 -- :name delete-activity-profile-document!
 -- :command :execute
@@ -31,7 +33,7 @@ AND agent_ifi = :agent-ifi
 -- :doc Delete a single activity profile document using resource params.
 DELETE FROM activity_profile_document
 WHERE profile_id = :profile-id
-AND activity_iri = :activity-iri
+AND activity_iri = :activity-iri;
 
 /* Admin Accounts + Credentials */
 
@@ -40,7 +42,7 @@ AND activity_iri = :activity-iri
 -- :result :affected
 -- :doc Delete the admin account associated with `:account-id`.
 DELETE FROM admin_account
-WHERE id = :account-id
+WHERE id = :account-id;
 
 -- :name delete-credential!
 -- :command :execute
@@ -49,7 +51,7 @@ WHERE id = :account-id
 DELETE FROM lrs_credential
 WHERE account_id = :account-id
 AND api_key = :api-key
-AND secret_key = :secret-key
+AND secret_key = :secret-key;
 
 -- :name delete-credential-scope!
 -- :command :execute
@@ -58,4 +60,4 @@ AND secret_key = :secret-key
 DELETE FROM credential_to_scope
 WHERE api_key = :api-key
 AND secret_key = :secret-key
-AND scope = :scope
+AND scope = :scope::scope_enum;

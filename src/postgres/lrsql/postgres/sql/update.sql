@@ -5,7 +5,7 @@
 UPDATE xapi_statement
 SET is_voided = TRUE
 WHERE statement_id = :statement-id
-AND verb_iri != 'http://adlnet.gov/expapi/verbs/voided'
+AND verb_iri != 'http://adlnet.gov/expapi/verbs/voided';
 -- ^ Any Statement that voids another cannot itself be voided.
 
 -- :name update-actor!
@@ -15,7 +15,7 @@ AND verb_iri != 'http://adlnet.gov/expapi/verbs/voided'
 UPDATE actor
 SET payload = :payload
 WHERE actor_ifi = :actor-ifi
-AND actor_type = :actor-type
+AND actor_type = :actor-type::actor_type_enum;
 
 -- :name update-activity!
 -- :command :execute
@@ -23,7 +23,7 @@ AND actor_type = :actor-type
 -- :doc Update the payload of a pre-existing activity.
 UPDATE activity
 SET payload = :payload
-WHERE activity_iri = :activity-iri
+WHERE activity_iri = :activity-iri;
 
 -- :name update-state-document!
 -- :command :insert
@@ -38,6 +38,7 @@ WHERE state_id = :state-id
 AND activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 --~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
+;
 
 -- :name update-agent-profile-document!
 -- :command :insert
@@ -49,7 +50,7 @@ SET
   contents = :contents,
   last_modified = :last-modified
 WHERE profile_id = :profile-id
-AND agent_ifi = :agent-ifi
+AND agent_ifi = :agent-ifi;
 
 -- :name update-activity-profile-document!
 -- :command :insert
@@ -61,4 +62,4 @@ SET
   contents = :contents,
   last_modified = :last-modified
 WHERE profile_id = :profile-id
-AND activity_iri = :activity-iri
+AND activity_iri = :activity-iri;

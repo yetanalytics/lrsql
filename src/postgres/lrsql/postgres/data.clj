@@ -13,8 +13,8 @@
 (defn- json->pg-object
   [jsn]
   (doto (PGobject.)
-    (.setType "json") ; faster IO than jsonb
-    (.setValue (u/write-json jsn))))
+    (.setType "json")
+    (.setValue (String. (u/write-json jsn)))))
 
 (defn- pg-object->json
   [^PGobject pg-obj]
@@ -48,5 +48,5 @@
   []
   (extend-protocol SettableParameter
     IPersistentMap
-    (set-parameter [^IPersistentMap m ^PreparedStatement s ^long i]
-      (.setObject s i (json->pg-object m)))))
+    (set-parameter [^IPersistentMap m ^PreparedStatement stmt ^long i]
+      (.setObject stmt i (json->pg-object m)))))
