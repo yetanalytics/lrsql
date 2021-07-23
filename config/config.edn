@@ -31,13 +31,13 @@
  :lrs
  #profile
   {;; Test/Dev
-   :test-h2-mem #merge [{:database #ref [:database]} #include "test/lrs.edn"]
-   :test-h2     #merge [{:database #ref [:database]} #include "test/lrs.edn"]
-   :test-sqlite #merge [{:database #ref [:database]} #include "test/lrs.edn"]
+   :test-h2-mem #include "test/lrs.edn"
+   :test-h2     #include "test/lrs.edn"
+   :test-sqlite #include "test/lrs.edn"
    ;; Production
-   :prod-h2-mem #merge [{:database #ref [:database]} #include "prod/lrs.edn"]
-   :prod-h2     #merge [{:database #ref [:database]} #include "prod/lrs.edn"]
-   :prod-sqlite #merge [{:database #ref [:database]} #include "prod/lrs.edn"]}
+   :prod-h2-mem #include "prod/lrs.edn"
+   :prod-h2     #include "prod/lrs.edn"
+   :prod-sqlite #include "prod/lrs.edn"}
  :webserver
  #profile
   {;; Test/Dev

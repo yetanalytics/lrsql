@@ -1,9 +1,13 @@
 (ns lrsql.h2.record
   (:require [com.stuartsierra.component :as cmp]
+            [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
+            [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.util :as u]))
 
 ;; Init HugSql functions
+
+(init-hugsql-adapter!)
 
 (u/def-hugsql-db-fns "lrsql/h2/sql/ddl.sql")
 (u/def-hugsql-db-fns "lrsql/h2/sql/insert.sql")
@@ -145,4 +149,11 @@
   (-query-credential-exists [_ tx input]
     (query-credential-exists tx input))
   (-query-credential-scopes [_ tx input]
-    (query-credential-scopes tx input)))
+    (query-credential-scopes tx input))
+
+  bp/BackendIOSetter
+  (-set-read! [_]
+    (bd/set-read-time->instant!)
+    (bd/set-read-bytes->json! #{"payload"}))
+  (-set-write! [_]
+    (bd/set-write-json->bytes!)))

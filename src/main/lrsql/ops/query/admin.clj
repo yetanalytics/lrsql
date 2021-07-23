@@ -1,6 +1,6 @@
 (ns lrsql.ops.query.admin
   (:require [clojure.spec.alpha :as s]
-            [lrsql.backend.protocol :as ip]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.admin :as ads]
             [lrsql.util.admin :as au]))
@@ -12,7 +12,7 @@
   [bk tx input]
   (if-some [{account-id :id
              passhash   :passhash}
-            (ip/-query-account bk tx input)]
+            (bp/-query-account bk tx input)]
     {:account-id account-id
      :passhash   passhash}
     :lrsql.admin/missing-account-error))

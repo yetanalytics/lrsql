@@ -59,8 +59,7 @@
 
 (s/def ::lrs
   (s/and (s/conformer remove-nil-vals)
-         (s/keys :req-un [::database
-                          ::stmt-more-url-prefix
+         (s/keys :req-un [::stmt-more-url-prefix
                           ::stmt-get-default
                           ::stmt-get-max]
                  :opt-un [::api-key-default

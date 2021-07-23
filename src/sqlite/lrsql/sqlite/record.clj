@@ -1,9 +1,14 @@
 (ns lrsql.sqlite.record
   (:require [com.stuartsierra.component :as cmp]
             [lrsql.backend.protocol :as bp]
+            [lrsql.backend.data :as bd]
+            [lrsql.init :refer [init-hugsql-adapter!]]
+            [lrsql.sqlite.data :as sd]
             [lrsql.util :as u]))
 
 ;; Init HugSql functions
+
+(init-hugsql-adapter!)
 
 (u/def-hugsql-db-fns "lrsql/sqlite/sql/ddl.sql")
 (u/def-hugsql-db-fns "lrsql/sqlite/sql/insert.sql")
@@ -143,4 +148,18 @@
   (-query-credential-exists [_ tx input]
     (query-credential-exists tx input))
   (-query-credential-scopes [_ tx input]
-    (query-credential-scopes tx input)))
+    (query-credential-scopes tx input))
+
+  bp/BackendIOSetter
+  (-set-read! [_]
+    (bd/set-read-time->instant!)
+    (bd/set-read-bytes->json! ; SQLite returns JSON data as byte arrays even
+     #{"payload"})            ; though the data type is "BLOB"
+    (sd/set-read-str->uuid-or-inst!
+     #{"id" "statement_id" "registration" "ancestor_id" "descendant_id" "account_id"}
+     #{"last_modified"}))
+  (-set-write! [_]
+    (bd/set-write-json->bytes!)
+    (sd/set-write-uuid->str!)
+    (sd/set-write-inst->str!)
+    (sd/set-write-bool->int!)))

@@ -2,8 +2,7 @@
   "Initialize HugSql functions and state."
   (:require [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
-            [lrsql.backend.protocol :as ip]
-            [lrsql.backend.data :as i-data]
+            [lrsql.backend.protocol :as bp]
             [lrsql.input.admin :as admin-input]
             [lrsql.input.auth  :as auth-input]
             [lrsql.ops.command.admin :as admin-cmd]
@@ -14,23 +13,15 @@
   []
   (hugsql/set-adapter! (next-adapter/hugsql-adapter-next-jdbc)))
 
-(defn init-settable-params!
-  "Set conversion functions for DB reading and writing depending on `db-type`."
-  [db-type]
-  (cond
-    ;; H2
-    (#{"h2" "h2:mem"} db-type)
-    (do (i-data/set-h2-read!)
-        (i-data/set-h2-write!))
-    
-    (#{"sqlite"} db-type)
-    (do (i-data/set-sqlite-read!)
-        (i-data/set-sqlite-write!))))
-
-(defn init-ddl!
-  "Execute SQL commands to create tables if they do not exist."
+(defn init-backend!
+  "Init the functionality of `backend`, including IO data conversion and
+   setting up the DB tables and indexes."
   [backend tx]
-  (ip/-create-all! backend tx))
+  ;; Init IO data conversion
+  (bp/-set-read! backend)
+  (bp/-set-write! backend)
+  ;; Init DDL
+  (bp/-create-all! backend tx))
 
 (defn insert-default-creds!
   "Seed the credential table with the default API key and secret, which are
