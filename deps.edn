@@ -28,25 +28,29 @@
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
    :sha        "77f78d1713e50e7b8610f58b5137695b0fccddaa"
    :exclusions [org.clojure/clojure]}}
-  :aliases
-  {:db-h2
-   {:extra-paths ["src/h2"]
-    :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
+ :aliases
+ {:db-h2
+  {:extra-paths ["src/h2"]
+   :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
   :db-sqlite
   {:extra-paths ["src/sqlite"]
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
-   :test
-   {:extra-paths ["src/h2" "src/test"]
-    :extra-deps  {com.h2database/h2      {:mvn/version "1.4.200"}
-                  org.clojure/test.check {:mvn/version "1.0.0"}
-                  babashka/babashka.curl {:mvn/version "0.0.3"}
-                  orchestra/orchestra    {:mvn/version "2021.01.01-1"}
-                  io.github.cognitect-labs/test-runner
-                  {:git/url "https://github.com/cognitect-labs/test-runner.git"
-                   :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
-                  com.yetanalytics.lrs/test-runner
-                  {:git/url "git@github.com:yetanalytics/lrs-test-runner.git"
-                   :sha "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
-                   :exclusions [org.clojure/data.json]}}
-    :exec-fn     cognitect.test-runner.api/test
-    :exec-args   {:dirs ["src/test"]}}}}
+  :test
+  {:extra-paths ["src/h2" "src/test"]
+   :extra-deps  {com.h2database/h2      {:mvn/version "1.4.200"}
+                 org.clojure/test.check {:mvn/version "1.0.0"}
+                 babashka/babashka.curl {:mvn/version "0.0.3"}
+                 orchestra/orchestra    {:mvn/version "2021.01.01-1"}
+                 io.github.cognitect-labs/test-runner
+                 {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                  :sha     "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
+                 com.yetanalytics.lrs/test-runner
+                 {:git/url    "git@github.com:yetanalytics/lrs-test-runner.git"
+                  :sha        "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
+                  :exclusions [org.clojure/data.json]}}
+   :exec-fn     cognitect.test-runner.api/test
+   :exec-args   {:dirs ["src/test"]}}
+  :build
+  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
+   :extra-paths ["src/build"]
+   :ns-default lrsql.build}}}
