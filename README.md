@@ -18,10 +18,10 @@ To use lrsql, a user needs to be authorized by an admin. Admin accounts can be c
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `LRSQL_DB_TYPE` | The DBMS that lrsql will use. Currently supports `h2:mem` and `h2`. The default value used depends on the `main` entry point used, e.g. `lrsql.sqlite.main/-main` will use `sqlite` by default, so overriding the default is **not** recommended. | Varies |
+| `LRSQL_DB_TYPE` | The DBMS that lrsql will use. Currently supports `h2:mem`, `h2`, `sqlite`, `postgres`, and `postgresql`. The default value used depends on the `main` entry point used, e.g. `lrsql.sqlite.main` will use `sqlite` by default, so overriding the default is **not** recommended. | Varies |
 | `LRSQL_DB_NAME` | The name of the database. | `example` |
-| `LRSQL_DB_HOST` | The host that the database will run on. Not supported by in-mem H2. | `localhost` |
-| `LRSQL_DB_PORT` | The port that the database will run on. Not supported by in-mem H2. | `9001` (H2) |
+| `LRSQL_DB_HOST` | The host that the database will run on. Not supported by in-mem H2 or SQLite. | `localhost` |
+| `LRSQL_DB_PORT` | The port that the database will run on. Not supported by in-mem H2 or SQLite. | `9001` (H2) |
 | `LRSQL_DB_PROPERTIES` | Optional additional database properties. Must be a string of comma-separated `key:value` pairs if set. Supported properties will depend on the DBMS. | Not set |
 | `LRSQL_DB_JDBC_URL` | Optional JDBC URL; this will override the above properties if set. URL syntax will depend on the DBMS. | Not set |
 | `LRSQL_DB_USER` | The DB user. Optional. | Not set |
@@ -56,7 +56,7 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_KEY_FILE` | The path to the Java Keystore file that contains the key pair and credentials, which are used for HTTPS as well as JWT signing and verification. | `config/keystore.jks` |
 | `LRSQL_KEY_ALIAS` | The alias of the private key. | `lrsql_keystore` |
 | `LRSQL_KEY_PASSWORD` | The password protecting the keystore. **It is highly recommended that you override the default value.** | `lrsql_pass` |
-| `LRSQL_JWT_EXP_TIME` | The amount of time, in seconds, after a JWT is created when it should expire. Since JWTs are not revocable, **this this time should be short** (eg. one hour or less). | `3600` (one hour) |
+| `LRSQL_JWT_EXP_TIME` | The amount of time, in seconds, after a JWT is created when it expires. Since JWTs are not revocable, **this this time should be short** (i.e. one hour or less). | `3600` (one hour) |
 | `LRSQL_JWT_EXP_LEEWAY` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
 | `LRSQL_ENABLE_HTTP` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
 | `LRSQL_ENABLE_HTTP2` | Whether HTTP/2 is supported or not. | `true` |
