@@ -3,8 +3,7 @@
             [xapi-schema.spec :as xs]
             [lrsql.spec.util :refer [remove-nil-vals]]))
 
-;; TODO: Add Postgres
-(s/def ::db-type #{"h2" "h2:mem" "sqlite"})
+(s/def ::db-type #{"h2" "h2:mem" "sqlite" "postgres" "postgresql"})
 (s/def ::db-name string?)
 (s/def ::db-host string?)
 (s/def ::db-port nat-int?)
