@@ -13,6 +13,7 @@
        :compile-ns :all
        :no-pom true
        :exclude ["^lrsql.*clj$"
+                 "^.*sql$"
                  "^.*yetanalytics.*clj$"
                  ;; don't ship keystores
                  "^.*jks$"]
