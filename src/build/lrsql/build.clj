@@ -14,7 +14,6 @@
                  "^.*sql$"
                  "^.*yetanalytics.*clj$"
                  ;; don't ship keystores
-                 "^.*jks$"]
-       :main-class "clojure.main"}
+                 "^.*jks$"]}
       (merge params)
       (depstar/uberjar)))
