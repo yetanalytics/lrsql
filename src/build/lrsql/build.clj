@@ -1,8 +1,6 @@
 (ns lrsql.build
   "Build utils for LRSQL artifacts"
-  (:require [hf.depstar :as depstar]
-            [clojure.java.io :as io])
-  (:import [java.io File]))
+  (:require [hf.depstar :as depstar]))
 
 (defn uber
   "All backends, as an uberjar"
