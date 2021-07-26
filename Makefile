@@ -1,4 +1,4 @@
-.phony: keystore, ci, ephemeral, persistent, clean, run-jar-h2, run-jar-sqlite, bundle
+.phony: keystore, ci, ephemeral, persistent, clean, run-jar-h2, run-jar-sqlite, bundle, run-jar-h2-persistent, run-jar-postgres
 
 config/keystore.jks:
 	keytool -genkey -noprompt \
