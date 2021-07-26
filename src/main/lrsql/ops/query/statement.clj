@@ -33,7 +33,9 @@
         statement   (when query-result
                       (query-res->statement format ltags query-result))
         attachments (when (and statement attachments?)
-                      (->> {:statement-id (get statement "id")}
+                      (->> (get statement "id")
+                           u/str->uuid
+                           (assoc {} :statement-id)
                            (bp/-query-attachments bk tx)
                            (mapv conform-attachment-res)))]
     (cond-> {}
@@ -56,6 +58,7 @@
         att-results   (if attachments?
                         (doall (->> (map (fn [stmt]
                                            (->> (get stmt "id")
+                                                u/str->uuid
                                                 (assoc {} :statement-id)
                                                 (bp/-query-attachments bk tx)))
                                          stmt-results)
