@@ -52,7 +52,8 @@
   (-delete-state-documents! [this tx input])
   ;; Queries
   (-query-state-document [this tx input])
-  (-query-state-document-ids [this tx input]))
+  (-query-state-document-ids [this tx input])
+  (-query-state-document-exists [this tx input]))
 
 (defprotocol AgentProfileDocumentBackend
   ;; Commands
@@ -61,7 +62,8 @@
   (-delete-agent-profile-document! [this tx input])
   ;; Queries
   (-query-agent-profile-document [this tx input])
-  (-query-agent-profile-document-ids [this tx input]))
+  (-query-agent-profile-document-ids [this tx input])
+  (-query-agent-profile-document-exists [this tx input]))
 
 (defprotocol ActivityProfileDocumentBackend
   ;; Commands
@@ -70,7 +72,8 @@
   (-delete-activity-profile-document! [this tx input])
   ;; Queries
   (-query-activity-profile-document [this tx input])
-  (-query-activity-profile-document-ids [this tx input]))
+  (-query-activity-profile-document-ids [this tx input])
+  (-query-activity-profile-document-exists [this tx inpu]))
 
 (defprotocol AdminAccountBackend
   ;; Commands
