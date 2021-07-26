@@ -21,7 +21,7 @@ To use lrsql, a user needs to be authorized by an admin. Admin accounts can be c
 | `LRSQL_DB_TYPE` | The DBMS that lrsql will use. Currently supports `h2:mem`, `h2`, `sqlite`, `postgres`, and `postgresql`. The default value used depends on the `main` entry point used, e.g. `lrsql.sqlite.main` will use `sqlite` by default, so overriding the default is **not** recommended. | Varies |
 | `LRSQL_DB_NAME` | The name of the database. | `example` |
 | `LRSQL_DB_HOST` | The host that the database will run on. Not supported by in-mem H2 or SQLite. | `localhost` |
-| `LRSQL_DB_PORT` | The port that the database will run on. Not supported by in-mem H2 or SQLite. | `9001` (H2) |
+| `LRSQL_DB_PORT` | The port that the database will run on. Not supported by in-mem H2 or SQLite. | `9001` (H2), `5432` (PG) |
 | `LRSQL_DB_PROPERTIES` | Optional additional database properties. Must be a string of comma-separated `key:value` pairs if set. Supported properties will depend on the DBMS. | Not set |
 | `LRSQL_DB_JDBC_URL` | Optional JDBC URL; this will override the above properties if set. URL syntax will depend on the DBMS. | Not set |
 | `LRSQL_DB_USER` | The DB user. Optional. | Not set |

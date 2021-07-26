@@ -22,7 +22,9 @@
                           #include "prod/database.edn"]
    :prod-sqlite   #merge [{:db-type #or [#env LRSQL_DB_TYPE "sqlite"]}
                           #include "prod/database.edn"]
-   :prod-postgres #merge [{:db-type #or [#env LRSQL_DB_TYPE "postgres"]}
+   :prod-postgres #merge [{:db-type #or [#env LRSQL_DB_TYPE "postgres"]
+                           :db-host #or [#env LRSQL_DB_HOST "localhost"]
+                           :db-port #or [#env LRSQL_DB_PORT 5432]}
                           #include "prod/database.edn"]}
  :connection
  #profile
