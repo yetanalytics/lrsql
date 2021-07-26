@@ -5,7 +5,7 @@
 (def uber-params
   {:jar "target/bundle/lrsql.jar"
    :aot true
-   :aliases [:db-h2 :db-sqlite]
+   :aliases [:db-h2 :db-sqlite :db-postgres]
    :compile-ns :all
    :no-pom true
    :exclude ["^lrsql.*clj$"

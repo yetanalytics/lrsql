@@ -54,5 +54,11 @@ target/bundle/config/keystore.jks: keystore
 run-jar-h2: target/bundle target/bundle/config/keystore.jks
 	cd target/bundle; LRSQL_SEED_API_KEY=username LRSQL_SEED_API_SECRET=password bin/run_h2.sh
 
+run-jar-h2-persistent: target/bundle target/bundle/config/keystore.jks
+	cd target/bundle; LRSQL_SEED_API_KEY=username LRSQL_SEED_API_SECRET=password bin/run_h2_persistent.sh
+
 run-jar-sqlite: target/bundle target/bundle/config/keystore.jks
 	cd target/bundle; LRSQL_SEED_API_KEY=username LRSQL_SEED_API_SECRET=password bin/run_sqlite.sh
+
+run-jar-postgres: target/bundle target/bundle/config/keystore.jks
+	cd target/bundle; LRSQL_SEED_API_KEY=username LRSQL_SEED_API_SECRET=password bin/run_postgres.sh
