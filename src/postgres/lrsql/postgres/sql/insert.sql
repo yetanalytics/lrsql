@@ -17,7 +17,7 @@ INSERT INTO xapi_statement (
 INSERT INTO actor (
   id, actor_ifi, actor_type, payload
 ) VALUES (
-  :primary-key, :actor-ifi, :actor-type, :payload
+  :primary-key, :actor-ifi, :actor-type::actor_type_enum, :payload
 );
 
 -- :name insert-activity!
@@ -47,7 +47,7 @@ INSERT INTO attachment (
 INSERT INTO statement_to_actor (
   id, statement_id, usage, actor_ifi, actor_type
 ) VALUES (
-  :primary-key, :statement-id, :usage, :actor-ifi, :actor-type
+  :primary-key, :statement-id, :usage::actor_usage_enum, :actor-ifi, :actor-type::actor_type_enum
 );
 
 -- :name insert-statement-to-activity!
@@ -57,7 +57,7 @@ INSERT INTO statement_to_actor (
 INSERT INTO statement_to_activity (
   id, statement_id, usage, activity_iri
 ) VALUES (
-  :primary-key, :statement-id, :usage, :activity-iri
+  :primary-key, :statement-id, :usage::activity_usage_enum, :activity-iri
 );
 
 -- :name insert-statement-to-statement!
@@ -82,7 +82,7 @@ INSERT INTO state_document (
 ) VALUES (
   :primary-key, :state-id, :activity-iri, :agent-ifi, :registration,
   :last-modified, :content-type, :content-length, :contents
-)
+) ON CONFLICT ON CONSTRAINT state_doc_idx DO NOTHING;
 
 -- :name insert-agent-profile-document!
 -- :command :insert
@@ -94,7 +94,7 @@ INSERT INTO agent_profile_document (
 ) VALUES (
   :primary-key, :profile-id, :agent-ifi,
   :last-modified, :content-type, :content-length, :contents
-)
+) ON CONFLICT ON CONSTRAINT agent_profile_doc_idx DO NOTHING;
 
 -- :name insert-activity-profile-document!
 -- :command :insert
@@ -106,7 +106,7 @@ INSERT INTO activity_profile_document (
 ) VALUES (
   :primary-key, :profile-id, :activity-iri,
   :last-modified, :content-type, :content-length, :contents
-)
+) ON CONFLICT ON CONSTRAINT activity_profile_doc_idx DO NOTHING;
 
 /* Accounts */
 
@@ -117,7 +117,7 @@ INSERT INTO admin_account (
   id, username, passhash
 ) VALUES (
   :primary-key, :username, :passhash
-)
+);
 
 /* Credentials */
 
@@ -129,7 +129,7 @@ INSERT INTO lrs_credential (
   id, api_key, secret_key, account_id
 ) VALUES (
   :primary-key, :api-key, :secret-key, :account-id
-)
+);
 
 -- :name insert-credential-scope!
 -- :command :insert
@@ -138,5 +138,5 @@ INSERT INTO lrs_credential (
 INSERT INTO credential_to_scope (
   id, api_key, secret_key, scope
 ) VALUES (
-  :primary-key, :api-key, :secret-key, :scope
-)
+  :primary-key, :api-key, :secret-key, :scope::scope_enum
+);

@@ -32,9 +32,12 @@
   {:db-h2
    {:extra-paths ["src/h2"]
     :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
-  :db-sqlite
-  {:extra-paths ["src/sqlite"]
-   :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
+   :db-sqlite
+   {:extra-paths ["src/sqlite"]
+    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
+   :db-postgres
+   {:extra-paths ["src/postgres"]
+    :extra-deps  {org.postgresql/postgresql {:mvn/version "42.2.23"}}}
    :test
    {:extra-paths ["src/h2" "src/test"]
     :extra-deps  {com.h2database/h2      {:mvn/version "1.4.200"}

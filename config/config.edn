@@ -1,50 +1,64 @@
 {:database
  #profile
   {;; Test/Dev
-   :test-h2-mem {:db-type "h2:mem"
-                 :db-name "example.h2"}
-   :test-h2     {:db-type "h2"
-                 :db-name "example.h2"
-                 :db-host "localhost"
-                 :db-port 9001}
-   :test-sqlite {:db-type "sqlite"
-                 :db-name "example.sqlite"}
+   :test-h2-mem   {:db-type "h2:mem"
+                   :db-name "example.h2"}
+   :test-h2       {:db-type "h2"
+                   :db-name "example.h2"
+                   :db-host "localhost"
+                   :db-port 9001}
+   :test-sqlite   {:db-type "sqlite"
+                   :db-name "example.sqlite"}
+   :test-postgres {:db-type "postgres"
+                   :db-name "example.pg"
+                   :db-host "localhost"
+                   :db-port 5432}
    ;; Production
-   :prod-h2-mem #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2:mem"]}
-                        #include "prod/database.edn"]
-   :prod-h2     #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2"]
-                         :db-host #or [#env LRSQL_DB_HOST "localhost"]
-                         :db-port #or [#env LRSQL_DB_PORT 9001]}
-                        #include "prod/database.edn"]
-   :prod-sqlite #merge [{:db-type #or [#env LRSQL_DB_TYPE "sqlite"]}
-                        #include "prod/database.edn"]}
+   :prod-h2-mem   #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2:mem"]}
+                          #include "prod/database.edn"]
+   :prod-h2       #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2"]
+                           :db-host #or [#env LRSQL_DB_HOST "localhost"]
+                           :db-port #or [#env LRSQL_DB_PORT 9001]}
+                          #include "prod/database.edn"]
+   :prod-sqlite   #merge [{:db-type #or [#env LRSQL_DB_TYPE "sqlite"]}
+                          #include "prod/database.edn"]
+   :prod-postgres #merge [{:db-type #or [#env LRSQL_DB_TYPE "postgres"]
+                           :db-host #or [#env LRSQL_DB_HOST "localhost"]
+                           :db-port #or [#env LRSQL_DB_PORT 5432]}
+                          #include "prod/database.edn"]}
  :connection
  #profile
   {;; Test/Dev
-   :test-h2-mem {:database #ref [:database]}
-   :test-h2     {:database #ref [:database]}
-   :test-sqlite {:database #ref [:database]}
+   :test-h2-mem   {:database #ref [:database]}
+   :test-h2       {:database #ref [:database]}
+   :test-sqlite   {:database #ref [:database]}
+   :test-postgres {:database #ref [:database]}
    ;; Production
-   :prod-h2-mem #merge [{:database #ref [:database]} #include "prod/connection.edn"]
-   :prod-h2     #merge [{:database #ref [:database]} #include "prod/connection.edn"]
-   :prod-sqlite #merge [{:database #ref [:database]} #include "prod/connection.edn"]}
+   :prod-h2-mem   #merge [{:database #ref [:database]} #include "prod/connection.edn"]
+   :prod-h2       #merge [{:database #ref [:database]} #include "prod/connection.edn"]
+   :prod-sqlite   #merge [{:database #ref [:database]} #include "prod/connection.edn"]
+   :prod-postgres #merge [{:database #ref [:database]} #include "prod/connection.edn"]}
  :lrs
  #profile
   {;; Test/Dev
-   :test-h2-mem #include "test/lrs.edn"
-   :test-h2     #include "test/lrs.edn"
-   :test-sqlite #include "test/lrs.edn"
+   :test-h2-mem   #include "test/lrs.edn"
+   :test-h2       #include "test/lrs.edn"
+   :test-sqlite   #include "test/lrs.edn"
+   :test-postgres #include "test/lrs.edn"
    ;; Production
-   :prod-h2-mem #include "prod/lrs.edn"
-   :prod-h2     #include "prod/lrs.edn"
-   :prod-sqlite #include "prod/lrs.edn"}
+   :prod-h2-mem   #include "prod/lrs.edn"
+   :prod-h2       #include "prod/lrs.edn"
+   :prod-sqlite   #include "prod/lrs.edn"
+   :prod-postgres #include "prod/lrs.edn"}
  :webserver
  #profile
   {;; Test/Dev
-   :test-h2-mem #include "test/webserver.edn"
-   :test-h2     #include "test/webserver.edn"
-   :test-sqlite #include "test/webserver.edn"
+   :test-h2-mem   #include "test/webserver.edn"
+   :test-h2       #include "test/webserver.edn"
+   :test-sqlite   #include "test/webserver.edn"
+   :test-postgres #include "test/webserver.edn"
    ;; Production
-   :prod-h2-mem #include "prod/webserver.edn"
-   :prod-h2     #include "prod/webserver.edn"
-   :prod-sqlite #include "prod/webserver.edn"}}
+   :prod-h2-mem   #include "prod/webserver.edn"
+   :prod-h2       #include "prod/webserver.edn"
+   :prod-sqlite   #include "prod/webserver.edn"
+   :prod-postgres #include "prod/webserver.edn"}}
