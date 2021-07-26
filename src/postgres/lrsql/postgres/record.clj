@@ -97,6 +97,9 @@
     (query-state-document tx input))
   (-query-state-document-ids [_ tx input]
     (query-state-document-ids tx input))
+  (-query-state-document-exists [_ tx input]
+    (query-state-document-exists tx input))
+
 
   bp/AgentProfileDocumentBackend
   (-insert-agent-profile-document! [_ tx input]
@@ -109,6 +112,9 @@
     (query-agent-profile-document tx input))
   (-query-agent-profile-document-ids [_ tx input]
     (query-agent-profile-document-ids tx input))
+  (-query-agent-profile-document-exists [_ tx input]
+    (query-agent-profile-document-exists tx input))
+
 
   bp/ActivityProfileDocumentBackend
   (-insert-activity-profile-document! [_ tx input]
@@ -121,6 +127,8 @@
     (query-activity-profile-document tx input))
   (-query-activity-profile-document-ids [_ tx input]
     (query-activity-profile-document-ids tx input))
+  (-query-activity-profile-document-exists [_ tx input]
+    (query-activity-profile-document-exists tx input))
 
   bp/AdminAccountBackend
   (-insert-admin-account! [_ tx input]
