@@ -19,10 +19,8 @@
   [filepath password]
   (let [istream (input-stream filepath)
         pass    (char-array password)]
-    (vary-meta
-     (doto (ks/*get-instance (ks/*get-default-type))
-       (ks/load istream pass))
-     ::from-file true)))
+    (doto (ks/*get-instance (ks/*get-default-type))
+      (ks/load istream pass))))
 
 (defn- keystore->private-key
   "Return a string representation of the private key stored in `keystore`
