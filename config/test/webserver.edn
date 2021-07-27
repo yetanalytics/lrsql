@@ -1,6 +1,9 @@
 {:key-file       "config/keystore.jks"
  :key-alias      "lrsql_keystore"
  :key-password   "lrsql_pass"
+ :key-pkey-file  "config/server.pkcs8"
+ :key-cert-file  "config/server.crt"
+ :key-ca-file    "config/cacert.pem"
  :jwt-exp-time   3600
  :jwt-exp-leeway 1
  :http?          true

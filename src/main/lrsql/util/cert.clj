@@ -1,4 +1,6 @@
 (ns lrsql.util.cert
+  (:require
+   [less.awful.ssl :as las])
   (:import
    [sun.security.x509
     X509CertImpl
@@ -18,7 +20,8 @@
     KeyPair]
    [java.security.cert
     Certificate
-    X509Certificate]))
+    X509Certificate]
+   [java.io File]))
 
 ;; a la https://stackoverflow.com/a/44738069/3532563
 (defn selfie
@@ -82,8 +85,8 @@
     {:cert cert-final
      :key-pair key-pair}))
 
-(defn selfie-key-store
-  "Create a key store + key pair with a self-signed cert"
+(defn selfie-keystore
+  "Create a key store + private key with a self-signed cert"
   ^KeyStore
   [^String key-alias
    ^String key-password
@@ -104,3 +107,32 @@
       (.. key-pair
           getPrivate
           getEncoded))}))
+
+(defn file-keystore
+  "Create a key store from cert files"
+  ^KeyStore
+  [^String key-alias
+   ^String key-password
+   ^String pkey-file
+   ^String cert-file
+   ^String ca-file]
+  (let [^PrivateKey key (las/private-key pkey-file)
+        ?cacert (try
+                  (las/load-certificate
+                   ca-file)
+                  (catch java.io.FileNotFoundException _
+                    nil))]
+    {:keystore (doto (KeyStore/getInstance
+                      (KeyStore/getDefaultType))
+                 (.load nil nil)
+                 (.setKeyEntry key-alias
+                               key
+                               (char-array key-password)
+                               (into-array Certificate
+                                           (cond-> [(las/load-certificate
+                                                     cert-file)]
+                                             ?cacert
+                                             (conj ?cacert)))))
+     :private-key
+     (slurp
+      (.getEncoded key))}))

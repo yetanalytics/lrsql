@@ -27,7 +27,8 @@
   com.yetanalytics/xapi-schema
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
    :sha        "77f78d1713e50e7b8610f58b5137695b0fccddaa"
-   :exclusions [org.clojure/clojure]}}
+   :exclusions [org.clojure/clojure]}
+  less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}}
  :aliases
  {:db-h2
   {:extra-paths ["src/h2"]

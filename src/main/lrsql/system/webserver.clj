@@ -36,7 +36,10 @@
   Return the keystore and the private key for use in signing"
   [{:keys [key-file
            key-alias
-           key-password]
+           key-password
+           key-pkey-file
+           key-cert-file
+           key-ca-file]
     :as _config}]
   (try
     (let [keystore (file->keystore key-file key-password)]
@@ -47,13 +50,20 @@
        "No keystore file found at %s."
        key-file)
 
-      ;; TODO: Look for files, read them in for keystore
-
-      ;; We make a selfie cert + keystore
-      (do
-        (log/warn "Creating a self-signed cert and keystore!")
-        (cu/selfie-key-store
-         key-alias key-password)))))
+      ;; Try to form from file...
+      (try
+        (cu/file-keystore
+         key-alias
+         key-password
+         key-pkey-file
+         key-cert-file
+         key-ca-file)
+        (catch java.io.FileNotFoundException _
+          (log/warn "No key or cert files found.")
+          ;; We make a selfie cert + keystore
+          (log/warn "Creating a self-signed cert and keystore!")
+          (cu/selfie-keystore
+           key-alias key-password))))))
 
 (defn- service-map
   "Create a new service map for the webserver."

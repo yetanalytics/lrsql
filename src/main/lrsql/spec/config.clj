@@ -78,6 +78,10 @@
 (s/def ::key-alias string?)
 (s/def ::key-password string?)
 
+(s/def ::key-pkey-file string?)
+(s/def ::key-cert-file string?)
+(s/def ::key-ca-file string?)
+
 (s/def ::webserver ; no nilable values here
   (s/keys :req-un [::http-host
                    ::http-port
@@ -86,6 +90,9 @@
                    ::key-file
                    ::key-alias
                    ::key-password
+                   ::key-pkey-file
+                   ::key-cert-file
+                   ::key-ca-file
                    ::jwt-exp-time
                    ::jwt-exp-leeway]))
 
