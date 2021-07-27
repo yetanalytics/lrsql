@@ -27,7 +27,7 @@
              ^Long days
              ^String alg]
       :or {dn "CN=com.yetanalytics.lrsql, OU=Dev, O=Yet Analytics, L=Baltimore, S=Maryland, C=US"
-           days 365
+           days 365000 ;; 1000 years of darkness
            alg "SHA256withRSA"}}]
   (let [;; gen a pair
         ^KeyPairGenerator kpg (KeyPairGenerator/getInstance "RSA")
