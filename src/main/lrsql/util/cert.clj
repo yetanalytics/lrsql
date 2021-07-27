@@ -93,7 +93,7 @@
          :as selfie} (apply selfie selfie-args)]
     {:keystore (doto (KeyStore/getInstance
                       (KeyStore/getDefaultType))
-                 (.load nil (.toCharArray key-password))
+                 (.load nil nil)
                  (.setCertificateEntry key-alias cert))
      :private-key
      (slurp
