@@ -9,7 +9,9 @@
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config]]))
+            [lrsql.system.util :refer [assert-config]]
+            [lrsql.util.cert :as cu])
+  (:import [java.security KeyPair]))
 
 (defn- file->keystore
   "Return a `java.security.KeyStore` instance from `filepath`, protected
@@ -17,8 +19,10 @@
   [filepath password]
   (let [istream (input-stream filepath)
         pass    (char-array password)]
-    (doto (ks/*get-instance (ks/*get-default-type))
-      (ks/load istream pass))))
+    (vary-meta
+     (doto (ks/*get-instance (ks/*get-default-type))
+       (ks/load istream pass))
+     ::from-file true)))
 
 (defn- keystore->private-key
   "Return a string representation of the private key stored in `keystore`
@@ -28,6 +32,30 @@
       (ks/get-key alias (char-array password))
       k/get-encoded
       slurp))
+
+(defn- init-keystore
+  "Initialize the keystore, either from file or other means.
+  Return the keystore and the private key for use in signing"
+  [{:keys [key-file
+           key-alias
+           key-password]
+    :as _config}]
+  (try
+    (let [keystore (file->keystore key-file key-password)]
+      {:keystore keystore
+       :private-key (keystore->private-key keystore key-alias key-password)})
+    (catch java.io.FileNotFoundException _
+      (log/infof
+       "No keystore file found at %s."
+       key-file)
+
+      ;; TODO: Look for files, read them in for keystore
+
+      ;; We make a selfie cert + keystore
+      (do
+        (log/info "Creating a self-signed cert and keystore...")
+        (cu/selfie-key-store
+         key-alias key-password)))))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -46,8 +74,9 @@
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
-        keystore    (file->keystore key-file key-password)
-        private-key (keystore->private-key keystore key-alias key-password)
+        {:keys [keystore
+                private-key]} (init-keystore config)
+
         ;; Make routes
         routes (->> (build {:lrs lrs})
                     (add-admin-routes {:lrs    lrs
