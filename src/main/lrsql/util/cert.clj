@@ -17,6 +17,7 @@
     PrivateKey
     KeyPair]
    [java.security.cert
+    Certificate
     X509Certificate]))
 
 ;; a la https://stackoverflow.com/a/44738069/3532563
@@ -94,7 +95,10 @@
     {:keystore (doto (KeyStore/getInstance
                       (KeyStore/getDefaultType))
                  (.load nil nil)
-                 (.setCertificateEntry key-alias cert))
+                 (.setKeyEntry key-alias
+                               (.getPrivate key-pair)
+                               (char-array key-password)
+                               (into-array Certificate [cert])))
      :private-key
      (slurp
       (.. key-pair
