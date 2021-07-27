@@ -51,7 +51,7 @@
 
       ;; We make a selfie cert + keystore
       (do
-        (log/info "Creating a self-signed cert and keystore...")
+        (log/warn "Creating a self-signed cert and keystore!")
         (cu/selfie-key-store
          key-alias key-password)))))
 
