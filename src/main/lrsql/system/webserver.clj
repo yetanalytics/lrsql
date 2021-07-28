@@ -42,8 +42,9 @@
            key-alias
            key-password
            key-pkey-file
-           key-cert-chain]
-    :as _config}]
+           key-cert-chain
+           key-enable-selfie]
+    :as config}]
   (or
    (and key-file
         (when-let [keystore (file->keystore key-file key-password)]
@@ -60,9 +61,14 @@
           (log/info "Generated keystore from key and cert(s)...")
           result))
 
-   (log/warn "No cert files found. Creating self-signed cert!")
-   (cu/selfie-keystore
-    key-alias key-password)))
+   (when key-enable-selfie
+     (log/warn "No cert files found. Creating self-signed cert!")
+     (cu/selfie-keystore
+      key-alias key-password))
+
+   (throw (ex-info "Cannot Create Keystore"
+                   {:type ::cannot-create-keystore
+                    :config config}))))
 
 (defn- service-map
   "Create a new service map for the webserver."

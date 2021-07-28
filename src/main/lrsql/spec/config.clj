@@ -80,6 +80,7 @@
 
 (s/def ::key-pkey-file string?)
 (s/def ::key-cert-chain string?)
+(s/def ::key-enable-selfie boolean?)
 
 (s/def ::webserver
   (s/keys :req-un [::http-host
@@ -88,6 +89,7 @@
                    ::http2?
                    ::key-alias
                    ::key-password
+                   ::key-enable-selfie
                    ::jwt-exp-time
                    ::jwt-exp-leeway]
           :opt-un [::key-file
