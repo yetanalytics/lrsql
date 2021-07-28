@@ -42,8 +42,7 @@
            key-alias
            key-password
            key-pkey-file
-           key-cert-file
-           key-ca-file]
+           key-cert-chain]
     :as _config}]
   (or
    (and key-file
@@ -52,13 +51,12 @@
           {:keystore keystore
            :private-key (keystore->private-key keystore key-alias key-password)}))
    (and (and key-pkey-file
-             key-cert-file)
+             key-cert-chain)
         (when-let [result (cu/cert-keystore
                            key-alias
                            key-password
                            key-pkey-file
-                           key-cert-file
-                           key-ca-file)]
+                           key-cert-chain)]
           (log/info "Generated keystore from key and cert(s)...")
           result))
 

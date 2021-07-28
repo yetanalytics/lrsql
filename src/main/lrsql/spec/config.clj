@@ -79,8 +79,7 @@
 (s/def ::key-password string?)
 
 (s/def ::key-pkey-file string?)
-(s/def ::key-cert-file string?)
-(s/def ::key-ca-file string?)
+(s/def ::key-cert-chain string?)
 
 (s/def ::webserver
   (s/keys :req-un [::http-host
@@ -93,8 +92,7 @@
                    ::jwt-exp-leeway]
           :opt-un [::key-file
                    ::key-pkey-file
-                   ::key-cert-file
-                   ::key-ca-file]))
+                   ::key-cert-chain]))
 
 (def config-spec
   (s/keys :req-un [::database
