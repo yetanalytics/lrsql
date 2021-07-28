@@ -108,7 +108,7 @@
           getPrivate
           getEncoded))}))
 
-(defn file-keystore
+(defn cert-keystore
   "Create a key store from cert files"
   ^KeyStore
   [^String key-alias
@@ -116,23 +116,28 @@
    ^String pkey-file
    ^String cert-file
    ^String ca-file]
-  (let [^PrivateKey key (las/private-key pkey-file)
-        ?cacert (try
-                  (las/load-certificate
-                   ca-file)
-                  (catch java.io.FileNotFoundException _
-                    nil))]
-    {:keystore (doto (KeyStore/getInstance
-                      (KeyStore/getDefaultType))
-                 (.load nil nil)
-                 (.setKeyEntry key-alias
-                               key
-                               (char-array key-password)
-                               (into-array Certificate
-                                           (cond-> [(las/load-certificate
-                                                     cert-file)]
-                                             ?cacert
-                                             (conj ?cacert)))))
-     :private-key
-     (slurp
-      (.getEncoded key))}))
+  (when (and pkey-file
+             cert-file)
+    (try
+      (let [^PrivateKey key (las/private-key pkey-file)
+            ?cacert (try
+                      (las/load-certificate
+                       ca-file)
+                      (catch java.io.FileNotFoundException _
+                        nil))]
+        {:keystore (doto (KeyStore/getInstance
+                          (KeyStore/getDefaultType))
+                     (.load nil nil)
+                     (.setKeyEntry key-alias
+                                   key
+                                   (char-array key-password)
+                                   (into-array Certificate
+                                               (cond-> [(las/load-certificate
+                                                         cert-file)]
+                                                 ?cacert
+                                                 (conj ?cacert)))))
+         :private-key
+         (slurp
+          (.getEncoded key))})
+      (catch java.io.FileNotFoundException _
+        nil))))

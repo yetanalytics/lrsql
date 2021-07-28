@@ -15,12 +15,16 @@
 
 (defn- file->keystore
   "Return a `java.security.KeyStore` instance from `filepath`, protected
-   by the keystore `password`."
+   by the keystore `password`.
+  If no file is found, return nil."
   [filepath password]
-  (let [istream (input-stream filepath)
-        pass    (char-array password)]
-    (doto (ks/*get-instance (ks/*get-default-type))
-      (ks/load istream pass))))
+  (try
+    (let [istream (input-stream filepath)
+          pass    (char-array password)]
+      (doto (ks/*get-instance (ks/*get-default-type))
+        (ks/load istream pass)))
+    (catch java.io.FileNotFoundException _
+      nil)))
 
 (defn- keystore->private-key
   "Return a string representation of the private key stored in `keystore`
@@ -41,29 +45,28 @@
            key-cert-file
            key-ca-file]
     :as _config}]
-  (try
-    (let [keystore (file->keystore key-file key-password)]
-      {:keystore keystore
-       :private-key (keystore->private-key keystore key-alias key-password)})
-    (catch java.io.FileNotFoundException _
-      (log/infof
-       "No keystore file found at %s."
-       key-file)
+  (or
+   (when-let [keystore (file->keystore key-file key-password)]
+     (log/infof "Keystore file found at %s" key-file)
+     {:keystore keystore
+      :private-key (keystore->private-key keystore key-alias key-password)})
 
-      ;; Try to form from file...
-      (try
-        (cu/file-keystore
-         key-alias
-         key-password
-         key-pkey-file
-         key-cert-file
-         key-ca-file)
-        (catch java.io.FileNotFoundException _
-          (log/warn "No key or cert files found.")
-          ;; We make a selfie cert + keystore
-          (log/warn "Creating a self-signed cert and keystore!")
-          (cu/selfie-keystore
-           key-alias key-password))))))
+   (log/infof "Keystore file not found at %s."
+              key-file)
+
+   (log/infof "Looking for key & cert files...")
+   (when-let [result (cu/cert-keystore
+                      key-alias
+                      key-password
+                      key-pkey-file
+                      key-cert-file
+                      key-ca-file)]
+     (log/info "Generated keystore from key and cert(s)...")
+     result)
+
+   (log/warn "No cert files found. Creating self-signed cert!")
+   (cu/selfie-keystore
+    key-alias key-password)))
 
 (defn- service-map
   "Create a new service map for the webserver."
