@@ -87,12 +87,12 @@
                    ::http-port
                    ::ssl-port
                    ::http2?
-                   ::key-file
                    ::key-alias
                    ::key-password
                    ::jwt-exp-time
                    ::jwt-exp-leeway]
-          :opt-un [::key-pkey-file
+          :opt-un [::key-file
+                   ::key-pkey-file
                    ::key-cert-file
                    ::key-ca-file]))
 

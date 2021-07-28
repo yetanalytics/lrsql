@@ -46,23 +46,21 @@
            key-ca-file]
     :as _config}]
   (or
-   (when-let [keystore (file->keystore key-file key-password)]
-     (log/infof "Keystore file found at %s" key-file)
-     {:keystore keystore
-      :private-key (keystore->private-key keystore key-alias key-password)})
-
-   (log/infof "Keystore file not found at %s."
-              key-file)
-
-   (log/infof "Looking for key & cert files...")
-   (when-let [result (cu/cert-keystore
-                      key-alias
-                      key-password
-                      key-pkey-file
-                      key-cert-file
-                      key-ca-file)]
-     (log/info "Generated keystore from key and cert(s)...")
-     result)
+   (and key-file
+        (when-let [keystore (file->keystore key-file key-password)]
+          (log/infof "Keystore file found at %s" key-file)
+          {:keystore keystore
+           :private-key (keystore->private-key keystore key-alias key-password)}))
+   (and (and key-pkey-file
+             key-cert-file)
+        (when-let [result (cu/cert-keystore
+                           key-alias
+                           key-password
+                           key-pkey-file
+                           key-cert-file
+                           key-ca-file)]
+          (log/info "Generated keystore from key and cert(s)...")
+          result))
 
    (log/warn "No cert files found. Creating self-signed cert!")
    (cu/selfie-keystore
