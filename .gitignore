@@ -18,7 +18,7 @@ config/*.jks
 config/*.key
 results/
 Test.java
-
+*.DS_Store
 # VSCode
 .calva/
 .lsp/

@@ -21,7 +21,23 @@ ephemeral: keystore
 		clojure -M:db-h2 -m lrsql.h2.main --persistent false
 
 persistent: keystore
-	LRSQL_DB_NAME=persistent \
-		LRSQL_SEED_API_KEY=username \
-		LRSQL_SEED_API_SECRET=password \
+	LRSQL_DB_NAME=persistent
+		LRSQL_SEED_API_KEY=username
+		LRSQL_SEED_API_SECRET=password
 		clojure -M:db-h2 -m lrsql.h2.main --persistent true
+
+sqlite: keystore
+	LRSQL_DB_NAME=sqlite \
+                LRSQL_SEED_API_KEY=username \
+                LRSQL_SEED_API_SECRET=password \
+                clojure -M:db-sqlite -m lrsql.sqlite.main
+
+pg: keystore
+	LRSQL_DB_TYPE=postgres \
+	LRSQL_DB_NAME=lrsql1 \
+	LRSQL_DB_USER=postgres \
+	LRSQL_DB_PASSWORD=cod3dre@ms \
+	LRSQL_DB_PORT=5432 \
+	LRSQL_SEED_API_KEY=username \
+	LRSQL_SEED_API_SECRET=password \
+	clojure -M:db-postgres -m lrsql.postgres.main

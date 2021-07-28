@@ -3,6 +3,7 @@
             [clojure.walk :refer [keywordize-keys]]
             [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
+            [next.jdbc :refer [with-logging]]
             [com.stuartsierra.component :as component]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]])
@@ -64,6 +65,18 @@
       ?max-stmt
       (assoc :maxStatements ?max-stmt))))
 
+(defn log-ds
+  [ds]
+  (with-logging ds
+    (fn [sym sql-params]
+      (prn sym sql-params)
+      (System/currentTimeMillis))
+    (fn [sym state result]
+      (prn sym
+           (- (System/currentTimeMillis) state)
+           (if (map? result) result (count result))))))
+
+
 (defrecord Connection [conn-pool config]
   component/Lifecycle
   (start
@@ -72,8 +85,9 @@
            {{db-type :db-type} :database :as config} :config}
           conn]
       (if-not ?conn-pool
-        (let [conn-pool (jdbc-conn/->pool ComboPooledDataSource
-                                          (coerce-conn-config config))]
+        (let [conn-pool (log-ds
+                         (jdbc-conn/->pool ComboPooledDataSource
+                                           (coerce-conn-config config)))]
           (log/infof "Starting new connection for %s database..." db-type)
           (log/tracef "Config: %s" config)
           (assoc conn :conn-pool conn-pool))
