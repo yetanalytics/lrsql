@@ -57,8 +57,7 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_KEY_ALIAS` | The alias of the private key. | `lrsql_keystore` |
 | `LRSQL_KEY_PASSWORD` | The password protecting the keystore. **It is highly recommended that you override the default value.** | `lrsql_pass` |
 | `LRSQL_KEY_PKEY_FILE` | Private key in PEM format | `config/server.key.pem` |
-| `LRSQL_KEY_CERT_FILE` | Cert in PEM format | `config/server.crt.pem` |
-| `LRSQL_KEY_CA_FILE` | Cert Authority Cert File | `config/cacert.pem` |
+| `LRSQL_KEY_CERT_FILE` | Comma separated PEM files for cert. | `config/server.crt.pem,config/cacert.pem` |
 | `LRSQL_JWT_EXP_TIME` | The amount of time, in seconds, after a JWT is created when it expires. Since JWTs are not revocable, **this this time should be short** (i.e. one hour or less). | `3600` (one hour) |
 | `LRSQL_JWT_EXP_LEEWAY` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
 | `LRSQL_ENABLE_HTTP` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
