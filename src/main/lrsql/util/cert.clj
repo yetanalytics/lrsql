@@ -1,7 +1,11 @@
 (ns lrsql.util.cert
   (:require
+   [jdk.security.KeyStore :as ks]
+   [jdk.security.Key :as k]
+   [clojure.java.io :refer [input-stream]]
    [clojure.string :as cs]
-   [less.awful.ssl :as las])
+   [less.awful.ssl :as las]
+   [clojure.tools.logging :as log])
   (:import
    [sun.security.x509
     X509CertImpl
@@ -144,3 +148,58 @@
           (.getEncoded key))}))
     (catch java.io.FileNotFoundException _
       nil)))
+
+(defn- file->keystore
+  "Return a `java.security.KeyStore` instance from `filepath`, protected
+   by the keystore `password`.
+  If no file is found, return nil."
+  [filepath password]
+  (try
+    (let [istream (input-stream filepath)
+          pass    (char-array password)]
+      (doto (ks/*get-instance (ks/*get-default-type))
+        (ks/load istream pass)))
+    (catch java.io.FileNotFoundException _
+      nil)))
+
+(defn- keystore->private-key
+  "Return a string representation of the private key stored in `keystore`
+   denoted by `alias` and protected by `password`."
+  [keystore alias password]
+  (-> keystore
+      (ks/get-key alias (char-array password))
+      k/get-encoded
+      slurp))
+
+(defn init-keystore
+  "Initialize the keystore, either from file or other means.
+  Return the keystore and the private key for use in signing"
+  [{:keys [key-file
+           key-alias
+           key-password
+           key-pkey-file
+           key-cert-chain
+           key-enable-selfie]
+    :as config}]
+  (or
+   (and key-file
+        (when-let [keystore (file->keystore key-file key-password)]
+          (log/infof "Keystore file found at %s" key-file)
+          {:keystore keystore
+           :private-key (keystore->private-key keystore key-alias key-password)}))
+   (and (and key-pkey-file
+             key-cert-chain)
+        (when-let [result (cert-keystore
+                           key-alias
+                           key-password
+                           key-pkey-file
+                           key-cert-chain)]
+          (log/info "Generated keystore from key and cert(s)...")
+          result))
+   (when key-enable-selfie
+     (log/warn "No cert files found. Creating self-signed cert!")
+     (selfie-keystore
+      key-alias key-password))
+   (throw (ex-info "Cannot Create Keystore"
+                   {:type ::cannot-create-keystore
+                    :config config}))))

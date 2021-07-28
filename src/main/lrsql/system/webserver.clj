@@ -1,8 +1,5 @@
 (ns lrsql.system.webserver
   (:require [clojure.tools.logging :as log]
-            [clojure.java.io :refer [input-stream]]
-            [jdk.security.KeyStore :as ks]
-            [jdk.security.Key :as k]
             [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
@@ -13,63 +10,6 @@
             [lrsql.util.cert :as cu])
   (:import [java.security KeyPair]))
 
-(defn- file->keystore
-  "Return a `java.security.KeyStore` instance from `filepath`, protected
-   by the keystore `password`.
-  If no file is found, return nil."
-  [filepath password]
-  (try
-    (let [istream (input-stream filepath)
-          pass    (char-array password)]
-      (doto (ks/*get-instance (ks/*get-default-type))
-        (ks/load istream pass)))
-    (catch java.io.FileNotFoundException _
-      nil)))
-
-(defn- keystore->private-key
-  "Return a string representation of the private key stored in `keystore`
-   denoted by `alias` and protected by `password`."
-  [keystore alias password]
-  (-> keystore
-      (ks/get-key alias (char-array password))
-      k/get-encoded
-      slurp))
-
-(defn- init-keystore
-  "Initialize the keystore, either from file or other means.
-  Return the keystore and the private key for use in signing"
-  [{:keys [key-file
-           key-alias
-           key-password
-           key-pkey-file
-           key-cert-chain
-           key-enable-selfie]
-    :as config}]
-  (or
-   (and key-file
-        (when-let [keystore (file->keystore key-file key-password)]
-          (log/infof "Keystore file found at %s" key-file)
-          {:keystore keystore
-           :private-key (keystore->private-key keystore key-alias key-password)}))
-   (and (and key-pkey-file
-             key-cert-chain)
-        (when-let [result (cu/cert-keystore
-                           key-alias
-                           key-password
-                           key-pkey-file
-                           key-cert-chain)]
-          (log/info "Generated keystore from key and cert(s)...")
-          result))
-
-   (when key-enable-selfie
-     (log/warn "No cert files found. Creating self-signed cert!")
-     (cu/selfie-keystore
-      key-alias key-password))
-
-   (throw (ex-info "Cannot Create Keystore"
-                   {:type ::cannot-create-keystore
-                    :config config}))))
-
 (defn- service-map
   "Create a new service map for the webserver."
   [lrs config]
@@ -79,8 +19,6 @@
                 http-host
                 http-port
                 ssl-port
-                key-file
-                key-alias
                 key-password]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway}
@@ -88,7 +26,7 @@
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
         {:keys [keystore
-                private-key]} (init-keystore config)
+                private-key]} (cu/init-keystore config)
 
         ;; Make routes
         routes (->> (build {:lrs lrs})
