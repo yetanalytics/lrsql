@@ -63,5 +63,9 @@
          :failure #{:lrsql.admin/missing-account-error
                     :lrsql.admin/invalid-password-error})))
 
+(def query-admin-ret-spec
+  (s/keys :req-un [::account-id
+                   ::passhash]))
+
 (def query-validate-admin-ret-spec
   (s/keys :req-un [:lrsql.spec.admin.query/result]))
