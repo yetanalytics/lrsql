@@ -183,8 +183,8 @@
           (log/infof "Keystore file found at %s" key-file)
           {:keystore keystore
            :private-key (keystore->private-key keystore key-alias key-password)}))
-   (and (and key-pkey-file
-             key-cert-chain)
+   (and key-pkey-file
+        key-cert-chain
         (when-let [result (cert-keystore
                            key-alias
                            key-password
