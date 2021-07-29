@@ -106,11 +106,10 @@
                                (.getPrivate key-pair)
                                (char-array key-password)
                                (into-array Certificate [cert])))
-     :private-key
-     (slurp
-      (.. key-pair
-          getPrivate
-          getEncoded))}))
+     :private-key (slurp
+                   (.. key-pair
+                       getPrivate
+                       getEncoded))}))
 
 (defn load-chain
   "Load up the cert chain"
@@ -141,9 +140,8 @@
                                    key
                                    (char-array key-password)
                                    chain))
-         :private-key
-         (slurp
-          (.getEncoded key))}))
+         :private-key (slurp
+                       (.getEncoded key))}))
     (catch java.io.FileNotFoundException _
       nil)))
 
