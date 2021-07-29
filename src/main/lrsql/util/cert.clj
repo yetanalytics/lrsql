@@ -133,7 +133,6 @@
     (when-let [chain (and pkey-file
                           cert-chain
                           (load-chain cert-chain))]
-      (println 'chain chain)
       (let [^PrivateKey key (las/private-key pkey-file)]
         {:keystore (doto (KeyStore/getInstance
                           (KeyStore/getDefaultType))
