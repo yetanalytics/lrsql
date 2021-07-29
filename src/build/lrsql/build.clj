@@ -11,8 +11,10 @@
    :exclude ["^lrsql.*clj$"
              "^.*sql$"
              "^.*yetanalytics.*clj$"
-             ;; don't ship keystores
-             "^.*jks$"]})
+             ;; don't shyp crypto
+             "^.*jks$"
+             "^.*key$"
+             "^.*pem$"]})
 
 (defn uber
   "All backends, as an uberjar"
