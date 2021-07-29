@@ -98,8 +98,7 @@
    & selfie-args]
   (let [{:keys
          [^X509CertImpl cert
-          ^KeyPair key-pair]
-         :as selfie} (apply selfie selfie-args)]
+          ^KeyPair key-pair]} (apply selfie selfie-args)]
     {:keystore (doto (KeyStore/getInstance
                       (KeyStore/getDefaultType))
                  (.load nil nil)
