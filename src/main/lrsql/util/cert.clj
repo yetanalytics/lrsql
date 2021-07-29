@@ -11,8 +11,8 @@
     KeyStore
     KeyPair
     KeyPairGenerator
-    SecureRandom
-    PrivateKey]
+    PrivateKey
+    SecureRandom]
    [java.security.cert
     Certificate]
    [sun.security.x509
