@@ -24,9 +24,7 @@
     PrivateKey
     KeyPair]
    [java.security.cert
-    Certificate
-    X509Certificate]
-   [java.io File]))
+    Certificate]))
 
 ;; a la https://stackoverflow.com/a/44738069/3532563
 (defn selfie
