@@ -1,30 +1,30 @@
 (ns lrsql.util.cert
   (:require
-   [jdk.security.KeyStore :as ks]
-   [jdk.security.Key :as k]
    [clojure.java.io :refer [input-stream]]
    [clojure.string :as cs]
-   [less.awful.ssl :as las]
-   [clojure.tools.logging :as log])
+   [clojure.tools.logging :as log]
+   [jdk.security.Key :as k]
+   [jdk.security.KeyStore :as ks]
+   [less.awful.ssl :as las])
   (:import
-   [sun.security.x509
-    X509CertImpl
-    CertificateAlgorithmId
-    AlgorithmId
-    CertificateVersion
-    CertificateX509Key
-    CertificateSerialNumber
-    X500Name
-    CertificateValidity
-    X509CertInfo]
    [java.security
     KeyStore
+    KeyPair
     KeyPairGenerator
     SecureRandom
-    PrivateKey
-    KeyPair]
+    PrivateKey]
    [java.security.cert
-    Certificate]))
+    Certificate]
+   [sun.security.x509
+    AlgorithmId
+    CertificateAlgorithmId
+    CertificateSerialNumber
+    CertificateValidity
+    CertificateVersion
+    CertificateX509Key
+    X500Name
+    X509CertImpl
+    X509CertInfo]))
 
 ;; a la https://stackoverflow.com/a/44738069/3532563
 (defn selfie
