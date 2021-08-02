@@ -21,7 +21,7 @@
   ch.qos.logback/logback-classic           {:mvn/version "1.2.3"}
   com.yetanalytics/lrs
   {:git/url    "git@github.com:yetanalytics/lrs.git"
-   :sha        "a23237e1c76dc4e4251ff13c3532c975bc2b722c"
+   :sha        "f83e214331d95a8510432549faaff8c5e6bbdd27"
    :exclusions [org.clojure/clojure
                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
