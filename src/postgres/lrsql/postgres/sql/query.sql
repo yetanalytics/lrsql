@@ -107,12 +107,12 @@ WHERE activity_iri = :activity-iri;
 SELECT descendant_id FROM statement_to_statement
 WHERE ancestor_id = :ancestor-id;
 
--- :name query-statement-ref-count
+-- :name query-statement-descendants-exist
 -- :command query
 -- :result :one
 -- :doc Query the number of statement-to-statement relationships.
-SELECT reltuples AS refs FROM pg_class
-WHERE relname = 'statement_to_statement'
+SELECT 1 FROM statement_to_statement
+LIMIT 1
 
 /* Attachment Queries */
 

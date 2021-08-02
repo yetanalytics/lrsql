@@ -29,6 +29,7 @@
     (lrsp/-get-statements lrs {} {:agent {"mbox" "mailto:steve@example.org"}
                                   :activity "https://books.allogy.com/v1/tenant/8/media/cc489c25-8215-4e2d-977d-8dbee098b521"} #{}))
 
+  (jdbc/execute! ds ["SELECT COUNT(*) FROM statement_to_statement"])
 
   (jdbc/execute! ds ["ALTER TABLE statement_to_statement
                       ALTER COLUMN ancestor_id
@@ -65,10 +66,6 @@
 
   (last
    (jdbc/execute! ds ["EXPLAIN ANALYZE
-                       WITH stmt_refs AS (
-                       SELECT reltuples AS count FROM pg_class
-                       WHERE relname = 'statement_to_statement'
-                       )
                       SELECT all_stmt.id, all_stmt.payload
                       FROM ((
                         SELECT stmt.id, stmt.payload
@@ -81,9 +78,6 @@
                         ORDER BY stmt.id DESC
                         LIMIT ?
                       ) UNION ALL (
-                       CASE stmt_a.id, stmt_a.payload
-                         WHEN stmt_refs.count = 0 THEN NULL, NULL
-                       ELSE (
                         SELECT stmt_a.id, stmt_a.payload
                         FROM statement_to_statement sts
                         INNER JOIN xapi_statement stmt_d ON stmt_d.statement_id = sts.descendant_id
@@ -94,7 +88,7 @@
                           AND stmt_d_actor.usage = ?::actor_usage_enum
                         ORDER BY stmt_a.id DESC
                         LIMIT ?
-                      ))) AS all_stmt
+                      )) AS all_stmt
                       ORDER BY all_stmt.id DESC
                       LIMIT ?
                       "
@@ -132,6 +126,7 @@
                       1
                       1]))
 
+  (jdbc/execute! ds ["SET enable_indexscan = TRUE"])
   (last
    (jdbc/execute! ds ["EXPLAIN ANALYZE
                         SELECT stmt_a.id, stmt_a.payload

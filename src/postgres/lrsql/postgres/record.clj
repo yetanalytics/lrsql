@@ -23,8 +23,6 @@
 ;; table is empty. Note that statement refs are never deleted, so we
 ;; only ever need to set the value of `stmt-ref-atom` from false to true.
 
-(def stmt-ref-atom (atom false))
-
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
 (defrecord PostgresBackend []
@@ -55,14 +53,15 @@
   (-insert-statement! [_ tx input]
     (insert-statement! tx input))
   (-insert-statement-to-statement! [_ tx input]
-    (reset! stmt-ref-atom true)
-    (insert-statement-to-statement! tx input))
+    (let [exists (query-statement-descendants-exist tx {})]
+      (insert-statement-to-statement! tx input)
+      (if-not exists (vacuum-analyze!))))
   (-void-statement! [_ tx input]
     (void-statement! tx input))
   (-query-statement [_ tx input]
     (query-statement tx input))
   (-query-statements [_ tx input]
-    (if (deref stmt-ref-atom)
+    (if (query-statement-descendants-exist tx {})
       (query-statements tx input)
       (query-statements-no-refs tx input)))
   (-query-statement-exists [_ tx input]
