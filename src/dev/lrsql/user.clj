@@ -4,23 +4,39 @@
             [lrsql.system :as system]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.admin.protocol :as adp]))
+            [lrsql.admin.protocol :as adp]
+            [lrsql.util :as u]))
 
 (comment
-  (require 
-   '[lrsql.h2.record :as ir]
-   '[lrsql.lrs-test :refer [stmt-4]])
-  
-  (def sys (system/system (ir/map->H2Interface {}) :test-h2-mem))
+  (require
+   '[lrsql.postgres.record :as ir]
+   '[lrsql.lrs-test :refer :all])
+
+  (def sys (system/system (ir/map->PostgresBackend {}) :test-postgres))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
 
+  (let [stmts (-> (lrsp/-get-statements lrs {} {} {})
+                  :statement-result
+                  :statements)
+        stmt-refs
+        (mapv (fn [stmt]
+                {"id"     (u/uuid->str (java.util.UUID/randomUUID))
+                 "actor"  {"mbox" "mailto:foo@example.org"}
+                 "verb"   {"id" "http://example.org/reference"}
+                 "object" {"objectType" "StatementRef"
+                           "id"         (get stmt "id")}})
+              stmts)]
+    (lrsp/-store-statements lrs {} stmt-refs []))
 
-  (lrsp/-get-statements lrs {} {:statementId (get stmt-4 "id")} {})
-
-  (lrsp/-store-statements lrs {} [stmt-4] [])
+  (dotimes [_ 1000]
+    (lrsp/-get-statements lrs {} {:verb "https://w3id.org/xapi/video/verbs/seeked"} #{})
+    (lrsp/-get-statements lrs {} {:agent {"mbox" "mailto:steve@example.org"}} #{})
+    (lrsp/-get-statements lrs {} {:activity "https://books.allogy.com/v1/tenant/8/media/cc489c25-8215-4e2d-977d-8dbee098b521"} #{})
+    (lrsp/-get-statements lrs {} {:agent {"mbox" "mailto:steve@example.org"}
+                                  :activity "https://books.allogy.com/v1/tenant/8/media/cc489c25-8215-4e2d-977d-8dbee098b521"} #{}))
 
   (do
     (doseq [cmd [;; Drop credentials table
