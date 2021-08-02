@@ -10,7 +10,7 @@
    :test-sqlite   {:db-type "sqlite"
                    :db-name "example.sqlite"}
    :test-postgres {:db-type "postgres"
-                   :db-name "example.pg"
+                   :db-name "pg_lrsql"
                    :db-host "localhost"
                    :db-port 5432}
    ;; Production

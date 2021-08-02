@@ -8,7 +8,7 @@
 
 (comment
   (require 
-   '[lrsql.h2.record :as ir]
+   '[lrsql.postgres.record :as ir]
    '[lrsql.lrs-test :refer [stmt-4]])
   
   (def sys (system/system (ir/map->H2Interface {}) :test-h2-mem))

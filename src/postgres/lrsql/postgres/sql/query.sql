@@ -41,7 +41,9 @@ WHERE stmt.is_voided = FALSE
 --~ (when (:until params)        "AND stmt.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt.registration = :registration")
---~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
+/*~ (if (:ascending? params)
+      "ORDER BY stmt.id ASC"
+      "ORDER BY stmt.id DESC") ~*/
 LIMIT :limit
 
 -- :frag stmt-ref-subquery-frag
@@ -57,7 +59,9 @@ WHERE TRUE
 --~ (when (:until params)        "AND stmt_a.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt.registration = :registration")
---~ (if (:ascending? params) "ORDER BY stmt_a.id ASC" "ORDER BY stmt_a.id DESC")
+/*~ (if (:ascending? params)
+      "ORDER BY (stmt_a.id, stmt_a.statement_id) ASC"
+      "ORDER BY (stmt_a.id, stmt_a.statement_id) DESC") ~*/
 LIMIT :limit
 
 -- :name query-statements
