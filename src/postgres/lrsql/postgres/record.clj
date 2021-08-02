@@ -16,13 +16,6 @@
 (u/def-hugsql-db-fns "lrsql/postgres/sql/update.sql")
 (u/def-hugsql-db-fns "lrsql/postgres/sql/delete.sql")
 
-;; In Postgres, statistics are not always accurate for empty tables.
-;; In the case of the `statement-to-statement` table, if this table is
-;; empty, the query planner will create a sub-optimal plan due to inaccurate
-;; stats. Thus we need to avoid incorporating statement refs when the
-;; table is empty. Note that statement refs are never deleted, so we
-;; only ever need to set the value of `stmt-ref-atom` from false to true.
-
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
 (defrecord PostgresBackend []
@@ -53,17 +46,13 @@
   (-insert-statement! [_ tx input]
     (insert-statement! tx input))
   (-insert-statement-to-statement! [_ tx input]
-    (let [exists (query-statement-descendants-exist tx {})]
-      (insert-statement-to-statement! tx input)
-      (if-not exists (vacuum-analyze!))))
+    (insert-statement-to-statement! tx input))
   (-void-statement! [_ tx input]
     (void-statement! tx input))
   (-query-statement [_ tx input]
     (query-statement tx input))
   (-query-statements [_ tx input]
-    (if (query-statement-descendants-exist tx {})
-      (query-statements tx input)
-      (query-statements-no-refs tx input)))
+    (query-statements tx input))
   (-query-statement-exists [_ tx input]
     (query-statement-exists tx input))
   (-query-statement-descendants [_ tx input]
@@ -111,6 +100,7 @@
   (-query-state-document-exists [_ tx input]
     (query-state-document-exists tx input))
 
+
   bp/AgentProfileDocumentBackend
   (-insert-agent-profile-document! [_ tx input]
     (insert-agent-profile-document! tx input))
@@ -124,6 +114,7 @@
     (query-agent-profile-document-ids tx input))
   (-query-agent-profile-document-exists [_ tx input]
     (query-agent-profile-document-exists tx input))
+
 
   bp/ActivityProfileDocumentBackend
   (-insert-activity-profile-document! [_ tx input]

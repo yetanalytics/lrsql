@@ -7,11 +7,11 @@
             [lrsql.admin.protocol :as adp]))
 
 (comment
-  (require
-   '[lrsql.postgres.record :as pr]
-   '[lrsql.lrs-test :refer [stmt-1' stmt-2' stmt-3']])
-
-  (def sys (system/system (pr/map->PostgresBackend {}) :test-postgres))
+  (require 
+   '[lrsql.h2.record :as ir]
+   '[lrsql.lrs-test :refer [stmt-4]])
+  
+  (def sys (system/system (ir/map->H2Interface {}) :test-h2-mem))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
@@ -139,9 +139,9 @@
                       1]))
 
   (jdbc/execute! ds ["SELECT COUNT(*) FROM statement_to_statement"])
+  (lrsp/-get-statements lrs {} {:statementId (get stmt-4 "id")} {})
 
-  (jdbc/execute! ds ["DROP INDEX stmt_ref_idx;"])
-  (jdbc/execute! ds ["CREATE INDEX IF NOT EXISTS stmt_ref_idx ON statement_to_statement(ancestor_id, descendant_id);"])
+  (lrsp/-store-statements lrs {} [stmt-4] [])
 
   (do
     (doseq [cmd [;; Drop credentials table

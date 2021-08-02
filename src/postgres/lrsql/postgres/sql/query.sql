@@ -75,12 +75,6 @@ AS all_stmt
 --~ (if (:ascending? params) "ORDER BY all_stmt.id ASC" "ORDER BY all_stmt.id DESC")
 LIMIT :limit;
 
--- :name query-statements-no-refs
--- :command :query
--- :result :many
--- :doc Query for one or more statements using statement resource parameters, without considering statement ref filters.
-:frag:stmt-no-ref-subquery-frag
-
 /* Statement Object Queries */
 
 -- :name query-actor
@@ -106,13 +100,6 @@ WHERE activity_iri = :activity-iri;
 -- :doc Query for the descendants of a referencing `:ancestor-id`.
 SELECT descendant_id FROM statement_to_statement
 WHERE ancestor_id = :ancestor-id;
-
--- :name query-statement-descendants-exist
--- :command query
--- :result :one
--- :doc Query the number of statement-to-statement relationships.
-SELECT 1 FROM statement_to_statement
-LIMIT 1
 
 /* Attachment Queries */
 
