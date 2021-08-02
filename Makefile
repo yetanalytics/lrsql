@@ -17,8 +17,7 @@ persistent:
 
 # Build
 clean:
-	rm -rf target
-	rm -f *.db
+	rm -rf target *.db *.log
 
 # Compile and make Uberjar
 target/bundle/lrsql.jar:
