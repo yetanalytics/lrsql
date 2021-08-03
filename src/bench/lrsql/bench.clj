@@ -68,9 +68,9 @@
   [endpoint query query-times user pass]
   (let [start-time (jt/instant)]
     (dotimes [_ query-times]
-      (curl/get endpoint {:headers headers
-                          :body    query
-                          :basic-auth [user pass]}))
+      (curl/get endpoint {:headers      headers
+                          :query-params query
+                          :basic-auth   [user pass]}))
     (let [end-time (jt/instant)
           duration (jt/duration start-time end-time)
           millis   (jt/as duration :millis)]
