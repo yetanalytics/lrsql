@@ -71,6 +71,9 @@ SELECT id, payload FROM
 --~ (if (:ascending? params) "ORDER BY id ASC" "ORDER BY id DESC")
 LIMIT :limit
 
+
+
+
 /* Statement Object Queries */
 
 -- :name query-actor

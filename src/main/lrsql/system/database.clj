@@ -21,6 +21,7 @@
 (defn- coerce-conn-config
   [conn-config]
   (assert-config ::cs/connection "connection" conn-config)
+  (clojure.pprint/pprint conn-config)
   (let [{{db-type   :db-type
           db-name   :db-name
           host      :db-host
@@ -68,13 +69,11 @@
 (defn log-ds
   [ds]
   (with-logging ds
-    (fn [sym sql-params]
-      (prn sym sql-params)
+    (fn [_ sql-params]
+      (prn sql-params)
       (System/currentTimeMillis))
-    (fn [sym state result]
-      (prn sym
-           (- (System/currentTimeMillis) state)
-           (if (map? result) result (count result))))))
+    (fn [_ state result]
+      (prn (str (- (System/currentTimeMillis) state) "ms, ")))))
 
 
 (defrecord Connection [conn-pool config]
@@ -85,7 +84,8 @@
            {{db-type :db-type} :database :as config} :config}
           conn]
       (if-not ?conn-pool
-        (let [conn-pool (log-ds
+        (let [_ (clojure.pprint/pprint (coerce-conn-config config))
+              conn-pool (log-ds
                          (jdbc-conn/->pool ComboPooledDataSource
                                            (coerce-conn-config config)))]
           (log/infof "Starting new connection for %s database..." db-type)

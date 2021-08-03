@@ -45,8 +45,9 @@
                           ::pool-max-size
                           ::pool-max-stmts])
          (fn [{:keys [pool-min-size pool-max-size]
-               :or {pool-min-size 3 ; c3p0 defaults
-                    pool-max-size 15}}]
+               :or {pool-min-size 1 ; c3p0 defaults
+                    pool-max-size 1}}]
+           (clojure.pprint/pprint [pool-min-size pool-max-size])
            (<= pool-min-size pool-max-size))))
 
 (s/def ::api-key-default string?)

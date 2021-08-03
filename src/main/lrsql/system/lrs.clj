@@ -9,6 +9,7 @@
             [lrsql.input.actor     :as agent-input]
             [lrsql.input.activity  :as activity-input]
             [lrsql.input.admin     :as admin-input]
+            [lrsql.system.database :refer [log-ds]]
             [lrsql.input.auth      :as auth-input]
             [lrsql.input.statement :as stmt-input]
             [lrsql.input.document  :as doc-input]
@@ -31,7 +32,10 @@
 (defn- lrs-conn
   "Get the connection pool from the LRS instance."
   [lrs]
-  (-> lrs :connection :conn-pool))
+  (-> lrs
+      :connection
+      :conn-pool
+      log-ds))
 
 (defrecord LearningRecordStore [connection backend config]
   cmp/Lifecycle
@@ -68,8 +72,9 @@
           (-> (map stmt-input/insert-statement-input stmts)
               (stmt-input/add-insert-attachment-inputs
                attachments))]
-      (jdbc/with-transaction [tx conn]
-        (let [stmt-results
+      (jdbc/with-transaction [raw-tx conn]
+        (let [tx (log-ds raw-tx)
+              stmt-results
               (map (fn [stmt-input]
                      (let [stmt-descs
                            (stmt-q/query-descendants
@@ -96,8 +101,9 @@
                       (stmt-util/add-more-url-prefix config)
                       (stmt-util/ensure-default-max-limit config)
                       stmt-input/query-statement-input)]
-      (jdbc/with-transaction [tx conn]
-        (stmt-q/query-statements backend tx inputs ltags))))
+      (jdbc/with-transaction [raw-tx conn]
+        (let [tx (log-ds raw-tx)]
+         (stmt-q/query-statements backend tx inputs ltags)))))
   (-consistent-through
     [_lrs _ctx _auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want

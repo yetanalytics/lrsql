@@ -29,12 +29,17 @@
   {;; Test/Dev
    :test-h2-mem   {:database #ref [:database]}
    :test-h2       {:database #ref [:database]}
-   :test-sqlite   {:database #ref [:database]}
+   :test-sqlite   {:database #ref [:database]
+                   :pool-init-size 1
+                   :pool-min-size 1
+                   :pool-max-size 1}
    :test-postgres {:database #ref [:database]}
    ;; Production
    :prod-h2-mem   #merge [{:database #ref [:database]} #include "prod/connection.edn"]
    :prod-h2       #merge [{:database #ref [:database]} #include "prod/connection.edn"]
-   :prod-sqlite   #merge [{:database #ref [:database]} #include "prod/connection.edn"]
+   :prod-sqlite   #merge [{:database #ref [:database]} {:pool-init-size 1
+                                                        :pool-min-size 1
+                                                        :pool-max-size 1}]
    :prod-postgres #merge [{:database #ref [:database]} #include "prod/connection.edn"]}
  :lrs
  #profile
