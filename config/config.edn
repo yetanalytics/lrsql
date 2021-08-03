@@ -1,4 +1,5 @@
-{:database
+{:config-json-file "lrsql.json"
+ :database
  #profile
   {;; Test/Dev
    :test-h2-mem   {:db-type "h2:mem"

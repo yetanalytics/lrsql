@@ -13,7 +13,7 @@
             [lrsql.spec.common :refer [instant-spec]])
   (:import [java.util UUID]
            [java.time Instant]
-           [java.io StringReader PushbackReader ByteArrayOutputStream]))
+           [java.io StringReader PushbackReader ByteArrayOutputStream File]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
@@ -52,11 +52,43 @@
 ;; Config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO: The config map should be as normalized as possible, but there is some
+;; duplication at present.
+;; When it is fully normalized, the following function won't be needed
+(defn- ensure-config-map
+  "The :database key is duplicated via ref in the aero config.
+  Run this after merging user config to ensure any changed are reflected in
+  contection."
+  [{:keys [database] :as config}]
+  (assoc-in config [:connection :database] database))
+
 (defn read-config*
   "Read `config/config.edn` with the given value of `profile`. Valid
-   profiles are `:test-[db-type]` and `:prod-[db-type]`."
+   profiles are `:test-[db-type]` and `:prod-[db-type]`.
+  Based on the :config-file-json key found will attempt to merge in properties
+  from the given path, if the file is present"
   [profile]
-  (aero/read-config (io/resource "config.edn") {:profile profile}))
+  (let [{:keys [config-json-file]
+         :as   static-config} (aero/read-config
+                               (io/resource "config.edn")
+                               {:profile profile})
+        ^File config-file     (io/file config-json-file)]
+    (ensure-config-map
+     (merge-with
+      merge
+      static-config
+      (when (.exists config-file)
+        (try
+          (with-open [rdr (io/reader config-file)]
+            (cjson/parse-stream-strict
+             rdr (partial keyword nil)))
+          (catch com.fasterxml.jackson.core.JsonParseException jpe
+            (throw
+             (ex-info
+              "Invalid JSON in Config File"
+              {:type ::invalid-config-json
+               :path config-json-file}
+              jpe)))))))))
 
 (def read-config
   "Memoized version of `read-config*`."
