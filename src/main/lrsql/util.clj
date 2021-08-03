@@ -82,13 +82,13 @@
           (with-open [rdr (io/reader config-file)]
             (cjson/parse-stream-strict
              rdr (partial keyword nil)))
-          (catch com.fasterxml.jackson.core.JsonParseException jpe
+          (catch Exception ex
             (throw
              (ex-info
               "Invalid JSON in Config File"
               {:type ::invalid-config-json
                :path config-json-file}
-              jpe)))))))))
+              ex)))))))))
 
 (def read-config
   "Memoized version of `read-config*`."
