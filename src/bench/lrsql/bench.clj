@@ -7,6 +7,10 @@
             [com.yetanalytics.datasim.input :as sim-input]
             [lrsql.util :as u]))
 
+(def headers
+  {"Content-Type"             "application/json"
+   "X-Experience-API-Version" "1.0.3"})
+
 (defn read-input
   [input-path]
   (-> (sim-input/from-location :input :json input-path)
@@ -34,8 +38,7 @@
     :desc "The batch size to use for posting statements. Ignored if `-i` is not given."]
    ["-q" "--query-input URI" "Query input source"
     :id :query-input
-    :default "src/bench/query_input.edn"
-    :desc "The location of a JSON file containing an array of statement query params."]
+    :desc "The location of a JSON file containing an array of statement query params. If not specified, the benchmark defaults to a single query with no params."]
    ["-n" "--query-number LONG" "Query execution number"
     :id :query-number
     :parse-fn #(Long/parseLong %)
@@ -51,11 +54,7 @@
 
 (defn store-statements
   [endpoint input-uri size batch-size user pass]
-  (let [inputs  (if input-uri
-                  (read-input input-uri)
-                  (read-input "src/bench/bench_input.json"))
-        headers {"Content-Type" "application/json"
-                 "X-Experience-API-Version" "1.0.3"}
+  (let [inputs  (read-input input-uri)
         stmts   (take size (sim/sim-seq inputs))]
     (loop [batches (partition-all batch-size stmts)]
       (if-some [batch (first batches)]
@@ -67,11 +66,9 @@
 
 (defn perform-query
   [endpoint query query-times user pass]
-  (let [header     {"Content-Type" "application/json"
-                    "X-Experience-API-Version" "1.0.3"}
-        start-time (jt/instant)]
+  (let [start-time (jt/instant)]
     (dotimes [_ query-times]
-      (curl/get endpoint {:headers header
+      (curl/get endpoint {:headers headers
                           :body    query
                           :basic-auth [user pass]}))
     (let [end-time (jt/instant)
@@ -84,7 +81,7 @@
 
 (defn query-statements
   [endpoint query-uri query-times user pass]
-  (loop [queries (read-query-input query-uri)
+  (loop [queries (if query-uri (read-query-input query-uri) [{}])
          results (transient [])]
     (if-some [query (first queries)]
       (let [res (perform-query endpoint query query-times user pass)]
@@ -104,7 +101,12 @@
                  query-input
                  query-number
                  user
-                 pass]} :options} (cli/parse-opts args cli-options)]
+                 pass]} :options}
+        (cli/parse-opts args cli-options)]
+    ;; Check for errors
+    (when (not-empty errors)
+      (throw (ex-info {:type   ::cli-parse-error
+                       :errors errors})))
     ;; Store statements
     (when insert-input
       (store-statements lrs-endpoint
