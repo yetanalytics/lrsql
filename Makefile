@@ -15,9 +15,12 @@ persistent:
 		LRSQL_SEED_API_SECRET=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent true
 
+clean-dev:
+	rm -f *.db *.log
+
 # Build
 clean:
-	rm -rf target *.db *.log
+	rm -rf target
 
 # Compile and make Uberjar
 target/bundle/lrsql.jar:
