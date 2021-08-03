@@ -17,61 +17,49 @@ WHERE statement_id = :statement-id
 
 /* Multi-statement query */
 
--- :frag actors-table-frag
-actors AS (
-  SELECT stmt_actor.actor_ifi, stmt_actor.statement_id
-  FROM statement_to_actor stmt_actor
-  WHERE stmt_actor.actor_ifi = :actor-ifi
-  --~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'")
-)
+-- :frag actors-joins
+LEFT JOIN statement_to_actor stmt_actor ON stmt.statement_id = stmt_actor.statement_id
+LEFT JOIN statement_to_actor stmt_d_actor ON stmt_d.statement_id = stmt_d_actor.statement_id
 
--- :frag activities-table-frag
-activs AS (
-  SELECT stmt_activ.activity_iri, stmt_activ.statement_id
-  FROM statement_to_activity stmt_activ
-  WHERE stmt_activ.activity_iri = :activity-iri
-  --~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'")
-)
-
--- :frag stmt-no-ref-subquery-frag
-SELECT stmt.id, stmt.payload
-FROM xapi_statement stmt
---~ (when (:actor-ifi params)    "INNER JOIN actors stmt_actors ON stmt.statement_id = stmt_actors.statement_id")
---~ (when (:activity-iri params) "INNER JOIN activs stmt_activs ON stmt.statement_id = stmt_activs.statement_id")
-WHERE stmt.is_voided = 0
---~ (when (:from params)         "AND stmt.id >= :from")
---~ (when (:since params)        "AND stmt.id > :since")
---~ (when (:until params)        "AND stmt.id <= :until")
---~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
---~ (when (:registration params) "AND stmt.registration = :registration")
-
--- :frag stmt-ref-subquery-frag
-SELECT stmt_a.id, stmt_a.payload
-FROM xapi_statement stmt_d
---~ (when (:actor-ifi params)    "INNER JOIN actors stmt_d_actors ON stmt_d.statement_id = stmt_d_actors.statement_id")
---~ (when (:activity-iri params) "INNER JOIN activs stmt_d_activs ON stmt_d.statement_id = stmt_d_activs.statement_id")
-INNER JOIN statement_to_statement sts ON stmt_d.statement_id = sts.descendant_id
-INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
-WHERE 1
---~ (when (:from params)         "AND stmt_a.id >= :from")
---~ (when (:since params)        "AND stmt_a.id > :since")
---~ (when (:until params)        "AND stmt_a.id <= :until")
---~ (when (:verb-iri params)     "AND stmt_d.verb_iri = :verb-iri")
---~ (when (:registration params) "AND stmt_d.registration = :registration")
+-- :frag activities-joins
+LEFT JOIN statement_to_activity stmt_activ ON stmt.statement_id = stmt_activ.statement_id
+LEFT JOIN statement_to_activity stmt_d_activ ON stmt_d.statement_id = stmt_d_activ.statement_id
 
 -- :name query-statements
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
---~ (when (and (:actor-ifi params) (:activity-iri params))       "WITH :frag:actors-table-frag, :frag:activities-table-frag")
---~ (when (and (:actor-ifi params) (not (:activity-iri params))) "WITH :frag:actors-table-frag")
---~ (when (and (not (:actor-ifi params)) (:activity-iri params)) "WITH :frag:activities-table-frag")
-SELECT id, payload FROM
-(:frag:stmt-no-ref-subquery-frag UNION :frag:stmt-ref-subquery-frag)
---~ (if (:ascending? params) "ORDER BY id ASC" "ORDER BY id DESC")
+SELECT DISTINCT stmt.id, stmt.payload
+FROM xapi_statement stmt
+LEFT JOIN statement_to_statement sts on sts.ancestor_id = stmt.statement_id
+LEFT JOIN xapi_statement stmt_d on sts.descendant_id = stmt_d.statement_id
+--~ (when (:activity-iri params)    ":frag:activities-joins")
+--~ (when (:actor-ifi params)       ":frag:actors-joins")
+WHERE stmt.is_voided = 0 AND
+((TRUE
+--~ (when (:from params)         "AND stmt.id >= :from")
+--~ (when (:since params)        "AND stmt.id > :since")
+--~ (when (:until params)        "AND stmt.id <= :until")
+--~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
+--~ (when (:registration params) "AND stmt.registration = :registration")
+--~ (when (:actor-ifi params) "AND stmt_actor.actor_ifi = :actor-ifi")
+--~ (when (and (:actor-ifi params) (not :related-actors? params)) "AND stmt_actor.usage = 'Actor'")
+--~ (when (:activity-iri params) "AND stmt_activ.activity_iri = :activity-iri")
+--~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_activ.usage = 'Object'")
+) OR (
+TRUE
+--~ (when (:from params)         "AND stmt.id >= :from")
+--~ (when (:since params)        "AND stmt.id > :since")
+--~ (when (:until params)        "AND stmt.id <= :until")
+--~ (when (:verb-iri params)     "AND stmt_d.verb_iri = :verb-iri")
+--~ (when (:registration params) "AND stmt_d.registration = :registration")
+--~ (when (:actor-ifi params) "AND stmt_d_actor.actor_ifi = :actor-ifi")
+--~ (when (and (:actor-ifi params) (not :related-actors? params)) "AND stmt_d_actor.usage = 'Actor'")
+--~ (when (:activity-iri params) "AND stmt_d_activ.activity_iri = :activity-iri")
+--~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_d_activ.usage = 'Object'")
+))
+--~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 LIMIT :limit
-
-
 
 
 /* Statement Object Queries */

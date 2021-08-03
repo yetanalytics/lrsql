@@ -36,19 +36,19 @@
     (create-activity-table! tx)
 
     (create-attachment-table! tx)
-    #_(create-attachment-statement-id-index! tx)
+    (create-attachment-statement-id-index! tx)
 
     (create-statement-to-actor-table! tx)
-    #_(create-statement-actor-statement-id-index! tx)
-    #_(create-statement-actor-ifi-index! tx)
+    (create-statement-actor-statement-id-index! tx)
+    (create-statement-actor-ifi-index! tx)
 
     (create-statement-to-activity-table! tx)
-    #_(create-statement-activity-statement-id-index! tx)
-    #_(create-statement-activity-iri-index! tx)
+    (create-statement-activity-statement-id-index! tx)
+    (create-statement-activity-iri-index! tx)
 
     (create-statement-to-statement-table! tx)
-    #_(create-sts-ancestor-id-index! tx)
-    #_(create-sts-descendant-id-index! tx)
+    (create-sts-ancestor-id-index! tx)
+    (create-sts-descendant-id-index! tx)
 
     (create-state-document-table! tx)
     (create-agent-profile-document-table! tx)
