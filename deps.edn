@@ -39,6 +39,23 @@
   :db-postgres
   {:extra-paths ["src/postgres"]
    :extra-deps  {org.postgresql/postgresql {:mvn/version "42.2.23"}}}
+  :bench
+  {:extra-paths ["src/bench"]
+   :extra-deps  {org.clojure/tools.cli  {:mvn/version "1.0.194"}
+                 babashka/babashka.curl {:mvn/version "0.0.3"}
+                 com.yetanalytics/datasim
+                 {:git/url    "git@github.com:yetanalytics/datasim.git"
+                  :sha        "423bd6c301ce8503f5c18b43df098bbe64f8f1ab"
+                  :exclusions [org.clojure/clojure
+                               com.yetanalytics/xapi-schema
+                               com.yetanalytics/project-pan]}
+                 ;; Override pan dep in DATASIM
+                 com.yetanalytics/project-pan
+                 {:git/url    "git@github.com:yetanalytics/project-pan.git"
+                  :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
+                  :exclusions [org.clojure/clojure
+                               com.yetanalytics/xapi-schema
+                               com.yetanalytics/project-pan]}}}
   :test
   {:extra-paths ["src/h2" "src/test"]
    :extra-deps  {com.h2database/h2      {:mvn/version "1.4.200"}

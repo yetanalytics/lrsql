@@ -57,5 +57,4 @@
                  "DROP TABLE IF EXISTS xapi_statement"]]
       (jdbc/execute! ds [cmd]))
 
-    (component/stop sys'))
-  )
+    (component/stop sys')))
