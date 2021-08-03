@@ -21,7 +21,7 @@ To use lrsql, a user needs to be authorized by an admin. Admin accounts can be c
 | `LRSQL_DB_TYPE` | The DBMS that lrsql will use. Currently supports `h2:mem`, `h2`, `sqlite`, `postgres`, and `postgresql`. The default value used depends on the `main` entry point used, e.g. `lrsql.sqlite.main` will use `sqlite` by default, so overriding the default is **not** recommended. | Varies |
 | `LRSQL_DB_NAME` | The name of the database. | `example` |
 | `LRSQL_DB_HOST` | The host that the database will run on. Not supported by in-mem H2 or SQLite. | `localhost` |
-| `LRSQL_DB_PORT` | The port that the database will run on. Not supported by in-mem H2 or SQLite. | `9001` (H2) |
+| `LRSQL_DB_PORT` | The port that the database will run on. Not supported by in-mem H2 or SQLite. | `9001` (H2), `5432` (PG) |
 | `LRSQL_DB_PROPERTIES` | Optional additional database properties. Must be a string of comma-separated `key:value` pairs if set. Supported properties will depend on the DBMS. | Not set |
 | `LRSQL_DB_JDBC_URL` | Optional JDBC URL; this will override the above properties if set. URL syntax will depend on the DBMS. | Not set |
 | `LRSQL_DB_USER` | The DB user. Optional. | Not set |
@@ -56,6 +56,9 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_KEY_FILE` | The path to the Java Keystore file that contains the key pair and credentials, which are used for HTTPS as well as JWT signing and verification. | `config/keystore.jks` |
 | `LRSQL_KEY_ALIAS` | The alias of the private key. | `lrsql_keystore` |
 | `LRSQL_KEY_PASSWORD` | The password protecting the keystore. **It is highly recommended that you override the default value.** | `lrsql_pass` |
+| `LRSQL_KEY_PKEY_FILE` | Private key in PEM format | `config/server.key.pem` |
+| `LRSQL_KEY_CERT_CHAIN` | Comma separated PEM files for cert. See the TLS/HTTPS section below. | `config/server.crt.pem,config/cacert.pem` |
+| `LRSQL_KEY_ENABLE_SELFIE` | Boolean, whether or not to enable self-signed cert generation. | true |
 | `LRSQL_JWT_EXP_TIME` | The amount of time, in seconds, after a JWT is created when it expires. Since JWTs are not revocable, **this this time should be short** (i.e. one hour or less). | `3600` (one hour) |
 | `LRSQL_JWT_EXP_LEEWAY` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
 | `LRSQL_ENABLE_HTTP` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
@@ -95,3 +98,27 @@ The following examples use `http://example.org` as the URL body. All methods req
 - `PUT http://example.org/creds`: Update an existing credential pair, given by `api-key` and `secret-key` properties in the request body, with the new scopes given by the `scopes` property.
 - `GET http://example.org/creds`: Read all credential pairs and their associated scopes for a particular account (denoted by the JWT).
 - `DELETE http://example.org/creds`: Delete an existing credential pair, given by the `api-key` and `secret-key` properties in the request body, as well as any associated scopes.
+
+## TLS/HTTPS
+
+lrsql will attempt to access certificates used for both HTTPS and signing in the following order:
+
+1. If `LRSQL_KEY_FILE` specifies a valid keystore on disk, it will be used.
+2. If `LRSQL_KEY_PKEY_FILE` and `LRSQL_KEY_CERT_CHAIN` specificy valid PEM files on disk, an in-memory keystore will be created and used based on their contents.
+3. If no keystore or cert files are found, lrsql will create a self-signed cert and log a warning.
+
+### Generating Dev Certs with `mkcert`
+
+If you install [mkcert](https://github.com/FiloSottile/mkcert) you can generate stable valid certs to use while developing the app:
+
+``` shell
+
+$ cp "$(mkcert -CAROOT)"/rootCA.pem config/cacert.pem
+$ mkcert -key-file config/server.key.pem \
+         -cert-file config/server.crt.pem \
+         example.com "*.example.com" example.test localhost 127.0.0.1 ::1
+$ clojure -Mdb-h2 -m lrsql.h2.main
+...
+11:25:54.085 [main] INFO  lrsql.util.cert - Generated keystore from key and cert(s)...
+
+```

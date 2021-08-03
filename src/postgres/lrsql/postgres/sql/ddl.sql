@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS attachment (
   CONSTRAINT statement_fk
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
 );
+CREATE INDEX IF NOT EXISTS attachment_stmt_fk ON attachment(statement_id);
 
 -- :name create-statement-to-actor-table!
 -- :command :execute
@@ -95,6 +96,8 @@ CREATE TABLE IF NOT EXISTS statement_to_actor (
   CONSTRAINT actor_fk
     FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 );
+CREATE INDEX IF NOT EXISTS stmt_actor_stmt_fk ON statement_to_actor(statement_id);
+CREATE INDEX IF NOT EXISTS stmt_actor_actor_fk ON statement_to_actor(actor_ifi, actor_type);
 
 -- :name create-statement-to-activity-table!
 -- :command :execute
@@ -109,6 +112,8 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
   CONSTRAINT activity_fk
     FOREIGN KEY (activity_iri) REFERENCES activity(activity_iri)
 );
+CREATE INDEX IF NOT EXISTS stmt_activ_stmt_fk ON statement_to_activity(statement_id);
+CREATE INDEX IF NOT EXISTS stmt_activ_activ_fk ON statement_to_activity(activity_iri);
 
 -- :name create-statement-to-statement-table!
 -- :command :execute
@@ -122,6 +127,8 @@ CREATE TABLE IF NOT EXISTS statement_to_statement (
   CONSTRAINT descendant_fk
     FOREIGN KEY (descendant_id) REFERENCES xapi_statement(statement_id)
 );
+CREATE INDEX IF NOT EXISTS stmt_stmt_ans_fk ON statement_to_statement(ancestor_id);
+CREATE INDEX IF NOT EXISTS stmt_stmt_desc_fk ON statement_to_statement(descendant_id);
 
 /* Document Tables */
 
@@ -200,6 +207,7 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
     REFERENCES admin_account(id)
     ON DELETE CASCADE
 );
+CREATE INDEX IF NOT EXISTS cred_account_fk ON lrs_credential(account_id)
 
 -- :name create-credential-to-scope-table!
 -- :command :execute
@@ -214,3 +222,4 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
     REFERENCES lrs_credential(api_key, secret_key)
     ON DELETE CASCADE
 );
+CREATE INDEX IF NOT EXISTS cred_keypair_fk ON credential_to_scope(api_key, secret_key)

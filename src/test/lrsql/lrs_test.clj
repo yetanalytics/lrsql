@@ -386,6 +386,11 @@
    :activityId "https://example.org/activity-type"
    :agent      {"mbox" "mailto:example@example.org"}})
 
+(def state-id-params-2
+  {:stateId "some-other-id"
+   :activityId "https://example.org/activity-type"
+   :agent      {"mbox" "mailto:example@example.org"}})
+
 (def state-doc-1
   {:content-length 17
    :content-type   "application/json"
@@ -435,6 +440,18 @@
       (is (= {}
              (lrsp/-set-document lrs
                                  {}
+                                 state-id-params-2
+                                 state-doc-1
+                                 false)))
+      (is (= {}
+             (lrsp/-set-document lrs
+                                 {}
+                                 state-id-params-2
+                                 state-doc-2
+                                 false)))
+      (is (= {}
+             (lrsp/-set-document lrs
+                                 {}
                                  agent-prof-id-params
                                  agent-prof-doc
                                  false)))
@@ -454,6 +471,14 @@
                  (update :document dissoc :updated)
                  (update-in [:document :contents] #(String. %)))))
       (is (= {:document
+              {:contents       "{\"foo\":10}"
+               :content-length 10
+               :content-type   "application/json"
+               :id             "some-other-id"}}
+             (-> (lrsp/-get-document lrs {} state-id-params-2)
+                 (update :document dissoc :updated)
+                 (update-in [:document :contents] #(String. %)))))
+      (is (= {:document
               {:contents       "Example Document"
                :content-length 16
                :content-type   "text/plain"
@@ -470,7 +495,7 @@
                  (update :document dissoc :updated)
                  (update-in [:document :contents] #(String. %))))))
     (testing "document ID query"
-      (is (= {:document-ids ["some-id"]}
+      (is (= {:document-ids ["some-id" "some-other-id"]}
              (lrsp/-get-document-ids lrs
                                      {}
                                      (dissoc state-id-params :stateId))))

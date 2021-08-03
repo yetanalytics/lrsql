@@ -140,6 +140,32 @@ FROM activity_profile_document
 WHERE activity_iri = :activity-iri
 AND profile_id = :profile-id
 
+-- :name query-state-document-exists
+-- :command :query
+-- :result :one
+-- :doc Query whether a particular state document exists. If `:registration` is missing then `registration` must be NULL.
+SELECT 1 FROM state_document
+WHERE activity_iri = :activity-iri
+AND agent_ifi = :agent-ifi
+AND state_id = :state-id
+--~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
+
+-- :name query-agent-profile-document-exists
+-- :command :query
+-- :result :one
+-- :doc Query whether a particular agent profile document exists.
+SELECT 1 FROM agent_profile_document
+WHERE agent_ifi = :agent-ifi
+AND profile_id = :profile-id
+
+-- :name query-activity-profile-document-exists
+-- :command :query
+-- :result :one
+-- :doc Query whether a particular activity profile document exists.
+SELECT 1 FROM activity_profile_document
+WHERE activity_iri = :activity-iri
+AND profile_id = :profile-id
+
 -- :name query-state-document-ids
 -- :command :query
 -- :result :many

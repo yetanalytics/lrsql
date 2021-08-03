@@ -1,33 +1,14 @@
 (ns lrsql.system.webserver
   (:require [clojure.tools.logging :as log]
-            [clojure.java.io :refer [input-stream]]
-            [jdk.security.KeyStore :as ks]
-            [jdk.security.Key :as k]
             [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config]]))
-
-(defn- file->keystore
-  "Return a `java.security.KeyStore` instance from `filepath`, protected
-   by the keystore `password`."
-  [filepath password]
-  (let [istream (input-stream filepath)
-        pass    (char-array password)]
-    (doto (ks/*get-instance (ks/*get-default-type))
-      (ks/load istream pass))))
-
-(defn- keystore->private-key
-  "Return a string representation of the private key stored in `keystore`
-   denoted by `alias` and protected by `password`."
-  [keystore alias password]
-  (-> keystore
-      (ks/get-key alias (char-array password))
-      k/get-encoded
-      slurp))
+            [lrsql.system.util :refer [assert-config]]
+            [lrsql.util.cert :as cu])
+  (:import [java.security KeyPair]))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -38,16 +19,15 @@
                 http-host
                 http-port
                 ssl-port
-                key-file
-                key-alias
                 key-password]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway}
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
-        keystore    (file->keystore key-file key-password)
-        private-key (keystore->private-key keystore key-alias key-password)
+        {:keys [keystore
+                private-key]} (cu/init-keystore config)
+
         ;; Make routes
         routes (->> (build {:lrs lrs})
                     (add-admin-routes {:lrs    lrs

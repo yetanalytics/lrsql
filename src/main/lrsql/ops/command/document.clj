@@ -24,11 +24,17 @@
   [bk tx {:keys [table] :as input}]
   (case table
     :state-document
-    (bp/-insert-state-document! bk tx input)
+    (if-not (bp/-query-state-document-exists bk tx input)
+      (bp/-insert-state-document! bk tx input)
+      (bp/-update-state-document! bk tx input))
     :agent-profile-document
-    (bp/-insert-agent-profile-document! bk tx input)
+    (if-not (bp/-query-agent-profile-document-exists bk tx input)
+      (bp/-insert-agent-profile-document! bk tx input)
+      (bp/-update-agent-profile-document! bk tx input))
     :activity-profile-document
-    (bp/-insert-activity-profile-document! bk tx input)
+    (if-not (bp/-query-activity-profile-document-exists bk tx input)
+      (bp/-insert-activity-profile-document! bk tx input)
+      (bp/-update-activity-profile-document! bk tx input))
     ;; Else
     (throw-invalid-table-ex "insert-document!" input))
   {})
