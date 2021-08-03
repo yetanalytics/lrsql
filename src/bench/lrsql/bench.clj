@@ -15,8 +15,7 @@
 (defn read-query-input
   [query-uri]
   (let [raw (slurp query-uri)]
-    ;; Parse if JSON, return if EDN
-    (if (map? raw) raw (u/parse-json raw :object? false))))
+    (u/parse-json raw :object? false)))
 
 (def cli-options
   [["-i" "--insert-input URI" "DATASIM input source"
@@ -36,7 +35,7 @@
    ["-q" "--query-input URI" "Query input source"
     :id :query-input
     :default "src/bench/query_input.edn"
-    :desc "The location of a JSON or EDN file containing an array of statement query params."]
+    :desc "The location of a JSON file containing an array of statement query params."]
    ["-n" "--query-number LONG" "Query execution number"
     :id :query-number
     :parse-fn #(Long/parseLong %)
@@ -59,11 +58,12 @@
                  "X-Experience-API-Version" "1.0.3"}
         stmts   (take size (sim/sim-seq inputs))]
     (loop [batches (partition-all batch-size stmts)]
-      (when-some [batch (first batches)]
-        (curl/post endpoint {:headers    headers
-                             :body       (String. (u/write-json (vec batch)))
-                             :basic-auth [user pass]})
-        (recur (rest batches))))))
+      (if-some [batch (first batches)]
+        (do
+          (curl/post endpoint {:headers    headers
+                               :body       (String. (u/write-json (vec batch)))
+                               :basic-auth [user pass]})
+          (recur (rest batches)))))))
 
 (defn perform-query
   [endpoint query query-times user pass]
