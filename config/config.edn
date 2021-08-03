@@ -1,4 +1,4 @@
-{:config-json-file "lrsql.json"
+{:config-json-file #or [#env LRSQL_CONFIG_JSON_FILE "lrsql.json"]
  :database
  #profile
   {;; Test/Dev
