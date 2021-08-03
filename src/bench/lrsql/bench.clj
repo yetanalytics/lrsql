@@ -1,5 +1,6 @@
 (ns lrsql.bench
   (:require [clojure.tools.cli :as cli]
+            [clojure.pprint :as pprint]
             [java-time :as jt]
             [babashka.curl :as curl]
             [com.yetanalytics.datasim.sim :as sim]
@@ -64,10 +65,6 @@
                              :basic-auth [user pass]})
         (recur (rest batches))))))
 
-(first
- (partition-all 2
-                (take 10 (sim/sim-seq (read-input "src/bench/bench_input.json")))))
-
 (defn perform-query
   [endpoint query query-times user pass]
   (let [header     {"Content-Type" "application/json"
@@ -117,8 +114,9 @@
                         user
                         pass))
     ;; Query statements
-    (query-statements lrs-endpoint
-                      query-input
-                      query-number
-                      user
-                      pass)))
+    (let [results (query-statements lrs-endpoint
+                                    query-input
+                                    query-number
+                                    user
+                                    pass)]
+      (pprint/print-table results))))
