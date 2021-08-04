@@ -3,7 +3,6 @@
             [clojure.walk :refer [keywordize-keys]]
             [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
-            [next.jdbc :refer [with-logging]]
             [com.stuartsierra.component :as component]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]])
@@ -64,7 +63,6 @@
       (assoc :maxPoolSize ?max-size)
       ?max-stmt
       (assoc :maxStatements ?max-stmt))))
-
 
 (defrecord Connection [conn-pool config]
   component/Lifecycle
