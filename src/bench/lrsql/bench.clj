@@ -26,8 +26,7 @@
 (def cli-options
   [["-i" "--insert-input URI" "DATASIM input source"
     :id :insert-input
-    :default nil
-    :desc "The location of a JSON file containing a DATASIM input spec. Used to populate the DB; if not given, then the initial insertion is ignored."]
+    :desc "The location of a JSON file containing a DATASIM input spec. If given, this input is used to insert statements into the DB."]
    ["-s" "--input-size LONG" "Size"
     :id :insert-size
     :parse-fn #(Long/parseLong %)
@@ -37,21 +36,21 @@
     :id :batch-size
     :parse-fn #(Long/parseLong %)
     :default 10
-    :desc "The batch size to use for posting statements. Ignored if `-i` is not given."]
+    :desc "The batch size to use for inserting statements. Ignored if `-i` is not given."]
    ["-q" "--query-input URI" "Query input source"
     :id :query-input
-    :desc "The location of a JSON file containing an array of statement query params. If not specified, the benchmark defaults to a single query with no params."]
+    :desc "The location of a JSON file containing an array of statement query params. If not given, the benchmark does a single query with no params."]
    ["-n" "--query-number LONG" "Query execution number"
     :id :query-number
     :parse-fn #(Long/parseLong %)
     :default 30
-    :desc "The number of times each query given by `-q` is performed."]
+    :desc "The number of times each query is performed."]
    ["-u" "--user STRING" "LRS User"
     :id :user
-    :desc "HTTP Basic Auth user"]
+    :desc "HTTP Basic Auth user."]
    ["-p" "--pass STRING" "LRS Password"
     :id :pass
-    :desc "HTTP Basic Auth password"]
+    :desc "HTTP Basic Auth password."]
    ["-h" "--help"]])
 
 (defn store-statements
@@ -126,7 +125,7 @@
 
 (defn -main
   [lrs-endpoint & args]
-  (let [{:keys [errors]
+  (let [{:keys [summary errors]
          :as _parsed-opts
          {:keys [insert-input
                  insert-size
@@ -134,13 +133,18 @@
                  query-input
                  query-number
                  user
-                 pass]} :options}
+                 pass
+                 help]} :options}
         (cli/parse-opts args cli-options)]
     ;; Check for errors
     (when (not-empty errors)
       (throw (ex-info "CLI Parse Error!"
                       {:type   ::cli-parse-error
                        :errors errors})))
+    ;; Print help and exit
+    (when help
+      (println summary)
+      (System/exit 0))
     ;; Store statements
     (when insert-input
       (log/info "Starting statement insertion...")
