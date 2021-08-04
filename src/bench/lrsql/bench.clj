@@ -209,7 +209,6 @@
     ;; Store statements
     (when insert-input
       (log/info "Starting statement insertion...")
-      (log/infof "Statement Ref: %s" (str statement-ref-type))
       (store-statements lrs-endpoint
                         insert-input
                         insert-size
