@@ -41,8 +41,9 @@
    :extra-deps  {org.postgresql/postgresql {:mvn/version "42.2.23"}}}
   :bench
   {:extra-paths ["src/bench"]
-   :extra-deps  {org.clojure/tools.cli  {:mvn/version "1.0.194"}
-                 babashka/babashka.curl {:mvn/version "0.0.3"}
+   :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
+                 org.clojure/math.numeric-tower {:mvn/version "0.0.4"}
+                 babashka/babashka.curl         {:mvn/version "0.0.3"}
                  com.yetanalytics/datasim
                  {:git/url    "git@github.com:yetanalytics/datasim.git"
                   :sha        "423bd6c301ce8503f5c18b43df098bbe64f8f1ab"

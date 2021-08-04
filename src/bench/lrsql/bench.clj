@@ -1,5 +1,6 @@
 (ns lrsql.bench
-  (:require [clojure.tools.cli :as cli]
+  (:require [clojure.math.numeric-tower :as math]
+            [clojure.tools.cli :as cli]
             [clojure.tools.logging :as log]
             [clojure.pprint :as pprint]
             [java-time :as jt]
@@ -60,43 +61,72 @@
     (loop [batches (partition-all batch-size stmts)]
       (if-some [batch (first batches)]
         (do
-          (curl/post endpoint {:headers    headers
-                               :body       (String. (u/write-json (vec batch)))
-                               :basic-auth [user pass]})
+          (curl/post endpoint
+                     {:headers    headers
+                      :body       (String. (u/write-json (vec batch)))
+                      :basic-auth [user pass]})
           (recur (rest batches)))))))
 
 (defn perform-query
+  [endpoint curl-input]
+  (let [start (jt/instant)
+        _     (curl/get endpoint curl-input)
+        end   (jt/instant)
+        dur   (jt/duration start end)]
+    (jt/as dur :millis)))
+
+(defn calc-statistics
+  [x-vec n]
+  (binding [*unchecked-math* true] ; Micro-optimize
+    (let [x-max  (apply max x-vec)
+          x-min  (apply min x-vec)
+          x-sum  (reduce + x-vec)
+          x-mean (quot x-sum n)
+          ;; Calculate sample (not population) standard deviation
+          x-sdel (map #(math/expt (- % x-mean) 2) x-vec)
+          x-sd   (math/round (math/sqrt (quot (reduce + x-sdel) n)))]
+      {:mean  x-mean
+       :sd    x-sd
+       :max   x-max
+       :min   x-min
+       :total x-sum})))
+
+(defn perform-queries
   [endpoint query query-times user pass]
-  (let [start-time (jt/instant)
-        curl-input {:headers      headers
+  (let [curl-input {:headers      headers
                     :query-params query
                     :basic-auth   [user pass]}]
-    (dotimes [_ query-times]
-      (curl/get endpoint curl-input))
-    (let [end-time (jt/instant)
-          duration (jt/duration start-time end-time)
-          millis   (jt/as duration :millis)]
-      ;; TODO: min, max, sd
-      {:param-str   (pr-str query)
-       :time-millis millis
-       :avg-millis  (quot millis query-times)})))
+    (loop [n   query-times
+           res (transient [])]
+      (if (< 0 n)
+        ;; Perform query
+        (let [r (perform-query endpoint curl-input)]
+          (recur (dec n)
+                 (conj! res r)))
+        ;; Calculate statistics and return
+        (let [results (persistent! res)]
+          (merge
+           {:query (pr-str query)}
+           (calc-statistics results query-times)))))))
 
 (defn query-statements
   [endpoint query-uri query-times user pass]
   (loop [queries (if query-uri (read-query-input query-uri) [{}])
          results (transient [])]
     (if-some [query (first queries)]
-      (let [res (perform-query endpoint query query-times user pass)]
+      (let [res (perform-queries endpoint
+                                 query
+                                 query-times
+                                 user
+                                 pass)]
         (recur (rest queries)
                (conj! results res)))
       (persistent! results))))
 
 (defn -main
   [lrs-endpoint & args]
-  (let [{:keys [arguments
-                summary
-                errors]
-         :as parsed-opts
+  (let [{:keys [errors]
+         :as _parsed-opts
          {:keys [insert-input
                  insert-size
                  batch-size
@@ -131,4 +161,9 @@
                                     user
                                     pass)]
       (log/info "Statement query benching finished.")
-      (pprint/print-table results))))
+      (printf "\n%s Query benchmark results for n = %d (in ms) %s\n"
+              "**********"
+              query-number
+              "**********")
+      (pprint/print-table results)
+      (println ""))))
