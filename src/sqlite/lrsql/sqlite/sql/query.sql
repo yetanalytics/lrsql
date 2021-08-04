@@ -43,7 +43,7 @@ WHERE stmt.is_voided = 0 AND
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt.registration = :registration")
 --~ (when (:actor-ifi params) "AND stmt_actor.actor_ifi = :actor-ifi")
---~ (when (and (:actor-ifi params) (not :related-actors? params)) "AND stmt_actor.usage = 'Actor'")
+--~ (when (and (:actor-ifi params) (not (:related-actors? params))) "AND stmt_actor.usage = 'Actor'")
 --~ (when (:activity-iri params) "AND stmt_activ.activity_iri = :activity-iri")
 --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_activ.usage = 'Object'")
 ) OR (
@@ -54,7 +54,7 @@ TRUE
 --~ (when (:verb-iri params)     "AND stmt_d.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt_d.registration = :registration")
 --~ (when (:actor-ifi params) "AND stmt_d_actor.actor_ifi = :actor-ifi")
---~ (when (and (:actor-ifi params) (not :related-actors? params)) "AND stmt_d_actor.usage = 'Actor'")
+--~ (when (and (:actor-ifi params) (not (:related-actors? params))) "AND stmt_d_actor.usage = 'Actor'")
 --~ (when (:activity-iri params) "AND stmt_d_activ.activity_iri = :activity-iri")
 --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_d_activ.usage = 'Object'")
 ))

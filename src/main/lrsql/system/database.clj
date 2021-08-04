@@ -21,7 +21,6 @@
 (defn- coerce-conn-config
   [conn-config]
   (assert-config ::cs/connection "connection" conn-config)
-  (clojure.pprint/pprint conn-config)
   (let [{{db-type   :db-type
           db-name   :db-name
           host      :db-host
@@ -66,15 +65,6 @@
       ?max-stmt
       (assoc :maxStatements ?max-stmt))))
 
-(defn log-ds
-  [ds]
-  (with-logging ds
-    (fn [_ sql-params]
-      (prn sql-params)
-      (System/currentTimeMillis))
-    (fn [_ state result]
-      (prn (str (- (System/currentTimeMillis) state) "ms, ")))))
-
 
 (defrecord Connection [conn-pool config]
   component/Lifecycle
@@ -84,10 +74,8 @@
            {{db-type :db-type} :database :as config} :config}
           conn]
       (if-not ?conn-pool
-        (let [_ (clojure.pprint/pprint (coerce-conn-config config))
-              conn-pool (log-ds
-                         (jdbc-conn/->pool ComboPooledDataSource
-                                           (coerce-conn-config config)))]
+        (let [conn-pool (jdbc-conn/->pool ComboPooledDataSource
+                                          (coerce-conn-config config))]
           (log/infof "Starting new connection for %s database..." db-type)
           (log/tracef "Config: %s" config)
           (assoc conn :conn-pool conn-pool))
