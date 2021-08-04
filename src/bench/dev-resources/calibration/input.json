@@ -1,0 +1,456 @@
+{
+  "profiles": [
+    {
+      "versions": [
+        {
+          "id": "https://xapinet.org/xapi/yet/calibration/v1",
+          "generatedAtTime": "2020-03-24T19:16:07.395Z"
+        }
+      ],
+      "@context": "https://w3id.org/xapi/profiles/context",
+      "author": {
+        "url": "https://www.yetanalytics.com/",
+        "name": "Yet Analytics",
+        "type": "Organization"
+      },
+      "concepts": [
+        {
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/concepts#activity-1",
+          "type": "Activity",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "activityDefinition": {
+            "name": {
+              "en-US": "Activity 1"
+            },
+            "description": {
+              "en-US": "The first activity"
+            },
+            "@context": "https://w3id.org/xapi/profiles/activity-context"
+          }
+        },
+        {
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/concepts#activity-2",
+          "type": "Activity",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "activityDefinition": {
+            "name": {
+              "en-US": "Activity 2"
+            },
+            "description": {
+              "en-US": "The second activity"
+            },
+            "@context": "https://w3id.org/xapi/profiles/activity-context"
+          }
+        },
+        {
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/concepts#activity-3",
+          "type": "Activity",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "activityDefinition": {
+            "name": {
+              "en-US": "Activity 3"
+            },
+            "description": {
+              "en-US": "The third activity"
+            },
+            "@context": "https://w3id.org/xapi/profiles/activity-context"
+          }
+        },
+        {
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/concepts#did",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "type": "Verb",
+          "definition": {
+            "en": "Did the thing"
+          },
+          "prefLabel": {
+            "en": "did"
+          }
+        }
+      ],
+      "id": "https://xapinet.org/xapi/yet/calibration",
+      "definition": {
+        "en": "This xAPI Profile is intended for experimental purposes only and can be used to show the basic Pattern selection behavior of simulated datasets"
+      },
+      "templates": [
+        {
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/templates#activity-1",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "prefLabel": {
+            "en": "Activity Template 1"
+          },
+          "definition": {
+            "en": "The statement template and rules associated with Activity 1 getting done."
+          },
+          "type": "StatementTemplate",
+          "verb": "https://xapinet.org/xapi/yet/calibration/v1/concepts#did",
+          "rules": [
+            {
+              "location": "$.id",
+              "presence": "included"
+            },
+            {
+              "location": "$.timestamp",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "https://xapinet.org/xapi/yet/calibration/v1/concepts#activity-1"
+              ],
+              "location": "$.object.id",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "Activity 1"
+              ],
+              "location": "$.object.definition.name.en-US",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "The first Activity"
+              ],
+              "location": "$.object.definition.description.en-US",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "https://xapinet.org/xapi/yet/calibration/v1"
+              ],
+              "location": "$.context.contextActivities.category[0].id",
+              "presence": "included"
+            }
+          ]
+        },
+        {
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/templates#activity-2",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "prefLabel": {
+            "en": "Activity Template 2"
+          },
+          "definition": {
+            "en": "The statement template and rules associated with Activity 2 getting done."
+          },
+          "type": "StatementTemplate",
+          "verb": "https://xapinet.org/xapi/yet/calibration/v1/concepts#did",
+          "rules": [
+            {
+              "location": "$.id",
+              "presence": "included"
+            },
+            {
+              "location": "$.timestamp",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "https://xapinet.org/xapi/yet/calibration/v1/concepts#activity-2"
+              ],
+              "location": "$.object.id",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "Activity 2"
+              ],
+              "location": "$.object.definition.name.en-US",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "The second Activity"
+              ],
+              "location": "$.object.definition.description.en-US",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "https://xapinet.org/xapi/yet/calibration/v1"
+              ],
+              "location": "$.context.contextActivities.category[0].id",
+              "presence": "included"
+            }
+          ]
+        },
+        {
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/templates#activity-3",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "prefLabel": {
+            "en": "Activity Template 3"
+          },
+          "definition": {
+            "en": "The statement template and rules associated with Activity 3 getting done."
+          },
+          "type": "StatementTemplate",
+          "verb": "https://xapinet.org/xapi/yet/calibration/v1/concepts#did",
+          "rules": [
+            {
+              "location": "$.id",
+              "presence": "included"
+            },
+            {
+              "location": "$.timestamp",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "https://xapinet.org/xapi/yet/calibration/v1/concepts#activity-3"
+              ],
+              "location": "$.object.id",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "Activity 3"
+              ],
+              "location": "$.object.definition.name.en-US",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "The third Activity"
+              ],
+              "location": "$.object.definition.description.en-US",
+              "presence": "included"
+            },
+            {
+              "any": [
+                "https://xapinet.org/xapi/yet/calibration/v1"
+              ],
+              "location": "$.context.contextActivities.category[0].id",
+              "presence": "included"
+            }
+          ]
+        }
+      ],
+      "type": "Profile",
+      "seeAlso": "https://github.com/yetanalytics/datasim",
+      "patterns": [
+        {
+          "definition": {
+            "en": "Pattern 1"
+          },
+          "primary": true,
+          "prefLabel": {
+            "en": "Learning Pattern 1"
+          },
+          "type": "Pattern",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/patterns#pattern-1",
+          "sequence": [
+            "https://xapinet.org/xapi/yet/calibration/v1/patterns#pattern-2",
+            "https://xapinet.org/xapi/yet/calibration/v1/patterns#pattern-3",
+            "https://xapinet.org/xapi/yet/calibration/v1/patterns#pattern-4"
+          ]
+        },
+        {
+          "definition": {
+            "en": "Pattern 2"
+          },
+          "primary": false,
+          "prefLabel": {
+            "en": "Learning Pattern 2"
+          },
+          "type": "Pattern",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/patterns#pattern-2",
+          "optional": "https://xapinet.org/xapi/yet/calibration/v1/templates#activity-1"
+        },
+        {
+          "definition": {
+            "en": "Pattern 3"
+          },
+          "primary": false,
+          "prefLabel": {
+            "en": "Learning Pattern 3"
+          },
+          "type": "Pattern",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/patterns#pattern-3",
+          "optional": "https://xapinet.org/xapi/yet/calibration/v1/templates#activity-2"
+        },
+        {
+          "definition": {
+            "en": "Pattern 4"
+          },
+          "primary": false,
+          "prefLabel": {
+            "en": "Learning Pattern 4"
+          },
+          "type": "Pattern",
+          "inScheme": "https://xapinet.org/xapi/yet/calibration/v1",
+          "id": "https://xapinet.org/xapi/yet/calibration/v1/patterns#pattern-4",
+          "optional": "https://xapinet.org/xapi/yet/calibration/v1/templates#activity-3"
+        }
+      ],
+      "conformsTo": "https://w3id.org/xapi/profiles#1.0",
+      "prefLabel": {
+        "en": "Calibration - Experimental xAPI Profile"
+      }
+    }
+  ],
+  "personae-array": [
+    {
+      "member": [
+        {
+          "name": "Dionne Knox",
+          "mbox": "mailto:0@yetanalytics.com"
+        },
+        {
+          "name": "Penny Mayer",
+          "mbox": "mailto:1@yetanalytics.com"
+        },
+        {
+          "name": "Stanley Ayers",
+          "mbox": "mailto:2@yetanalytics.com"
+        },
+        {
+          "name": "Reid Joyner",
+          "mbox": "mailto:3@yetanalytics.com"
+        },
+        {
+          "name": "Loretta Elliott",
+          "mbox": "mailto:4@yetanalytics.com"
+        },
+        {
+          "name": "Hawkins Landry",
+          "mbox": "mailto:5@yetanalytics.com"
+        },
+        {
+          "name": "Zimmerman Short",
+          "mbox": "mailto:6@yetanalytics.com"
+        },
+        {
+          "name": "Jeannette Castaneda",
+          "mbox": "mailto:7@yetanalytics.com"
+        },
+        {
+          "name": "Ramos Boyer",
+          "mbox": "mailto:8@yetanalytics.com"
+        },
+        {
+          "name": "Montgomery Dale",
+          "mbox": "mailto:9@yetanalytics.com"
+        },
+        {
+          "name": "Jerry Rose",
+          "mbox": "mailto:10@yetanalytics.com"
+        },
+        {
+          "name": "Katina Armstrong",
+          "mbox": "mailto:11@yetanalytics.com"
+        },
+        {
+          "name": "Dickson Gaines",
+          "mbox": "mailto:12@yetanalytics.com"
+        },
+        {
+          "name": "Patricia Forbes",
+          "mbox": "mailto:13@yetanalytics.com"
+        },
+        {
+          "name": "Petty Huber",
+          "mbox": "mailto:14@yetanalytics.com"
+        },
+        {
+          "name": "Sexton Cooley",
+          "mbox": "mailto:15@yetanalytics.com"
+        },
+        {
+          "name": "Nola Burns",
+          "mbox": "mailto:16@yetanalytics.com"
+        },
+        {
+          "name": "Caitlin Lancaster",
+          "mbox": "mailto:17@yetanalytics.com"
+        },
+        {
+          "name": "Dean Roth",
+          "mbox": "mailto:18@yetanalytics.com"
+        },
+        {
+          "name": "Wilson Chambers",
+          "mbox": "mailto:19@yetanalytics.com"
+        },
+        {
+          "name": "Helga Hutchinson",
+          "mbox": "mailto:20@yetanalytics.com"
+        },
+        {
+          "name": "Mary Flores",
+          "mbox": "mailto:21@yetanalytics.com"
+        },
+        {
+          "name": "Baker Orr",
+          "mbox": "mailto:22@yetanalytics.com"
+        },
+        {
+          "name": "Randall Fernandez",
+          "mbox": "mailto:23@yetanalytics.com"
+        },
+        {
+          "name": "Margie Pratt",
+          "mbox": "mailto:24@yetanalytics.com"
+        },
+        {
+          "name": "Christian Baxter",
+          "mbox": "mailto:25@yetanalytics.com"
+        },
+        {
+          "name": "Guerrero Glass",
+          "mbox": "mailto:26@yetanalytics.com"
+        },
+        {
+          "name": "Marian Fox",
+          "mbox": "mailto:27@yetanalytics.com"
+        },
+        {
+          "name": "Ayers Farley",
+          "mbox": "mailto:28@yetanalytics.com"
+        },
+        {
+          "name": "Milagros Hudson",
+          "mbox": "mailto:29@yetanalytics.com"
+        },
+        {
+          "name": "Brittany French",
+          "mbox": "mailto:30@yetanalytics.com"
+        },
+        {
+          "name": "Mueller Ward",
+          "mbox": "mailto:31@yetanalytics.com"
+        },
+        {
+          "name": "Emily Lucas",
+          "mbox": "mailto:32@yetanalytics.com"
+        },
+        {
+          "name": "Cohen Shepherd",
+          "mbox": "mailto:33@yetanalytics.com"
+        }
+      ],
+      "objectType": "Group",
+      "name": "trainees"
+    }
+  ],
+  "alignments": [
+    {
+      "id": "mbox::mailto:bob@example.org",
+      "type": "Agent",
+      "alignments": [
+        {
+          "component": "https://example.org/course/1440130447",
+          "weight": -1
+        }
+      ]
+    }
+  ],
+  "parameters": {
+    "start": "2020-11-18T11:38:39.219768Z",
+    "end": "2021-02-18T11:38:39.219768Z",
+    "timezone": "America/New_York",
+    "seed": 47,
+    "from": "2020-11-18T11:38:39.219768Z"
+  }
+}

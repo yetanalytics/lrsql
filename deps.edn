@@ -46,7 +46,7 @@
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
                  com.yetanalytics/datasim
                  {:git/url    "git@github.com:yetanalytics/datasim.git"
-                  :sha        "423bd6c301ce8503f5c18b43df098bbe64f8f1ab"
+                  :sha        "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}
