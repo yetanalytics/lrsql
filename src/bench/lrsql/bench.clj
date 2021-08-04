@@ -44,7 +44,7 @@
    ["-n" "--query-number LONG" "Query execution number"
     :id :query-number
     :parse-fn #(Long/parseLong %)
-    :default 1000
+    :default 30
     :desc "The number of times each query given by `-q` is performed."]
    ["-u" "--user STRING" "LRS User"
     :id :user
