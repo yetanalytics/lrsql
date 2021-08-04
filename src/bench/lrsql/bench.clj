@@ -1,5 +1,6 @@
 (ns lrsql.bench
-  (:require [clojure.math.numeric-tower :as math]
+  (:require [clojure.string :refer [join]]
+            [clojure.math.numeric-tower :as math]
             [clojure.tools.cli :as cli]
             [clojure.tools.logging :as log]
             [clojure.pprint :as pprint]
@@ -9,19 +10,13 @@
             [com.yetanalytics.datasim.input :as sim-input]
             [lrsql.util :as u]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Defs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (def headers
   {"Content-Type"             "application/json"
    "X-Experience-API-Version" "1.0.3"})
-
-(defn read-input
-  [input-path]
-  (-> (sim-input/from-location :input :json input-path)
-      (assoc-in [:parameters :seed] (rand-int 1000000000))))
-
-(defn read-query-input
-  [query-uri]
-  (let [raw (slurp query-uri)]
-    (u/parse-json raw :object? false)))
 
 (def cli-options
   [["-i" "--insert-input URI" "DATASIM input source"
@@ -37,6 +32,12 @@
     :parse-fn #(Long/parseLong %)
     :default 10
     :desc "The batch size to use for inserting statements. Ignored if `-i` is not given."]
+   ["-r" "--statement-refs STRING" "Statement Ref Insertion Type"
+    :id :statement-ref-type
+    :parse-fn keyword
+    :validate [#{:all :half :none} "Should be `all`, `half`, or `none`."]
+    :default :none
+    :desc "How Statement Refs should be inserted. Valid options are `none` (default), `half`, and `all`."]
    ["-q" "--query-input URI" "Query input source"
     :id :query-input
     :desc "The location of a JSON file containing an array of statement query params. If not given, the benchmark does a single query with no params."]
@@ -53,10 +54,62 @@
     :desc "HTTP Basic Auth password."]
    ["-h" "--help"]])
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Input Reading
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn read-input
+  [input-path]
+  (-> (sim-input/from-location :input :json input-path)
+      (assoc-in [:parameters :seed] (rand-int 1000000000))))
+
+(defn read-query-input
+  [query-uri]
+  (let [raw (slurp query-uri)]
+    (u/parse-json raw :object? false)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Insertion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmulti generate-statements
+  {:arglist '([inputs size sref-type])}
+  (fn [_ _ sref-type] sref-type)
+  :default :none)
+
+(defmethod generate-statements :none
+  [inputs size _]
+  (take size (sim/sim-seq inputs)))
+
+(defmethod generate-statements :half
+  [inputs size _]
+  (let [stmt-seq    (take size (sim/sim-seq inputs))
+        [tgts refs] (split-at (quot size 2) stmt-seq)
+        refs'       (map (fn [t r]
+                           (let [tid  (get t "id")
+                                 robj {"objectType" "StatementRef"
+                                       "id"         tid}]
+                             (assoc r "object" robj)))
+                         tgts
+                         refs)]
+    (concat tgts refs')))
+
+(defmethod generate-statements :all
+  [inputs size _]
+  (let [stmt-seq (take (inc size) (sim/sim-seq inputs))
+        targets  (take size stmt-seq)
+        refs     (drop 1 stmt-seq)]
+    (map (fn [t r]
+           (let [tid (get t "id")
+                 robj {"objectType" "StatementRef" "id" tid}]
+             (assoc r "object" robj)))
+         targets
+         refs)))
+
 (defn store-statements
-  [endpoint input-uri size batch-size user pass]
+  [endpoint input-uri size batch-size user pass sref-type]
   (let [inputs  (read-input input-uri)
-        stmts   (take size (sim/sim-seq inputs))]
+        stmts   (generate-statements inputs size sref-type)]
     (loop [batches (partition-all batch-size stmts)]
       (if-some [batch (first batches)]
         (do
@@ -65,6 +118,10 @@
                       :body       (String. (u/write-json (vec batch)))
                       :basic-auth [user pass]})
           (recur (rest batches)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Query
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn perform-query
   [endpoint curl-input]
@@ -123,12 +180,17 @@
                (conj! results res)))
       (persistent! results))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Putting it all together
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn -main
   [lrs-endpoint & args]
   (let [{:keys [summary errors]
          :as _parsed-opts
          {:keys [insert-input
                  insert-size
+                 statement-ref-type
                  batch-size
                  query-input
                  query-number
@@ -138,7 +200,8 @@
         (cli/parse-opts args cli-options)]
     ;; Check for errors
     (when (not-empty errors)
-      (throw (ex-info "CLI Parse Error!"
+      (log/errorf "CLI Parse Errors:\n%s" (join "\n" errors))
+      (throw (ex-info "CLI Parse Errors!"
                       {:type   ::cli-parse-error
                        :errors errors})))
     ;; Print help and exit
@@ -148,12 +211,14 @@
     ;; Store statements
     (when insert-input
       (log/info "Starting statement insertion...")
+      (log/infof "Statement Ref: %s" (str statement-ref-type))
       (store-statements lrs-endpoint
                         insert-input
                         insert-size
                         batch-size
                         user
-                        pass)
+                        pass
+                        statement-ref-type)
       (log/info "Statement insertion finished."))
     ;; Query statements
     (log/info "Starting statement query benching...")
