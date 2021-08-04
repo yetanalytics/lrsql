@@ -105,8 +105,12 @@
         (cli/parse-opts args cli-options)]
     ;; Check for errors
     (when (not-empty errors)
-      (throw (ex-info {:type   ::cli-parse-error
+      (throw (ex-info "CLI Parse Error!"
+                      {:type   ::cli-parse-error
                        :errors errors})))
+    (when-not query-input
+      (throw (ex-info "Missing Query Input!"
+                      {:type ::missing-query-input})))
     ;; Store statements
     (when insert-input
       (store-statements lrs-endpoint
