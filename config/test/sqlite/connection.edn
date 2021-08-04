@@ -1,5 +1,3 @@
 {:pool-init-size  1
  :pool-min-size   1
- :pool-inc        nil
- :pool-max-size   1
- :pool-max-stmts  nil}
+ :pool-max-size   1}
