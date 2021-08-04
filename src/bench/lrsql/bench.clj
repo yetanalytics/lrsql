@@ -72,6 +72,15 @@
 ;; Statement Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn- assoc-stmt-refs
+  [targets refs]
+  (map (fn [tgt ref]
+         (let [tid  (get tgt "id")
+               robj {"objectType" "StatementRef" "id" tid}]
+           (assoc ref "object" robj)))
+       targets
+       refs))
+
 (defmulti generate-statements
   {:arglist '([inputs size sref-type])}
   (fn [_ _ sref-type] sref-type)
@@ -85,26 +94,15 @@
   [inputs size _]
   (let [stmt-seq    (take size (sim/sim-seq inputs))
         [tgts refs] (split-at (quot size 2) stmt-seq)
-        refs'       (map (fn [t r]
-                           (let [tid  (get t "id")
-                                 robj {"objectType" "StatementRef"
-                                       "id"         tid}]
-                             (assoc r "object" robj)))
-                         tgts
-                         refs)]
+        refs'       (assoc-stmt-refs tgts refs)]
     (concat tgts refs')))
 
 (defmethod generate-statements :all
   [inputs size _]
-  (let [stmt-seq (take (inc size) (sim/sim-seq inputs))
-        targets  (take size stmt-seq)
-        refs     (drop 1 stmt-seq)]
-    (map (fn [t r]
-           (let [tid (get t "id")
-                 robj {"objectType" "StatementRef" "id" tid}]
-             (assoc r "object" robj)))
-         targets
-         refs)))
+  (let [tgts  (take size (sim/sim-seq inputs))
+        refs  (drop 1 tgts)
+        refs' (assoc-stmt-refs tgts refs)]
+    (cons (first tgts) refs')))
 
 (defn store-statements
   [endpoint input-uri size batch-size user pass sref-type]
@@ -131,7 +129,7 @@
         dur   (jt/duration start end)]
     (jt/as dur :millis)))
 
-(defn calc-statistics
+(defn- calc-statistics
   [x-vec n]
   (binding [*unchecked-math* true] ; Micro-optimize
     (let [x-max  (apply max x-vec)
