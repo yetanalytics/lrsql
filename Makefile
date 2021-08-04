@@ -1,4 +1,4 @@
-.phony: ci, ephemeral, persistent, clean, run-jar-h2, run-jar-sqlite, bundle, run-jar-h2-persistent, run-jar-postgres
+.phony: ci, ephemeral, persistent, bench, bench-h2, clean, run-jar-h2, run-jar-sqlite, bundle, run-jar-h2-persistent, run-jar-postgres
 
 ci:
 	clojure -X:test
@@ -14,6 +14,13 @@ persistent:
 		LRSQL_SEED_API_KEY=username \
 		LRSQL_SEED_API_SECRET=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent true
+
+# Intended for use with `make ephemeral` or `make persistent`
+bench:
+	clojure -M:bench -m lrsql.bench http://localhost:8080/xapi/statements \
+		-i src/bench/bench_input.json \
+		-q src/bench/query_input.json \
+		-u username -p password
 
 # Build
 clean:
