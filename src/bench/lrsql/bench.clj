@@ -140,9 +140,6 @@
       (throw (ex-info "CLI Parse Error!"
                       {:type   ::cli-parse-error
                        :errors errors})))
-    (when-not query-input
-      (throw (ex-info "Missing Query Input!"
-                      {:type ::missing-query-input})))
     ;; Store statements
     (when insert-input
       (log/info "Starting statement insertion...")
