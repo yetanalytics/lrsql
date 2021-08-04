@@ -1,4 +1,4 @@
-.phony: ci, ephemeral, persistent, bench, bench-h2, clean, run-jar-h2, run-jar-sqlite, bundle, run-jar-h2-persistent, run-jar-postgres
+.phony: ci, ephemeral, persistent, bench, clean, run-jar-h2, run-jar-sqlite, bundle, run-jar-h2-persistent, run-jar-postgres
 
 ci:
 	clojure -X:test
