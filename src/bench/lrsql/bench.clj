@@ -1,5 +1,6 @@
 (ns lrsql.bench
   (:require [clojure.tools.cli :as cli]
+            [clojure.tools.logging :as log]
             [clojure.pprint :as pprint]
             [java-time :as jt]
             [babashka.curl :as curl]
@@ -66,11 +67,12 @@
 
 (defn perform-query
   [endpoint query query-times user pass]
-  (let [start-time (jt/instant)]
+  (let [start-time (jt/instant)
+        curl-input {:headers      headers
+                    :query-params query
+                    :basic-auth   [user pass]}]
     (dotimes [_ query-times]
-      (curl/get endpoint {:headers      headers
-                          :query-params query
-                          :basic-auth   [user pass]}))
+      (curl/get endpoint curl-input))
     (let [end-time (jt/instant)
           duration (jt/duration start-time end-time)
           millis   (jt/as duration :millis)]
@@ -113,16 +115,20 @@
                       {:type ::missing-query-input})))
     ;; Store statements
     (when insert-input
+      (log/info "Starting statement insertion...")
       (store-statements lrs-endpoint
                         insert-input
                         insert-size
                         batch-size
                         user
-                        pass))
+                        pass)
+      (log/info "Statement insertion finished."))
     ;; Query statements
+    (log/info "Starting statement query benching...")
     (let [results (query-statements lrs-endpoint
                                     query-input
                                     query-number
                                     user
                                     pass)]
+      (log/info "Statement query benching finished.")
       (pprint/print-table results))))
