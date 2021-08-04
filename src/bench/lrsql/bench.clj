@@ -93,8 +93,9 @@
 
 (defn perform-queries
   [endpoint query query-times user pass]
+  ;; `nil` = `{}` since babashka/curl does not like the latter
   (let [curl-input {:headers      headers
-                    :query-params query
+                    :query-params (not-empty query)
                     :basic-auth   [user pass]}]
     (loop [n   query-times
            res (transient [])]
