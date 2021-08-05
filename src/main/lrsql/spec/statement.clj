@@ -165,8 +165,7 @@
 
 (s/def ::query-params
   (s/merge ::lrsp/get-statements-params
-           (s/keys :req-un [::limit]
-                   :opt-un [::more-url-prefix])))
+           (s/keys :req-un [::limit])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query spec
