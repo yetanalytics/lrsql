@@ -11,17 +11,18 @@
 ;; TODO: Change for version 2.0.0
 (def xapi-version "1.0.0")
 
-;; TODO: more specific authority
-(def lrsql-authority {"name" "LRSQL"
-                      "objectType" "Agent"
-                      "account" {"homePage" "http://localhost:8080"
-                                 "name"     "LRSQL"}})
+(defn lrsql-authority
+  [auth-url]
+  {"name"       "LRSQL"
+   "objectType" "Agent"
+   "account"    {"homePage" auth-url
+                 "name"     "LRSQL"}})
 
 (defn prepare-statement
   "Prepare `statement` for LRS storage by coll-ifying context activities
    and setting missing id, timestamp, authority, version, and stored
-   properties."
-  [statement]
+   properties. `auth-url` is required to set the IFI of the authority Agent."
+  [auth-url statement]
   (let [{?id        "id"
          ?timestamp "timestamp"
          ?authority "authority"
@@ -53,7 +54,7 @@
       (not ?timestamp)
       (assoc-to-stmt "timestamp" squuid-ts-str)
       (not ?authority)
-      (assoc-to-stmt "authority" lrsql-authority)
+      (assoc-to-stmt "authority" (lrsql-authority auth-url))
       (not ?version)
       (assoc-to-stmt "version" xapi-version))))
 

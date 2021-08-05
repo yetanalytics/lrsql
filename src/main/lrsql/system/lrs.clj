@@ -63,8 +63,10 @@
     [lrs _auth-identity statements attachments]
     (let [conn
           (lrs-conn lrs)
+          auth-url
+          (-> lrs :config :authority-body)
           stmts
-          (map stmt-util/prepare-statement
+          (map (partial stmt-util/prepare-statement auth-url)
                statements)
           stmt-inputs
           (-> (map stmt-input/insert-statement-input stmts)
