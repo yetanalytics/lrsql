@@ -31,7 +31,9 @@
 (defn- lrs-conn
   "Get the connection pool from the LRS instance."
   [lrs]
-  (-> lrs :connection :conn-pool))
+  (-> lrs
+      :connection
+      :conn-pool))
 
 (defrecord LearningRecordStore [connection backend config]
   cmp/Lifecycle

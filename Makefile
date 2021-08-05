@@ -15,6 +15,13 @@ persistent:
 		LRSQL_SEED_API_SECRET=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent true
 
+
+sqlite:
+	LRSQL_DB_NAME=db.sqlite \
+		LRSQL_SEED_API_KEY=username \
+		LRSQL_SEED_API_SECRET=password \
+		clojure -M:db-sqlite -m lrsql.sqlite.main
+
 clean-dev:
 	rm -f *.db *.log
 
