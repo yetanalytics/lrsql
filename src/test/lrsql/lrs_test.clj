@@ -224,6 +224,7 @@
                  (update-in [:statement-result :statements]
                             (partial map remove-props))))))
     (testing "querying with limits"
+      ;; Descending
       (is (= {:statement-result
               {:statements [stmt-4 stmt-3]
                :more "/xapi/statements?limit=2&from="}
@@ -233,6 +234,17 @@
                             (partial map remove-props))
                  (update-in [:statement-result :more]
                             #(->> % (re-matches #"(.*from=).*") second)))))
+      (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
+              :attachments      []}
+             (let [more
+                   (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
+                       (get-in [:statement-result :more]))
+                   from
+                   (->> more (re-matches #".*from=(.*)") second)]
+               (-> (lrsp/-get-statements lrs {} {:limit 2 :from from} #{})
+                   (update-in [:statement-result :statements]
+                              (partial map remove-props))))))
+      ;; Ascending
       (is (= {:statement-result
               {:statements [stmt-1 stmt-2]
                :more "/xapi/statements?limit=2&ascending=true&from="}

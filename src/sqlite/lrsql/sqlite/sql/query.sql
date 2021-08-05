@@ -35,11 +35,12 @@ LEFT JOIN statement_to_statement sts on sts.ancestor_id = stmt.statement_id
 LEFT JOIN xapi_statement stmt_d on sts.descendant_id = stmt_d.statement_id
 --~ (when (:activity-iri params)    ":frag:activities-joins")
 --~ (when (:actor-ifi params)       ":frag:actors-joins")
-WHERE stmt.is_voided = 0 AND
-((TRUE
---~ (when (:from params)         "AND stmt.id >= :from")
+WHERE stmt.is_voided = 0
+/*~ (when (:from params)
+     (if (:ascending? params) "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt.id > :since")
 --~ (when (:until params)        "AND stmt.id <= :until")
+AND ((TRUE
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt.registration = :registration")
 --~ (when (:actor-ifi params) "AND stmt_actor.actor_ifi = :actor-ifi")
@@ -48,9 +49,6 @@ WHERE stmt.is_voided = 0 AND
 --~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_activ.usage = 'Object'")
 ) OR (
 TRUE
---~ (when (:from params)         "AND stmt.id >= :from")
---~ (when (:since params)        "AND stmt.id > :since")
---~ (when (:until params)        "AND stmt.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt_d.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt_d.registration = :registration")
 --~ (when (:actor-ifi params) "AND stmt_d_actor.actor_ifi = :actor-ifi")
