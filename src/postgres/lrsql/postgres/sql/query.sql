@@ -54,7 +54,7 @@ FROM xapi_statement stmt
 --~ (when (:activity-iri params) ":frag:activs-join-frag")
 INNER JOIN statement_to_statement sts ON stmt.statement_id = sts.descendant_id
 INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
-WHERE TRUE
+WHERE stmt_a.is_voided = FALSE
 /*~ (when (:from params)
      (if (:ascending? params) "AND stmt_a.id >= :from" "AND stmt_a.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt_a.id > :since")
