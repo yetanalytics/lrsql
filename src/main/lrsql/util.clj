@@ -56,7 +56,12 @@
   "Read `config/config.edn` with the given value of `profile`. Valid
    profiles are `:test-[db-type]` and `:prod-[db-type]`."
   [profile]
-  (aero/read-config (io/resource "config.edn") {:profile profile}))
+  (let [{:keys [database connection lrs webserver]}
+        (aero/read-config (io/resource "config.edn")
+                          {:profile profile})]
+    {:connection (assoc connection :database database)
+     :lrs        lrs
+     :webserver  webserver}))
 
 (def read-config
   "Memoized version of `read-config*`."
