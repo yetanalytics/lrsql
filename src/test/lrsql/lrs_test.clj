@@ -224,46 +224,70 @@
                  (update-in [:statement-result :statements]
                             (partial map remove-props))))))
     (testing "querying with limits"
-      ;; Descending
-      (is (= {:statement-result
-              {:statements [stmt-4 stmt-3]
-               :more "/xapi/statements?limit=2&from="}
-              :attachments      []}
-             (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props))
-                 (update-in [:statement-result :more]
-                            #(->> % (re-matches #"(.*from=).*") second)))))
-      (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
-              :attachments      []}
-             (let [more
-                   (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
-                       (get-in [:statement-result :more]))
-                   from
-                   (->> more (re-matches #".*from=(.*)") second)]
-               (-> (lrsp/-get-statements lrs {} {:limit 2 :from from} #{})
+      (testing "(descending)"
+        (is (= {:statement-result
+                {:statements [stmt-4 stmt-3]
+                 :more "/xapi/statements?limit=2&from="}
+                :attachments      []}
+               (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
                    (update-in [:statement-result :statements]
-                              (partial map remove-props))))))
-      ;; Ascending
-      (is (= {:statement-result
-              {:statements [stmt-1 stmt-2]
-               :more "/xapi/statements?limit=2&ascending=true&from="}
-              :attachments      []}
-             (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props))
-                 (update-in [:statement-result :more]
-                            #(->> % (re-matches #"(.*from=).*") second)))))
-      (is (= {:statement-result {:statements [stmt-3 stmt-4] :more ""}
-              :attachments      []}
-             (let [more
-                   (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
-                       (get-in [:statement-result :more]))
-                   from
-                   (->> more (re-matches #".*from=(.*)") second)]
-               (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true :from from} #{})
+                              (partial map remove-props))
+                   (update-in [:statement-result :more]
+                              #(->> % (re-matches #"(.*from=).*") second)))))
+        (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
+                :attachments      []}
+               (let [more
+                     (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
+                         (get-in [:statement-result :more]))
+                     from
+                     (->> more (re-matches #".*from=(.*)") second)]
+                 (-> (lrsp/-get-statements lrs {} {:limit 2 :from from} #{})
+                     (update-in [:statement-result :statements]
+                                (partial map remove-props)))))))
+      (testing "(ascending)"
+        (is (= {:statement-result
+                {:statements [stmt-1 stmt-2]
+                 :more "/xapi/statements?limit=2&ascending=true&from="}
+                :attachments []}
+               (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
                    (update-in [:statement-result :statements]
-                              (partial map remove-props)))))))
+                              (partial map remove-props))
+                   (update-in [:statement-result :more]
+                              #(->> % (re-matches #"(.*from=).*") second)))))
+        (is (= {:statement-result {:statements [stmt-3 stmt-4] :more ""}
+                :attachments      []}
+               (let [more
+                     (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
+                         (get-in [:statement-result :more]))
+                     from
+                     (->> more (re-matches #".*from=(.*)") second)]
+                 (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true :from from} #{})
+                     (update-in [:statement-result :statements]
+                                (partial map remove-props)))))))
+      (testing "(with actor)"
+        (let [params {:limit 1
+                      :agent {"name" "Sample Agent 1"
+                              "mbox" "mailto:sample.agent@example.com"}
+                      :related_agents true}]
+          (is (= {:statement-result
+                  {:statements [stmt-3]
+                   :more "/xapi/statements?limit=1&agent=%7B%22name%22%3A%22Sample+Agent+1%22%2C%22mbox%22%3A%22mailto%3Asample.agent%40example.com%22%7D&related_agents=true&from="}
+                  :attachments []}
+                 (-> (lrsp/-get-statements lrs {} params #{})
+                     (update-in [:statement-result :statements]
+                                (partial map remove-props))
+                     (update-in [:statement-result :more]
+                                #(->> % (re-matches #"(.*from=).*") second)))))
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (let [more
+                       (-> (lrsp/-get-statements lrs {} params #{})
+                           (get-in [:statement-result :more]))
+                       from
+                       (->> more (re-matches #".*from=(.*)") second)]
+                   (-> (lrsp/-get-statements lrs {} (assoc params :from from) #{})
+                       (update-in [:statement-result :statements]
+                                  (partial map remove-props)))))))))
     (testing "querying with attachments"
       (is (= {:statement-result {:statements [stmt-4] :more ""}
               :attachments      [(update stmt-4-attach :content #(String. %))]}
