@@ -36,7 +36,8 @@ FROM xapi_statement stmt
 --~ (when (:actor-ifi params)    ":frag:actors-join-frag")
 --~ (when (:activity-iri params) ":frag:activs-join-frag")
 WHERE stmt.is_voided = FALSE
---~ (when (:from params)         "AND stmt.id >= :from")
+/*~ (when (:from params)
+     (if (:ascending? params) "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt.id > :since")
 --~ (when (:until params)        "AND stmt.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
@@ -54,7 +55,8 @@ FROM xapi_statement stmt
 INNER JOIN statement_to_statement sts ON stmt.statement_id = sts.descendant_id
 INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
 WHERE TRUE
---~ (when (:from params)         "AND stmt_a.id >= :from")
+/*~ (when (:from params)
+     (if (:ascending? params) "AND stmt_a.id >= :from" "AND stmt_a.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt_a.id > :since")
 --~ (when (:until params)        "AND stmt_a.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
