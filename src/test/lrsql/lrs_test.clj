@@ -107,6 +107,7 @@
         id-3  (get stmt-3 "id")
         id-4  (get stmt-4 "id")
         ts    "3000-01-01T01:00:00Z" ; Date far into the future
+        agt-0 (-> stmt-0 (get "actor"))
         agt-1 (-> stmt-1 (get "actor") (dissoc "name"))
         grp-4 (-> stmt-4 (get "actor") (dissoc "name"))
         mem-4 (-> stmt-4 (get-in ["actor" "member" 0]) (dissoc "name"))
@@ -189,69 +190,115 @@
              (-> (lrsp/-get-statements lrs {} {:agent mem-4} #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
-      ;; XAPI-00162 - stmt-2 shows up because it refers to a statement that
-      ;; meets the query criteria, even though that statement is void
-      (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
-              :attachments      []}
-             (-> (lrsp/-get-statements lrs {} {:verb vrb-1} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
-              :attachments      []}
-             (-> (lrsp/-get-statements lrs {} {:activity act-1} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
-              :attachments      []}
-             (-> (lrsp/-get-statements lrs {} {:activity act-1 :related_activities true} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
-      ;; Query with both activities and agents
-      (is (= {:statement-result {:statements [stmt-1] :more ""}
-              :attachments      []}
-             (-> (lrsp/-get-statements lrs {} {:activity act-1 :agent agt-1} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
-              :attachments      []}
-             (-> (lrsp/-get-statements lrs
-                                       {}
-                                       {:activity           act-1
-                                        :agent              agt-1
-                                        :related_activities true
-                                        :related_agents     true}
-                                       #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props))))))
-    (testing "querying with limits"
-      (is (= {:statement-result
-              {:statements [stmt-4 stmt-3]
-               :more "/xapi/statements?limit=2&from="}
-              :attachments      []}
-             (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props))
-                 (update-in [:statement-result :more]
-                            #(->> % (re-matches #"(.*from=).*") second)))))
-      (is (= {:statement-result
-              {:statements [stmt-1 stmt-2]
-               :more "/xapi/statements?limit=2&ascending=true&from="}
-              :attachments      []}
-             (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props))
-                 (update-in [:statement-result :more]
-                            #(->> % (re-matches #"(.*from=).*") second)))))
-      (is (= {:statement-result {:statements [stmt-3 stmt-4] :more ""}
-              :attachments      []}
-             (let [more
-                   (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
-                       (get-in [:statement-result :more]))
-                   from
-                   (->> more (re-matches #".*from=(.*)") second)]
-               (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true :from from} #{})
+      
+      ;; XAPI-00162 - stmt-2 shows up because it refers to a statement, stmt-0,
+      ;; that meets the query criteria, even though stmt-0 was voided.
+      (testing "apply voiding"
+        ;; stmt-0 itself cannot be directly queried, since it was voided.
+        ;; However, stmt-2 is returned since it was not voided.
+        (is (= {:statement-result {:statements [stmt-2] :more ""}
+                :attachments      []}
+               (-> (lrsp/-get-statements lrs {} {:agent agt-0} #{})
+                   (update-in [:statement-result :statements]
+                              (partial map remove-props)))))
+        (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
+                :attachments      []}
+               (-> (lrsp/-get-statements lrs {} {:verb vrb-1} #{})
+                   (update-in [:statement-result :statements]
+                              (partial map remove-props)))))
+        (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
+                :attachments      []}
+               (-> (lrsp/-get-statements lrs {} {:activity act-1} #{})
+                   (update-in [:statement-result :statements]
+                              (partial map remove-props)))))
+        (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
+                :attachments      []}
+               (-> (lrsp/-get-statements lrs {} {:activity act-1 :related_activities true} #{})
+                   (update-in [:statement-result :statements]
+                              (partial map remove-props))))))
+
+      (testing "with both activities and agents"
+        (is (= {:statement-result {:statements [stmt-1] :more ""}
+                :attachments      []}
+               (-> (lrsp/-get-statements lrs {} {:activity act-1 :agent agt-1} #{})
+                   (update-in [:statement-result :statements]
+                              (partial map remove-props)))))
+        (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
+                :attachments      []}
+               (-> (lrsp/-get-statements lrs
+                                         {}
+                                         {:activity           act-1
+                                          :agent              agt-1
+                                          :related_activities true
+                                          :related_agents     true}
+                                         #{})
                    (update-in [:statement-result :statements]
                               (partial map remove-props)))))))
+    (testing "querying with limits"
+      (testing "(descending)"
+        (is (= {:statement-result
+                {:statements [stmt-4 stmt-3]
+                 :more "/xapi/statements?limit=2&from="}
+                :attachments      []}
+               (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
+                   (update-in [:statement-result :statements]
+                              (partial map remove-props))
+                   (update-in [:statement-result :more]
+                              #(->> % (re-matches #"(.*from=).*") second)))))
+        (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
+                :attachments      []}
+               (let [more
+                     (-> (lrsp/-get-statements lrs {} {:limit 2} #{})
+                         (get-in [:statement-result :more]))
+                     from
+                     (->> more (re-matches #".*from=(.*)") second)]
+                 (-> (lrsp/-get-statements lrs {} {:limit 2 :from from} #{})
+                     (update-in [:statement-result :statements]
+                                (partial map remove-props)))))))
+      (testing "(ascending)"
+        (is (= {:statement-result
+                {:statements [stmt-1 stmt-2]
+                 :more "/xapi/statements?limit=2&ascending=true&from="}
+                :attachments []}
+               (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
+                   (update-in [:statement-result :statements]
+                              (partial map remove-props))
+                   (update-in [:statement-result :more]
+                              #(->> % (re-matches #"(.*from=).*") second)))))
+        (is (= {:statement-result {:statements [stmt-3 stmt-4] :more ""}
+                :attachments      []}
+               (let [more
+                     (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true} #{})
+                         (get-in [:statement-result :more]))
+                     from
+                     (->> more (re-matches #".*from=(.*)") second)]
+                 (-> (lrsp/-get-statements lrs {} {:limit 2 :ascending true :from from} #{})
+                     (update-in [:statement-result :statements]
+                                (partial map remove-props)))))))
+      (testing "(with actor)"
+        (let [params {:limit 1
+                      :agent {"name" "Sample Agent 1"
+                              "mbox" "mailto:sample.agent@example.com"}
+                      :related_agents true}]
+          (is (= {:statement-result
+                  {:statements [stmt-3]
+                   :more "/xapi/statements?limit=1&agent=%7B%22name%22%3A%22Sample+Agent+1%22%2C%22mbox%22%3A%22mailto%3Asample.agent%40example.com%22%7D&related_agents=true&from="}
+                  :attachments []}
+                 (-> (lrsp/-get-statements lrs {} params #{})
+                     (update-in [:statement-result :statements]
+                                (partial map remove-props))
+                     (update-in [:statement-result :more]
+                                #(->> % (re-matches #"(.*from=).*") second)))))
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (let [more
+                       (-> (lrsp/-get-statements lrs {} params #{})
+                           (get-in [:statement-result :more]))
+                       from
+                       (->> more (re-matches #".*from=(.*)") second)]
+                   (-> (lrsp/-get-statements lrs {} (assoc params :from from) #{})
+                       (update-in [:statement-result :statements]
+                                  (partial map remove-props)))))))))
     (testing "querying with attachments"
       (is (= {:statement-result {:statements [stmt-4] :more ""}
               :attachments      [(update stmt-4-attach :content #(String. %))]}
@@ -317,6 +364,15 @@
    "object" {"objectType" "StatementRef"
              "id" "00000000-0000-4000-0000-000000000002"}})
 
+(def stmt-4'
+  {"id"     "00000000-0000-4000-0000-000000000004"
+   "actor"  {"mbox"       "mailto:sample3@example.com"
+             "objectType" "Agent"}
+   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/voided"
+             "display" {"en-US" "voided"}}
+   "object" {"objectType" "StatementRef"
+             "id" "00000000-0000-4000-0000-000000000003"}})
+
 (deftest test-statement-ref-fns
   (let [sys  (support/test-system)
         sys' (component/start sys)
@@ -329,56 +385,99 @@
     (testing "statement queries"
       (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs
-                                       {}
-                                       {:agent {"mbox" "mailto:sample.0@example.com"
-                                                "objectType" "Agent"}}
-                                       #{})
+             (-> (lrsp/-get-statements
+                  lrs
+                  {}
+                  {:agent {"mbox" "mailto:sample.0@example.com"
+                           "objectType" "Agent"}}
+                  #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
       (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs
-                                       {}
-                                       {:activity "http://www.example.com/tincan/activities/multipart"}
-                                       #{})
+             (-> (lrsp/-get-statements
+                  lrs
+                  {}
+                  {:activity "http://www.example.com/tincan/activities/multipart"}
+                  #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
       (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs
-                                       {}
-                                       {:verb "http://adlnet.gov/expapi/verbs/answered"}
-                                       #{})
+             (-> (lrsp/-get-statements
+                  lrs
+                  {}
+                  {:verb "http://adlnet.gov/expapi/verbs/answered"}
+                  #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
       (is (= {:statement-result {:statements [] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs
-                                       {}
-                                       {:since "3000-01-01T01:00:00Z"}
-                                       #{})
+             (-> (lrsp/-get-statements
+                  lrs
+                  {}
+                  {:since "3000-01-01T01:00:00Z"}
+                  #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
       (is (= {:statement-result {:statements [stmt-1' stmt-2' stmt-3'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs
-                                       {}
-                                       {:until     "3000-01-01T01:00:00Z"
-                                        :ascending true}
-                                       #{})
+             (-> (lrsp/-get-statements
+                  lrs
+                  {}
+                  {:until     "3000-01-01T01:00:00Z"
+                   :ascending true}
+                  #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props)))))
       (is (= {:statement-result {:statements [stmt-3']}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs
-                                       {}
-                                       {:activity "http://www.example.com/tincan/activities/multipart"
-                                        :limit    1}
-                                       #{})
+             (-> (lrsp/-get-statements
+                  lrs
+                  {}
+                  {:activity "http://www.example.com/tincan/activities/multipart"
+                   :limit    1}
+                  #{})
                  (update-in [:statement-result :statements]
                             (partial map remove-props))
                  (update :statement-result dissoc :more)))))
+    (testing "don't return voided statement refs"
+      (is (= {:statement-ids ["00000000-0000-4000-0000-000000000004"]}
+             (lrsp/-store-statements lrs {} [stmt-4'] [])))
+      ;; stmt-4' is returned because it targets stmt-3', whose voided status
+      ;; does not matter. On the other hand, stmt-3' itself is not returned
+      ;; because it was voided.
+      (is (= {:statement-result {:statements [stmt-4'] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements
+                  lrs
+                  {}
+                  {:agent {"mbox" "mailto:sample.2@example.com"}}
+                  #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      ;; stmt-2' is returned directly (not as a stmt ref target)
+      ;; since it is not voided.
+      (is (= {:statement-result {:statements [stmt-4' stmt-2'] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements
+                  lrs
+                  {}
+                  {:agent {"mbox" "mailto:sample.1@example.com"}}
+                  #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props)))))
+      ;; stmt-1' is returned directly (not as a stmt ref target).
+      ;; stmt-2' is returned since it refers to stmt-1' and is not voided
+      (is (= {:statement-result {:statements [stmt-4' stmt-2' stmt-1'] :more ""}
+              :attachments      []}
+             (-> (lrsp/-get-statements
+                  lrs
+                  {}
+                  {:agent {"mbox" "mailto:sample.0@example.com"}}
+                  #{})
+                 (update-in [:statement-result :statements]
+                            (partial map remove-props))))))
     (component/stop sys')))
 
 (def state-id-params

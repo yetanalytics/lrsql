@@ -4,23 +4,18 @@
             [lrsql.system :as system]
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.admin.protocol :as adp]))
+            [lrsql.admin.protocol :as adp]
+            [lrsql.util :as u]))
 
 (comment
-  (require 
-   '[lrsql.h2.record :as ir]
-   '[lrsql.lrs-test :refer [stmt-4]])
-  
-  (def sys (system/system (ir/map->H2Interface {}) :test-h2-mem))
+  (require
+   '[lrsql.h2.record :as r])
+
+  (def sys (system/system (r/map->H2Backend {}) :test-sqlite))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
-
-
-  (lrsp/-get-statements lrs {} {:statementId (get stmt-4 "id")} {})
-
-  (lrsp/-store-statements lrs {} [stmt-4] [])
 
   (do
     (doseq [cmd [;; Drop credentials table
@@ -41,5 +36,4 @@
                  "DROP TABLE IF EXISTS xapi_statement"]]
       (jdbc/execute! ds [cmd]))
 
-    (component/stop sys'))
-  )
+    (component/stop sys')))
