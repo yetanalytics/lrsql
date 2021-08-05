@@ -56,7 +56,7 @@ INNER JOIN statement_to_statement sts ON stmt.statement_id = sts.descendant_id
 INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
 WHERE TRUE
 /*~ (when (:from params)
-     (if (:ascending? params) "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
+     (if (:ascending? params) "AND stmt_a.id >= :from" "AND stmt_a.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt_a.id > :since")
 --~ (when (:until params)        "AND stmt_a.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
