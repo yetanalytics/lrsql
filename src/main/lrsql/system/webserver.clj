@@ -7,8 +7,7 @@
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
-            [lrsql.util.cert :as cu])
-  (:import [java.security KeyPair]))
+            [lrsql.util.cert :as cu]))
 
 (defn- service-map
   "Create a new service map for the webserver."
