@@ -20,7 +20,7 @@ config/*.key
 config/*.pem
 results/
 Test.java
-
+.DS_Store
 # VSCode
 .calva/
 .lsp/

@@ -15,50 +15,50 @@
                    :db-port 5432}
    ;; Production
    :prod-h2-mem   #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2:mem"]}
-                          #include "prod/database.edn"]
+                          #include "prod/default/database.edn"]
    :prod-h2       #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2"]
                            :db-host #or [#env LRSQL_DB_HOST "localhost"]
                            :db-port #or [#env LRSQL_DB_PORT 9001]}
-                          #include "prod/database.edn"]
+                          #include "prod/default/database.edn"]
    :prod-sqlite   #merge [{:db-type #or [#env LRSQL_DB_TYPE "sqlite"]}
-                          #include "prod/database.edn"]
+                          #include "prod/default/database.edn"]
    :prod-postgres #merge [{:db-type #or [#env LRSQL_DB_TYPE "postgres"]
                            :db-host #or [#env LRSQL_DB_HOST "localhost"]
                            :db-port #or [#env LRSQL_DB_PORT 5432]}
-                          #include "prod/database.edn"]}
+                          #include "prod/default/database.edn"]}
  :connection
  #profile
   {;; Test/Dev
    :test-h2-mem   {}
    :test-h2       {}
-   :test-sqlite   {}
+   :test-sqlite   #include "test/sqlite/connection.edn"
    :test-postgres {}
    ;; Production
-   :prod-h2-mem   #include "prod/connection.edn"
-   :prod-h2       #include "prod/connection.edn"
-   :prod-sqlite   #include "prod/connection.edn"
-   :prod-postgres #include "prod/connection.edn"}
+   :prod-h2-mem   #include "prod/default/connection.edn"
+   :prod-h2       #include "prod/default/connection.edn"
+   :prod-sqlite   #include "prod/sqlite/connection.edn"
+   :prod-postgres #include "prod/default/connection.edn"}
  :lrs
  #profile
   {;; Test/Dev
-   :test-h2-mem   #include "test/lrs.edn"
-   :test-h2       #include "test/lrs.edn"
-   :test-sqlite   #include "test/lrs.edn"
-   :test-postgres #include "test/lrs.edn"
+   :test-h2-mem   #include "test/default/lrs.edn"
+   :test-h2       #include "test/default/lrs.edn"
+   :test-sqlite   #include "test/default/lrs.edn"
+   :test-postgres #include "test/default/lrs.edn"
    ;; Production
-   :prod-h2-mem   #include "prod/lrs.edn"
-   :prod-h2       #include "prod/lrs.edn"
-   :prod-sqlite   #include "prod/lrs.edn"
-   :prod-postgres #include "prod/lrs.edn"}
+   :prod-h2-mem   #include "prod/default/lrs.edn"
+   :prod-h2       #include "prod/default/lrs.edn"
+   :prod-sqlite   #include "prod/default/lrs.edn"
+   :prod-postgres #include "prod/default/lrs.edn"}
  :webserver
  #profile
   {;; Test/Dev
-   :test-h2-mem   #include "test/webserver.edn"
-   :test-h2       #include "test/webserver.edn"
-   :test-sqlite   #include "test/webserver.edn"
-   :test-postgres #include "test/webserver.edn"
+   :test-h2-mem   #include "test/default/webserver.edn"
+   :test-h2       #include "test/default/webserver.edn"
+   :test-sqlite   #include "test/default/webserver.edn"
+   :test-postgres #include "test/default/webserver.edn"
    ;; Production
-   :prod-h2-mem   #include "prod/webserver.edn"
-   :prod-h2       #include "prod/webserver.edn"
-   :prod-sqlite   #include "prod/webserver.edn"
-   :prod-postgres #include "prod/webserver.edn"}}
+   :prod-h2-mem   #include "prod/default/webserver.edn"
+   :prod-h2       #include "prod/default/webserver.edn"
+   :prod-sqlite   #include "prod/default/webserver.edn"
+   :prod-postgres #include "prod/default/webserver.edn"}}
