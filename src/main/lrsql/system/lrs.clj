@@ -94,12 +94,12 @@
     [lrs _auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
+          prefix (:url-prefix config)
           inputs (->> params
-                      (stmt-util/add-more-url-prefix config)
                       (stmt-util/ensure-default-max-limit config)
                       stmt-input/query-statement-input)]
       (jdbc/with-transaction [tx conn]
-        (stmt-q/query-statements backend tx inputs ltags))))
+        (stmt-q/query-statements backend tx inputs ltags prefix))))
   (-consistent-through
     [_lrs _ctx _auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want

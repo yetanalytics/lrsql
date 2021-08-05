@@ -1,0 +1,2 @@
+{:url-prefix     #or [#env LRSQL_URL_PREFIX "/xapi"]
+ :authority-body #or [#env LRSQL_AUTHORITY_BODY "https://localhost"]}

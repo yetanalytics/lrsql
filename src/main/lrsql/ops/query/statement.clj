@@ -44,7 +44,7 @@
 
 (defn- query-many-statements
   "Query potentially multiple statements from the DB."
-  [bk tx input ltags]
+  [bk tx input ltags prefix]
   (let [{:keys [format limit attachments? query-params]} input
         input'        (if limit (update input :limit inc) input)
         query-results (bp/-query-statements bk tx input')
@@ -68,7 +68,7 @@
     {:statement-result
      {:statements (vec stmt-results)
       :more       (if ?next-cursor
-                    (us/make-more-url query-params ?next-cursor)
+                    (us/make-more-url query-params prefix ?next-cursor)
                     "")}
      :attachments att-results}))
 
@@ -76,7 +76,8 @@
   :args (s/cat :bk ss/statement-backend?
                :tx transaction?
                :input ss/statement-query-spec
-               :ltags ss/lang-tags-spec)
+               :ltags ss/lang-tags-spec
+               :prefix string?)
   :ret ::lrsp/get-statements-ret)
 
 (defn query-statements
@@ -87,11 +88,11 @@
    language tag-value pairs are returned when `:format` is `:canonical`.
    Note that the `:more` property of `:statement-result` returned is a
    statement PK, NOT the full URL."
-  [bk tx input ltags]
+  [bk tx input ltags prefix]
   (let [{?stmt-id :statement-id} input]
     (if ?stmt-id
       (query-one-statement bk tx input ltags)
-      (query-many-statements bk tx input ltags))))
+      (query-many-statements bk tx input ltags prefix))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Descendant Querying

@@ -18,6 +18,7 @@
                 http-host
                 http-port
                 ssl-port
+                url-prefix
                 key-password]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway}
@@ -40,6 +41,7 @@
      ::http/host          http-host
      ::http/port          (when http? http-port) ; nil = no HTTP
      ::http/join?         false
+     ::i/url-prefix       url-prefix
      ::http/allowed-origins
      {:creds           true
       :allowed-origins (constantly true)}
