@@ -68,7 +68,7 @@ FROM xapi_statement stmt_d
 --~ (when (:activity-iri params) "INNER JOIN activs stmt_d_activs ON stmt_d.statement_id = stmt_d_activs.statement_id")
 INNER JOIN statement_to_statement sts ON stmt_d.statement_id = sts.descendant_id
 INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
-WHERE 1
+WHERE stmt_a.is_voided = FALSE
 /*~ (when (:from params)
      (if (:ascending? params) "AND stmt_a.id >= :from" "AND stmt_a.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt_a.id > :since")
