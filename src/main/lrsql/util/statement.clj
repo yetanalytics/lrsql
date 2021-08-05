@@ -200,9 +200,11 @@
   "Forms the `more` URL value from `query-params` and the Statement ID
    `next-cursor` which points to the first Statement of the next page."
   [query-params next-cursor]
-  (let [{:keys [more-url-prefix]} query-params]
-    (str more-url-prefix
+  (let [{?agent :agent ?prefix :more-url-prefix} query-params]
+    (str ?prefix
          "/xapi/statements?"
-         (form-encode (-> query-params
-                          (assoc :from next-cursor)
-                          (dissoc :more-url-prefix))))))
+         (form-encode
+          (cond-> query-params
+            true   (assoc :from next-cursor)
+            true   (dissoc :more-url-prefix)
+            ?agent (assoc :agent (String. (u/write-json ?agent))))))))

@@ -1,0 +1,8 @@
+[
+    {},
+    {"activity": "https://xapinet.org/xapi/yet/calibration/v1/concepts#activity-2",
+     "related_activities": "true"},
+    {"agent": "{\"name\":\"Penny Mayer\",\"mbox\":\"mailto:1@yetanalytics.com\"}"},
+    {"registration": "491cbeb0-8f93-40c8-9d4f-1b34a4708561"},
+    {"since" : "2021-08-03T15:23:50.078000000Z"}
+]
