@@ -64,7 +64,7 @@
     (let [conn
           (lrs-conn lrs)
           auth-url
-          (-> lrs :config :authority-body)
+          (-> lrs :config :authority-url)
           stmts
           (map (partial stmt-util/prepare-statement auth-url)
                statements)
