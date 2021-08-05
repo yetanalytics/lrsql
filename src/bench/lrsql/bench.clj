@@ -58,7 +58,7 @@
 ;; Input Reading
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn read-input
+(defn read-insert-input
   [input-path]
   (-> (sim-input/from-location :input :json input-path)
       (assoc-in [:parameters :seed] (rand-int 1000000000))))
@@ -106,7 +106,7 @@
 
 (defn store-statements
   [endpoint input-uri size batch-size user pass sref-type]
-  (let [inputs  (read-input input-uri)
+  (let [inputs  (read-insert-input input-uri)
         stmts   (generate-statements inputs size sref-type)]
     (loop [batches (partition-all batch-size stmts)]
       (if-some [batch (first batches)]
