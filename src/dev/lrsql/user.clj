@@ -9,34 +9,13 @@
 
 (comment
   (require
-   '[lrsql.postgres.record :as ir]
-   '[lrsql.lrs-test :refer :all])
+   '[lrsql.h2.record :as r])
 
-  (def sys (system/system (ir/map->PostgresBackend {}) :test-postgres))
+  (def sys (system/system (r/map->H2Backend {}) :test-sqlite))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
-
-  (let [stmts (-> (lrsp/-get-statements lrs {} {} {})
-                  :statement-result
-                  :statements)
-        stmt-refs
-        (mapv (fn [stmt]
-                {"id"     (u/uuid->str (java.util.UUID/randomUUID))
-                 "actor"  {"mbox" "mailto:foo@example.org"}
-                 "verb"   {"id" "http://example.org/reference"}
-                 "object" {"objectType" "StatementRef"
-                           "id"         (get stmt "id")}})
-              stmts)]
-    (lrsp/-store-statements lrs {} stmt-refs []))
-
-  (dotimes [_ 1000]
-    (lrsp/-get-statements lrs {} {:verb "https://w3id.org/xapi/video/verbs/seeked"} #{})
-    (lrsp/-get-statements lrs {} {:agent {"mbox" "mailto:steve@example.org"}} #{})
-    (lrsp/-get-statements lrs {} {:activity "https://books.allogy.com/v1/tenant/8/media/cc489c25-8215-4e2d-977d-8dbee098b521"} #{})
-    (lrsp/-get-statements lrs {} {:agent {"mbox" "mailto:steve@example.org"}
-                                  :activity "https://books.allogy.com/v1/tenant/8/media/cc489c25-8215-4e2d-977d-8dbee098b521"} #{}))
 
   (do
     (doseq [cmd [;; Drop credentials table
