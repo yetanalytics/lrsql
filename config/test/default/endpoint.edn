@@ -1,2 +1,2 @@
-{:url-prefix     "/xapi"
- :authority-body "https://localhost"}
+{:url-prefix    "/xapi"
+ :authority-url "https://localhost"}
