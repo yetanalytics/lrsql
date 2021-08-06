@@ -52,7 +52,7 @@
      :cred-id       #uuid "41ec697d-802e-4f3e-aad5-e5fc9fb55f35"
      :account-id    #uuid "3aa61cf9-a697-46f1-b60d-62a2c78ab33b"})))
 
-(s/fdef make-authority-fn
+(s/fdef make-authority-fn*
   :args (s/cat :template-path (s/nilable string?) :threshold (s/? pos-int?))
   :ret (s/fspec
         :args (s/cat :context-map ::context-map)
