@@ -1,0 +1,14 @@
+{# for template syntax see: https://github.com/yogthos/Selmer#templates
+ Variables
+ =================================================
+ authority-url : LRSQL_AUTHORITY_URL env var value
+ cred-id       : LRS Credential Pair ID (UUID)
+ account-id    : LRS Admin Account ID (UUID)
+#}
+{
+    "account": {
+        "homePage":"{{authority-url}}",
+        "name":"{{cred-id}}"
+    },
+    "objectType": "Agent"
+}
