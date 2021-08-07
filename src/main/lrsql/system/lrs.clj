@@ -61,11 +61,13 @@
 
   lrsp/StatementsResource
   (-store-statements
-    [lrs _auth-identity statements attachments]
+    [lrs auth-identity statements attachments]
     (let [conn
           (lrs-conn lrs)
+          authority
+          (-> auth-identity :agent)
           stmts
-          (map stmt-util/prepare-statement
+          (map (partial stmt-util/prepare-statement authority)
                statements)
           stmt-inputs
           (-> (map stmt-input/insert-statement-input stmts)

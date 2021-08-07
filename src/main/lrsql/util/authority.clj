@@ -85,6 +85,7 @@
            :account-id    #uuid "3aa61cf9-a697-46f1-b60d-62a2c78ab33b"}))
 
   ;; use arbitrary by fs path
+
   (let [a-fn (make-authority-fn "config/authority.json.template")]
     (a-fn {:authority-url "https://lrs.example.com"
            :cred-id       #uuid "41ec697d-802e-4f3e-aad5-e5fc9fb55f35"
@@ -100,8 +101,8 @@
   ;; given context map (input), until old entries are evicted when `threshold`
   ;; is reached
   (time
-   (dotimes [_ 1]
-     (let [a-fn (make-authority-fn "config/authority.json.template")]
+   (dotimes [_ 1000]
+     (let [a-fn (make-authority-fn "config/authority.json.template" 1)]
        (a-fn sample-authority-fn-input)
        (a-fn {:authority-url "https://lrs.example.com"
               :cred-id       #uuid "41ec697d-802e-4f3e-aad5-e5fc9fb55f35"
