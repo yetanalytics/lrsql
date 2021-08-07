@@ -14,12 +14,12 @@
   "When a user enters a variable and it is not in our context map, throw!
    Used by selmer when context map validation fails."
   [tag context-map]
-  (throw (ex-info
-          (format "\"%s\" is not a valid variable for the authority template."
-                  (:tag-value tag))
-          {:type        ::unknown-variable
-           :tag         tag
-           :context-map context-map})))
+  (throw
+   (ex-info (format "\"%s\" is not a valid variable for the authority template."
+                    (:tag-value tag))
+            {:type        ::unknown-variable
+             :tag         tag
+             :context-map context-map})))
 
 (def sample-authority-fn-input
   {:authority-url "https://lrs.example.com"
@@ -48,14 +48,18 @@
 
 (defn make-authority-fn*
   "Returns a function that will render the template to data, using the
-   template read at `template-path`. Not memoized."
-  [template-path]
+   template read at `template-path`. `make-authority-fn*` itself is not
+   memoized, but it returns a memoized function, with `threshold` setting
+   how many authorities will be cached before least recently used (LRU)
+   clearing."
+  [template-path threshold]
   (let [^File f (io/file template-path)]
     (if (and f (.exists f))
       (let [template     (selm-parser/parse* f)
             authority-fn (make-authority-fn** template)]
         (if (valid-authority-fn? authority-fn)
-          authority-fn
+          (mem/lru authority-fn
+                   :lru/threshold (or threshold 512))
           (throw
            (ex-info "Authority template does not produce a valid xAPI Agent"
                     {:type          ::invalid-json
@@ -65,15 +69,12 @@
                 {:type          ::no-authority-template
                  :template-path template-path})))))
 
-(defn make-authority-fn
-  "Returns a memoized function that will render the template to data.
-   Will use the template at the filesystem path `template-path`; throws an
-   exception if the template is not found or if it is malformed.
-   The `threshold` optional arg controls the how many authorities will be
-   cached before least-recently used (LRU) clearing."
-  [template-path & [threshold]]
-  (mem/lru (make-authority-fn* template-path)
-           :lru/threshold (or threshold 512)))
+(def make-authority-fn
+  "Memoized version of `make-authority-fn*`. This should be called in order
+   to avoid unnecessarily reading and parsing the file at `template-path`."
+  (mem/memo
+   (fn [template-path & [threshold]]
+     (make-authority-fn* template-path threshold))))
 
 (comment
 
@@ -98,4 +99,11 @@
   ;; to a suitable component. It will only ever render the agent once for a
   ;; given context map (input), until old entries are evicted when `threshold`
   ;; is reached
+  (time
+   (dotimes [_ 1]
+     (let [a-fn (make-authority-fn "config/authority.json.template")]
+       (a-fn sample-authority-fn-input)
+       (a-fn {:authority-url "https://lrs.example.com"
+              :cred-id       #uuid "41ec697d-802e-4f3e-aad5-e5fc9fb55f35"
+              :account-id    #uuid "3aa61cf9-a697-46f1-b60d-62a2c78ab33b"}))))
   )
