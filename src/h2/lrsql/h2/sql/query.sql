@@ -237,7 +237,7 @@ WHERE account_id = :account-id
 -- :command :query
 -- :result :one
 -- :doc Query the credential and account IDs associated with `:api-key` and `:secret-key`.
-SELECT id AS credential_id, account_id FROM lrs_credential
+SELECT id AS cred_id, account_id FROM lrs_credential
 WHERE api_key = :api-key
 AND secret_key = :secret-key
 

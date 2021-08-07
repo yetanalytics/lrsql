@@ -13,7 +13,7 @@
   :ret (s/nilable (s/keys :req-un [::as/ids ::as/scopes])))
 
 (defn- conform-credential-ids
-  [{cred-id :credential_id account-id :account_id}]
+  [{cred-id :cred_id account-id :account_id}]
   {:cred-id    cred-id
    :account-id account-id})
 
@@ -38,10 +38,11 @@
 (defn query-credential-scopes
   "Like `query-credential-scopes*` except that its return value conforms
    to the expectations of the lrs lib. In particular, returns a result
-   map containins the scope and auth key map on success. If the credentials
-   are not found, return a keyword to indicate that the webserver will
-   return 401 Forbidden. In addition to required properties, the return
-   map contains an additional `:ids` key."
+   map that contains the `:scope` `:auth`, and `:agent` properties. The
+   `:agent` property can then be set as the Statement authority.
+   
+   If the credentials are not found, return `:forbidden` to indicate that the
+   webserver will return 401 Forbidden."
   [bk tx input]
   (if-some [{:keys [ids scopes]} (query-credential-scopes* bk tx input)]
     ;; Credentials found - return result map
