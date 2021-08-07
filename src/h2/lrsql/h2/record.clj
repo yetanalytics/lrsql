@@ -150,8 +150,8 @@
     (delete-credential-scope! tx input))
   (-query-credentials [_ tx input]
     (query-credentials tx input))
-  (-query-credential-exists [_ tx input]
-    (query-credential-exists tx input))
+  (-query-credential-ids [_ tx input]
+    (query-credential-ids tx input))
   (-query-credential-scopes [_ tx input]
     (query-credential-scopes tx input))
 

@@ -217,10 +217,10 @@
     (let [conn  (lrs-conn this)
           input (auth-input/query-credential-scopes-input api-key secret-key)]
       (jdbc/with-transaction [tx conn]
-        (let [scopes'    (set (auth-q/query-credential-scopes*
-                               backend
-                               tx
-                               input))
+        (let [scopes'    (set (:scopes (auth-q/query-credential-scopes*
+                                        backend
+                                        tx
+                                        input)))
               add-scopes (cset/difference scopes scopes')
               del-scopes (cset/difference scopes' scopes)
               add-inputs (auth-input/insert-credential-scopes-input

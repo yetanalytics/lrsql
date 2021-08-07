@@ -3,6 +3,7 @@
             [clojure.spec.gen.alpha :as sgen]
             [xapi-schema.spec :as xs]
             [xapi-schema.spec.regex :as xsr]
+            [com.yetanalytics.lrs.auth :as lrs-auth]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :as c]
             [lrsql.spec.admin :as ads])
@@ -42,6 +43,7 @@
 (s/def ::api-key string?)
 (s/def ::secret-key string?)
 
+(s/def ::credential-id ::c/primary-key)
 (s/def ::account-id ::c/primary-key)
 
 (s/def ::scope
@@ -53,6 +55,10 @@
     "profile"
     "all/read"
     "all"})
+
+(s/def ::ids
+  (s/keys :req-un [::credential-id
+                   ::account-id]))
 
 (s/def ::scopes
   (s/coll-of ::scope :min-count 1 :gen-max 5 :distinct true))
@@ -123,3 +129,17 @@
 (def query-cred-scopes-input-spec
   (s/keys :req-un [::api-key
                    ::secret-key]))
+
+;; Recreate the specs in lrs.auth and lrs.protocol, but with the
+;; additional `::ids` spec
+
+;; FIXME: The `:unauthorized` pred should actually be `#{::unauthorized}`
+;; but that fails the conformance tests
+
+(s/def ::result
+  (s/or :authenticated (s/merge ::lrs-auth/identity
+                                (s/keys :req-un [::ids]))
+        :unauthorized #{::lrs-auth/forbidden}))
+
+(def query-cred-scopes-ret-spec
+  (s/keys :req-un [::result]))
