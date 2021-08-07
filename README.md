@@ -48,6 +48,8 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_STMT_MORE_URL_PREFIX` | A string that prefixes the fragment in the `more` URL returned by a multi-statement query. | Empty string |
 | `LRSQL_STMT_GET_DEFAULT` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` | 
 | `LRSQL_STMT_GET_MAX` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |
+| `LRSQL_AUTHORITY_TEMPLATE` | The filepath to the Statement authority template file, which describe how authorities are constructed during statement insertion. | `config/prod/template/authority.json.template`
+| `LRSQL_AUTHORITY_URL` | The URL that is set as the `authority-url` value when constructing an authority from a template. | `http://localhost`
 
 ### Webserver
 
