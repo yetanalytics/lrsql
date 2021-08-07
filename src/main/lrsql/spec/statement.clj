@@ -130,7 +130,7 @@
            #(contains? % :statement/authority))
     #(sgen/fmap (partial apply prepare-statement)
                 (s/gen (s/tuple ::xs/agent
-                                  ::xs/statement)))))
+                                ::xs/statement)))))
 
 (defn- update-stmt-input-attachments
   [[stmt-inputs attachments]]
