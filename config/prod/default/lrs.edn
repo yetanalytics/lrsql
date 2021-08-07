@@ -3,4 +3,4 @@
  :stmt-more-url-prefix #or [#env LRSQL_STMT_MORE_URL_PREFIX ""]
  :stmt-get-default     #long #or [#env LRSQL_STMT_GET_DEFAULT 50]
  :stmt-get-max         #long #or [#env LRSQL_STMT_GET_MAX 50]
- :authority-template   #or [#env LRSQL_AUTHORITY_TEMPLATE "authority.json.template"]}
+ :authority-template   #or [#env LRSQL_AUTHORITY_TEMPLATE "config/authority.json.template"]}
