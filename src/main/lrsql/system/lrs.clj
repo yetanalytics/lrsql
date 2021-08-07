@@ -25,6 +25,7 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
             [lrsql.util.auth      :as auth-util]
+            [lrsql.util.authority :as authority-util]
             [lrsql.util.statement :as stmt-util])
   (:import [java.time Instant]))
 
@@ -161,8 +162,15 @@
     [lrs ctx]
     (let [conn   (lrs-conn lrs)
           header (get-in ctx [:request :headers "authorization"])]
-      (if-some [key-pr (auth-util/header->key-pair header)]
-        (let [input (auth-input/query-credential-scopes-input key-pr)]
+      (if-some [key-pair (auth-util/header->key-pair header)]
+        (let [{:keys [authority-template
+                      authority-url]} config
+              authority-fn (authority-util/make-authority-fn
+                            authority-template)
+              input        (auth-input/query-credential-scopes-input
+                            authority-fn
+                            authority-url
+                            key-pair)]
           (jdbc/with-transaction [tx conn]
             (auth-q/query-credential-scopes backend tx input)))
         {:result :com.yetanalytics.lrs.auth/forbidden})))
@@ -215,7 +223,7 @@
    ;; TODO: Verify the key pair is associated with the account ID
     [this _account-id api-key secret-key scopes]
     (let [conn  (lrs-conn this)
-          input (auth-input/query-credential-scopes-input api-key secret-key)]
+          input (auth-input/query-credential-scopes*-input api-key secret-key)]
       (jdbc/with-transaction [tx conn]
         (let [scopes'    (set (:scopes (auth-q/query-credential-scopes*
                                         backend

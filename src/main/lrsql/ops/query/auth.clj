@@ -1,5 +1,6 @@
 (ns lrsql.ops.query.auth
   (:require [clojure.spec.alpha :as s]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.auth :as as]
@@ -8,13 +9,13 @@
 (s/fdef query-credential-scopes*
   :args (s/cat :bk as/credential-backend?
                :tx transaction?
-               :input as/query-cred-scopes-input-spec)
+               :input as/query-cred-scopes*-input-spec)
   :ret (s/nilable (s/keys :req-un [::as/ids ::as/scopes])))
 
 (defn- conform-credential-ids
   [{cred-id :credential_id account-id :account_id}]
-  {:credential-id cred-id
-   :account-id    account-id})
+  {:cred-id    cred-id
+   :account-id account-id})
 
 (defn query-credential-scopes*
   "Return a map of `:ids` and `:scopes` associated with an API key and secret
@@ -32,7 +33,7 @@
   :args (s/cat :bk as/credential-backend?
                :tx transaction?
                :input as/query-cred-scopes-input-spec)
-  :ret as/query-cred-scopes-ret-spec)
+  :ret ::lrsp/authenticate-ret)
 
 (defn query-credential-scopes
   "Like `query-credential-scopes*` except that its return value conforms
@@ -44,7 +45,7 @@
   [bk tx input]
   (if-some [{:keys [ids scopes]} (query-credential-scopes* bk tx input)]
     ;; Credentials found - return result map
-    (let [{:keys [api-key secret-key]}
+    (let [{:keys [api-key secret-key authority-fn authority-url]}
           input
           scope-set
           (if (empty? scopes)
@@ -62,8 +63,11 @@
                 :prefix ""
                 :auth   {:basic {:username api-key
                                  :password secret-key}}
-                :ids    ids}})
+                :agent  (authority-fn
+                         (assoc ids :authority-url authority-url))}})
     ;; Credentials not found - uh oh!
+    ;; FIXME: Should be `unauthorized` but changing it will make
+    ;; conformance tests fail.
     {:result :com.yetanalytics.lrs.auth/forbidden}))
 
 (s/fdef query-credentials

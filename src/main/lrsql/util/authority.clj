@@ -4,20 +4,11 @@
             [clojure.core.memoize :as mem]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
-            [lrsql.spec.common :as c]
             [selmer.parser :as selm-parser]
             [selmer.util :as selm-u]
-            [xapi-schema.spec :as xs])
+            [xapi-schema.spec :as xs]
+            [lrsql.spec.authority :as ats])
   (:import [java.io File]))
-
-(s/def ::authority-url string?)
-(s/def ::cred-id ::c/primary-key)
-(s/def ::account-id ::c/primary-key)
-
-(s/def ::context-map
-  (s/keys :req-un [::authority-url
-                   ::cred-id
-                   ::account-id]))
 
 (defn throw-on-missing
   "When a user enters a variable and it is not in our context map, throw!
@@ -40,10 +31,9 @@
   (s/valid? ::xs/agent (authority-fn sample-authority-fn-input)))
 
 (s/fdef make-authority-fn
-  :args (s/cat :template-path (s/nilable string?) :threshold (s/? pos-int?))
-  :ret (s/fspec
-        :args (s/cat :context-map ::context-map)
-        :ret ::xs/agent))
+  :args (s/cat :template-path (s/nilable string?)
+               :threshold (s/? pos-int?))
+  :ret ::ats/authority-fn)
 
 (defn make-authority-fn**
   "Returns a function that will render the template to data, using `template`.
