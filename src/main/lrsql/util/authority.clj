@@ -35,6 +35,10 @@
   (s/valid? ::xs/agent (authority-fn sample-authority-fn-input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Default Authority - known at compile-time
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Make authority function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -43,7 +47,7 @@
                :threshold (s/? pos-int?))
   :ret ::ats/authority-fn)
 
-(defn make-authority-fn**
+(defn make-authority-fn*
   "Returns a function that will render the template to data, using `template`.
    Not memoized."
   [template]
@@ -54,55 +58,36 @@
           (selm-parser/render-template context-map)
           json/parse-string))))
 
-(defn make-authority-fn*
+(def default-authority-fn
+  "The default precompiled function to render authority"
+  (-> "authority.json.template"
+      io/resource
+      selm-parser/parse*
+      make-authority-fn*))
+
+(defn make-authority-fn
   "Returns a function that will render the template to data, using the
    template read at `template-path`. `make-authority-fn*` itself is not
    memoized, but it returns a memoized function, with `threshold` setting
    how many authorities will be cached before least recently used (LRU)
    clearing."
-  [template-path threshold]
-  (let [^File f (io/file template-path)]
+  [template-path & [threshold]]
+  (let [threshold (or threshold 512)
+        ^File f   (io/file template-path)]
     (if (and f (.exists f))
+      ;; Override template supplied - use that
       (let [template     (selm-parser/parse* f)
-            authority-fn (make-authority-fn** template)]
+            authority-fn (make-authority-fn* template)]
         (if (valid-authority-fn? authority-fn)
           (mem/lru authority-fn
-                   :lru/threshold (or threshold 512))
+                   :lru/threshold threshold)
           (throw
            (ex-info "Authority template does not produce a valid xAPI Agent"
                     {:type          ::invalid-json
                      :template-path template-path}))))
-      (throw
-       (ex-info (format "No authority template specified at %s" template-path)
-                {:type          ::no-authority-template
-                 :template-path template-path})))))
-
-(def make-authority-fn
-  "Memoized version of `make-authority-fn*`. This should be called in order
-   to avoid unnecessarily reading and parsing the file at `template-path`."
-  (mem/memo
-   (fn [template-path & [threshold]]
-     (make-authority-fn* template-path threshold))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Default Authority - known at compile-time
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def default-template
-  "The default precompiled template to render authority"
-  (-> "lrsql/config/authority.json.template"
-      io/resource
-      selm-parser/parse*))
-
-(def default-authority-fn
-  (mem/lru
-   (fn [context-map]
-     (binding [selm-u/*missing-value-formatter* throw-on-missing
-               selm-u/*filter-missing-values*   (constantly false)]
-       (-> default-template
-           (selm-parser/render-template context-map)
-           json/parse-string)))
-   :lru/threshold 512))
+      ;; Override template not supplied - fall back to default
+      (mem/lru default-authority-fn
+               :lru/threshold threshold))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
