@@ -53,10 +53,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn read-config*
-  "Read `config/config.edn` with the given value of `profile`. Valid
+  "Read `config.edn` with the given value of `profile`. Valid
    profiles are `:test-[db-type]` and `:prod-[db-type]`."
   [profile]
-  (aero/read-config (io/resource "config.edn") {:profile profile}))
+  (aero/read-config (io/resource "lrsql/config/config.edn")
+                    {:profile profile}))
 
 (def read-config
   "Memoized version of `read-config*`."
