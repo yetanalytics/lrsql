@@ -52,16 +52,29 @@
 ;; Config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; The default aero `#include` resolver does not work with JARs, so we
+;; need to resolve the root dirs manually.
+
+(defn resolver
+  [_ include]
+  (io/resource (str "lrsql/config/" include)))
+
 (defn read-config*
   "Read `config.edn` with the given value of `profile`. Valid
    profiles are `:test-[db-type]` and `:prod-[db-type]`."
   [profile]
   (aero/read-config (io/resource "lrsql/config/config.edn")
-                    {:profile profile}))
+                    {:profile  profile
+                     :resolver resolver}))
 
 (def read-config
   "Memoized version of `read-config*`."
   (memoize read-config*))
+
+(comment
+  
+  (read-config* :prod-h2-mem)
+  (io/reader (io/resource "lrsql/config/prod/default/database.edn")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Timestamps
