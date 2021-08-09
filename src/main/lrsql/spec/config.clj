@@ -64,10 +64,10 @@
          (s/keys :req-un [::stmt-more-url-prefix
                           ::stmt-get-default
                           ::stmt-get-max
-                          ::authority-template
                           ::authority-url]
                  :opt-un [::api-key-default
-                          ::api-secret-default])))
+                          ::api-secret-default
+                          ::authority-template])))
 
 (s/def ::http? boolean?)
 (s/def ::http2? boolean?)

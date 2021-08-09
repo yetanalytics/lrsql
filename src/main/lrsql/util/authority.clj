@@ -10,6 +10,10 @@
             [lrsql.spec.authority :as ats])
   (:import [java.io File]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Helper vars and functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn throw-on-missing
   "When a user enters a variable and it is not in our context map, throw!
    Used by selmer when context map validation fails."
@@ -29,6 +33,10 @@
 (defn- valid-authority-fn?
   [authority-fn]
   (s/valid? ::xs/agent (authority-fn sample-authority-fn-input)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Make authority function
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef make-authority-fn
   :args (s/cat :template-path (s/nilable string?)
@@ -75,6 +83,28 @@
   (mem/memo
    (fn [template-path & [threshold]]
      (make-authority-fn* template-path threshold))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Default Authority - known at compile-time
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def default-template
+  "The default precompiled template to render authority"
+  (-> "lrsql/config/authority.json.template"
+      io/resource
+      selm-parser/parse*))
+
+(def default-authority-fn
+  (mem/lru
+   (fn [context-map]
+     (binding [selm-u/*missing-value-formatter* throw-on-missing
+               selm-u/*filter-missing-values*   (constantly false)]
+       (-> default-template
+           (selm-parser/render-template context-map)
+           json/parse-string)))
+   :lru/threshold 512))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (comment
 

@@ -1,0 +1,7 @@
+{
+    "account": {
+        "homePage":"{{authority-url}}",
+        "name":"{{cred-id}}"
+    },
+    "objectType": "Agent"
+}

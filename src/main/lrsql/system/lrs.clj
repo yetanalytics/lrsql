@@ -25,8 +25,9 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
             [lrsql.util.auth      :as auth-util]
-            [lrsql.util.authority :as authority-util]
-            [lrsql.util.statement :as stmt-util])
+            [lrsql.util.statement :as stmt-util]
+            [lrsql.util.authority :refer [make-authority-fn
+                                          default-authority-fn]])
   (:import [java.time Instant]))
 
 (defn- lrs-conn
@@ -36,22 +37,24 @@
       :connection
       :conn-pool))
 
-(defrecord LearningRecordStore [connection backend config]
+(defrecord LearningRecordStore [connection backend config authority-fn]
   cmp/Lifecycle
   (start
     [lrs]
-    (let [conn  (-> connection :conn-pool)
-          uname (-> config :api-key-default)
-          pass  (-> config :api-secret-default)]
-      (assert-config ::cs/lrs "LRS" config)
+    (assert-config ::cs/lrs "LRS" config)
+    (let [conn    (-> connection :conn-pool)
+          uname   (-> config :api-key-default)
+          pass    (-> config :api-secret-default)
+          ?temp   (-> config :authority-template)
+          auth-fn (if ?temp (make-authority-fn ?temp) default-authority-fn)]
       (init/init-backend! backend conn)
       (init/insert-default-creds! backend conn uname pass)
       (log/info "Starting new LRS")
-      (assoc lrs :connection connection)))
+      (assoc lrs :connection connection :authority-fn auth-fn)))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
-    (assoc lrs :connection nil))
+    (assoc lrs :connection nil :authority-fn nil))
 
   lrsp/AboutResource
   (-get-about
@@ -165,14 +168,11 @@
     (let [conn   (lrs-conn lrs)
           header (get-in ctx [:request :headers "authorization"])]
       (if-some [key-pair (auth-util/header->key-pair header)]
-        (let [{:keys [authority-template
-                      authority-url]} config
-              authority-fn (authority-util/make-authority-fn
-                            authority-template)
-              input        (auth-input/query-credential-scopes-input
-                            authority-fn
-                            authority-url
-                            key-pair)]
+        (let [{:keys [authority-url]} config
+              input (auth-input/query-credential-scopes-input
+                     authority-fn
+                     authority-url
+                     key-pair)]
           (jdbc/with-transaction [tx conn]
             (auth-q/query-credential-scopes backend tx input)))
         {:result :com.yetanalytics.lrs.auth/forbidden})))
