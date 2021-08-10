@@ -7,8 +7,8 @@
 (defn merge-user-config
   "Given a static config map from aero and a path where a user config json file
   might reside, deep merge in valid json."
-  [static-config
-   user-config-json]
+  [{:keys [user-config-json]
+    :as   static-config}]
   (let [;; place handle on the config file at path
         ^File config-file (io/file user-config-json)]
     (merge-with

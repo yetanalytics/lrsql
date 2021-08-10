@@ -69,17 +69,15 @@
   from the given path, if the file is present."
   [profile]
   (let [;; Read in and process aeron config
-        {:keys [user-config-json]
-         :as   static-config}
-        (aero/read-config (io/resource (str config-path-prefix "config.edn"))
-                          {:profile  profile
-                           :resolver resolver})
         {:keys [database
                 connection
                 lrs
-                webserver]} (config/merge-user-config
-                             static-config
-                             user-config-json)]
+                webserver]} (-> (str config-path-prefix "config.edn")
+                                io/resource
+                                (aero/read-config
+                                 {:profile  profile
+                                  :resolver resolver})
+                                config/merge-user-config)]
     ;; form the final config the app will use
     {:connection (assoc connection :database database)
      :lrs        (assoc lrs :stmt-url-prefix (:url-prefix webserver))
