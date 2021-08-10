@@ -55,16 +55,18 @@
 ;; The default aero `#include` resolver does not work with JARs, so we
 ;; need to resolve the root dirs manually.
 
-(defn resolver
+(def config-path-prefix "lrsql/config/")
+
+(defn- resolver
   [_ include]
-  (io/resource (str "lrsql/config/" include)))
+  (io/resource (str config-path-prefix include)))
 
 (defn read-config*
   "Read `config.edn` with the given value of `profile`. Valid
    profiles are `:test-[db-type]` and `:prod-[db-type]`."
   [profile]
   (let [{:keys [database connection lrs webserver]}
-        (aero/read-config (io/resource "lrsql/config/config.edn")
+        (aero/read-config (io/resource (str config-path-prefix "config.edn"))
                           {:profile  profile
                            :resolver resolver})]
     {:connection (assoc connection :database database)
