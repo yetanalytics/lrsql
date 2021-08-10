@@ -57,17 +57,17 @@
 (s/def ::stmt-get-max pos-int?)
 
 (s/def ::authority-template string?)
-(s/def ::authority-url string?) ; TODO: URL spec
+(s/def ::authority-url ::xs/irl)
 
 (s/def ::lrs
   (s/and (s/conformer remove-nil-vals)
          (s/keys :req-un [::stmt-more-url-prefix
                           ::stmt-get-default
                           ::stmt-get-max
+                          ::authority-template
                           ::authority-url]
                  :opt-un [::api-key-default
-                          ::api-secret-default
-                          ::authority-template])))
+                          ::api-secret-default])))
 
 (s/def ::http? boolean?)
 (s/def ::http2? boolean?)
