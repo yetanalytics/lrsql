@@ -101,10 +101,7 @@
                    ::key-pkey-file
                    ::key-cert-chain]))
 
-(s/def ::user-config-json string?)
-
 (def config-spec
   (s/keys :req-un [::connection
                    ::lrs
-                   ::webserver
-                   ::user-config-json]))
+                   ::webserver]))
