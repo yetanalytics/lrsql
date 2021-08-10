@@ -1,4 +1,4 @@
-.phony: ci, ephemeral, persistent, bench, clean, run-jar-h2, run-jar-sqlite, bundle, run-jar-h2-persistent, run-jar-postgres
+.phony: ci, ephemeral, persistent, bench, clean, run-jar-h2, run-jar-sqlite, bundle, config-ex, run-jar-h2-persistent, run-jar-postgres
 
 ci:
 	clojure -X:test
@@ -15,12 +15,13 @@ persistent:
 		LRSQL_SEED_API_SECRET=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent true
 
-
 sqlite:
 	LRSQL_DB_NAME=db.sqlite \
 		LRSQL_SEED_API_KEY=username \
 		LRSQL_SEED_API_SECRET=password \
 		clojure -M:db-sqlite -m lrsql.sqlite.main
+
+# TODO: Postgres
 
 clean-dev:
 	rm -f *.db *.log
@@ -34,6 +35,7 @@ bench:
 
 # Build
 clean:
+	rm config/authority.json.template.example
 	rm -rf target
 
 # Compile and make Uberjar
@@ -46,8 +48,16 @@ target/bundle/bin:
 	cp -r bin target/bundle/bin
 	chmod +x target/bundle/bin/*.sh
 
+# Copy config example
+# TODO: Update with `resources` dir refactor
+# TODO: Add user config json file
+config/authority.json.template.example:
+	cp config/authority.json.template config/authority.json.template.example
+
+config-ex: config/authority.json.template.example
+
 # entire bundle
-target/bundle: target/bundle/lrsql.jar target/bundle/bin
+target/bundle: target/bundle/lrsql.jar target/bundle/bin config-ex
 
 bundle: target/bundle
 
