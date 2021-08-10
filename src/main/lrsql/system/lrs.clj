@@ -25,7 +25,8 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
             [lrsql.util.auth      :as auth-util]
-            [lrsql.util.statement :as stmt-util])
+            [lrsql.util.statement :as stmt-util]
+            [lrsql.util.authority :refer [make-authority-fn]])
   (:import [java.time Instant]))
 
 (defn- lrs-conn
@@ -35,22 +36,24 @@
       :connection
       :conn-pool))
 
-(defrecord LearningRecordStore [connection backend config]
+(defrecord LearningRecordStore [connection backend config authority-fn]
   cmp/Lifecycle
   (start
     [lrs]
-    (let [conn  (-> connection :conn-pool)
-          uname (-> config :api-key-default)
-          pass  (-> config :api-secret-default)]
-      (assert-config ::cs/lrs "LRS" config)
+    (assert-config ::cs/lrs "LRS" config)
+    (let [conn    (-> connection :conn-pool)
+          uname   (-> config :api-key-default)
+          pass    (-> config :api-secret-default)
+          auth-tp (-> config :authority-template)
+          auth-fn (make-authority-fn auth-tp)]
       (init/init-backend! backend conn)
       (init/insert-default-creds! backend conn uname pass)
       (log/info "Starting new LRS")
-      (assoc lrs :connection connection)))
+      (assoc lrs :connection connection :authority-fn auth-fn)))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
-    (assoc lrs :connection nil))
+    (assoc lrs :connection nil :authority-fn nil))
 
   lrsp/AboutResource
   (-get-about
@@ -60,11 +63,13 @@
 
   lrsp/StatementsResource
   (-store-statements
-    [lrs _auth-identity statements attachments]
+    [lrs auth-identity statements attachments]
     (let [conn
           (lrs-conn lrs)
+          authority
+          (-> auth-identity :agent)
           stmts
-          (map stmt-util/prepare-statement
+          (map (partial stmt-util/prepare-statement authority)
                statements)
           stmt-inputs
           (-> (map stmt-input/insert-statement-input stmts)
@@ -94,12 +99,12 @@
     [lrs _auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
+          prefix (:stmt-url-prefix config)
           inputs (->> params
-                      (stmt-util/add-more-url-prefix config)
                       (stmt-util/ensure-default-max-limit config)
                       stmt-input/query-statement-input)]
       (jdbc/with-transaction [tx conn]
-        (stmt-q/query-statements backend tx inputs ltags))))
+        (stmt-q/query-statements backend tx inputs ltags prefix))))
   (-consistent-through
     [_lrs _ctx _auth-identity]
     ;; TODO: review, this should be OK because of transactions, but we may want
@@ -161,8 +166,12 @@
     [lrs ctx]
     (let [conn   (lrs-conn lrs)
           header (get-in ctx [:request :headers "authorization"])]
-      (if-some [key-pr (auth-util/header->key-pair header)]
-        (let [input (auth-input/query-credential-scopes-input key-pr)]
+      (if-some [key-pair (auth-util/header->key-pair header)]
+        (let [{:keys [authority-url]} config
+              input (auth-input/query-credential-scopes-input
+                     authority-fn
+                     authority-url
+                     key-pair)]
           (jdbc/with-transaction [tx conn]
             (auth-q/query-credential-scopes backend tx input)))
         {:result :com.yetanalytics.lrs.auth/forbidden})))
@@ -215,12 +224,12 @@
    ;; TODO: Verify the key pair is associated with the account ID
     [this _account-id api-key secret-key scopes]
     (let [conn  (lrs-conn this)
-          input (auth-input/query-credential-scopes-input api-key secret-key)]
+          input (auth-input/query-credential-scopes*-input api-key secret-key)]
       (jdbc/with-transaction [tx conn]
-        (let [scopes'    (set (auth-q/query-credential-scopes*
-                               backend
-                               tx
-                               input))
+        (let [scopes'    (set (:scopes (auth-q/query-credential-scopes*
+                                        backend
+                                        tx
+                                        input)))
               add-scopes (cset/difference scopes scopes')
               del-scopes (cset/difference scopes' scopes)
               add-inputs (auth-input/insert-credential-scopes-input

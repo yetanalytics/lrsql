@@ -9,9 +9,10 @@
 
 (comment
   (require
-   '[lrsql.h2.record :as r])
+   '[lrsql.h2.record :as r]
+   '[lrsql.lrs-test :refer [stmt-1]])
 
-  (def sys (system/system (r/map->H2Backend {}) :test-sqlite))
+  (def sys (system/system (r/map->H2Backend {}) :test-h2-mem))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))

@@ -94,15 +94,34 @@
   [account-id]
   {:account-id account-id})
 
-(s/fdef query-credential-scopes-input
-  :args (s/cat :key-pair as/key-pair-args-spec)
-  :ret as/query-cred-scopes-input-spec)
+(s/fdef query-credential-scopes*-input
+  :args as/key-pair-args-spec
+  :ret as/query-cred-scopes*-input-spec)
 
-(defn query-credential-scopes-input
+(defn query-credential-scopes*-input
   "Given either a `key-pair` map or separate `api-key` and `secret-key` args,
-   construct the input param map for `query-credential-scopes(*)`."
+   construct the input param map for `query-credential-scopes*`."
   ([key-pair]
    key-pair)
   ([api-key secret-key]
    {:api-key    api-key
     :secret-key secret-key}))
+
+(s/fdef query-credential-scopes-input
+  :args as/key-pair-authority-args-spec
+  :ret as/query-cred-scopes-input-spec)
+
+(defn query-credential-scopes-input
+  "Given either a `key-pair` map or separate `api-key` and `secret-key` args,
+   alongside `authority-fn` and `authority-url` args for agent creation,
+   construct the input param map for `query-credential-scopes`."
+  ([authority-fn authority-url key-pair]
+   (merge
+    key-pair
+    {:authority-fn  authority-fn
+     :authority-url authority-url}))
+  ([authority-fn authority-url api-key secret-key]
+   {:api-key       api-key
+    :secret-key    secret-key
+    :authority-fn  authority-fn
+    :authority-url authority-url}))

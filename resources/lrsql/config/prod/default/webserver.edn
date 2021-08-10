@@ -10,4 +10,5 @@
  :http2?            #boolean #or [#env LRSQL_ENABLE_HTTP2 true]
  :http-host         #or [#env LRSQL_HTTP_HOST "0.0.0.0"]
  :http-port         #long #or [#env LRSQL_HTTP_PORT 8080]
- :ssl-port          #long #or [#env LRSQL_SSL_PORT 8443]}
+ :ssl-port          #long #or [#env LRSQL_SSL_PORT 8443]
+ :url-prefix        #or [#env LRSQL_URL_PREFIX "/xapi"]}
