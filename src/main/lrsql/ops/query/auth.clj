@@ -69,7 +69,7 @@
     ;; Credentials not found - uh oh!
     ;; FIXME: Should be `unauthorized` but changing it will make
     ;; conformance tests fail.
-    {:result :com.yetanalytics.lrs.auth/forbidden}))
+    {:result :com.yetanalytics.lrs.auth/unauthorized}))
 
 (s/fdef query-credentials
   :args (s/cat :bk as/credential-backend?
