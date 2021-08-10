@@ -61,4 +61,7 @@
    :prod-h2-mem   #include "prod/default/webserver.edn"
    :prod-h2       #include "prod/default/webserver.edn"
    :prod-sqlite   #include "prod/default/webserver.edn"
-   :prod-postgres #include "prod/default/webserver.edn"}}
+   :prod-postgres #include "prod/default/webserver.edn"}
+ ;; A user-provided JSON file for merge-with merge into this map
+ :config-json-file #or [#env LRSQL_CONFIG_JSON_FILE "config/lrsql.json"]
+ }
