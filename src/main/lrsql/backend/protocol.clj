@@ -91,5 +91,5 @@
   (-delete-credential-scope! [this tx input])
   ;; Queries
   (-query-credentials [this tx input])
-  (-query-credential-exists [this tx input])
+  (-query-credential-ids [this tx input])
   (-query-credential-scopes [this tx input]))
