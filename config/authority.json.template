@@ -10,5 +10,5 @@
         "homePage":"{{authority-url}}",
         "name":"{{cred-id}}"
     },
-    "objectType": "Agent"
+    "objectType":"Agent"
 }

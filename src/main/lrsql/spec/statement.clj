@@ -128,8 +128,9 @@
            #(contains? % :statement/timestamp)
            #(contains? % :statement/stored)
            #(contains? % :statement/authority))
-    #(sgen/fmap prepare-statement
-                (s/gen ::xs/statement))))
+    #(sgen/fmap (partial apply prepare-statement)
+                (s/gen (s/tuple ::xs/agent
+                                ::xs/statement)))))
 
 (defn- update-stmt-input-attachments
   [[stmt-inputs attachments]]

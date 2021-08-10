@@ -2,4 +2,6 @@
  :api-secret-default   "password"
  :stmt-more-url-prefix ""
  :stmt-get-default     50
- :stmt-get-max         50}
+ :stmt-get-max         50
+ :authority-template   "config/authority.json.template"
+ :authority-url        "http://localhost"}

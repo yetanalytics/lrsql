@@ -11,17 +11,16 @@
 ;; TODO: Change for version 2.0.0
 (def xapi-version "1.0.0")
 
-;; TODO: more specific authority
-(def lrsql-authority {"name" "LRSQL"
-                      "objectType" "Agent"
-                      "account" {"homePage" "http://localhost:8080"
-                                 "name"     "LRSQL"}})
+;; NOTE: It is recommended that we override any pre-existing authorities
+;; in a statement, unless there's a high degree of trust. We assume such
+;; a degree of trust (e.g. if the LRSs are part of the same system), but
+;; we may need to address this in the future (e.g. set using env vars).
 
 (defn prepare-statement
   "Prepare `statement` for LRS storage by coll-ifying context activities
    and setting missing id, timestamp, authority, version, and stored
    properties."
-  [statement]
+  [authority statement]
   (let [{?id        "id"
          ?timestamp "timestamp"
          ?authority "authority"
@@ -53,7 +52,7 @@
       (not ?timestamp)
       (assoc-to-stmt "timestamp" squuid-ts-str)
       (not ?authority)
-      (assoc-to-stmt "authority" lrsql-authority)
+      (assoc-to-stmt "authority" authority)
       (not ?version)
       (assoc-to-stmt "version" xapi-version))))
 
