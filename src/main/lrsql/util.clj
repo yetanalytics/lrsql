@@ -75,11 +75,6 @@
   "Memoized version of `read-config*`."
   (memoize read-config*))
 
-(comment
-  
-  (read-config* :prod-h2-mem)
-  (io/reader (io/resource "lrsql/config/prod/default/database.edn")))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Timestamps
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
