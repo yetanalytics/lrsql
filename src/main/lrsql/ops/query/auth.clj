@@ -41,8 +41,8 @@
    map that contains the `:scope` `:auth`, and `:agent` properties. The
    `:agent` property can then be set as the Statement authority.
    
-   If the credentials are not found, return `:forbidden` to indicate that the
-   webserver will return 401 Forbidden."
+   If the credentials are not found, return `::lrs-auth/unauthorized` to
+   indicate that the webserver will return 401 Unauthorized."
   [bk tx input]
   (if-some [{:keys [ids scopes]} (query-credential-scopes* bk tx input)]
     ;; Credentials found - return result map
@@ -67,8 +67,6 @@
                 :agent  (authority-fn
                          (assoc ids :authority-url authority-url))}})
     ;; Credentials not found - uh oh!
-    ;; FIXME: Should be `unauthorized` but changing it will make
-    ;; conformance tests fail.
     {:result :com.yetanalytics.lrs.auth/unauthorized}))
 
 (s/fdef query-credentials
