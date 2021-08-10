@@ -68,13 +68,13 @@
   from the given path, if the file is present."
   [profile]
   (let [;; Read in and process aeron config
-        {:keys [config-json-file]
+        {:keys [user-config-json]
          :as   static-config}
         (aero/read-config (io/resource (str config-path-prefix "config.edn"))
                           {:profile  profile
                            :resolver resolver})
         ;; place handle on the config file at path
-        ^File config-file   (io/file config-json-file)
+        ^File config-file   (io/file user-config-json)
         ;; merge with user configuration if one is provided
         {:keys [database
                 connection
@@ -92,7 +92,7 @@
                                     (ex-info
                                      "Invalid JSON in Config File"
                                      {:type ::invalid-config-json
-                                      :path config-json-file}
+                                      :path user-config-json}
                                      ex))))))]
     ;; form the final config the app will use
     {:connection (assoc connection :database database)
