@@ -10,10 +10,11 @@
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
             [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
-            [lrsql.spec.common :refer [instant-spec]])
+            [lrsql.spec.common :refer [instant-spec]]
+            [lrsql.util.config :as config])
   (:import [java.util UUID]
            [java.time Instant]
-           [java.io StringReader PushbackReader ByteArrayOutputStream File]))
+           [java.io StringReader PushbackReader ByteArrayOutputStream]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
@@ -73,27 +74,12 @@
         (aero/read-config (io/resource (str config-path-prefix "config.edn"))
                           {:profile  profile
                            :resolver resolver})
-        ;; place handle on the config file at path
-        ^File config-file   (io/file user-config-json)
-        ;; merge with user configuration if one is provided
         {:keys [database
                 connection
                 lrs
-                webserver]} (merge-with
-                             merge
+                webserver]} (config/merge-user-config
                              static-config
-                             (when (.exists config-file)
-                               (try
-                                 (with-open [rdr (io/reader config-file)]
-                                   (cjson/parse-stream-strict
-                                    rdr (partial keyword nil)))
-                                 (catch Exception ex
-                                   (throw
-                                    (ex-info
-                                     "Invalid JSON in Config File"
-                                     {:type ::invalid-config-json
-                                      :path user-config-json}
-                                     ex))))))]
+                             user-config-json)]
     ;; form the final config the app will use
     {:connection (assoc connection :database database)
      :lrs        (assoc lrs :stmt-url-prefix (:url-prefix webserver))
