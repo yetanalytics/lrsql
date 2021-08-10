@@ -64,7 +64,7 @@
 
 (def default-authority-fn
   "The default precompiled function to render authority"
-  (-> "authority.json.template"
+  (-> "lrsql/config/authority.json.template"
       io/resource
       selm-parser/parse*
       make-authority-fn*))

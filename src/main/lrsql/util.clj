@@ -64,7 +64,7 @@
    profiles are `:test-[db-type]` and `:prod-[db-type]`."
   [profile]
   (let [{:keys [database connection lrs webserver]}
-        (aero/read-config (io/resource "config.edn")
+        (aero/read-config (io/resource "lrsql/config/config.edn")
                           {:profile  profile
                            :resolver resolver})]
     {:connection (assoc connection :database database)
