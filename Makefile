@@ -1,4 +1,4 @@
-.phony: ci, ephemeral, persistent, bench, clean, run-jar-h2, run-jar-sqlite, bundle, config-ex, run-jar-h2-persistent, run-jar-postgres
+.phony: ci, ephemeral, persistent, bench, clean, run-jar-h2, run-jar-sqlite, bundle, config, run-jar-h2-persistent, run-jar-postgres
 
 ci:
 	clojure -X:test
@@ -35,7 +35,6 @@ bench:
 
 # Build
 clean:
-	rm config/authority.json.template.example
 	rm -rf target
 
 # Compile and make Uberjar
@@ -48,16 +47,17 @@ target/bundle/bin:
 	cp -r bin target/bundle/bin
 	chmod +x target/bundle/bin/*.sh
 
-# Copy config example
+# Copy config
 # TODO: Update with `resources` dir refactor
 # TODO: Add user config json file
-config/authority.json.template.example:
-	cp config/authority.json.template config/authority.json.template.example
+target/bundle/config/authority.json.template.example:
+	mkdir -p target/bundle/config
+	cp config/authority.json.template target/bundle/config/authority.json.template.example
 
-config-ex: config/authority.json.template.example
+config: target/bundle/config/authority.json.template.example
 
 # entire bundle
-target/bundle: target/bundle/lrsql.jar target/bundle/bin config-ex
+target/bundle: config target/bundle/lrsql.jar target/bundle/bin
 
 bundle: target/bundle
 
