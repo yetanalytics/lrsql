@@ -15,9 +15,7 @@ pom.xml.asc
 .cpcache/
 *.db
 *.sqlite
-config/*.jks
-config/*.key
-config/*.pem
+config/
 results/
 Test.java
 .DS_Store

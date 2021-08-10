@@ -1,4 +1,4 @@
-{:paths ["src/main" "config"]
+{:paths ["src/main" "resources"]
  :deps
  {org.clojure/clojure                      {:mvn/version "1.10.3"}
   clojure-interop/java.security            {:mvn/version "1.0.5"}
