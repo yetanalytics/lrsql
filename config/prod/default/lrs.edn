@@ -1,0 +1,7 @@
+{:api-key-default      #or [#env LRSQL_SEED_API_KEY nil]
+ :api-secret-default   #or [#env LRSQL_SEED_API_SECRET nil]
+ :stmt-get-default     #long #or [#env LRSQL_STMT_GET_DEFAULT 50]
+ :stmt-get-max         #long #or [#env LRSQL_STMT_GET_MAX 50]
+ :stmt-url-prefix      "/xapi" ; overriden by ::webserver/url-prefix
+ :authority-template   #or [#env LRSQL_AUTHORITY_TEMPLATE "config/authority.json.template"]
+ :authority-url        #or [#env LRSQL_AUTHORITY_URL "http://localhost"]}

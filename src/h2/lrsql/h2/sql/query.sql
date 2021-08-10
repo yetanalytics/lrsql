@@ -52,7 +52,8 @@ FROM xapi_statement stmt
 --~ (when (:actor-ifi params)    "INNER JOIN actors stmt_actors ON stmt.statement_id = stmt_actors.statement_id")
 --~ (when (:activity-iri params) "INNER JOIN activs stmt_activs ON stmt.statement_id = stmt_activs.statement_id")
 WHERE stmt.is_voided = FALSE
---~ (when (:from params)         "AND stmt.id >= :from")
+/*~ (when (:from params)
+     (if (:ascending? params) "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt.id > :since")
 --~ (when (:until params)        "AND stmt.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
@@ -67,8 +68,9 @@ FROM xapi_statement stmt_d
 --~ (when (:activity-iri params) "INNER JOIN activs stmt_d_activs ON stmt_d.statement_id = stmt_d_activs.statement_id")
 INNER JOIN statement_to_statement sts ON stmt_d.statement_id = sts.descendant_id
 INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
-WHERE 1
---~ (when (:from params)         "AND stmt_a.id >= :from")
+WHERE stmt_a.is_voided = FALSE
+/*~ (when (:from params)
+     (if (:ascending? params) "AND stmt_a.id >= :from" "AND stmt_a.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt_a.id > :since")
 --~ (when (:until params)        "AND stmt_a.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt_d.verb_iri = :verb-iri")
@@ -231,11 +233,11 @@ WHERE username = :username
 SELECT api_key, secret_key FROM lrs_credential
 WHERE account_id = :account-id
 
--- :name query-credential-exists
+-- :name query-credential-ids
 -- :command :query
 -- :result :one
--- :doc Query whether a credential with the associated `:api-key` and `:secret-key` exists.
-SELECT 1 FROM lrs_credential
+-- :doc Query the credential and account IDs associated with `:api-key` and `:secret-key`.
+SELECT id AS cred_id, account_id FROM lrs_credential
 WHERE api_key = :api-key
 AND secret_key = :secret-key
 

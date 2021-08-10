@@ -18,57 +18,71 @@ WHERE statement_id = :statement-id;
 
 /* Multi-statement query */
 
--- :frag actors-table-frag
-actors AS (
-  SELECT stmt_actor.actor_ifi, stmt_actor.statement_id
-  FROM statement_to_actor stmt_actor
-  WHERE stmt_actor.actor_ifi = :actor-ifi
-  --~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'::actor_usage_enum")
-)
+-- :frag actors-join-frag
+INNER JOIN statement_to_actor stmt_actor
+ON stmt.statement_id = stmt_actor.statement_id
+AND stmt_actor.actor_ifi = :actor-ifi
+--~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'::actor_usage_enum")
 
--- :frag activities-table-frag
-activs AS (
-  SELECT stmt_activ.activity_iri, stmt_activ.statement_id
-  FROM statement_to_activity stmt_activ
-  WHERE stmt_activ.activity_iri = :activity-iri
-  --~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'::activity_usage_enum")
-)
+-- :frag activs-join-frag
+INNER JOIN statement_to_activity stmt_activ
+ON stmt.statement_id = stmt_activ.statement_id
+AND stmt_activ.activity_iri = :activity-iri
+--~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'::activity_usage_enum")
 
 -- :frag stmt-no-ref-subquery-frag
 SELECT stmt.id, stmt.payload
 FROM xapi_statement stmt
---~ (when (:actor-ifi params)    "INNER JOIN actors stmt_actors ON stmt.statement_id = stmt_actors.statement_id")
---~ (when (:activity-iri params) "INNER JOIN activs stmt_activs ON stmt.statement_id = stmt_activs.statement_id")
+--~ (when (:actor-ifi params)    ":frag:actors-join-frag")
+--~ (when (:activity-iri params) ":frag:activs-join-frag")
 WHERE stmt.is_voided = FALSE
---~ (when (:from params)         "AND stmt.id >= :from")
+/*~ (when (:from params)
+     (if (:ascending? params) "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt.id > :since")
 --~ (when (:until params)        "AND stmt.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt.registration = :registration")
+/*~ (if (:ascending? params)
+      "ORDER BY stmt.id ASC"
+      "ORDER BY stmt.id DESC") ~*/
+LIMIT :limit
+
+/* Note: We sort by both the PK and statement ID in order to force the query
+   planner to avoid scanning on `stmt_a.id` first, which is much slower than
+   joining on `statement_to_statement` (at least when the number of such links
+   is lower than the number of statements, which is most cases). */
 
 -- :frag stmt-ref-subquery-frag
 SELECT stmt_a.id, stmt_a.payload
-FROM xapi_statement stmt_d
---~ (when (:actor-ifi params)    "INNER JOIN actors stmt_d_actors ON stmt_d.statement_id = stmt_d_actors.statement_id")
---~ (when (:activity-iri params) "INNER JOIN activs stmt_d_activs ON stmt_d.statement_id = stmt_d_activs.statement_id")
-INNER JOIN statement_to_statement sts ON stmt_d.statement_id = sts.descendant_id
+FROM xapi_statement stmt
+--~ (when (:actor-ifi params)    ":frag:actors-join-frag")
+--~ (when (:activity-iri params) ":frag:activs-join-frag")
+INNER JOIN statement_to_statement sts ON stmt.statement_id = sts.descendant_id
 INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
-WHERE TRUE
---~ (when (:from params)         "AND stmt_a.id >= :from")
+WHERE stmt_a.is_voided = FALSE
+/*~ (when (:from params)
+     (if (:ascending? params) "AND stmt_a.id >= :from" "AND stmt_a.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt_a.id > :since")
 --~ (when (:until params)        "AND stmt_a.id <= :until")
---~ (when (:verb-iri params)     "AND stmt_d.verb_iri = :verb-iri")
---~ (when (:registration params) "AND stmt_d.registration = :registration")
+--~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
+--~ (when (:registration params) "AND stmt.registration = :registration")
+/*~ (if (:ascending? params)
+      "ORDER BY (stmt_a.id, stmt_a.statement_id) ASC"
+      "ORDER BY (stmt_a.id, stmt_a.statement_id) DESC") ~*/
+LIMIT :limit
 
 -- :name query-statements
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
---~ (when (and (:actor-ifi params) (:activity-iri params))       "WITH :frag:actors-table-frag, :frag:activities-table-frag")
---~ (when (and (:actor-ifi params) (not (:activity-iri params))) "WITH :frag:actors-table-frag")
---~ (when (and (not (:actor-ifi params)) (:activity-iri params)) "WITH :frag:activities-table-frag")
-SELECT DISTINCT ON (all_stmt.id) all_stmt.id, all_stmt.payload FROM
-((:frag:stmt-no-ref-subquery-frag) UNION ALL (:frag:stmt-ref-subquery-frag)) AS all_stmt
+SELECT DISTINCT ON (all_stmt.id)
+  all_stmt.id,
+  all_stmt.payload
+FROM (
+  (:frag:stmt-no-ref-subquery-frag)
+  UNION ALL
+  (:frag:stmt-ref-subquery-frag))
+AS all_stmt
 --~ (if (:ascending? params) "ORDER BY all_stmt.id ASC" "ORDER BY all_stmt.id DESC")
 LIMIT :limit;
 
@@ -220,11 +234,11 @@ WHERE username = :username;
 SELECT api_key, secret_key FROM lrs_credential
 WHERE account_id = :account-id;
 
--- :name query-credential-exists
+-- :name query-credential-ids
 -- :command :query
 -- :result :one
--- :doc Query whether a credential with the associated `:api-key` and `:secret-key` exists.
-SELECT 1 FROM lrs_credential
+-- :doc Query the credential and account IDs associated with `:api-key` and `:secret-key`.
+SELECT id AS cred_id, account_id FROM lrs_credential
 WHERE api_key = :api-key
 AND secret_key = :secret-key;
 

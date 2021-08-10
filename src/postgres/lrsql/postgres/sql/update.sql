@@ -1,3 +1,7 @@
+-- :name vacuum-analyze!
+-- :doc Run the `VACUUM ANALYZE` command, in case it was not done automatically yet.
+VACUUM ANALYZE;
+
 -- :name void-statement!
 -- :command :execute
 -- :result :affected

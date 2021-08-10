@@ -31,12 +31,25 @@
     (create-desc-id-index! tx)
     (create-verb-iri-index! tx)
     (create-registration-index! tx)
+
     (create-actor-table! tx)
     (create-activity-table! tx)
+
     (create-attachment-table! tx)
+    (create-attachment-statement-id-index! tx)
+
     (create-statement-to-actor-table! tx)
+    (create-statement-actor-statement-id-index! tx)
+    (create-statement-actor-ifi-index! tx)
+
     (create-statement-to-activity-table! tx)
+    (create-statement-activity-statement-id-index! tx)
+    (create-statement-activity-iri-index! tx)
+
     (create-statement-to-statement-table! tx)
+    (create-sts-ancestor-id-index! tx)
+    (create-sts-descendant-id-index! tx)
+
     (create-state-document-table! tx)
     (create-agent-profile-document-table! tx)
     (create-activity-profile-document-table! tx)
@@ -151,8 +164,8 @@
     (delete-credential-scope! tx input))
   (-query-credentials [_ tx input]
     (query-credentials tx input))
-  (-query-credential-exists [_ tx input]
-    (query-credential-exists tx input))
+  (-query-credential-ids [_ tx input]
+    (query-credential-ids tx input))
   (-query-credential-scopes [_ tx input]
     (query-credential-scopes tx input))
 

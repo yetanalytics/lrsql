@@ -6,7 +6,9 @@
             [lrsql.input.admin :as admin-input]
             [lrsql.input.auth  :as auth-input]
             [lrsql.ops.command.admin :as admin-cmd]
-            [lrsql.ops.command.auth :as auth-cmd]))
+            [lrsql.ops.command.auth :as auth-cmd]
+            [lrsql.ops.query.admin :as admin-q]
+            [lrsql.ops.query.auth :as auth-q]))
 
 (defn init-hugsql-adapter!
   "Initialize HugSql to use the next-jdbc adapter."
@@ -24,10 +26,11 @@
   (bp/-create-all! backend tx))
 
 (defn insert-default-creds!
-  "Seed the credential table with the default API key and secret, which are
-   set by the environmental variables. The scope of the default credentials
-   would be hardcoded as \"all\". Does not seed the table when the username
-   or password is nil."
+  "Seed the credential table with the default API key and secret, as well as
+   the admin account table; the default API key and secret are set by the
+   environmental variables. The scope of the default credentials would be
+   hardcoded as \"all\". Does not seed the tables when the username
+   or password is nil, or if the tables were already seeded."
   [backend tx ?username ?password]
   (when (and ?username ?password)
     ;; TODO: Default admin also from config vars?
@@ -42,6 +45,9 @@
           scope-in (auth-input/insert-credential-scopes-input
                     key-pair
                     #{"all"})]
-      (admin-cmd/insert-admin! backend tx admin-in)
-      (auth-cmd/insert-credential! backend tx cred-in)
-      (auth-cmd/insert-credential-scopes! backend tx scope-in))))
+      ;; Don't insert if reconnecting to a previously-seeded DB
+      (when-not (admin-q/query-admin backend tx admin-in)
+        (admin-cmd/insert-admin! backend tx admin-in))
+      (when-not (auth-q/query-credential-scopes* backend tx cred-in)
+        (auth-cmd/insert-credential! backend tx cred-in)
+        (auth-cmd/insert-credential-scopes! backend tx scope-in)))))

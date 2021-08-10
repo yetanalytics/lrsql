@@ -32,7 +32,7 @@ CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri)
 -- :name create-registration-index!
 -- :command :execute
 -- :doc Create an index on the `xapi_statement.registration` column.
-CREATE INDEX IF NOT EXISTS registration_idex ON xapi_statement(registration)
+CREATE INDEX IF NOT EXISTS registration_idx ON xapi_statement(registration)
 
 -- :name create-actor-table!
 -- :command :execute
@@ -69,6 +69,11 @@ CREATE TABLE IF NOT EXISTS attachment (
   FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
 )
 
+-- :name create-attachment-statement-id-index!
+-- :command :execute
+-- :doc Create an index on the `attachment.statement_id` column.
+CREATE INDEX IF NOT EXISTS attachment_statement_id_idx ON attachment(statement_id)
+
 -- :name create-statement-to-actor-table!
 -- :command :execute
 -- :doc Create the `statement_to_actor` link table if it doesn't exist yet.
@@ -87,6 +92,16 @@ CREATE TABLE IF NOT EXISTS statement_to_actor (
   FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 )
 
+-- :name create-statement-actor-statement-id-index!
+-- :command :execute
+-- :doc Create an index on the `statement_to_actor.statement_id` column.
+CREATE INDEX IF NOT EXISTS statement_actor_statement_id_idx ON statement_to_actor(statement_id)
+
+-- :name create-statement-actor-ifi-index!
+-- :command :execute
+-- :doc Create an index on the `statement_to_actor.actor_ifi` column.
+CREATE INDEX IF NOT EXISTS statement_actor_ifi_idx ON statement_to_actor(actor_ifi)
+
 -- :name create-statement-to-activity-table!
 -- :command :execute
 -- :doc Create the `statement_to_activity` link table if it doesn't exist yet.
@@ -102,6 +117,16 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
   FOREIGN KEY (activity_iri) REFERENCES activity(activity_iri)
 )
 
+-- :name create-statement-activity-statement-id-index!
+-- :command :execute
+-- :doc Create an index on the `statement_to_activity.statement_id` column.
+CREATE INDEX IF NOT EXISTS statement_activity_statement_id_idx ON statement_to_activity(statement_id)
+
+-- :name create-statement-activity-iri-index!
+-- :command :execute
+-- :doc Create an index on the `statement_to_activity.activity_iri` column.
+CREATE INDEX IF NOT EXISTS statement_activity_iri_idx ON statement_to_activity(activity_iri)
+
 -- :name create-statement-to-statement-table!
 -- :command :execute
 -- :doc Create the `statement_to_statement` link table, used for StatementRef associations, if it doesn't exist yet.
@@ -112,6 +137,18 @@ CREATE TABLE IF NOT EXISTS statement_to_statement (
   FOREIGN KEY (ancestor_id) REFERENCES xapi_statement(statement_id),
   FOREIGN KEY (descendant_id) REFERENCES xapi_statement(statement_id)
 )
+
+-- :name create-sts-ancestor-id-index!
+-- :command :execute
+-- :doc Create an index on the `statement_to_statement.ancestor_id` column.
+CREATE INDEX IF NOT EXISTS sts_ancestor_id_idx ON statement_to_statement(ancestor_id)
+
+-- :name create-sts-descendant-id-index!
+-- :command :execute
+-- :doc Create an index on the `statement_to_statement.descendant_id` column.
+CREATE INDEX IF NOT EXISTS sts_descendant_id_idx ON statement_to_statement(descendant_id)
+
+
 
 /* Document Tables */
 

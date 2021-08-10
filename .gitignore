@@ -1,3 +1,4 @@
+*.DS_Store
 pom.xml
 pom.xml.asc
 *.jar
@@ -19,7 +20,7 @@ config/*.key
 config/*.pem
 results/
 Test.java
-
+.DS_Store
 # VSCode
 .calva/
 .lsp/
