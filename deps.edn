@@ -1,4 +1,4 @@
-{:paths ["src/main" "config"]
+{:paths ["src/main" "resources"]
  :deps
  {org.clojure/clojure                      {:mvn/version "1.10.3"}
   clojure-interop/java.security            {:mvn/version "1.0.5"}
@@ -28,7 +28,9 @@
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
    :sha        "77f78d1713e50e7b8610f58b5137695b0fccddaa"
    :exclusions [org.clojure/clojure]}
-  less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}}
+  less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
+  selmer/selmer                            {:mvn/version "1.12.44"}
+  org.clojure/core.memoize                 {:mvn/version "1.0.250"}}
  :aliases
  {:db-h2
   {:extra-paths ["src/h2"]
@@ -39,6 +41,24 @@
   :db-postgres
   {:extra-paths ["src/postgres"]
    :extra-deps  {org.postgresql/postgresql {:mvn/version "42.2.23"}}}
+  :bench
+  {:extra-paths ["src/bench"]
+   :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
+                 org.clojure/math.numeric-tower {:mvn/version "0.0.4"}
+                 babashka/babashka.curl         {:mvn/version "0.0.3"}
+                 com.yetanalytics/datasim
+                 {:git/url    "git@github.com:yetanalytics/datasim.git"
+                  :sha        "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
+                  :exclusions [org.clojure/clojure
+                               com.yetanalytics/xapi-schema
+                               com.yetanalytics/project-pan]}
+                 ;; Override pan dep in DATASIM
+                 com.yetanalytics/project-pan
+                 {:git/url    "git@github.com:yetanalytics/project-pan.git"
+                  :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
+                  :exclusions [org.clojure/clojure
+                               com.yetanalytics/xapi-schema
+                               com.yetanalytics/project-pan]}}}
   :test
   {:extra-paths ["src/h2" "src/test"]
    :extra-deps  {com.h2database/h2      {:mvn/version "1.4.200"}

@@ -52,43 +52,52 @@
 ;; Config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: The config map should be as normalized as possible, but there is some
-;; duplication at present.
-;; When it is fully normalized, the following function won't be needed
-(defn- ensure-config-map
-  "The :database key is duplicated via ref in the aero config.
-  Run this after merging user config to ensure any changed are reflected in
-  contection."
-  [{:keys [database] :as config}]
-  (assoc-in config [:connection :database] database))
+;; The default aero `#include` resolver does not work with JARs, so we
+;; need to resolve the root dirs manually.
+
+(def config-path-prefix "lrsql/config/")
+
+(defn- resolver
+  [_ include]
+  (io/resource (str config-path-prefix include)))
 
 (defn read-config*
-  "Read `config/config.edn` with the given value of `profile`. Valid
+  "Read `config.edn` with the given value of `profile`. Valid
    profiles are `:test-[db-type]` and `:prod-[db-type]`.
   Based on the :config-file-json key found will attempt to merge in properties
-  from the given path, if the file is present"
+  from the given path, if the file is present."
   [profile]
-  (let [{:keys [config-json-file]
-         :as   static-config} (aero/read-config
-                               (io/resource "config.edn")
-                               {:profile profile})
-        ^File config-file     (io/file config-json-file)]
-    (ensure-config-map
-     (merge-with
-      merge
-      static-config
-      (when (.exists config-file)
-        (try
-          (with-open [rdr (io/reader config-file)]
-            (cjson/parse-stream-strict
-             rdr (partial keyword nil)))
-          (catch Exception ex
-            (throw
-             (ex-info
-              "Invalid JSON in Config File"
-              {:type ::invalid-config-json
-               :path config-json-file}
-              ex)))))))))
+  (let [;; Read in and process aeron config
+        {:keys [config-json-file]
+         :as   static-config}
+        (aero/read-config (io/resource (str config-path-prefix "config.edn"))
+                          {:profile  profile
+                           :resolver resolver})
+        ;; place handle on the config file at path
+        ^File config-file   (io/file config-json-file)
+        ;; merge with user configuration if one is provided
+        {:keys [database
+                connection
+                lrs
+                webserver]} (merge-with
+                             merge
+                             static-config
+                             (when (.exists config-file)
+                               (try
+                                 (with-open [rdr (io/reader config-file)]
+                                   (cjson/parse-stream-strict
+                                    rdr (partial keyword nil)))
+                                 (catch Exception ex
+                                   (throw
+                                    (ex-info
+                                     "Invalid JSON in Config File"
+                                     {:type ::invalid-config-json
+                                      :path config-json-file}
+                                     ex))))))]
+    ;; form the final config the app will use
+    {:connection (assoc connection :database database)
+     :lrs        (assoc lrs :stmt-url-prefix (:url-prefix webserver))
+     :webserver  webserver}))
 
 (def read-config
   "Memoized version of `read-config*`."
@@ -240,14 +249,14 @@
    :squuid     The sequential UUID made up of a base UUID and timestamp.
    :base-uuid  The base v4 UUID that provides the lower 80 bits.
    :timestamp  The timestamp that provides the higher 48 bits.
-   
+
    The sequential UUIDs have 7 reserved bits from the RFC 4122 standard;
    4 for the UUID version and 3 for the UUID variant. This leaves 73 random
    bits, allowing for about 9.4 sextillion random segments.
-   
+
    The timestamp is coerced to millisecond resolution. Due to the 48 bit
    maximum on the timestamp, the latest time supported is February 11, 10332.
-   
+
    In case that this function is called multiple times in the same millisecond,
    subsequent SQUUIDs are created by incrementing the base UUID and thus the
    random segment of the SQUUID. An exception is thrown in the unlikely case

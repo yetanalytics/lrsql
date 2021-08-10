@@ -36,7 +36,8 @@ FROM xapi_statement stmt
 --~ (when (:actor-ifi params)    ":frag:actors-join-frag")
 --~ (when (:activity-iri params) ":frag:activs-join-frag")
 WHERE stmt.is_voided = FALSE
---~ (when (:from params)         "AND stmt.id >= :from")
+/*~ (when (:from params)
+     (if (:ascending? params) "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt.id > :since")
 --~ (when (:until params)        "AND stmt.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
@@ -46,6 +47,11 @@ WHERE stmt.is_voided = FALSE
       "ORDER BY stmt.id DESC") ~*/
 LIMIT :limit
 
+/* Note: We sort by both the PK and statement ID in order to force the query
+   planner to avoid scanning on `stmt_a.id` first, which is much slower than
+   joining on `statement_to_statement` (at least when the number of such links
+   is lower than the number of statements, which is most cases). */
+
 -- :frag stmt-ref-subquery-frag
 SELECT stmt_a.id, stmt_a.payload
 FROM xapi_statement stmt
@@ -53,8 +59,9 @@ FROM xapi_statement stmt
 --~ (when (:activity-iri params) ":frag:activs-join-frag")
 INNER JOIN statement_to_statement sts ON stmt.statement_id = sts.descendant_id
 INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
-WHERE TRUE
---~ (when (:from params)         "AND stmt_a.id >= :from")
+WHERE stmt_a.is_voided = FALSE
+/*~ (when (:from params)
+     (if (:ascending? params) "AND stmt_a.id >= :from" "AND stmt_a.id <= :from"))  ~*/
 --~ (when (:since params)        "AND stmt_a.id > :since")
 --~ (when (:until params)        "AND stmt_a.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
@@ -227,11 +234,11 @@ WHERE username = :username;
 SELECT api_key, secret_key FROM lrs_credential
 WHERE account_id = :account-id;
 
--- :name query-credential-exists
+-- :name query-credential-ids
 -- :command :query
 -- :result :one
--- :doc Query whether a credential with the associated `:api-key` and `:secret-key` exists.
-SELECT 1 FROM lrs_credential
+-- :doc Query the credential and account IDs associated with `:api-key` and `:secret-key`.
+SELECT id AS cred_id, account_id FROM lrs_credential
 WHERE api_key = :api-key
 AND secret_key = :secret-key;
 

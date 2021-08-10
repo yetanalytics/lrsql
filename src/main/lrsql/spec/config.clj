@@ -52,15 +52,19 @@
 (s/def ::api-key-default string?)
 (s/def ::api-secret-default string?)
 
-(s/def ::stmt-more-url-prefix string?)
 (s/def ::stmt-get-default pos-int?)
 (s/def ::stmt-get-max pos-int?)
 
+(s/def ::authority-template string?)
+(s/def ::authority-url ::xs/irl)
+
 (s/def ::lrs
   (s/and (s/conformer remove-nil-vals)
-         (s/keys :req-un [::stmt-more-url-prefix
-                          ::stmt-get-default
-                          ::stmt-get-max]
+         (s/keys :req-un [::stmt-get-default
+                          ::stmt-get-max
+                          ::stmt-url-prefix
+                          ::authority-template
+                          ::authority-url]
                  :opt-un [::api-key-default
                           ::api-secret-default])))
 
@@ -87,6 +91,7 @@
                    ::http-port
                    ::ssl-port
                    ::http2?
+                   ::url-prefix
                    ::key-alias
                    ::key-password
                    ::key-enable-selfie
@@ -99,8 +104,7 @@
 (s/def ::config-json-file string?)
 
 (def config-spec
-  (s/keys :req-un [::config-json-file
-                   ::database
-                   ::connection
+  (s/keys :req-un [::connection
                    ::lrs
-                   ::webserver]))
+                   ::webserver
+                   ::config-json-file]))

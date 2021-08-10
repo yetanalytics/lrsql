@@ -7,8 +7,7 @@
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
-            [lrsql.util.cert :as cu])
-  (:import [java.security KeyPair]))
+            [lrsql.util.cert :as cu]))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -19,6 +18,7 @@
                 http-host
                 http-port
                 ssl-port
+                url-prefix
                 key-password]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway}
@@ -41,6 +41,7 @@
      ::http/host          http-host
      ::http/port          (when http? http-port) ; nil = no HTTP
      ::http/join?         false
+     ::i/url-prefix       url-prefix
      ::http/allowed-origins
      {:creds           true
       :allowed-origins (constantly true)}
