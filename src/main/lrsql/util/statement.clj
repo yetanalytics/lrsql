@@ -163,14 +163,6 @@
 
 ;; Pre-query
 
-(defn add-more-url-prefix
-  "Apply the URL prefix for the `more` StatementResult property to the params
-   map from the LRS configs."
-  [{?url-prefix :stmt-more-url-prefix :as _lrs-config}
-   params]
-  (when ?url-prefix
-    (assoc params :more-url-prefix ?url-prefix)))
-
 (defn ensure-default-max-limit
   "Given `?limit`, apply the maximum possible limit (if it is zero
    or exceeds that limit) or the default limit (if it is `nil`).
@@ -196,14 +188,14 @@
 ;; Post-query
 
 (defn make-more-url
-  "Forms the `more` URL value from `query-params` and the Statement ID
-   `next-cursor` which points to the first Statement of the next page."
-  [query-params next-cursor]
-  (let [{?agent :agent ?prefix :more-url-prefix} query-params]
-    (str ?prefix
-         "/xapi/statements?"
+  "Forms the `more` URL value from `query-params`, the URL prefix `prefix` and
+   the Statement PK `next-cursor` which points to the first Statement of the
+   next page."
+  [query-params prefix next-cursor]
+  (let [{?agent :agent} query-params]
+    (str prefix
+         "/statements?"
          (form-encode
           (cond-> query-params
             true   (assoc :from next-cursor)
-            true   (dissoc :more-url-prefix)
             ?agent (assoc :agent (String. (u/write-json ?agent))))))))

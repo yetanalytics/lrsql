@@ -29,15 +29,15 @@
  :connection
  #profile
   {;; Test/Dev
-   :test-h2-mem   {:database #ref [:database]}
-   :test-h2       {:database #ref [:database]}
-   :test-sqlite   #merge [{:database #ref [:database]} #include "test/sqlite/connection.edn"]
-   :test-postgres {:database #ref [:database]}
+   :test-h2-mem   {}
+   :test-h2       {}
+   :test-sqlite   #include "test/sqlite/connection.edn"
+   :test-postgres {}
    ;; Production
-   :prod-h2-mem   #merge [{:database #ref [:database]} #include "prod/default/connection.edn"]
-   :prod-h2       #merge [{:database #ref [:database]} #include "prod/default/connection.edn"]
-   :prod-sqlite   #merge [{:database #ref [:database]} #include "prod/sqlite/connection.edn"]
-   :prod-postgres #merge [{:database #ref [:database]} #include "prod/default/connection.edn"]}
+   :prod-h2-mem   #include "prod/default/connection.edn"
+   :prod-h2       #include "prod/default/connection.edn"
+   :prod-sqlite   #include "prod/sqlite/connection.edn"
+   :prod-postgres #include "prod/default/connection.edn"}
  :lrs
  #profile
   {;; Test/Dev
