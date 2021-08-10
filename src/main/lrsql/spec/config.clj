@@ -49,9 +49,6 @@
                     pool-max-size 15}}]
            (<= pool-min-size pool-max-size))))
 
-(s/def ::url-prefix string?)
-(s/def ::authority-url string?) ; TODO: URL spec
-
 (s/def ::api-key-default string?)
 (s/def ::api-secret-default string?)
 
@@ -63,10 +60,9 @@
 
 (s/def ::lrs
   (s/and (s/conformer remove-nil-vals)
-         (s/keys :req-un [::url-prefix
-                          ::authority-url
-                          ::stmt-get-default
+         (s/keys :req-un [::stmt-get-default
                           ::stmt-get-max
+                          ::stmt-url-prefix
                           ::authority-template
                           ::authority-url]
                  :opt-un [::api-key-default
@@ -95,12 +91,12 @@
                    ::http-port
                    ::ssl-port
                    ::http2?
+                   ::url-prefix
                    ::key-alias
                    ::key-password
                    ::key-enable-selfie
                    ::jwt-exp-time
-                   ::jwt-exp-leeway
-                   ::url-prefix]
+                   ::jwt-exp-leeway]
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain]))

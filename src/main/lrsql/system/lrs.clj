@@ -99,7 +99,7 @@
     [lrs _auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
-          prefix (:url-prefix config)
+          prefix (:stmt-url-prefix config)
           inputs (->> params
                       (stmt-util/ensure-default-max-limit config)
                       stmt-input/query-statement-input)]

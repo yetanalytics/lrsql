@@ -26,18 +26,6 @@
                            :db-host #or [#env LRSQL_DB_HOST "localhost"]
                            :db-port #or [#env LRSQL_DB_PORT 5432]}
                           #include "prod/default/database.edn"]}
- :endpoint
- #profile
- {;; Test/Dev
-  :test-h2-mem   #include "test/default/endpoint.edn"
-  :test-h2       #include "test/default/endpoint.edn"
-  :test-sqlite   #include "test/default/endpoint.edn"
-  :test-postgres #include "test/default/endpoint.edn"
-  ;; Production
-  :prod-h2-mem   #include "prod/default/endpoint.edn"
-  :prod-h2       #include "prod/default/endpoint.edn"
-  :prod-sqlite   #include "prod/default/endpoint.edn"
-  :prod-postgres #include "prod/default/endpoint.edn"}
  :connection
  #profile
   {;; Test/Dev
