@@ -18,12 +18,10 @@
      (when (.exists config-file)
        (try
          (with-open [rdr (io/reader config-file)]
-           (cjson/parse-stream-strict
-            rdr (partial keyword nil)))
+           (cjson/parse-stream-strict rdr (partial keyword nil)))
          (catch Exception ex
            (throw
-            (ex-info
-             "Invalid JSON in Config File"
-             {:type ::invalid-user-config-json
-              :path user-config-json}
+            (ex-info "Invalid JSON in Config File"
+                     {:type ::invalid-user-config-json
+                      :path user-config-json}
              ex))))))))
