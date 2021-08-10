@@ -48,6 +48,8 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_STMT_MORE_URL_PREFIX` | A string that prefixes the fragment in the `more` URL returned by a multi-statement query. | Empty string |
 | `LRSQL_STMT_GET_DEFAULT` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` | 
 | `LRSQL_STMT_GET_MAX` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |
+| `LRSQL_AUTHORITY_TEMPLATE` | The filepath to the Statement authority template file, which describes how authorities are constructed during statement insertion. If the file is not found, the system defaults to a default authority function. | <details>`config/authority.json.template`<summary>(Long string)</summary></details>
+| `LRSQL_AUTHORITY_URL` | The URL that is set as the `authority-url` value when constructing an authority from a template. | `http://localhost`
 
 ### Webserver
 
@@ -57,7 +59,7 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_KEY_ALIAS` | The alias of the private key. | `lrsql_keystore` |
 | `LRSQL_KEY_PASSWORD` | The password protecting the keystore. **It is highly recommended that you override the default value.** | `lrsql_pass` |
 | `LRSQL_KEY_PKEY_FILE` | Private key in PEM format | `config/server.key.pem` |
-| `LRSQL_KEY_CERT_CHAIN` | Comma separated PEM files for cert. See the TLS/HTTPS section below. | `config/server.crt.pem,config/cacert.pem` |
+| `LRSQL_KEY_CERT_CHAIN` | Comma separated PEM files for cert. See the TLS/HTTPS section below. | <details>`config/server.crt.pem,config/cacert.pem`<summary>(Long string)</summary></details> |
 | `LRSQL_KEY_ENABLE_SELFIE` | Boolean, whether or not to enable self-signed cert generation. | true |
 | `LRSQL_JWT_EXP_TIME` | The amount of time, in seconds, after a JWT is created when it expires. Since JWTs are not revocable, **this this time should be short** (i.e. one hour or less). | `3600` (one hour) |
 | `LRSQL_JWT_EXP_LEEWAY` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |

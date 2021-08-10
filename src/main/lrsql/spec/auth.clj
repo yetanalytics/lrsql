@@ -5,7 +5,8 @@
             [xapi-schema.spec.regex :as xsr]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :as c]
-            [lrsql.spec.admin :as ads])
+            [lrsql.spec.admin :as ads]
+            [lrsql.spec.authority :as ats])
   (:import [java.util Base64 Base64$Encoder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -42,7 +43,7 @@
 (s/def ::api-key string?)
 (s/def ::secret-key string?)
 
-(s/def ::account-id ::c/primary-key)
+(s/def ::account-id ::ats/account-id)
 
 (s/def ::scope
   #{"statements/write"
@@ -53,6 +54,9 @@
     "profile"
     "all/read"
     "all"})
+
+(s/def ::ids
+  (s/keys :req-un [::ats/cred-id ::ats/account-id]))
 
 (s/def ::scopes
   (s/coll-of ::scope :min-count 1 :gen-max 5 :distinct true))
@@ -75,6 +79,15 @@
 (def key-pair-args-spec
   (s/alt :map  key-pair-spec
          :args (s/cat :api-key    ::api-key
+                      :secret-key ::secret-key)))
+
+(def key-pair-authority-args-spec
+  (s/alt :map (s/cat :authority-fn ::ats/authority-fn
+                     :authority-url ::ats/authority-url
+                     :key-pair key-pair-spec)
+         :args (s/cat :authority-fn ::ats/authority-fn
+                      :authority-url ::ats/authority-url
+                      :api-key ::api-key
                       :secret-key ::secret-key)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -120,6 +133,12 @@
 (def query-creds-input-spec
   (s/keys :req-un [::ads/account-id]))
 
-(def query-cred-scopes-input-spec
+(def query-cred-scopes*-input-spec
   (s/keys :req-un [::api-key
                    ::secret-key]))
+
+(def query-cred-scopes-input-spec
+  (s/keys :req-un [::api-key
+                   ::secret-key
+                   ::ats/authority-url
+                   ::ats/authority-fn]))

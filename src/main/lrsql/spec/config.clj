@@ -58,12 +58,17 @@
 (s/def ::stmt-get-default pos-int?)
 (s/def ::stmt-get-max pos-int?)
 
+(s/def ::authority-template string?)
+(s/def ::authority-url ::xs/irl)
+
 (s/def ::lrs
   (s/and (s/conformer remove-nil-vals)
          (s/keys :req-un [::url-prefix
                           ::authority-url
                           ::stmt-get-default
-                          ::stmt-get-max]
+                          ::stmt-get-max
+                          ::authority-template
+                          ::authority-url]
                  :opt-un [::api-key-default
                           ::api-secret-default])))
 
