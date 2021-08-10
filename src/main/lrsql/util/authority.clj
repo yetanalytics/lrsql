@@ -34,9 +34,13 @@
   [authority-fn]
   (s/valid? ::xs/agent (authority-fn sample-authority-fn-input)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Default Authority - known at compile-time
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn- assert-authority-fn
+  [template-path authority-fn]
+  (when-not (valid-authority-fn? authority-fn)
+    (throw
+     (ex-info "Authority template does not produce a valid xAPI Agent"
+              {:type          ::invalid-json
+               :template-path template-path}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Make authority function
@@ -72,22 +76,19 @@
    how many authorities will be cached before least recently used (LRU)
    clearing."
   [template-path & [threshold]]
-  (let [threshold (or threshold 512)
-        ^File f   (io/file template-path)]
-    (if (and f (.exists f))
-      ;; Override template supplied - use that
-      (let [template     (selm-parser/parse* f)
-            authority-fn (make-authority-fn* template)]
-        (if (valid-authority-fn? authority-fn)
-          (mem/lru authority-fn
-                   :lru/threshold threshold)
-          (throw
-           (ex-info "Authority template does not produce a valid xAPI Agent"
-                    {:type          ::invalid-json
-                     :template-path template-path}))))
-      ;; Override template not supplied - fall back to default
-      (mem/lru default-authority-fn
-               :lru/threshold threshold))))
+  (let [^File f
+        (io/file template-path)
+        authority-fn
+        (if (and f (.exists f))
+          ;; Override template supplied - use that
+          (let [template     (selm-parser/parse* f)
+                authority-fn (make-authority-fn* template)]
+            (assert-authority-fn template-path authority-fn)
+            authority-fn)
+          ;; Override template not supplied - fall back to default
+          default-authority-fn)]
+    (mem/lru authority-fn
+             :lru/threshold (or threshold 512))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
