@@ -24,6 +24,6 @@
            (throw
             (ex-info
              "Invalid JSON in Config File"
-             {:type ::invalid-config-json
+             {:type ::invalid-user-config-json
               :path user-config-json}
              ex))))))))
