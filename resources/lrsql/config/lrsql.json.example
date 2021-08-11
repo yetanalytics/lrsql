@@ -1,4 +1,9 @@
 {
+  "database": {
+    "db-name": "example",
+    "db-user": "dbusername",
+    "db-password": "changeme"
+  },
   "lrs" : {
     "api-key-default" : "my-api-key",
     "api-secret-default" : "changeme",
