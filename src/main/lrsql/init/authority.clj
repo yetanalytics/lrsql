@@ -1,4 +1,4 @@
-(ns lrsql.util.authority
+(ns lrsql.init.authority
   "Utilities for generating xAPI authority Agents"
   (:require [cheshire.core :as json]
             [clojure.core.memoize :as mem]

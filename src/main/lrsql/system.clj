@@ -3,14 +3,14 @@
             [lrsql.system.database :as db]
             [lrsql.system.lrs :as lrs]
             [lrsql.system.webserver :as webserver]
-            [lrsql.util :as u]))
+            [lrsql.init.config :refer [read-config]]))
 
 (defn system
   "Return a lrsql system with configuration specified by the `profile`
    keyword."
   [backend profile]
   (let [config
-        (u/read-config profile)
+        (read-config profile)
         initial-sys ; init without configuration
         (component/system-map
          :backend    (component/using
