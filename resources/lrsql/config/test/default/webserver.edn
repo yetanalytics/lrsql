@@ -4,8 +4,8 @@
  :key-enable-selfie true
  :jwt-exp-time      3600
  :jwt-exp-leeway    1
- :http?             true
- :http2?            true
+ :enable-http       true
+ :enable-http2      true
  :ssl-port          8443
  :http-host         "0.0.0.0"
  :http-port         8080

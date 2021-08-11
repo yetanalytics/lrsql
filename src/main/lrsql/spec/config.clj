@@ -68,8 +68,8 @@
                  :opt-un [::api-key-default
                           ::api-secret-default])))
 
-(s/def ::http? boolean?)
-(s/def ::http2? boolean?)
+(s/def ::enable-http boolean?)
+(s/def ::enable-http2 boolean?)
 
 (s/def ::http-host string?)
 (s/def ::http-port nat-int?)
@@ -90,7 +90,7 @@
   (s/keys :req-un [::http-host
                    ::http-port
                    ::ssl-port
-                   ::http2?
+                   ::enable-http2
                    ::url-prefix
                    ::key-alias
                    ::key-password
