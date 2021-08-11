@@ -15,7 +15,7 @@ pom.xml.asc
 .cpcache/
 *.db
 *.sqlite
-config/
+/config/
 results/
 Test.java
 .DS_Store
