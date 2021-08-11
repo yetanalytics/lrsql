@@ -1,4 +1,4 @@
-.phony: ci, ephemeral, persistent, bench, clean, run-jar-h2, run-jar-sqlite, bundle, config, run-jar-h2-persistent, run-jar-postgres
+.phony: ci, ephemeral, persistent, bench, clean, run-jar-h2, run-jar-sqlite, bundle, run-jar-h2-persistent, run-jar-postgres
 
 ci:
 	clojure -X:test
@@ -48,15 +48,18 @@ target/bundle/bin:
 	chmod +x target/bundle/bin/*.sh
 
 # Copy config
-# TODO: Add user config json file
+target/bundle/config/lrsql.json.example:
+	mkdir -p target/bundle/config
+	cp resources/lrsql/config/lrsql.json.example target/bundle/config/lrsql.json.example
+
 target/bundle/config/authority.json.template.example:
 	mkdir -p target/bundle/config
 	cp resources/lrsql/config/authority.json.template target/bundle/config/authority.json.template.example
 
-config: target/bundle/config/authority.json.template.example
+target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/config/authority.json.template.example
 
 # entire bundle
-target/bundle: config target/bundle/lrsql.jar target/bundle/bin
+target/bundle: target/bundle/config target/bundle/lrsql.jar target/bundle/bin
 
 bundle: target/bundle
 

@@ -10,7 +10,8 @@
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
             [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
-            [lrsql.spec.common :refer [instant-spec]])
+            [lrsql.spec.common :refer [instant-spec]]
+            [lrsql.util.config :as config])
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]))
@@ -63,12 +64,21 @@
 
 (defn read-config*
   "Read `config.edn` with the given value of `profile`. Valid
-   profiles are `:test-[db-type]` and `:prod-[db-type]`."
+   profiles are `:test-[db-type]` and `:prod-[db-type]`.
+  Based on the :config-file-json key found will attempt to merge in properties
+  from the given path, if the file is present."
   [profile]
-  (let [{:keys [database connection lrs webserver]}
-        (aero/read-config (io/resource (str config-path-prefix "config.edn"))
-                          {:profile  profile
-                           :resolver resolver})]
+  (let [;; Read in and process aeron config
+        {:keys [database
+                connection
+                lrs
+                webserver]} (-> (str config-path-prefix "config.edn")
+                                io/resource
+                                (aero/read-config
+                                 {:profile  profile
+                                  :resolver resolver})
+                                config/merge-user-config)]
+    ;; form the final config the app will use
     {:connection (assoc connection :database database)
      :lrs        (assoc lrs :stmt-url-prefix (:url-prefix webserver))
      :webserver  webserver}))
@@ -223,14 +233,14 @@
    :squuid     The sequential UUID made up of a base UUID and timestamp.
    :base-uuid  The base v4 UUID that provides the lower 80 bits.
    :timestamp  The timestamp that provides the higher 48 bits.
-   
+
    The sequential UUIDs have 7 reserved bits from the RFC 4122 standard;
    4 for the UUID version and 3 for the UUID variant. This leaves 73 random
    bits, allowing for about 9.4 sextillion random segments.
-   
+
    The timestamp is coerced to millisecond resolution. Due to the 48 bit
    maximum on the timestamp, the latest time supported is February 11, 10332.
-   
+
    In case that this function is called multiple times in the same millisecond,
    subsequent SQUUIDs are created by incrementing the base UUID and thus the
    random segment of the SQUUID. An exception is thrown in the unlikely case
