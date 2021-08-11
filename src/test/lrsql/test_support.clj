@@ -1,9 +1,9 @@
 (ns lrsql.test-support
   (:require [clojure.spec.test.alpha :as stest]
             [orchestra.spec.test :as otest]
+            [lrsql.init.config :refer [read-config]]
             [lrsql.h2.record :as ir]
-            [lrsql.system :as system]
-            [lrsql.util :as u])
+            [lrsql.system :as system])
   (:import [java.util UUID]))
 
 (defn- lrsql-syms
@@ -24,12 +24,12 @@
 (defn fresh-db-fixture
   [f]
   (let [id-str (str (UUID/randomUUID))
-        cfg (-> (u/read-config :test-h2-mem)
+        cfg (-> (read-config :test-h2-mem)
                 (assoc-in [:database :db-name] id-str)
                 (assoc-in [:connection :database :db-name] id-str)
                 (assoc-in [:lrs :database :db-name] id-str))]
     (with-redefs
-     [u/read-config (constantly cfg)]
+     [read-config (constantly cfg)]
       (f))))
 
 ;; TODO: Somehow allow other DMBSs to be tested

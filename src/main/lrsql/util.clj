@@ -2,7 +2,6 @@
   (:require [clj-uuid]
             [java-time]
             [java-time.properties :as jt-props]
-            [aero.core :as aero]
             [hugsql.core :as hug]
             [clojure.spec.alpha :as s]
             [clojure.java.io    :as io]
@@ -10,8 +9,7 @@
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
             [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
-            [lrsql.spec.common :refer [instant-spec]]
-            [lrsql.util.config :as config])
+            [lrsql.spec.common :refer [instant-spec]])
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]))
@@ -48,44 +46,6 @@
                           {:type      ::parse-failure
                            :data      ~data
                            :data-type ~data-type})))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Config
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; The default aero `#include` resolver does not work with JARs, so we
-;; need to resolve the root dirs manually.
-
-(def config-path-prefix "lrsql/config/")
-
-(defn- resolver
-  [_ include]
-  (io/resource (str config-path-prefix include)))
-
-(defn read-config*
-  "Read `config.edn` with the given value of `profile`. Valid
-   profiles are `:test-[db-type]` and `:prod-[db-type]`.
-  Based on the :config-file-json key found will attempt to merge in properties
-  from the given path, if the file is present."
-  [profile]
-  (let [;; Read in and process aeron config
-        {:keys [database
-                connection
-                lrs
-                webserver]} (-> (str config-path-prefix "config.edn")
-                                io/resource
-                                (aero/read-config
-                                 {:profile  profile
-                                  :resolver resolver})
-                                config/merge-user-config)]
-    ;; form the final config the app will use
-    {:connection (assoc connection :database database)
-     :lrs        (assoc lrs :stmt-url-prefix (:url-prefix webserver))
-     :webserver  webserver}))
-
-(def read-config
-  "Memoized version of `read-config*`."
-  (memoize read-config*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Timestamps
