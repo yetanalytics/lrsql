@@ -20,14 +20,14 @@ All environment variables can either be set directly via the command line, or ca
 
 | Env Var | Config | Description | Default |
 | --- | --- | --- | --- |
-| `LRSQL_DB_TYPE` | `db-type` | The DBMS that lrsql will use. Currently supports `h2:mem`, `h2`, `sqlite`, and `postgres`/`postgresql`. The default value used depends on the `main` entry point used, e.g. `lrsql.sqlite.main` will use `sqlite` by default, so overriding the default is **not** recommended. | Varies |
-| `LRSQL_DB_NAME` | `db-name` | The name of the database. | `example` |
-| `LRSQL_DB_HOST` | `db-host` | The host that the database will run on. Not supported by in-mem H2 or SQLite. | `localhost` |
-| `LRSQL_DB_PORT` | `db-port` | The port that the database will run on. Not supported by in-mem H2 or SQLite. | `9001` (H2), `5432` (PG) |
-| `LRSQL_DB_PROPERTIES` | `db-properties` | Optional additional database properties. Must be a string of comma-separated `key:value` pairs if set. Supported properties will depend on the DBMS. | Not set |
-| `LRSQL_DB_JDBC_URL` | `db-jdbc-url` | Optional JDBC URL; this will override the above properties if set. URL syntax will depend on the DBMS. | Not set |
-| `LRSQL_DB_USER` | `db-user` | The DB user. Optional. | Not set |
-| `LRSQL_DB_PASSWORD` | `db-password` | The DB password. Optional. | Not set |
+| `LRSQL_DB_TYPE` | `db_type` | The DBMS that lrsql will use. Currently supports `h2:mem`, `h2`, `sqlite`, and `postgres`/`postgresql`. The default value used depends on the `main` entry point used, e.g. `lrsql.sqlite.main` will use `sqlite` by default, so overriding the default is **not** recommended. | Varies |
+| `LRSQL_DB_NAME` | `db_name` | The name of the database. | `example` |
+| `LRSQL_DB_HOST` | `db_host` | The host that the database will run on. Not supported by in-mem H2 or SQLite. | `localhost` |
+| `LRSQL_DB_PORT` | `db_port` | The port that the database will run on. Not supported by in-mem H2 or SQLite. | `9001` (H2), `5432` (PG) |
+| `LRSQL_DB_PROPERTIES` | `db_properties` | Optional additional database properties. Must be a string of comma-separated `key:value` pairs if set. Supported properties will depend on the DBMS. | Not set |
+| `LRSQL_DB_JDBC_URL` | `db_jdbc_url` | Optional JDBC URL; this will override the above properties if set. URL syntax will depend on the DBMS. | Not set |
+| `LRSQL_DB_USER` | `db_user` | The DB user. Optional. | Not set |
+| `LRSQL_DB_PASSWORD` | `db_password` | The DB password. Optional. | Not set |
 
 ### Connection
 
@@ -35,41 +35,41 @@ The following environment variables are aliases for c3p0 properties, each of whi
 
 | Env Var | Config | c3p0 Property |
 | --- | --- | --- |
-| `LRSQL_POOL_INIT_SIZE` | `pool-init-size` |  [initialPoolSize](https://www.mchange.com/projects/c3p0/#initialPoolSize) |
-| `LRSQL_POOL_MIN_SIZE` | `pool-min-size` | [minPoolSize](https://www.mchange.com/projects/c3p0/#minPoolSize) |
-| `LRSQL_POOL_INC` | `pool-inc` | [acquireIncrement](https://www.mchange.com/projects/c3p0/#acquireIncrement) |
-| `LRSQL_POOL_MAX_SIZE` | `pool-max-size` | [maxPoolSize](https://www.mchange.com/projects/c3p0/#maxPoolSize) |
-| `LRSQL_POOL_MAX_STMTS` | `pool-max-stmts` | [maxStatements](https://www.mchange.com/projects/c3p0/#maxStatements) |
+| `LRSQL_POOL_INIT_SIZE` | `pool_init_size` |  [initialPoolSize](https://www.mchange.com/projects/c3p0/#initialPoolSize) |
+| `LRSQL_POOL_MIN_SIZE` | `pool_min_size` | [minPoolSize](https://www.mchange.com/projects/c3p0/#minPoolSize) |
+| `LRSQL_POOL_INC` | `pool_inc` | [acquireIncrement](https://www.mchange.com/projects/c3p0/#acquireIncrement) |
+| `LRSQL_POOL_MAX_SIZE` | `pool_max_size` | [maxPoolSize](https://www.mchange.com/projects/c3p0/#maxPoolSize) |
+| `LRSQL_POOL_MAX_STMTS` | `pool_max_stmts` | [maxStatements](https://www.mchange.com/projects/c3p0/#maxStatements) |
 
 ### LRS
 
 | Env Var | Config | Description | Default |
 | --- | --- | --- | --- |
-| `LRSQL_SEED_API_KEY` | `api-key-default` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
-| `LRSQL_SEED_API_SECRET` | `api-secret-default` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
-| `LRSQL_STMT_GET_DEFAULT` | `stmt-get-default` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` | 
-| `LRSQL_STMT_GET_MAX` | `stmt-get-max` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |
-| `LRSQL_AUTHORITY_TEMPLATE` | `authority-template` | The filepath to the Statement authority template file, which describes how authorities are constructed during statement insertion. If the file is not found, the system defaults to a default authority function. | <details>`config/authority.json.template`<summary>(Long string)</summary></details>
-| `LRSQL_AUTHORITY_URL` | `authority-url` | The URL that is set as the `authority-url` value when constructing an authority from a template. | `http://localhost`
+| `LRSQL_SEED_API_KEY` | `api_key_default` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
+| `LRSQL_SEED_API_SECRET` | `api_secret_default` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
+| `LRSQL_STMT_GET_DEFAULT` | `stmt_get_default` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` | 
+| `LRSQL_STMT_GET_MAX` | `stmt_get_max` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |
+| `LRSQL_AUTHORITY_TEMPLATE` | `authority_template` | The filepath to the Statement authority template file, which describes how authorities are constructed during statement insertion. If the file is not found, the system defaults to a default authority function. | <details>`config/authority.json.template`<summary>(Long string)</summary></details>
+| `LRSQL_AUTHORITY_URL` | `authority_url` | The URL that is set as the `authority-url` value when constructing an authority from a template. | `http://localhost`
 
 ### Webserver
 
 | Env Var | Config | Description | Default |
 | --- | --- | --- | --- |
-| `LRSQL_KEY_FILE` | `key-file` | The path to the Java Keystore file that contains the key pair and credentials, which are used for HTTPS as well as JWT signing and verification. | `config/keystore.jks` |
-| `LRSQL_KEY_ALIAS` | `key-alias` | The alias of the private key. | `lrsql_keystore` |
-| `LRSQL_KEY_PASSWORD` | `key-password` | The password protecting the keystore. **It is highly recommended that you override the default value.** | `lrsql_pass` |
-| `LRSQL_KEY_PKEY_FILE` | `key-pkey-file` | Private key in PEM format | `config/server.key.pem` |
-| `LRSQL_KEY_CERT_CHAIN` | `key-cert-chain` | Comma separated PEM files for cert. See the TLS/HTTPS section below. | <details>`config/server.crt.pem,config/cacert.pem`<summary>(Long string)</summary></details> |
-| `LRSQL_KEY_ENABLE_SELFIE` | `key-enable-selfie` | Boolean, whether or not to enable self-signed cert generation. | true |
-| `LRSQL_JWT_EXP_TIME` | `jwt-exp-time` | The amount of time, in seconds, after a JWT is created when it expires. Since JWTs are not revocable, **this this time should be short** (i.e. one hour or less). | `3600` (one hour) |
-| `LRSQL_JWT_EXP_LEEWAY` | `jwt-exp-leeway` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
+| `LRSQL_KEY_FILE` | `key_file` | The path to the Java Keystore file that contains the key pair and credentials, which are used for HTTPS as well as JWT signing and verification. | `config/keystore.jks` |
+| `LRSQL_KEY_ALIAS` | `key_alias` | The alias of the private key. | `lrsql_keystore` |
+| `LRSQL_KEY_PASSWORD` | `key_password` | The password protecting the keystore. **It is highly recommended that you override the default value.** | `lrsql_pass` |
+| `LRSQL_KEY_PKEY_FILE` | `key_pkey_file` | Private key in PEM format | `config/server.key.pem` |
+| `LRSQL_KEY_CERT_CHAIN` | `key_cert_chain` | Comma separated PEM files for cert. See the TLS/HTTPS section below. | <details>`config/server.crt.pem,config/cacert.pem`<summary>(Long string)</summary></details> |
+| `LRSQL_KEY_ENABLE_SELFIE` | `key_enable_selfie` | Boolean, whether or not to enable self-signed cert generation. | true |
+| `LRSQL_JWT_EXP_TIME` | `jwt_exp_time` | The amount of time, in seconds, after a JWT is created when it expires. Since JWTs are not revocable, **this this time should be short** (i.e. one hour or less). | `3600` (one hour) |
+| `LRSQL_JWT_EXP_LEEWAY` | `jwt_exp_leeway` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
 | `LRSQL_ENABLE_HTTP` | `http?` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
 | `LRSQL_ENABLE_HTTP2` | `http2` | Whether HTTP/2 is supported or not. | `true` |
-| `LRSQL_HTTP_HOST` | `http-host` | The host that the webserver will run on. | `0.0.0.0` (localhost) |
-| `LRSQL_HTTP_PORT` | `http-port` | The HTTP port that the webserver will be open on. | `8080` |
-| `LRSQL_SSL_PORT` | `ssl-port` | The HTTPS port that the webserver will be open on. | `8443` |
-| `LRSQL_URL_PREFIX` | `url-prefix` | The prefix of the webserver URL path, e.g. the prefix in `http://localhost/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi`
+| `LRSQL_HTTP_HOST` | `http_host` | The host that the webserver will run on. | `0.0.0.0` (localhost) |
+| `LRSQL_HTTP_PORT` | `http_port` | The HTTP port that the webserver will be open on. | `8080` |
+| `LRSQL_SSL_PORT` | `ssl_port` | The HTTPS port that the webserver will be open on. | `8443` |
+| `LRSQL_URL_PREFIX` | `url_prefix` | The prefix of the webserver URL path, e.g. the prefix in `http://localhost/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi`
 
 ## Makefile Targets
 
