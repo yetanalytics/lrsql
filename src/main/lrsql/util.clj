@@ -2,7 +2,6 @@
   (:require [clj-uuid]
             [java-time]
             [java-time.properties :as jt-props]
-            [aero.core :as aero]
             [hugsql.core :as hug]
             [clojure.spec.alpha :as s]
             [clojure.java.io    :as io]
@@ -10,8 +9,7 @@
             [xapi-schema.spec :as xs]
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
             [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
-            [lrsql.spec.common :refer [instant-spec]]
-            [lrsql.util.config :as config])
+            [lrsql.spec.common :refer [instant-spec]])
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]))
@@ -48,10 +46,6 @@
                           {:type      ::parse-failure
                            :data      ~data
                            :data-type ~data-type})))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Config
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Timestamps

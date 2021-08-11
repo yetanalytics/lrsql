@@ -25,4 +25,4 @@
             (ex-info "Invalid JSON in Config File"
                      {:type ::invalid-user-config-json
                       :path user-config-json}
-             ex))))))))
+                     ex))))))))
