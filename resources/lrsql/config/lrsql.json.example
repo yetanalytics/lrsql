@@ -1,0 +1,26 @@
+{
+  "lrs" : {
+    "api-key-default" : "my-api-key",
+    "api-secret-default" : "changeme",
+    "stmt-get-default" : 50,
+    "stmt-get-max" : 50,
+    "authority-template" : "config/authority.json.template",
+    "authority-url" : "http://localhost"
+  },
+  "webserver" : {
+    "key-file" : "config/keystore.jks",
+    "key-alias" : "lrsql_keystore",
+    "key-password" : "lrsql_pass",
+    "key-pkey-file" : "config/server.key.pem",
+    "key-cert-chain" : "config/server.crt.pem,config/cacert.pem",
+    "key-enable-selfie" : true,
+    "jwt-exp-time" : 3600,
+    "jwt-exp-leeway" : 1,
+    "http?" : true,
+    "http2?" : true,
+    "http-host" : "0.0.0.0",
+    "http-port" : 8080,
+    "ssl-port" : 8443,
+    "url-prefix" : "/xapi"
+  }
+}
