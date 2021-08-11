@@ -65,7 +65,7 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_JWT_EXP_TIME` | `jwt_exp_time` | The amount of time, in seconds, after a JWT is created when it expires. Since JWTs are not revocable, **this this time should be short** (i.e. one hour or less). | `3600` (one hour) |
 | `LRSQL_JWT_EXP_LEEWAY` | `jwt_exp_leeway` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
 | `LRSQL_ENABLE_HTTP` | `http?` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
-| `LRSQL_ENABLE_HTTP2` | `http2` | Whether HTTP/2 is supported or not. | `true` |
+| `LRSQL_ENABLE_HTTP2` | `http2?` | Whether HTTP/2 is supported or not. | `true` |
 | `LRSQL_HTTP_HOST` | `http_host` | The host that the webserver will run on. | `0.0.0.0` (localhost) |
 | `LRSQL_HTTP_PORT` | `http_port` | The HTTP port that the webserver will be open on. | `8080` |
 | `LRSQL_SSL_PORT` | `ssl_port` | The HTTPS port that the webserver will be open on. | `8443` |
