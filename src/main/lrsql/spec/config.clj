@@ -90,6 +90,7 @@
   (s/keys :req-un [::http-host
                    ::http-port
                    ::ssl-port
+                   ::enable-http
                    ::enable-http2
                    ::url-prefix
                    ::key-alias
