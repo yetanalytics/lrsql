@@ -174,7 +174,8 @@
                      key-pair)]
           (jdbc/with-transaction [tx conn]
             (auth-q/query-credential-scopes backend tx input)))
-        {:result :com.yetanalytics.lrs.auth/forbidden})))
+        ;; TODO: Return an error map
+        {:result :com.yetanalytics.lrs.auth/unauthorized})))
   (-authorize
     [_lrs ctx auth-identity]
     (auth-util/authorize-action ctx auth-identity))
