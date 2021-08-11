@@ -26,7 +26,7 @@
             [lrsql.system.util :refer [assert-config]]
             [lrsql.util.auth      :as auth-util]
             [lrsql.util.statement :as stmt-util]
-            [lrsql.util.authority :refer [make-authority-fn]])
+            [lrsql.init.authority :refer [make-authority-fn]])
   (:import [java.time Instant]))
 
 (defn- lrs-conn
