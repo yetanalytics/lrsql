@@ -1,7 +1,8 @@
 (ns lrsql.util.config
   "Functions for working with system and user configuration"
   (:require [cheshire.core :as cjson]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [camel-snake-kebab.core :as csk])
   (:import [java.io File]))
 
 (defn merge-user-config
@@ -18,7 +19,7 @@
      (when (.exists config-file)
        (try
          (with-open [rdr (io/reader config-file)]
-           (cjson/parse-stream-strict rdr (partial keyword nil)))
+           (cjson/parse-stream-strict rdr csk/->kebab-case-keyword))
          (catch Exception ex
            (throw
             (ex-info "Invalid JSON in Config File"

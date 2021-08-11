@@ -30,7 +30,8 @@
    :exclusions [org.clojure/clojure]}
   less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
   selmer/selmer                            {:mvn/version "1.12.44"}
-  org.clojure/core.memoize                 {:mvn/version "1.0.250"}}
+  org.clojure/core.memoize                 {:mvn/version "1.0.250"}
+  camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}}
  :aliases
  {:db-h2
   {:extra-paths ["src/h2"]
