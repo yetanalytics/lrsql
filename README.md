@@ -45,8 +45,8 @@ The following environment variables are aliases for c3p0 properties, each of whi
 
 | Env Var | Config | Description | Default |
 | --- | --- | --- | --- |
-| `LRSQL_SEED_API_KEY` | `apiKeyDefault` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
-| `LRSQL_SEED_API_SECRET` | `apiSecretDefault` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
+| `LRSQL_API_KEY_DEFAULT` | `apiKeyDefault` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
+| `LRSQL_API_SECRET_DEFAULT` | `apiSecretDefault` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
 | `LRSQL_STMT_GET_DEFAULT` | `stmtGetDefault` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` | 
 | `LRSQL_STMT_GET_MAX` | `stmtGetMax` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |
 | `LRSQL_AUTHORITY_TEMPLATE` | `authorityTemplate` | The filepath to the Statement authority template file, which describes how authorities are constructed during statement insertion. If the file is not found, the system defaults to a default authority function. | <details>`config/authority.json.template`<summary>(Long string)</summary></details>
@@ -64,8 +64,8 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_KEY_ENABLE_SELFIE` | `keyEnableSelfie` | Boolean, whether or not to enable self-signed cert generation. | true |
 | `LRSQL_JWT_EXP_TIME` | `jwtExpTime` | The amount of time, in seconds, after a JWT is created when it expires. Since JWTs are not revocable, **this this time should be short** (i.e. one hour or less). | `3600` (one hour) |
 | `LRSQL_JWT_EXP_LEEWAY` | `jwtExpLeeway` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
-| `LRSQL_ENABLE_HTTP` | `http?` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
-| `LRSQL_ENABLE_HTTP2` | `http2?` | Whether HTTP/2 is supported or not. | `true` |
+| `LRSQL_ENABLE_HTTP` | `enableHttp` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
+| `LRSQL_ENABLE_HTTP2` | `enableHttp2` | Whether HTTP/2 is supported or not. | `true` |
 | `LRSQL_HTTP_HOST` | `httpHost` | The host that the webserver will run on. | `0.0.0.0` (localhost) |
 | `LRSQL_HTTP_PORT` | `httpPort` | The HTTP port that the webserver will be open on. | `8080` |
 | `LRSQL_SSL_PORT` | `sslPort` | The HTTPS port that the webserver will be open on. | `8443` |

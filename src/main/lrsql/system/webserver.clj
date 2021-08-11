@@ -13,8 +13,8 @@
   "Create a new service map for the webserver."
   [lrs config]
   (let [;; Destructure webserver config
-        {:keys [http?
-                http2?
+        {:keys [enable-http
+                enable-http2
                 http-host
                 http-port
                 ssl-port
@@ -39,15 +39,15 @@
      ::http/resource-path "/public"
      ::http/type          :jetty
      ::http/host          http-host
-     ::http/port          (when http? http-port) ; nil = no HTTP
+     ::http/port          (when enable-http http-port) ; nil = no HTTP
      ::http/join?         false
      ::i/url-prefix       url-prefix
      ::http/allowed-origins
      {:creds           true
       :allowed-origins (constantly true)}
      ::http/container-options
-     {:h2c?         (and http? http2?)
-      :h2?          http2?
+     {:h2c?         (and enable-http enable-http2)
+      :h2?          enable-http2
       :ssl?         true
       :ssl-port     ssl-port
       :keystore     keystore
