@@ -45,8 +45,8 @@ The following environment variables are aliases for c3p0 properties, each of whi
 
 | Env Var | Config | Description | Default |
 | --- | --- | --- | --- |
-| `LRSQL_SEED_API_KEY` | `apiKeyDefault` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
-| `LRSQL_SEED_API_SECRET` | `apiSecretDefault` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
+| `LRSQL_API_KEY_DEFAULT` | `apiKeyDefault` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
+| `LRSQL_API_SECRET_DEFAULT` | `apiSecretDefault` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
 | `LRSQL_STMT_GET_DEFAULT` | `stmtGetDefault` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` | 
 | `LRSQL_STMT_GET_MAX` | `stmtGetMax` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |
 | `LRSQL_AUTHORITY_TEMPLATE` | `authorityTemplate` | The filepath to the Statement authority template file, which describes how authorities are constructed during statement insertion. If the file is not found, the system defaults to a default authority function. | <details>`config/authority.json.template`<summary>(Long string)</summary></details>
