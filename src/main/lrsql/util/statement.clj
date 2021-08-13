@@ -94,7 +94,7 @@
               dissoc-activity-def)
       ?cat-acts ; Also unorder context activity arrays
       (update-in ["context" "contextActivities" "category"]
-                 (comp (partial sort-by) dissoc-activity-defs))
+                 (comp set dissoc-activity-defs))
       ?grp-acts
       (update-in ["context" "contextActivities" "grouping"]
                  (comp set dissoc-activity-defs))
@@ -107,8 +107,8 @@
       ;; Group member arrays must be unordered
       ;; Note: Ignore authority unless OAuth is enabled
       (= "Group" stmt-act-type)
-      (update-in  ["actor" "member"]
-                  set)
+      (update-in ["actor" "member"]
+                 set)
       (= "Group" stmt-obj-type)
       (update-in ["object" "member"]
                  set)
