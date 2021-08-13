@@ -102,3 +102,11 @@
             %))
      code)
    tests))
+
+(defmacro seq-is
+  "Apply `clojure.test/is` to each element of `exprs`, comapring each
+   result to `expected`."
+  [expected exprs]
+  (let [is-exprs# (map (fn [expr] `(clojure.test/is (= ~expected ~expr)))
+                      exprs)]
+    `(do ~@is-exprs#)))

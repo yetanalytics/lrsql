@@ -515,47 +515,50 @@
    :content-type  "text/plain"
    :contents      (.getBytes "Example Document 2")})
 
+(defn- get-doc
+  "Same as lrsp/-get-documents except automatically formats the result."
+  [lrs auth-ident params]
+  (-> (lrsp/-get-document lrs auth-ident params)
+      (update :document dissoc :updated)
+      (update-in [:document :contents] #(String. %))))
+
 (deftest test-document-fns
   (let [sys  (support/test-system)
         sys' (component/start sys)
         lrs  (:lrs sys')]
     (testing "document insertion"
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 state-id-params
-                                 state-doc-1
-                                 true)))
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 state-id-params
-                                 state-doc-2
-                                 true)))
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 state-id-params-2
-                                 state-doc-1
-                                 false)))
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 state-id-params-2
-                                 state-doc-2
-                                 false)))
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 agent-prof-id-params
-                                 agent-prof-doc
-                                 false)))
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 activity-prof-id-params
-                                 activity-prof-doc
-                                 false))))
+      (support/seq-is
+       {}
+       [(lrsp/-set-document lrs
+                            auth-ident
+                            state-id-params
+                            state-doc-1
+                            true)
+        (lrsp/-set-document lrs
+                            auth-ident
+                            state-id-params
+                            state-doc-2
+                            true)
+        (lrsp/-set-document lrs
+                            auth-ident
+                            state-id-params-2
+                            state-doc-1
+                            false)
+        (lrsp/-set-document lrs
+                            auth-ident
+                            state-id-params-2
+                            state-doc-2
+                            false)
+        (lrsp/-set-document lrs
+                            auth-ident
+                            agent-prof-id-params
+                            agent-prof-doc
+                            false)
+        (lrsp/-set-document lrs
+                            auth-ident
+                            activity-prof-id-params
+                            activity-prof-doc
+                            false)]))
 
     (testing "document query"
       (is (= {:document
@@ -563,71 +566,65 @@
                :content-length 18
                :content-type   "application/json"
                :id             "some-id"}}
-             (-> (lrsp/-get-document lrs auth-ident state-id-params)
-                 (update :document dissoc :updated)
-                 (update-in [:document :contents] #(String. %)))))
+             (get-doc lrs auth-ident state-id-params)))
       (is (= {:document
               {:contents       "{\"foo\":10}"
                :content-length 10
                :content-type   "application/json"
                :id             "some-other-id"}}
-             (-> (lrsp/-get-document lrs auth-ident state-id-params-2)
-                 (update :document dissoc :updated)
-                 (update-in [:document :contents] #(String. %)))))
+             (get-doc lrs auth-ident state-id-params-2)))
       (is (= {:document
               {:contents       "Example Document"
                :content-length 16
                :content-type   "text/plain"
                :id             "https://example.org/some-profile"}}
-             (-> (lrsp/-get-document lrs auth-ident agent-prof-id-params)
-                 (update :document dissoc :updated)
-                 (update-in [:document :contents] #(String. %)))))
+             (get-doc lrs auth-ident agent-prof-id-params)))
       (is (= {:document
               {:contents       "Example Document 2"
                :content-length 18
                :content-type   "text/plain"
                :id             "https://example.org/some-profile"}}
-             (-> (lrsp/-get-document lrs auth-ident activity-prof-id-params)
-                 (update :document dissoc :updated)
-                 (update-in [:document :contents] #(String. %))))))
+             (get-doc lrs auth-ident activity-prof-id-params))))
+  
     (testing "document ID query"
       (is (= {:document-ids ["some-id" "some-other-id"]}
-             (lrsp/-get-document-ids lrs
-                                     auth-ident
-                                     (dissoc state-id-params :stateId))))
+             (lrsp/-get-document-ids
+              lrs
+              auth-ident
+              (dissoc state-id-params :stateId))))
       (is (= {:document-ids ["https://example.org/some-profile"]}
-             (lrsp/-get-document-ids lrs
-                                     auth-ident
-                                     (dissoc agent-prof-id-params
-                                             :profileId))))
+             (lrsp/-get-document-ids
+              lrs
+              auth-ident
+              (dissoc agent-prof-id-params :profileId))))
       (is (= {:document-ids ["https://example.org/some-profile"]}
-             (lrsp/-get-document-ids lrs
-                                     auth-ident
-                                     (dissoc activity-prof-id-params
-                                             :profileId)))))
+             (lrsp/-get-document-ids
+              lrs
+              auth-ident
+              (dissoc activity-prof-id-params :profileId)))))
+  
     (testing "document deletion"
-      (is (= {}
-             (lrsp/-delete-documents lrs
-                                     auth-ident
-                                     (dissoc state-id-params :stateId))))
-      (is (= {}
-             (lrsp/-delete-document lrs
-                                    auth-ident
-                                    agent-prof-id-params)))
-      (is (= {}
-             (lrsp/-delete-document lrs
-                                    auth-ident
-                                    activity-prof-id-params)))
-      (is (= {:document nil}
-             (lrsp/-get-document lrs
-                                 auth-ident
-                                 state-id-params)))
-      (is (= {:document nil}
-             (lrsp/-get-document lrs
-                                 auth-ident
-                                 agent-prof-id-params)))
-      (is (= {:document nil}
-             (lrsp/-get-document lrs
-                                 auth-ident
-                                 activity-prof-id-params))))
+      (support/seq-is
+       {}
+       [(lrsp/-delete-documents lrs
+                                auth-ident
+                                (dissoc state-id-params :stateId))
+        (lrsp/-delete-document lrs
+                               auth-ident
+                               agent-prof-id-params)
+        (lrsp/-delete-document lrs
+                               auth-ident
+                               activity-prof-id-params)])
+      (support/seq-is
+       {:document nil}
+       [(lrsp/-get-document lrs
+                            auth-ident
+                            state-id-params)
+        (lrsp/-get-document lrs
+                            auth-ident
+                            agent-prof-id-params)
+        (lrsp/-get-document lrs
+                            auth-ident
+                            activity-prof-id-params)]))
+    
     (component/stop sys')))
