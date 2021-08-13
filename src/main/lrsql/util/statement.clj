@@ -105,7 +105,7 @@
       (update-in ["context" "contextActivities" "other"]
                  (comp set dissoc-activity-defs))
       ;; Group member arrays must be unordered
-      ;; Note: Ignore authority unless OAuth is enabled
+      ;; NOTE: Ignore authority unless OAuth is enabled
       (= "Group" stmt-act-type)
       (update-in ["actor" "member"]
                  set)
@@ -113,10 +113,10 @@
       (update-in ["object" "member"]
                  set)
       (and ?stmt-inst (contains? ?stmt-inst "member"))
-      (update-in ["context" "instructor" "membrs"]
+      (update-in ["context" "instructor" "member"]
                  set)
       (and ?stmt-team (contains? ?stmt-inst "member"))
-      (update-in ["context" "team" "members"]
+      (update-in ["context" "team" "member"]
                  set)
       ;; Repeat the above in any Substatements
       (and (not substmt?)
