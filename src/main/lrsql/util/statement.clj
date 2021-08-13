@@ -62,15 +62,18 @@
 
 ;; TODO: Case sensitivity of string values
 (defn- dissoc-statement-properties*
-  [stmt substmt?]
-  (let [{{stmt-act-type "objectType" :or {stmt-act-type "Agent"}}                                                                          "actor"
-         {stmt-obj-type "objectType" :or {stmt-obj-type "Activity"}}                                                 "object"
+  [substmt? stmt]
+  (let [{{stmt-act-type "objectType" :or {stmt-act-type "Agent"}}
+         "actor"
+         {stmt-obj-type "objectType" :or {stmt-obj-type "Activity"}}
+         "object"
          {{?cat-acts "category"
            ?grp-acts "grouping"
            ?prt-acts "parent"
            ?oth-acts "other"} "contextActivities"
           ?stmt-inst "instructor"
-          ?stmt-team "team"} "context"}
+          ?stmt-team "team"}
+         "context"}
         stmt
         dissoc-activity-def
         (fn [activity] (dissoc activity "definition"))
@@ -94,7 +97,7 @@
               dissoc-activity-def)
       ?cat-acts ; Also unorder context activity arrays
       (update-in ["context" "contextActivities" "category"]
-                 (comp (partial sort-by) dissoc-activity-defs))
+                 (comp set dissoc-activity-defs))
       ?grp-acts
       (update-in ["context" "contextActivities" "grouping"]
                  (comp set dissoc-activity-defs))
@@ -105,29 +108,29 @@
       (update-in ["context" "contextActivities" "other"]
                  (comp set dissoc-activity-defs))
       ;; Group member arrays must be unordered
-      ;; Note: Ignore authority unless OAuth is enabled
+      ;; NOTE: Ignore authority unless OAuth is enabled
       (= "Group" stmt-act-type)
-      (update-in  ["actor" "member"]
-                  set)
+      (update-in ["actor" "member"]
+                 set)
       (= "Group" stmt-obj-type)
       (update-in ["object" "member"]
                  set)
       (and ?stmt-inst (contains? ?stmt-inst "member"))
-      (update-in ["context" "instructor" "membrs"]
+      (update-in ["context" "instructor" "member"]
                  set)
       (and ?stmt-team (contains? ?stmt-inst "member"))
-      (update-in ["context" "team" "members"]
+      (update-in ["context" "team" "member"]
                  set)
       ;; Repeat the above in any Substatements
       (and (not substmt?)
            (= "SubStatement" stmt-obj-type))
-      (update "object" (dissoc-statement-properties* stmt true)))))
+      (update "object" (partial dissoc-statement-properties* true)))))
 
 (defn dissoc-statement-properties
   "Dissociate any Statement properties in `stmt` that are an exception to
    Statement Immutability."
   [stmt]
-  (dissoc-statement-properties* stmt false))
+  (dissoc-statement-properties* false stmt))
 
 (defn statement-equal?
   "Compare two Statements based on their immutable properties."
