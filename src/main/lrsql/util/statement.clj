@@ -62,15 +62,18 @@
 
 ;; TODO: Case sensitivity of string values
 (defn- dissoc-statement-properties*
-  [stmt substmt?]
-  (let [{{stmt-act-type "objectType" :or {stmt-act-type "Agent"}}                                                                          "actor"
-         {stmt-obj-type "objectType" :or {stmt-obj-type "Activity"}}                                                 "object"
+  [substmt? stmt]
+  (let [{{stmt-act-type "objectType" :or {stmt-act-type "Agent"}}
+         "actor"
+         {stmt-obj-type "objectType" :or {stmt-obj-type "Activity"}}
+         "object"
          {{?cat-acts "category"
            ?grp-acts "grouping"
            ?prt-acts "parent"
            ?oth-acts "other"} "contextActivities"
           ?stmt-inst "instructor"
-          ?stmt-team "team"} "context"}
+          ?stmt-team "team"}
+         "context"}
         stmt
         dissoc-activity-def
         (fn [activity] (dissoc activity "definition"))
@@ -121,13 +124,13 @@
       ;; Repeat the above in any Substatements
       (and (not substmt?)
            (= "SubStatement" stmt-obj-type))
-      (update "object" (dissoc-statement-properties* stmt true)))))
+      (update "object" (partial dissoc-statement-properties* true)))))
 
 (defn dissoc-statement-properties
   "Dissociate any Statement properties in `stmt` that are an exception to
    Statement Immutability."
   [stmt]
-  (dissoc-statement-properties* stmt false))
+  (dissoc-statement-properties* false stmt))
 
 (defn statement-equal?
   "Compare two Statements based on their immutable properties."
