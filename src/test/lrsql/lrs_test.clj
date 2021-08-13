@@ -4,8 +4,29 @@
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.test-support :as support]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Init Test Config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Instrument
+(support/instrument-lrsql)
+
+;; New DB config
+(use-fixtures :each support/fresh-db-fixture)
+
+(def auth-ident
+  {:agent {"objectType" "Agent"
+           "account"    {"homePage" "http://example.org"
+                         "name"     "12341234-0000-4000-1234-123412341234"}}})
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Need to have a non-zero UUID version, or else xapi-schema gets angry
+
 (def stmt-0
-  {"id"     "5c9cbcb0-18c0-46de-bed1-c622c03163a1"
+  {"id"     "00000000-0000-4000-8000-000000000000"
    "actor"  {"mbox"       "mailto:sample.foo@example.com"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
@@ -13,7 +34,7 @@
    "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
 
 (def stmt-1
-  {"id"     "030e001f-b32a-4361-b701-039a3d9fceb1"
+  {"id"     "00000000-0000-4000-8000-000000000001"
    "actor"  {"mbox"       "mailto:sample.agent@example.com"
              "name"       "Sample Agent 1"
              "objectType" "Agent"}
@@ -25,7 +46,7 @@
                            "description" {"en-US" "Multi Part Activity Description"}}}})
 
 (def stmt-2
-  {"id"     "3f5f3c7d-c786-4496-a3a8-6d6e4461aa9d"
+  {"id"     "00000000-0000-4000-8000-000000000002"
    "actor"  {"account"    {"name"     "Sample Agent 2"
                            "homePage" "https://example.org"}
              "name"       "Sample Agent 2"
@@ -37,7 +58,7 @@
 
 (def stmt-3
   (-> stmt-1
-      (assoc "id" "708b3377-2fa0-4b96-9ff1-b10208b599b1")
+      (assoc "id" "00000000-0000-4000-8000-000000000003")
       (assoc "actor" {"openid"     "https://example.org"
                       "name"       "Sample Agent 3"
                       "objectType" "Agent"})
@@ -46,7 +67,7 @@
       (assoc-in ["context" "contextActivities" "other"] [(get stmt-1 "object")])))
 
 (def stmt-4
-  {"id"          "e8477a8d-786c-48be-a703-7c8ec7eedee5"
+  {"id"          "00000000-0000-4000-8000-000000000004"
    "actor"       {"mbox"       "mailto:sample.group.4@example.com"
                   "name"       "Sample Group 4"
                   "objectType" "Group"
@@ -91,17 +112,6 @@
       (dissoc "authority")
       (dissoc "version")))
 
-;; Instrument
-(support/instrument-lrsql)
-
-;; New DB config
-(use-fixtures :each support/fresh-db-fixture)
-
-(def auth-ident
-  {:agent {"objectType" "Agent"
-           "account" {"homePage" "http://example.org"
-                      "name" "12341234-0000-4000-1234-123412341234"}}})
-
 (deftest test-statement-fns
   (let [sys   (support/test-system)
         sys'  (component/start sys)
@@ -119,6 +129,7 @@
         vrb-1 (get-in stmt-1 ["verb" "id"])
         act-1 (get-in stmt-1 ["object" "id"])
         act-4 (get-in stmt-4 ["object" "id"])]
+
     (testing "statement insertions"
       (is (= {:statement-ids [id-0]}
              (lrsp/-store-statements lrs auth-ident [stmt-0] [])))
@@ -150,7 +161,7 @@
              (-> (lrsp/-get-statements lrs auth-ident {:voidedStatementId id-0 :format "canonical"} #{"en-US"})
                  (update :statement remove-props))))
       (is (= {:statement
-              {"id"     "030e001f-b32a-4361-b701-039a3d9fceb1"
+              {"id"     id-1
                "actor"  {"objectType" "Agent"
                          "mbox"       "mailto:sample.agent@example.com"}
                "verb"   {"id" "http://adlnet.gov/expapi/verbs/answered"}
@@ -285,6 +296,7 @@
                  (-> (lrsp/-get-statements lrs auth-ident {:limit 2 :ascending true :from from} #{})
                      (update-in [:statement-result :statements]
                                 (partial map remove-props)))))))
+
       (testing "(with actor)"
         (let [params {:limit 1
                       :agent {"name" "Sample Agent 1"
@@ -309,45 +321,53 @@
                    (-> (lrsp/-get-statements lrs auth-ident (assoc params :from from) #{})
                        (update-in [:statement-result :statements]
                                   (partial map remove-props)))))))))
+
     (testing "querying with attachments"
-      (is (= {:statement-result {:statements [stmt-4] :more ""}
-              :attachments      [(update stmt-4-attach :content #(String. %))]}
-             (-> (lrsp/-get-statements lrs auth-ident {:activity act-4 :attachments true} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props))
-                 (update-in [:attachments]
-                            vec)
-                 (update-in [:attachments 0 :content]
-                            #(String. %))))))
-    
-    (testing "querying with attachments (single)"
-      (is (= {:statement    stmt-4
-              :attachments  [(update stmt-4-attach :content #(String. %))]}
-             (-> (lrsp/-get-statements lrs auth-ident {:statementId
-                                                       (get stmt-4 "id")
-                                                       :attachments true} #{})
-                 (update    :statement
-                            remove-props)
-                 (update-in [:attachments]
-                            vec)
-                 (update-in [:attachments 0 :content]
-                            #(String. %))))))
+      (testing "(multiple)"
+        (is (= {:statement-result {:statements [stmt-4] :more ""}
+                :attachments      [(update stmt-4-attach :content #(String. %))]}
+               (-> (lrsp/-get-statements lrs auth-ident {:activity act-4 :attachments true} #{})
+                   (update-in [:statement-result :statements]
+                              (partial map remove-props))
+                   (update-in [:attachments]
+                              vec)
+                   (update-in [:attachments 0 :content]
+                              #(String. %))))))
+
+      (testing "(single)"
+        (is (= {:statement    stmt-4
+                :attachments  [(update stmt-4-attach :content #(String. %))]}
+               (-> (lrsp/-get-statements lrs auth-ident {:statementId
+                                                         (get stmt-4 "id")
+                                                         :attachments true} #{})
+                   (update    :statement
+                              remove-props)
+                   (update-in [:attachments]
+                              vec)
+                   (update-in [:attachments 0 :content]
+                              #(String. %)))))))
+
     (testing "agent query"
-      (is (= {:person {"objectType" "Person"
-                       "name" ["Sample Agent 1"]
-                       "mbox" ["mailto:sample.agent@example.com"]}}
+      (is (= {:person
+              {"objectType" "Person"
+               "name" ["Sample Agent 1"]
+               "mbox" ["mailto:sample.agent@example.com"]}}
              (lrsp/-get-person lrs auth-ident {:agent agt-1}))))
+
     (testing "activity query"
       ;; Activity was updated between stmt-0 and stmt-1
-      (is (= {:activity {"id"         "http://www.example.com/tincan/activities/multipart"
-                         "objectType" "Activity"
-                         "definition" {"name"        {"en-US" "Multi Part Activity"}
-                                       "description" {"en-US" "Multi Part Activity Description"}}}}
+      (is (= {:activity
+              {"id"         "http://www.example.com/tincan/activities/multipart"
+               "objectType" "Activity"
+               "definition" {"name"        {"en-US" "Multi Part Activity"}
+                             "description" {"en-US" "Multi Part Activity Description"}}}}
              (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
     (component/stop sys')
     (support/unstrument-lrsql)))
 
-;; Need to have a non-zero UUID version, or else xapi-schema gets angry
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Ref Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def stmt-1'
   {"id"     "00000000-0000-4000-0000-000000000001"
@@ -492,6 +512,10 @@
                  (update-in [:statement-result :statements]
                             (partial map remove-props))))))
     (component/stop sys')))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Document Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def state-id-params
   {:stateId    "some-id"
