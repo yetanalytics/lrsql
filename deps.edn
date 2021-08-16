@@ -19,6 +19,10 @@
   com.stuartsierra/component               {:mvn/version "1.0.0"}
   org.clojure/tools.logging                {:mvn/version "1.1.0"}
   ch.qos.logback/logback-classic           {:mvn/version "1.2.3"}
+  less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
+  selmer/selmer                            {:mvn/version "1.12.44"}
+  org.clojure/core.memoize                 {:mvn/version "1.0.250"}
+  camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
   com.yetanalytics/lrs
   {:git/url    "git@github.com:yetanalytics/lrs.git"
    :sha        "76e5ef031b8469cc25a8ff8bb550b40207c3148b"
@@ -26,12 +30,12 @@
                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
-   :sha        "77f78d1713e50e7b8610f58b5137695b0fccddaa"
+   :sha        "4b97122d839e895b9111e6ed62ae68bc0fdee723"
    :exclusions [org.clojure/clojure]}
-  less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
-  selmer/selmer                            {:mvn/version "1.12.44"}
-  org.clojure/core.memoize                 {:mvn/version "1.0.250"}
-  camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}}
+  com.yetanalytics/colossal-squuid
+  {:git/url    "git@github.com:yetanalytics/colossal-squuid.git"
+   :sha        "a125975fc40b14bbba7e7fe4fbe4d9363f7c2202"
+   :exclusions [org.clojure/clojure]}}
  :aliases
  {:db-h2
   {:extra-paths ["src/h2"]
