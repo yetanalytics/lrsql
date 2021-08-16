@@ -154,7 +154,7 @@
 
 (defn time->uuid
   "Convert a java.util.Instant timestamp to a UUID. The upper 48 bits represent
-   the timestamp, while the lower 80 bits are `1FFF-1FFF-FFFFFFFFFFFF`."
+   the timestamp, while the lower 80 bits are `8FFF-8FFF-FFFFFFFFFFFF`."
   [^Instant ts]
   (squuid/time->uuid ts))
 
