@@ -76,7 +76,20 @@
                  com.yetanalytics.lrs/test-runner
                  {:git/url    "git@github.com:yetanalytics/lrs-test-runner.git"
                   :sha        "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
-                  :exclusions [org.clojure/data.json]}}
+                  :exclusions [org.clojure/data.json]}
+                 com.yetanalytics/datasim
+                 {:git/url    "git@github.com:yetanalytics/datasim.git"
+                  :sha        "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
+                  :exclusions [org.clojure/clojure
+                               com.yetanalytics/xapi-schema
+                               com.yetanalytics/project-pan]}
+                 ;; Override pan dep in DATASIM
+                 com.yetanalytics/project-pan
+                 {:git/url    "git@github.com:yetanalytics/project-pan.git"
+                  :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
+                  :exclusions [org.clojure/clojure
+                               com.yetanalytics/xapi-schema
+                               com.yetanalytics/project-pan]}}
    :exec-fn     cognitect.test-runner.api/test
    :exec-args   {:dirs ["src/test"]}}
   ;; build alias invoked like clojure -Xbuild uber
