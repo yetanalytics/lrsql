@@ -47,7 +47,7 @@
   {:extra-paths ["src/postgres"]
    :extra-deps  {org.postgresql/postgresql {:mvn/version "42.2.23"}}}
   :bench
-  {:extra-paths ["src/bench"]
+  {:extra-paths ["src/bench" "dev-resources"]
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
                  org.clojure/math.numeric-tower {:mvn/version "0.0.4"}
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
@@ -65,7 +65,7 @@
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}}}
   :test
-  {:extra-paths ["src/h2" "src/test"]
+  {:extra-paths ["src/h2" "src/test" "dev-resources"]
    :extra-deps  {com.h2database/h2      {:mvn/version "1.4.200"}
                  org.clojure/test.check {:mvn/version "1.0.0"}
                  babashka/babashka.curl {:mvn/version "0.0.3"}

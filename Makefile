@@ -29,8 +29,8 @@ clean-dev:
 # Intended for use with `make ephemeral` or `make persistent`
 bench:
 	clojure -M:bench -m lrsql.bench http://localhost:8080/xapi/statements \
-		-i src/bench/dev-resources/default/insert_input.json \
-		-q src/bench/dev-resources/default/query_input.json \
+		-i dev-resources/default/insert_input.json \
+		-q dev-resources/default/query_input.json \
 		-u username -p password
 
 # Build
