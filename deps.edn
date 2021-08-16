@@ -30,7 +30,7 @@
                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
-   :sha        "a9273e3df2d73bdd40754d0a7ecd9a59d4177666"
+   :sha        "4b97122d839e895b9111e6ed62ae68bc0fdee723"
    :exclusions [org.clojure/clojure]}
   com.yetanalytics/colossal-squuid
   {:git/url    "git@github.com:yetanalytics/colossal-squuid.git"
