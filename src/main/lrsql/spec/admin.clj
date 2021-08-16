@@ -67,5 +67,9 @@
   (s/keys :req-un [::account-id
                    ::passhash]))
 
+(def query-admin-accounts-ret-spec
+  (s/every (s/keys :req-un [::account-id
+                            ::passhash])))
+
 (def query-validate-admin-ret-spec
   (s/keys :req-un [:lrsql.spec.admin.query/result]))

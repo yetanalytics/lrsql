@@ -81,7 +81,8 @@
   (-delete-admin-account! [this tx input])
   ;; Queries
   (-query-account [this tx input])
-  (-query-account-exists [this tx input]))
+  (-query-account-exists [this tx input])
+  (-query-admin-accounts [this tx]))
 
 (defprotocol CredentialBackend
   ;; Commands

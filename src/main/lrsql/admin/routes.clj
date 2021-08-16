@@ -15,13 +15,17 @@
    (i/lrs-interceptor lrs)])
 
 (defn admin-account-routes
-  [common-interceptors jwt-secret jwt-exp]
+  [common-interceptors jwt-secret jwt-exp jwt-leeway]
   #{;; Create new account
     ["/admin/account/create" :post (conj common-interceptors
                                          ai/validate-params
                                          ai/create-admin
                                          (ai/generate-jwt jwt-secret jwt-exp))
      :route-name :lrsql.admin.account/create]
+    ["/admin/account" :get (conj common-interceptors
+                                 (ci/validate-jwt jwt-secret jwt-leeway)
+                                 ai/get-accounts)
+     :route-name :lrsql.admin.account/get]
     ;; Log into an existing account
     ["/admin/account/login" :post (conj common-interceptors
                                         ai/validate-params
@@ -69,5 +73,5 @@
   [{:keys [lrs exp leeway secret]} routes]
   (let [common-interceptors (make-common-interceptors lrs)]
     (cset/union routes
-                (admin-account-routes common-interceptors secret exp)
+                (admin-account-routes common-interceptors secret exp leeway)
                 (admin-cred-routes common-interceptors secret leeway))))

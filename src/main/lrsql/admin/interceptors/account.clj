@@ -57,6 +57,17 @@
                  {:status 409 :body (format "An account \"%s\" already exists!"
                                             username)}))))}))
 
+(def get-accounts
+  (interceptor
+   {:name ::get-accounts
+    :enter
+    (fn get-accounts [ctx]
+      (let [{lrs :com.yetanalytics/lrs} ctx
+            {:keys [result]} (adp/-get-accounts lrs)]
+        (assoc ctx
+               :response
+               {:status 200 :body result})))}))
+
 (def authenticate-admin
   (interceptor
    {:name ::authenticate-admin

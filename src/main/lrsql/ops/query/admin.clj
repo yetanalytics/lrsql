@@ -41,3 +41,23 @@
       {:result (:account-id res)}
       :else
       {:result :lrsql.admin/invalid-password-error})))
+
+(s/fdef query-admin-accounts
+  :args (s/cat :bk ads/admin-backend?
+               :tx transaction?)
+  :ret ads/query-admin-accounts-ret-spec)
+
+(defn query-admin-accounts
+  "Query all admin accounts. Returns a vec of maps containing `:account-id`
+  and `:passhash` on success, or nil on failure."
+  [bk tx]
+  (let [result (bp/-query-admin-accounts bk tx)
+        _ (print "got to query/admin")
+        _ (clojure.pprint/pprint result)
+        transformed
+        (mapv (fn [{account-id :id username :username}]
+                {:account-id account-id
+                 :username username})
+              result)
+        _ (clojure.pprint/pprint transformed)]
+    transformed))
