@@ -51,11 +51,7 @@
   "Query all admin accounts. Returns a vec of maps containing `:account-id`
   and `:username` on success, or empty vec on failure."
   [bk tx]
-  (let [result (bp/-query-admin-accounts bk tx)
-        transformed
-        (mapv (fn [{account-id :id username :username}]
-                {:account-id account-id
-                 :username username})
-              result)
-        _ (clojure.pprint/pprint transformed)]
-    transformed))
+  (mapv (fn [{account-id :id username :username}]
+          {:account-id account-id
+           :username username})
+        (bp/-query-admin-accounts bk tx)))
