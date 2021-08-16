@@ -63,7 +63,7 @@
     :enter
     (fn get-accounts [ctx]
       (let [{lrs :com.yetanalytics/lrs} ctx
-            {:keys [result]} (adp/-get-accounts lrs)]
+            result (adp/-get-accounts lrs)]
         (assoc ctx
                :response
                {:status 200 :body result})))}))
