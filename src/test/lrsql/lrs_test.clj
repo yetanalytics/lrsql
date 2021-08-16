@@ -1,7 +1,10 @@
 (ns lrsql.lrs-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [com.stuartsierra.component    :as component]
-            [com.yetanalytics.lrs.protocol :as lrsp]
+            [clojure.string :as cstr]
+            [com.stuartsierra.component     :as component]
+            [com.yetanalytics.datasim.input :as sim-input]
+            [com.yetanalytics.datasim.sim   :as sim]
+            [com.yetanalytics.lrs.protocol  :as lrsp]
             [lrsql.test-support :as support]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -470,6 +473,112 @@
                      {:agent {"mbox" "mailto:sample.0@example.com"}}
                      #{}))))
 
+    (component/stop sys')))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement DATASIM Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Taken from lrs and third lib tests
+
+(def test-statements
+  (->> "dev-resources/default/insert_input.json"
+       (sim-input/from-location :input :json)
+       sim/sim-seq
+       (take 50)
+       (into [])))
+
+(deftest datasim-tests
+  (let [sys     (support/test-system)
+        sys'    (component/start sys)
+        lrs     (:lrs sys')
+        get-ss' (fn [params]
+                 (-> (lrsp/-get-statements lrs auth-ident params #{"en-US"})
+                     :statement-result
+                     :statements))]
+    (lrsp/-store-statements lrs auth-ident test-statements [])
+    (testing "descending query"
+      (let [query-res (get-ss' {:limit 50})]
+        (is (= 50
+               (count query-res)))
+        (is (= (-> test-statements
+                   last
+                   (dissoc "authority" "version" "stored"))
+               (-> query-res
+                   first
+                   (dissoc "authority" "version" "stored"))))
+        (is (= (->> query-res
+                    (map #(get % "stored")))
+               (->> query-res
+                    (map #(get % "stored"))
+                    (sort (comp #(* % -1) compare)))))))
+
+    (testing "ascending query"
+      (let [query-res (get-ss' {:ascending true :limit 50})]
+        (is (= 50
+               (count query-res)))
+        (is (= (->> query-res
+                    (map #(get % "stored")))
+               (->> query-res
+                    (map #(get % "stored"))
+                    (sort compare))))))
+
+    (testing "since + until:"
+      (let [query-res  (get-ss' {:limit 50})
+            fst-stored (-> query-res last (get "stored"))
+            snd-stored (-> query-res butlast (get "stored"))
+            lst-stored (-> query-res first (get "stored"))
+            pen-stored (-> query-res second (get "stored"))]
+        (testing "both"
+          (is (= 49
+                 (count (get-ss' {:since fst-stored
+                                  :until lst-stored
+                                  :limit 50}))))
+          (is (= 49
+                 (count (get-ss' {:ascending true
+                                  :since     fst-stored
+                                  :until     lst-stored
+                                  :limit     50})))))
+        (testing "since only"
+          (is (= 49
+                 (count (get-ss' {:since fst-stored
+                                  :limit 50}))))
+          (is (= 48
+                 (count (get-ss' {:since snd-stored
+                                  :limit 50}))))
+          (is (= 49
+                 (count (get-ss' {:ascending true
+                                  :since     fst-stored
+                                  :limit     50}))))
+          (is (= 48
+                 (count (get-ss' {:ascending true
+                                  :since     snd-stored
+                                  :limit     50})))))
+        (testing "until only"
+          (is (= 50
+                 (count (get-ss' {:until lst-stored
+                                  :limit 50}))))
+          (is (= 49
+                 (count (get-ss' {:until pen-stored
+                                  :limit 50}))))
+          (is (= 50
+                 (count (get-ss' {:ascending true
+                                  :until     lst-stored
+                                  :limit     50}))))
+          (is (= 49
+                 (count (get-ss' {:ascending true
+                                  :until     pen-stored
+                                  :limit     50})))))))
+    ;; TODO: Storing UUID keys ignores case
+    (testing "UUID params ignore case"
+      (let [id  (-> test-statements first (get "id"))
+            reg (-> test-statements first (get-in ["context" "registration"]))]
+        (is (:statement (lrsp/-get-statements
+                         lrs
+                         auth-ident
+                         {:statementId (cstr/upper-case id)}
+                         #{})))
+        (is (not-empty (get-ss' {:registration (cstr/upper-case reg)})))))
     (component/stop sys')))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
