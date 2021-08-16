@@ -99,16 +99,15 @@
                   stmt-activity-inputs
                   stmt-stmt-inputs]
            :as input}]
-  (let [?stmt-id (insert-statement!* bk tx statement-input)]
-    (dorun (map (partial insert-actor! bk tx) actor-inputs))
-    (dorun (map (partial insert-activity! bk tx) activity-inputs))
-    (dorun (map (partial insert-stmt-actor! bk tx) stmt-actor-inputs))
-    (dorun (map (partial insert-stmt-activity! bk tx) stmt-activity-inputs))
-    (dorun (map (partial insert-stmt-stmt! bk tx) stmt-stmt-inputs))
-    (dorun (map (partial insert-attachment! bk tx) attachment-inputs))
-    ;; Return the statement ID on success, error on failure
-    (if ?stmt-id
-      {:statement-ids [(u/uuid->str ?stmt-id)]}
-      {:error (ex-info "Could not insert statement."
-                       {:type  ::statement-insertion-error
-                        :input input})})))
+  (if-some [stmt-id (insert-statement!* bk tx statement-input)]
+    (do
+      (dorun (map (partial insert-actor! bk tx) actor-inputs))
+      (dorun (map (partial insert-activity! bk tx) activity-inputs))
+      (dorun (map (partial insert-stmt-actor! bk tx) stmt-actor-inputs))
+      (dorun (map (partial insert-stmt-activity! bk tx) stmt-activity-inputs))
+      (dorun (map (partial insert-stmt-stmt! bk tx) stmt-stmt-inputs))
+      (dorun (map (partial insert-attachment! bk tx) attachment-inputs))
+      {:statement-ids [(u/uuid->str stmt-id)]})
+    {:error (ex-info "Could not insert statement."
+                     {:type  ::statement-insertion-error
+                      :input input})}))
