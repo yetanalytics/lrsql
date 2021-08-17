@@ -5,7 +5,7 @@
 
 (defn- get-db-name
   [config]
-  (get-in config [:database :db-name]))
+  (get-in config [:connection :database :db-name]))
 
 (deftest fresh-db-fixture-test
   (testing "sets the db name to a random uuid"
