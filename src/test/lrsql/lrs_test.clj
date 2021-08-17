@@ -676,36 +676,36 @@
     (testing "document insertion"
       (support/seq-is
        {}
-       [(lrsp/-set-document lrs
-                            auth-ident
-                            state-id-params
-                            state-doc-1
-                            true)
-        (lrsp/-set-document lrs
-                            auth-ident
-                            state-id-params
-                            state-doc-2
-                            true)
-        (lrsp/-set-document lrs
-                            auth-ident
-                            state-id-params-2
-                            state-doc-1
-                            false)
-        (lrsp/-set-document lrs
-                            auth-ident
-                            state-id-params-2
-                            state-doc-2
-                            false)
-        (lrsp/-set-document lrs
-                            auth-ident
-                            agent-prof-id-params
-                            agent-prof-doc
-                            false)
-        (lrsp/-set-document lrs
-                            auth-ident
-                            activity-prof-id-params
-                            activity-prof-doc
-                            false)]))
+       (lrsp/-set-document lrs
+                           auth-ident
+                           state-id-params
+                           state-doc-1
+                           true)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           state-id-params
+                           state-doc-2
+                           true)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           state-id-params-2
+                           state-doc-1
+                           false)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           state-id-params-2
+                           state-doc-2
+                           false)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           agent-prof-id-params
+                           agent-prof-doc
+                           false)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           activity-prof-id-params
+                           activity-prof-doc
+                           false)))
 
     (testing "document query"
       (is (= {:document
@@ -753,25 +753,25 @@
     (testing "document deletion"
       (support/seq-is
        {}
-       [(lrsp/-delete-documents lrs
-                                auth-ident
-                                (dissoc state-id-params :stateId))
-        (lrsp/-delete-document lrs
+       (lrsp/-delete-documents lrs
                                auth-ident
-                               agent-prof-id-params)
-        (lrsp/-delete-document lrs
-                               auth-ident
-                               activity-prof-id-params)])
+                               (dissoc state-id-params :stateId))
+       (lrsp/-delete-document lrs
+                              auth-ident
+                              agent-prof-id-params)
+       (lrsp/-delete-document lrs
+                              auth-ident
+                              activity-prof-id-params))
       (support/seq-is
        {:document nil}
-       [(lrsp/-get-document lrs
-                            auth-ident
-                            state-id-params)
-        (lrsp/-get-document lrs
-                            auth-ident
-                            agent-prof-id-params)
-        (lrsp/-get-document lrs
-                            auth-ident
-                            activity-prof-id-params)]))
+       (lrsp/-get-document lrs
+                           auth-ident
+                           state-id-params)
+       (lrsp/-get-document lrs
+                           auth-ident
+                           agent-prof-id-params)
+       (lrsp/-get-document lrs
+                           auth-ident
+                           activity-prof-id-params)))
     
     (component/stop sys')))
