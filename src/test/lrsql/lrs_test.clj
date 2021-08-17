@@ -523,51 +523,66 @@
                     (map #(get % "stored"))
                     (sort compare))))))
 
+    ;; Important difference from third/lrs: `stored` timestamps are not
+    ;; monotonic in lrsql, unlike in those other libs. Because of this,
+    ;; query result counts will vary depending on the exact timestamp values.
     (testing "since + until:"
-      (let [query-res  (get-ss' {:limit 50})
+      (let [query-res  (-> (lrsp/-get-statements lrs auth-ident {:limit 50} #{})
+                           :statement-result
+                           :statements)
+            ;; since
             fst-stored (-> query-res last (get "stored"))
-            snd-stored (-> query-res butlast (get "stored"))
+            since-fst  (take-while #(-> % (get "stored") (not= fst-stored))
+                                   query-res)
+            snd-stored (-> since-fst last (get "stored"))
+            since-snd  (take-while #(-> % (get "stored") (not= snd-stored))
+                                   since-fst)
+            ;; until
             lst-stored (-> query-res first (get "stored"))
-            pen-stored (-> query-res second (get "stored"))]
-        (testing "both"
-          (is (= 49
-                 (count (get-ss' {:since fst-stored
-                                  :until lst-stored
-                                  :limit 50}))))
-          (is (= 49
-                 (count (get-ss' {:ascending true
-                                  :since     fst-stored
-                                  :until     lst-stored
-                                  :limit     50})))))
+            until-lst  (drop-while #(-> % (get "stored") (= lst-stored))
+                                   query-res)
+            pen-stored (-> until-lst first (get "stored"))]
         (testing "since only"
-          (is (= 49
+          (is (= (count since-fst)
                  (count (get-ss' {:since fst-stored
                                   :limit 50}))))
-          (is (= 48
+          (is (= (count since-snd)
                  (count (get-ss' {:since snd-stored
                                   :limit 50}))))
-          (is (= 49
+          (is (= (count since-fst)
                  (count (get-ss' {:ascending true
                                   :since     fst-stored
                                   :limit     50}))))
-          (is (= 48
+          (is (= (count since-snd)
                  (count (get-ss' {:ascending true
                                   :since     snd-stored
                                   :limit     50})))))
+        
         (testing "until only"
           (is (= 50
                  (count (get-ss' {:until lst-stored
                                   :limit 50}))))
-          (is (= 49
+          (is (= (count until-lst)
                  (count (get-ss' {:until pen-stored
                                   :limit 50}))))
           (is (= 50
                  (count (get-ss' {:ascending true
                                   :until     lst-stored
                                   :limit     50}))))
-          (is (= 49
+          (is (= (count until-lst)
                  (count (get-ss' {:ascending true
                                   :until     pen-stored
+                                  :limit     50})))))
+        
+        (testing "both"
+          (is (= (count since-fst)
+                 (count (get-ss' {:since fst-stored
+                                  :until lst-stored
+                                  :limit 50}))))
+          (is (= (count since-fst)
+                 (count (get-ss' {:ascending true
+                                  :since     fst-stored
+                                  :until     lst-stored
                                   :limit     50})))))))
     ;; TODO: Storing UUID keys ignores case
     (testing "UUID params ignore case"
