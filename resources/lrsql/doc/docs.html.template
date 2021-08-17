@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+    <head>
+        <style type=\"text/css\">
+body{
+    margin: 0 auto;
+    padding: 30px;
+    font: 20px Tahoma, Helvetica, Arial, Sans-Serif;
+    line-height: 1.5;
+}
+h1, h2, h3, h4 {
+	display: block; text-decoration: none;
+	font: Helvetica, Arial, Sans-Serif;
+ }
+h1 {
+  font-size: 35px;
+ }
+h2 {
+  font-size: 30px;
+ }
+h3 {
+  font-size: 25px;
+ }
+h4 {
+  font-size: 20px;
+ }
+textarea {
+	width: 600px; margin: 0 auto; background: #222; padding: 20px;
+	font-size: 22px; color: #555; text-shadow: 0px 2px 3px #171717;
+	-webkit-box-shadow: 0px 2px 3px #555;
+	-moz-box-shadow: 0px 2px 3px #555;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+}
+code {
+        background: #f6f8fa;
+}
+pre {
+        margin: 0 auto; background: #f6f8fa; padding: 20px;
+	font-size: 15px;
+	margin-bottom: 20px;
+}
+a {
+	text-decoration: none;
+	font: 18px Helvetica, Arial, Sans-Serif;
+ }
+hr {
+  height: 3px;
+  border: 0;
+  background-color: #333;
+}
+img {
+  max-width: 95%%;
+  display: block;
+  margin: auto;
+}
+div#container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80%%;
+}
+/* a la https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Styling_tables#Spacing_and_layout */
+table {
+  width: 95%%;
+  margin-right: auto;
+  margin-left: auto;
+  border-collapse: collapse;
+  border: 1px solid #dee2e5;
+}
+th, td {
+  border: 1px solid #dee2e5;
+  padding: 20px;
+  line-height: 1.25;
+}
+tbody tr:nth-child(even) {
+  background-color: #f6f8fa;
+}
+p {
+  text-align: justify;
+}
+</style>
+    </head>
+    <body>
+        <div id=\"container\">
+            {{content}}
+        </div>
+    </body>
+</html>
