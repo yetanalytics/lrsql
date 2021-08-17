@@ -6,6 +6,10 @@
             [lrsql.system :as system])
   (:import [java.util UUID]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; LRS test helpers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn- lrsql-syms
   []
   (set (filter #(->> % namespace (re-matches #"lrsql\..*"))
@@ -25,9 +29,7 @@
   [f]
   (let [id-str (str (UUID/randomUUID))
         cfg (-> (read-config :test-h2-mem)
-                (assoc-in [:database :db-name] id-str)
-                (assoc-in [:connection :database :db-name] id-str)
-                (assoc-in [:lrs :database :db-name] id-str))]
+                (assoc-in [:connection :database :db-name] id-str))]
     (with-redefs
      [read-config (constantly cfg)]
       (f))))
@@ -55,7 +57,20 @@
      (when-not (true? (-> res first :clojure.spec.test.check/ret :pass?))
        res))))
 
-;; TODO: This function is unused - remove or use
+(defmacro seq-is
+  "Apply `clojure.test/is` to each element of `exprs`, comapring each
+   result to `expected`."
+  [expected exprs]
+  (let [is-exprs# (map (fn [expr] `(clojure.test/is (= ~expected ~expr)))
+                       exprs)]
+    `(do ~@is-exprs#)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Conformance test helpers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Currently these are unused, but we keep them in case we need to debug later
+
 (defn tests-seq
   "Given nested xapi conformance logs, flatten them into a seq"
   [logs]
@@ -102,11 +117,3 @@
             %))
      code)
    tests))
-
-(defmacro seq-is
-  "Apply `clojure.test/is` to each element of `exprs`, comapring each
-   result to `expected`."
-  [expected exprs]
-  (let [is-exprs# (map (fn [expr] `(clojure.test/is (= ~expected ~expr)))
-                      exprs)]
-    `(do ~@is-exprs#)))
