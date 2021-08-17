@@ -50,8 +50,7 @@
 (defn fill-template
   "Add `content` to the HTML doc template."
   [content]
-  (selm-u/without-escaping
-   (selm-parser/render-template doc-template {:content content})))
+  (selm-parser/render-template doc-template {:content content}))
 
 (defn all-paths-seq
   "Return a seq of all files located in `root`."

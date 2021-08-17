@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
     <head>
-        <style type=\"text/css\">
+        <style type="text/css">
 body{
     margin: 0 auto;
     padding: 30px;
@@ -81,8 +81,8 @@ p {
 </style>
     </head>
     <body>
-        <div id=\"container\">
-            {{content}}
+        <div id="container">
+            {{content|safe}}
         </div>
     </body>
 </html>
