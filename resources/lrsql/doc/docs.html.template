@@ -50,18 +50,18 @@ hr {
   background-color: #333;
 }
 img {
-  max-width: 95%%;
+  max-width: 95%;
   display: block;
   margin: auto;
 }
 div#container {
   margin-left: auto;
   margin-right: auto;
-  max-width: 80%%;
+  max-width: 80%;
 }
 /* a la https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Styling_tables#Spacing_and_layout */
 table {
-  width: 95%%;
+  width: 95%;
   margin-right: auto;
   margin-left: auto;
   border-collapse: collapse;

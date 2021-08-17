@@ -77,11 +77,12 @@
       ;; Make file
       (if (.endsWith md-path ".md")
         ;; Convert Markdown into HTML
-        (-> md-path
-            slurp
-            md->html
-            fill-template
-            (->> (spit (io/file md-ext->html-ext))))
+        (let [html (-> md-path slurp md->html fill-template)]
+          (spit (io/file (md-ext->html-ext html-path)) html))
         ;; Simply copy other, non-HTML files (e.g. images)
         (io/copy (io/file md-path)
                  (io/file html-path))))))
+
+(comment
+  (-main "doc" "target/bundle/doc")
+  )
