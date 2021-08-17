@@ -30,4 +30,4 @@
            (get-in
             (fresh-db-fixture
              #(test-system))
-            [:database :db-name])))))
+            [:connection :database :db-name])))))
