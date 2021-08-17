@@ -28,6 +28,9 @@
   (s/keys :req-un [::username
                    ::password]))
 
+(def admin-delete-params-spec
+  (s/keys :req-un [::account-id]))
+
 (def insert-admin-input-spec
   (s/keys :req-un [::c/primary-key
                    ::username

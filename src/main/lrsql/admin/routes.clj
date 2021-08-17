@@ -19,8 +19,8 @@
   #{;; Create new account
     ["/admin/account/create" :post (conj common-interceptors
                                          ai/validate-params
-                                         ai/create-admin
-                                         (ai/generate-jwt jwt-secret jwt-exp))
+                                         (ci/validate-jwt jwt-secret jwt-leeway)
+                                         ai/create-admin)
      :route-name :lrsql.admin.account/create]
     ["/admin/account" :get (conj common-interceptors
                                  (ci/validate-jwt jwt-secret jwt-leeway)
@@ -34,8 +34,8 @@
      :route-name :lrsql.admin.account/login]
     ;; Delete account (and associated credentials)
     ["/admin/account" :delete (conj common-interceptors
-                                    ai/validate-params
-                                    ai/authenticate-admin
+                                    ai/validate-delete-params
+                                    (ci/validate-jwt jwt-secret jwt-leeway)
                                     ai/delete-admin)
      :route-name :lrsql.admin.account/delete]})
 

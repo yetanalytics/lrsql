@@ -12,32 +12,43 @@
 
 (use-fixtures :each support/fresh-db-fixture)
 
+(def content-type {"Content-Type" "application/json"})
+
 (deftest admin-routes-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
-        data {:headers {"Content-Type" "application/json"}
-              :body    (String. (u/write-json {"username" "myname"
-                                               "password" "swordfish"}))}]
+        {:keys [api-key-default api-secret-default]} (get-in sys' [:lrs :config])
+        seed-jwt (-> (curl/post "http://0.0.0.0:8080/admin/account/login"
+                                {:headers content-type
+                                 :body
+                                 (String. (u/write-json
+                                           {"username" api-key-default
+                                            "password" api-secret-default}))})
+                     :body
+                     u/parse-json
+                     (get "json-web-token"))
+        seed-auth {"Authorization" (str "Bearer " seed-jwt)}
+        data {:body (String. (u/write-json {"username" "myname"
+                                            "password" "swordfish"}))}]
     (testing "admin account creation"
       (let [{:keys [status body]}
             (curl/post "http://0.0.0.0:8080/admin/account/create"
-                       data)
+                       (assoc data :headers (merge content-type seed-auth)))
             edn-body
             (u/parse-json body)]
         (is (= 200 status))
         (is (try (u/str->uuid (get edn-body "account-id"))
-                 (catch Exception _ false)))
-        (is (re-matches #".*\..*\..*"
-                        (get edn-body "json-web-token"))))
+                 (catch Exception _ false))))
       (try
         (curl/post "http://0.0.0.0:8080/admin/account/create"
-                   data)
+                   (assoc data :headers (merge content-type seed-auth)))
         (catch clojure.lang.ExceptionInfo e
           ;; Conflict status code
           (is (= 409 (-> e ex-data :status)))))
       (try
         (curl/post "http://0.0.0.0:8080/admin/account/create"
-                   (assoc data :body ""))
+                   {:body ""
+                    :headers (merge content-type seed-auth)})
         (catch clojure.lang.ExceptionInfo e
           ;; Bad Request status code (invalid body)
           (is (= 400 (-> e ex-data :status)))))
@@ -49,19 +60,20 @@
           (is (= 400 (-> e ex-data :status))))))
     (testing "get admin accounts"
       (let [{:keys [status body]}
-            (curl/get "http://0.0.0.0:8080/admin/account")
+            (curl/get "http://0.0.0.0:8080/admin/account"
+                      {:headers (merge content-type seed-auth)})
             edn-body
-            (u/parse-json body)]
+            (u/parse-json body :object? false)]
+        ;; success
         (is (= 200 status))
+        ;; is a vec
         (is (vector? edn-body))
-        (is (-> edn-body
-                first
-                (get "username")
-                (= "myname")))))
+        ;; has the created user
+        (is (some #(= (get % "username") "myname") edn-body))))
     (testing "admin account login"
       (let [{:keys [status body]}
             (curl/post "http://0.0.0.0:8080/admin/account/login"
-                       data)
+                       (assoc data :headers content-type))
             edn-body
             (u/parse-json body)]
         (is (= 200 status))
@@ -72,58 +84,74 @@
       (try
         (curl/post
          "http://0.0.0.0:8080/admin/account/login"
-         (assoc data :body (String. (u/write-json
-                                     {"username" "foo"
-                                      "password" "swordfish"}))))
+         {:body (String. (u/write-json
+                          {"username" "foo"
+                           "password" "swordfish"}))
+          :headers content-type})
         (catch clojure.lang.ExceptionInfo e
           ;; Not Found status code
           (is (= 404 (-> e ex-data :status)))))
       (try
         (curl/post
          "http://0.0.0.0:8080/admin/account/login"
-         (assoc data :body (String. (u/write-json
-                                     {"username" "myname"
-                                      "password" "badpass"}))))
+         {:body (String. (u/write-json
+                          {"username" "myname"
+                           "password" "badpass"}))
+          :headers content-type})
         (catch clojure.lang.ExceptionInfo e
           ;; Forbidden status code
           (is (= 401 (-> e ex-data :status)))))
       (try
         (curl/post
          "http://0.0.0.0:8080/admin/account/login"
-         (assoc data :body ""))
+         {:body ""
+          :headers content-type})
         (catch clojure.lang.ExceptionInfo e
           ;; Bad Request status code
           (is (= 400 (-> e ex-data :status))))))
     (testing "admin account deletion"
-      (let [delete-res
-            (curl/delete "http://0.0.0.0:8080/admin/account"
-                         data)]
-        (is (= 200 (:status delete-res))))
-      (try
-        (curl/delete "http://0.0.0.0:8080/admin/account"
-                     data)
-        (catch clojure.lang.ExceptionInfo e
-          ;; Not Found status code
-          (is (= 404 (-> e ex-data :status)))))
-      (try
-        (curl/delete
-         "http://0.0.0.0:8080/admin/account"
-         (assoc data :body ""))
-        (catch clojure.lang.ExceptionInfo e
-          ;; Bad Request status code
-          (is (= 400 (-> e ex-data :status))))))
+      (let [accounts   (-> (curl/get "http://0.0.0.0:8080/admin/account"
+                                    {:headers (merge content-type seed-auth)})
+                          :body
+                          (u/parse-json :object? false))
+            account (filter (fn [acct] (= (get acct "username") "myname"))
+                     accounts)
+            account-id (-> account
+                           first
+                           (get "account-id"))
+            del-data   {:body (String. (u/write-json {"account-id" account-id}))}]
+        (let [delete-res
+              (curl/delete "http://0.0.0.0:8080/admin/account"
+                           (assoc del-data
+                                  :headers (merge content-type seed-auth)))]
+          (is (= 200 (:status delete-res))))
+        (try
+          (curl/delete "http://0.0.0.0:8080/admin/account"
+                       (assoc del-data
+                              :headers (merge content-type seed-auth)))
+          (catch clojure.lang.ExceptionInfo e
+            ;; Not Found status code
+            (is (= 404 (-> e ex-data :status)))))
+        (try
+          (curl/delete
+           "http://0.0.0.0:8080/admin/account"
+           {:body ""
+            :headers (merge content-type seed-auth)})
+          (catch clojure.lang.ExceptionInfo e
+            ;; Bad Request status code
+            (is (= 400 (-> e ex-data :status)))))))
     (component/stop sys')))
 
 (deftest auth-routes-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
         jwt  (->
-              (curl/post "http://0.0.0.0:8080/admin/account/create"
+              (curl/post "http://0.0.0.0:8080/admin/account/login"
                          {:headers {"Content-Type" "application/json"}
                           :body    (String. (u/write-json
-                                             {"username" "myname"
-                                              "password" "swordfish"}))})
-              (get :body)
+                                             {"username" "username"
+                                              "password" "password"}))})
+              :body
               u/parse-json
               (get "json-web-token"))
         hdr  {"Content-Type" "application/json"
