@@ -36,19 +36,25 @@
    {:name ::validate-delete-params
     :enter
     (fn validate-params [ctx]
-      (let [params (get-in ctx [:request :json-params])
-            params' (assoc params "account-id"
-                           (u/str->uuid ("account-id" params)))]
-        (if-some [err (s/explain-data ads/admin-delete-params-spec params')]
+      (try
+        (let [params (get-in ctx [:request :json-params])
+              params' (assoc params :account-id
+                             (u/str->uuid (:account-id params)))]
+          (if-some [err (s/explain-data ads/admin-delete-params-spec params')]
+            (assoc (chain/terminate ctx)
+                   :response
+                   {:status 400
+                    :body   (format "Invalid parameters:\n%s"
+                                    (-> err s/explain-out with-out-str))})
+            (let [acc-info (select-keys params' [:account-id])]
+              (-> ctx
+                  (assoc ::data acc-info)
+                  (assoc-in [:request :session ::data] acc-info)))))
+        (catch clojure.lang.ExceptionInfo e
           (assoc (chain/terminate ctx)
                  :response
                  {:status 400
-                  :body   (format "Invalid parameters:\n%s"
-                                  (-> err s/explain-out with-out-str))})
-          (let [acc-info (select-keys params' [:account-id])]
-            (-> ctx
-                (assoc ::data acc-info)
-                (assoc-in [:request :session ::data] acc-info))))))}))
+                  :body   (format "Invalid parameters: account-id must be a uuid.")}))))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Intermediate Interceptors

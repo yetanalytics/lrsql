@@ -110,13 +110,12 @@
           ;; Bad Request status code
           (is (= 400 (-> e ex-data :status))))))
     (testing "admin account deletion"
-      (let [accounts   (-> (curl/get "http://0.0.0.0:8080/admin/account"
-                                    {:headers (merge content-type seed-auth)})
-                          :body
-                          (u/parse-json :object? false))
-            account (filter (fn [acct] (= (get acct "username") "myname"))
-                     accounts)
-            account-id (-> account
+      (let [account-id (-> (curl/get "http://0.0.0.0:8080/admin/account"
+                                     {:headers (merge content-type seed-auth)})
+                           :body
+                           (u/parse-json :object? false)
+                           (#(filter (fn [acct]
+                                       (= (get acct "username") "myname")) %))
                            first
                            (get "account-id"))
             del-data   {:body (String. (u/write-json {"account-id" account-id}))}]
@@ -178,7 +177,10 @@
             (is (= {"api-key"    api-key
                     "secret-key" secret-key
                     "scopes"     scopes}
-                   (first (u/parse-json body :object? false))))))
+                   (-> body
+                       (u/parse-json :object? false)
+                       (#(filter (fn [cred] (= (get cred "api-key") api-key)) %))
+                       first)))))
         (testing "and updating"
           (let [{:keys [status body]}
                 (curl/put
@@ -202,12 +204,14 @@
                 {api-key'    "api-key"
                  secret-key' "secret-key"
                  scopes'     "scopes"}
-                (first (u/parse-json body :object? false))]
+                (-> body
+                    (u/parse-json :object? false)
+                    (#(filter (fn [cred] (= (get cred "api-key") api-key)) %))
+                    first)]
             (is (= 200 status))
             (is (= api-key api-key'))
             (is (= secret-key secret-key'))
-            (is (= #{"all/read" "statements/read"} (set scopes')))
-            (is (nil? (second (u/parse-json body :object? false))))))
+            (is (= #{"all/read" "statements/read"} (set scopes')))))
         (testing "and deletion"
           (let [{:keys [status]}
                 (curl/delete
@@ -225,5 +229,5 @@
                 edn-res
                 (u/parse-json body :object? false)]
             (is (= 200 status))
-            (is (= [] edn-res))))))
+            (is (not (some (fn [cred] (= (get cred "api-key") api-key)) edn-res)))))))
     (component/stop sys')))
