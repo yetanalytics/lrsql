@@ -58,7 +58,7 @@
   lrsp/AboutResource
   (-get-about
     [_lrs _auth-identity]
-   ;; TODO: Add 2.X.X versions
+    ;; TODO: Add 2.X.X versions
     {:body {:version ["1.0.0" "1.0.1" "1.0.2" "1.0.3"]}})
 
   lrsp/StatementsResource

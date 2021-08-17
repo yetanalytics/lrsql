@@ -11,9 +11,6 @@
             [lrsql.spec.attachment :as hs-attach]
             [lrsql.util.statement :refer [prepare-statement]]))
 
-;; TODO: Deal with different encodings for JSON types (e.g. payloads,
-;; actor ifi), instead of just H2 strings.
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interface
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -39,7 +36,6 @@
 (s/def ::stored c/instant-spec)
 
 ;; Registration
-;; TODO: Make a separate nilable version
 (s/def ::registration (s/nilable uuid?))
 
 ;; Verb

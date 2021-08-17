@@ -72,7 +72,9 @@
                      (contains? scopes :scope/statements.read))
                 (and (#{:put :post} request-method)
                      (contains? scopes :scope/statements.write))))
-       ;; TODO: implement scopes: statements/read/mine, state, define, profile
+       ;; NOTE: There are other scopes - `statements/read/mine`, `state`,
+       ;; `define`, and `profile` - that exist and are supported as DB enum
+       ;; values, but are unlikely to ever be implemented
        (do
          (let [scopes' (dissoc scopes
                                :scope/all

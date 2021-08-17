@@ -33,7 +33,6 @@
    or password is nil, or if the tables were already seeded."
   [backend tx ?username ?password]
   (when (and ?username ?password)
-    ;; TODO: Default admin also from config vars?
     (let [admin-in (admin-input/insert-admin-input
                     ?username
                     ?password)

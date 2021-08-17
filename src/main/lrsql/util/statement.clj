@@ -60,7 +60,8 @@
 ;; Statement Equality
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: Case sensitivity of string values
+;; NOTE: Case sensitivity of string values is not checked for, due to
+;; vagueness of the spec.
 (defn- dissoc-statement-properties*
   [substmt? stmt]
   (let [{{stmt-act-type "objectType" :or {stmt-act-type "Agent"}}
