@@ -594,6 +594,29 @@
                          {:statementId (cstr/upper-case id)}
                          #{})))
         (is (not-empty (get-ss' {:registration (cstr/upper-case reg)})))))
+    
+    (testing "UUID keys ignore case"
+      (let [id "00000000-0000-4000-8000-abcdefabcdef"
+            stmt (-> test-statements
+                     first
+                     (assoc "id" (cstr/upper-case id))
+                     (assoc-in ["context" "registration"] (cstr/upper-case id)))
+            _ (lrsp/-store-statements lrs auth-ident [stmt] [])]
+        (is (:statement (lrsp/-get-statements
+                         lrs
+                         auth-ident
+                         {:statementId id}
+                         #{})))
+        (is (not-empty (get-ss' {:verb (get-in stmt ["verb" "id"])})))
+        (is (not-empty (get-ss' {:registration id})))
+        ;; Original case is preserved
+        (is (= (cstr/upper-case id)
+               (-> (lrsp/-get-statements
+                    lrs
+                    auth-ident
+                    {:statementId id}
+                    #{})
+                   (get-in [:statement "id"]))))))
     (component/stop sys')))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
