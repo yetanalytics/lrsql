@@ -4,7 +4,8 @@
             [clojure.string :as cstr]
             [markdown.core :as md]
             [markdown.transformers :as md-trans]
-            [selmer.parser :as selm-parser])
+            [selmer.parser :as selm-parser]
+            [selmer.util :as selm-u])
   (:import [java.io File]))
 
 ;; Code is borrowed from: https://github.com/yetanalytics/third/blob/master/src/doc/render_docs.clj
@@ -49,8 +50,8 @@
 (defn fill-template
   "Add `content` to the HTML doc template."
   [content]
-  (-> doc-template
-      (selm-parser/render-template {:content content})))
+  (selm-u/without-escaping
+   (selm-parser/render-template doc-template {:content content})))
 
 (defn all-paths-seq
   "Return a seq of all files located in `root`."
