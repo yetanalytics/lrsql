@@ -55,4 +55,4 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | `LRSQL_HTTP_HOST` | `httpHost` | The host that the webserver will run on. | `0.0.0.0` (localhost) |
 | `LRSQL_HTTP_PORT` | `httpPort` | The HTTP port that the webserver will be open on. | `8080` |
 | `LRSQL_SSL_PORT` | `sslPort` | The HTTPS port that the webserver will be open on. | `8443` |
-| `LRSQL_URL_PREFIX` | `urlPrefix` | The prefix of the webserver URL path, e.g. the prefix in `http://localhost/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi`
+| `LRSQL_URL_PREFIX` | `urlPrefix` | The prefix of the webserver URL path, e.g. the prefix in `http://localhost/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi` |
