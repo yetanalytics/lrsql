@@ -47,6 +47,17 @@
         (catch clojure.lang.ExceptionInfo e
           ;; Bad Request status code (missing header and jwt)
           (is (= 400 (-> e ex-data :status))))))
+    (testing "get admin accounts"
+      (let [{:keys [status body]}
+            (curl/get "http://0.0.0.0:8080/admin/account")
+            edn-body
+            (u/parse-json body)]
+        (is (= 200 status))
+        (is (vector? edn-body))
+        (is (-> edn-body
+                first
+                (get "username")
+                (= "myname")))))
     (testing "admin account login"
       (let [{:keys [status body]}
             (curl/post "http://0.0.0.0:8080/admin/account/login"
