@@ -26,7 +26,7 @@
         #(read-config :test-h2-mem))))))
   (testing "sets system db-name"
     (is
-     (not= "example" ; TODO: this will come from env, check against that
+     (not= "example"
            (get-in
             (fresh-db-fixture
              #(test-system))
