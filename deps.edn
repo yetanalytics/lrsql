@@ -101,4 +101,7 @@
   :build-dev
   {;; note the :extra-deps instead of :replace-deps
    :extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
-   :extra-paths ["src/build"]}}}
+   :extra-paths ["src/build"]}
+  :doc
+  {:extra-deps  {markdown-clj/markdown-clj {:mvn/version "1.10.5"}}
+   :extra-paths ["src/doc"]}}}

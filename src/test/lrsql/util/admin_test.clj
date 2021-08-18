@@ -3,7 +3,6 @@
             [lrsql.util.admin :as ua]
             [lrsql.util :as u]))
 
-;; TODO: Replace with a gentest
 (deftest password-test
   (testing "password hashing and verification"
     (let [pass-hash-m (ua/hash-password "foo")]

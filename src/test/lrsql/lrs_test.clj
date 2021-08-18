@@ -584,7 +584,6 @@
                                   :since     fst-stored
                                   :until     lst-stored
                                   :limit     50})))))))
-    ;; TODO: Storing UUID keys ignores case
     (testing "UUID params ignore case"
       (let [id  (-> test-statements first (get "id"))
             reg (-> test-statements first (get-in ["context" "registration"]))]
