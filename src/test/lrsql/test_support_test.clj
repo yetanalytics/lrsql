@@ -5,7 +5,7 @@
 
 (defn- get-db-name
   [config]
-  (get-in config [:database :db-name]))
+  (get-in config [:connection :database :db-name]))
 
 (deftest fresh-db-fixture-test
   (testing "sets the db name to a random uuid"
@@ -26,8 +26,8 @@
         #(read-config :test-h2-mem))))))
   (testing "sets system db-name"
     (is
-     (not= "example" ; TODO: this will come from env, check against that
+     (not= "example"
            (get-in
             (fresh-db-fixture
              #(test-system))
-            [:database :db-name])))))
+            [:connection :database :db-name])))))

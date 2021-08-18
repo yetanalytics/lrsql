@@ -1,11 +1,60 @@
 (ns lrsql.lrs-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [com.stuartsierra.component    :as component]
-            [com.yetanalytics.lrs.protocol :as lrsp]
+            [clojure.string :as cstr]
+            [com.stuartsierra.component     :as component]
+            [com.yetanalytics.datasim.input :as sim-input]
+            [com.yetanalytics.datasim.sim   :as sim]
+            [com.yetanalytics.lrs.protocol  :as lrsp]
             [lrsql.test-support :as support]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Init Test Config
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Instrument
+(support/instrument-lrsql)
+
+;; New DB config
+(use-fixtures :each support/fresh-db-fixture)
+
+(def auth-ident
+  {:agent {"objectType" "Agent"
+           "account"    {"homePage" "http://example.org"
+                         "name"     "12341234-0000-4000-1234-123412341234"}}})
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Helper Functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- remove-props
+  "Remove properties added by `prepare-statement`."
+  [statement]
+  (-> statement
+      (dissoc "timestamp")
+      (dissoc "stored")
+      (dissoc "authority")
+      (dissoc "version")))
+
+(defn get-ss
+  "Same as `lrsp/-get-statements` except that `remove-props` is applied
+   on the results."
+  [lrs auth-ident params ltags]
+  (if (or (contains? params :statementId)
+          (contains? params :voidedStatementId))
+    (-> (lrsp/-get-statements lrs auth-ident params ltags)
+        (update :statement remove-props))
+    (-> (lrsp/-get-statements lrs auth-ident params ltags)
+        (update-in [:statement-result :statements]
+                   (partial map remove-props)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Need to have a non-zero UUID version, or else xapi-schema gets angry
+
 (def stmt-0
-  {"id"     "5c9cbcb0-18c0-46de-bed1-c622c03163a1"
+  {"id"     "00000000-0000-4000-8000-000000000000"
    "actor"  {"mbox"       "mailto:sample.foo@example.com"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
@@ -13,7 +62,7 @@
    "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
 
 (def stmt-1
-  {"id"     "030e001f-b32a-4361-b701-039a3d9fceb1"
+  {"id"     "00000000-0000-4000-8000-000000000001"
    "actor"  {"mbox"       "mailto:sample.agent@example.com"
              "name"       "Sample Agent 1"
              "objectType" "Agent"}
@@ -25,7 +74,7 @@
                            "description" {"en-US" "Multi Part Activity Description"}}}})
 
 (def stmt-2
-  {"id"     "3f5f3c7d-c786-4496-a3a8-6d6e4461aa9d"
+  {"id"     "00000000-0000-4000-8000-000000000002"
    "actor"  {"account"    {"name"     "Sample Agent 2"
                            "homePage" "https://example.org"}
              "name"       "Sample Agent 2"
@@ -33,11 +82,11 @@
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/voided"
              "display" {"en-US" "Voided"}}
    "object" {"objectType" "StatementRef"
-             "id"         "5c9cbcb0-18c0-46de-bed1-c622c03163a1"}})
+             "id"         "00000000-0000-4000-8000-000000000000"}})
 
 (def stmt-3
   (-> stmt-1
-      (assoc "id" "708b3377-2fa0-4b96-9ff1-b10208b599b1")
+      (assoc "id" "00000000-0000-4000-8000-000000000003")
       (assoc "actor" {"openid"     "https://example.org"
                       "name"       "Sample Agent 3"
                       "objectType" "Agent"})
@@ -46,7 +95,7 @@
       (assoc-in ["context" "contextActivities" "other"] [(get stmt-1 "object")])))
 
 (def stmt-4
-  {"id"          "e8477a8d-786c-48be-a703-7c8ec7eedee5"
+  {"id"          "00000000-0000-4000-8000-000000000004"
    "actor"       {"mbox"       "mailto:sample.group.4@example.com"
                   "name"       "Sample Group 4"
                   "objectType" "Group"
@@ -82,26 +131,6 @@
    :length      27
    :sha2        "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"})
 
-(defn- remove-props
-  "Remove properties added by `input/prepare-statement`."
-  [statement]
-  (-> statement
-      (dissoc "timestamp")
-      (dissoc "stored")
-      (dissoc "authority")
-      (dissoc "version")))
-
-;; Instrument
-(support/instrument-lrsql)
-
-;; New DB config
-(use-fixtures :each support/fresh-db-fixture)
-
-(def auth-ident
-  {:agent {"objectType" "Agent"
-           "account" {"homePage" "http://example.org"
-                      "name" "12341234-0000-4000-1234-123412341234"}}})
-
 (deftest test-statement-fns
   (let [sys   (support/test-system)
         sys'  (component/start sys)
@@ -119,6 +148,7 @@
         vrb-1 (get-in stmt-1 ["verb" "id"])
         act-1 (get-in stmt-1 ["object" "id"])
         act-4 (get-in stmt-4 ["object" "id"])]
+
     (testing "statement insertions"
       (is (= {:statement-ids [id-0]}
              (lrsp/-store-statements lrs auth-ident [stmt-0] [])))
@@ -126,13 +156,15 @@
              (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-2 stmt-3] [])))
       (is (= {:statement-ids [id-4]}
              (lrsp/-store-statements lrs auth-ident [stmt-4] [stmt-4-attach]))))
-    
+
     (testing "statement conflicts"
-      (is (some? (:error (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-1] []))))
-      (let [stmt-1' (assoc-in stmt-1
-                              ["verb" "display" "en-US"]
-                              "ANSWERED")]
-        (is (some? (:error (lrsp/-store-statements lrs auth-ident [stmt-1'] [])))))
+      (is (-> (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-1] [])
+              :error
+              some?))
+      (let [stmt-1' (assoc-in stmt-1 ["verb" "display" "en-US"] "ANSWERED")]
+        (is (-> (lrsp/-store-statements lrs auth-ident [stmt-1'] [])
+                :error
+                some?)))
       (let [stmt-1'' (assoc-in stmt-1
                                ["actor" "mbox"]
                                "mailto:sample.agent.boo@example.com")]
@@ -140,65 +172,52 @@
              (catch clojure.lang.ExceptionInfo e
                (is (= :com.yetanalytics.lrs.protocol/statement-conflict
                       (-> e ex-data :type)))))))
-  
+
     (testing "statement ID queries"
-      ;; Statement ID queries
       (is (= {:statement stmt-0}
-             (-> (lrsp/-get-statements lrs auth-ident {:voidedStatementId id-0} #{})
-                 (update :statement remove-props))))
+             (get-ss lrs auth-ident {:voidedStatementId id-0} #{})))
       (is (= {:statement stmt-0}
-             (-> (lrsp/-get-statements lrs auth-ident {:voidedStatementId id-0 :format "canonical"} #{"en-US"})
-                 (update :statement remove-props))))
+             (get-ss lrs
+                     auth-ident
+                     {:voidedStatementId id-0 :format "canonical"}
+                     #{"en-US"})))
       (is (= {:statement
-              {"id"     "030e001f-b32a-4361-b701-039a3d9fceb1"
+              {"id"     id-1
                "actor"  {"objectType" "Agent"
                          "mbox"       "mailto:sample.agent@example.com"}
                "verb"   {"id" "http://adlnet.gov/expapi/verbs/answered"}
                "object" {"id" "http://www.example.com/tincan/activities/multipart"}}}
-             (-> (lrsp/-get-statements lrs auth-ident {:statementId id-1 :format "ids"} #{})
-                 (update :statement remove-props))))
+             (get-ss lrs auth-ident {:statementId id-1 :format "ids"} #{})))
       (is (= {:statement stmt-2}
-             (-> (lrsp/-get-statements lrs auth-ident {:statementId id-2} #{})
-                 (update :statement remove-props))))
+             (get-ss lrs auth-ident {:statementId id-2} #{})))
       (is (= {:statement stmt-3}
-             (-> (lrsp/-get-statements lrs auth-ident {:statementId id-3} #{})
-                 (update :statement remove-props)))))
-  
+             (get-ss lrs auth-ident {:statementId id-3} #{}))))
+
     (testing "statement property queries"
       (is (= {:statement-result {:statements [] :more ""}
               :attachments      []}
-             (lrsp/-get-statements lrs auth-ident {:since ts} #{})))
-      (is (= {:statement-result {:statements [stmt-4 stmt-3 stmt-2 stmt-1] :more ""}
+             (get-ss lrs auth-ident {:since ts} #{})))
+      (is (= {:statement-result {:statements [stmt-4 stmt-3 stmt-2 stmt-1]
+                                 :more       ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs auth-ident {:until ts} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
-      (is (= {:statement-result {:statements [stmt-1 stmt-2 stmt-3 stmt-4] :more ""}
+             (get-ss lrs auth-ident {:until ts} #{})))
+      (is (= {:statement-result {:statements [stmt-1 stmt-2 stmt-3 stmt-4]
+                                 :more       ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs auth-ident {:until ts :ascending true} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs auth-ident {:until ts :ascending true} #{})))
       (is (= {:statement-result {:statements [stmt-1] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs auth-ident {:agent agt-1} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs auth-ident {:agent agt-1} #{})))
       (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs auth-ident {:agent agt-1 :related_agents true} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs auth-ident {:agent agt-1 :related_agents true} #{})))
       (is (= {:statement-result {:statements [stmt-4] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs auth-ident {:agent grp-4} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs auth-ident {:agent grp-4} #{})))
       (is (= {:statement-result {:statements [stmt-4] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements lrs auth-ident {:agent mem-4} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
-      
+             (get-ss lrs auth-ident {:agent mem-4} #{})))
+
       ;; XAPI-00162 - stmt-2 shows up because it refers to a statement, stmt-0,
       ;; that meets the query criteria, even though stmt-0 was voided.
       (testing "apply voiding"
@@ -206,148 +225,137 @@
         ;; However, stmt-2 is returned since it was not voided.
         (is (= {:statement-result {:statements [stmt-2] :more ""}
                 :attachments      []}
-               (-> (lrsp/-get-statements lrs auth-ident {:agent agt-0} #{})
-                   (update-in [:statement-result :statements]
-                              (partial map remove-props)))))
+               (get-ss lrs auth-ident {:agent agt-0} #{})))
         (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
                 :attachments      []}
-               (-> (lrsp/-get-statements lrs auth-ident {:verb vrb-1} #{})
-                   (update-in [:statement-result :statements]
-                              (partial map remove-props)))))
+               (get-ss lrs auth-ident {:verb vrb-1} #{})))
         (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
                 :attachments      []}
-               (-> (lrsp/-get-statements lrs auth-ident {:activity act-1} #{})
-                   (update-in [:statement-result :statements]
-                              (partial map remove-props)))))
+               (get-ss lrs auth-ident {:activity act-1} #{})))
         (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
                 :attachments      []}
-               (-> (lrsp/-get-statements lrs auth-ident {:activity act-1 :related_activities true} #{})
-                   (update-in [:statement-result :statements]
-                              (partial map remove-props))))))
+               (get-ss lrs
+                       auth-ident
+                       {:activity act-1 :related_activities true}
+                       #{})))))
 
-      (testing "with both activities and agents"
-        (is (= {:statement-result {:statements [stmt-1] :more ""}
-                :attachments      []}
-               (-> (lrsp/-get-statements lrs auth-ident {:activity act-1 :agent agt-1} #{})
-                   (update-in [:statement-result :statements]
-                              (partial map remove-props)))))
-        (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
-                :attachments      []}
-               (-> (lrsp/-get-statements
-                    lrs
-                    auth-ident
-                    {:activity           act-1
-                     :agent              agt-1
-                     :related_activities true
-                     :related_agents     true}
-                    #{})
-                   (update-in [:statement-result :statements]
-                              (partial map remove-props)))))))
-    
+    (testing "with both activities and agents"
+      (is (= {:statement-result {:statements [stmt-1] :more ""}
+              :attachments      []}
+             (get-ss lrs auth-ident {:activity act-1 :agent agt-1} #{})))
+      (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
+              :attachments      []}
+             (get-ss lrs
+                     auth-ident
+                     {:activity           act-1
+                      :agent              agt-1
+                      :related_activities true
+                      :related_agents     true}
+                     #{}))))
+
     (testing "querying with limits"
       (testing "(descending)"
         (is (= {:statement-result
                 {:statements [stmt-4 stmt-3]
-                 :more "/xapi/statements?limit=2&from="}
-                :attachments      []}
-               (-> (lrsp/-get-statements lrs auth-ident {:limit 2} #{})
-                   (update-in [:statement-result :statements]
-                              (partial map remove-props))
+                 :more       "/xapi/statements?limit=2&from="}
+                :attachments []}
+               (-> (get-ss lrs auth-ident {:limit 2} #{})
                    (update-in [:statement-result :more]
                               #(->> % (re-matches #"(.*from=).*") second)))))
         (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
                 :attachments      []}
-               (let [more
-                     (-> (lrsp/-get-statements lrs auth-ident {:limit 2} #{})
-                         (get-in [:statement-result :more]))
-                     from
-                     (->> more (re-matches #".*from=(.*)") second)]
-                 (-> (lrsp/-get-statements lrs auth-ident {:limit 2 :from from} #{})
-                     (update-in [:statement-result :statements]
-                                (partial map remove-props)))))))
-      (testing "(ascending)"
+               (let [more (-> (get-ss lrs auth-ident {:limit 2} #{})
+                              (get-in [:statement-result :more]))
+                     from (->> more (re-matches #".*from=(.*)") second)]
+                 (get-ss lrs auth-ident {:limit 2 :from from} #{}))))))
+    (testing "(ascending)"
+      (is (= {:statement-result
+              {:statements [stmt-1 stmt-2]
+               :more       "/xapi/statements?limit=2&ascending=true&from="}
+              :attachments []}
+             (-> (get-ss lrs auth-ident {:limit 2 :ascending true} #{})
+                 (update-in [:statement-result :more]
+                            #(->> % (re-matches #"(.*from=).*") second)))))
+      (is (= {:statement-result {:statements [stmt-3 stmt-4] :more ""}
+              :attachments      []}
+             (let [more (-> (get-ss lrs auth-ident {:limit 2 :ascending true} #{})
+                            (get-in [:statement-result :more]))
+                   from (->> more (re-matches #".*from=(.*)") second)]
+               (get-ss lrs
+                       auth-ident
+                       {:limit 2 :ascending true :from from}
+                       #{})))))
+
+    (testing "(with actor)"
+      (let [params {:limit 1
+                    :agent {"name" "Sample Agent 1"
+                            "mbox" "mailto:sample.agent@example.com"}
+                    :related_agents true}]
         (is (= {:statement-result
-                {:statements [stmt-1 stmt-2]
-                 :more "/xapi/statements?limit=2&ascending=true&from="}
+                {:statements [stmt-3]
+                 :more       (str "/xapi/statements"
+                                  "?" "limit=1"
+                                  "&" "agent=%7B%22name%22%3A%22Sample+Agent+1%22%2C%22mbox%22%3A%22mailto%3Asample.agent%40example.com%22%7D"
+                                  "&" "related_agents=true"
+                                  "&" "from=")}
                 :attachments []}
-               (-> (lrsp/-get-statements lrs auth-ident {:limit 2 :ascending true} #{})
-                   (update-in [:statement-result :statements]
-                              (partial map remove-props))
+               (-> (get-ss lrs auth-ident params #{})
                    (update-in [:statement-result :more]
                               #(->> % (re-matches #"(.*from=).*") second)))))
-        (is (= {:statement-result {:statements [stmt-3 stmt-4] :more ""}
+        (is (= {:statement-result {:statements [stmt-1] :more ""}
                 :attachments      []}
-               (let [more
-                     (-> (lrsp/-get-statements lrs auth-ident {:limit 2 :ascending true} #{})
-                         (get-in [:statement-result :more]))
-                     from
-                     (->> more (re-matches #".*from=(.*)") second)]
-                 (-> (lrsp/-get-statements lrs auth-ident {:limit 2 :ascending true :from from} #{})
-                     (update-in [:statement-result :statements]
-                                (partial map remove-props)))))))
-      (testing "(with actor)"
-        (let [params {:limit 1
-                      :agent {"name" "Sample Agent 1"
-                              "mbox" "mailto:sample.agent@example.com"}
-                      :related_agents true}]
-          (is (= {:statement-result
-                  {:statements [stmt-3]
-                   :more "/xapi/statements?limit=1&agent=%7B%22name%22%3A%22Sample+Agent+1%22%2C%22mbox%22%3A%22mailto%3Asample.agent%40example.com%22%7D&related_agents=true&from="}
-                  :attachments []}
-                 (-> (lrsp/-get-statements lrs auth-ident params #{})
-                     (update-in [:statement-result :statements]
-                                (partial map remove-props))
-                     (update-in [:statement-result :more]
-                                #(->> % (re-matches #"(.*from=).*") second)))))
-          (is (= {:statement-result {:statements [stmt-1] :more ""}
-                  :attachments      []}
-                 (let [more
-                       (-> (lrsp/-get-statements lrs auth-ident params #{})
-                           (get-in [:statement-result :more]))
-                       from
-                       (->> more (re-matches #".*from=(.*)") second)]
-                   (-> (lrsp/-get-statements lrs auth-ident (assoc params :from from) #{})
-                       (update-in [:statement-result :statements]
-                                  (partial map remove-props)))))))))
+               (let [more (-> (get-ss lrs auth-ident params #{})
+                              (get-in [:statement-result :more]))
+                     from (->> more (re-matches #".*from=(.*)") second)]
+                 (get-ss lrs auth-ident (assoc params :from from) #{}))))))
+
     (testing "querying with attachments"
-      (is (= {:statement-result {:statements [stmt-4] :more ""}
-              :attachments      [(update stmt-4-attach :content #(String. %))]}
-             (-> (lrsp/-get-statements lrs auth-ident {:activity act-4 :attachments true} #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props))
-                 (update-in [:attachments]
-                            vec)
-                 (update-in [:attachments 0 :content]
-                            #(String. %))))))
-    
-    (testing "querying with attachments (single)"
-      (is (= {:statement    stmt-4
-              :attachments  [(update stmt-4-attach :content #(String. %))]}
-             (-> (lrsp/-get-statements lrs auth-ident {:statementId
-                                                       (get stmt-4 "id")
-                                                       :attachments true} #{})
-                 (update    :statement
-                            remove-props)
-                 (update-in [:attachments]
-                            vec)
-                 (update-in [:attachments 0 :content]
-                            #(String. %))))))
+      (testing "(multiple)"
+        (is (= {:statement-result {:statements [stmt-4] :more ""}
+                :attachments      [(update stmt-4-attach :content #(String. %))]}
+               (-> (get-ss lrs
+                           auth-ident
+                           {:activity act-4 :attachments true}
+                           #{})
+                   (update-in [:attachments]
+                              vec)
+                   (update-in [:attachments 0 :content]
+                              #(String. %))))))
+
+      (testing "(single)"
+        (is (= {:statement    stmt-4
+                :attachments  [(update stmt-4-attach :content #(String. %))]}
+               (-> (get-ss lrs
+                           auth-ident
+                           {:statementId (get stmt-4 "id") :attachments true}
+                           #{})
+                   (update-in [:attachments]
+                              vec)
+                   (update-in [:attachments 0 :content]
+                              #(String. %)))))))
+
     (testing "agent query"
-      (is (= {:person {"objectType" "Person"
-                       "name" ["Sample Agent 1"]
-                       "mbox" ["mailto:sample.agent@example.com"]}}
+      (is (= {:person
+              {"objectType" "Person"
+               "name" ["Sample Agent 1"]
+               "mbox" ["mailto:sample.agent@example.com"]}}
              (lrsp/-get-person lrs auth-ident {:agent agt-1}))))
+
     (testing "activity query"
       ;; Activity was updated between stmt-0 and stmt-1
-      (is (= {:activity {"id"         "http://www.example.com/tincan/activities/multipart"
-                         "objectType" "Activity"
-                         "definition" {"name"        {"en-US" "Multi Part Activity"}
-                                       "description" {"en-US" "Multi Part Activity Description"}}}}
+      (is (= {:activity
+              {"id"         "http://www.example.com/tincan/activities/multipart"
+               "objectType" "Activity"
+               "definition" {"name"        {"en-US" "Multi Part Activity"}
+                             "description" {"en-US" "Multi Part Activity Description"}}}}
              (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
+    
     (component/stop sys')
     (support/unstrument-lrsql)))
 
-;; Need to have a non-zero UUID version, or else xapi-schema gets angry
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Ref Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def stmt-1'
   {"id"     "00000000-0000-4000-0000-000000000001"
@@ -387,73 +395,55 @@
 (deftest test-statement-ref-fns
   (let [sys  (support/test-system)
         sys' (component/start sys)
-        lrs  (:lrs sys')]
+        lrs  (:lrs sys')
+        ts   "3000-01-01T01:00:00Z"]
     (testing "statement insertions"
       (is (= {:statement-ids ["00000000-0000-4000-0000-000000000001"
                               "00000000-0000-4000-0000-000000000002"
                               "00000000-0000-4000-0000-000000000003"]}
              (lrsp/-store-statements lrs auth-ident [stmt-1' stmt-2' stmt-3'] []))))
-    
+
     (testing "statement queries"
       (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements
-                  lrs
-                  auth-ident
-                  {:agent {"mbox" "mailto:sample.0@example.com"
-                           "objectType" "Agent"}}
-                  #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs
+                     auth-ident
+                     {:agent {"mbox" "mailto:sample.0@example.com"
+                              "objectType" "Agent"}}
+                     #{})))
       (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements
-                  lrs
-                  auth-ident
-                  {:activity "http://www.example.com/tincan/activities/multipart"}
-                  #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs
+                     auth-ident
+                     {:activity "http://www.example.com/tincan/activities/multipart"}
+                     #{})))
       (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements
-                  lrs
-                  auth-ident
-                  {:verb "http://adlnet.gov/expapi/verbs/answered"}
-                  #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs
+                     auth-ident
+                     {:verb "http://adlnet.gov/expapi/verbs/answered"}
+                     #{})))
       (is (= {:statement-result {:statements [] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements
-                  lrs
-                  auth-ident
-                  {:since "3000-01-01T01:00:00Z"}
-                  #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs
+                     auth-ident
+                     {:since ts}
+                     #{})))
       (is (= {:statement-result {:statements [stmt-1' stmt-2' stmt-3'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements
-                  lrs
-                  auth-ident
-                  {:until     "3000-01-01T01:00:00Z"
-                   :ascending true}
-                  #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs
+                     auth-ident
+                     {:until ts :ascending true}
+                     #{})))
       (is (= {:statement-result {:statements [stmt-3']}
               :attachments      []}
-             (-> (lrsp/-get-statements
-                  lrs
-                  auth-ident
-                  {:activity "http://www.example.com/tincan/activities/multipart"
-                   :limit    1}
-                  #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props))
+             (-> (get-ss lrs
+                         auth-ident
+                         {:activity "http://www.example.com/tincan/activities/multipart"
+                          :limit    1}
+                         #{})
                  (update :statement-result dissoc :more)))))
-    
+
     (testing "don't return voided statement refs"
       (is (= {:statement-ids ["00000000-0000-4000-0000-000000000004"]}
              (lrsp/-store-statements lrs auth-ident [stmt-4'] [])))
@@ -462,36 +452,175 @@
       ;; because it was voided.
       (is (= {:statement-result {:statements [stmt-4'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements
-                  lrs
-                  auth-ident
-                  {:agent {"mbox" "mailto:sample.2@example.com"}}
-                  #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs
+                     auth-ident
+                     {:agent {"mbox" "mailto:sample.2@example.com"}}
+                     #{})))
       ;; stmt-2' is returned directly (not as a stmt ref target)
       ;; since it is not voided.
       (is (= {:statement-result {:statements [stmt-4' stmt-2'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements
-                  lrs
-                  auth-ident
-                  {:agent {"mbox" "mailto:sample.1@example.com"}}
-                  #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props)))))
+             (get-ss lrs
+                     auth-ident
+                     {:agent {"mbox" "mailto:sample.1@example.com"}}
+                     #{})))
       ;; stmt-1' is returned directly (not as a stmt ref target).
       ;; stmt-2' is returned since it refers to stmt-1' and is not voided
       (is (= {:statement-result {:statements [stmt-4' stmt-2' stmt-1'] :more ""}
               :attachments      []}
-             (-> (lrsp/-get-statements
-                  lrs
-                  auth-ident
-                  {:agent {"mbox" "mailto:sample.0@example.com"}}
-                  #{})
-                 (update-in [:statement-result :statements]
-                            (partial map remove-props))))))
+             (get-ss lrs
+                     auth-ident
+                     {:agent {"mbox" "mailto:sample.0@example.com"}}
+                     #{}))))
+
     (component/stop sys')))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement DATASIM Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Taken from lrs and third lib tests
+
+(def test-statements
+  (->> "dev-resources/default/insert_input.json"
+       (sim-input/from-location :input :json)
+       sim/sim-seq
+       (take 50)
+       (into [])))
+
+(deftest datasim-tests
+  (let [sys     (support/test-system)
+        sys'    (component/start sys)
+        lrs     (:lrs sys')
+        get-ss' (fn [params]
+                 (-> (lrsp/-get-statements lrs auth-ident params #{"en-US"})
+                     :statement-result
+                     :statements))]
+    (lrsp/-store-statements lrs auth-ident test-statements [])
+    (testing "descending query"
+      (let [query-res (get-ss' {:limit 50})]
+        (is (= 50
+               (count query-res)))
+        (is (= (-> test-statements
+                   last
+                   (dissoc "authority" "version" "stored"))
+               (-> query-res
+                   first
+                   (dissoc "authority" "version" "stored"))))
+        (is (= (->> query-res
+                    (map #(get % "stored")))
+               (->> query-res
+                    (map #(get % "stored"))
+                    (sort (comp #(* % -1) compare)))))))
+
+    (testing "ascending query"
+      (let [query-res (get-ss' {:ascending true :limit 50})]
+        (is (= 50
+               (count query-res)))
+        (is (= (->> query-res
+                    (map #(get % "stored")))
+               (->> query-res
+                    (map #(get % "stored"))
+                    (sort compare))))))
+
+    ;; Important difference from third/lrs: `stored` timestamps are not
+    ;; monotonic in lrsql, unlike in those other libs. Because of this,
+    ;; query result counts will vary depending on the exact timestamp values.
+    (testing "since + until:"
+      (let [query-res  (-> (lrsp/-get-statements lrs auth-ident {:limit 50} #{})
+                           :statement-result
+                           :statements)
+            ;; since
+            fst-stored (-> query-res last (get "stored"))
+            since-fst  (take-while #(-> % (get "stored") (not= fst-stored))
+                                   query-res)
+            snd-stored (-> since-fst last (get "stored"))
+            since-snd  (take-while #(-> % (get "stored") (not= snd-stored))
+                                   since-fst)
+            ;; until
+            lst-stored (-> query-res first (get "stored"))
+            until-lst  (drop-while #(-> % (get "stored") (= lst-stored))
+                                   query-res)
+            pen-stored (-> until-lst first (get "stored"))]
+        (testing "since only"
+          (is (= (count since-fst)
+                 (count (get-ss' {:since fst-stored
+                                  :limit 50}))))
+          (is (= (count since-snd)
+                 (count (get-ss' {:since snd-stored
+                                  :limit 50}))))
+          (is (= (count since-fst)
+                 (count (get-ss' {:ascending true
+                                  :since     fst-stored
+                                  :limit     50}))))
+          (is (= (count since-snd)
+                 (count (get-ss' {:ascending true
+                                  :since     snd-stored
+                                  :limit     50})))))
+        
+        (testing "until only"
+          (is (= 50
+                 (count (get-ss' {:until lst-stored
+                                  :limit 50}))))
+          (is (= (count until-lst)
+                 (count (get-ss' {:until pen-stored
+                                  :limit 50}))))
+          (is (= 50
+                 (count (get-ss' {:ascending true
+                                  :until     lst-stored
+                                  :limit     50}))))
+          (is (= (count until-lst)
+                 (count (get-ss' {:ascending true
+                                  :until     pen-stored
+                                  :limit     50})))))
+        
+        (testing "both"
+          (is (= (count since-fst)
+                 (count (get-ss' {:since fst-stored
+                                  :until lst-stored
+                                  :limit 50}))))
+          (is (= (count since-fst)
+                 (count (get-ss' {:ascending true
+                                  :since     fst-stored
+                                  :until     lst-stored
+                                  :limit     50})))))))
+    (testing "UUID params ignore case"
+      (let [id  (-> test-statements first (get "id"))
+            reg (-> test-statements first (get-in ["context" "registration"]))]
+        (is (:statement (lrsp/-get-statements
+                         lrs
+                         auth-ident
+                         {:statementId (cstr/upper-case id)}
+                         #{})))
+        (is (not-empty (get-ss' {:registration (cstr/upper-case reg)})))))
+    
+    (testing "UUID keys ignore case"
+      (let [id "00000000-0000-4000-8000-abcdefabcdef"
+            stmt (-> test-statements
+                     first
+                     (assoc "id" (cstr/upper-case id))
+                     (assoc-in ["context" "registration"] (cstr/upper-case id)))
+            _ (lrsp/-store-statements lrs auth-ident [stmt] [])]
+        (is (:statement (lrsp/-get-statements
+                         lrs
+                         auth-ident
+                         {:statementId id}
+                         #{})))
+        (is (not-empty (get-ss' {:verb (get-in stmt ["verb" "id"])})))
+        (is (not-empty (get-ss' {:registration id})))
+        ;; Original case is preserved
+        (is (= (cstr/upper-case id)
+               (-> (lrsp/-get-statements
+                    lrs
+                    auth-ident
+                    {:statementId id}
+                    #{})
+                   (get-in [:statement "id"]))))))
+    (component/stop sys')))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Document Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def state-id-params
   {:stateId    "some-id"
@@ -532,47 +661,50 @@
    :content-type  "text/plain"
    :contents      (.getBytes "Example Document 2")})
 
+(defn- get-doc
+  "Same as lrsp/-get-documents except automatically formats the result."
+  [lrs auth-ident params]
+  (-> (lrsp/-get-document lrs auth-ident params)
+      (update :document dissoc :updated)
+      (update-in [:document :contents] #(String. %))))
+
 (deftest test-document-fns
   (let [sys  (support/test-system)
         sys' (component/start sys)
         lrs  (:lrs sys')]
     (testing "document insertion"
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 state-id-params
-                                 state-doc-1
-                                 true)))
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 state-id-params
-                                 state-doc-2
-                                 true)))
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 state-id-params-2
-                                 state-doc-1
-                                 false)))
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 state-id-params-2
-                                 state-doc-2
-                                 false)))
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 agent-prof-id-params
-                                 agent-prof-doc
-                                 false)))
-      (is (= {}
-             (lrsp/-set-document lrs
-                                 auth-ident
-                                 activity-prof-id-params
-                                 activity-prof-doc
-                                 false))))
+      (support/seq-is
+       {}
+       (lrsp/-set-document lrs
+                           auth-ident
+                           state-id-params
+                           state-doc-1
+                           true)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           state-id-params
+                           state-doc-2
+                           true)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           state-id-params-2
+                           state-doc-1
+                           false)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           state-id-params-2
+                           state-doc-2
+                           false)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           agent-prof-id-params
+                           agent-prof-doc
+                           false)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           activity-prof-id-params
+                           activity-prof-doc
+                           false)))
 
     (testing "document query"
       (is (= {:document
@@ -580,71 +712,65 @@
                :content-length 18
                :content-type   "application/json"
                :id             "some-id"}}
-             (-> (lrsp/-get-document lrs auth-ident state-id-params)
-                 (update :document dissoc :updated)
-                 (update-in [:document :contents] #(String. %)))))
+             (get-doc lrs auth-ident state-id-params)))
       (is (= {:document
               {:contents       "{\"foo\":10}"
                :content-length 10
                :content-type   "application/json"
                :id             "some-other-id"}}
-             (-> (lrsp/-get-document lrs auth-ident state-id-params-2)
-                 (update :document dissoc :updated)
-                 (update-in [:document :contents] #(String. %)))))
+             (get-doc lrs auth-ident state-id-params-2)))
       (is (= {:document
               {:contents       "Example Document"
                :content-length 16
                :content-type   "text/plain"
                :id             "https://example.org/some-profile"}}
-             (-> (lrsp/-get-document lrs auth-ident agent-prof-id-params)
-                 (update :document dissoc :updated)
-                 (update-in [:document :contents] #(String. %)))))
+             (get-doc lrs auth-ident agent-prof-id-params)))
       (is (= {:document
               {:contents       "Example Document 2"
                :content-length 18
                :content-type   "text/plain"
                :id             "https://example.org/some-profile"}}
-             (-> (lrsp/-get-document lrs auth-ident activity-prof-id-params)
-                 (update :document dissoc :updated)
-                 (update-in [:document :contents] #(String. %))))))
+             (get-doc lrs auth-ident activity-prof-id-params))))
+  
     (testing "document ID query"
       (is (= {:document-ids ["some-id" "some-other-id"]}
-             (lrsp/-get-document-ids lrs
-                                     auth-ident
-                                     (dissoc state-id-params :stateId))))
+             (lrsp/-get-document-ids
+              lrs
+              auth-ident
+              (dissoc state-id-params :stateId))))
       (is (= {:document-ids ["https://example.org/some-profile"]}
-             (lrsp/-get-document-ids lrs
-                                     auth-ident
-                                     (dissoc agent-prof-id-params
-                                             :profileId))))
+             (lrsp/-get-document-ids
+              lrs
+              auth-ident
+              (dissoc agent-prof-id-params :profileId))))
       (is (= {:document-ids ["https://example.org/some-profile"]}
-             (lrsp/-get-document-ids lrs
-                                     auth-ident
-                                     (dissoc activity-prof-id-params
-                                             :profileId)))))
+             (lrsp/-get-document-ids
+              lrs
+              auth-ident
+              (dissoc activity-prof-id-params :profileId)))))
+  
     (testing "document deletion"
-      (is (= {}
-             (lrsp/-delete-documents lrs
-                                     auth-ident
-                                     (dissoc state-id-params :stateId))))
-      (is (= {}
-             (lrsp/-delete-document lrs
-                                    auth-ident
-                                    agent-prof-id-params)))
-      (is (= {}
-             (lrsp/-delete-document lrs
-                                    auth-ident
-                                    activity-prof-id-params)))
-      (is (= {:document nil}
-             (lrsp/-get-document lrs
-                                 auth-ident
-                                 state-id-params)))
-      (is (= {:document nil}
-             (lrsp/-get-document lrs
-                                 auth-ident
-                                 agent-prof-id-params)))
-      (is (= {:document nil}
-             (lrsp/-get-document lrs
-                                 auth-ident
-                                 activity-prof-id-params))))
+      (support/seq-is
+       {}
+       (lrsp/-delete-documents lrs
+                               auth-ident
+                               (dissoc state-id-params :stateId))
+       (lrsp/-delete-document lrs
+                              auth-ident
+                              agent-prof-id-params)
+       (lrsp/-delete-document lrs
+                              auth-ident
+                              activity-prof-id-params))
+      (support/seq-is
+       {:document nil}
+       (lrsp/-get-document lrs
+                           auth-ident
+                           state-id-params)
+       (lrsp/-get-document lrs
+                           auth-ident
+                           agent-prof-id-params)
+       (lrsp/-get-document lrs
+                           auth-ident
+                           activity-prof-id-params)))
+    
     (component/stop sys')))

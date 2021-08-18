@@ -36,7 +36,7 @@
                ;; (not milliseconds!) from the 1970 UTC start.
                :iat (quot (u/time->millis ctime) 1000)
                :exp (quot (u/time->millis etime) 1000)}]
-    (bj/sign claim secret))) ; TODO: algorithm
+    (bj/sign claim secret)))
 
 (defn header->jwt
   "Given an authentication header whose value is a JSON Web Token, return
@@ -56,7 +56,6 @@
   [tok secret leeway]
   (if tok ; Avoid encountering a null pointer exception
     (try
-      ;; TODO: algorithm
       (-> tok (bj/unsign secret {:leeway leeway}) :acc u/str->uuid)
       (catch clojure.lang.ExceptionInfo e
         (let [{:keys [type cause]} (ex-data e)]

@@ -47,7 +47,7 @@
   {:extra-paths ["src/postgres"]
    :extra-deps  {org.postgresql/postgresql {:mvn/version "42.2.23"}}}
   :bench
-  {:extra-paths ["src/bench"]
+  {:extra-paths ["src/bench" "dev-resources"]
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
                  org.clojure/math.numeric-tower {:mvn/version "0.0.4"}
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
@@ -65,7 +65,7 @@
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}}}
   :test
-  {:extra-paths ["src/h2" "src/test"]
+  {:extra-paths ["src/h2" "src/test" "dev-resources"]
    :extra-deps  {com.h2database/h2      {:mvn/version "1.4.200"}
                  org.clojure/test.check {:mvn/version "1.0.0"}
                  babashka/babashka.curl {:mvn/version "0.0.3"}
@@ -76,7 +76,20 @@
                  com.yetanalytics.lrs/test-runner
                  {:git/url    "git@github.com:yetanalytics/lrs-test-runner.git"
                   :sha        "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
-                  :exclusions [org.clojure/data.json]}}
+                  :exclusions [org.clojure/data.json]}
+                 com.yetanalytics/datasim
+                 {:git/url    "git@github.com:yetanalytics/datasim.git"
+                  :sha        "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
+                  :exclusions [org.clojure/clojure
+                               com.yetanalytics/xapi-schema
+                               com.yetanalytics/project-pan]}
+                 ;; Override pan dep in DATASIM
+                 com.yetanalytics/project-pan
+                 {:git/url    "git@github.com:yetanalytics/project-pan.git"
+                  :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
+                  :exclusions [org.clojure/clojure
+                               com.yetanalytics/xapi-schema
+                               com.yetanalytics/project-pan]}}
    :exec-fn     cognitect.test-runner.api/test
    :exec-args   {:dirs ["src/test"]}}
   ;; build alias invoked like clojure -Xbuild uber
@@ -88,4 +101,7 @@
   :build-dev
   {;; note the :extra-deps instead of :replace-deps
    :extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
-   :extra-paths ["src/build"]}}}
+   :extra-paths ["src/build"]}
+  :doc
+  {:extra-deps  {markdown-clj/markdown-clj {:mvn/version "1.10.5"}}
+   :extra-paths ["src/doc"]}}}

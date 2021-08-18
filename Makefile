@@ -29,8 +29,8 @@ clean-dev:
 # Intended for use with `make ephemeral` or `make persistent`
 bench:
 	clojure -M:bench -m lrsql.bench http://localhost:8080/xapi/statements \
-		-i src/bench/dev-resources/default/insert_input.json \
-		-q src/bench/dev-resources/default/query_input.json \
+		-i dev-resources/default/insert_input.json \
+		-q dev-resources/default/query_input.json \
 		-u username -p password
 
 # Build
@@ -47,6 +47,11 @@ target/bundle/bin:
 	cp -r bin target/bundle/bin
 	chmod +x target/bundle/bin/*.sh
 
+# Create HTML docs
+# TODO: make this a .zip file
+target/bundle/doc:
+	clojure -M:doc -m lrsql.render-doc doc target/bundle/doc
+
 # Copy config
 target/bundle/config/lrsql.json.example:
 	mkdir -p target/bundle/config
@@ -59,7 +64,7 @@ target/bundle/config/authority.json.template.example:
 target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/config/authority.json.template.example
 
 # entire bundle
-target/bundle: target/bundle/config target/bundle/lrsql.jar target/bundle/bin
+target/bundle: target/bundle/config target/bundle/doc target/bundle/lrsql.jar target/bundle/bin
 
 bundle: target/bundle
 
