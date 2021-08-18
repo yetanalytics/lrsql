@@ -24,6 +24,10 @@
       (is (-> (adp/-create-account lrs test-username test-password)
               :result
               (= :lrsql.admin/existing-account-error))))
+    (testing "Admin account get"
+      (let [accounts (adp/-get-accounts lrs)]
+        (is (vector? accounts))
+        (is (some (fn [acct] (= (:username acct) test-username)) accounts))))
     (testing "Admin account authentication"
       (is (-> (adp/-authenticate-account lrs test-username test-password)
               :result
