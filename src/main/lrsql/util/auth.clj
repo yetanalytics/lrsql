@@ -8,8 +8,6 @@
             [lrsql.spec.auth :as as])
   (:import [java.util Base64 Base64$Decoder]))
 
-(set! *warn-on-reflection* true)
-
 (def scope-str-kw-map
   {"all"                  :scope/all
    "all/read"             :scope/all.read
