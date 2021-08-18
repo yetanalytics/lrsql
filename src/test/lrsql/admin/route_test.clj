@@ -30,6 +30,9 @@
         seed-auth {"Authorization" (str "Bearer " seed-jwt)}
         data {:body (String. (u/write-json {"username" "myname"
                                             "password" "swordfish"}))}]
+    (testing "seed jwt retrieved"
+      ;; Sanity check that the test credentials are in place
+      (is (some? seed-jwt)))
     (testing "admin account creation"
       (let [{:keys [status body]}
             (curl/post "http://0.0.0.0:8080/admin/account/create"
