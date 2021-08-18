@@ -71,16 +71,18 @@
 
 (s/def ::request-method #{:get :head :put :post :delete})
 (s/def ::path-info string?)
+(s/def ::request (s/keys :req-un [::request-method ::path-info]))
+
 (s/def ::scope #{:scope/all
                  :scope/all.read
                  :scope/statements.read
                  :scope/statements.write})
 (s/def ::scopes (s/coll-of ::scope :kind set?))
+
 (s/def ::result boolean?)
 
 (s/fdef authorize-action
-  :args (s/cat :ctx (s/keys :req-un [::request-method
-                                     ::path-info])
+  :args (s/cat :ctx           (s/keys :req-un [::request])
                :auth-identity (s/keys :req-un [::scopes]))
   :ret (s/keys :req-un [::result]))
 
