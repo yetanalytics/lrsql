@@ -1,4 +1,10 @@
 # Index
 
-- [Overview](overview.md) - What is Lrsql?
-- [Environment Vars](env_vars.md) - How can you configure Lrsql for your needs?
+- Overview (TODO)
+- Getting Started (TODO)
+- [Setting up TLS/HTTP](https.md)
+
+## Reference
+
+- [Configuration](env_vars.md)
+- [HTTP Endpoints](endpoints.md)
