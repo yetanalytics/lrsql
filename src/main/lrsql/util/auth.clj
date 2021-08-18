@@ -66,7 +66,7 @@
   {:result
    (or (contains? scopes :scope/all)
        (and (contains? scopes :scope/all.read)
-            (#{:get :head} request-method))
+            (boolean (#{:get :head} request-method)))
        (and (.endsWith ^String path-info "statements")
             (or (and (#{:get :head} request-method)
                      (contains? scopes :scope/statements.read))
@@ -76,11 +76,11 @@
        ;; `define`, and `profile` - that exist and are supported as DB enum
        ;; values, but are unlikely to ever be implemented
        (do
-         (let [scopes' (dissoc scopes
-                               :scope/all
-                               :scope/all.read
-                               :scope/statements.read
-                               :scope/statements.write)]
+         (let [scopes' (disj scopes
+                             :scope/all
+                             :scope/all.read
+                             :scope/statements.read
+                             :scope/statements.write)]
            (when (not-empty scopes')
              (log/errorf "Scopes not currently implemented: %s"
                          (->> scopes' (map scope-kw->str) vec))))
