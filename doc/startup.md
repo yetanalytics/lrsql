@@ -27,7 +27,7 @@ xAPI Statements can be inserted into and queried from the SQL LRS using HTTP com
 
 ```json
 {
-    "agent": {
+    "actor": {
         "mbox": "mailto:mike@example.org",
         "name": "Mike"
     },
@@ -47,21 +47,21 @@ xAPI Statements can be inserted into and queried from the SQL LRS using HTTP com
 
 In order to insert this Statement into your LRS, run the following command:
 ```
-curl -X PUT \
+curl -X POST \
     http://[host]:[port]/xapi/statements \
     -H "Content-Type: application/json" \
     -H "X-Experience-API-Version: 1.0.3" \
     -u "[username]:[password]" \
     -d '[statement data]'
 ```
-where `username` and `password` are your seed API keys, `host` and `port` are set for your webserver, and `statement data` is your Statement (which you can copy-paste from above).
+where `username` and `password` are your seed API keys, `host` and `port` are set for your webserver, and `statement data` is your Statement (which you can copy-paste from above). You should get a vector containing a single UUID back in return; this is the Statement ID that the SQL LRS generated (since the Statement did not have a pre-existing ID).
 
 In order to retrieve that statement, you can run the following command:
 ```
 curl -X GET \
-    http://[host]:[port]/xapi/statements?limit=1 \
+    http://[host]:[port]/xapi/statements \
     -H "Content-Type: application/json" \
     -H "X-Experience-API-Version: 1.0.3" \
-    -u "[username]:[password]" \
+    -u "[username]:[password]"
 ```
-This will run a query where exactly one Statement will be returned - in this case, the Statement we had just inserted.
+This will run a query where all Statements will be returned - in this case, the one Statement we had just inserted.
