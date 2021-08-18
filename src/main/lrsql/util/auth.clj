@@ -1,9 +1,11 @@
 (ns lrsql.util.auth
-  (:require [clojure.set :as cset]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.set :as cset]
             [clojure.string :as cstr]
             [clojure.tools.logging :as log]
             [buddy.core.codecs :refer [bytes->hex]]
-            [buddy.core.nonce  :refer [random-bytes]])
+            [buddy.core.nonce  :refer [random-bytes]]
+            [lrsql.spec.auth :as as])
   (:import [java.util Base64 Base64$Decoder]))
 
 (def scope-str-kw-map
@@ -29,6 +31,10 @@
 
 (def ^Base64$Decoder decoder (Base64/getDecoder))
 
+(s/fdef header->key-pair
+  :args (s/cat :auth-header string?)
+  :ret (s/nilable as/key-pair-spec))
+
 (defn header->key-pair
   "Given a Base64 authentication header, return a map with the keys
    `:api-key` and `:secret-key`. The map can then be used as the input to
@@ -44,6 +50,10 @@
           :secret-key (if ?srt-key ?srt-key "")})
        (catch Exception _ nil)))
 
+(s/fdef generate-key-pair
+  :args (s/cat)
+  :ret as/key-pair-spec)
+
 (defn generate-key-pair
   "Generate a pair of credentials for lrsql: an API key (the \"username\") and
    a secret API key (the \"password\"). Compatiable as `query-authentication`
@@ -58,6 +68,22 @@
 
 ;; Mostly copied from the third LRS:
 ;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc
+
+(s/def ::request-method #{:get :head :put :post :delete})
+(s/def ::path-info string?)
+(s/def ::scope #{:scope/all
+                 :scope/all.read
+                 :scope/statements.read
+                 :scope/statements.write})
+(s/def ::scopes (s/coll-of ::scope :kind set?))
+(s/def ::result boolean?)
+
+(s/fdef authorize-action
+  :args (s/cat :ctx (s/keys :req-un [::request-method
+                                     ::path-info])
+               :auth-identity (s/keys :req-un [::scopes]))
+  :ret (s/keys :req-un [::result]))
+
 (defn authorize-action
   "Given a pedestal context and an auth identity, authorize or deny."
   [{{:keys [request-method path-info]} :request
@@ -76,7 +102,8 @@
      (and (contains? scopes :scope/all.read)
           (#{:get :head} request-method))
      ;; `statements/read` and `statements/write`: path needs to be for stmts
-     (and (.endsWith ^String path-info "statements")
+     (and (not-empty path-info)
+          (cstr/ends-with? path-info "statements")
           (or (and (#{:get :head} request-method)
                    (contains? scopes :scope/statements.read))
               (and (#{:put :post} request-method)
