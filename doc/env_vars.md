@@ -17,22 +17,22 @@ All environment variables can either be set directly via the command line, or ca
 
 ## Connection
 
-The following environment variables are aliases for c3p0 properties, each of which has their respective link to the c3p0 documentation. All of these variables are optional and are not set by default (in which case c3p0 uses its own default values).
+The following environment variables are aliases for c3p0 properties, each of which has their respective link to the c3p0 documentation. All of these variables are optional and are not set by default (in which case c3p0 uses its own default values). Note that SQLite uses its own defaults due to issues with multi-threading.
 
-| Env Var | Config | c3p0 Property |
-| --- | --- | --- |
-| `LRSQL_POOL_INIT_SIZE` | `poolInitSize` |  [initialPoolSize](https://www.mchange.com/projects/c3p0/#initialPoolSize) |
-| `LRSQL_POOL_MIN_SIZE` | `poolMinSize` | [minPoolSize](https://www.mchange.com/projects/c3p0/#minPoolSize) |
-| `LRSQL_POOL_INC` | `poolInc` | [acquireIncrement](https://www.mchange.com/projects/c3p0/#acquireIncrement) |
-| `LRSQL_POOL_MAX_SIZE` | `poolMaxSize` | [maxPoolSize](https://www.mchange.com/projects/c3p0/#maxPoolSize) |
-| `LRSQL_POOL_MAX_STMTS` | `poolMaxStmts` | [maxStatements](https://www.mchange.com/projects/c3p0/#maxStatements) |
+| Env Var | Config | c3p0 Property | c3p0 Default | SQLite Default |
+| --- | --- | --- | --- | --- |
+| `LRSQL_POOL_INIT_SIZE` | `poolInitSize` |  [initialPoolSize](https://www.mchange.com/projects/c3p0/#initialPoolSize) | 3 | 1 |
+| `LRSQL_POOL_MIN_SIZE` | `poolMinSize` | [minPoolSize](https://www.mchange.com/projects/c3p0/#minPoolSize) | 3 | 1 |
+| `LRSQL_POOL_INC` | `poolInc` | [acquireIncrement](https://www.mchange.com/projects/c3p0/#acquireIncrement) | 3 | 3 |
+| `LRSQL_POOL_MAX_SIZE` | `poolMaxSize` | [maxPoolSize](https://www.mchange.com/projects/c3p0/#maxPoolSize) | 15 | 1 |
+| `LRSQL_POOL_MAX_STMTS` | `poolMaxStmts` | [maxStatements](https://www.mchange.com/projects/c3p0/#maxStatements) | 0 | 0 |
 
 ## LRS
 
 | Env Var | Config | Description | Default |
 | --- | --- | --- | --- |
-| `LRSQL_API_KEY_DEFAULT` | `apiKeyDefault` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
-| `LRSQL_API_SECRET_DEFAULT` | `apiSecretDefault` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional and primarily used for testing and development. | Not set |
+| `LRSQL_API_KEY_DEFAULT` | `apiKeyDefault` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional **but shouold be set**. | Not set |
+| `LRSQL_API_SECRET_DEFAULT` | `apiSecretDefault` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional **but should be set**. | Not set |
 | `LRSQL_STMT_GET_DEFAULT` | `stmtGetDefault` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` |
 | `LRSQL_STMT_GET_MAX` | `stmtGetMax` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |
 | `LRSQL_AUTHORITY_TEMPLATE` | `authorityTemplate` | The filepath to the Statement authority template file, which describes how authorities are constructed during statement insertion. If the file is not found, the system defaults to a default authority function. | <details>`config/authority.json.template`<summary>(Long string)</summary></details> |
