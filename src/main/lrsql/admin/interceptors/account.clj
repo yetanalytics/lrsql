@@ -60,42 +60,6 @@
 ;; Intermediate Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def create-admin
-  (interceptor
-   {:name ::create-admin
-    :enter
-    (fn create-admin [ctx]
-      (let [{lrs :com.yetanalytics/lrs
-             {:keys [username password]} ::data}
-            ctx
-            {:keys [result]}
-            (adp/-create-account lrs username password)]
-        (cond
-          ;; The result is the account ID - success!
-          ;; Pass it along as an intermediate value
-          (uuid? result)
-          (assoc ctx
-                 :response
-                 {:status 200 :body {:account-id result}})
-
-          ;; The account already exists
-          (= :lrsql.admin/existing-account-error result)
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 409 :body (format "An account \"%s\" already exists!"
-                                            username)}))))}))
-
-(def get-accounts
-  (interceptor
-   {:name ::get-accounts
-    :enter
-    (fn get-accounts [ctx]
-      (let [{lrs :com.yetanalytics/lrs} ctx
-            result (adp/-get-accounts lrs)]
-        (assoc ctx
-               :response
-               {:status 200 :body result})))}))
-
 (def authenticate-admin
   (interceptor
    {:name ::authenticate-admin
@@ -131,6 +95,42 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Terminal Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def create-admin
+  (interceptor
+   {:name ::create-admin
+    :enter
+    (fn create-admin [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [username password]} ::data}
+            ctx
+            {:keys [result]}
+            (adp/-create-account lrs username password)]
+        (cond
+          ;; The result is the account ID - success!
+          ;; Pass it along as an intermediate value
+          (uuid? result)
+          (assoc ctx
+                 :response
+                 {:status 200 :body {:account-id result}})
+
+          ;; The account already exists
+          (= :lrsql.admin/existing-account-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 409 :body (format "An account \"%s\" already exists!"
+                                            username)}))))}))
+
+(def get-accounts
+  (interceptor
+   {:name ::get-accounts
+    :enter
+    (fn get-accounts [ctx]
+      (let [{lrs :com.yetanalytics/lrs} ctx
+            result (adp/-get-accounts lrs)]
+        (assoc ctx
+               :response
+               {:status 200 :body result})))}))
 
 (def delete-admin
   (interceptor
