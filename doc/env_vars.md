@@ -23,7 +23,7 @@ The following environment variables are aliases for c3p0 properties, each of whi
 | --- | --- | --- | --- | --- |
 | `LRSQL_POOL_INIT_SIZE` | `poolInitSize` |  [initialPoolSize](https://www.mchange.com/projects/c3p0/#initialPoolSize) | 3 | 1 |
 | `LRSQL_POOL_MIN_SIZE` | `poolMinSize` | [minPoolSize](https://www.mchange.com/projects/c3p0/#minPoolSize) | 3 | 1 |
-| `LRSQL_POOL_INC` | `poolInc` | [acquireIncrement](https://www.mchange.com/projects/c3p0/#acquireIncrement) | 3 | 3 |
+| `LRSQL_POOL_INC` | `poolInc` | [acquireIncrement](https://www.mchange.com/projects/c3p0/#acquireIncrement) | 3 | 1 |
 | `LRSQL_POOL_MAX_SIZE` | `poolMaxSize` | [maxPoolSize](https://www.mchange.com/projects/c3p0/#maxPoolSize) | 15 | 1 |
 | `LRSQL_POOL_MAX_STMTS` | `poolMaxStmts` | [maxStatements](https://www.mchange.com/projects/c3p0/#maxStatements) | 0 | 0 |
 
