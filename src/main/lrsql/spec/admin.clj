@@ -70,7 +70,7 @@
   (s/keys :req-un [::account-id
                    ::passhash]))
 
-(def query-admin-accounts-ret-spec
+(def query-all-admin-accounts-ret-spec
   (s/every (s/keys :req-un [::account-id
                             ::username])))
 

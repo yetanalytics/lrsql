@@ -82,7 +82,7 @@
   ;; Queries
   (-query-account [this tx input])
   (-query-account-exists [this tx input])
-  (-query-admin-accounts [this tx]))
+  (-query-all-admin-accounts [this tx]))
 
 (defprotocol CredentialBackend
   ;; Commands

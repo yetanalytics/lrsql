@@ -191,7 +191,7 @@
     [this]
     (let [conn (lrs-conn this)]
       (jdbc/with-transaction [tx conn]
-        (admin-q/query-admin-accounts backend tx))))
+        (admin-q/query-all-admin-accounts backend tx))))
   (-authenticate-account
     [this username password]
     (let [conn  (lrs-conn this)

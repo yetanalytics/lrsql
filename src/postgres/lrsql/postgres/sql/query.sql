@@ -218,7 +218,7 @@ WHERE activity_iri = :activity-iri
 SELECT id, passhash FROM admin_account
 WHERE username = :username;
 
--- :name query-admin-accounts
+-- :name query-all-accounts
 -- :command :query
 -- :result :many
 -- :doc Return all admin accounts.

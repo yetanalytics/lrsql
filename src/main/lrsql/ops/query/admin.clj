@@ -42,16 +42,16 @@
       :else
       {:result :lrsql.admin/invalid-password-error})))
 
-(s/fdef query-admin-accounts
+(s/fdef query-all-admin-accounts
   :args (s/cat :bk ads/admin-backend?
                :tx transaction?)
-  :ret ads/query-admin-accounts-ret-spec)
+  :ret ads/query-all-admin-accounts-ret-spec)
 
-(defn query-admin-accounts
+(defn query-all-admin-accounts
   "Query all admin accounts. Returns a vec of maps containing `:account-id`
   and `:username` on success, or empty vec on failure."
   [bk tx]
   (mapv (fn [{account-id :id username :username}]
           {:account-id account-id
            :username username})
-        (bp/-query-admin-accounts bk tx)))
+        (bp/-query-all-admin-accounts bk tx)))
