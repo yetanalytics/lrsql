@@ -8,6 +8,8 @@
             [lrsql.spec.auth :as as])
   (:import [java.util Base64 Base64$Decoder]))
 
+(set! *warn-on-reflection* true)
+
 (def scope-str-kw-map
   {"all"                  :scope/all
    "all/read"             :scope/all.read
@@ -38,23 +40,24 @@
   (Base64/getDecoder))
 
 (s/fdef header->key-pair
-  :args (s/cat :auth-header string?)
+  :args (s/cat :auth-header (s/nilable string?))
   :ret (s/nilable as/key-pair-spec))
 
 (defn header->key-pair
-  "Given a Base64 authentication header, return a map with the keys
+  "Given a header of the form `Basic <Base64 string>, return a map with keys
    `:api-key` and `:secret-key`. The map can then be used as the input to
-   `query-authentication`. Return `nil` if the header cannot be decoded."
-  [^String auth-header]
-  (try (let [auth-part  (subs auth-header 6) ; Remove "Basic " prefix
-             decoded    (String. (.decode    ; Base64 -> "username:password"
-                                  decoder
-                                  auth-part))
-             [?api-key
-              ?srt-key] (cstr/split decoded #":")]
-         {:api-key    (if ?api-key ?api-key "")
-          :secret-key (if ?srt-key ?srt-key "")})
-       (catch Exception _ nil)))
+   `query-authentication`. Return `nil` if the header is `nil` or cannot
+   be decoded."
+  [auth-header]
+  (when auth-header
+    (try (let [^String auth-part   (second (re-matches #"Basic\s+(.*)"
+                                                       auth-header))
+               ^String decoded     (String. (.decode decoder
+                                                     auth-part))
+               [?api-key ?srt-key] (cstr/split decoded #":")]
+           {:api-key    (if ?api-key ?api-key "")
+            :secret-key (if ?srt-key ?srt-key "")})
+         (catch Exception _ nil))))
 
 (s/fdef generate-key-pair
   :args (s/cat)

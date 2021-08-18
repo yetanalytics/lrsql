@@ -1,19 +1,23 @@
 (ns lrsql.util.auth-test
   (:require [clojure.test :refer [deftest testing is are]]
-            [lrsql.test-support :refer [check-validate]]
+            [lrsql.test-support :refer [check-validate instrument-lrsql]]
             [lrsql.util.auth :as au]))
+
+(instrument-lrsql)
 
 (deftest key-pair-test
   (testing "header->key-pair test"
     ;; Base64 derived using: https://www.base64encode.org/
     (is (= {:api-key "username" :secret-key "password"}
            (au/header->key-pair "Basic dXNlcm5hbWU6cGFzc3dvcmQ=")))
+    (is (= {:api-key "username" :secret-key "password"}
+           (au/header->key-pair "Basic             dXNlcm5hbWU6cGFzc3dvcmQ=")))
     (is (= {:api-key "0123456789ABCDEF" :secret-key "fedcba9876543210"}
            (au/header->key-pair "Basic MDEyMzQ1Njc4OUFCQ0RFRjpmZWRjYmE5ODc2NTQzMjEw")))
     (is (nil? (au/header->key-pair "Foo dXNlcm5hbWU6cGFzc3dvcmQ=")))
-    (is (nil? (au/header->key-pair "Basic  dXNlcm5hbWU6cGFzc3dvcmQ=")))
     (is (nil? (au/header->key-pair "Basic: dXNlcm5hbWU6cGFzc3dvcmQ=")))
-    (is (nil? (au/header->key-pair "BasicdXNlcm5hbWU6cGFzc3dvcmQ="))))
+    (is (nil? (au/header->key-pair "BasicdXNlcm5hbWU6cGFzc3dvcmQ=")))
+    (is (nil? (au/header->key-pair nil))))
   (testing "header->key-pair and generate-key-pair gentests"
     (is (nil? (check-validate `au/header->key-pair)))
     (is (nil? (check-validate `au/generate-key-pair)))))
