@@ -22,14 +22,20 @@
   (cset/map-invert scope-str-kw-map))
 
 (defn scope-str->kw
+  "Convert a scope string into the appropriate internal keyword, e.g. `all`
+   becomes `:scope/all`."
   [scope-str]
   (get scope-str-kw-map scope-str))
 
 (defn scope-kw->str
+  "Convert a scope keyword into the appropriate string, e.g. `:scope/all`
+   becomes `all`."
   [scope-kw]
   (get scope-kw-str-map scope-kw))
 
-(def ^Base64$Decoder decoder (Base64/getDecoder))
+(def ^Base64$Decoder decoder
+  "The default Base64 decoder."
+  (Base64/getDecoder))
 
 (s/fdef header->key-pair
   :args (s/cat :auth-header string?)
