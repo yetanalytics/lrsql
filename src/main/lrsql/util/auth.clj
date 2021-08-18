@@ -44,7 +44,7 @@
   :ret (s/nilable as/key-pair-spec))
 
 (defn header->key-pair
-  "Given a header of the form `Basic <Base64 string>, return a map with keys
+  "Given a header of the form `Basic [Base64 string]`, return a map with keys
    `:api-key` and `:secret-key`. The map can then be used as the input to
    `query-authentication`. Return `nil` if the header is `nil` or cannot
    be decoded."

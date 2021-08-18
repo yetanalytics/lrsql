@@ -39,7 +39,7 @@
     (bj/sign claim secret)))
 
 (defn header->jwt
-  "Given an header of the form `Bearer <encoded JWT>, return the JWT.
+  "Given an header of the form `Bearer [encoded JWT]`, return the JWT.
    Returns `nil` if the header itself is `nil` or cannot be parsed."
   [auth-header]
   (when auth-header
