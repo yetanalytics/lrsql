@@ -10,7 +10,7 @@ The following examples use `http://example.org` as the URL body. All methods req
 
 - `POST http://example.org/admin/account/create`: Create a new admin account. The response body contains a newly generated JSON Web Token on success. Returns a `400` error if the request body parameters are invalid, or a `409 CONFLICT` error if the account already exists.
 - `POST http://example.org/admin/account/login`: Log into an existing account. The response body contains a newly generated JSON Web Token on success. A `404 NOT FOUND` error is returned if the account does not exist, or a `401 FORBIDDEN` error if the password is incorrect.
-- `DELETE http://example.org/admin/account`: Delete an existing account. The response body is a message that says `"Successfully deleted account [username]"` on success. Returns a `404 NOT FOUND` error if the account does not exist, or a `401 FORBIDDEN` error if the password is incorrect.gi
+- `DELETE http://example.org/admin/account`: Delete an existing account. The response body is a message that says `"Successfully deleted account [username]"` on success. Returns a `404 NOT FOUND` error if the account does not exist, or a `401 FORBIDDEN` error if the password is incorrect.
 
 ## Admin Credential Routes
 
