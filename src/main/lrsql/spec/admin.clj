@@ -1,7 +1,8 @@
 (ns lrsql.spec.admin
   (:require [clojure.spec.alpha :as s]
             [lrsql.backend.protocol :as bp]
-            [lrsql.spec.common :as c]))
+            [lrsql.spec.common :as c]
+            [xapi-schema.spec :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interface
@@ -19,6 +20,7 @@
 (s/def ::username string?)
 (s/def ::password string?)
 (s/def ::passhash string?) ; format may vary by password lib
+(s/def ::uuid ::xs/uuid)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inputs

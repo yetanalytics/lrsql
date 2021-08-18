@@ -35,10 +35,16 @@
   (interceptor
    {:name ::validate-delete-params
     :enter
-    (fn validate-params [ctx]
-      (try
-        (let [params (get-in ctx [:request :json-params])
-              params' (assoc params :account-id
+    (fn validate-params [{{{:keys [account-id] :as params} :json-params}
+                          :request :as ctx}]
+      (if (not (s/valid? ::ads/uuid account-id))
+        ;;not a valid uuid
+        (assoc (chain/terminate ctx)
+               :response
+               {:status 400
+                :body   "Invalid parameters: account-id must be a uuid."})
+        ;;valid uuid
+        (let [params' (assoc params :account-id
                              (u/str->uuid (:account-id params)))]
           (if-some [err (s/explain-data ads/admin-delete-params-spec params')]
             (assoc (chain/terminate ctx)
@@ -49,12 +55,7 @@
             (let [acc-info (select-keys params' [:account-id])]
               (-> ctx
                   (assoc ::data acc-info)
-                  (assoc-in [:request :session ::data] acc-info)))))
-        (catch clojure.lang.ExceptionInfo e
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400
-                  :body   (format "Invalid parameters: account-id must be a uuid.")}))))}))
+                  (assoc-in [:request :session ::data] acc-info)))))))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Intermediate Interceptors
