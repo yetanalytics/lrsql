@@ -2,6 +2,13 @@
   (:require [clojure.test :refer [deftest testing is are]]
             [lrsql.util.auth :as au]))
 
+(deftest key-pair-test
+  (testing "header->key-pair test"
+    ;; Base64 derived using: https://www.base64encode.org/
+    (is (= {:api-key "username" :secret-key "password"}
+           (au/header->key-pair "Basic dXNlcm5hbWU6cGFzc3dvcmQ=")))
+    (is (nil? (au/header->key-pair "Foo dXNlcm5hbWU6cGFzc3dvcmQ=")))))
+
 (deftest authorize-test
   (testing "authorize-action function"
     (are [exp act] (= exp (:result act))
