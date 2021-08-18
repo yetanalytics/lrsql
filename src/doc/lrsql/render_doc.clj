@@ -4,11 +4,11 @@
             [clojure.string :as cstr]
             [markdown.core :as md]
             [markdown.transformers :as md-trans]
-            [selmer.parser :as selm-parser]
-            [selmer.util :as selm-u])
+            [selmer.parser :as selm-parser])
   (:import [java.io File]))
 
-;; Code is borrowed from: https://github.com/yetanalytics/third/blob/master/src/doc/render_docs.clj
+;; Code is borrowed from:
+;; https://github.com/yetanalytics/third/blob/master/src/doc/render_docs.clj
 ;; Modified to take advantage of Selmer templates
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -21,7 +21,13 @@
   (cstr/replace file-path #"\.md" ".html"))
 
 (def relative-md-path-re
-  #"\((?!www\.|(?:http|ftp)s?://|[A-Za-z]:\\|//)[A-Za-z0-9_\-\./]+\.md(?:#[0-9a-zA-Z\?\/\:\@\-\.\_\~\!\$\&\'\(\)\*\+\,\;\=]*)?\)")
+  (re-pattern
+   (str "\\("
+        "(?!www\\.|(?:http|ftp)s?://|[A-Za-z]:\\\\|//)" ; no web URLs
+        "[A-Za-z0-9_\\-\\./]+"
+        "\\.md"
+        "(?:#[\\w\\?\\/\\\\\\:\\@\\.\\~\\!\\$\\&\\'\\(\\)\\*\\+\\,\\;\\=]*)?" ; fragments
+        "\\)")))
 
 (defn relative-md-links
   "Convert Markdown links in `text` into HTML links"
@@ -82,7 +88,3 @@
         ;; Simply copy other, non-HTML files (e.g. images)
         (io/copy (io/file md-path)
                  (io/file html-path))))))
-
-(comment
-  (-main "doc" "target/bundle/doc")
-  )
