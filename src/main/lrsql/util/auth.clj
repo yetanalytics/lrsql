@@ -52,6 +52,10 @@
   {:api-key    (-> 32 random-bytes bytes->hex)
    :secret-key (-> 32 random-bytes bytes->hex)})
 
+;; NOTE: There are other scopes - `statements/read/mine`, `state`,
+;; `define`, and `profile` - that exist and are supported as DB enum
+;; values, but are unlikely to ever be implemented
+
 ;; Mostly copied from the third LRS:
 ;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc
 (defn authorize-action
@@ -64,24 +68,27 @@
            _agent]
     :as _auth-identity}]
   {:result
-   (or (contains? scopes :scope/all)
-       (and (contains? scopes :scope/all.read)
-            (boolean (#{:get :head} request-method)))
-       (and (.endsWith ^String path-info "statements")
-            (or (and (#{:get :head} request-method)
-                     (contains? scopes :scope/statements.read))
-                (and (#{:put :post} request-method)
-                     (contains? scopes :scope/statements.write))))
-       ;; NOTE: There are other scopes - `statements/read/mine`, `state`,
-       ;; `define`, and `profile` - that exist and are supported as DB enum
-       ;; values, but are unlikely to ever be implemented
-       (do
-         (let [scopes' (disj scopes
-                             :scope/all
-                             :scope/all.read
-                             :scope/statements.read
-                             :scope/statements.write)]
-           (when (not-empty scopes')
-             (log/errorf "Scopes not currently implemented: %s"
-                         (->> scopes' (map scope-kw->str) vec))))
-         false))})
+   (boolean
+    (or
+     ;; `all` scope: everything is permitted
+     (contains? scopes :scope/all)
+     ;; `all/read` scope: only GET/HEAD requests permitted
+     (and (contains? scopes :scope/all.read)
+          (#{:get :head} request-method))
+     ;; `statements/read` and `statements/write`: path needs to be for stmts
+     (and (.endsWith ^String path-info "statements")
+          (or (and (#{:get :head} request-method)
+                   (contains? scopes :scope/statements.read))
+              (and (#{:put :post} request-method)
+                   (contains? scopes :scope/statements.write))))
+     ;; Invalid scopes
+     (do
+       (let [scopes' (disj scopes
+                           :scope/all
+                           :scope/all.read
+                           :scope/statements.read
+                           :scope/statements.write)]
+         (when (not-empty scopes')
+           (log/errorf "Scopes not currently implemented: %s"
+                       (->> scopes' (map scope-kw->str) vec))))
+       false)))})
