@@ -65,9 +65,9 @@
   {:api-key    (-> 32 random-bytes bytes->hex)
    :secret-key (-> 32 random-bytes bytes->hex)})
 
-;; NOTE: There are other scopes - `statements/read/mine`, `state`,
-;; `define`, and `profile` - that exist and are supported as DB enum
-;; values, but are unlikely to ever be implemented
+;; TODO: Implement `statements/read/mine`
+;; TODO: Implement `define`
+;; TODO: Implement `state` and `profile`
 
 ;; Mostly copied from the third LRS:
 ;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc

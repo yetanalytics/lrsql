@@ -55,7 +55,9 @@
             ;; "statements/write" and "statements/read/mine"
             ;; if no scope is specified.
             #{:scopes/statements.write
-              :scopes/statements.read.mine}
+              ;; TODO: Implement `statements/read/mine`
+              :scopes/statements.read
+              #_:scopes/statements.read.mine}
             ;; Return scope set
             (->> scopes
                  (map au/scope-str->kw)
