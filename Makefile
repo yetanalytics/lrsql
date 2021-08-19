@@ -1,21 +1,21 @@
-.phony: ci, ephemeral, persistent, bench, clean, run-jar-h2, run-jar-sqlite, bundle, run-jar-h2-persistent, run-jar-postgres
+.phony: ci, ephemeral, persistent, bench, clean, run-jar-h2, run-jar-sqlite, bundle, run-jar-h2-persistent, run-jar-postgres, admin-ui
 
 ci:
 	clojure -X:test
 
-ephemeral:
+ephemeral: admin-ui
 	LRSQL_DB_NAME=ephemeral \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent false
 
-persistent:
+persistent: admin-ui
 	LRSQL_DB_NAME=persistent \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent true
 
-sqlite:
+sqlite: admin-ui
 	LRSQL_DB_NAME=db.sqlite \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
@@ -35,10 +35,23 @@ bench:
 
 # Build
 clean:
-	rm -rf target
+	rm -rf target resources/public lrs-admin-ui
+
+# Get and compile the admin UI SPA
+lrs-admin-ui:
+	git clone --depth 1 git@github.com:yetanalytics/lrs-admin-ui.git -b design-refactor_adv-comp #TODO: main
+
+lrs-admin-ui/target/bundle: lrs-admin-ui
+	cd lrs-admin-ui; make bundle
+
+resources/public/admin: lrs-admin-ui/target/bundle
+	mkdir -p resources/public/admin
+	cp -r lrs-admin-ui/target/bundle resources/public/admin
+
+admin-ui: resources/public/admin
 
 # Compile and make Uberjar
-target/bundle/lrsql.jar:
+target/bundle/lrsql.jar: admin-ui
 	clojure -Xbuild uber
 
 # Copy scripts
