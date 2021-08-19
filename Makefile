@@ -41,6 +41,14 @@ clean:
 target/bundle/lrsql.jar:
 	clojure -Xbuild uber
 
+# Create launch4j executables (and install launch4j if not present)
+# https://stackoverflow.com/questions/33227553/check-if-a-program-exists-from-a-makefile-otherwise-run-command
+target/bundle/lrsql.exe: target/bundle/lrsql.jar
+	@type launch4j >/dev/null 2>&1 || brew install launch4j
+	cp -r resources/lrsql/build/launch4j target/bundle/launch4j
+	launch4j target/bundle/launch4j/config.xml
+	mv target/bundle/launch4j/lrsql.exe target/bundle/lrsql.exe
+
 # Copy scripts
 target/bundle/bin:
 	mkdir -p target/bundle
@@ -64,7 +72,7 @@ target/bundle/config/authority.json.template.example:
 target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/config/authority.json.template.example
 
 # entire bundle
-target/bundle: target/bundle/config target/bundle/doc target/bundle/lrsql.jar target/bundle/bin
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/lrsql.exe
 
 bundle: target/bundle
 
