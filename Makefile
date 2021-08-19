@@ -35,7 +35,7 @@ bench:
 
 # Build
 clean:
-	rm -rf target resources/public lrs-admin-ui
+	rm -rf target resources/public
 
 # Get and compile the admin UI SPA
 lrs-admin-ui:
@@ -45,7 +45,7 @@ lrs-admin-ui/target/bundle: lrs-admin-ui
 	cd lrs-admin-ui; make bundle
 
 resources/public/admin: lrs-admin-ui/target/bundle
-	mkdir -p resources/public/admin
+	mkdir -p resources/public
 	cp -r lrs-admin-ui/target/bundle resources/public/admin
 
 admin-ui: resources/public/admin
