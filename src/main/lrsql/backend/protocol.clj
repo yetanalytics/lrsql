@@ -3,7 +3,9 @@
 
 (defprotocol BackendInit
   (-create-all! [this tx]
-    "Create all tables and indexes."))
+    "Create the tables, indexes, etc. specified by the DDL.")
+  (-update-all! [this tx]
+    "Update the tables, indexes, etc. specified by the DDL."))
 
 (defprotocol BackendIOSetter
   (-set-read! [this]
