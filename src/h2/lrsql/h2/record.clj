@@ -132,6 +132,8 @@
   bp/AdminAccountBackend
   (-insert-admin-account! [_ tx input]
     (insert-admin-account! tx input))
+  (-query-all-admin-accounts [_ tx]
+    (query-all-accounts tx))
   (-delete-admin-account! [_ tx input]
     (delete-admin-account! tx input))
   (-query-account [_ tx input]

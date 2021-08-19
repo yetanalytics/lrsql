@@ -5,6 +5,8 @@
 (defprotocol AdminAccountManager
   (-create-account [this username password]
     "Create a new account with `username` and `password`.")
+  (-get-accounts [this]
+    "Get all admin user accounts")
   (-authenticate-account [this username password]
     "Authenticate by looking up if the account exists in the account table.")
   (-delete-account [this account-id]

@@ -187,6 +187,11 @@
           input (admin-input/insert-admin-input username password)]
       (jdbc/with-transaction [tx conn]
         (admin-cmd/insert-admin! backend tx input))))
+  (-get-accounts
+    [this]
+    (let [conn (lrs-conn this)]
+      (jdbc/with-transaction [tx conn]
+        (admin-q/query-all-admin-accounts backend tx))))
   (-authenticate-account
     [this username password]
     (let [conn  (lrs-conn this)
