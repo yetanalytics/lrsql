@@ -76,8 +76,12 @@ target/bundle/config/authority.json.template.example:
 
 target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/config/authority.json.template.example
 
+target/bundle/admin: admin-ui
+	mkdir -p target/bundle
+	cp -r resources/public/admin target/bundle/admin
+
 # entire bundle
-target/bundle: target/bundle/config target/bundle/doc target/bundle/lrsql.jar target/bundle/bin
+target/bundle: target/bundle/config target/bundle/doc target/bundle/lrsql.jar target/bundle/bin target/bundle/admin
 
 bundle: target/bundle
 
