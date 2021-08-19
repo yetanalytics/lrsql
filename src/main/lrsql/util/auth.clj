@@ -8,6 +8,8 @@
             [lrsql.spec.auth :as as])
   (:import [java.util Base64 Base64$Decoder]))
 
+;; NOTE: Additional scopes may be implemented in the future.
+
 (def scope-str-kw-map
   {"all"                  :scope/all
    "all/read"             :scope/all.read
@@ -64,10 +66,6 @@
   []
   {:api-key    (-> 32 random-bytes bytes->hex)
    :secret-key (-> 32 random-bytes bytes->hex)})
-
-;; TODO: Implement `statements/read/mine`
-;; TODO: Implement `define`
-;; TODO: Implement `state` and `profile`
 
 ;; Mostly copied from the third LRS:
 ;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc
