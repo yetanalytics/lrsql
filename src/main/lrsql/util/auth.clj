@@ -11,11 +11,7 @@
 (def scope-str-kw-map
   {"all"                  :scope/all
    "all/read"             :scope/all.read
-   "profile"              :scope/profile
-   "define"               :scope/define
-   "state"                :scope/state
    "statements/read"      :scope/statements.read
-   "statements/read/mine" :scope/statements.read.mine
    "statements/write"     :scope/statements.write})
 
 (def scope-kw-str-map
@@ -80,6 +76,7 @@
 (s/def ::path-info string?)
 (s/def ::request (s/keys :req-un [::request-method ::path-info]))
 
+;; Need separate spec since the one in spec.auth is for the string versions.
 (s/def ::scope #{:scope/all
                  :scope/all.read
                  :scope/statements.read
@@ -116,7 +113,7 @@
           (or (and (#{:get :head} request-method)
                    (contains? scopes :scope/statements.read))
               (and (#{:put :post} request-method)
-                   (contains? scopes :scope/statements.write))))
+                 (contains? scopes :scope/statements.write))))
      ;; Invalid scopes
      (do
        (let [scopes' (disj scopes

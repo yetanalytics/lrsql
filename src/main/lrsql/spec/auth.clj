@@ -47,11 +47,7 @@
 
 (s/def ::scope
   #{"statements/write"
-    "statements/read/mine"
     "statements/read"
-    "state"
-    "define"
-    "profile"
     "all/read"
     "all"})
 
