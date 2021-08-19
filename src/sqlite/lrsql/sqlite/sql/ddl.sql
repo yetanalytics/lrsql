@@ -232,14 +232,10 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
   secret_key TEXT NOT NULL,             -- string
   scope      TEXT CHECK (
                scope IN ('statements/write',
-                         'statements/read/mine', -- unimplemented
                          'statements/read',
-                         'state',   -- unimplemented
-                         'define',  -- unimplemented
-                         'profile', -- unimplemented
                          'all/read',
                          'all'
-             )),                        -- enum
+             )), -- enum
   FOREIGN KEY (api_key, secret_key)
     REFERENCES lrs_credential(api_key, secret_key)
     ON DELETE CASCADE

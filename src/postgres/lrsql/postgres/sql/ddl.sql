@@ -20,11 +20,7 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'scope_enum') THEN
     CREATE TYPE scope_enum AS ENUM (
       'statements/write',
-      'statements/read/mine', -- unimplemented
       'statements/read',
-      'state',   -- unimplemented
-      'define',  -- unimplemented
-      'profile', -- unimplemented
       'all/read',
       'all');
   END IF;
