@@ -113,15 +113,10 @@
           (or (and (#{:get :head} request-method)
                    (contains? scopes :scope/statements.read))
               (and (#{:put :post} request-method)
-                 (contains? scopes :scope/statements.write))))
+                   (contains? scopes :scope/statements.write))))
      ;; Invalid scopes
      (do
-       (let [scopes' (disj scopes
-                           :scope/all
-                           :scope/all.read
-                           :scope/statements.read
-                           :scope/statements.write)]
-         (when (not-empty scopes')
-           (log/errorf "Scopes not currently implemented: %s"
-                       (->> scopes' (map scope-kw->str) vec))))
+       (when-some [err (s/explain-data ::scopes scopes)]
+         (log/errorf "Scope errors (perhaps you had unimplemented scopes):\n%s"
+                     (with-out-str (s/explain-out err))))
        false)))})
