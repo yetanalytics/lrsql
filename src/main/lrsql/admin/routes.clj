@@ -4,7 +4,8 @@
             [io.pedestal.http.body-params :refer [body-params]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors.account :as ai]
-            [lrsql.admin.interceptors.credentials :as ci]))
+            [lrsql.admin.interceptors.credentials :as ci]
+            [lrsql.admin.interceptors.ui :as ui]))
 
 (defn- make-common-interceptors
   [lrs]
@@ -66,6 +67,17 @@
                                   ci/delete-api-keys)
      :route-name :lrsql.admin.creds/delete]})
 
+(def admin-ui-routes
+  #{;; Redirect root to admin UI
+    ["/" :get `ui/admin-ui-redirect
+     :route-name :lrsql.admin.ui/root-redirect]
+    ;; Redirect admin w/o slash to admin UI
+    ["/admin" :get `ui/admin-ui-redirect
+     :route-name :lrsql.admin.ui/path-redirect]
+    ;; Redirect admin with slash to admin UI
+    ["/admin/" :get `ui/admin-ui-redirect
+     :route-name :lrsql.admin.ui/slash-redirect]})
+
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
    add additional routes specific to creating and updating admin
@@ -74,4 +86,5 @@
   (let [common-interceptors (make-common-interceptors lrs)]
     (cset/union routes
                 (admin-account-routes common-interceptors secret exp leeway)
-                (admin-cred-routes common-interceptors secret leeway))))
+                (admin-cred-routes common-interceptors secret leeway)
+                admin-ui-routes)))
