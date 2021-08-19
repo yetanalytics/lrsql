@@ -82,9 +82,10 @@
   "Given a set of routes `routes` for a default LRS implementation,
    add additional routes specific to creating and updating admin
    accounts."
-  [{:keys [lrs exp leeway secret]} routes]
+  [{:keys [lrs exp leeway secret enable-admin-ui]} routes]
   (let [common-interceptors (make-common-interceptors lrs)]
     (cset/union routes
                 (admin-account-routes common-interceptors secret exp leeway)
                 (admin-cred-routes common-interceptors secret leeway)
-                admin-ui-routes)))
+                (when enable-admin-ui
+                  admin-ui-routes))))
