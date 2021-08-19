@@ -55,7 +55,7 @@
   (s/keys :req-un [::ats/cred-id ::ats/account-id]))
 
 (s/def ::scopes
-  (s/coll-of ::scope :min-count 1 :gen-max 5 :distinct true))
+  (s/coll-of ::scope :gen-max 5 :distinct true))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Basic Specs
@@ -103,7 +103,7 @@
                    ::scope]))
 
 (def insert-cred-scopes-input-spec
-  (s/coll-of insert-cred-scope-input-spec :min-count 1 :gen-max 5))
+  (s/coll-of insert-cred-scope-input-spec :gen-max 5))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Delete
@@ -120,7 +120,7 @@
                    ::scope]))
 
 (def delete-cred-scopes-input-spec
-  (s/coll-of delete-cred-scope-input-spec :min-count 1 :gen-max 5))
+  (s/coll-of delete-cred-scope-input-spec :gen-max 5))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query

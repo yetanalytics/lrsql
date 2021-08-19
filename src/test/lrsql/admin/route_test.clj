@@ -215,6 +215,35 @@
             (is (= api-key api-key'))
             (is (= secret-key secret-key'))
             (is (= #{"all/read" "statements/read"} (set scopes')))))
+        (testing "and no-op scope update"
+          (let [{:keys [status body]}
+                (curl/put
+                 "http://0.0.0.0:8080/admin/creds"
+                 {:headers hdr
+                  :body (String.
+                         (u/write-json
+                          {"api-key"    api-key
+                           "secret-key" secret-key
+                           "scopes"     ["all/read" "statements/read"]}))})
+                {:strs [scopes]}
+                (u/parse-json body)]
+            (is (= 200 status))
+            (is (= #{"all/read" "statements/read"}
+                   (set scopes)))))
+        (testing "and deleting all scopes"
+          (let [{:keys [status body]}
+                (curl/put
+                 "http://0.0.0.0:8080/admin/creds"
+                 {:headers hdr
+                  :body (String.
+                         (u/write-json
+                          {"api-key"    api-key
+                           "secret-key" secret-key
+                           "scopes"     []}))})
+                {:strs [scopes]}
+                (u/parse-json body)]
+            (is (= 200 status))
+            (is (= #{} (set scopes)))))
         (testing "and deletion"
           (let [{:keys [status]}
                 (curl/delete
@@ -232,5 +261,6 @@
                 edn-res
                 (u/parse-json body :object? false)]
             (is (= 200 status))
-            (is (not (some (fn [cred] (= (get cred "api-key") api-key)) edn-res)))))))
+            (is (not (some (fn [cred] (= (get cred "api-key") api-key))
+                           edn-res)))))))
     (component/stop sys')))
