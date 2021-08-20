@@ -39,15 +39,13 @@ clean:
 
 # Compile and make Uberjar
 target/bundle/lrsql.jar:
-	clojure -Xbuild uber
+	clojure -X:build uber
 
-# Create launch4j executables (and install launch4j if not present)
-# https://stackoverflow.com/questions/33227553/check-if-a-program-exists-from-a-makefile-otherwise-run-command
 target/bundle/lrsql.exe: target/bundle/lrsql.jar
-	@type launch4j >/dev/null 2>&1 || brew install launch4j
-	cp -r resources/lrsql/build/launch4j target/bundle/launch4j
-	launch4j target/bundle/launch4j/config.xml
-	mv target/bundle/launch4j/lrsql.exe target/bundle/lrsql.exe
+	cp resources/lrsql/build/launch4j/config.xml target/bundle/config.xml
+	cp resources/lrsql/build/launch4j/lrsql.ico target/bundle/lrsql.ico
+	clojure -X:build launch4j :config '"target/bundle/config.xml"'
+	rm -f target/bundle/config.xml target/bundle/lrsql.ico
 
 # Copy scripts
 target/bundle/bin:
