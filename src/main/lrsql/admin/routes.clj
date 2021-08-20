@@ -20,10 +20,12 @@
     ["/admin/account/create" :post (conj common-interceptors
                                          ai/validate-params
                                          (ci/validate-jwt jwt-secret jwt-leeway)
+                                         ci/validate-jwt-account
                                          ai/create-admin)
      :route-name :lrsql.admin.account/create]
     ["/admin/account" :get (conj common-interceptors
                                  (ci/validate-jwt jwt-secret jwt-leeway)
+                                 ci/validate-jwt-account
                                  ai/get-accounts)
      :route-name :lrsql.admin.account/get]
     ;; Log into an existing account
@@ -36,6 +38,7 @@
     ["/admin/account" :delete (conj common-interceptors
                                     ai/validate-delete-params
                                     (ci/validate-jwt jwt-secret jwt-leeway)
+                                    ci/validate-jwt-account
                                     ai/delete-admin)
      :route-name :lrsql.admin.account/delete]})
 
@@ -43,26 +46,30 @@
   [common-interceptors jwt-secret jwt-leeway]
   #{;; Create new API key pair w/ scope set
     ["/admin/creds" :post (conj common-interceptors
-                               (ci/validate-params {:scopes? true})
-                               (ci/validate-jwt jwt-secret jwt-leeway)
-                               ci/create-api-keys)
+                                (ci/validate-params {:scopes? true})
+                                (ci/validate-jwt jwt-secret jwt-leeway)
+                                ci/validate-jwt-account
+                                ci/create-api-keys)
      :route-name :lrsql.admin.creds/put]
     ;; Create or update new keys w/ scope set
     ["/admin/creds" :put (conj common-interceptors
-                                (ci/validate-params {:key-pair? true
-                                                     :scopes?   true})
-                                (ci/validate-jwt jwt-secret jwt-leeway)
-                                ci/update-api-keys)
+                               (ci/validate-params {:key-pair? true
+                                                    :scopes?   true})
+                               (ci/validate-jwt jwt-secret jwt-leeway)
+                               ci/validate-jwt-account
+                               ci/update-api-keys)
      :route-name :lrsql.admin.creds/post]
     ;; Get current keys + scopes associated w/ account
     ["/admin/creds" :get (conj common-interceptors
                                (ci/validate-jwt jwt-secret jwt-leeway)
+                               ci/validate-jwt-account
                                ci/read-api-keys)
      :route-name :lrsql.admin.creds/get]
     ;; Delete API key pair and associated scopes
     ["/admin/creds" :delete (conj common-interceptors
                                   (ci/validate-params {:key-pair? true})
                                   (ci/validate-jwt jwt-secret jwt-leeway)
+                                  ci/validate-jwt-account
                                   ci/delete-api-keys)
      :route-name :lrsql.admin.creds/delete]})
 
