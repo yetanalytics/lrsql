@@ -46,7 +46,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def launch4j-base-dir
-  (.getCanonicalFile (io/file "launch4j")))
+  (.getCanonicalFile (io/file "launch")))
 
 (defn- set-launch4j-config!
   [launch4j-config]
