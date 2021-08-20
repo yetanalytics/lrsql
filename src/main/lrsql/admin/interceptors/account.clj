@@ -145,8 +145,8 @@
         (assoc ctx
                :response
                {:status 200
-                :body   (format "Successfully deleted account \"%s\"!"
-                                account-id)})))}))
+                :body {:success true
+                       :account-id account-id}})))}))
 
 (defn generate-jwt
   [secret exp]
