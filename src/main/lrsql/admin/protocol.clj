@@ -9,6 +9,8 @@
     "Get all admin user accounts")
   (-authenticate-account [this username password]
     "Authenticate by looking up if the account exists in the account table.")
+  (-existing-account? [this account-id]
+    "Check that the account with the given ID exists in the account table. Returns a boolean.")
   (-delete-account [this account-id]
     "Delete the account and all associated creds. Assumes the account has already been authenticated."))
 

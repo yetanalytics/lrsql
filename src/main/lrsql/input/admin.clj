@@ -18,11 +18,19 @@
 
 (s/fdef delete-admin-input
   :args (s/cat :account-id ::ads/account-id)
-  :ret ads/delete-admin-input-spec)
+  :ret ads/admin-id-input-spec)
 
 (defn delete-admin-input
-  "Given `username` and `password`, construct the input param map for
-   `delete-admin!`."
+  "Given `account-id`, construct the input param map for `delete-admin!`."
+  [account-id]
+  {:account-id account-id})
+
+(s/fdef query-admin-exists-input
+  :args (s/cat :account-id ::ads/account-id)
+  :ret ads/admin-id-input-spec)
+
+(defn query-admin-exists-input
+  "Given `account-id`, construct the input param map for `query-admin-exists.`"
   [account-id]
   {:account-id account-id})
 
