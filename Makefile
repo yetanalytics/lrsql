@@ -39,7 +39,7 @@ clean:
 
 # Get and compile the admin UI SPA
 lrs-admin-ui:
-	git clone --depth 1 git@github.com:yetanalytics/lrs-admin-ui.git -b design-refactor_adv-comp #TODO: main
+	git clone --depth 1 git@github.com:yetanalytics/lrs-admin-ui.git
 
 lrs-admin-ui/target/bundle: lrs-admin-ui
 	cd lrs-admin-ui; make bundle
