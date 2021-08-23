@@ -94,15 +94,13 @@
    :exec-args   {:dirs ["src/test"]}}
   ;; build alias invoked like clojure -Xbuild uber
   :build
-  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}
-                  net.sf.launch4j/launch4j        {:mvn/version "3.14"}}
+  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
    :extra-paths  ["src/build"]
    :ns-default   lrsql.build}
   ;; alias for dev so you can use from repl w/o breakage
   :build-dev
   {;; note the :extra-deps instead of :replace-deps
-   :extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}
-                 net.sf.launch4j/launch4j        {:mvn/version "3.14"}}
+   :extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
    :extra-paths ["src/build"]}
   :doc
   {:extra-deps  {markdown-clj/markdown-clj {:mvn/version "1.10.5"}}
