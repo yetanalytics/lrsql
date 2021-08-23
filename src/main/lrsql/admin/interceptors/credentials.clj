@@ -3,6 +3,7 @@
             [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
+            [lrsql.admin.interceptors.jwt :as jwt]
             [lrsql.spec.auth :as as]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -44,7 +45,8 @@
     :enter
     (fn create-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id scopes]} ::data}
+             {:keys [account-id]} ::jwt/data
+             {:keys [scopes]} ::data}
             ctx
             api-key-res
             (adp/-create-api-keys lrs
@@ -61,7 +63,7 @@
     :enter
     (fn read-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id]} ::data}
+             {:keys [account-id]} ::jwt/data}
             ctx
             api-key-res
             (adp/-get-api-keys lrs
@@ -77,7 +79,8 @@
     :enter
     (fn update-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id api-key secret-key scopes]} ::data}
+             {:keys [account-id]} ::jwt/data
+             {:keys [api-key secret-key scopes]} ::data}
             ctx
             api-key-res
             (adp/-update-api-keys lrs
@@ -96,7 +99,8 @@
     :enter
     (fn delete-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id api-key secret-key]} ::data}
+             {:keys [account-id]} ::jwt/data
+             {:keys [api-key secret-key]} ::data}
             ctx
             api-key-res
             (adp/-delete-api-keys lrs

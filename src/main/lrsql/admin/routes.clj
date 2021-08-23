@@ -5,8 +5,7 @@
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors.account :as ai]
             [lrsql.admin.interceptors.credentials :as ci]
-            [lrsql.admin.interceptors.common :refer [validate-jwt
-                                                     validate-jwt-account]]))
+            [lrsql.admin.interceptors.jwt :as ji]))
 
 (defn- make-common-interceptors
   [lrs]
@@ -27,21 +26,21 @@
     ;; Create new account
     ["/admin/account/create" :post (conj common-interceptors
                                          ai/validate-params
-                                         (validate-jwt jwt-secret jwt-leeway)
-                                         validate-jwt-account
+                                         (ji/validate-jwt jwt-secret jwt-leeway)
+                                         ji/validate-jwt-account
                                          ai/create-admin)
      :route-name :lrsql.admin.account/create]
     ;; Get all accounts
     ["/admin/account" :get (conj common-interceptors
-                                 (validate-jwt jwt-secret jwt-leeway)
-                                 validate-jwt-account
+                                 (ji/validate-jwt jwt-secret jwt-leeway)
+                                 ji/validate-jwt-account
                                  ai/get-accounts)
      :route-name :lrsql.admin.account/get]
     ;; Delete account (and associated credentials)
     ["/admin/account" :delete (conj common-interceptors
                                     ai/validate-delete-params
-                                    (validate-jwt jwt-secret jwt-leeway)
-                                    validate-jwt-account
+                                    (ji/validate-jwt jwt-secret jwt-leeway)
+                                    ji/validate-jwt-account
                                     ai/delete-admin)
      :route-name :lrsql.admin.account/delete]})
 
@@ -50,29 +49,29 @@
   #{;; Create new API key pair w/ scope set
     ["/admin/creds" :post (conj common-interceptors
                                 (ci/validate-params {:scopes? true})
-                                (validate-jwt jwt-secret jwt-leeway)
-                                validate-jwt-account
+                                (ji/validate-jwt jwt-secret jwt-leeway)
+                                ji/validate-jwt-account
                                 ci/create-api-keys)
      :route-name :lrsql.admin.creds/put]
     ;; Create or update new keys w/ scope set
     ["/admin/creds" :put (conj common-interceptors
                                (ci/validate-params {:key-pair? true
                                                     :scopes?   true})
-                               (validate-jwt jwt-secret jwt-leeway)
-                               validate-jwt-account
+                               (ji/validate-jwt jwt-secret jwt-leeway)
+                               ji/validate-jwt-account
                                ci/update-api-keys)
      :route-name :lrsql.admin.creds/post]
     ;; Get current keys + scopes associated w/ account
     ["/admin/creds" :get (conj common-interceptors
-                               (validate-jwt jwt-secret jwt-leeway)
-                               validate-jwt-account
+                               (ji/validate-jwt jwt-secret jwt-leeway)
+                               ji/validate-jwt-account
                                ci/read-api-keys)
      :route-name :lrsql.admin.creds/get]
     ;; Delete API key pair and associated scopes
     ["/admin/creds" :delete (conj common-interceptors
                                   (ci/validate-params {:key-pair? true})
-                                  (validate-jwt jwt-secret jwt-leeway)
-                                  validate-jwt-account
+                                  (ji/validate-jwt jwt-secret jwt-leeway)
+                                  ji/validate-jwt-account
                                   ci/delete-api-keys)
      :route-name :lrsql.admin.creds/delete]})
 

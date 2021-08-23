@@ -1,12 +1,11 @@
-(ns lrsql.admin.interceptors.common
+(ns lrsql.admin.interceptors.jwt
   (:require [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
             [lrsql.util.admin :as admin-u]))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Validation Interceptors
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; NOTE: These interceptors are specifically for JWT validation.
+;; For JWT generation see `account/generate-jwt`.
 
 (defn validate-jwt
   "Validate that the header JWT is valid (e.g. not expired)."
@@ -43,9 +42,9 @@
    This should go after `validate-jwt`, and MUST be present if `account-id`
    is used in the route (e.g. for credential operations)."
   (interceptor
-   {:name ::check-admin-existence
+   {:name ::validate-jwt-account
     :enter
-    (fn check-admin-existence [ctx]
+    (fn validate-jwt-account [ctx]
       (let [{lrs :com.yetanalytics/lrs
              {:keys [account-id]} ::data} ctx]
         (if (adp/-existing-account? lrs account-id)
