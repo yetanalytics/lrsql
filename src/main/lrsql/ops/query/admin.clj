@@ -17,10 +17,16 @@
    failure."
   [bk tx input]
   (when-some [{account-id :id
-             passhash   :passhash}
+               passhash   :passhash}
             (bp/-query-account bk tx input)]
     {:account-id account-id
      :passhash   passhash}))
+
+(defn query-admin-exists
+  "Query whether an admin account with the given ID exists. Returns true
+   if it does exists, false otherwise."
+  [bk tx input]
+  (boolean (bp/-query-account-exists bk tx input)))
 
 (s/fdef query-validate-admin
   :args (s/cat :bk ads/admin-backend?

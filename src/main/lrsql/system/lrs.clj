@@ -198,6 +198,12 @@
           input (admin-input/query-validate-admin-input username password)]
       (jdbc/with-transaction [tx conn]
         (admin-q/query-validate-admin backend tx input))))
+  (-existing-account?
+    [this account-id]
+    (let [conn (lrs-conn this)
+          input (admin-input/query-admin-exists-input account-id)]
+      (jdbc/with-transaction [tx conn]
+        (admin-q/query-admin-exists backend tx input))))
   (-delete-account
     [this account-id]
     (let [conn  (lrs-conn this)
