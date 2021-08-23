@@ -6,7 +6,7 @@
     <mainClass>clojure.main</mainClass>
     <cp>lrsql.jar</cp>
   </classPath>
-  <outfile>lrsql.exe</outfile>
+  <outfile>lrsql_pg.exe</outfile>
   <errTitle>You must have Java 11+ installed to run SQL LRS</errTitle>
   <cmdLine>-m lrsql.postgres.main</cmdLine>
   <chdir>.</chdir>
