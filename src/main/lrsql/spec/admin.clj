@@ -57,7 +57,10 @@
 (def insert-admin-ret-spec
   (s/keys :req-un [:lrsql.spec.admin.insert/result]))
 
-(s/def :lrsql.spec.admin.delete/result uuid?)
+(s/def :lrsql.spec.admin.delete/result
+  (s/nonconforming
+   (s/or :success uuid?
+         :failure #{:lrsql.admin/missing-account-error})))
 
 (def delete-admin-ret-spec
   (s/keys :req-un [:lrsql.spec.admin.delete/result]))

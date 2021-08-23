@@ -109,7 +109,6 @@
             (adp/-create-account lrs username password)]
         (cond
           ;; The result is the account ID - success!
-          ;; Pass it along as an intermediate value
           (uuid? result)
           (assoc ctx
                  :response
@@ -122,6 +121,30 @@
                  {:status 409 :body (format "An account \"%s\" already exists!"
                                             username)}))))}))
 
+(def delete-admin
+  (interceptor
+   {:name ::delete-admin
+    :enter
+    (fn delete-admin [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [account-id]} ::data}
+            ctx
+            {:keys [result]}
+            (adp/-delete-account lrs account-id)]
+        (cond
+          ;; The result is the account ID - success!
+          (uuid? result)
+          (assoc ctx
+                 :response
+                 {:status 200 :body {:account-id account-id}})
+          
+          ;; The account was already deleted (or is otherwise missing)
+          (= :lrsql.admin/missing-account-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 404 :body (format "The account \"%s\" no longer exists!"
+                                            (u/uuid->str account-id))}))))}))
+
 (def get-accounts
   (interceptor
    {:name ::get-accounts
@@ -132,20 +155,6 @@
         (assoc ctx
                :response
                {:status 200 :body result})))}))
-
-(def delete-admin
-  (interceptor
-   {:name ::delete-admin
-    :enter
-    (fn delete-admin [ctx]
-      (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id]} ::data}
-            ctx]
-        (adp/-delete-account lrs account-id)
-        (assoc ctx
-               :response
-               {:status 200
-                :body {:account-id account-id}})))}))
 
 (defn generate-jwt
   [secret exp]

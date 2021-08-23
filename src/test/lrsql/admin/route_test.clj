@@ -126,7 +126,7 @@
                             :body
                             u/parse-json
                             (get "account-id")))))
-        ; (is-err-code (delete-account headers del-body) 404)
+        (is-err-code (delete-account headers del-body) 404)
         (is-err-code (delete-account headers "") 400)
         (testing "using a deleted account ID for admin ops"
           (is-err-code (get-account del-head) 401) ; Unauthorized
