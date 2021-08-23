@@ -71,7 +71,7 @@ target/bundle/config/authority.json.template.example:
 
 target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/config/authority.json.template.example
 
-# entire bundle
+# Create entire bundle
 
 target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar
 
@@ -80,7 +80,7 @@ bundle: target/bundle
 # Create launch4j executables
 # https://stackoverflow.com/questions/5618615/check-if-a-program-exists-from-a-makefile
 
-target/bundle/lrsql.exe: target/bundle/lrsql.jar
+target/bundle/lrsql.exe: target/bundle
 ifeq (,$(shell which launch4j))
 	$(error "ERROR: launch4j is not installed!")
 else
@@ -90,9 +90,7 @@ else
 	rm target/bundle/config.xml target/bundle/lrsql.ico
 endif
 
-executable: target/bundle/lrsql.exe
-
-bundle-exe: target/bundle target/bundle/lrsql.exe
+bundle-exe: target/bundle/lrsql.exe
 
 # *** Run build ***
 
