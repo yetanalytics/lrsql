@@ -57,6 +57,9 @@
                 (= :lrsql.admin/missing-account-error)))))
     (component/stop sys')))
 
+;; TODO: Add tests for creds with no explicit scopes, once
+;; `statements/read/mine` is implemented
+
 (deftest auth-test
   (let [sys    (support/test-system)
         sys'   (component/start sys)
