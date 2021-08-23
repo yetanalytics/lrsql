@@ -37,7 +37,7 @@ bench:
 
 # *** Build ***
 
-.phony: clean, bundle, executable, bundle-exe
+.phony: clean, bundle, bundle-exe
 
 clean:
 	rm -rf target
