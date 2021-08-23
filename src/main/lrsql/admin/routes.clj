@@ -16,24 +16,25 @@
 
 (defn admin-account-routes
   [common-interceptors jwt-secret jwt-exp jwt-leeway]
-  #{;; Create new account
+  #{;; Log into an existing account
+    ["/admin/account/login" :post (conj common-interceptors
+                                        ai/validate-params
+                                        ai/authenticate-admin
+                                        (ai/generate-jwt jwt-secret jwt-exp))
+     :route-name :lrsql.admin.account/login]
+    ;; Create new account
     ["/admin/account/create" :post (conj common-interceptors
                                          ai/validate-params
                                          (ci/validate-jwt jwt-secret jwt-leeway)
                                          ci/validate-jwt-account
                                          ai/create-admin)
      :route-name :lrsql.admin.account/create]
+    ;; Get all accounts
     ["/admin/account" :get (conj common-interceptors
                                  (ci/validate-jwt jwt-secret jwt-leeway)
                                  ci/validate-jwt-account
                                  ai/get-accounts)
      :route-name :lrsql.admin.account/get]
-    ;; Log into an existing account
-    ["/admin/account/login" :post (conj common-interceptors
-                                        ai/validate-params
-                                        ai/authenticate-admin
-                                        (ai/generate-jwt jwt-secret jwt-exp))
-     :route-name :lrsql.admin.account/login]
     ;; Delete account (and associated credentials)
     ["/admin/account" :delete (conj common-interceptors
                                     ai/validate-delete-params
