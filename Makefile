@@ -90,7 +90,17 @@ else
 	rm target/bundle/config.xml target/bundle/lrsql.ico
 endif
 
-bundle-exe: target/bundle/lrsql.exe
+target/bundle/lrsql_pg.exe: target/bundle
+ifeq (,$(shell which launch4j))
+	$(error "ERROR: launch4j is not installed!")
+else
+	cp resources/lrsql/build/launch4j/config_pg.xml target/bundle/config_pg.xml
+	cp resources/lrsql/build/launch4j/lrsql.ico target/bundle/lrsql.ico
+	launch4j target/bundle/config_pg.xml
+	rm target/bundle/config_pg.xml target/bundle/lrsql.ico
+endif
+
+bundle-exe: target/bundle/lrsql.exe target/bundle/lrsql_pg.exe
 
 # *** Run build ***
 
