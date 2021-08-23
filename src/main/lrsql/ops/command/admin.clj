@@ -32,7 +32,7 @@
 (s/fdef delete-admin!
   :args (s/cat :bk ads/admin-backend?
                :tx transaction?
-               :input ads/delete-admin-input-spec)
+               :input ads/admin-id-input-spec)
   :ret ads/delete-admin-ret-spec)
 
 (defn delete-admin!

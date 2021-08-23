@@ -42,7 +42,7 @@
   (s/keys :req-un [::username
                    ::password]))
 
-(def delete-admin-input-spec
+(def admin-id-input-spec
   (s/keys :req-un [::account-id]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
