@@ -20,11 +20,13 @@
     (fn validate-params [ctx]
       (let [params (get-in ctx [:request :json-params])]
         (if-some [err (s/explain-data ads/admin-params-spec params)]
+          ;; Invalid parameters - Bad Request
           (assoc (chain/terminate ctx)
                  :response
                  {:status 400
                   :body   (format "Invalid parameters:\n%s"
                                   (-> err s/explain-out with-out-str))})
+          ;; Valid params - continue
           (let [acc-info (select-keys params [:username :password])]
             (-> ctx
                 (assoc ::data acc-info)
@@ -38,20 +40,22 @@
     (fn validate-params [{{{:keys [account-id] :as params} :json-params}
                           :request :as ctx}]
       (if (not (s/valid? ::ads/uuid account-id))
-        ;; Not a valid uuid
+        ;; Not a valid UUID - Bad Request
         (assoc (chain/terminate ctx)
                :response
                {:status 400
                 :body   "Invalid parameters: account-id must be a uuid."})
-        ;; Valid uuid
+        ;; Valid UUID
         (let [params' (assoc params :account-id
                              (u/str->uuid (:account-id params)))]
           (if-some [err (s/explain-data ads/admin-delete-params-spec params')]
+            ;; Params fail spec - Bad Request
             (assoc (chain/terminate ctx)
                    :response
                    {:status 400
                     :body   (format "Invalid parameters:\n%s"
                                     (-> err s/explain-out with-out-str))})
+            ;; Valid params - continue
             (let [acc-info (select-keys params' [:account-id])]
               (-> ctx
                   (assoc ::data acc-info)
@@ -79,14 +83,14 @@
               (assoc-in [::data :account-id] result)
               (assoc-in [:request :session ::data :account-id] result))
 
-          ;; The account cannot be found
+          ;; The account is not in the table - Not Found
           (= :lrsql.admin/missing-account-error result)
           (assoc (chain/terminate ctx)
                  :response
                  {:status 404 :body (format "Account \"%s\" not found!"
                                             username)})
 
-          ;; The password was invalid
+          ;; The password was invalid - Unauthorized
           (= :lrsql.admin/invalid-password-error result)
           (assoc (chain/terminate ctx)
                  :response
@@ -115,7 +119,7 @@
                  :response
                  {:status 200 :body {:account-id result}})
 
-          ;; The account already exists
+          ;; The account already exists - Conflict
           (= :lrsql.admin/existing-account-error result)
           (assoc (chain/terminate ctx)
                  :response
@@ -140,7 +144,7 @@
                  :response
                  {:status 200 :body {:account-id account-id}})
           
-          ;; The account was already deleted (or is otherwise missing)
+          ;; The account was already deleted/missing - Not Found
           (= :lrsql.admin/missing-account-error result)
           (assoc (chain/terminate ctx)
                  :response

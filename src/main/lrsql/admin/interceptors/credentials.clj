@@ -22,11 +22,13 @@
                            (s/explain-data as/key-pair-spec params))
                          (when scopes?
                            (s/explain-data as/scopes-spec params)))]
+         ;; Invalid parameters - Bad Request
          (assoc (chain/terminate ctx)
                 :response
                 {:status 400
                  :body (format "Invalid parameters:\n%s"
                                (-> err s/explain-out with-out-str))})
+         ;; Valid parameters - continue
          (let [cred-info (select-keys params [:api-key
                                               :secret-key
                                               :scopes])]

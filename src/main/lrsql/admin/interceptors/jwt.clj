@@ -25,13 +25,13 @@
               (assoc-in [::data :account-id] result)
               (assoc-in [:request :session ::data :account-id] result))
 
-          ;; Failure - the token has expired
+          ;; The token has expired - Unauthorized
           (= :lrsql.admin/expired-token-error result)
           (assoc (chain/terminate ctx)
                  :response
                  {:status 401 :body "Expired token!"})
 
-          ;; Failure - the token is invalid
+          ;; The token is invalid or malformed - Bad Request
           (= :lrsql.admin/invalid-token-error result)
           (assoc (chain/terminate ctx)
                  :response
@@ -50,7 +50,7 @@
         (if (adp/-existing-account? lrs account-id)
           ;; Success - continue on your merry way
           ctx
-          ;; Failure - the account does not exist (e.g. it was deleted)
+          ;; The account does not exist/was deleted - Unauthorized
           (assoc (chain/terminate ctx)
                  :response
                  {:status 401 :body "Admin account does not exist!"}))))}))
