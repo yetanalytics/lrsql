@@ -98,6 +98,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def create-admin
+  "Create a new admin account and store it in the account table."
   (interceptor
    {:name ::create-admin
     :enter
@@ -122,6 +123,7 @@
                                             username)}))))}))
 
 (def delete-admin
+  "Delete the selected admin account. This is a hard delete."
   (interceptor
    {:name ::delete-admin
     :enter
@@ -146,6 +148,7 @@
                                             (u/uuid->str account-id))}))))}))
 
 (def get-accounts
+  "Get all admin accounts from the account table."
   (interceptor
    {:name ::get-accounts
     :enter
@@ -157,6 +160,7 @@
                {:status 200 :body result})))}))
 
 (defn generate-jwt
+  "Upon account login, generate a new JSON web token."
   [secret exp]
   (interceptor
    {:name ::generate-jwt
