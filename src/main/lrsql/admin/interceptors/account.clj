@@ -145,8 +145,7 @@
         (assoc ctx
                :response
                {:status 200
-                :body {:success true
-                       :account-id account-id}})))}))
+                :body {:account-id account-id}})))}))
 
 (defn generate-jwt
   [secret exp]
