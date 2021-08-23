@@ -8,14 +8,12 @@
             [lrsql.spec.auth :as as])
   (:import [java.util Base64 Base64$Decoder]))
 
+;; NOTE: Additional scopes may be implemented in the future.
+
 (def scope-str-kw-map
   {"all"                  :scope/all
    "all/read"             :scope/all.read
-   "profile"              :scope/profile
-   "define"               :scope/define
-   "state"                :scope/state
    "statements/read"      :scope/statements.read
-   "statements/read/mine" :scope/statements.read.mine
    "statements/write"     :scope/statements.write})
 
 (def scope-kw-str-map
@@ -69,10 +67,6 @@
   {:api-key    (-> 32 random-bytes bytes->hex)
    :secret-key (-> 32 random-bytes bytes->hex)})
 
-;; NOTE: There are other scopes - `statements/read/mine`, `state`,
-;; `define`, and `profile` - that exist and are supported as DB enum
-;; values, but are unlikely to ever be implemented
-
 ;; Mostly copied from the third LRS:
 ;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc
 
@@ -80,6 +74,7 @@
 (s/def ::path-info string?)
 (s/def ::request (s/keys :req-un [::request-method ::path-info]))
 
+;; Need separate spec since the one in spec.auth is for the string versions.
 (s/def ::scope #{:scope/all
                  :scope/all.read
                  :scope/statements.read
@@ -119,12 +114,7 @@
                    (contains? scopes :scope/statements.write))))
      ;; Invalid scopes
      (do
-       (let [scopes' (disj scopes
-                           :scope/all
-                           :scope/all.read
-                           :scope/statements.read
-                           :scope/statements.write)]
-         (when (not-empty scopes')
-           (log/errorf "Scopes not currently implemented: %s"
-                       (->> scopes' (map scope-kw->str) vec))))
+       (when-some [err (s/explain-data ::scopes scopes)]
+         (log/errorf "Scope errors (perhaps you had unimplemented scopes):\n%s"
+                     (with-out-str (s/explain-out err))))
        false)))})

@@ -23,7 +23,8 @@
   (bp/-set-read! backend)
   (bp/-set-write! backend)
   ;; Init DDL
-  (bp/-create-all! backend tx))
+  (bp/-create-all! backend tx)
+  (bp/-update-all! backend tx))
 
 (defn insert-default-creds!
   "Seed the credential table with the default API key and secret, as well as

@@ -31,7 +31,7 @@
                         {:request {:request-method request-method
                                    :path-info path-info}}
                         {:scopes scopes}))))
-      ;; all scope
+      ;; all scopes
       true {:request-method :get
             :path-info      "xapi/statements"
             :scopes         #{:scope/all}}
@@ -89,7 +89,7 @@
       false {:request-method :put
              :path-info      "xapi/activities/state"
              :scopes         #{:scope/statements.write}}
-      ;; Multiple scopes
+      ;; Multiple scopes (non-exhaustive)
       true {:request-method :get
             :path-info      "xapi/statements"
             :scopes         #{:scope/statements.read :scope/statements.write}}
@@ -101,6 +101,24 @@
             :scopes         #{:scope/all :scope/statements.read}}
       true {:request-method :get
             :path-info      "xapi/activities/state"
-            :scopes         #{:scope/all.read :scope/statements.read}}))
+            :scopes         #{:scope/all.read :scope/statements.read}}
+      ;; No scopes
+      ;; Differs from recommended behavior in xAPI spec (where default
+      ;; scopes are `statements/write` and `statements/read/mine`)
+      false {:request-method :get
+             :path-info      "xapi/statements"
+             :scopes         #{}}
+      false {:request-method :head
+             :path-info      "xapi/statements"
+             :scopes         #{}}
+      false {:request-method :put
+             :path-info      "xapi/statements"
+             :scopes         #{}}
+      false {:request-method :post
+             :path-info      "xapi/statements"
+             :scopes         #{}}
+      false {:request-method :delete
+             :path-info      "xapi/activities/state"
+             :scopes         #{}}))
   (testing "authorize-action gentest"
     (is (nil? (check-validate `au/authorize-action)))))

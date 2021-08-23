@@ -52,4 +52,5 @@
   (testing "admin account inputs"
     (is (nil? (check-validate `i-admin/insert-admin-input 3)))
     (is (nil? (check-validate `i-admin/query-validate-admin-input)))
+    (is (nil? (check-validate `i-admin/query-admin-exists-input)))
     (is (nil? (check-validate `i-admin/delete-admin-input)))))

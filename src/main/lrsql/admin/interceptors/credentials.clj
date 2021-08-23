@@ -64,6 +64,22 @@
                  :response
                  {:status 400 :body "Missing or invalid token!"}))))}))
 
+;; NOTE: This should ALWAYS go after `validate-jwt` int the route table
+(def validate-jwt-account
+  (interceptor
+   {:name ::check-admin-existence
+    :enter
+    (fn check-admin-existence [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [account-id]} ::data} ctx]
+        (if (adp/-existing-account? lrs account-id)
+          ;; Success - continue on your merry way
+          ctx
+          ;; Failure - the account does not exist (e.g. it was deleted)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 401 :body "Admin account does not exist!"}))))}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Terminal Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

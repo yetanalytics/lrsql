@@ -113,7 +113,7 @@
           ;; Bad Request status code
           (is (= 400 (-> e ex-data :status))))))
     (testing "admin account deletion"
-      (let [account-id (-> (curl/get "http://0.0.0.0:8080/admin/account"
+      (let [del-acc-id (-> (curl/get "http://0.0.0.0:8080/admin/account"
                                      {:headers (merge content-type seed-auth)})
                            :body
                            (u/parse-json :object? false)
@@ -121,7 +121,13 @@
                                        (= (get acct "username") "myname")) %))
                            first
                            (get "account-id"))
-            del-data   {:body (String. (u/write-json {"account-id" account-id}))}]
+            del-jwt    (-> (curl/post "http://0.0.0.0:8080/admin/account/login"
+                                      (merge {:headers content-type} data))
+                           :body
+                           u/parse-json
+                           (get "json-web-token"))
+            del-auth   {"Authorization" (str "Bearer " del-jwt)}
+            del-data   {:body (String. (u/write-json {"account-id" del-acc-id}))}]
         (let [delete-res
               (curl/delete "http://0.0.0.0:8080/admin/account"
                            (assoc del-data
@@ -141,7 +147,61 @@
             :headers (merge content-type seed-auth)})
           (catch clojure.lang.ExceptionInfo e
             ;; Bad Request status code
-            (is (= 400 (-> e ex-data :status)))))))
+            (is (= 400 (-> e ex-data :status)))))
+        (testing "doing stuff after deletion"
+          (try
+            (curl/get "http://0.0.0.0:8080/admin/account"
+                      {:headers (merge content-type del-auth)})
+            (catch clojure.lang.ExceptionInfo e
+              ;; Unauthorized status code
+              (is (= 401 (-> e ex-data :status)))))
+          (try
+            (curl/post "http://0.0.0.0:8080/admin/account/create"
+                       (assoc data :headers (merge content-type del-auth)))
+            (catch clojure.lang.ExceptionInfo e
+              ;; Unauthorized status code
+              (is (= 401 (-> e ex-data :status)))))
+          (try
+            (curl/delete "http://0.0.0.0:8080/admin/account"
+                         (assoc del-data
+                                :headers (merge content-type del-auth)))
+            (catch clojure.lang.ExceptionInfo e
+              ;; Unauthorized status code
+              (is (= 401 (-> e ex-data :status))))))
+        (testing "doing stuff after deletion"
+          (try
+            (curl/post "http://0.0.0.0:8080/admin/creds"
+                       {:headers (merge content-type del-auth)
+                        :body    (String. (u/write-json
+                                           {"scopes" ["all" "all/read"]}))})
+            (catch clojure.lang.ExceptionInfo e
+              ;; Unauthorized status code
+              (is (= 401 (-> e ex-data :status)))))
+          (try
+            (curl/put "http://0.0.0.0:8080/admin/creds"
+                      {:headers (merge content-type del-auth)
+                       :body    (String. (u/write-json
+                                          {"api-key" "foo"
+                                           "secret-key" "bar"
+                                           "scopes" ["all" "all/read"]}))})
+            (catch clojure.lang.ExceptionInfo e
+              ;; Unauthorized status code
+              (is (= 401 (-> e ex-data :status)))))
+          (try
+            (curl/get "http://0.0.0.0:8080/admin/creds"
+                      {:headers (merge content-type del-auth)})
+            (catch clojure.lang.ExceptionInfo e
+              ;; Unauthorized status code
+              (is (= 401 (-> e ex-data :status)))))
+          (try
+            (curl/delete "http://0.0.0.0:8080/admin/creds"
+                         {:headers (merge content-type del-auth)
+                          :body    (String. (u/write-json
+                                             {"api-key" "foo"
+                                              "secret-key" "bar"}))})
+            (catch clojure.lang.ExceptionInfo e
+              ;; Unauthorized status code
+              (is (= 401 (-> e ex-data :status))))))))
     (component/stop sys')))
 
 (deftest auth-routes-test
@@ -215,6 +275,35 @@
             (is (= api-key api-key'))
             (is (= secret-key secret-key'))
             (is (= #{"all/read" "statements/read"} (set scopes')))))
+        (testing "and no-op scope update"
+          (let [{:keys [status body]}
+                (curl/put
+                 "http://0.0.0.0:8080/admin/creds"
+                 {:headers hdr
+                  :body (String.
+                         (u/write-json
+                          {"api-key"    api-key
+                           "secret-key" secret-key
+                           "scopes"     ["all/read" "statements/read"]}))})
+                {:strs [scopes]}
+                (u/parse-json body)]
+            (is (= 200 status))
+            (is (= #{"all/read" "statements/read"}
+                   (set scopes)))))
+        (testing "and deleting all scopes"
+          (let [{:keys [status body]}
+                (curl/put
+                 "http://0.0.0.0:8080/admin/creds"
+                 {:headers hdr
+                  :body (String.
+                         (u/write-json
+                          {"api-key"    api-key
+                           "secret-key" secret-key
+                           "scopes"     []}))})
+                {:strs [scopes]}
+                (u/parse-json body)]
+            (is (= 200 status))
+            (is (= #{} (set scopes)))))
         (testing "and deletion"
           (let [{:keys [status]}
                 (curl/delete
@@ -232,5 +321,6 @@
                 edn-res
                 (u/parse-json body :object? false)]
             (is (= 200 status))
-            (is (not (some (fn [cred] (= (get cred "api-key") api-key)) edn-res)))))))
+            (is (not (some (fn [cred] (= (get cred "api-key") api-key))
+                           edn-res)))))))
     (component/stop sys')))
