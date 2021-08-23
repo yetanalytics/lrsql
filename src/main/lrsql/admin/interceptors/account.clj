@@ -12,8 +12,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def validate-params
-  "Validate that the JSON params contain the params `username` and `password`.
-  for login and create"
+  "Validate that the JSON params contain the params `username` and `password`
+   for login and create."
   (interceptor
    {:name ::validate-params
     :enter
@@ -38,12 +38,12 @@
     (fn validate-params [{{{:keys [account-id] :as params} :json-params}
                           :request :as ctx}]
       (if (not (s/valid? ::ads/uuid account-id))
-        ;;not a valid uuid
+        ;; Not a valid uuid
         (assoc (chain/terminate ctx)
                :response
                {:status 400
                 :body   "Invalid parameters: account-id must be a uuid."})
-        ;;valid uuid
+        ;; Valid uuid
         (let [params' (assoc params :account-id
                              (u/str->uuid (:account-id params)))]
           (if-some [err (s/explain-data ads/admin-delete-params-spec params')]
