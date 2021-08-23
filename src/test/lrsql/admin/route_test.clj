@@ -6,7 +6,6 @@
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.test-support :as support]
-            [lrsql.util.admin :as admin-u]
             [lrsql.util :as u]))
 
 (support/instrument-lrsql)
