@@ -5,6 +5,8 @@
 -- SET search_path TO :i:db-schema;                           -- current session
 -- ALTER DATABASE :i:db-name SET search_path TO :i:db-schema; -- future sessions
 
+-- Solution from: https://stackoverflow.com/a/48382296
+
 -- :name create-actor-type-enum!
 -- :command :execute
 DO $$ BEGIN
