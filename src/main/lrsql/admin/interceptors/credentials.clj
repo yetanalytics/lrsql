@@ -26,8 +26,8 @@
          (assoc (chain/terminate ctx)
                 :response
                 {:status 400
-                 :body (format "Invalid parameters:\n%s"
-                               (-> err s/explain-out with-out-str))})
+                 :body {:error (format "Invalid parameters:\n%s"
+                                       (-> err s/explain-out with-out-str))}})
          ;; Valid parameters - continue
          (let [cred-info (select-keys params [:api-key
                                               :secret-key

@@ -99,11 +99,11 @@
       (let [bad-body (String. (u/write-json
                                {"username" "foo"
                                 "password" "swordfish"}))]
-        (is-err-code (login-account content-type bad-body) 404))  ; Not Found
+        (is-err-code (login-account content-type bad-body) 401))  ; Bad User 401
       (let [bad-body (String. (u/write-json
                                {"username" "myname"
                                 "password" "badpass"}))]
-        (is-err-code (login-account content-type bad-body) 401))  ; Unauthorized
+        (is-err-code (login-account content-type bad-body) 401))  ; Bad Pass 401
       (let [bad-body ""]
         (is-err-code (login-account content-type bad-body) 400))) ; Bad Request
     (testing "delete the `myname` account using the seed account"
