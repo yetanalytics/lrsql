@@ -24,8 +24,8 @@
           (assoc (chain/terminate ctx)
                  :response
                  {:status 400
-                  :body   (format "Invalid parameters:\n%s"
-                                  (-> err s/explain-out with-out-str))})
+                  :body   {:error (format "Invalid parameters:\n%s"
+                                          (-> err s/explain-out with-out-str))}})
           ;; Valid params - continue
           (let [acc-info (select-keys params [:username :password])]
             (-> ctx
@@ -44,7 +44,7 @@
         (assoc (chain/terminate ctx)
                :response
                {:status 400
-                :body   "Invalid parameters: account-id must be a uuid."})
+                :body   {:error "Invalid parameters: account-id must be a uuid."}})
         ;; Valid UUID
         (let [params' (assoc params :account-id
                              (u/str->uuid (:account-id params)))]
@@ -53,8 +53,8 @@
             (assoc (chain/terminate ctx)
                    :response
                    {:status 400
-                    :body   (format "Invalid parameters:\n%s"
-                                    (-> err s/explain-out with-out-str))})
+                    :body   {:error (format "Invalid parameters:\n%s"
+                                            (-> err s/explain-out with-out-str))}})
             ;; Valid params - continue
             (let [acc-info (select-keys params' [:account-id])]
               (-> ctx
@@ -84,18 +84,12 @@
               (assoc-in [:request :session ::data :account-id] result))
 
           ;; The account is not in the table - Not Found
-          (= :lrsql.admin/missing-account-error result)
+          (or (= :lrsql.admin/missing-account-error result)
+              (= :lrsql.admin/invalid-password-error result))
           (assoc (chain/terminate ctx)
                  :response
-                 {:status 404 :body (format "Account \"%s\" not found!"
-                                            username)})
-
-          ;; The password was invalid - Unauthorized
-          (= :lrsql.admin/invalid-password-error result)
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 401 :body (format "Incorrect password for \"%s\"!"
-                                            username)}))))}))
+                 {:status 401
+                  :body   {:error "Invalid Account Credentials"}}))))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Terminal Interceptors
@@ -123,8 +117,9 @@
           (= :lrsql.admin/existing-account-error result)
           (assoc (chain/terminate ctx)
                  :response
-                 {:status 409 :body (format "An account \"%s\" already exists!"
-                                            username)}))))}))
+                 {:status 409
+                  :body   {:error (format "An account \"%s\" already exists!"
+                                          username)}}))))}))
 
 (def delete-admin
   "Delete the selected admin account. This is a hard delete."
@@ -143,13 +138,14 @@
           (assoc ctx
                  :response
                  {:status 200 :body {:account-id account-id}})
-          
+
           ;; The account was already deleted/missing - Not Found
           (= :lrsql.admin/missing-account-error result)
           (assoc (chain/terminate ctx)
                  :response
-                 {:status 404 :body (format "The account \"%s\" no longer exists!"
-                                            (u/uuid->str account-id))}))))}))
+                 {:status 404
+                  :body   {:error (format "The account \"%s\" does not exist!"
+                                          (u/uuid->str account-id))}}))))}))
 
 (def get-accounts
   "Get all admin accounts from the account table."
