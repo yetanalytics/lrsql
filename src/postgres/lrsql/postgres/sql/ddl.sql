@@ -1,36 +1,49 @@
 /* Enums */
 
--- :name create-schema!
--- :command :execute
--- :doc Create `schema` and set it to the search path.
-CREATE SCHEMA IF NOT EXISTS :schema;
-SET search_path TO :schema;
+-- TODO: Make into Hug function?
+-- CREATE SCHEMA IF NOT EXISTS :i:db-schema;
+-- SET search_path TO :i:db-schema;                           -- current session
+-- ALTER DATABASE :i:db-name SET search_path TO :i:db-schema; -- future sessions
 
--- :name create-enums!
+-- :name create-actor-type-enum!
 -- :command :execute
--- :doc Create all enum types.
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'actor_type_enum') THEN
-    CREATE TYPE actor_type_enum AS ENUM('Agent', 'Group');
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'actor_usage_enum') THEN
-    CREATE TYPE actor_usage_enum AS ENUM (
+  CREATE TYPE actor_type_enum AS ENUM ('Agent', 'Group');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+-- :name create-actor-usage-enum!
+-- :command :execute
+DO $$ BEGIN
+  CREATE TYPE actor_usage_enum AS ENUM (
       'Actor', 'Object', 'Authority', 'Instructor', 'Team',
       'SubActor', 'SubObject', 'SubInstructor', 'SubTeam');
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'activity_usage_enum') THEN
-    CREATE TYPE activity_usage_enum AS ENUM (
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+-- :name create-activity-usage-enum!
+-- :command :execute
+DO $$ BEGIN
+  CREATE TYPE activity_usage_enum AS ENUM (
       'Object', 'Category', 'Grouping', 'Parent', 'Other',
       'SubObject', 'SubCategory', 'SubGrouping', 'SubParent', 'SubOther');
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'scope_enum') THEN
-    CREATE TYPE scope_enum AS ENUM (
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+-- :name create-scope-enum!
+-- :command :execute
+DO $$ BEGIN
+  CREATE TYPE scope_enum AS ENUM (
       'statements/write',
       'statements/read',
       'all/read',
       'all');
-  END IF;
-END $$
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 /* Statement + Attachment Tables */
 

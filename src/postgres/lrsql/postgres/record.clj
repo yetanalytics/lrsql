@@ -26,7 +26,10 @@
   bp/BackendInit
   (-create-all! [_ tx]
     ;; Enums
-    (create-enums! tx)
+    (create-actor-type-enum! tx)
+    (create-actor-usage-enum! tx)
+    (create-activity-usage-enum! tx)
+    (create-scope-enum! tx)
     ;; Tables
     (create-statement-table! tx)
     (create-actor-table! tx)
