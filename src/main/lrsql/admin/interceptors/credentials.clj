@@ -3,8 +3,8 @@
             [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
-            [lrsql.spec.auth :as as]
-            [lrsql.util.admin :as admin-u]))
+            [lrsql.admin.interceptors.jwt :as jwt]
+            [lrsql.spec.auth :as as]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Validation Interceptors
@@ -22,11 +22,13 @@
                            (s/explain-data as/key-pair-spec params))
                          (when scopes?
                            (s/explain-data as/scopes-spec params)))]
+         ;; Invalid parameters - Bad Request
          (assoc (chain/terminate ctx)
                 :response
                 {:status 400
                  :body (format "Invalid parameters:\n%s"
                                (-> err s/explain-out with-out-str))})
+         ;; Valid parameters - continue
          (let [cred-info (select-keys params [:api-key
                                               :secret-key
                                               :scopes])]
@@ -34,63 +36,19 @@
                (assoc ::data cred-info)
                (assoc-in [:request :session ::data] cred-info))))))})
 
-(defn validate-jwt
-  "Validate that the header JWT is valid (e.g. not expired)."
-  [secret leeway]
-  (interceptor
-   {:name ::validate-jwt
-    :enter
-    (fn validate-jwt [ctx]
-      (let [token  (-> ctx
-                       (get-in [:request :headers "authorization"])
-                       admin-u/header->jwt)
-            result (admin-u/jwt->account-id token secret leeway)]
-        (cond
-          ;; Success - assoc the account ID as an intermediate value
-          (uuid? result)
-          (-> ctx
-              (assoc-in [::data :account-id] result)
-              (assoc-in [:request :session ::data :account-id] result))
-
-          ;; Failure - the token has expired
-          (= :lrsql.admin/expired-token-error result)
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 401 :body "Expired token!"})
-
-          ;; Failure - the token is invalid
-          (= :lrsql.admin/invalid-token-error result)
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400 :body "Missing or invalid token!"}))))}))
-
-;; NOTE: This should ALWAYS go after `validate-jwt` int the route table
-(def validate-jwt-account
-  (interceptor
-   {:name ::check-admin-existence
-    :enter
-    (fn check-admin-existence [ctx]
-      (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id]} ::data} ctx]
-        (if (adp/-existing-account? lrs account-id)
-          ;; Success - continue on your merry way
-          ctx
-          ;; Failure - the account does not exist (e.g. it was deleted)
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 401 :body "Admin account does not exist!"}))))}))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Terminal Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def create-api-keys
+  "Create a new pair of API keys and store them in the credential table."
   (interceptor
    {:name ::create-api-keys
     :enter
     (fn create-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id scopes]} ::data}
+             {:keys [account-id]} ::jwt/data
+             {:keys [scopes]} ::data}
             ctx
             api-key-res
             (adp/-create-api-keys lrs
@@ -101,12 +59,13 @@
                {:status 200 :body api-key-res})))}))
 
 (def read-api-keys
+  "Read the API keys associated with an account ID."
   (interceptor
    {:name ::read-api-keys
     :enter
     (fn read-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id]} ::data}
+             {:keys [account-id]} ::jwt/data}
             ctx
             api-key-res
             (adp/-get-api-keys lrs
@@ -116,12 +75,14 @@
                {:status 200 :body api-key-res})))}))
 
 (def update-api-keys
+  "Update the scopes of the selected API key pair."
   (interceptor
    {:name ::update-api-keys
     :enter
     (fn update-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id api-key secret-key scopes]} ::data}
+             {:keys [account-id]} ::jwt/data
+             {:keys [api-key secret-key scopes]} ::data}
             ctx
             api-key-res
             (adp/-update-api-keys lrs
@@ -134,12 +95,14 @@
                {:status 200 :body api-key-res})))}))
 
 (def delete-api-keys
+  "Delete the selected API key pair."
   (interceptor
    {:name ::delete-api-keys
     :enter
     (fn delete-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id api-key secret-key]} ::data}
+             {:keys [account-id]} ::jwt/data
+             {:keys [api-key secret-key]} ::data}
             ctx
             api-key-res
             (adp/-delete-api-keys lrs
