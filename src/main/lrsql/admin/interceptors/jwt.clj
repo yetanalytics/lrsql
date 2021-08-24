@@ -30,14 +30,14 @@
           (assoc (chain/terminate ctx)
                  :response
                  {:status 401
-                  :body {:error "Session Expired!"}})
+                  :body   {:error "Session Expired!"}})
 
           ;; The token is invalid or malformed - Bad Request
           (= :lrsql.admin/invalid-token-error result)
           (assoc (chain/terminate ctx)
                  :response
                  {:status 400
-                  :body {:error "Missing or invalid token!"}}))))}))
+                  :body   {:error "Missing or invalid token!"}}))))}))
 
 (def validate-jwt-account
   "Check that the account ID stored in the JWT exists in the account table.
@@ -56,4 +56,4 @@
           (assoc (chain/terminate ctx)
                  :response
                  {:status 401
-                  :body {:error "Unauthorized, account does not exist!"}}))))}))
+                  :body   {:error "Unauthorized, account does not exist!"}}))))}))

@@ -89,7 +89,7 @@
           (assoc (chain/terminate ctx)
                  :response
                  {:status 401
-                  :body {:error "Invalid Account Credentials"}}))))}))
+                  :body   {:error "Invalid Account Credentials"}}))))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Terminal Interceptors
