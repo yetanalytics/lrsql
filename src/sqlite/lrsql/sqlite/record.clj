@@ -19,7 +19,7 @@
 ;; Define record
 
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
-(defrecord SQLiteBackend []
+(defrecord SQLiteBackend [config]
   cmp/Lifecycle
   (start [this] this)
   (stop [this] this)

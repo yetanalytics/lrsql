@@ -12,7 +12,8 @@
    :test-postgres {:db-type "postgres"
                    :db-name "pg_lrsql"
                    :db-host "localhost"
-                   :db-port 5432}
+                   :db-port 5432
+                   :db-schema "lrsql"}
    ;; Production
    :prod-h2-mem   #merge [{:db-type #or [#env LRSQL_DB_TYPE "h2:mem"]}
                           #include "prod/default/database.edn"]
@@ -24,7 +25,8 @@
                           #include "prod/default/database.edn"]
    :prod-postgres #merge [{:db-type #or [#env LRSQL_DB_TYPE "postgres"]
                            :db-host #or [#env LRSQL_DB_HOST "localhost"]
-                           :db-port #or [#env LRSQL_DB_PORT 5432]}
+                           :db-port #or [#env LRSQL_DB_PORT 5432]
+                           :db-schema #or [#env LRSQL_DB_SCHEMA "lrsql"]}
                           #include "prod/default/database.edn"]}
  :connection
  #profile

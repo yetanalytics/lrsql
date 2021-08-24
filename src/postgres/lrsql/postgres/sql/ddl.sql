@@ -1,5 +1,11 @@
 /* Enums */
 
+-- :name create-schema!
+-- :command :execute
+-- :doc Create `schema` and set it to the search path.
+CREATE SCHEMA IF NOT EXISTS :schema;
+SET search_path TO :schema;
+
 -- :name create-enums!
 -- :command :execute
 -- :doc Create all enum types.

@@ -18,7 +18,7 @@
 
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
-(defrecord PostgresBackend []
+(defrecord PostgresBackend [config]
   cmp/Lifecycle
   (start [this] this)
   (stop [this] this)

@@ -18,7 +18,7 @@
  ;; Define record
 
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
-(defrecord H2Backend []
+(defrecord H2Backend [config]
   cmp/Lifecycle
   (start [this] this)
   (stop [this] this)
@@ -38,7 +38,7 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
-  (-update-all! [_ _]
+  (-update-all! [_ _tx]
     ;; No-op for now; add functions if updates are needed
     nil)
 
