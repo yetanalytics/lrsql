@@ -1,7 +1,7 @@
 (ns lrsql.spec.config
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec :as xs]
-            [lrsql.spec.util :refer [remove-nil-vals]]))
+            [lrsql.spec.util :as u]))
 
 (s/def ::db-type #{"h2" "h2:mem" "sqlite" "postgres" "postgresql"})
 (s/def ::db-name string?)
@@ -16,7 +16,8 @@
 (s/def ::db-password string?)
 
 (s/def ::database
-  (s/and (s/conformer remove-nil-vals)
+  (s/and (s/conformer u/remove-nil-vals)
+         (s/conformer u/remove-neg-vals)
          (s/or :no-jdbc-url
                (s/keys :req-un [::db-type
                                 ::db-name]
@@ -37,7 +38,8 @@
 (s/def ::pool-max-stmts nat-int?)
 
 (s/def ::connection
-  (s/and (s/conformer remove-nil-vals)
+  (s/and (s/conformer u/remove-nil-vals)
+         (s/conformer u/remove-neg-vals)
          (s/keys :req-un [::database]
                  :opt-un [::pool-init-size
                           ::pool-min-size
@@ -59,7 +61,8 @@
 (s/def ::authority-url ::xs/irl)
 
 (s/def ::lrs
-  (s/and (s/conformer remove-nil-vals)
+  (s/and (s/conformer u/remove-nil-vals)
+         (s/conformer u/remove-neg-vals)
          (s/keys :req-un [::stmt-get-default
                           ::stmt-get-max
                           ::stmt-url-prefix
