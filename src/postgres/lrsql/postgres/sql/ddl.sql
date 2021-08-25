@@ -1,14 +1,10 @@
 /* Enums */
 
--- TODO: Make into Hug function?
--- CREATE SCHEMA IF NOT EXISTS :i:db-schema;
--- SET search_path TO :i:db-schema;                           -- current session
--- ALTER DATABASE :i:db-name SET search_path TO :i:db-schema; -- future sessions
-
 -- Solution from: https://stackoverflow.com/a/48382296
 
 -- :name create-actor-type-enum!
 -- :command :execute
+-- :doc Create the Actor type enum if it doesn't exist in the current schema.
 DO $$ BEGIN
   CREATE TYPE actor_type_enum AS ENUM ('Agent', 'Group');
 EXCEPTION
@@ -17,6 +13,7 @@ END $$;
 
 -- :name create-actor-usage-enum!
 -- :command :execute
+-- :doc Create the Actor usage enum if it doesn't exist in the current schema.
 DO $$ BEGIN
   CREATE TYPE actor_usage_enum AS ENUM (
       'Actor', 'Object', 'Authority', 'Instructor', 'Team',
@@ -27,6 +24,7 @@ END $$;
 
 -- :name create-activity-usage-enum!
 -- :command :execute
+-- :doc Create the Activity type enum if it doesn't exist in the current schema.
 DO $$ BEGIN
   CREATE TYPE activity_usage_enum AS ENUM (
       'Object', 'Category', 'Grouping', 'Parent', 'Other',
@@ -37,6 +35,7 @@ END $$;
 
 -- :name create-scope-enum!
 -- :command :execute
+-- :doc Create the scope enum if it doesn't exist in the current schema.
 DO $$ BEGIN
   CREATE TYPE scope_enum AS ENUM (
       'statements/write',
