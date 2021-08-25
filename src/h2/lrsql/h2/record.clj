@@ -38,7 +38,7 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
-  (-update-all! [_ _]
+  (-update-all! [_ _tx]
     ;; No-op for now; add functions if updates are needed
     nil)
 
