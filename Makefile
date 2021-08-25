@@ -1,6 +1,6 @@
 # *** Development ***
 
-.phony: clean-dev, ci, ephemeral, persistent, bench
+.phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
 
 clean-dev:
 	rm -f *.db *.log
@@ -21,12 +21,20 @@ persistent:
 		clojure -M:db-h2 -m lrsql.h2.main --persistent true
 
 sqlite:
-	LRSQL_DB_NAME=db.sqlite \
+	LRSQL_DB_NAME=lrsql.sqlite.db \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-sqlite -m lrsql.sqlite.main
 
-# TODO: Postgres
+# NOTE: Requires a running PG instance!
+postgres:
+	LRSQL_DB_NAME=lrsql_pg \
+		LRSQL_DB_USERNAME=lrsql_user \
+		LRSQL_DB_PASSWORD=swordfish \
+		LRSQL_DB_PROPERTIES=currentSchema:lrsql \
+		LRSQL_API_KEY_DEFAULT=username \
+		LRSQL_API_SECRET_DEFAULT=password \
+		clojure -M:db-postgres -m lrsql.postgres.main
 
 # Intended for use with `make ephemeral` or `make persistent`
 bench:
