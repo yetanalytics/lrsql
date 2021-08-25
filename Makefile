@@ -1,6 +1,6 @@
 # *** Development ***
 
-.phony: clean-dev, ci, ephemeral, persistent, bench
+.phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
 
 clean-dev:
 	rm -f *.db *.log
