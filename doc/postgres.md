@@ -43,4 +43,10 @@ You can also set the search path as the value of the `currentSchema` property, w
 }
 ```
 
+If you skip this step, then the default `public` schema will be used for all DB objects.
+
 5. Start up the SQL LRS and enjoy!
+
+## A Note on Schemas and Tenancy
+
+Although the SQL LRS does not provide explicit support for tenancy, an administrator can set up a tenancy system by assigning each user their own dynamic schema. This will ensure data segregation between users, as each user will have their own set of tables and indexes. However, if the SQL LRS undergoes a DDL update, then _all_ users/schemas must be updated, so this is not necessarily a viable approach under all circumstances.

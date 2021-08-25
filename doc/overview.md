@@ -11,6 +11,6 @@ To use SQL LRS, a user needs to be authorized by an admin. Admin accounts can be
 ## Differences from Cloud LRS
 
 If you previously used Yet's Cloud LRS products, it is important to be aware of certain differences:
-- Tenancy is not supported in SQL LRS; the entire database can be considered to be a single default tenant.
+- Tenancy is not supported in SQL LRS; the entire database can be considered to be a single default tenant. (The exception is if you use per-user dynamic schemas in a Postgres database; see the [Postgres](postgres.md) page for more information.)
 - All operations in SQL LRS are synchronous; async operations are not supported.
 - `stored` timestamps are not strictly monotonic in SQL LRS; two or more Statements may be assigned the same timestamp if stored in quick succession.

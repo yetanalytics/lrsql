@@ -17,9 +17,11 @@
 
 For a complete list of config variables, see [here](env_vars.md).
 
-5. Start the LRS.
+5. (Postgres only) Set up the Postgres DB; instructions for that can be found [here](postgres.md).
+
+6. Start the LRS.
 - Mac or Linux: Run the appropriate shell script from the command line, e.g. `./bin/run_sqlite.sh`. All scripts are located in the `bin` directory.
-- Windows: Run the appropriate executable.
+- Windows: Run the appropriate executable: `lrsql.exe` for a SQLite database, `lrsql_pg.exe` for a Postgres one.
 
 ## Your first Statement
 
