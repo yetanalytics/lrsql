@@ -9,10 +9,10 @@
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
 
 (defn- parse-db-props
-  "Given `prop-str` of the form \"key=value;key=value;...\", return a
+  "Given `prop-str` of the form \"key=value:key=value:...\", return a
    keyword-key map of property names to values."
   [prop-str]
-  (->> (cstr/split prop-str #";")
+  (->> (cstr/split prop-str #":")
        (map #(cstr/split % #"="))
        (into {})
        keywordize-keys))
