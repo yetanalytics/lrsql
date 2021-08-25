@@ -53,8 +53,7 @@
                                   :resolver resolver})
                                 merge-user-config)]
     ;; form the final config the app will use
-    {:backend    database
-     :connection (assoc connection :database database)
+    {:connection (assoc connection :database database)
      :lrs        (assoc lrs :stmt-url-prefix (:url-prefix webserver))
      :webserver  webserver}))
 

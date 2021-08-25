@@ -18,7 +18,7 @@
  ;; Define record
 
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
-(defrecord H2Backend [config]
+(defrecord H2Backend []
   cmp/Lifecycle
   (start [this] this)
   (stop [this] this)
