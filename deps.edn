@@ -25,7 +25,7 @@
   camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
   com.yetanalytics/lrs
   {:git/url    "git@github.com:yetanalytics/lrs.git"
-   :sha        "76e5ef031b8469cc25a8ff8bb550b40207c3148b"
+   :sha        "1765c48bac2f313099cfd59e08e2bd3ccd85b597"
    :exclusions [org.clojure/clojure
                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema

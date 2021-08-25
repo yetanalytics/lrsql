@@ -39,9 +39,8 @@
     (bj/sign claim secret)))
 
 (defn header->jwt
-  "Given an authentication header whose value is a JSON Web Token, return
-   the encoded JWT. Returns nil if the header itself is nil or cannot be
-   parsed."
+  "Given an header of the form `Bearer [encoded JWT]`, return the JWT.
+   Returns `nil` if the header itself is `nil` or cannot be parsed."
   [auth-header]
   (when auth-header
     (second (re-matches #"Bearer\s+(.*)" auth-header))))

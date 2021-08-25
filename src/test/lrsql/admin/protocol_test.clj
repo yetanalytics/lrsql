@@ -24,6 +24,10 @@
       (is (-> (adp/-create-account lrs test-username test-password)
               :result
               (= :lrsql.admin/existing-account-error))))
+    (testing "Admin account get"
+      (let [accounts (adp/-get-accounts lrs)]
+        (is (vector? accounts))
+        (is (some (fn [acct] (= (:username acct) test-username)) accounts))))
     (testing "Admin account authentication"
       (is (-> (adp/-authenticate-account lrs test-username test-password)
               :result
@@ -34,6 +38,14 @@
       (is (-> (adp/-authenticate-account lrs "foo" "bar")
               :result
               (= :lrsql.admin/missing-account-error))))
+    (testing "Admin account existence check"
+      (let [account-id (-> (adp/-authenticate-account lrs
+                                                      test-username
+                                                      test-password)
+                           :result)]
+        (is (adp/-existing-account? lrs account-id)))
+      (let [bad-account-id #uuid "00000000-0000-4000-8000-000000000000"]
+        (is (not (adp/-existing-account? lrs bad-account-id)))))
     (testing "Admin account deletion"
       (let [account-id (-> (adp/-authenticate-account lrs
                                                       test-username
@@ -44,6 +56,9 @@
                 :result
                 (= :lrsql.admin/missing-account-error)))))
     (component/stop sys')))
+
+;; TODO: Add tests for creds with no explicit scopes, once
+;; `statements/read/mine` is implemented
 
 (deftest auth-test
   (let [sys    (support/test-system)
