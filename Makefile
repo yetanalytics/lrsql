@@ -31,7 +31,7 @@ postgres:
 	LRSQL_DB_NAME=lrsql_pg \
 		LRSQL_DB_USERNAME=lrsql_user \
 		LRSQL_DB_PASSWORD=swordfish \
-		LRSQL_DB_PROPERTIES=currentSchema:lrsql \
+		LRSQL_DB_PROPERTIES=currentSchema=lrsql \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-postgres -m lrsql.postgres.main

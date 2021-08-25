@@ -9,7 +9,7 @@
 (s/def ::db-port nat-int?)
 
 (s/def ::db-properties
-  (s/and string? (partial re-matches #"(?:(?:\w+:\w+)(?:,\w+:\w+)*)?")))
+  (s/and string? (partial re-matches #"(?:(?:\w+=\w+)(?:;\w+=\w+)*)?")))
 (s/def ::db-jdbc-url ::xs/iri)
 
 (s/def ::db-user string?)

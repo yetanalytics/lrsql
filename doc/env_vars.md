@@ -10,7 +10,7 @@ All environment variables can either be set directly via the command line, or ca
 | `LRSQL_DB_NAME` | `dbName` | The name of the database. | `example` |
 | `LRSQL_DB_HOST` | `dbHost` | The host that the database will run on. Not supported by in-mem H2 or SQLite. | `localhost` |
 | `LRSQL_DB_PORT` | `dbPort` | The port that the database will run on. Not supported by in-mem H2 or SQLite. | `9001` (H2), `5432` (PG) |
-| `LRSQL_DB_PROPERTIES` | `dbProperties` | Optional additional database properties. Must be a string of comma-separated `key:value` pairs if set. Supported properties will depend on the DBMS. | Not set |
+| `LRSQL_DB_PROPERTIES` | `dbProperties` | Optional additional database properties. Must be a string of semicolon-separated `key=value` pairs if set. Supported properties will depend on the DBMS. | Not set |
 | `LRSQL_DB_JDBC_URL` | `dbJdbcUrl` | Optional JDBC URL; this will override the above properties if set. URL syntax will depend on the DBMS. | Not set |
 | `LRSQL_DB_USER` | `dbUser` | The DB user. Optional. | Not set |
 | `LRSQL_DB_PASSWORD` | `dbPassword` | The DB password. Optional. | Not set |
