@@ -1,0 +1,46 @@
+# Postgres setup
+
+Using the Postgres implementation of the SQL LRS requires a pre-existing database (unlike the H2 and SQLite implementations, which create the database file if it does not exist). Therefore, you need to set up the Postgres user and database before you start using the SQL LRS.
+
+1. Log into `psql` as a user with user and database creation permissions.
+
+2. Create the user and database that the SQL LRS will use (note the single quotes around the password):
+```
+postgres=# CREATE USER [username] WITH CREATEDB WITH PASSWORD '[password]';
+postgres=# CREATE DATABASE [username];
+```
+
+3. Log into `psql` as the new user and create the underlying database that SQL LRS will use:
+```
+% psql -U [username]
+[username]=# CREATE DATABASE [db_name];
+```
+
+4. (Optional, but recommended) Connect to the database and create a new schema for all the database objects:
+```
+% psql -d [db_name]
+[db_name]=# CREATE SCHEMA IF NOT EXISTS [schema_name];
+```
+
+You must then set the schema search path, where the first schema listed is the one that you just created. You can do so for the user:
+```
+postgres=# ALTER ROLE [username] SET search_path TO [search_path];
+```
+
+Or you can fix it for the database:
+```
+[username]=# ALTER DATABASE [db_name] SET search_path TO [search_path];
+```
+
+Note that the above changes will only affect subsequent Postgres sessions, not the current one.
+
+You can also set the search path as the value of the `currentSchema` property, which you can do in `lrsql.json`:
+```json
+{
+    "database": {
+        "dbProperties": "currentSchema:[schema_name]",
+    }
+}
+```
+
+5. Start up the SQL LRS and enjoy!
