@@ -40,7 +40,7 @@ clean:
 # Get and compile the admin UI SPA
 lrs-admin-ui:
 	git clone git@github.com:yetanalytics/lrs-admin-ui.git
-	cd lrs-admin-ui; git checkout aa27a5ed0a5d53de296cb66b8f69e7da16ddf4fd
+	cd lrs-admin-ui; git checkout 4a990b8c6f8a218268521fd18290566ac9573292
 
 lrs-admin-ui/target/bundle: lrs-admin-ui
 	cd lrs-admin-ui; make bundle
