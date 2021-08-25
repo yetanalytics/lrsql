@@ -12,16 +12,83 @@
 
 (use-fixtures :each support/fresh-db-fixture)
 
+(def content-type {"Content-Type" "application/json"})
+
+(defn- login-account
+  [headers body]
+  (curl/post "http://0.0.0.0:8080/admin/account/login"
+             {:headers headers
+              :body    body}))
+
+(defn- create-account
+  [headers body]
+  (curl/post "http://0.0.0.0:8080/admin/account/create"
+             {:headers headers
+              :body    body}))
+
+(defn- get-account
+  [headers]
+  (curl/get "http://0.0.0.0:8080/admin/account"
+            {:headers headers}))
+
+(defn- delete-account
+  [headers body]
+  (curl/delete "http://0.0.0.0:8080/admin/account"
+               {:headers headers
+                :body    body}))
+
+(defmacro is-err-code
+  "Test that `expr` throws an exception with the correct HTTP error `code`."
+  [expr code]
+  `(try
+     (do ~expr (is false))
+     (catch clojure.lang.ExceptionInfo e#
+       (is (= ~code (-> e# ex-data :status))))))
+
 (deftest admin-routes-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
-        data {:headers {"Content-Type" "application/json"}
-              :body    (String. (u/write-json {"username" "myname"
-                                               "password" "swordfish"}))}]
-    (testing "admin account creation"
+        ;; Seed information
+        {:keys [api-key-default
+                api-secret-default]} (get-in sys' [:lrs :config])
+        seed-body (String. (u/write-json
+                            {"username" api-key-default
+                             "password" api-secret-default}))
+        seed-jwt  (-> (login-account content-type seed-body)
+                      :body
+                      u/parse-json
+                      (get "json-web-token"))
+        seed-auth {"Authorization" (str "Bearer " seed-jwt)}
+        ;; New data information
+        headers  (merge content-type seed-auth)
+        req-body (String. (u/write-json {"username" "myname"
+                                         "password" "swordfish"}))]
+    (testing "seed jwt retrieved"
+      ;; Sanity check that the test credentials are in place
+      (is (some? seed-jwt)))
+    (testing "create account with username `myname` and password `swordfish`"
+      (let [{:keys [status
+                    body]} (create-account headers req-body)
+            edn-body       (u/parse-json body)]
+        (is (= 200 status))
+        (is (try (u/str->uuid (get edn-body "account-id"))
+                 (catch Exception _ false))))
+      (is-err-code (create-account headers req-body) 409) ; Conflict
+      (is-err-code (create-account headers "") 400)       ; Bad Request
+      (is-err-code (create-account nil req-body) 400))
+    (testing "get all admin accounts"
+      (let [{:keys [status
+                    body]} (get-account headers)
+            edn-body       (u/parse-json body :object? false)]
+        ;; success
+        (is (= 200 status))
+        ;; is a vec
+        (is (vector? edn-body))
+        ;; has the created user
+        (is (some #(= (get % "username") "myname") edn-body))))
+    (testing "log into the `myname` account"
       (let [{:keys [status body]}
-            (curl/post "http://0.0.0.0:8080/admin/account/create"
-                       data)
+            (login-account content-type req-body)
             edn-body
             (u/parse-json body)]
         (is (= 200 status))
@@ -29,107 +96,95 @@
                  (catch Exception _ false)))
         (is (re-matches #".*\..*\..*"
                         (get edn-body "json-web-token"))))
-      (try
-        (curl/post "http://0.0.0.0:8080/admin/account/create"
-                   data)
-        (catch clojure.lang.ExceptionInfo e
-          ;; Conflict status code
-          (is (= 409 (-> e ex-data :status)))))
-      (try
-        (curl/post "http://0.0.0.0:8080/admin/account/create"
-                   (assoc data :body ""))
-        (catch clojure.lang.ExceptionInfo e
-          ;; Bad Request status code (invalid body)
-          (is (= 400 (-> e ex-data :status)))))
-      (try
-        (curl/post "http://0.0.0.0:8080/admin/account/create"
-                   (assoc data :headers nil))
-        (catch clojure.lang.ExceptionInfo e
-          ;; Bad Request status code (missing header and jwt)
-          (is (= 400 (-> e ex-data :status))))))
-    (testing "admin account login"
-      (let [{:keys [status body]}
-            (curl/post "http://0.0.0.0:8080/admin/account/login"
-                       data)
-            edn-body
-            (u/parse-json body)]
-        (is (= 200 status))
-        (is (try (u/str->uuid (get edn-body "account-id"))
-                 (catch Exception _ false)))
-        (is (re-matches #".*\..*\..*"
-                        (get edn-body "json-web-token"))))
-      (try
-        (curl/post
-         "http://0.0.0.0:8080/admin/account/login"
-         (assoc data :body (String. (u/write-json
-                                     {"username" "foo"
-                                      "password" "swordfish"}))))
-        (catch clojure.lang.ExceptionInfo e
-          ;; Not Found status code
-          (is (= 404 (-> e ex-data :status)))))
-      (try
-        (curl/post
-         "http://0.0.0.0:8080/admin/account/login"
-         (assoc data :body (String. (u/write-json
-                                     {"username" "myname"
-                                      "password" "badpass"}))))
-        (catch clojure.lang.ExceptionInfo e
-          ;; Forbidden status code
-          (is (= 401 (-> e ex-data :status)))))
-      (try
-        (curl/post
-         "http://0.0.0.0:8080/admin/account/login"
-         (assoc data :body ""))
-        (catch clojure.lang.ExceptionInfo e
-          ;; Bad Request status code
-          (is (= 400 (-> e ex-data :status))))))
-    (testing "admin account deletion"
-      (let [delete-res
-            (curl/delete "http://0.0.0.0:8080/admin/account"
-                         data)]
-        (is (= 200 (:status delete-res))))
-      (try
-        (curl/delete "http://0.0.0.0:8080/admin/account"
-                     data)
-        (catch clojure.lang.ExceptionInfo e
-          ;; Not Found status code
-          (is (= 404 (-> e ex-data :status)))))
-      (try
-        (curl/delete
-         "http://0.0.0.0:8080/admin/account"
-         (assoc data :body ""))
-        (catch clojure.lang.ExceptionInfo e
-          ;; Bad Request status code
-          (is (= 400 (-> e ex-data :status))))))
+      (let [bad-body (String. (u/write-json
+                               {"username" "foo"
+                                "password" "swordfish"}))]
+        (is-err-code (login-account content-type bad-body) 401))  ; Bad User 401
+      (let [bad-body (String. (u/write-json
+                               {"username" "myname"
+                                "password" "badpass"}))]
+        (is-err-code (login-account content-type bad-body) 401))  ; Bad Pass 401
+      (let [bad-body ""]
+        (is-err-code (login-account content-type bad-body) 400))) ; Bad Request
+    (testing "delete the `myname` account using the seed account"
+      (let [del-jwt  (-> (login-account content-type req-body)
+                         :body
+                         u/parse-json
+                         (get "json-web-token"))
+            del-id   (-> (get-account headers)
+                         :body
+                         (u/parse-json :object? false)
+                         (#(filter (fn [acc] (= (get acc "username") "myname")) %))
+                         first
+                         (get "account-id"))
+            del-auth {"Authorization" (str "Bearer " del-jwt)}
+            del-head (merge content-type del-auth)
+            del-body (String. (u/write-json {"account-id" del-id}))]
+        (let [delete-res (delete-account headers del-body)]
+          (is (= 200 (:status delete-res)))
+          (is (= del-id (-> delete-res
+                            :body
+                            u/parse-json
+                            (get "account-id")))))
+        (is-err-code (delete-account headers del-body) 404)
+        (is-err-code (delete-account headers "") 400)
+        (testing "using a deleted account ID for admin ops"
+          (is-err-code (get-account del-head) 401) ; Unauthorized
+          (is-err-code (create-account del-head req-body) 401)
+          (is-err-code (delete-account del-head del-body) 401))
+        (testing "using a deleted account ID for credential ops"
+          (let [pk "foo"
+                sk "bar"
+                ss ["all" "all/read"]]
+            (is-err-code (curl/post
+                          "http://0.0.0.0:8080/admin/creds"
+                          {:headers del-head
+                           :body    (String. (u/write-json {"scopes" ss}))})
+                         401)
+            (is-err-code (curl/put
+                          "http://0.0.0.0:8080/admin/creds"
+                          {:headers del-head
+                           :body    (String. (u/write-json {"api-key"    pk
+                                                            "secret-key" sk
+                                                            "scopes"     ss}))})
+                         401)
+            (is-err-code (curl/get
+                          "http://0.0.0.0:8080/admin/creds"
+                          {:headers del-head})
+                         401)
+            (is-err-code (curl/delete
+                          "http://0.0.0.0:8080/admin/creds"
+                          {:headers del-head
+                           :body    (String. (u/write-json {"api-key"    pk
+                                                            "secret-key" sk}))})
+                         401)))))
     (component/stop sys')))
 
 (deftest auth-routes-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
-        jwt  (->
-              (curl/post "http://0.0.0.0:8080/admin/account/create"
-                         {:headers {"Content-Type" "application/json"}
-                          :body    (String. (u/write-json
-                                             {"username" "myname"
-                                              "password" "swordfish"}))})
-              (get :body)
-              u/parse-json
-              (get "json-web-token"))
-        hdr  {"Content-Type" "application/json"
-              "Authorization" (str "Bearer " jwt)}]
+        jwt  (-> (curl/post "http://0.0.0.0:8080/admin/account/login"
+                            {:headers content-type
+                             :body    (String. (u/write-json
+                                                {"username" "username"
+                                                 "password" "password"}))})
+                 :body
+                 u/parse-json
+                 (get "json-web-token"))
+        auth {"Authorization" (str "Bearer " jwt)}
+        hdr  (merge content-type auth)]
     (testing "credential creation"
       (let [{:keys [status body]}
             (curl/post "http://0.0.0.0:8080/admin/creds"
-                      {:headers hdr
-                       :body (String. (u/write-json
-                                       {"scopes" ["all" "all/read"]}))})
+                       {:headers hdr
+                        :body (String. (u/write-json
+                                        {"scopes" ["all" "all/read"]}))})
             {:strs [api-key secret-key scopes]}
             (u/parse-json body)]
         (is (= 200 status))
         (is (re-matches Base64RegEx api-key))
         (is (re-matches Base64RegEx secret-key))
-        (is (= #{"all" "all/read"}
-               (set scopes)))
+        (is (= #{"all" "all/read"} (set scopes)))
         (testing "and reading"
           (let [{:keys [status body]}
                 (curl/get
@@ -139,22 +194,25 @@
             (is (= {"api-key"    api-key
                     "secret-key" secret-key
                     "scopes"     scopes}
-                   (first (u/parse-json body :object? false))))))
+                   (-> body
+                       (u/parse-json :object? false)
+                       (#(filter (fn [cred] (= (get cred "api-key") api-key))
+                                 %))
+                       first)))))
         (testing "and updating"
-          (let [{:keys [status body]}
+          (let [req-scopes
+                ["all/read" "statements/read"]
+                {:keys [status body]}
                 (curl/put
                  "http://0.0.0.0:8080/admin/creds"
                  {:headers hdr
-                  :body (String.
-                         (u/write-json
-                          {"api-key"    api-key
-                           "secret-key" secret-key
-                           "scopes"     ["all/read" "statements/read"]}))})
+                  :body    (String. (u/write-json {"api-key"    api-key
+                                                   "secret-key" secret-key
+                                                   "scopes"     req-scopes}))})
                 {:strs [scopes]}
                 (u/parse-json body)]
             (is (= 200 status))
-            (is (= #{"all/read" "statements/read"}
-                   (set scopes)))))
+            (is (= #{"all/read" "statements/read"} (set scopes)))))
         (testing "and reading after updating"
           (let [{:keys [status body]}
                 (curl/get
@@ -163,20 +221,47 @@
                 {api-key'    "api-key"
                  secret-key' "secret-key"
                  scopes'     "scopes"}
-                (first (u/parse-json body :object? false))]
+                (-> body
+                    (u/parse-json :object? false)
+                    (#(filter (fn [cred] (= (get cred "api-key") api-key)) %))
+                    first)]
             (is (= 200 status))
             (is (= api-key api-key'))
             (is (= secret-key secret-key'))
-            (is (= #{"all/read" "statements/read"} (set scopes')))
-            (is (nil? (second (u/parse-json body :object? false))))))
+            (is (= #{"all/read" "statements/read"} (set scopes')))))
+        (testing "and no-op scope update"
+          (let [req-scopes
+                ["all/read" "statements/read"]
+                {:keys [status body]}
+                (curl/put
+                 "http://0.0.0.0:8080/admin/creds"
+                 {:headers hdr
+                  :body   (String. (u/write-json {"api-key"    api-key
+                                                  "secret-key" secret-key
+                                                  "scopes"     req-scopes}))})
+                {:strs [scopes]}
+                (u/parse-json body)]
+            (is (= 200 status))
+            (is (= #{"all/read" "statements/read"} (set scopes)))))
+        (testing "and deleting all scopes"
+          (let [{:keys [status body]}
+                (curl/put
+                 "http://0.0.0.0:8080/admin/creds"
+                 {:headers hdr
+                  :body   (String. (u/write-json {"api-key"    api-key
+                                                  "secret-key" secret-key
+                                                  "scopes"     []}))})
+                {:strs [scopes]}
+                (u/parse-json body)]
+            (is (= 200 status))
+            (is (= #{} (set scopes)))))
         (testing "and deletion"
           (let [{:keys [status]}
                 (curl/delete
                  "http://0.0.0.0:8080/admin/creds"
                  {:headers hdr
-                  :body    (String. (u/write-json
-                                     {"api-key"    api-key
-                                      "secret-key" secret-key}))})]
+                  :body    (String. (u/write-json {"api-key"    api-key
+                                                   "secret-key" secret-key}))})]
             (is (= 200 status))))
         (testing "and reading after deletion"
           (let [{:keys [status body]}
@@ -186,5 +271,6 @@
                 edn-res
                 (u/parse-json body :object? false)]
             (is (= 200 status))
-            (is (= [] edn-res))))))
+            (is (not (some (fn [cred] (= (get cred "api-key") api-key))
+                           edn-res)))))))
     (component/stop sys')))

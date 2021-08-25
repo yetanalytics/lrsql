@@ -169,11 +169,7 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
   api_key    VARCHAR(255) NOT NULL,
   secret_key VARCHAR(255) NOT NULL,
   scope      ENUM('statements/write',
-                  'statements/read/mine', -- unimplemented
                   'statements/read',
-                  'state',   -- unimplemented
-                  'define',  -- unimplemented
-                  'profile', -- unimplemented
                   'all/read',
                   'all'), -- enum is nullable
   FOREIGN KEY (api_key, secret_key)

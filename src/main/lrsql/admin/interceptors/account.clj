@@ -4,58 +4,66 @@
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
             [lrsql.spec.admin :as ads]
-            [lrsql.util.admin :as admin-u]))
+            [lrsql.util.admin :as admin-u]
+            [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Validation Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def validate-params
-  "Validate that the JSON params contain the params `username` and `password`."
+  "Validate that the JSON params contain the params `username` and `password`
+   for login and create."
   (interceptor
    {:name ::validate-params
     :enter
     (fn validate-params [ctx]
       (let [params (get-in ctx [:request :json-params])]
         (if-some [err (s/explain-data ads/admin-params-spec params)]
+          ;; Invalid parameters - Bad Request
           (assoc (chain/terminate ctx)
                  :response
                  {:status 400
-                  :body   (format "Invalid parameters:\n%s"
-                                  (-> err s/explain-out with-out-str))})
+                  :body   {:error (format "Invalid parameters:\n%s"
+                                          (-> err s/explain-out with-out-str))}})
+          ;; Valid params - continue
           (let [acc-info (select-keys params [:username :password])]
             (-> ctx
                 (assoc ::data acc-info)
                 (assoc-in [:request :session ::data] acc-info))))))}))
 
+(def validate-delete-params
+  "Validate that the JSON params contain `account-id` for delete."
+  (interceptor
+   {:name ::validate-delete-params
+    :enter
+    (fn validate-params [{{{:keys [account-id] :as params} :json-params}
+                          :request :as ctx}]
+      (if (not (s/valid? ::ads/uuid account-id))
+        ;; Not a valid UUID - Bad Request
+        (assoc (chain/terminate ctx)
+               :response
+               {:status 400
+                :body   {:error "Invalid parameters: account-id must be a uuid."}})
+        ;; Valid UUID
+        (let [params' (assoc params :account-id
+                             (u/str->uuid (:account-id params)))]
+          (if-some [err (s/explain-data ads/admin-delete-params-spec params')]
+            ;; Params fail spec - Bad Request
+            (assoc (chain/terminate ctx)
+                   :response
+                   {:status 400
+                    :body   {:error (format "Invalid parameters:\n%s"
+                                            (-> err s/explain-out with-out-str))}})
+            ;; Valid params - continue
+            (let [acc-info (select-keys params' [:account-id])]
+              (-> ctx
+                  (assoc ::data acc-info)
+                  (assoc-in [:request :session ::data] acc-info)))))))}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Intermediate Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def create-admin
-  (interceptor
-   {:name ::create-admin
-    :enter
-    (fn create-admin [ctx]
-      (let [{lrs :com.yetanalytics/lrs
-             {:keys [username password]} ::data}
-            ctx
-            {:keys [result]}
-            (adp/-create-account lrs username password)]
-        (cond
-          ;; The result is the account ID - success!
-          ;; Pass it along as an intermediate value
-          (uuid? result)
-          (-> ctx
-              (assoc-in [::data :account-id] result)
-              (assoc-in [:request :session ::data :account-id] result))
-
-          ;; The account already exists
-          (= :lrsql.admin/existing-account-error result)
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 409 :body (format "An account \"%s\" already exists!"
-                                            username)}))))}))
 
 (def authenticate-admin
   (interceptor
@@ -75,40 +83,84 @@
               (assoc-in [::data :account-id] result)
               (assoc-in [:request :session ::data :account-id] result))
 
-          ;; The account cannot be found
-          (= :lrsql.admin/missing-account-error result)
+          ;; The account is not in the table - Not Found
+          (or (= :lrsql.admin/missing-account-error result)
+              (= :lrsql.admin/invalid-password-error result))
           (assoc (chain/terminate ctx)
                  :response
-                 {:status 404 :body (format "Account \"%s\" not found!"
-                                            username)})
-
-          ;; The password was invalid
-          (= :lrsql.admin/invalid-password-error result)
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 401 :body (format "Incorrect password for \"%s\"!"
-                                            username)}))))}))
+                 {:status 401
+                  :body   {:error "Invalid Account Credentials"}}))))}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Terminal Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def create-admin
+  "Create a new admin account and store it in the account table."
+  (interceptor
+   {:name ::create-admin
+    :enter
+    (fn create-admin [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [username password]} ::data}
+            ctx
+            {:keys [result]}
+            (adp/-create-account lrs username password)]
+        (cond
+          ;; The result is the account ID - success!
+          (uuid? result)
+          (assoc ctx
+                 :response
+                 {:status 200 :body {:account-id result}})
+
+          ;; The account already exists - Conflict
+          (= :lrsql.admin/existing-account-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 409
+                  :body   {:error (format "An account \"%s\" already exists!"
+                                          username)}}))))}))
+
 (def delete-admin
+  "Delete the selected admin account. This is a hard delete."
   (interceptor
    {:name ::delete-admin
     :enter
     (fn delete-admin [ctx]
       (let [{lrs :com.yetanalytics/lrs
-             {:keys [username account-id]} ::data}
-            ctx]
-        (adp/-delete-account lrs account-id)
+             {:keys [account-id]} ::data}
+            ctx
+            {:keys [result]}
+            (adp/-delete-account lrs account-id)]
+        (cond
+          ;; The result is the account ID - success!
+          (uuid? result)
+          (assoc ctx
+                 :response
+                 {:status 200 :body {:account-id account-id}})
+
+          ;; The account was already deleted/missing - Not Found
+          (= :lrsql.admin/missing-account-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 404
+                  :body   {:error (format "The account \"%s\" does not exist!"
+                                          (u/uuid->str account-id))}}))))}))
+
+(def get-accounts
+  "Get all admin accounts from the account table."
+  (interceptor
+   {:name ::get-accounts
+    :enter
+    (fn get-accounts [ctx]
+      (let [{lrs :com.yetanalytics/lrs} ctx
+            result (adp/-get-accounts lrs)]
         (assoc ctx
                :response
-               {:status 200
-                :body   (format "Successfully deleted account \"%s\"!"
-                                username)})))}))
+               {:status 200 :body result})))}))
 
 (defn generate-jwt
+  "Upon account login, generate a new JSON web token."
   [secret exp]
   (interceptor
    {:name ::generate-jwt

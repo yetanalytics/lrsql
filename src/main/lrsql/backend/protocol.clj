@@ -3,7 +3,9 @@
 
 (defprotocol BackendInit
   (-create-all! [this tx]
-    "Create all tables and indexes."))
+    "Create the tables, indexes, etc. specified by the DDL.")
+  (-update-all! [this tx]
+    "Update the tables, indexes, etc. specified by the DDL."))
 
 (defprotocol BackendIOSetter
   (-set-read! [this]
@@ -81,7 +83,8 @@
   (-delete-admin-account! [this tx input])
   ;; Queries
   (-query-account [this tx input])
-  (-query-account-exists [this tx input]))
+  (-query-account-exists [this tx input])
+  (-query-all-admin-accounts [this tx]))
 
 (defprotocol CredentialBackend
   ;; Commands

@@ -56,6 +56,9 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
+  (-update-all! [_ _]
+    ;; No-op for now; add functions if updates are needed
+    nil)
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
@@ -146,6 +149,8 @@
   bp/AdminAccountBackend
   (-insert-admin-account! [_ tx input]
     (insert-admin-account! tx input))
+  (-query-all-admin-accounts [_ tx]
+    (query-all-accounts tx))
   (-delete-admin-account! [_ tx input]
     (delete-admin-account! tx input))
   (-query-account [_ tx input]

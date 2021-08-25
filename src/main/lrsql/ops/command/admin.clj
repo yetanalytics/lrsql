@@ -32,12 +32,15 @@
 (s/fdef delete-admin!
   :args (s/cat :bk ads/admin-backend?
                :tx transaction?
-               :input ads/delete-admin-input-spec)
+               :input ads/admin-id-input-spec)
   :ret ads/delete-admin-ret-spec)
 
 (defn delete-admin!
   "Delete the admin account and any associated credentials. Returns a map
    where `:result` is the account ID."
   [bk tx input]
-  (bp/-delete-admin-account! bk tx input)
-  {:result (:account-id input)})
+  (if (bp/-query-account-exists bk tx input)
+    (do
+      (bp/-delete-admin-account! bk tx input)
+      {:result (:account-id input)})
+    {:result :lrsql.admin/missing-account-error}))
