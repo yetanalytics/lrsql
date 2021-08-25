@@ -39,5 +39,8 @@
   "Delete the admin account and any associated credentials. Returns a map
    where `:result` is the account ID."
   [bk tx input]
-  (bp/-delete-admin-account! bk tx input)
-  {:result (:account-id input)})
+  (if (bp/-query-account-exists bk tx input)
+    (do
+      (bp/-delete-admin-account! bk tx input)
+      {:result (:account-id input)})
+    {:result :lrsql.admin/missing-account-error}))
