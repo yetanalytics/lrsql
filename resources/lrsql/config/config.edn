@@ -43,18 +43,16 @@
    :prod-sqlite   #include "prod/default/lrs.edn"
    :prod-postgres #include "prod/default/lrs.edn"}
  :webserver
- #merge
- [#profile
-  {;; Test/Dev
-   :test-h2-mem   #include "test/default/webserver.edn"
-   :test-h2       #include "test/default/webserver.edn"
-   :test-sqlite   #include "test/default/webserver.edn"
-   :test-postgres #include "test/default/webserver.edn"
-   ;; Production
-   :prod-h2-mem   #include "prod/default/webserver.edn"
-   :prod-h2       #include "prod/default/webserver.edn"
-   :prod-sqlite   #include "prod/default/webserver.edn"
-   :prod-postgres #include "prod/default/webserver.edn"}
-  {:enable-admin-ui #boolean #or [#env LRSQL_ENABLE_ADMIN_UI true]}]
+ #profile
+ {;; Test/Dev
+  :test-h2-mem   #include "test/default/webserver.edn"
+  :test-h2       #include "test/default/webserver.edn"
+  :test-sqlite   #include "test/default/webserver.edn"
+  :test-postgres #include "test/default/webserver.edn"
+  ;; Production
+  :prod-h2-mem   #include "prod/default/webserver.edn"
+  :prod-h2       #include "prod/default/webserver.edn"
+  :prod-sqlite   #include "prod/default/webserver.edn"
+  :prod-postgres #include "prod/default/webserver.edn"}
  ;; A user-provided JSON file for merge-with merge into this map
  :user-config-json #or [#env LRSQL_USER_CONFIG_JSON "config/lrsql.json"]}
