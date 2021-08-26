@@ -1,6 +1,25 @@
+# *** Admin Assets ***
+
+.phony: admin-ui
+
+# Get and compile the admin UI SPA
+
+lrs-admin-ui:
+	git clone git@github.com:yetanalytics/lrs-admin-ui.git
+	cd lrs-admin-ui; git checkout 4a990b8c6f8a218268521fd18290566ac9573292
+
+lrs-admin-ui/target/bundle: lrs-admin-ui
+	cd lrs-admin-ui; make bundle
+
+resources/public/admin: lrs-admin-ui/target/bundle
+	mkdir -p resources/public
+	cp -r lrs-admin-ui/target/bundle resources/public/admin
+
+admin-ui: resources/public/admin
+
 # *** Development ***
 
-.phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench, admin-ui
+.phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
 
 clean-dev:
 	rm -f *.db *.log
@@ -49,20 +68,6 @@ bench:
 
 clean:
 	rm -rf target resources/public
-
-# Get and compile the admin UI SPA
-lrs-admin-ui:
-	git clone git@github.com:yetanalytics/lrs-admin-ui.git
-	cd lrs-admin-ui; git checkout 4a990b8c6f8a218268521fd18290566ac9573292
-
-lrs-admin-ui/target/bundle: lrs-admin-ui
-	cd lrs-admin-ui; make bundle
-
-resources/public/admin: lrs-admin-ui/target/bundle
-	mkdir -p resources/public
-	cp -r lrs-admin-ui/target/bundle resources/public/admin
-
-admin-ui: resources/public/admin
 
 # Compile and make Uberjar
 
