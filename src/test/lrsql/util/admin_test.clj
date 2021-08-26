@@ -17,13 +17,13 @@
              (-> test-id
                  (ua/account-id->jwt "secret" 3600)
                  (ua/jwt->account-id "secret" 1))))
-      (is (= :lrsql.admin/invalid-token-error
+      (is (= :lrsql.admin/unauthorized-token-error
              (ua/jwt->account-id "not-a-jwt" "secret" 3600)))
-      (is (= :lrsql.admin/invalid-token-error
+      (is (= :lrsql.admin/unauthorized-token-error
              (-> test-id
                  (ua/account-id->jwt "secret" 3600)
                  (ua/jwt->account-id "different-secret" 1))))
-      (is (= :lrsql.admin/expired-token-error
+      (is (= :lrsql.admin/unauthorized-token-error
              (let [tok (ua/account-id->jwt test-id "secret" 1)
                    _   (Thread/sleep 1001)]
                  (ua/jwt->account-id tok "secret" 0)))))))
