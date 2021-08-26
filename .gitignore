@@ -22,3 +22,6 @@ Test.java
 # VSCode
 .calva/
 .lsp/
+# Admin SPA
+/lrs-admin-ui/
+/resources/public/admin/

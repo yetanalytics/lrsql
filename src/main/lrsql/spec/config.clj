@@ -86,6 +86,8 @@
 (s/def ::key-cert-chain string?)
 (s/def ::key-enable-selfie boolean?)
 
+(s/def ::enable-admin-ui boolean?)
+
 (s/def ::webserver
   (s/keys :req-un [::http-host
                    ::http-port
@@ -97,7 +99,8 @@
                    ::key-password
                    ::key-enable-selfie
                    ::jwt-exp-time
-                   ::jwt-exp-leeway]
+                   ::jwt-exp-leeway
+                   ::enable-admin-ui]
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain]))

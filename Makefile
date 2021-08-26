@@ -1,33 +1,52 @@
+# *** Admin Assets ***
+
+.phony: admin-ui
+
+# Get and compile the admin UI SPA
+
+lrs-admin-ui:
+	git clone git@github.com:yetanalytics/lrs-admin-ui.git
+	cd lrs-admin-ui; git checkout 4a990b8c6f8a218268521fd18290566ac9573292
+
+lrs-admin-ui/target/bundle: lrs-admin-ui
+	cd lrs-admin-ui; make bundle
+
+resources/public/admin: lrs-admin-ui/target/bundle
+	mkdir -p resources/public
+	cp -r lrs-admin-ui/target/bundle resources/public/admin
+
+admin-ui: resources/public/admin
+
 # *** Development ***
 
 .phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
 
 clean-dev:
-	rm -f *.db *.log
+	rm -rf *.db *.log resources/public
 
 ci:
 	clojure -X:test
 
-ephemeral:
+ephemeral: admin-ui
 	LRSQL_DB_NAME=ephemeral \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent false
 
-persistent:
+persistent: admin-ui
 	LRSQL_DB_NAME=persistent \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent true
 
-sqlite:
+sqlite: admin-ui
 	LRSQL_DB_NAME=lrsql.sqlite.db \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-sqlite -m lrsql.sqlite.main
 
 # NOTE: Requires a running PG instance!
-postgres:
+postgres: admin-ui
 	LRSQL_DB_NAME=lrsql_pg \
 		LRSQL_DB_USERNAME=lrsql_user \
 		LRSQL_DB_PASSWORD=swordfish \
@@ -48,11 +67,11 @@ bench:
 .phony: clean, bundle, bundle-exe
 
 clean:
-	rm -rf target
+	rm -rf target resources/public
 
 # Compile and make Uberjar
 
-target/bundle/lrsql.jar:
+target/bundle/lrsql.jar: admin-ui
 	clojure -X:build uber
 
 # Copy scripts
@@ -79,9 +98,15 @@ target/bundle/config/authority.json.template.example:
 
 target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/config/authority.json.template.example
 
+# Copy Admin UI
+
+target/bundle/admin: admin-ui
+	mkdir -p target/bundle
+	cp -r resources/public/admin target/bundle/admin
+
 # Create entire bundle
 
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin
 
 bundle: target/bundle
 
