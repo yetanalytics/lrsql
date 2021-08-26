@@ -47,19 +47,13 @@
 
 (defn jwt->account-id
   "Given the JSON Web Token `tok`, return the account ID if valid.
-   Otherwise return one of the following errors:
-     `:expired-token-error` - if the token was expired.
-     `:invalid-token-error` - every other error (ie. parse failure).
+   Otherwise return `:lrsql.admin/unauthorized-token-error`.
    `leeway` is a time amount (in seconds) provided to compensate for
    clock drift."
   [tok secret leeway]
   (if tok ; Avoid encountering a null pointer exception
     (try
       (-> tok (bj/unsign secret {:leeway leeway}) :acc u/str->uuid)
-      (catch clojure.lang.ExceptionInfo e
-        (let [{:keys [type cause]} (ex-data e)]
-          (if (and (#{:validation} type)
-                   (#{:exp} cause))
-            :lrsql.admin/expired-token-error
-            :lrsql.admin/invalid-token-error))))
-    :lrsql.admin/invalid-token-error))
+      (catch clojure.lang.ExceptionInfo _
+        :lrsql.admin/unauthorized-token-error))
+    :lrsql.admin/unauthorized-token-error))

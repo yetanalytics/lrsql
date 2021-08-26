@@ -25,19 +25,12 @@
               (assoc-in [::data :account-id] result)
               (assoc-in [:request :session ::data :account-id] result))
 
-          ;; The token has expired - Unauthorized
-          (= :lrsql.admin/expired-token-error result)
+          ;; The token is bad (expired, malformed, etc.) - Unauthorized
+          (= :lrsql.admin/unauthorized-token-error result)
           (assoc (chain/terminate ctx)
                  :response
                  {:status 401
-                  :body   {:error "Session Expired!"}})
-
-          ;; The token is invalid or malformed - Bad Request
-          (= :lrsql.admin/invalid-token-error result)
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400
-                  :body   {:error "Missing or invalid token!"}}))))}))
+                  :body   {:error "Unauthorized JSON Web Token!"}}))))}))
 
 (def validate-jwt-account
   "Check that the account ID stored in the JWT exists in the account table.
