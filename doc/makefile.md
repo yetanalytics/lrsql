@@ -20,7 +20,9 @@ For conciseness, only phony targets are listed here. The only non-phony targets 
 | --- | --- |
 | `clean` | Removes the `target` directory (i.e. all artifacts constructed during the build process). |
 | `bundle` | Create the `target/bundle` directory, which will contain `bin` (for build scripts), `doc`, `config`, and `lrsql.jar` (the AOT compilation artifact). |
+| `bundle-exe` | Same as `bundle` except that it also generates Windows executables in `target/bundle`. Requires [launch4j](http://launch4j.sourceforge.net/index.html) to be installed.
 | `run-jar-h2` | Compile `lrsql.jar` using `bundle` and run an H2 in-mem database with `username` and `password` credentials. |
 | `run-jar-h2-persistent` | Compile `lrsql.jar` using `bundle` and run an H2 persistent database with `username` and `password` credentials. |
 | `run-jar-sqlite` | Compile `lrsql.jar` using `bundle` and run a SQLite database with `username` and `password` credentials. |
 | `run-jar-postgres` | Compile `lrsql.jar` using `bundle` and run a PostgreSQL database with `username` and `password` credentials. Note that a PostgreSQL DB with the default name `pg_lrsql` must already exist. |
+

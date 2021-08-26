@@ -26,7 +26,10 @@
   bp/BackendInit
   (-create-all! [_ tx]
     ;; Enums
-    (create-enums! tx)
+    (create-actor-type-enum! tx)
+    (create-actor-usage-enum! tx)
+    (create-activity-usage-enum! tx)
+    (create-scope-enum! tx)
     ;; Tables
     (create-statement-table! tx)
     (create-actor-table! tx)
@@ -41,6 +44,9 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
+  (-update-all! [_ _]
+    ;; No-op for now; add functions if updates are needed
+    nil)
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]

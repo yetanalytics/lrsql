@@ -46,20 +46,18 @@
   [bk tx input]
   (if-some [{:keys [ids scopes]} (query-credential-scopes* bk tx input)]
     ;; Credentials found - return result map
-    (let [{:keys [api-key secret-key authority-fn authority-url]}
-          input
-          scope-set
-          (if (empty? scopes)
-            ;; Credentials not associated with any scope.
-            ;; The LRS MUST assume a requested scope of
-            ;; "statements/write" and "statements/read/mine"
-            ;; if no scope is specified.
-            #{:scopes/statements.write
-              :scopes/statements.read.mine}
-            ;; Return scope set
-            (->> scopes
-                 (map au/scope-str->kw)
-                 (into #{})))]
+    (let [{:keys [api-key
+                  secret-key
+                  authority-fn
+                  authority-url]} input
+          ;; NOTE: According to the xAPI spec, the LRS MUST assume scopes
+          ;; "statements/write" and "statements/read/mine" if no scope is
+          ;; specified, if OAuth 1.0 is used. Since we are using Basic
+          ;; Auth and since the above behavior is confusing, we simply
+          ;; return empty scope sets as-is.
+          scope-set (->> scopes
+                         (map au/scope-str->kw)
+                         (into #{}))]
       {:result {:scopes scope-set
                 :prefix ""
                 :auth   {:basic {:username api-key

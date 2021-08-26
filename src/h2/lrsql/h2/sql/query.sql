@@ -226,9 +226,10 @@ SELECT id, username FROM admin_account
 -- :name query-account-exists
 -- :command :query
 -- :result :one
--- :doc Given an account `username`, return whether the account exists in the table.
+-- :doc Given an account `username` or `account-id`, return whether the account exists in the table.
 SELECT 1 FROM admin_account
-WHERE username = :username
+--~ (when (:username params)   "WHERE username = :username")
+--~ (when (:account-id params) "WHERE id = :account-id")
 
 /* Credentials */
 
