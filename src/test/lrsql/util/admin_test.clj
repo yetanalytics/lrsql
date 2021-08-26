@@ -18,6 +18,8 @@
                  (ua/account-id->jwt "secret" 3600)
                  (ua/jwt->account-id "secret" 1))))
       (is (= :lrsql.admin/unauthorized-token-error
+             (ua/jwt->account-id nil "secret" 3600)))
+      (is (= :lrsql.admin/unauthorized-token-error
              (ua/jwt->account-id "not-a-jwt" "secret" 3600)))
       (is (= :lrsql.admin/unauthorized-token-error
              (-> test-id
