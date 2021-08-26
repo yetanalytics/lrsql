@@ -28,4 +28,4 @@
       (is (= :lrsql.admin/unauthorized-token-error
              (let [tok (ua/account-id->jwt test-id "secret" 1)
                    _   (Thread/sleep 1001)]
-                 (ua/jwt->account-id tok "secret" 0)))))))
+               (ua/jwt->account-id tok "secret" 0)))))))
