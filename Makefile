@@ -1,7 +1,5 @@
 # *** Admin Assets ***
 
-.phony: admin-ui
-
 # Get and compile the admin UI SPA
 
 lrs-admin-ui:
@@ -15,8 +13,6 @@ resources/public/admin: lrs-admin-ui/target/bundle
 	mkdir -p resources/public
 	cp -r lrs-admin-ui/target/bundle resources/public/admin
 
-admin-ui: resources/public/admin
-
 # *** Development ***
 
 .phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
@@ -27,26 +23,26 @@ clean-dev:
 ci:
 	clojure -X:test
 
-ephemeral: admin-ui
+ephemeral: resources/public/admin
 	LRSQL_DB_NAME=ephemeral \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent false
 
-persistent: admin-ui
+persistent: resources/public/admin
 	LRSQL_DB_NAME=persistent \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-h2 -m lrsql.h2.main --persistent true
 
-sqlite: admin-ui
+sqlite: resources/public/admin
 	LRSQL_DB_NAME=lrsql.sqlite.db \
 		LRSQL_API_KEY_DEFAULT=username \
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-sqlite -m lrsql.sqlite.main
 
 # NOTE: Requires a running PG instance!
-postgres: admin-ui
+postgres: resources/public/admin
 	LRSQL_DB_NAME=lrsql_pg \
 		LRSQL_DB_USERNAME=lrsql_user \
 		LRSQL_DB_PASSWORD=swordfish \
@@ -71,7 +67,7 @@ clean:
 
 # Compile and make Uberjar
 
-target/bundle/lrsql.jar: admin-ui
+target/bundle/lrsql.jar: resources/public/admin
 	clojure -X:build uber
 
 # Copy scripts
@@ -110,7 +106,7 @@ target/bundle/runtimes: target/bundle/bin
 
 # Copy Admin UI
 
-target/bundle/admin: admin-ui
+target/bundle/admin: resources/public/admin
 	mkdir -p target/bundle
 	cp -r resources/public/admin target/bundle/admin
 
