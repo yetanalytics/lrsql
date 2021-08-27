@@ -22,7 +22,7 @@ admin-ui: resources/public/admin
 .phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
 
 clean-dev:
-	rm -rf *.db *.log resources/public
+	rm -f *.db *.log
 
 ci:
 	clojure -X:test
@@ -98,6 +98,14 @@ target/bundle/config/authority.json.template.example:
 
 target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/config/authority.json.template.example
 
+# Make Runtime Environment
+
+MACHINE_TYPE = $(shell target/bundle/bin/machine.sh)
+
+target/bundle/runtimes: target/bundle/bin
+	mkdir target/bundle/runtimes
+	jlink --output target/bundle/runtimes/$(MACHINE_TYPE) --add-modules java.base,java.logging,java.naming,java.xml,java.sql,java.transaction.xa,java.security.sasl,java.desktop,java.management
+
 # Copy Admin UI
 
 target/bundle/admin: admin-ui
@@ -106,7 +114,7 @@ target/bundle/admin: admin-ui
 
 # Create entire bundle
 
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/runtimes target/bundle/lrsql.jar target/bundle/admin
 
 bundle: target/bundle
 
