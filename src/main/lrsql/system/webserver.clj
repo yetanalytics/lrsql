@@ -1,5 +1,6 @@
 (ns lrsql.system.webserver
   (:require [clojure.tools.logging :as log]
+            [lrsql.util.logging   :refer [logo]]
             [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
@@ -88,6 +89,7 @@
              (log/infof "Starting new webserver at host %s and SSL port %s"
                         host
                         ssl-port)))
+         (log/info logo)
          (log/tracef "Server map: %s" server)
          ;; Return new webserver
          (assoc this
