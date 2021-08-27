@@ -11,7 +11,6 @@
   buddy/buddy-core                         {:mvn/version "1.10.1"}
   buddy/buddy-sign                         {:mvn/version "3.4.1"}
   buddy/buddy-hashers                      {:mvn/version "1.8.1"}
-  org.bouncycastle/bcprov-jdk15on          {:mvn/version "1.68"}
   com.mchange/c3p0                         {:mvn/version "0.9.5.5"}
   com.github.seancorfield/next.jdbc        {:mvn/version "1.2.674"}
   ;; com.layerware/hugsql                   {:mvn/version "0.5.1"}
