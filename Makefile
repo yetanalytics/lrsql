@@ -22,7 +22,7 @@ admin-ui: resources/public/admin
 .phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
 
 clean-dev:
-	rm -f *.db *.log
+	rm -rf *.db *.log resources/public
 
 ci:
 	clojure -X:test
