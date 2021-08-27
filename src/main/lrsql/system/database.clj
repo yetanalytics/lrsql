@@ -2,6 +2,7 @@
   (:require [clojure.string :as cstr]
             [clojure.walk :refer [keywordize-keys]]
             [clojure.tools.logging :as log]
+            [hikari-cp.core :as hikari]
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
             [lrsql.spec.config :as cs]
@@ -38,9 +39,9 @@
     (cond-> {}
       ;; Basic specs
       ?jdbc-url
-      (assoc :jdbcUrl ?jdbc-url)
+      (assoc :jdbc-url #_:jdbcUrl ?jdbc-url)
       (not ?jdbc-url)
-      (assoc :jdbcUrl (cond-> {:dbtype db-type
+      (assoc :jdbc-url #_:jdbcUrl (cond-> {:dbtype db-type
                                :dbname db-name
                                :host   host
                                :port   port}
@@ -53,16 +54,19 @@
       (assoc :user ?user)
       ?password
       (assoc :password ?password)
-      ?init-size
-      (assoc :initialPoolSize ?init-size)
-      ?min-size
-      (assoc :minPoolSize ?min-size)
-      ?inc
-      (assoc :acquireIncrement ?inc)
       ?max-size
-      (assoc :maxPoolSize ?max-size)
-      ?max-stmt
-      (assoc :maxStatements ?max-stmt))))
+      (assoc :maximum-pool-size ?max-size)
+      ;; ?init-size
+      ;; (assoc :initialPoolSize ?init-size)
+      ;; ?min-size
+      ;; (assoc :minPoolSize ?min-size)
+      ;; ?inc
+      ;; (assoc :acquireIncrement ?inc)
+      ;; ?max-size
+      ;; (assoc :maxPoolSize ?max-size)
+      ;; ?max-stmt
+      ;; (assoc :maxStatements ?max-stmt)
+      )))
 
 (defrecord Connection [conn-pool config]
   component/Lifecycle
@@ -72,8 +76,10 @@
            {{db-type :db-type} :database :as config} :config}
           conn]
       (if-not ?conn-pool
-        (let [conn-pool (jdbc-conn/->pool ComboPooledDataSource
-                                          (coerce-conn-config config))]
+        (let [conn-pool
+              (hikari/make-datasource (coerce-conn-config config))
+              #_(jdbc-conn/->pool ComboPooledDataSource
+                                  (coerce-conn-config config))]
           (log/infof "Starting new connection for %s database..." db-type)
           (log/tracef "Config: %s" config)
           (assoc conn :conn-pool conn-pool))
@@ -85,7 +91,8 @@
     (if-some [conn-pool (:conn-pool conn)]
       (do
         (log/info "Stopping connection...")
-        (.close ^ComboPooledDataSource conn-pool)
+        (hikari/close-datasource conn-pool)
+        #_(.close ^ComboPooledDataSource conn-pool)
         (assoc conn :conn-pool nil))
       (do
         (log/info "Connection already stopped; do nothing.")
