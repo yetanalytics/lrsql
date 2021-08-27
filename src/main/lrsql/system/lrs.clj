@@ -26,7 +26,8 @@
             [lrsql.system.util :refer [assert-config]]
             [lrsql.util.auth      :as auth-util]
             [lrsql.util.statement :as stmt-util]
-            [lrsql.init.authority :refer [make-authority-fn]])
+            [lrsql.init.authority :refer [make-authority-fn]]
+            [lrsql.util.logging   :refer [logo]])
   (:import [java.time Instant]))
 
 (defn- lrs-conn
@@ -48,6 +49,7 @@
           auth-fn (make-authority-fn auth-tp)]
       (init/init-backend! backend conn)
       (init/insert-default-creds! backend conn uname pass)
+      (log/info logo)
       (log/info "Starting new LRS")
       (assoc lrs :connection connection :authority-fn auth-fn)))
   (stop
