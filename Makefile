@@ -44,7 +44,7 @@ sqlite: resources/public/admin
 # NOTE: Requires a running PG instance!
 postgres: resources/public/admin
 	LRSQL_DB_NAME=lrsql_pg \
-		LRSQL_DB_USERNAME=lrsql_user \
+		LRSQL_DB_USER=lrsql_user \
 		LRSQL_DB_PASSWORD=swordfish \
 		LRSQL_DB_PROPERTIES=currentSchema:lrsql \
 		LRSQL_API_KEY_DEFAULT=username \
@@ -102,7 +102,7 @@ MACHINE_TYPE = $(shell target/bundle/bin/machine.sh)
 
 target/bundle/runtimes: target/bundle/bin
 	mkdir target/bundle/runtimes
-	jlink --output target/bundle/runtimes/$(MACHINE_TYPE) --add-modules java.base,java.logging,java.naming,java.xml,java.sql,java.transaction.xa,java.security.sasl,java.desktop,java.management
+	jlink --output target/bundle/runtimes/$(MACHINE_TYPE) --add-modules java.base,java.logging,java.naming,java.xml,java.sql,java.transaction.xa,java.security.sasl,java.management
 
 # Copy Admin UI
 
