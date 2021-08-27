@@ -7,6 +7,5 @@
   <root level="info">
     <appender-ref ref="STDOUT" />
   </root>
-  <logger name="com.mchange.v2.c3p0" level="warn" />
   <logger name="io.pedestal.http" level="warn" />
 </configuration>

@@ -6,8 +6,7 @@
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
             [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config]])
-  (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
+            [lrsql.system.util :refer [assert-config]]))
 
 (defn- parse-db-props
   "Given `prop-str` of the form \"key:value,key:value,...\", return a
@@ -51,7 +50,7 @@
                         jdbc-conn/jdbc-url))
       ;; Additional specs
       ?user
-      (assoc :user ?user)
+      (assoc :username ?user)
       ?password
       (assoc :password ?password)
       ?max-size
@@ -76,10 +75,7 @@
            {{db-type :db-type} :database :as config} :config}
           conn]
       (if-not ?conn-pool
-        (let [conn-pool
-              (hikari/make-datasource (coerce-conn-config config))
-              #_(jdbc-conn/->pool ComboPooledDataSource
-                                  (coerce-conn-config config))]
+        (let [conn-pool (hikari/make-datasource (coerce-conn-config config))]
           (log/infof "Starting new connection for %s database..." db-type)
           (log/tracef "Config: %s" config)
           (assoc conn :conn-pool conn-pool))
@@ -92,7 +88,6 @@
       (do
         (log/info "Stopping connection...")
         (hikari/close-datasource conn-pool)
-        #_(.close ^ComboPooledDataSource conn-pool)
         (assoc conn :conn-pool nil))
       (do
         (log/info "Connection already stopped; do nothing.")
