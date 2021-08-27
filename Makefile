@@ -100,6 +100,8 @@ target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/conf
 
 # Make Runtime Environment
 
+# TODO: instead of platform-based jlinks, we'll pull from a remote location with all runtimes
+
 MACHINE_TYPE = $(shell target/bundle/bin/machine.sh)
 
 target/bundle/runtimes: target/bundle/bin
