@@ -8,9 +8,22 @@
 (s/def ::db-host string?)
 (s/def ::db-port nat-int?)
 
-(s/def ::db-properties
-  (s/and string?
-         (partial re-matches #"(?:(?:[\w,%]+=[\w,%]+)(?::[\w,%]+=[\w,%]+)*)?")))
+(def db-prop-regex
+  "Regex for JDBC URL query params."
+  (let [basic-char "[\\w\\.\\-~,:]" ; URL basics + commonly-used in JDBC params
+        per-encode "(?:%[0-9A-fa-f]{2})"
+        sing-quote "(?:'.*')"
+        doub-quote "(?:\".*\")"
+        kstr "([\\w]+)"
+        vstr (str "((?:" basic-char "|" per-encode ")+"
+                  "|" sing-quote
+                  "|" doub-quote ")")
+        kv   (str kstr "=" vstr)
+        fst  (str "(?:" kv ")")
+        rst  (str "(?:(?:&|;)" kv ")*")]
+    (re-pattern (str "(?:" fst rst ")?"))))
+
+(s/def ::db-properties (s/and string? (partial re-matches db-prop-regex)))
 (s/def ::db-jdbc-url ::xs/iri)
 
 (s/def ::db-user string?)
