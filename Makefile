@@ -18,7 +18,7 @@ resources/public/admin: lrs-admin-ui/target/bundle
 .phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
 
 clean-dev:
-	rm -rf *.db *.log resources/public
+	rm -rf *.db *.log resources/public tmp
 
 ci:
 	clojure -X:test
@@ -63,7 +63,7 @@ bench:
 .phony: clean, bundle, bundle-exe
 
 clean:
-	rm -rf target resources/public tmp
+	rm -rf target resources/public
 
 # Compile and make Uberjar
 
@@ -100,30 +100,26 @@ target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/conf
 
 # The given tag to pull down
 RUNTIME_TAG ?= 0.0.1-java-11-zulu
+RUNTIME_MACHINE ?= macos
+RUNTIME_MACHINE_BUILD ?= macOS-latest
+RUNTIME_ZIP_DIR ?= tmp/runtimes/${RUNTIME_TAG}
+RUNTIME_ZIP ?= ${RUNTIME_ZIP_DIR}/${RUNTIME_MACHINE}.zip
 
-target/bundle/runtimes/macos:
-	mkdir -p tmp
+target/bundle/runtimes/%:
+	mkdir -p ${RUNTIME_ZIP_DIR}
 	mkdir -p target/bundle/runtimes
-	curl -o tmp/macos.zip https://yet-public.s3.amazonaws.com/runtimes/refs/tags/${RUNTIME_TAG}/macOS-latest-jre.zip
-	unzip tmp/macos.zip -d target/bundle/runtimes/
-	mv target/bundle/runtimes/macOS-latest target/bundle/runtimes/macos
-	rm tmp/macos.zip
+	[ ! -f ${RUNTIME_ZIP} ] && curl -o ${RUNTIME_ZIP} https://yet-public.s3.amazonaws.com/runtimes/refs/tags/${RUNTIME_TAG}/${RUNTIME_MACHINE_BUILD}-jre.zip || echo 'already present'
+	unzip ${RUNTIME_ZIP} -d target/bundle/runtimes/
+	mv target/bundle/runtimes/${RUNTIME_MACHINE_BUILD} target/bundle/runtimes/${RUNTIME_MACHINE}
 
-target/bundle/runtimes/linux:
-	mkdir -p tmp
-	mkdir -p target/bundle/runtimes
-	curl -o tmp/linux.zip https://yet-public.s3.amazonaws.com/runtimes/refs/tags/${RUNTIME_TAG}/ubuntu-latest-jre.zip
-	unzip tmp/linux.zip -d target/bundle/runtimes/
-	mv target/bundle/runtimes/ubuntu-latest target/bundle/runtimes/linux
-	rm tmp/linux.zip
+target/bundle/runtimes/macos: RUNTIME_MACHINE = macos
+target/bundle/runtimes/macos: RUNTIME_MACHINE_BUILD = macOS-latest
 
-target/bundle/runtimes/windows:
-	mkdir -p tmp
-	mkdir -p target/bundle/runtimes
-	curl -o tmp/windows.zip https://yet-public.s3.amazonaws.com/runtimes/refs/tags/${RUNTIME_TAG}/windows-latest-jre.zip
-	unzip tmp/windows.zip -d target/bundle/runtimes/
-	mv target/bundle/runtimes/windows-latest target/bundle/runtimes/windows
-	rm tmp/windows.zip
+target/bundle/runtimes/linux: RUNTIME_MACHINE = linux
+target/bundle/runtimes/linux: RUNTIME_MACHINE_BUILD = ubuntu-latest
+
+target/bundle/runtimes/windows: RUNTIME_MACHINE = windows
+target/bundle/runtimes/windows: RUNTIME_MACHINE_BUILD = windows-latest
 
 target/bundle/runtimes: target/bundle/runtimes/macos target/bundle/runtimes/linux target/bundle/runtimes/windows
 
