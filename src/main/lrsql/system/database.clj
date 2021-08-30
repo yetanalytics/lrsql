@@ -1,21 +1,10 @@
 (ns lrsql.system.database
-  (:require [clojure.string :as cstr]
-            [clojure.walk :refer [keywordize-keys]]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [hikari-cp.core :as hikari]
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
             [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config]]))
-
-(defn- parse-db-props
-  "Given `prop-str` of the form \"key:value,key:value,...\", return a
-   keyword-key map of property names to values."
-  [prop-str]
-  (->> (cstr/split prop-str #",")
-       (mapv #(cstr/split % #":"))
-       (into {})
-       keywordize-keys))
+            [lrsql.system.util :refer [assert-config parse-db-props]]))
 
 (defn- coerce-conn-config
   [conn-config]
