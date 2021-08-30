@@ -97,6 +97,8 @@ target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/conf
 # Make Runtime Environment
 
 # Download the 3 runtimes
+
+# The given tag to pull down
 RUNTIME_TAG ?= 0.0.1-java-11-zulu
 
 target/bundle/runtimes/macos:
@@ -107,13 +109,23 @@ target/bundle/runtimes/macos:
 	mv target/bundle/runtimes/macOS-latest target/bundle/runtimes/macos
 	rm tmp/macos.zip
 
-# TODO: instead of platform-based jlinks, we'll pull from a remote location with all runtimes
+target/bundle/runtimes/linux:
+	mkdir -p tmp
+	mkdir -p target/bundle/runtimes
+	curl -o tmp/linux.zip https://yet-public.s3.amazonaws.com/runtimes/refs/tags/${RUNTIME_TAG}/ubuntu-latest-jre.zip
+	unzip tmp/linux.zip -d target/bundle/runtimes/
+	mv target/bundle/runtimes/ubuntu-latest target/bundle/runtimes/linux
+	rm tmp/linux.zip
 
-MACHINE_TYPE = $(shell target/bundle/bin/machine.sh)
+target/bundle/runtimes/windows:
+	mkdir -p tmp
+	mkdir -p target/bundle/runtimes
+	curl -o tmp/windows.zip https://yet-public.s3.amazonaws.com/runtimes/refs/tags/${RUNTIME_TAG}/windows-latest-jre.zip
+	unzip tmp/windows.zip -d target/bundle/runtimes/
+	mv target/bundle/runtimes/windows-latest target/bundle/runtimes/windows
+	rm tmp/windows.zip
 
-target/bundle/runtimes: target/bundle/bin
-	mkdir target/bundle/runtimes
-	jlink --output target/bundle/runtimes/$(MACHINE_TYPE) --add-modules java.base,java.logging,java.naming,java.xml,java.sql,java.transaction.xa,java.security.sasl,java.desktop,java.management
+target/bundle/runtimes: target/bundle/runtimes/macos target/bundle/runtimes/linux target/bundle/runtimes/windows
 
 # Copy Admin UI
 
