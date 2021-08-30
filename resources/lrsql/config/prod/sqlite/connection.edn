@@ -1,5 +1,11 @@
-{:pool-init-size #long #or [#env LRSQL_POOL_INIT_SIZE 1]
- :pool-min-size  #long #or [#env LRSQL_POOL_MIN_SIZE 1]
- :pool-inc       #long #or [#env LRSQL_POOL_INC 1]
- :pool-max-size  #long #or [#env LRSQL_POOL_MAX_SIZE 1]
- :pool-max-stmts #long #or [#env LRSQL_POOL_MAX_STMTS 0]} ; c3p0 default
+;; All values here are Hikari defaults unless specified otherwise
+{:pool-auto-commit        #boolean #or [#env LRSQL_POOL_AUTO_COMMIT true]
+ :pool-keepalive-time     #long #or [#env LRSQL_POOL_KEEPALIVE_TIME 0]
+ :pool-connection-timeout #long #or [#env LRSQL_POOL_CONNECTION_TIMEOUT 30000]
+ :pool-idle-timeout       #long #or [#env LRSQL_POOL_IDLE_TIMEOUT 600000]
+ :pool-validation-timeout #long #or [#env LRSQL_POOL_VALIDATION_TIMEOUT 5000]
+ :pool-init-fail-timeout  #long #or [#env LRSQL_POOL_INIT_FAIL_TIMEOUT 1]
+ :pool-max-lifetime       #long #or [#env LRSQL_POOL_MAX_LIFETIME 1800000]
+ :pool-min-idle           #long #or [#env LRSQL_POOL_MIN_IDLE 1] ; changed!
+ :pool-max-size           #long #or [#env LRSQL_POOL_MAX_SIZE 1] ; changed!
+ :pool-name               #or [#env LRSQL_POOL_NAME nil]}

@@ -21,10 +21,10 @@
  :connection
  #profile
   {;; Test/Dev
-   :test-h2-mem   {}
-   :test-h2       {}
+   :test-h2-mem   #include "test/default/connection.edn"
+   :test-h2       #include "test/default/connection.edn"
    :test-sqlite   #include "test/sqlite/connection.edn"
-   :test-postgres {}
+   :test-postgres #include "test/default/connection.edn"
    ;; Production
    :prod-h2-mem   #include "prod/default/connection.edn"
    :prod-h2       #include "prod/default/connection.edn"

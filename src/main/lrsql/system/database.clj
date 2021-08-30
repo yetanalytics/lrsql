@@ -4,57 +4,67 @@
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
             [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config parse-db-props]]))
+            [lrsql.system.util :refer [assert-config parse-db-props]])
+  (:import [com.zaxxer.hikari HikariConfig HikariDataSource]))
 
-(defn- coerce-conn-config
-  [conn-config]
+(defn- make-jdbc-url
+  [{:keys [db-type
+           db-name
+           db-host
+           db-port
+           db-properties
+           db-jdbc-url]}]
+  (if db-jdbc-url
+    ;; If JDBC URL is given directly, this overrides all
+    db-jdbc-url
+    ;; Construct a new JDBC URL from config vars
+    (cond-> {:dbtype db-type
+             :dbname db-name
+             :host   db-host
+             :port   db-port}
+      db-properties
+      (merge (parse-db-props db-properties))
+      true
+      jdbc-conn/jdbc-url)))
+
+(defn- make-conn-pool
+  [{{:keys [db-user
+            db-password
+            db-schema]
+     :as db-config}
+    :database
+    :keys [pool-auto-commit
+           pool-keepalive-time
+           pool-connection-timeout
+           pool-idle-timeout
+           pool-validation-timeout
+           pool-init-fail-timeout
+           pool-max-lifetime
+           pool-min-idle
+           pool-max-size
+           pool-name]
+    :as conn-config}]
   (assert-config ::cs/connection "connection" conn-config)
-  (let [{{db-type   :db-type
-          db-name   :db-name
-          host      :db-host
-          port      :db-port
-          ?user     :db-user
-          ?password :db-password
-          ?props    :db-properties
-          ?jdbc-url :db-jdbc-url}
-         :database
-         ?init-size :pool-init-size
-         ?min-size  :pool-min-size
-         ?inc       :pool-inc
-         ?max-size  :pool-max-size
-         ?max-stmt  :pool-max-stmts}
-        conn-config]
-    (cond-> {}
-      ;; Basic specs
-      ?jdbc-url
-      (assoc :jdbc-url #_:jdbcUrl ?jdbc-url)
-      (not ?jdbc-url)
-      (assoc :jdbc-url #_:jdbcUrl (cond-> {:dbtype db-type
-                               :dbname db-name
-                               :host   host
-                               :port   port}
-                        ?props
-                        (merge (parse-db-props ?props))
-                        true
-                        jdbc-conn/jdbc-url))
-      ;; Additional specs
-      ?user
-      (assoc :username ?user)
-      ?password
-      (assoc :password ?password)
-      ?max-size
-      (assoc :maximum-pool-size ?max-size)
-      ;; ?init-size
-      ;; (assoc :initialPoolSize ?init-size)
-      ;; ?min-size
-      ;; (assoc :minPoolSize ?min-size)
-      ;; ?inc
-      ;; (assoc :acquireIncrement ?inc)
-      ;; ?max-size
-      ;; (assoc :maxPoolSize ?max-size)
-      ;; ?max-stmt
-      ;; (assoc :maxStatements ?max-stmt)
-      )))
+  (let [config (doto (HikariConfig.)
+                 ;; Database properties
+                 (.setJdbcUrl  (make-jdbc-url db-config))
+                 (.setUsername db-user)
+                 (.setPassword db-password)
+                 (.setSchema   db-schema)
+                 ;; Connection pool properties
+                 (.setAutoCommit                pool-auto-commit)
+                 (.setKeepaliveTime             pool-keepalive-time)
+                 (.setConnectionTimeout         pool-connection-timeout)
+                 (.setIdleTimeout               pool-idle-timeout)
+                 (.setValidationTimeout         pool-validation-timeout)
+                 (.setInitializationFailTimeout pool-init-fail-timeout)
+                 (.setMaxLifetime               pool-max-lifetime)
+                 (.setMinimumIdle               pool-min-idle)
+                 (.setMaximumPoolSize           pool-max-size))]
+    ;; Why is there no conditional doto?
+    (when pool-name (.setPoolName config pool-name))
+    ;; Make connection pool/datasource
+    (HikariDataSource. config)))
 
 (defrecord Connection [conn-pool config]
   component/Lifecycle
@@ -64,7 +74,7 @@
            {{db-type :db-type} :database :as config} :config}
           conn]
       (if-not ?conn-pool
-        (let [conn-pool (hikari/make-datasource (coerce-conn-config config))]
+        (let [conn-pool (make-conn-pool config)]
           (log/infof "Starting new connection for %s database..." db-type)
           (log/tracef "Config: %s" config)
           (assoc conn :conn-pool conn-pool))

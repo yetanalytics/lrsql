@@ -1,6 +1,32 @@
-;; All values here are c3p0 defaults
-{:pool-init-size #long #or [#env LRSQL_POOL_INIT_SIZE 3]
- :pool-min-size  #long #or [#env LRSQL_POOL_MIN_SIZE 3]
- :pool-inc       #long #or [#env LRSQL_POOL_INC 3]
- :pool-max-size  #long #or [#env LRSQL_POOL_MAX_SIZE 15]
- :pool-max-stmts #long #or [#env LRSQL_POOL_MAX_STMTS 0]}
+;; All values here are Hikari defaults
+{:pool-auto-commit        #boolean #or [#env LRSQL_POOL_AUTO_COMMIT true]
+ :pool-keepalive-time     #long #or [#env LRSQL_POOL_KEEPALIVE_TIME 0]
+ :pool-connection-timeout #long #or [#env LRSQL_POOL_CONNECTION_TIMEOUT 30000]
+ :pool-idle-timeout       #long #or [#env LRSQL_POOL_IDLE_TIMEOUT 600000]
+ :pool-validation-timeout #long #or [#env LRSQL_POOL_VALIDATION_TIMEOUT 5000]
+ :pool-init-fail-timeout  #long #or [#env LRSQL_POOL_INIT_FAIL_TIMEOUT 1]
+ :pool-max-lifetime       #long #or [#env LRSQL_POOL_MAX_LIFETIME 1800000]
+ :pool-min-idle           #long #or [#env LRSQL_POOL_MIN_IDLE 10]
+ :pool-max-size           #long #or [#env LRSQL_POOL_MAX_SIZE 10]
+ :pool-name               #or [#env LRSQL_POOL_NAME nil]}
+
+;; Not all Hikari options are available:
+;; - jdbcUrl, username, password, and schema are set in the `database` map
+;; - connectionTestQuery is not recommended for JDBC4
+;; - metricRegistry and healthCheckRegistry require Java instances and are
+;;   mainly for DB analytics/debugging
+;; - readOnly will just cause lrsql to not work if set to `true`
+;; - isolateInternalQueries is rarely necessary since internal pool queries
+;;   are read-only
+;; - registerMbeans and allowPoolSuspension involve MBeans and Java management
+;;   tools, which shouldn't be needed in our app
+;; - catalog could mess up DDL and doesn't seem as important as schemas
+;; - connectionInitSql would expose the inner SQL workings to the user, which
+;;   completely violates app encapsulation
+;; - driverClassName would clash with the driver given by the JDBC URL
+;; - transactionIsolation is only used if there are specific requirements
+;;   shared by all queries
+;; - leakDetectionThreshold is mainly a debugging tool
+;; - dataSource would clash with the JDBC URL
+;; - threadFactory and scheduledExecutor are Java instances and are used only
+;;   in specific execution environemnts

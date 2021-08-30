@@ -17,6 +17,7 @@
 
 (s/def ::db-user string?)
 (s/def ::db-password string?)
+(s/def ::db-schema string?)
 
 (s/def ::database
   (s/and (s/conformer u/remove-nil-vals)
@@ -24,35 +25,52 @@
          (s/or :no-jdbc-url
                (s/keys :req-un [::db-type
                                 ::db-name]
-                       :opt-un [::db-properties
-                                ::db-host
+                       :opt-un [::db-host
                                 ::db-port
+                                ::db-properties
                                 ::db-user
-                                ::db-password])
+                                ::db-password
+                                ::db-schema])
                :jdbc-url
                (s/keys :req-un [::db-jdbc-url]
                        :opt-un [::db-user
-                                ::db-password]))))
+                                ::db-password
+                                ::db-schema]))))
 
-(s/def ::pool-init-size nat-int?)
-(s/def ::pool-min-size nat-int?)
-(s/def ::pool-inc nat-int?)
-(s/def ::pool-max-size nat-int?)
-(s/def ::pool-max-stmts nat-int?)
+(s/def ::pool-auto-commit boolean?)
+(s/def ::pool-init-fail-timeout int?)
+(s/def ::pool-min-idle nat-int?)
+(s/def ::pool-max-size pos-int?)
+(s/def ::pool-name string?)
+
+(s/def ::pool-connection-timeout
+  (s/and pos-int? (partial < 250)))
+(s/def ::pool-idle-timeout
+  (s/and pos-int? (partial < 10000)))
+(s/def ::pool-validation-timeout
+  (s/and pos-int? (partial < 250)))
+
+(s/def ::pool-keepalive-time
+  (s/or :disabled zero?
+        :enabled (s/and pos-int? (partial < 10000))))
+(s/def ::pool-max-lifetime
+  (s/or :no-max-lifetime zero?
+        :max-lifetime (s/and pos-int? (partial < 30000))))
 
 (s/def ::connection
   (s/and (s/conformer u/remove-nil-vals)
          (s/conformer u/remove-neg-vals)
-         (s/keys :req-un [::database]
-                 :opt-un [::pool-init-size
-                          ::pool-min-size
-                          ::pool-inc
-                          ::pool-max-size
-                          ::pool-max-stmts])
-         (fn [{:keys [pool-min-size pool-max-size]
-               :or {pool-min-size 3 ; c3p0 defaults
-                    pool-max-size 15}}]
-           (<= pool-min-size pool-max-size))))
+         (s/keys :req-un [::database
+                          ::pool-auto-commit
+                          ::pool-keepalive-time
+                          ::pool-connection-timeout
+                          ::pool-idle-timeout
+                          ::pool-validation-timeout
+                          ::pool-init-fail-timeout
+                          ::pool-max-lifetime
+                          ::pool-min-idle
+                          ::pool-max-size]
+                 :opt-un [::pool-name])))
 
 (s/def ::api-key-default string?)
 (s/def ::api-secret-default string?)

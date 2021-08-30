@@ -5,6 +5,6 @@
  :pool-validation-timeout 5000
  :pool-init-fail-timeout  1
  :pool-max-lifetime       1800000
- :pool-min-idle           1
- :pool-max-size           1
+ :pool-min-idle           10
+ :pool-max-size           10
  :pool-name               nil}
