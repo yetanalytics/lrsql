@@ -63,7 +63,7 @@ bench:
 .phony: clean, bundle, bundle-exe
 
 clean:
-	rm -rf target resources/public
+	rm -rf target resources/public tmp
 
 # Compile and make Uberjar
 
@@ -95,6 +95,17 @@ target/bundle/config/authority.json.template.example:
 target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/config/authority.json.template.example
 
 # Make Runtime Environment
+
+# Download the 3 runtimes
+RUNTIME_TAG ?= 0.0.1-java-11-zulu
+
+target/bundle/runtimes/macos:
+	mkdir -p tmp
+	mkdir -p target/bundle/runtimes
+	curl -o tmp/macos.zip https://yet-public.s3.amazonaws.com/runtimes/refs/tags/${RUNTIME_TAG}/macOS-latest-jre.zip
+	unzip tmp/macos.zip -d target/bundle/runtimes/
+	mv target/bundle/runtimes/macOS-latest target/bundle/runtimes/macos
+	rm tmp/macos.zip
 
 # TODO: instead of platform-based jlinks, we'll pull from a remote location with all runtimes
 
