@@ -10,7 +10,7 @@
 
 (def db-prop-regex
   "Regex for JDBC URL query params."
-  #"(?:[^&]+=[^&]+)(?:&[^&]+=[^&]+)*)")
+  #"(?:(?:[^&]+=[^&]+)(?:&[^&]+=[^&]+)*))?")
 
 (s/def ::db-properties (s/and string? (partial re-matches db-prop-regex)))
 (s/def ::db-jdbc-url ::xs/iri)
