@@ -9,15 +9,26 @@
             [lrsql.system.util :refer [assert-config]])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
 
+(defn- remove-quotes
+  [s]
+  (cond-> s
+    (re-matches #"(?:\".*\")|(?:'.*')" s)
+    (subs 1 (-> s count dec))))
+
 (defn- parse-db-props
-  "Given `prop-str` of the form \"key=value&key=value:...\", return a
+  "Given `prop-str` of the form \"key=value&key=value...\", return a
    keyword-key map of property names to values."
   [prop-str]
-  (->> (cstr/split prop-str #"&|;")
-       (map (fn [s] (cstr/split s #"=" 2)))
-       (map (fn [[k v]] [k (-> v (cstr/replace #"'|\"" "") form-encode)]))
-       (into {})
-       keywordize-keys))
+  (let [grps (->> prop-str
+                  (re-matches cs/db-prop-regex)
+                  rest
+                  (filter some?))]
+    (loop [g grps
+           m (transient {})]
+      (if-not (empty? g)
+        (let [[[k v] g'] (split-at 2 g)]
+          (recur g' (assoc! m (keyword k) (form-encode (remove-quotes v)))))
+        (persistent! m)))))
 
 (defn- coerce-conn-config
   [conn-config]
