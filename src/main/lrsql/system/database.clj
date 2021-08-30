@@ -1,21 +1,10 @@
 (ns lrsql.system.database
-  (:require [clojure.string :as cstr]
-            [clojure.walk :refer [keywordize-keys]]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
             [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config]])
+            [lrsql.system.util :refer [assert-config parse-db-props]])
   (:import [com.mchange.v2.c3p0 ComboPooledDataSource]))
-
-(defn- parse-db-props
-  "Given `prop-str` of the form \"key:value,key:value,...\", return a
-   keyword-key map of property names to values."
-  [prop-str]
-  (->> (cstr/split prop-str #",")
-       (mapv #(cstr/split % #":"))
-       (into {})
-       keywordize-keys))
 
 (defn- coerce-conn-config
   [conn-config]
@@ -72,10 +61,12 @@
            {{db-type :db-type} :database :as config} :config}
           conn]
       (if-not ?conn-pool
-        (let [conn-pool (jdbc-conn/->pool ComboPooledDataSource
-                                          (coerce-conn-config config))]
+        (let [coerced-config (coerce-conn-config config)
+              conn-pool      (jdbc-conn/->pool ComboPooledDataSource
+                                               coerced-config)]
           (log/infof "Starting new connection for %s database..." db-type)
           (log/tracef "Config: %s" config)
+          (log/tracef "JDBC URL: %s" (:jdbcUrl coerced-config))
           (assoc conn :conn-pool conn-pool))
         (do
           (log/info "Connection already started; do nothing.")
