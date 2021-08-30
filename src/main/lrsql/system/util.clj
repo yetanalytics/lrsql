@@ -1,6 +1,7 @@
 (ns lrsql.system.util
   (:require [clojure.spec.alpha :as s]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [ring.util.codec :refer [form-encode form-decode]]))
 
 (defmacro assert-config
   [spec component-name config]
@@ -12,3 +13,11 @@
                                ~component-name)
                        {:type ::invalid-config
                         :error-data err#})))))
+
+(defn parse-db-props
+  "Given `prop-str` of the form \"key=value&key=value...\", return a
+   keyword-key map of property names to values."
+  [prop-str]
+  (reduce-kv (fn [m k v] (assoc m (keyword k) (form-encode v)))
+             {}
+             (form-decode prop-str)))
