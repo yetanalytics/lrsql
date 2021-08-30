@@ -28,4 +28,6 @@
       {:options "-c+search_path%3Dlrsql%2Cpublic%2Cfoo" :bar "baz"}
       "options=-c search_path=lrsql,public,foo&bar=baz"
       {:options "-c+search_path%3Dlrsql%2Cpublic%2Cpgcatalog+-c+statement_timeout%3D90000"}
-      "options=-c%20search_path=lrsql,public,pgcatalog%20-c%20statement_timeout=90000")))
+      "options=-c%20search_path=lrsql,public,pgcatalog%20-c%20statement_timeout=90000"
+      {:options "-c+search_path%3Dlrsql%2Cpublic%2Cpgcatalog+-c+statement_timeout%3D90000"}
+      "options=-c search_path=lrsql,public,pgcatalog -c statement_timeout=90000")))
