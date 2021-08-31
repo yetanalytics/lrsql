@@ -17,15 +17,20 @@ All environment variables can either be set directly via the command line, or ca
 
 ## Connection
 
-The following environment variables are aliases for c3p0 properties, each of which has their respective link to the c3p0 documentation. All of these variables are optional and are not set by default (in which case c3p0 uses its own default values). Note that SQLite uses its own defaults due to issues with multi-threading.
+The following environment variables are aliases for [HikariCP properties](https://github.com/brettwooldridge/HikariCP#gear-configuration-knobs-baby). All of these variables (except for `poolName`) have default values that are already set. Note that SQLite uses its own defaults due to issues with multi-threading. All temporal values are in milliseconds.
 
-| Env Var | Config | c3p0 Property | c3p0 Default | SQLite Default |
-| --- | --- | --- | --- | --- |
-| `LRSQL_POOL_INIT_SIZE` | `poolInitSize` |  [initialPoolSize](https://www.mchange.com/projects/c3p0/#initialPoolSize) | 3 | 1 |
-| `LRSQL_POOL_MIN_SIZE` | `poolMinSize` | [minPoolSize](https://www.mchange.com/projects/c3p0/#minPoolSize) | 3 | 1 |
-| `LRSQL_POOL_INC` | `poolInc` | [acquireIncrement](https://www.mchange.com/projects/c3p0/#acquireIncrement) | 3 | 1 |
-| `LRSQL_POOL_MAX_SIZE` | `poolMaxSize` | [maxPoolSize](https://www.mchange.com/projects/c3p0/#maxPoolSize) | 15 | 1 |
-| `LRSQL_POOL_MAX_STMTS` | `poolMaxStmts` | [maxStatements](https://www.mchange.com/projects/c3p0/#maxStatements) | 0 | 0 |
+| Env Var | Config | Default | Valid Values |
+| --- | --- | --- | --- |
+| `LRSQL_POOL_AUTO_COMMIT` | `poolAutoCommit` | `true` | `true`/`false`
+| `LRSQL_POOL_KEEPALIVE_TIME` | `poolKeepaliveTime` | `0` (disabled) | `≥ 10000` or `0`, less than `poolMaxLifetime` |
+| `LRSQL_POOL_CONNECTION_TIMEOUT` | `poolConnectionTimeout` | `3000` | `≥ 250` |
+| `LRSQL_POOL_IDLE_TIMEOUT` | `poolIdleTimeout` | `600000` | `≥ 10000` or `0` |
+| `LRSQL_POOL_VALIDATION_TIMEOUT` | `poolValidationTimeout` | `5000` | `≥ 250`, less than `poolConnectionTimeout` |
+| `LRSQL_POOL_INIT_FAIL_TIMEOUT` | `poolInitFailTimeout` | `1` | Any integer |
+| `LRSQL_POOL_MAX_LIFETIME` | `poolMaxLifetime` | `1800000` | `≥ 30000` or `0` |
+| `LRSQL_POOL_MIN_IDLE` | `poolMinIdle` | `10` | `≥ 0` |
+| `LRSQL_POOL_MAX_SIZE` | `poolMaxSize` | `10` | `≥ 1` |
+| `LRSQL_POOL_NAME` | `poolName` | Not set | Any string |
 
 ## LRS
 

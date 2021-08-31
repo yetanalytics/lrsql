@@ -44,18 +44,18 @@
 (s/def ::pool-name string?)
 
 (s/def ::pool-connection-timeout
-  (s/and pos-int? (partial < 250)))
+  (s/and pos-int? (partial <= 250)))
 (s/def ::pool-idle-timeout
-  (s/and pos-int? (partial < 10000)))
+  (s/and pos-int? (partial <= 10000)))
 (s/def ::pool-validation-timeout
-  (s/and pos-int? (partial < 250)))
+  (s/and pos-int? (partial <= 250)))
 
 (s/def ::pool-keepalive-time
   (s/or :disabled zero?
-        :enabled (s/and pos-int? (partial < 10000))))
+        :enabled (s/and pos-int? (partial <= 10000))))
 (s/def ::pool-max-lifetime
   (s/or :no-max-lifetime zero?
-        :max-lifetime (s/and pos-int? (partial < 30000))))
+        :max-lifetime (s/and pos-int? (partial <= 30000))))
 
 (s/def ::connection
   (s/and (s/conformer u/remove-nil-vals)
@@ -70,7 +70,13 @@
                           ::pool-max-lifetime
                           ::pool-min-idle
                           ::pool-max-size]
-                 :opt-un [::pool-name])))
+                 :opt-un [::pool-name])
+         (fn valid-keepalive-time?
+           [{:keys [pool-keepalive-time pool-max-lifetime]}]
+           (< pool-keepalive-time pool-max-lifetime))
+         (fn valid-validation-timeout?
+           [{:keys [pool-validation-timeout pool-connection-timeout]}]
+           (< pool-validation-timeout pool-connection-timeout))))
 
 (s/def ::api-key-default string?)
 (s/def ::api-secret-default string?)
