@@ -60,7 +60,7 @@ bench:
 
 # *** Build ***
 
-.phony: clean, bundle, bundle-exe
+.phony: clean, bundle
 
 clean:
 	rm -rf target resources/public
@@ -145,7 +145,10 @@ target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/b
 
 bundle: target/bundle
 
-# Create launch4j executables
+# *** build Windows EXEs with launch4j ***
+
+.phony: bundle-exe
+
 # https://stackoverflow.com/questions/5618615/check-if-a-program-exists-from-a-makefile
 # These are assumed to be checked in and thus available to the bundle
 # BUT these targets can be used to re-generate them with the jar if needed
