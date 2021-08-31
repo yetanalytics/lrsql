@@ -123,6 +123,16 @@ target/bundle/runtimes/windows: RUNTIME_MACHINE_BUILD = windows-latest
 
 target/bundle/runtimes: target/bundle/runtimes/macos target/bundle/runtimes/linux target/bundle/runtimes/windows
 
+# Copy windows EXEs
+
+target/bundle/lrsql.exe: exe/lrsql.exe
+	mkdir -p target/bundle
+	mv exe/lrsql.exe target/bundle/lrsql.exe
+
+target/bundle/lrsql_pg.exe: exe/lrsql_pg.exe
+	mkdir -p target/bundle
+	mv exe/lrsql_pg.exe target/bundle/lrsql_pg.exe
+
 # Copy Admin UI
 
 target/bundle/admin: resources/public/admin
@@ -131,34 +141,40 @@ target/bundle/admin: resources/public/admin
 
 # Create entire bundle
 
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/runtimes target/bundle/lrsql.jar target/bundle/admin
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/runtimes target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe
 
 bundle: target/bundle
 
 # Create launch4j executables
 # https://stackoverflow.com/questions/5618615/check-if-a-program-exists-from-a-makefile
+# These are assumed to be checked in and thus available to the bundle
+# BUT these targets can be used to re-generate them with the jar if needed
 
-target/bundle/lrsql.exe: target/bundle
+exe/lrsql.exe: target/bundle/lrsql.jar
 ifeq (,$(shell which launch4j))
 	$(error "ERROR: launch4j is not installed!")
 else
+	mkdir -p exe
 	cp resources/lrsql/build/launch4j/config.xml target/bundle/config.xml
 	cp resources/lrsql/build/launch4j/lrsql.ico target/bundle/lrsql.ico
 	launch4j target/bundle/config.xml
 	rm target/bundle/config.xml target/bundle/lrsql.ico
+	cp target/bundle/lrsql.exe exe/lrsql.exe
 endif
 
-target/bundle/lrsql_pg.exe: target/bundle
+exe/lrsql_pg.exe: target/bundle/lrsql.jar
 ifeq (,$(shell which launch4j))
 	$(error "ERROR: launch4j is not installed!")
 else
+	mkdir -p exe
 	cp resources/lrsql/build/launch4j/config_pg.xml target/bundle/config_pg.xml
 	cp resources/lrsql/build/launch4j/lrsql.ico target/bundle/lrsql.ico
 	launch4j target/bundle/config_pg.xml
 	rm target/bundle/config_pg.xml target/bundle/lrsql.ico
+	cp target/bundle/lrsql_pg.exe exe/lrsql_pg.exe
 endif
 
-bundle-exe: target/bundle/lrsql.exe target/bundle/lrsql_pg.exe
+bundle-exe: exe/lrsql.exe exe/lrsql_pg.exe
 
 # *** Run build ***
 
