@@ -150,28 +150,18 @@ bundle: target/bundle
 # These are assumed to be checked in and thus available to the bundle
 # BUT these targets can be used to re-generate them with the jar if needed
 
-exe/lrsql.exe: target/bundle/lrsql.jar
+exe/lrsql.exe:
 ifeq (,$(shell which launch4j))
 	$(error "ERROR: launch4j is not installed!")
 else
-	mkdir -p exe
-	cp resources/lrsql/build/launch4j/config.xml target/bundle/config.xml
-	cp resources/lrsql/build/launch4j/lrsql.ico target/bundle/lrsql.ico
-	launch4j target/bundle/config.xml
-	rm target/bundle/config.xml target/bundle/lrsql.ico
-	cp target/bundle/lrsql.exe exe/lrsql.exe
+	launch4j exe/config.xml
 endif
 
-exe/lrsql_pg.exe: target/bundle/lrsql.jar
+exe/lrsql_pg.exe:
 ifeq (,$(shell which launch4j))
 	$(error "ERROR: launch4j is not installed!")
 else
-	mkdir -p exe
-	cp resources/lrsql/build/launch4j/config_pg.xml target/bundle/config_pg.xml
-	cp resources/lrsql/build/launch4j/lrsql.ico target/bundle/lrsql.ico
-	launch4j target/bundle/config_pg.xml
-	rm target/bundle/config_pg.xml target/bundle/lrsql.ico
-	cp target/bundle/lrsql_pg.exe exe/lrsql_pg.exe
+	launch4j exe/config_pg.xml
 endif
 
 bundle-exe: exe/lrsql.exe exe/lrsql_pg.exe
