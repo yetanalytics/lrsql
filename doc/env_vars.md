@@ -17,6 +17,8 @@ All environment variables can either be set directly via the command line, or ca
 
 ## Connection
 
+### HikariCP Properties
+
 The following environment variables are aliases for [HikariCP properties](https://github.com/brettwooldridge/HikariCP#gear-configuration-knobs-baby). All of these variables (except for `poolName`) have default values that are already set. Note that SQLite uses its own defaults due to issues with multi-threading. All temporal values are in milliseconds.
 
 | Env Var | Config | Default | Valid Values |
@@ -31,6 +33,19 @@ The following environment variables are aliases for [HikariCP properties](https:
 | `LRSQL_POOL_MIN_IDLE` | `poolMinIdle` | `10` | `≥ 0` |
 | `LRSQL_POOL_MAX_SIZE` | `poolMaxSize` | `10` | `≥ 1` |
 | `LRSQL_POOL_NAME` | `poolName` | Not set | Any string |
+
+### Metric Reporting via JMX
+
+The following config var is to activate metrics reporting via JMX.
+
+| Env Var | Config | Description | Default |
+| --- | --- | --- | --- |
+| `LRSQL_POOL_ENABLE_JMX` | `poolEnableJmx` | Activate metrics reporting via JMX. | `false` |
+
+Unlike the previous vars, which are one-to-one with HikariCP properties, the following sets multiple such properties:
+- `registerMbeans` is set in order to activate JMX reporting.
+- `allowPoolSuspension` is set to `true` to allow for user control over connection pools.
+- `metricRegistry` is set to be a Codahale/Dropwizard `MetricRegistry` instance.
 
 ## LRS
 

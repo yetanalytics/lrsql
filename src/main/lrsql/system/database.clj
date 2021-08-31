@@ -5,7 +5,9 @@
             [com.stuartsierra.component :as component]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config parse-db-props]])
-  (:import [com.zaxxer.hikari HikariConfig HikariDataSource]))
+  (:import [com.zaxxer.hikari HikariConfig HikariDataSource]
+           [com.codahale.metrics MetricRegistry]
+           [com.codahale.metrics.jmx JmxReporter]))
 
 (defn- make-jdbc-url
   [{:keys [db-type
@@ -27,6 +29,24 @@
       true
       jdbc-conn/jdbc-url)))
 
+(defn- enable-jmx!
+  [config]
+  (let [metric-registry (MetricRegistry.)]
+    ;; Set HikariCP config properties
+    ;; NOTE: we skip setting the healthCheckRegistry since enough info
+    ;; should be already provided by the metrics, and there doesn't seem
+    ;; to be an easy way to call its properties via JMX.
+    (.setRegisterMbeans config true)
+    (.setAllowPoolSuspension config true)
+    (.setMetricRegistry config metric-registry)
+    ;; Add the metric registry to the JMX reporter
+    ;; Code from Pedestal:
+    ;; https://github.com/pedestal/pedestal/blob/master/log/src/io/pedestal/log.clj#L489
+    (doto (some-> (JmxReporter/forRegistry metric-registry)
+                  (.inDomain "com.zaxxer.hikari.metrics")
+                  (.build))
+      (.start))))
+
 (defn- make-conn-pool
   [{{:keys [db-user
             db-password
@@ -42,6 +62,7 @@
            pool-max-lifetime
            pool-min-idle
            pool-max-size
+           pool-enable-jmx
            pool-name]
     :as conn-config}]
   (assert-config ::cs/connection "connection" conn-config)
@@ -62,7 +83,8 @@
                  (.setMinimumIdle               pool-min-idle)
                  (.setMaximumPoolSize           pool-max-size))]
     ;; Why is there no conditional doto?
-    (when pool-name (.setPoolName config pool-name))
+    (when pool-name       (.setPoolName config pool-name))
+    (when pool-enable-jmx (enable-jmx! config))
     ;; Make connection pool/datasource
     (HikariDataSource. config)))
 

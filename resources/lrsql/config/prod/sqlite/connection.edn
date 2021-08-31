@@ -8,4 +8,5 @@
  :pool-max-lifetime       #long #or [#env LRSQL_POOL_MAX_LIFETIME 1800000]
  :pool-min-idle           #long #or [#env LRSQL_POOL_MIN_IDLE 1] ; changed!
  :pool-max-size           #long #or [#env LRSQL_POOL_MAX_SIZE 1] ; changed!
- :pool-name               #or [#env LRSQL_POOL_NAME nil]}
+ :pool-name               #or [#env LRSQL_POOL_NAME nil]
+ :pool-enable-jmx         #boolean #or [#env LRSQL_POOL_ENABLE_JMX false]}

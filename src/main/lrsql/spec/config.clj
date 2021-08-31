@@ -42,6 +42,8 @@
 (s/def ::pool-min-idle nat-int?)
 (s/def ::pool-max-size pos-int?)
 (s/def ::pool-name string?)
+(s/def ::pool-enable-jmx boolean?)
+
 
 (s/def ::pool-connection-timeout
   (s/and pos-int? (partial <= 250)))
@@ -69,7 +71,8 @@
                           ::pool-init-fail-timeout
                           ::pool-max-lifetime
                           ::pool-min-idle
-                          ::pool-max-size]
+                          ::pool-max-size
+                          ::pool-enable-jmx]
                  :opt-un [::pool-name])
          (fn keepalive-lt-max-lifetime?
            [conn-config]

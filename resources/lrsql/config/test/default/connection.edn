@@ -7,4 +7,5 @@
  :pool-max-lifetime       1800000
  :pool-min-idle           10
  :pool-max-size           10
- :pool-name               nil}
+ :pool-name               nil
+ :pool-enable-jmx         false}
