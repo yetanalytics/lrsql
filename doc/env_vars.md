@@ -32,8 +32,8 @@ The following environment variables are aliases for [HikariCP properties](https:
 | `LRSQL_POOL_VALIDATION_TIMEOUT` | `poolValidationTimeout` | `5000` | `≥ 250`, less than `poolConnectionTimeout` |
 | `LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT` | `poolInitializationFailTimeout` | `1` | Any integer |
 | `LRSQL_POOL_MAX_LIFETIME` | `poolMaxLifetime` | `1800000` | `≥ 30000` or `0` |
-| `LRSQL_POOL_MIN_IDLE` | `poolMinIdle` | `10` | `≥ 0` |
-| `LRSQL_POOL_MAX_SIZE` | `poolMaxSize` | `10` | `≥ 1` |
+| `LRSQL_POOL_MINIMUM_IDLE` | `poolMinimumIdle` | `10` | `≥ 0` |
+| `LRSQL_POOL_MAXIMUM_SIZE` | `poolMaximumSize` | `10` | `≥ 1` |
 | `LRSQL_POOL_ISOLATE_INTERNAL_QUERIES` | `poolIsolateInternal` | `false` | `true`/`false` |
 | `LRSQL_POOL_LEAK_DETECTION_THRESHOLD` | `poolLeakDetectionThreshold` | `0` (disabled) | `≥ 2000` or `0` |
 | `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | JDBC Connection transaction isolation string
