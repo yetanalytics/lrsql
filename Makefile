@@ -127,11 +127,11 @@ target/bundle/runtimes: target/bundle/runtimes/macos target/bundle/runtimes/linu
 
 target/bundle/lrsql.exe: exe/lrsql.exe
 	mkdir -p target/bundle
-	mv exe/lrsql.exe target/bundle/lrsql.exe
+	cp exe/lrsql.exe target/bundle/lrsql.exe
 
 target/bundle/lrsql_pg.exe: exe/lrsql_pg.exe
 	mkdir -p target/bundle
-	mv exe/lrsql_pg.exe target/bundle/lrsql_pg.exe
+	cp exe/lrsql_pg.exe target/bundle/lrsql_pg.exe
 
 # Copy Admin UI
 
