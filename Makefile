@@ -99,7 +99,7 @@ target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/conf
 # Download the 3 runtimes
 
 # The given tag to pull down
-RUNTIME_TAG ?= 0.0.1-java-11-zulu
+RUNTIME_TAG ?= 0.0.1-java-11-temurin
 RUNTIME_MACHINE ?= macos
 RUNTIME_MACHINE_BUILD ?= macOS-latest
 RUNTIME_ZIP_DIR ?= tmp/runtimes/${RUNTIME_TAG}
