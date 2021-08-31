@@ -71,10 +71,13 @@
                           ::pool-min-idle
                           ::pool-max-size]
                  :opt-un [::pool-name])
-         (fn valid-keepalive-time?
-           [{:keys [pool-keepalive-time pool-max-lifetime]}]
-           (< pool-keepalive-time pool-max-lifetime))
-         (fn valid-validation-timeout?
+         (fn keepalive-lt-max-lifetime?
+           [conn-config]
+           ;; Need to call `second` due to `s/or` conforming the key values.
+           (let [keep-alive (-> conn-config :pool-keepalive-time second)
+                 max-life   (-> conn-config :pool-max-lifetime second)]
+             (< keep-alive max-life)))
+         (fn validation-lt-connection-timeout?
            [{:keys [pool-validation-timeout pool-connection-timeout]}]
            (< pool-validation-timeout pool-connection-timeout))))
 
