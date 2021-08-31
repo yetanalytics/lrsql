@@ -147,7 +147,7 @@ bundle: target/bundle
 
 # *** build Windows EXEs with launch4j ***
 
-.phony: bundle-exe, clean-exe
+.phony: clean-exe
 
 # https://stackoverflow.com/questions/5618615/check-if-a-program-exists-from-a-makefile
 # These are assumed to be checked in and thus available to the bundle
@@ -170,7 +170,7 @@ else
 	launch4j exe/config_pg.xml
 endif
 
-bundle-exe: exe/lrsql.exe exe/lrsql_pg.exe
+exe: exe/lrsql.exe exe/lrsql_pg.exe
 
 # *** Run build ***
 

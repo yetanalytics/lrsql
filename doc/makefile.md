@@ -20,7 +20,7 @@ For conciseness, only phony targets are listed here. The only non-phony targets 
 | --- | --- |
 | `clean` | Removes the `target` directory (i.e. all artifacts constructed during the build process). |
 | `bundle` | Create the `target/bundle` directory, which will contain `bin` (for build scripts), `doc`, `config`, and `lrsql.jar` (the AOT compilation artifact). |
-| `bundle-exe` | Generate Windows executables at `exe/` (note that these are checked in to source and available by default). Requires [launch4j](http://launch4j.sourceforge.net/index.html) to be installed. |
+| `exe` | Generate Windows executables at `exe/` (note that these are checked in to source and available by default). Requires [launch4j](http://launch4j.sourceforge.net/index.html) to be installed. |
 | `clean-exe` | Delete any extant Windows executables at `exe/`. |
 | `run-jar-h2` | Compile `lrsql.jar` using `bundle` and run an H2 in-mem database with `username` and `password` credentials. |
 | `run-jar-h2-persistent` | Compile `lrsql.jar` using `bundle` and run an H2 persistent database with `username` and `password` credentials. |
