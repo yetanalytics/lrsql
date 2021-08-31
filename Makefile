@@ -147,11 +147,14 @@ bundle: target/bundle
 
 # *** build Windows EXEs with launch4j ***
 
-.phony: bundle-exe
+.phony: bundle-exe, clean-exe
 
 # https://stackoverflow.com/questions/5618615/check-if-a-program-exists-from-a-makefile
 # These are assumed to be checked in and thus available to the bundle
 # BUT these targets can be used to re-generate them with the jar if needed
+
+clean-exe:
+	rm exe/*.exe
 
 exe/lrsql.exe:
 ifeq (,$(shell which launch4j))
