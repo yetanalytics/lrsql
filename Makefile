@@ -18,7 +18,7 @@ resources/public/admin: lrs-admin-ui/target/bundle
 .phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
 
 clean-dev:
-	rm -rf *.db *.log resources/public
+	rm -rf *.db *.log resources/public tmp
 
 ci:
 	clojure -X:test
@@ -60,7 +60,7 @@ bench:
 
 # *** Build ***
 
-.phony: clean, bundle, bundle-exe
+.phony: clean, bundle
 
 clean:
 	rm -rf target resources/public
@@ -96,13 +96,47 @@ target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/conf
 
 # Make Runtime Environment
 
-# TODO: instead of platform-based jlinks, we'll pull from a remote location with all runtimes
+# Download the 3 runtimes
 
-MACHINE_TYPE = $(shell target/bundle/bin/machine.sh)
+# The given tag to pull down
+RUNTIME_TAG ?= 0.0.1-java-11-temurin
+RUNTIME_MACHINE ?= macos
+RUNTIME_MACHINE_BUILD ?= macOS-latest
+RUNTIME_ZIP_DIR ?= tmp/runtimes/${RUNTIME_TAG}
+RUNTIME_ZIP ?= ${RUNTIME_ZIP_DIR}/${RUNTIME_MACHINE}.zip
 
-target/bundle/runtimes: target/bundle/bin
-	mkdir target/bundle/runtimes
-	jlink --output target/bundle/runtimes/$(MACHINE_TYPE) --add-modules java.base,java.logging,java.naming,java.xml,java.sql,java.transaction.xa,java.security.sasl,java.management
+# DEBUG: Kept here for reference
+# target/bundle/runtimes: target/bundle/bin
+# 	mkdir target/bundle/runtimes
+# 	jlink --output target/bundle/runtimes/$(MACHINE_TYPE) --add-modules java.base,java.logging,java.naming,java.xml,java.sql,java.transaction.xa,java.security.sasl,java.management
+
+target/bundle/runtimes/%:
+	mkdir -p ${RUNTIME_ZIP_DIR}
+	mkdir -p target/bundle/runtimes
+	[ ! -f ${RUNTIME_ZIP} ] && curl -o ${RUNTIME_ZIP} https://yet-public.s3.amazonaws.com/runtimes/refs/tags/${RUNTIME_TAG}/${RUNTIME_MACHINE_BUILD}-jre.zip || echo 'already present'
+	unzip ${RUNTIME_ZIP} -d target/bundle/runtimes/
+	mv target/bundle/runtimes/${RUNTIME_MACHINE_BUILD} target/bundle/runtimes/${RUNTIME_MACHINE}
+
+target/bundle/runtimes/macos: RUNTIME_MACHINE = macos
+target/bundle/runtimes/macos: RUNTIME_MACHINE_BUILD = macOS-latest
+
+target/bundle/runtimes/linux: RUNTIME_MACHINE = linux
+target/bundle/runtimes/linux: RUNTIME_MACHINE_BUILD = ubuntu-latest
+
+target/bundle/runtimes/windows: RUNTIME_MACHINE = windows
+target/bundle/runtimes/windows: RUNTIME_MACHINE_BUILD = windows-latest
+
+target/bundle/runtimes: target/bundle/runtimes/macos target/bundle/runtimes/linux target/bundle/runtimes/windows
+
+# Copy windows EXEs
+
+target/bundle/lrsql.exe: exe/lrsql.exe
+	mkdir -p target/bundle
+	cp exe/lrsql.exe target/bundle/lrsql.exe
+
+target/bundle/lrsql_pg.exe: exe/lrsql_pg.exe
+	mkdir -p target/bundle
+	cp exe/lrsql_pg.exe target/bundle/lrsql_pg.exe
 
 # Copy Admin UI
 
@@ -112,34 +146,36 @@ target/bundle/admin: resources/public/admin
 
 # Create entire bundle
 
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/runtimes target/bundle/lrsql.jar target/bundle/admin
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/runtimes target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe
 
 bundle: target/bundle
 
-# Create launch4j executables
+# *** build Windows EXEs with launch4j ***
+
+.phony: clean-exe
+
 # https://stackoverflow.com/questions/5618615/check-if-a-program-exists-from-a-makefile
+# These are assumed to be checked in and thus available to the bundle
+# BUT these targets can be used to re-generate them with the jar if needed
 
-target/bundle/lrsql.exe: target/bundle
+clean-exe:
+	rm exe/*.exe
+
+exe/lrsql.exe:
 ifeq (,$(shell which launch4j))
 	$(error "ERROR: launch4j is not installed!")
 else
-	cp resources/lrsql/build/launch4j/config.xml target/bundle/config.xml
-	cp resources/lrsql/build/launch4j/lrsql.ico target/bundle/lrsql.ico
-	launch4j target/bundle/config.xml
-	rm target/bundle/config.xml target/bundle/lrsql.ico
+	launch4j exe/config.xml
 endif
 
-target/bundle/lrsql_pg.exe: target/bundle
+exe/lrsql_pg.exe:
 ifeq (,$(shell which launch4j))
 	$(error "ERROR: launch4j is not installed!")
 else
-	cp resources/lrsql/build/launch4j/config_pg.xml target/bundle/config_pg.xml
-	cp resources/lrsql/build/launch4j/lrsql.ico target/bundle/lrsql.ico
-	launch4j target/bundle/config_pg.xml
-	rm target/bundle/config_pg.xml target/bundle/lrsql.ico
+	launch4j exe/config_pg.xml
 endif
 
-bundle-exe: target/bundle/lrsql.exe target/bundle/lrsql_pg.exe
+exe: exe/lrsql.exe exe/lrsql_pg.exe
 
 # *** Run build ***
 

@@ -25,3 +25,4 @@ Test.java
 # Admin SPA
 /lrs-admin-ui/
 /resources/public/admin/
+/tmp/
