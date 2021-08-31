@@ -50,7 +50,8 @@
 (defn- make-conn-pool
   [{{:keys [db-user
             db-password
-            db-schema]
+            db-schema
+            db-catalog]
      :as db-config}
     :database
     :keys [pool-auto-commit
@@ -58,35 +59,45 @@
            pool-connection-timeout
            pool-idle-timeout
            pool-validation-timeout
-           pool-init-fail-timeout
+           pool-initialization-fail-timeout
            pool-max-lifetime
-           pool-min-idle
-           pool-max-size
+           pool-minimum-idle
+           pool-maximum-size
+           pool-isolate-internal-queries
+           pool-leak-detection-threshold
+           pool-transaction-isolation
            pool-enable-jmx
            pool-name]
     :as conn-config}]
   (assert-config ::cs/connection "connection" conn-config)
-  (let [config (doto (HikariConfig.)
-                 ;; Database properties
-                 (.setJdbcUrl  (make-jdbc-url db-config))
-                 (.setUsername db-user)
-                 (.setPassword db-password)
-                 (.setSchema   db-schema)
-                 ;; Connection pool properties
-                 (.setAutoCommit                pool-auto-commit)
-                 (.setKeepaliveTime             pool-keepalive-time)
-                 (.setConnectionTimeout         pool-connection-timeout)
-                 (.setIdleTimeout               pool-idle-timeout)
-                 (.setValidationTimeout         pool-validation-timeout)
-                 (.setInitializationFailTimeout pool-init-fail-timeout)
-                 (.setMaxLifetime               pool-max-lifetime)
-                 (.setMinimumIdle               pool-min-idle)
-                 (.setMaximumPoolSize           pool-max-size))]
+  (let [conf (doto (HikariConfig.)
+               ;; Database properties
+               (.setJdbcUrl  (make-jdbc-url db-config))
+               (.setUsername db-user)
+               (.setPassword db-password)
+               (.setSchema   db-schema)
+               (.setCatalog  db-catalog)
+               ;; Connection pool properties
+               (.setAutoCommit                pool-auto-commit)
+               (.setKeepaliveTime             pool-keepalive-time)
+               (.setConnectionTimeout         pool-connection-timeout)
+               (.setIdleTimeout               pool-idle-timeout)
+               (.setValidationTimeout         pool-validation-timeout)
+               (.setInitializationFailTimeout pool-initialization-fail-timeout)
+               (.setMaxLifetime               pool-max-lifetime)
+               (.setMinimumIdle               pool-minimum-idle)
+               (.setMaximumPoolSize           pool-maximum-size)
+               (.setIsolateInternalQueries    pool-isolate-internal-queries)
+               (.setLeakDetectionThreshold    pool-leak-detection-threshold))]
     ;; Why is there no conditional doto?
-    (when pool-name       (.setPoolName config pool-name))
-    (when pool-enable-jmx (enable-jmx! config))
+    (when pool-name
+      (.setPoolName conf pool-name))
+    (when pool-transaction-isolation
+      (.setTransactionIsolation conf pool-transaction-isolation))
+    (when pool-enable-jmx
+      (enable-jmx! conf))
     ;; Make connection pool/datasource
-    (HikariDataSource. config)))
+    (HikariDataSource. conf)))
 
 (defrecord Connection [conn-pool config]
   component/Lifecycle

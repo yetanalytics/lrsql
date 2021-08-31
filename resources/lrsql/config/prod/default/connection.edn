@@ -4,26 +4,24 @@
  :pool-connection-timeout #long #or [#env LRSQL_POOL_CONNECTION_TIMEOUT 30000]
  :pool-idle-timeout       #long #or [#env LRSQL_POOL_IDLE_TIMEOUT 600000]
  :pool-validation-timeout #long #or [#env LRSQL_POOL_VALIDATION_TIMEOUT 5000]
- :pool-init-fail-timeout  #long #or [#env LRSQL_POOL_INIT_FAIL_TIMEOUT 1]
  :pool-max-lifetime       #long #or [#env LRSQL_POOL_MAX_LIFETIME 1800000]
- :pool-min-idle           #long #or [#env LRSQL_POOL_MIN_IDLE 10]
- :pool-max-size           #long #or [#env LRSQL_POOL_MAX_SIZE 10]
- :pool-name               #or [#env LRSQL_POOL_NAME nil]
- :pool-enable-jmx         #boolean #or [#env LRSQL_POOL_ENABLE_JMX false]}
+ :pool-minimum-idle       #long #or [#env LRSQL_POOL_MINIMUM_IDLE 10]
+ :pool-maximum-size       #long #or [#env LRSQL_POOL_MAXIMUM_SIZE 10]
+ :pool-initialization-fail-timeout #long #or [#env LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT 1]
+ :pool-isolate-internal-queries    #boolean #or [#env LRSQL_POOL_ISOLATE_INTERNAL_QUERIES false]
+ :pool-leak-detection-threshold    #long #or [#env LRSQL_POOL_LEAK_DETECTION_THRESHOLD 0]
+ :pool-transaction-isolation       #or [#env LRSQL_POOL_TRANSACTION_ISOLATION nil]
+ :pool-name       #or [#env LRSQL_POOL_NAME nil]
+ :pool-enable-jmx #boolean #or [#env LRSQL_POOL_ENABLE_JMX false]}
 
 ;; Not all Hikari options are available:
 ;; - jdbcUrl, username, password, and schema are set in the `database` map
 ;; - connectionTestQuery is not recommended for JDBC4
 ;; - readOnly will just cause lrsql to not work if set to `true`
-;; - isolateInternalQueries is rarely necessary since internal pool queries
-;;   are read-only
 ;; - catalog could mess up DDL and doesn't seem as important as schemas
 ;; - connectionInitSql would expose the inner SQL workings to the user, which
 ;;   completely violates app encapsulation
 ;; - driverClassName would clash with the driver given by the JDBC URL
-;; - transactionIsolation is only used if there are specific requirements
-;;   shared by all queries
-;; - leakDetectionThreshold is mainly a debugging tool
 ;; - dataSource would clash with the JDBC URL
 ;; - threadFactory and scheduledExecutor are Java instances and are used only
 ;;   in specific execution environemnts

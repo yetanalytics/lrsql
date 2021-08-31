@@ -6,4 +6,5 @@
  :db-jdbc-url   #or [#env LRSQL_DB_JDBC_URL nil]
  :db-user       #or [#env LRSQL_DB_USER nil]
  :db-password   #or [#env LRSQL_DB_PASSWORD nil]
- :db-schema     #or [#env LRSQL_DB_SCHEMA nil]}
+ :db-schema     #or [#env LRSQL_DB_SCHEMA nil]
+ :db-catalog    #or [#env LRSQL_DB_CATALOG nil]}

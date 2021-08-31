@@ -7,5 +7,8 @@
  :pool-max-lifetime       1800000
  :pool-min-idle           10
  :pool-max-size           10
+ :pool-isolate-internal-queries false
+ :pool-leak-detection-threshold 0
+ :pool-transaction-isolation    nil
  :pool-name               nil
  :pool-enable-jmx         false}

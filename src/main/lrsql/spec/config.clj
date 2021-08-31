@@ -18,6 +18,7 @@
 (s/def ::db-user string?)
 (s/def ::db-password string?)
 (s/def ::db-schema string?)
+(s/def ::db-catalog string?)
 
 (s/def ::database
   (s/and (s/conformer u/remove-nil-vals)
@@ -30,7 +31,8 @@
                                 ::db-properties
                                 ::db-user
                                 ::db-password
-                                ::db-schema])
+                                ::db-schema
+                                ::db-catalog])
                :jdbc-url
                (s/keys :req-un [::db-jdbc-url]
                        :opt-un [::db-user
@@ -38,12 +40,12 @@
                                 ::db-schema]))))
 
 (s/def ::pool-auto-commit boolean?)
-(s/def ::pool-init-fail-timeout int?)
-(s/def ::pool-min-idle nat-int?)
-(s/def ::pool-max-size pos-int?)
+(s/def ::pool-initialization-fail-timeout int?)
+(s/def ::pool-minimum-idle nat-int?)
+(s/def ::pool-maximum-size pos-int?)
+(s/def ::pool-isolate-internal-queries boolean?)
 (s/def ::pool-name string?)
 (s/def ::pool-enable-jmx boolean?)
-
 
 (s/def ::pool-connection-timeout
   (s/and pos-int? (partial <= 250)))
@@ -58,6 +60,15 @@
 (s/def ::pool-max-lifetime
   (s/or :no-max-lifetime zero?
         :max-lifetime (s/and pos-int? (partial <= 30000))))
+(s/def ::pool-leak-detection-threshold
+  (s/or :disabled zero?
+        :enabled (s/and pos-int? (partial <= 2000))))
+
+(s/def ::pool-transaction-isolation
+  #{"TRANSACTION_READ_UNCOMMITTED"
+    "TRANSACTION_READ_COMMITTED"
+    "TRANSACTION_REPEATABLE_READ"
+    "TRANSACTION_SERIALIZABLE"})
 
 (s/def ::connection
   (s/and (s/conformer u/remove-nil-vals)
@@ -68,12 +79,15 @@
                           ::pool-connection-timeout
                           ::pool-idle-timeout
                           ::pool-validation-timeout
-                          ::pool-init-fail-timeout
+                          ::pool-initialization-fail-timeout
                           ::pool-max-lifetime
-                          ::pool-min-idle
-                          ::pool-max-size
+                          ::pool-minimum-idle
+                          ::pool-maximum-size
+                          ::pool-isolate-internal-queries
+                          ::pool-leak-detection-threshold
                           ::pool-enable-jmx]
-                 :opt-un [::pool-name])
+                 :opt-un [::pool-name
+                          ::pool-transaction-isolation])
          (fn keepalive-lt-max-lifetime?
            [conn-config]
            ;; Need to call `second` due to `s/or` conforming the key values.
