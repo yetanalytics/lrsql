@@ -8,8 +8,7 @@
             [lrsql.spec.attachment :refer [attachment-backend?]]
             [lrsql.spec.statement :as ss :refer [statement-backend?]]
             [lrsql.util :as u]
-            [lrsql.util.activity :as au]
-            [lrsql.util.statement :as su]))
+            [lrsql.util.activity :as au]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertion
@@ -18,22 +17,12 @@
 (defn- insert-statement!*
   [bk tx input]
   (let [{stmt-id  :statement-id
-         sref-id  :statement-ref-id
-         new-stmt :payload} input]
-    (if-some [{old-stmt :payload}
-              (bp/-query-statement bk tx {:statement-id stmt-id})]
-      ;; Return nil if the statements aren't actually equal
-      (when-not (su/statement-equal? old-stmt new-stmt)
-        (throw
-         (ex-info "Statement Conflict!"
-                  {:type :com.yetanalytics.lrs.protocol/statement-conflict
-                   :extant-statement old-stmt
-                   :statement        new-stmt})))
-      (do
-        (bp/-insert-statement! bk tx input)
-        (when (:voiding? input)
-          (bp/-void-statement! bk tx {:statement-id sref-id}))
-        stmt-id))))
+         sref-id  :statement-ref-id}
+        input]
+    (bp/-insert-statement! bk tx input)
+    (when (:voiding? input)
+      (bp/-void-statement! bk tx {:statement-id sref-id}))
+    stmt-id))
 
 (defn- insert-actor!
   [bk tx input]
@@ -89,25 +78,19 @@
 
 (defn insert-statement!
   "Insert the statement and auxillary objects and attachments that are given
-   by `input`. Returns a map with the property `:statement-ids` on success,
-   or one with the `:error` property on failure."
+   by `input`. Returns a map of a singleton vector containing the statement ID."
   [bk tx {:keys [statement-input
                   actor-inputs
                   activity-inputs
                   attachment-inputs
                   stmt-actor-inputs
                   stmt-activity-inputs
-                  stmt-stmt-inputs]
-           :as input}]
-  (if-some [stmt-id (insert-statement!* bk tx statement-input)]
-    (do
-      (dorun (map (partial insert-actor! bk tx) actor-inputs))
-      (dorun (map (partial insert-activity! bk tx) activity-inputs))
-      (dorun (map (partial insert-stmt-actor! bk tx) stmt-actor-inputs))
-      (dorun (map (partial insert-stmt-activity! bk tx) stmt-activity-inputs))
-      (dorun (map (partial insert-stmt-stmt! bk tx) stmt-stmt-inputs))
-      (dorun (map (partial insert-attachment! bk tx) attachment-inputs))
-      {:statement-ids [(u/uuid->str stmt-id)]})
-    {:error (ex-info "Could not insert statement."
-                     {:type  ::statement-insertion-error
-                      :input input})}))
+                  stmt-stmt-inputs]}]
+  (let [stmt-id (insert-statement!* bk tx statement-input)]
+    (dorun (map (partial insert-actor! bk tx) actor-inputs))
+    (dorun (map (partial insert-activity! bk tx) activity-inputs))
+    (dorun (map (partial insert-stmt-actor! bk tx) stmt-actor-inputs))
+    (dorun (map (partial insert-stmt-activity! bk tx) stmt-activity-inputs))
+    (dorun (map (partial insert-stmt-stmt! bk tx) stmt-stmt-inputs))
+    (dorun (map (partial insert-attachment! bk tx) attachment-inputs))
+    {:statement-ids [(u/uuid->str stmt-id)]}))

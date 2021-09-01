@@ -158,20 +158,19 @@
              (lrsp/-store-statements lrs auth-ident [stmt-4] [stmt-4-attach]))))
 
     (testing "statement conflicts"
-      (is (-> (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-1] [])
-              :error
-              some?))
+      (is (= (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+             {:statement-ids []}))
       (let [stmt-1' (assoc-in stmt-1 ["verb" "display" "en-US"] "ANSWERED")]
-        (is (-> (lrsp/-store-statements lrs auth-ident [stmt-1'] [])
-                :error
-                some?)))
+        (is (= (lrsp/-store-statements lrs auth-ident [stmt-1'] [])
+               {:statement-ids []})))
       (let [stmt-1'' (assoc-in stmt-1
                                ["actor" "mbox"]
                                "mailto:sample.agent.boo@example.com")]
-        (try (lrsp/-store-statements lrs auth-ident [stmt-1''] [])
-             (catch clojure.lang.ExceptionInfo e
-               (is (= :com.yetanalytics.lrs.protocol/statement-conflict
-                      (-> e ex-data :type)))))))
+        (is (= (-> (lrsp/-store-statements lrs auth-ident [stmt-1''] [])
+                   :error
+                   ex-data
+                   :type)
+               :com.yetanalytics.lrs.protocol/statement-conflict))))
 
     (testing "statement ID queries"
       (is (= {:statement stmt-0}

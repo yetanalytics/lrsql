@@ -74,27 +74,52 @@
           stmt-inputs
           (-> (map stmt-input/insert-statement-input stmts)
               (stmt-input/add-insert-attachment-inputs
-               attachments))]
-      (jdbc/with-transaction [tx conn]
-        (let [stmt-results
+               attachments))
+          stmt-inputs-or-conflict
+          (loop [stmt-ins  stmt-inputs
+                 stmt-ins' (transient [])]
+            (if-some [stmt-in (first stmt-ins)]
+              (let [conflict (jdbc/with-transaction [tx conn]
+                               (stmt-q/query-statement-conflict
+                                backend
+                                tx
+                                stmt-in))]
+                (cond
+                  ;; Statement not in DB; continue
+                  (nil? conflict)
+                  (recur (rest stmt-ins) (conj! stmt-ins' stmt-in))
+                  ;; Statement in DB but completely equal; ignore
+                  (:equal? conflict)
+                  (recur (rest stmt-ins) stmt-ins')
+                  ;; Statement in DB with same ID but different contents
+                  :else conflict))
+              (persistent! stmt-ins')))]
+      (if (map? stmt-inputs-or-conflict)
+        {:error (ex-info "Statement Conflict!"
+                         (merge stmt-inputs-or-conflict
+                                {:type ::lrsp/statement-conflict}))}
+        (let [stmt-inputs
+              stmt-inputs-or-conflict
+              _
+              (log/errorf "Statement Inputs: %s" stmt-inputs)
+              stmt-results
               (map (fn [stmt-input]
-                     (let [stmt-descs
-                           (stmt-q/query-descendants
-                            backend
-                            tx
-                            stmt-input)
-                           stmt-input'
-                           (stmt-input/add-insert-descendant-inputs
-                            stmt-input
-                            stmt-descs)]
-                       (stmt-cmd/insert-statement!
-                        backend
-                        tx
-                        stmt-input')))
+                     (jdbc/with-transaction [tx conn]
+                       (let [stmt-descs
+                             (stmt-q/query-descendants
+                              backend
+                              tx
+                              stmt-input)
+                             stmt-input'
+                             (stmt-input/add-insert-descendant-inputs
+                              stmt-input
+                              stmt-descs)]
+                         (stmt-cmd/insert-statement!
+                          backend
+                          tx
+                          stmt-input'))))
                    stmt-inputs)]
-          (if-some [ex (some :error stmt-results)]
-            {:error ex}
-            {:statement-ids (vec (mapcat :statement-ids stmt-results))})))))
+          {:statement-ids (vec (mapcat :statement-ids stmt-results))}))))
   (-get-statements
     [lrs _auth-identity params ltags]
     (let [conn   (lrs-conn lrs)

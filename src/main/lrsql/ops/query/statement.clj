@@ -30,14 +30,14 @@
   [bk tx input ltags]
   (let [{:keys [format attachments?]} input
         query-result (bp/-query-statement bk tx input)
-        statement   (when query-result
-                      (query-res->statement format ltags query-result))
-        attachments (when (and statement attachments?)
-                      (->> (get statement "id")
-                           u/str->uuid
-                           (assoc {} :statement-id)
-                           (bp/-query-attachments bk tx)
-                           (mapv conform-attachment-res)))]
+        statement    (when query-result
+                       (query-res->statement format ltags query-result))
+        attachments  (when (and statement attachments?)
+                       (->> (get statement "id")
+                            u/str->uuid
+                            (assoc {} :statement-id)
+                            (bp/-query-attachments bk tx)
+                            (mapv conform-attachment-res)))]
     (cond-> {}
       statement   (assoc :statement statement)
       attachments (assoc :attachments attachments))))
@@ -93,6 +93,37 @@
     (if ?stmt-id
       (query-one-statement bk tx input ltags)
       (query-many-statements bk tx input ltags prefix))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Existence Checking
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/def ::extant-statement ::ss/payload)
+(s/def ::statement ::ss/payload)
+
+(s/fdef query-statement-conflict
+  :args (s/cat :bk ss/statement-backend?
+               :tx transaction?
+               :input ss/insert-statement-input-spec)
+  :ret (s/or :ok nil?
+             :error (s/keys :req-un [::extant-statement ::statement])))
+
+(defn query-statement-conflict
+  "Check if a Statement already exists in the DB. If so, then return a map
+   containing `:extant-statement` (the pre-existing Statement) and
+   `:statement` (the one being inserted).
+   
+   We perform this query separately from Statement insertion in order to
+   allow for separate transactions for each Statement query and insertion,
+   which will help us avoid deadlocks."
+  [bk tx input]
+  (let [{{stmt-id :statement-id stmt-old :payload} :statement-input} input]
+    (when-some [stmt-new (->> {:statement-id stmt-id}
+                            (bp/-query-statement bk tx)
+                            :payload)]
+      {:extant-statement stmt-old
+       :statement        stmt-new
+       :equal?           (us/statement-equal? stmt-old stmt-new)})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Descendant Querying
