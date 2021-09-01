@@ -100,8 +100,6 @@
                                 {:type ::lrsp/statement-conflict}))}
         (let [stmt-inputs
               stmt-inputs-or-conflict
-              _
-              (log/errorf "Statement Inputs: %s" stmt-inputs)
               stmt-results
               (map (fn [stmt-input]
                      (jdbc/with-transaction [tx conn]
