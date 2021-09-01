@@ -36,6 +36,45 @@
       :connection
       :conn-pool))
 
+(defonce deadlock-limit 15)
+
+(defn try-statement-insert
+  [backend conn stmt-inputs attempt]
+  (try
+    (do
+      (println (str "attempt " attempt))
+      (jdbc/with-transaction [tx conn]
+        (let [stmt-results
+              (map (fn [stmt-input]
+                     (let [stmt-descs
+                           (stmt-q/query-descendants
+                            backend
+                            tx
+                            stmt-input)
+                           stmt-input'
+                           (stmt-input/add-insert-descendant-inputs
+                            stmt-input
+                            stmt-descs)]
+                       (stmt-cmd/insert-statement!
+                        backend
+                        tx
+                        stmt-input')))
+                   stmt-inputs)]
+          (if-some [ex (some :error stmt-results)]
+            {:error ex}
+            {:statement-ids (vec (mapcat :statement-ids stmt-results))}))))
+    (catch org.postgresql.util.PSQLException e
+      (do
+        (clojure.pprint/pprint "had error")
+        (if (< attempt deadlock-limit)
+          (do
+            (println "trying again")
+            (try-statement-insert backend conn stmt-inputs (+ 1 attempt)))
+          (do
+            (println "out of attempts")
+            (throw e)))))))
+
+
 (defrecord LearningRecordStore [connection backend config authority-fn]
   cmp/Lifecycle
   (start
@@ -75,26 +114,7 @@
           (-> (map stmt-input/insert-statement-input stmts)
               (stmt-input/add-insert-attachment-inputs
                attachments))]
-      (jdbc/with-transaction [tx conn]
-        (let [stmt-results
-              (map (fn [stmt-input]
-                     (let [stmt-descs
-                           (stmt-q/query-descendants
-                            backend
-                            tx
-                            stmt-input)
-                           stmt-input'
-                           (stmt-input/add-insert-descendant-inputs
-                            stmt-input
-                            stmt-descs)]
-                       (stmt-cmd/insert-statement!
-                        backend
-                        tx
-                        stmt-input')))
-                   stmt-inputs)]
-          (if-some [ex (some :error stmt-results)]
-            {:error ex}
-            {:statement-ids (vec (mapcat :statement-ids stmt-results))})))))
+      (try-statement-insert backend conn stmt-inputs 0)))
   (-get-statements
     [lrs _auth-identity params ltags]
     (let [conn   (lrs-conn lrs)

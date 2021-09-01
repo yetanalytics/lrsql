@@ -18,7 +18,7 @@ INSERT INTO actor (
   id, actor_ifi, actor_type, payload
 ) VALUES (
   :primary-key, :actor-ifi, :actor-type::actor_type_enum, :payload
-);
+) ON CONFLICT DO NOTHING;
 
 -- :name insert-activity!
 -- :command :insert
@@ -28,7 +28,7 @@ INSERT INTO activity (
   id, activity_iri, payload
 ) VALUES (
   :primary-key, :activity-iri, :payload
-);
+) ON CONFLICT DO NOTHING;
 
 -- :name insert-attachment!
 -- :command :insert
