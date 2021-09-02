@@ -6,6 +6,7 @@
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.admin.protocol :as adp]
             [lrsql.init :as init]
+            [lrsql.backend.protocol :as bp]
             [lrsql.input.actor     :as agent-input]
             [lrsql.input.activity  :as activity-input]
             [lrsql.input.admin     :as admin-input]
@@ -38,6 +39,7 @@
       :conn-pool))
 
 (defonce stmt-deadlock-limit 10)
+(defonce stmt-retry-budget 1000)
 
 (defrecord LearningRecordStore [connection backend config authority-fn]
   cmp/Lifecycle
@@ -100,7 +102,9 @@
              (if-some [ex (some :error stmt-results)]
                {:error ex}
                {:statement-ids (vec (mapcat :statement-ids stmt-results))}))))
-       1000 stmt-deadlock-limit)))
+       (partial bp/-txn-retry? backend)
+       stmt-retry-budget
+       stmt-deadlock-limit)))
   (-get-statements
     [lrs _auth-identity params ltags]
     (let [conn   (lrs-conn lrs)

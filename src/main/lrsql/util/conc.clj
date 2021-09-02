@@ -18,26 +18,21 @@
                                       jitter)))))
 
 (defn rerunable-txn*
-  [txn budget max-attempt attempt]
+  [txn retry-test budget max-attempt attempt]
   (try
     (txn)
-    ;;TODO: make specific protocol fn for each sql that examines exc and allows retry
-    (catch org.postgresql.util.PSQLException e
-      (do
-        (log/info (str "had error on attempt " attempt))
-        (if (< attempt max-attempt)
-          (do
-            (log/info "trying again")
-            (let [sleep (backoff-ms budget (+ 1 attempt) max-attempt)]
-              (log/info (str "sleeping for " sleep))
-              (Thread/sleep sleep))
-            (log/info "awake!")
-            (rerunable-txn* txn budget max-attempt (+ 1 attempt)))
-          (do
-            (log/info "out of attempts")
-            (throw e)))))))
+    (catch Exception e
+      (if (and (< attempt max-attempt)
+               (retry-test e))
+        (do
+          (let [sleep (backoff-ms budget (+ 1 attempt) max-attempt)]
+            (Thread/sleep sleep)
+            (rerunable-txn* txn retry-test budget max-attempt (+ 1 attempt))))
+        (do
+          (log/warn "Rerunable Transaction exhausted attempts or could not be retried")
+          (throw e))))))
 
 
 (defn rerunable-txn
-  [txn budget max-attempt]
-  (rerunable-txn* txn budget max-attempt 0))
+  [txn retry-test budget max-attempt]
+  (rerunable-txn* txn retry-test budget max-attempt 0))

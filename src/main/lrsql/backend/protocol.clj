@@ -13,6 +13,10 @@
   (-set-write! [this]
     "Set data conversion behavior when writing from the backend."))
 
+(defprotocol BackendUtil
+  (-txn-retry? [this ex]
+    "Determine if an exception should be retried in a txn"))
+
 (defprotocol StatementBackend
   ;; Commands
   (-insert-statement! [this tx input])

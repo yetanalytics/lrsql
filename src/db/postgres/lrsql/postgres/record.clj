@@ -48,6 +48,14 @@
     ;; No-op for now; add functions if updates are needed
     nil)
 
+  bp/BackendUtil
+  (-txn-retry? [_ ex]
+    ;; only retry PGExceptions with a specified phrase
+    (if (instance? org.postgresql.util.PSQLException ex)
+      (do (println "yes, this is a PGException and retryable")
+          true)
+      false))
+
   bp/StatementBackend
   (-insert-statement! [_ tx input]
     (insert-statement! tx input))

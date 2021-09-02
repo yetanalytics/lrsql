@@ -54,7 +54,7 @@
                                        (bp/-query-activity bk tx)
                                        :payload)]
     (let [new-activ (assoc (:payload input) "objectType" "Activity")]
-      (when-not (= old-activ new-activ)
+      #_(when-not (= old-activ new-activ)
         (clojure.pprint/pprint [old-activ new-activ (= old-activ new-activ)]))
       (when-not (= old-activ new-activ)
         (let [activity' (au/merge-activities old-activ new-activ)
@@ -100,7 +100,8 @@
                   stmt-actor-inputs
                   stmt-activity-inputs
                   stmt-stmt-inputs]
-           :as input}]
+          :as input}]
+  (throw (Exception. "my exception message"))
   (if-some [stmt-id (insert-statement!* bk tx statement-input)]
     (do
       (dorun (map (partial insert-actor! bk tx) actor-inputs))
