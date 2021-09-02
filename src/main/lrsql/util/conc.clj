@@ -1,4 +1,4 @@
-(ns lrsql.util
+(ns lrsql.util.conc
   (:require [clojure.tools.logging :as log]))
 
 (defn backoff-ms
