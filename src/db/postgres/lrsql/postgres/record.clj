@@ -4,6 +4,7 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.postgres.data :as pd]
+            [clojure.string :refer [includes?]]
             [lrsql.util :as u]))
 
 ;; Init HugSql functions
@@ -51,10 +52,8 @@
   bp/BackendUtil
   (-txn-retry? [_ ex]
     ;; only retry PGExceptions with a specified phrase
-    (if (instance? org.postgresql.util.PSQLException ex)
-      (do (println "yes, this is a PGException and retryable")
-          true)
-      false))
+    (and (instance? org.postgresql.util.PSQLException ex)
+         (includes? (.getMessage ex) "ERROR: deadlock detected")))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]

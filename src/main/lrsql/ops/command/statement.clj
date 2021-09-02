@@ -101,7 +101,6 @@
                   stmt-activity-inputs
                   stmt-stmt-inputs]
           :as input}]
-  (throw (Exception. "my exception message"))
   (if-some [stmt-id (insert-statement!* bk tx statement-input)]
     (do
       (dorun (map (partial insert-actor! bk tx) actor-inputs))

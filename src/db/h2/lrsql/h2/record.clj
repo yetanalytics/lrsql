@@ -42,6 +42,11 @@
     ;; No-op for now; add functions if updates are needed
     nil)
 
+  bp/BackendUtil
+  (-txn-retry? [_ ex]
+    ;;No known retry cases for H2
+    false)
+
   bp/StatementBackend
   (-insert-statement! [_ tx input]
     (insert-statement! tx input))
