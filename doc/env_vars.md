@@ -58,7 +58,7 @@ You may have noted that some options are not available:
 
 - `connectionTestQuery` is not recommended for JDBC4 (which all of our DBMS implementations use).
 - `readOnly` will cause the SQL LRS to not work if set to `true`.
-- `connectionInitSql` would expose the inner SQL workings to the user, which may have negative effects on operation. (This is an additional reason why `connectionTestQuery` is not available.)
+- `connectionInitSql` is set automatically by the SQL LRS system (e.g. to run pragmas in SQLite).
 - `driverClassName` and `dataSource` would clash with SQL LRS's approach to setting the JDBC driver, which is via an URL.
 - `healthCheckRegistry` cannot easily report via JMX, and most of its information should be covered by `metricRegistry` anyways.
 - `threadFactory` and `scheduledExecutor` are Java instances that should only be used in specific execution environments.

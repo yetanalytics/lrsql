@@ -1,6 +1,11 @@
 (ns lrsql.backend.protocol
   "Protocols that serve as a low-level backend for DB functions.")
 
+(defprotocol ConnectionOps
+  (-conn-init-sql [this]
+    "Return SQL commands strings to operate when a Hikari connection starts.
+     Returns `nil` if no commands are available."))
+
 (defprotocol BackendInit
   (-create-all! [this tx]
     "Create the tables, indexes, etc. specified by the DDL.")

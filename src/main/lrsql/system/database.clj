@@ -3,6 +3,7 @@
             [hikari-cp.core :as hikari]
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
+            [lrsql.backend.protocol :as bp]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config parse-db-props]])
   (:import [com.zaxxer.hikari HikariConfig HikariDataSource]
@@ -48,7 +49,10 @@
       (.start))))
 
 (defn- make-conn-pool
-  [{{:keys [db-user
+  [;; Backend
+   backend
+   ;; Config
+   {{:keys [db-user
             db-password
             db-schema
             db-catalog]
@@ -94,12 +98,14 @@
       (.setPoolName conf pool-name))
     (when pool-transaction-isolation
       (.setTransactionIsolation conf pool-transaction-isolation))
+    (when-some [init-sql (bp/-conn-init-sql backend)]
+      (.setConnectionInitSql conf init-sql))
     (when pool-enable-jmx
       (enable-jmx! conf))
     ;; Make connection pool/datasource
     (HikariDataSource. conf)))
 
-(defrecord Connection [conn-pool config]
+(defrecord Connection [backend conn-pool config]
   component/Lifecycle
   (start
     [conn]
@@ -107,7 +113,7 @@
            {{db-type :db-type} :database :as config} :config}
           conn]
       (if-not ?conn-pool
-        (let [conn-pool (make-conn-pool config)]
+        (let [conn-pool (make-conn-pool backend config)]
           (log/infof "Starting new connection for %s database..." db-type)
           (log/tracef "Config: %s" config)
           (assoc conn :conn-pool conn-pool))

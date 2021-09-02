@@ -23,6 +23,10 @@
   (start [this] this)
   (stop [this] this)
 
+  bp/ConnectionOps
+  (-conn-init-sql [_]
+    nil)
+
   bp/BackendInit
   (-create-all! [_ tx]
     (create-statement-table! tx)
