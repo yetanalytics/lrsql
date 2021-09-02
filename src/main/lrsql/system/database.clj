@@ -31,7 +31,7 @@
       jdbc-conn/jdbc-url)))
 
 (defn- enable-jmx!
-  [config]
+  [^HikariConfig config]
   (let [metric-registry (MetricRegistry.)]
     ;; Set HikariCP config properties
     ;; NOTE: we skip setting the healthCheckRegistry since enough info
