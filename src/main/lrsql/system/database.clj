@@ -1,35 +1,12 @@
 (ns lrsql.system.database
   (:require [clojure.tools.logging :as log]
-            [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config parse-db-props]])
+            [lrsql.system.util :refer [assert-config make-jdbc-url]])
   (:import [com.zaxxer.hikari HikariConfig HikariDataSource]
            [com.codahale.metrics MetricRegistry]
            [com.codahale.metrics.jmx JmxReporter]))
-
-(set! *warn-on-reflection* true)
-
-(defn- make-jdbc-url
-  [{:keys [db-type
-           db-name
-           db-host
-           db-port
-           db-properties
-           db-jdbc-url]}]
-  (if db-jdbc-url
-    ;; If JDBC URL is given directly, this overrides all
-    db-jdbc-url
-    ;; Construct a new JDBC URL from config vars
-    (cond-> {:dbtype db-type
-             :dbname db-name
-             :host   db-host
-             :port   db-port}
-      db-properties
-      (merge (parse-db-props db-properties))
-      true
-      jdbc-conn/jdbc-url)))
 
 ;; Note: there is a hikari-cp wrapper lib for Clojure. However, we skip using
 ;; this because 1) it uses HikariCP v4 (which is for Java 8, not Java 11+) and
