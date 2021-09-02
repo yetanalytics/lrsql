@@ -1,6 +1,6 @@
 # *** Admin Assets ***
 
-# Get and compile the admin UI SPA
+# Get and compile the admin UI SPA from the GitHub repo.
 
 lrs-admin-ui:
 	git clone git@github.com:yetanalytics/lrs-admin-ui.git
@@ -14,6 +14,13 @@ resources/public/admin: lrs-admin-ui/target/bundle
 	cp -r lrs-admin-ui/target/bundle resources/public/admin
 
 # *** Development ***
+
+# `clean-dev` removes all development files.
+# `ci` runs all tests and is called with every push to GitHub.
+# `bench` runs a query benchmarking session on a lrsql instance.
+
+# All other phony targets run lrsql instances that can be used and tested
+# during development. All start up with fixed DB properties and seed creds.
 
 .phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
 
@@ -41,7 +48,7 @@ sqlite: resources/public/admin
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-sqlite -m lrsql.sqlite.main
 
-# NOTE: Requires a running PG instance!
+# NOTE: Requires a running Postgres instance!
 postgres: resources/public/admin
 	LRSQL_DB_NAME=lrsql_pg \
 		LRSQL_DB_USER=lrsql_user \
@@ -51,7 +58,7 @@ postgres: resources/public/admin
 		LRSQL_API_SECRET_DEFAULT=password \
 		clojure -M:db-postgres -m lrsql.postgres.main
 
-# Intended for use with `make ephemeral` or `make persistent`
+# NOTE: Requires a running lrsql instance!
 bench:
 	clojure -M:bench -m lrsql.bench http://localhost:8080/xapi/statements \
 		-i dev-resources/default/insert_input.json \
@@ -59,6 +66,11 @@ bench:
 		-u username -p password
 
 # *** Build ***
+
+# `clean` removes all artifacts constructed during the build process.
+# `bundle` creates a `target/bundle` directory that contains the entire
+# lrsql package, including config, docs, JARs, admin UI files, JREs, and
+# Windows executables.
 
 .phony: clean, bundle
 
@@ -70,14 +82,14 @@ clean:
 target/bundle/lrsql.jar: resources/public/admin
 	clojure -X:build uber
 
-# Copy scripts
+# Copy build scripts
 
 target/bundle/bin:
 	mkdir -p target/bundle
 	cp -r bin target/bundle/bin
 	chmod +x target/bundle/bin/*.sh
 
-# Create HTML docs (TODO: make this a .zip file)
+# Create HTML docs
 
 target/bundle/doc:
 	clojure -M:doc -m lrsql.render-doc doc target/bundle/doc
@@ -94,9 +106,9 @@ target/bundle/config/authority.json.template.example:
 
 target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/config/authority.json.template.example
 
-# Make Runtime Environment
+# Make Runtime Environment (i.e. JREs)
 
-# Download the 3 runtimes
+# Download the 3 runtimes from an AWS S3 bucket.
 
 # The given tag to pull down
 RUNTIME_TAG ?= 0.0.1-java-11-temurin
@@ -123,7 +135,7 @@ target/bundle/runtimes/windows: RUNTIME_MACHINE_BUILD = windows-latest
 
 target/bundle/runtimes: target/bundle/runtimes/macos target/bundle/runtimes/linux target/bundle/runtimes/windows
 
-# Copy windows EXEs
+# Copy Windows EXEs
 
 target/bundle/lrsql.exe: exe/lrsql.exe
 	mkdir -p target/bundle
@@ -145,13 +157,19 @@ target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/b
 
 bundle: target/bundle
 
-# *** build Windows EXEs with launch4j ***
+# *** Build Windows EXEs with launch4j ***
+
+# `clean-exe` removes all pre-existing executables, so that they can be rebuilt.
+# This is not done as part of the regular `clean` target because we do not want
+# to rebuild the EXEs across multiple builds.
 
 .phony: clean-exe
 
+# Building the executables require launch4j to be pre-installed:
 # https://stackoverflow.com/questions/5618615/check-if-a-program-exists-from-a-makefile
-# These are assumed to be checked in and thus available to the bundle
-# BUT these targets can be used to re-generate them with the jar if needed
+
+# The executables are assumed to be checked in and thus available to the bundle.
+# BUT these targets can be used to re-generate them with the JAR if needed.
 
 clean-exe:
 	rm exe/*.exe
@@ -174,6 +192,9 @@ exe: exe/lrsql.exe exe/lrsql_pg.exe
 
 # *** Run build ***
 
+# These targets create a bundle containing a lrsql JAR and then runs
+# the JAR to create the specific lrsql instance.
+
 .phony: run-jar-h2, run-jar-sqlite, run-jar-h2-persistent, run-jar-postgres
 
 run-jar-h2: target/bundle
@@ -185,5 +206,6 @@ run-jar-h2-persistent: target/bundle
 run-jar-sqlite: target/bundle
 	cd target/bundle; LRSQL_API_KEY_DEFAULT=username LRSQL_API_SECRET_DEFAULT=password bin/run_sqlite.sh
 
+# NOTE: Requires a running Postgres instance!
 run-jar-postgres: target/bundle
 	cd target/bundle; LRSQL_API_KEY_DEFAULT=username LRSQL_API_SECRET_DEFAULT=password bin/run_postgres.sh
