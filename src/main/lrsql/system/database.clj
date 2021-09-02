@@ -1,6 +1,5 @@
 (ns lrsql.system.database
   (:require [clojure.tools.logging :as log]
-            [hikari-cp.core :as hikari]
             [next.jdbc.connection :as jdbc-conn]
             [com.stuartsierra.component :as component]
             [lrsql.backend.protocol :as bp]
@@ -9,6 +8,8 @@
   (:import [com.zaxxer.hikari HikariConfig HikariDataSource]
            [com.codahale.metrics MetricRegistry]
            [com.codahale.metrics.jmx JmxReporter]))
+
+(set! *warn-on-reflection* true)
 
 (defn- make-jdbc-url
   [{:keys [db-type
@@ -29,6 +30,10 @@
       (merge (parse-db-props db-properties))
       true
       jdbc-conn/jdbc-url)))
+
+;; Note: there is a hikari-cp wrapper lib for Clojure. However, we skip using
+;; this because 1) it uses HikariCP v4 (which is for Java 8, not Java 11+) and
+;; 2) it doesn't set several properties that the latest version supports.
 
 (defn- enable-jmx!
   [^HikariConfig config]
@@ -125,7 +130,7 @@
     (if-some [conn-pool (:conn-pool conn)]
       (do
         (log/info "Stopping connection...")
-        (hikari/close-datasource conn-pool)
+        (.close ^HikariDataSource conn-pool)
         (assoc conn :conn-pool nil))
       (do
         (log/info "Connection already stopped; do nothing.")

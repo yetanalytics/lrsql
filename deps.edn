@@ -14,9 +14,6 @@
   ;; Need to exclude slf4j to make logback work properly
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
-  ;; This lib uses the Java 8, not Java 11, version of HikariCP
-  hikari-cp/hikari-cp                      {:mvn/version "2.13.0"
-                                            :exclusions  [com.zaxxer/HikariCP]}
   com.github.seancorfield/next.jdbc        {:mvn/version "1.2.674"}
   ;; com.layerware/hugsql                   {:mvn/version "0.5.1"}
   com.yetanalytics/hugsql                  {:mvn/version "0.6.0-SNAPSHOT"}
