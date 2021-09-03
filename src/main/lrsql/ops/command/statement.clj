@@ -151,7 +151,7 @@
 
       ;; What the pineapple? Trigger a 500 Internal Server Error.
       :else
-      {:error (ex-info "Unknown error while inserting statement."
+      {:error (ex-info "Unexpected error while inserting statement."
                        {:type   ::statement-insertion-error
                         :input  input
                         :result stmt-res})})))
