@@ -200,7 +200,7 @@
              (get-ss lrs auth-ident {:statementId id-3} #{}))))
 
     (testing "statement property queries"
-      ;; Also checks that no extra statements were from on rolled-back inserts
+      ;; Also checks that no extra stmts were inserted on rolled-back inserts
       (is (= {:statement-result {:statements [stmt-4 stmt-3 stmt-2 stmt-1]
                                  :more       ""}
               :attachments      []}
