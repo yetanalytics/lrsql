@@ -95,7 +95,8 @@
                                stmt-input')]
               (if (contains? stmt-result :error)
                 ;; Statement conflict or some other error - stop and rollback
-                (do (.rollback tx)
+                (do (log/error "Error on statement insertion; roll back transaction.")
+                    (.rollback tx)
                     stmt-result)
                 ;; Non-error result - continue
                 (if-some [stmt-id (:statement-id stmt-result)]
