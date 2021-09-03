@@ -152,6 +152,13 @@ bundle: target/bundle
 # This is not done as part of the regular `clean` target because we do not want
 # to rebuild the EXEs across multiple builds.
 
+# To build a new set of EXEs to commit, perform the following:
+# % make bundle # if you haven't built the new JAR yet
+# % make clean-exe
+# % make exe
+# Note that `make bundle` also builds the EXEs automatically, and also copies
+# them to `target/bundle`.
+
 .phony: clean-exe
 
 # Building the executables require launch4j to be pre-installed:
