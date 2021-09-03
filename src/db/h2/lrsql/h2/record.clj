@@ -44,8 +44,8 @@
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
-    ;;No known retry cases for H2
-    false)
+    ;; TODO: add org.h2.jdbc.JdbcSQLTransactionRollbackException: Deadlock detected
+    (instance? org.h2.jdbc.JdbcSQLTimeoutException ex))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
