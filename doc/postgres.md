@@ -38,7 +38,7 @@ You can also set the search path as the value of the `currentSchema` property, w
 ```json
 {
     "database": {
-        "dbProperties": "currentSchema:[schema_name]",
+        "dbProperties": "currentSchema=[schema_name]",
     }
 }
 ```
@@ -47,6 +47,24 @@ If you skip this step, then the default `public` schema will be used for all DB 
 
 5. Start up the SQL LRS and enjoy!
 
+## Example lrsql.json configuration
+
+Here is an example database config map in the `lrsql.json` configuration file. The user is `lrsql_user`, the password is `this_should_be_a_good_password`, and the schema is `lrsql`. The host is set to `myhost`, while the port is maintained at the Postgres default of `5432` (which is why it is not included in the file).
+
+```json
+{
+    "database": {
+        "dbHost": "myhost",
+        "dbUser": "lrsql_user",
+        "dbPassword":  "this_should_be_a_good_password",
+        "dbProperties": "currentSchema=lrsql",
+        "dbSchema": "lrsql"
+    }
+}
+```
+
+The `connection`, `lrs`, and `webserver` maps can then be set with whatever properties the user sees fit, like the example in the [Getting Started](startup.md) page.
+
 ## A Note on Schemas and Tenancy
 
-Although the SQL LRS does not provide explicit support for tenancy, an administrator can set up a tenancy system by assigning each user their own dynamic schema. This will ensure data segregation between users, as each user will have their own set of tables and indexes. However, if the SQL LRS undergoes a DDL update, then _all_ users/schemas must be updated, so this is not necessarily a viable approach under all circumstances.
+Although the SQL LRS does not provide explicit support for tenancy, an administrator can set up a tenancy-like system by assigning each user their own dynamic schema. This will ensure data segregation between users, as each user will have their own set of tables and indexes. However, if the SQL LRS undergoes a DDL update, then _all_ users/schemas must be updated, so this is not necessarily a viable approach under all circumstances.
