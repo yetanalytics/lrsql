@@ -15,6 +15,22 @@
   [tx]
   (satisfies? jp/Transactable tx))
 
+;; Exceptions
+;; Predicate and generator code taken from:
+;; https://github.com/yetanalytics/lrs/blob/master/src/main/com/yetanalytics/lrs/protocol.cljc#L15
+
+(defn exception?
+  [ex]
+  (instance? Exception ex))
+
+(def exception-gen-fn
+  (sgen/fmap #(apply ex-info %)
+             (sgen/tuple (sgen/string-ascii)
+                         (s/gen map?))))
+
+(s/def ::error
+  (s/with-gen exception? exception-gen-fn))
+
 ;; Instants
 
 ;; Need to use this since `inst?` also returns true for java.util.Date
