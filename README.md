@@ -1,3 +1,5 @@
+![SQL LRS Logo](docs/doc_logo.png)
+
 # lrsql
 
 _lrsql (LER-skwəl) - The Learning Record Structured Query Language_
