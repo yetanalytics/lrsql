@@ -158,21 +158,27 @@
              (lrsp/-store-statements lrs auth-ident [stmt-4] [stmt-4-attach]))))
 
     (testing "statement conflicts"
-      (is (-> (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-1] [])
-              :error
-              some?))
-      (let [stmt-1' (assoc-in stmt-1 ["verb" "display" "en-US"] "ANSWERED")]
-        (is (-> (lrsp/-store-statements lrs auth-ident [stmt-1'] [])
-                :error
-                some?)))
-      (let [stmt-1'' (assoc-in stmt-1
+      (is (= {:statement-ids []}
+             (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-1] [])))
+      (testing "(verb display not part of Statement Immutability)"
+        (let [stmt-1' (assoc-in stmt-1 ["verb" "display" "en-US"] "ANSWERED")]
+          (is (= {:statement-ids []}
+                 (lrsp/-store-statements lrs auth-ident [stmt-1'] [])))))
+      (testing "(actor IFI is part of Statement Immutability)"
+        ;; Neither statement should be inserted due to batch rollback, even
+        ;; though stmt-b could be inserted by itself.
+        (let [stmt-a (assoc-in stmt-1
                                ["actor" "mbox"]
-                               "mailto:sample.agent.boo@example.com")]
-        (try (lrsp/-store-statements lrs auth-ident [stmt-1''] [])
-             (catch clojure.lang.ExceptionInfo e
-               (is (= :com.yetanalytics.lrs.protocol/statement-conflict
-                      (-> e ex-data :type)))))))
-
+                               "mailto:sample.agent.boo@example.com")
+              stmt-b (assoc stmt-a
+                            "id"
+                            "00000000-0000-4000-8000-000000000010")]
+          (is (= ::lrsp/statement-conflict
+                 (-> (lrsp/-store-statements lrs auth-ident [stmt-b stmt-a] [])
+                     :error
+                     ex-data
+                     :type))))))
+    
     (testing "statement ID queries"
       (is (= {:statement stmt-0}
              (get-ss lrs auth-ident {:voidedStatementId id-0} #{})))
@@ -194,6 +200,11 @@
              (get-ss lrs auth-ident {:statementId id-3} #{}))))
 
     (testing "statement property queries"
+      ;; Also checks that no extra stmts were inserted on rolled-back inserts
+      (is (= {:statement-result {:statements [stmt-4 stmt-3 stmt-2 stmt-1]
+                                 :more       ""}
+              :attachments      []}
+             (get-ss lrs auth-ident {} #{})))
       (is (= {:statement-result {:statements [] :more ""}
               :attachments      []}
              (get-ss lrs auth-ident {:since ts} #{})))
@@ -349,7 +360,7 @@
                "definition" {"name"        {"en-US" "Multi Part Activity"}
                              "description" {"en-US" "Multi Part Activity Description"}}}}
              (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
-    
+
     (component/stop sys')
     (support/unstrument-lrsql)))
 
