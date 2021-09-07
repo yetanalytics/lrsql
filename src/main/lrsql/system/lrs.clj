@@ -28,7 +28,7 @@
             [lrsql.util.auth      :as auth-util]
             [lrsql.util.statement :as stmt-util]
             [lrsql.init.authority :refer [make-authority-fn]]
-            [lrsql.util.conc      :as conc :refer [with-rerunable-txn]])
+            [lrsql.util.concurrency :refer [with-rerunable-txn]])
   (:import [java.time Instant]))
 
 (defn- lrs-conn

@@ -1,2 +1,3 @@
-{:lint-as {lrsql.util.conc/with-rerunable-txn  next.jdbc/with-transaction
-           lrsql.system.lrs/with-rerunable-txn next.jdbc/with-transaction}}
+{:lint-as
+ {lrsql.util.concurrency/with-rerunable-txn next.jdbc/with-transaction
+  lrsql.system.lrs/with-rerunable-txn       next.jdbc/with-transaction}}

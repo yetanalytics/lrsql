@@ -1,4 +1,4 @@
-(ns lrsql.util.conc
+(ns lrsql.util.concurrency
   (:require [clojure.tools.logging :as log]
             [next.jdbc :refer [with-transaction]]))
 

@@ -62,7 +62,7 @@
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
-    ;;No known retry cases for SQLite
+    ;; No known retry cases for SQLite
     false)
 
   bp/StatementBackend
