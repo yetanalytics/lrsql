@@ -28,7 +28,7 @@
             [lrsql.util.auth      :as auth-util]
             [lrsql.util.statement :as stmt-util]
             [lrsql.init.authority :refer [make-authority-fn]]
-            [lrsql.util.conc      :refer [rerunable-txn]])
+            [lrsql.util.conc      :as conc :refer [with-rerunable-txn]])
   (:import [java.time Instant]))
 
 (defn- lrs-conn
@@ -79,42 +79,40 @@
                attachments))
           retry-limit  (:stmt-retry-limit config)
           retry-budget (:stmt-retry-budget config)]
-      (rerunable-txn
-       (fn []
-         ;; We wrap all the insertions in a transaction so that we can perform
-         ;; a bulk rollback.
-         (jdbc/with-transaction [tx conn]
-           (loop [stmt-ins stmt-inputs
-                  stmt-res {:statement-ids []}]
-             (if-some [stmt-input (first stmt-ins)]
+      (with-rerunable-txn [tx conn {:retry-test  (partial bp/-txn-retry? backend)
+                                    :budget      retry-budget
+                                    :max-attempt retry-limit}]
+        (loop [stmt-ins stmt-inputs
+               stmt-res {:statement-ids []}]
+          (if-some [stmt-input (first stmt-ins)]
                ;; Statement input available to insert
-               (let [stmt-descs  (stmt-q/query-descendants
-                                  backend
-                                  tx
-                                  stmt-input)
-                     stmt-input' (stmt-input/add-insert-descendant-inputs
-                                  stmt-input
-                                  stmt-descs)
-                     stmt-result (stmt-cmd/insert-statement!
-                                  backend
-                                  tx
-                                  stmt-input')]
-                 (if (contains? stmt-result :error)
+            (let [stmt-descs  (stmt-q/query-descendants
+                               backend
+                               tx
+                               stmt-input)
+                  stmt-input' (stmt-input/add-insert-descendant-inputs
+                               stmt-input
+                               stmt-descs)
+                  stmt-result (stmt-cmd/insert-statement!
+                               backend
+                               tx
+                               stmt-input')]
+              (if (contains? stmt-result :error)
                    ;; Statement conflict or some other error - stop and rollback
-                   (do (log/error "Error on statement insertion; roll back transaction.")
-                       (.rollback tx)
-                       stmt-result)
+                (do (log/error "Error on statement insertion; roll back transaction.")
+                    (.rollback tx)
+                    stmt-result)
                    ;; Non-error result - continue
-                   (if-some [stmt-id (:statement-id stmt-result)]
-                     (recur (rest stmt-ins)
-                            (update stmt-res :statement-ids conj stmt-id))
-                     (recur (rest stmt-ins)
-                            stmt-res))))
+                (if-some [stmt-id (:statement-id stmt-result)]
+                  (recur (rest stmt-ins)
+                         (update stmt-res :statement-ids conj stmt-id))
+                  (recur (rest stmt-ins)
+                         stmt-res))))
                ;; No more statement inputs - return
-               stmt-res))))
-       (partial bp/-txn-retry? backend)
-       retry-budget
-       retry-limit)))
+            stmt-res)))
+      (partial bp/-txn-retry? backend)
+      {:budget      retry-budget
+       :max-attempt retry-limit}))
 
   (-get-statements
     [lrs _auth-identity params ltags]
