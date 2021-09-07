@@ -27,7 +27,7 @@
                (retry-test e))
         (let [sleep (apply backoff-ms (inc attempt) opts)]
           (Thread/sleep sleep)
-          (apply rerunable-txn* txn-expr retry-test (inc attempt) opts))
+          (rerunable-txn* txn-expr (inc attempt) opts))
         (do
           (log/warn "Rerunable Transaction exhausted attempts or could not be retried")
           (throw e))))))
@@ -35,21 +35,13 @@
 (defmacro rerunable-txn
   [transactable f opts]
   `(rerunable-txn*
-    (transact ~transactable ~f ~(not-empty opts))
+    (transact ~transactable ~f (not-empty ~opts))
     0
-    (select-keys ~opts [:max-attempt
-                        :retry-test
-                        :budget
-                        :j-range
-                        :inital])))
+    ~opts))
 
 (defmacro with-rerunable-txn
   [[sym transactable opts] & body]
   `(rerunable-txn*
     (with-transaction [~sym ~transactable ~opts] ~@body)
     0
-    (select-keys ~opts [:max-attempt
-                        :retry-test
-                        :budget
-                        :j-range
-                        :initial])))
+    ~opts))

@@ -109,10 +109,7 @@
                   (recur (rest stmt-ins)
                          stmt-res))))
                ;; No more statement inputs - return
-            stmt-res)))
-      (partial bp/-txn-retry? backend)
-      {:budget      retry-budget
-       :max-attempt retry-limit}))
+            stmt-res)))))
 
   (-get-statements
     [lrs _auth-identity params ltags]
