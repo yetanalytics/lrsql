@@ -2,6 +2,8 @@
   (:require [clojure.tools.logging :as log]
             [next.jdbc :refer [with-transaction]]))
 
+;; `j-range` and `initial` are internal opts and should not be set by the user.
+
 (defn backoff-ms
   "Take an overall time budget in ms, an attempt number, max attempts and
   return a backoff time in ms. Can optionally provide range for jitter and
@@ -19,6 +21,9 @@
                                       jitter)))))
 
 (defn rerunable-txn*
+  "Take a `txn-expr` thunk, a positive number of `attempt`s, and an `opts` map,
+   and run `txn-expr`. If it throws an exception and `retry-test` passes,
+   attempt to retry until `max-attempt` has been reached."
   [txn-expr attempt {:keys [retry-test max-attempt] :as opts}]
   (try
     (txn-expr)
@@ -33,6 +38,8 @@
           (throw e))))))
 
 (defmacro rerunable-txn
+  "Macro to create a rerunable version of `next.jdbc/transact`. `f` needs to
+   be a one-arity function that takes a transaction arg and runs the body."
   [transactable f opts]
   `(rerunable-txn*
     (fn [] (transact ~transactable ~f (not-empty ~opts)))
@@ -40,6 +47,8 @@
     ~opts))
 
 (defmacro with-rerunable-txn
+  "Macro to create a rerunable version of `next.jdbc/with-transaction`. Binds
+   `sym` to `transactable` and executes `body` in a rerunable manner."
   [[sym transactable opts] & body]
   `(rerunable-txn*
     (fn [] (with-transaction [~sym ~transactable ~opts] ~@body))
