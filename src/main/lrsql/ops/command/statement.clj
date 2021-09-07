@@ -54,8 +54,6 @@
                                        (bp/-query-activity bk tx)
                                        :payload)]
     (let [new-activ (assoc (:payload input) "objectType" "Activity")]
-      #_(when-not (= old-activ new-activ)
-        (clojure.pprint/pprint [old-activ new-activ (= old-activ new-activ)]))
       (when-not (= old-activ new-activ)
         (let [activity' (au/merge-activities old-activ new-activ)
               input'    (assoc input :payload activity')]
