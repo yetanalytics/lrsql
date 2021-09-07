@@ -78,11 +78,24 @@ tbody tr:nth-child(even) {
 p {
   text-align: justify;
 }
+
+div.logo {
+  width: 800px;
+}
+div.footer {
+  margin-left: 40%;
+  color: #ff0000;
+  font-size: medium;
+}
 </style>
     </head>
     <body>
-        <div id="container">
-            {{content|safe}}
+      <div id="container">
+        <div class="logo">
+          <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
         </div>
+        {{content|safe}}
+        <div class="footer">&copy; 2021 Yet Analytics Inc.</>
+      </div>
     </body>
 </html>
