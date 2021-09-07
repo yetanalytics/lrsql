@@ -35,13 +35,13 @@
 (defmacro rerunable-txn
   [transactable f opts]
   `(rerunable-txn*
-    (transact ~transactable ~f (not-empty ~opts))
+    (fn [] (transact ~transactable ~f (not-empty ~opts)))
     0
     ~opts))
 
 (defmacro with-rerunable-txn
   [[sym transactable opts] & body]
   `(rerunable-txn*
-    (with-transaction [~sym ~transactable ~opts] ~@body)
+    (fn [] (with-transaction [~sym ~transactable ~opts] ~@body))
     0
     ~opts))
