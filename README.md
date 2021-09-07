@@ -15,6 +15,5 @@ To use lrsql, a user needs to be authorized by an admin. Admin accounts can be c
 ## Index
 
 - [Environment Variables](doc/env_vars.md) - How to configure lrsql?
-- [Makefile Targets](doc/makefile.md) - Using the Makefile during development
 - [HTTP Endpoints](doc/endpoints.md) - How to use the lrsql API?
 - [TLS/HTTPS](doc/https.md) - How to set up a secure connection with lrsql?

@@ -47,7 +47,7 @@
                     #{"all"})]
       ;; Don't insert if reconnecting to a previously-seeded DB
       (when-not (admin-q/query-admin backend tx admin-in)
-        (admin-cmd/insert-admin! backend tx admin-in))
-      (when-not (auth-q/query-credential-scopes* backend tx cred-in)
-        (auth-cmd/insert-credential! backend tx cred-in)
-        (auth-cmd/insert-credential-scopes! backend tx scope-in)))))
+        (admin-cmd/insert-admin! backend tx admin-in)
+        (when-not (auth-q/query-credential-scopes* backend tx cred-in)
+          (auth-cmd/insert-credential! backend tx cred-in)
+          (auth-cmd/insert-credential-scopes! backend tx scope-in))))))
