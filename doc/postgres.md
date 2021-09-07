@@ -64,7 +64,3 @@ Here is an example database config map in the `lrsql.json` configuration file. T
 ```
 
 The `connection`, `lrs`, and `webserver` maps can then be set with whatever properties the user sees fit, like the example in the [Getting Started](startup.md) page.
-
-## A Note on Schemas and Tenancy
-
-Although the SQL LRS does not provide explicit support for tenancy, an administrator can set up a tenancy-like system by assigning each user their own dynamic schema. This will ensure data segregation between users, as each user will have their own set of tables and indexes. However, if the SQL LRS undergoes a DDL update, then _all_ users/schemas must be updated, so this is not necessarily a viable approach under all circumstances.
