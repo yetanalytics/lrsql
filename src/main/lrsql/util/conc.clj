@@ -24,12 +24,11 @@
     (catch Exception e
       (if (and (< attempt max-attempt)
                (retry-test e))
-        (do
-          (let [sleep (apply backoff-ms
-                             budget (+ 1 attempt) max-attempt kwargs)]
-            (Thread/sleep sleep)
-            (apply rerunable-txn*
-                   txn retry-test budget max-attempt (+ 1 attempt) kwargs)))
+        (let [sleep (apply backoff-ms
+                           budget (+ 1 attempt) max-attempt kwargs)]
+          (Thread/sleep sleep)
+          (apply rerunable-txn*
+                 txn retry-test budget max-attempt (+ 1 attempt) kwargs))
         (do
           (log/warn "Rerunable Transaction exhausted attempts or could not be retried")
           (throw e))))))
