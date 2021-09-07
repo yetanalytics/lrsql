@@ -1,4 +1,4 @@
-![SQL LRS Logo](doc/doc_logo.png)
+![SQL LRS Logo](doc/images/doc_logo.png)
 
 # lrsql
 
