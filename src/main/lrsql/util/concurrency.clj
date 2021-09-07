@@ -22,8 +22,9 @@
 
 (defn rerunable-txn*
   "Take a `txn-expr` thunk, a positive number of `attempt`s, and an `opts` map,
-   and run `txn-expr`. If it throws an exception and `retry-test` passes,
-   attempt to retry until `max-attempt` has been reached."
+   and run `txn-expr`. If it throws an exception and `:retry-test` passes,
+   attempt to retry until `:max-attempt` has been reached, with the backoff
+   time exponentially increasing and scaled by `:budget`."
   [txn-expr attempt {:keys [retry-test max-attempt] :as opts}]
   (try
     (txn-expr)
@@ -39,7 +40,9 @@
 
 (defmacro rerunable-txn
   "Macro to create a rerunable version of `next.jdbc/transact`. `f` needs to
-   be a one-arity function that takes a transaction arg and runs the body."
+   be a one-arity function that takes a transaction arg and runs the body.
+   `opts` include `:retry-test`, `:max-attempt`, and `:budget`, as well as the
+   usual options for `transact`."
   [transactable f opts]
   `(rerunable-txn*
     (fn [] (transact ~transactable ~f (not-empty ~opts)))
@@ -48,7 +51,9 @@
 
 (defmacro with-rerunable-txn
   "Macro to create a rerunable version of `next.jdbc/with-transaction`. Binds
-   `sym` to `transactable` and executes `body` in a rerunable manner."
+   `sym` to `transactable` and executes `body` in a rerunable manner. `opts`
+   include `:retry-test`, `:max-attempt`, and `:budget`, as well as the usual
+   options for `with-transaction`."
   [[sym transactable opts] & body]
   `(rerunable-txn*
     (fn [] (with-transaction [~sym ~transactable ~opts] ~@body))
