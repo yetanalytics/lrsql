@@ -38,9 +38,6 @@
       :connection
       :conn-pool))
 
-(defonce stmt-deadlock-limit 10)
-(defonce stmt-retry-budget 1000)
-
 (defrecord LearningRecordStore [connection backend config authority-fn]
   cmp/Lifecycle
   (start
@@ -79,7 +76,9 @@
           stmt-inputs
           (-> (map stmt-input/insert-statement-input stmts)
               (stmt-input/add-insert-attachment-inputs
-               attachments))]
+               attachments))
+          retry-limit  (:stmt-retry-limit config)
+          retry-budget (:stmt-retry-budget config)]
       (rerunable-txn
        (fn []
          ;; We wrap all the insertions in a transaction so that we can perform
@@ -114,8 +113,8 @@
                ;; No more statement inputs - return
                stmt-res))))
        (partial bp/-txn-retry? backend)
-       stmt-retry-budget
-       stmt-deadlock-limit)))
+       retry-budget
+       retry-limit)))
 
   (-get-statements
     [lrs _auth-identity params ltags]
