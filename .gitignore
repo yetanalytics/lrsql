@@ -6,6 +6,7 @@ pom.xml.asc
 /lib/
 /classes/
 /target/
+/logs/
 /checkouts/
 .lein-deps-sum
 .lein-repl-history
@@ -22,3 +23,7 @@ Test.java
 # VSCode
 .calva/
 .lsp/
+# Admin SPA
+/lrs-admin-ui/
+/resources/public/admin/
+/tmp/

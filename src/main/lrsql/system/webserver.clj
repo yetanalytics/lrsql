@@ -1,5 +1,6 @@
 (ns lrsql.system.webserver
   (:require [clojure.tools.logging :as log]
+            [lrsql.util.logging   :refer [logo]]
             [com.stuartsierra.component :as component]
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
@@ -19,7 +20,8 @@
                 http-port
                 ssl-port
                 url-prefix
-                key-password]
+                key-password
+                enable-admin-ui]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway}
         config
@@ -33,10 +35,13 @@
                     (add-admin-routes {:lrs    lrs
                                        :exp    jwt-exp
                                        :leeway jwt-lwy
-                                       :secret private-key}))]
+                                       :secret private-key
+                                       :enable-admin-ui enable-admin-ui}))]
     {:env                 :prod
      ::http/routes        routes
-     ::http/resource-path "/public"
+     ::http/resource-path (when enable-admin-ui
+                            ;; only serve assets if the admin ui is enabled
+                            "/public")
      ::http/type          :jetty
      ::http/host          http-host
      ::http/port          (when enable-http http-port) ; nil = no HTTP
@@ -84,6 +89,7 @@
              (log/infof "Starting new webserver at host %s and SSL port %s"
                         host
                         ssl-port)))
+         (log/info logo)
          (log/tracef "Server map: %s" server)
          ;; Return new webserver
          (assoc this

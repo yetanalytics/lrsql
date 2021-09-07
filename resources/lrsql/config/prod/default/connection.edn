@@ -1,5 +1,6 @@
-{:pool-init-size #or [#env LRSQL_POOL_INIT_SIZE nil]
- :pool-min-size  #or [#env LRSQL_POOL_MIN_SIZE nil]
- :pool-inc       #or [#env LRSQL_POOL_INC nil]
- :pool-max-size  #or [#env LRSQL_POOL_MAX_SIZE nil]
- :pool-max-stmts #or [#env LRSQL_POOL_MAX_STMTS nil]}
+;; All values here are c3p0 defaults
+{:pool-init-size #long #or [#env LRSQL_POOL_INIT_SIZE 3]
+ :pool-min-size  #long #or [#env LRSQL_POOL_MIN_SIZE 3]
+ :pool-inc       #long #or [#env LRSQL_POOL_INC 3]
+ :pool-max-size  #long #or [#env LRSQL_POOL_MAX_SIZE 15]
+ :pool-max-stmts #long #or [#env LRSQL_POOL_MAX_STMTS 0]}

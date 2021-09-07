@@ -1,22 +1,26 @@
 (ns lrsql.spec.config
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec :as xs]
-            [lrsql.spec.util :refer [remove-nil-vals]]))
+            [lrsql.spec.util :as u]))
 
 (s/def ::db-type #{"h2" "h2:mem" "sqlite" "postgres" "postgresql"})
 (s/def ::db-name string?)
 (s/def ::db-host string?)
 (s/def ::db-port nat-int?)
 
-(s/def ::db-properties
-  (s/and string? (partial re-matches #"(?:(?:\w+:\w+)(?:,\w+:\w+)*)?")))
+(def db-prop-regex
+  "Regex for JDBC URL query params."
+  #"(?:(?:[^&]+=[^&]+)(?:&[^&]+=[^&]+)*)?")
+
+(s/def ::db-properties (s/and string? (partial re-matches db-prop-regex)))
 (s/def ::db-jdbc-url ::xs/iri)
 
 (s/def ::db-user string?)
 (s/def ::db-password string?)
 
 (s/def ::database
-  (s/and (s/conformer remove-nil-vals)
+  (s/and (s/conformer u/remove-nil-vals)
+         (s/conformer u/remove-neg-vals)
          (s/or :no-jdbc-url
                (s/keys :req-un [::db-type
                                 ::db-name]
@@ -37,7 +41,8 @@
 (s/def ::pool-max-stmts nat-int?)
 
 (s/def ::connection
-  (s/and (s/conformer remove-nil-vals)
+  (s/and (s/conformer u/remove-nil-vals)
+         (s/conformer u/remove-neg-vals)
          (s/keys :req-un [::database]
                  :opt-un [::pool-init-size
                           ::pool-min-size
@@ -59,7 +64,8 @@
 (s/def ::authority-url ::xs/irl)
 
 (s/def ::lrs
-  (s/and (s/conformer remove-nil-vals)
+  (s/and (s/conformer u/remove-nil-vals)
+         (s/conformer u/remove-neg-vals)
          (s/keys :req-un [::stmt-get-default
                           ::stmt-get-max
                           ::stmt-url-prefix
@@ -86,6 +92,8 @@
 (s/def ::key-cert-chain string?)
 (s/def ::key-enable-selfie boolean?)
 
+(s/def ::enable-admin-ui boolean?)
+
 (s/def ::webserver
   (s/keys :req-un [::http-host
                    ::http-port
@@ -97,7 +105,8 @@
                    ::key-password
                    ::key-enable-selfie
                    ::jwt-exp-time
-                   ::jwt-exp-leeway]
+                   ::jwt-exp-leeway
+                   ::enable-admin-ui]
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain]))

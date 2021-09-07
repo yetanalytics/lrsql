@@ -38,13 +38,13 @@
    :exclusions [org.clojure/clojure]}}
  :aliases
  {:db-h2
-  {:extra-paths ["src/h2"]
+  {:extra-paths ["src/db/h2"]
    :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
   :db-sqlite
-  {:extra-paths ["src/sqlite"]
+  {:extra-paths ["src/db/sqlite"]
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
   :db-postgres
-  {:extra-paths ["src/postgres"]
+  {:extra-paths ["src/db/postgres"]
    :extra-deps  {org.postgresql/postgresql {:mvn/version "42.2.23"}}}
   :bench
   {:extra-paths ["src/bench" "dev-resources"]
@@ -65,7 +65,7 @@
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}}}
   :test
-  {:extra-paths ["src/h2" "src/test" "dev-resources"]
+  {:extra-paths ["src/db/h2" "src/test" "dev-resources"]
    :extra-deps  {com.h2database/h2      {:mvn/version "1.4.200"}
                  org.clojure/test.check {:mvn/version "1.0.0"}
                  babashka/babashka.curl {:mvn/version "0.0.3"}

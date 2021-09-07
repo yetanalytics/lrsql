@@ -1,4 +1,5 @@
 {:pool-init-size  1
  :pool-min-size   1
  :pool-inc        1
- :pool-max-size   1}
+ :pool-max-size   1
+ :pool-max-stmts  0} ; c3p0 default

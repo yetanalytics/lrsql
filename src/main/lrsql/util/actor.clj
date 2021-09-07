@@ -26,4 +26,7 @@
   "Given the Agent or Group `actor`, return an equivalent Person object with
    the IFI and name wrapped in vectors."
   [actor]
-  (agnt/person actor))
+  ;; agnt/person takes zero or more args
+  (if actor
+    (agnt/person actor)
+    (agnt/person)))
