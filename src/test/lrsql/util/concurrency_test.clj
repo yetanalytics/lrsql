@@ -10,7 +10,7 @@
     ;; TODO: More backoff tests
     )
   (testing "backoff calculation (gentest)"
-    (is (nil? (check-validate `conc/backoff-ms)))))
+    (is (nil? (check-validate `conc/backoff-ms 1000)))))
 
 (deftest rerunable-txn-test
   (testing "rerunable-txn* function"

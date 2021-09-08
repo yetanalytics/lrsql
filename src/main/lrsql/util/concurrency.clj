@@ -4,11 +4,13 @@
             [next.jdbc :refer [with-transaction]]))
 
 ;; `j-range` and `initial` are internal opts and should not be set by the user.
+;; We also need to enforce MAX_VALUE constraints since `int?`, `nat-int?`, etc
+;; don't do so on their own.
 
-(s/def ::budget pos-int?)
-(s/def ::max-attempt pos-int?)
-(s/def ::j-range (s/and nat-int? #(<= % Integer/MAX_VALUE)))
-(s/def ::initial nat-int?)
+(s/def ::budget      (s/and int? (fn [n] (< 0 n Integer/MAX_VALUE))))
+(s/def ::max-attempt (s/and int? (fn [n] (< 0 n Integer/MAX_VALUE))))
+(s/def ::j-range     (s/and int? (fn [n] (<= 0 n Integer/MAX_VALUE))))
+(s/def ::initial     (s/and int? (fn [n] (<= 0 n Integer/MAX_VALUE))))
 
 (def backoff-opts-spec
   (s/keys :req-un [::budget ::max-attempt]
@@ -20,9 +22,10 @@
   :ret (s/nilable nat-int?))
 
 (defn backoff-ms
-  "Take an overall time budget in ms, an attempt number, max attempts and
-  return a backoff time in ms. Can optionally provide range for jitter and
-  an initial delay to be used first"
+  "Take an `attempt` number and an opts map containing the total `:budget`
+   in ms and an `:max-attempt` number and return a backoff time in ms.
+   Can also optionally provide a jitter in `j-range` ms and an `initial` ms
+   amount of delay to be used first in the opts map."
   [attempt {:keys [budget max-attempt j-range initial]
             :or {j-range 10}}]
   (let [jitter (rand-int j-range)]
