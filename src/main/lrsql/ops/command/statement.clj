@@ -76,6 +76,7 @@
   (if-some [old-activ (some->> (select-keys input [:activity-iri])
                                        (bp/-query-activity bk tx)
                                        :payload)]
+    ;; add objectType for comparison in order to avoid unnecessary writes
     (let [new-activ (assoc (:payload input) "objectType" "Activity")]
       (when-not (= old-activ new-activ)
         (let [activity' (au/merge-activities old-activ new-activ)
