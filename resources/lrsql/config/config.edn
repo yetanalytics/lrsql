@@ -21,8 +21,8 @@
  :connection
  #profile
   {;; Test/Dev
-   :test-h2-mem   #include "test/default/connection.edn"
-   :test-h2       #include "test/default/connection.edn"
+   :test-h2-mem   #include "test/h2/connection.edn"
+   :test-h2       #include "test/h2/connection.edn"
    :test-sqlite   #include "test/sqlite/connection.edn"
    :test-postgres #include "test/default/connection.edn"
    ;; Production
