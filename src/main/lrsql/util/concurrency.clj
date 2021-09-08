@@ -63,7 +63,7 @@
    usual options for `transact`."
   [transactable f opts]
   `(rerunable-txn*
-    (fn [] (transact ~transactable ~f (not-empty ~opts)))
+    (fn [] (transact ~transactable ~f ~opts))
     0
     ~opts))
 
