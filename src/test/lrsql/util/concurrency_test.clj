@@ -8,11 +8,36 @@
     ;; Generative testing
     (testing "(gentest)"
       (is (nil? (check-validate `conc/backoff-ms 1000))))
+
     ;; Unit testing
+
+    ;; 0th attempt should be zero backoff
     (is (= 0 (conc/backoff-ms 0 {:budget      10
                                  :max-attempt 10})))
-    ;; TODO: More backoff tests
-    ))
+
+    ;; First retry with a set initial and 0 jitter
+    (is (= 5 (conc/backoff-ms 1 {:budget 1000
+                                 :initial 5
+                                 :max-attempt 10
+                                 :j-range 0})))
+
+    ;; Over max should return nil
+    (is (nil? (conc/backoff-ms 10 {:budget 1000
+                                   :max-attempt 5})))
+
+    ;; Exact values no jitter, over 1000 budget
+    (is (= (mapv #(conc/backoff-ms % {:budget 1000
+                                      :j-range 0
+                                      :max-attempt 5})
+                 [0 1 2 3 4 5 6])
+           [0 31 62 125 250 500 nil]))
+
+    ;; Jitter included
+    (is (let [value (conc/backoff-ms 3 {:budget 1000
+                                        :max-attempt 5
+                                        :j-range 5})]
+          (and (>= value 125)
+               (< value 131))))))
 
 (deftest rerunable-txn-test
   (testing "rerunable-txn* function"
