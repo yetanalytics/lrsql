@@ -15,6 +15,14 @@
   [tx]
   (satisfies? jp/Transactable tx))
 
+;; Exceptions
+
+(defn exception?
+  [ex]
+  (instance? Exception ex))
+
+(s/def ::error exception?)
+
 ;; Instants
 
 ;; Need to use this since `inst?` also returns true for java.util.Date

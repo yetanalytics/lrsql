@@ -1,8 +1,9 @@
 (ns lrsql.ops.command.statement
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
+            [xapi-schema.spec :as xs]
             [lrsql.backend.protocol :as bp]
-            [lrsql.spec.common :refer [transaction?]]
+            [lrsql.spec.common :as cs :refer [transaction?]]
             [lrsql.spec.actor :refer [actor-backend?]]
             [lrsql.spec.activity :refer [activity-backend?]]
             [lrsql.spec.attachment :refer [attachment-backend?]]
@@ -15,20 +16,42 @@
 ;; Statement Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- insert-statement!*
+(defn- check-stmt-conflict
+  "Check if the statement already exists in the DB and return a map if it does.
+   The `statement-equal?` prop determines if the two statements are equal
+   (according to Statement Immutability guidelines)."
   [bk tx input]
   (let [{stmt-id  :statement-id
-         sref-id  :statement-ref-id
          new-stmt :payload} input]
-    (if-some [{old-stmt :payload}
-              (bp/-query-statement bk tx {:statement-id stmt-id})]
-      ;; Return nil if the statements aren't actually equal
-      (when-not (su/statement-equal? old-stmt new-stmt)
-        (throw
-         (ex-info "Statement Conflict!"
-                  {:type :com.yetanalytics.lrs.protocol/statement-conflict
-                   :extant-statement old-stmt
-                   :statement        new-stmt})))
+    ;; Optimization: if the statement ID is auto-assigned by lrsql, then
+    ;; we can assume that no collisions are possible (given the extreme
+    ;; rarity of random UUID collisions).
+    (when-not (contains? (-> new-stmt meta :assigned-vals) :id)
+      (when-some [{old-stmt :payload} (bp/-query-statement
+                                       bk
+                                       tx
+                                       {:statement-id stmt-id})]
+        ;; Conflict! Return enough info to create an ex-info map if needed.
+        {:extant-statement old-stmt
+         :statement        new-stmt
+         :statement-equal? (su/statement-equal? old-stmt new-stmt)}))))
+
+(defn- insert-statement!*
+  "Tries to insert a statement. There are three possible results:
+   - Success: returns the statement (UU)ID
+   - Equal statement exists: returns `nil`
+   - Not equal statement exists: return a map containing an `:error`."
+  [bk tx input]
+  (let [{stmt-id :statement-id
+         sref-id :statement-ref-id} input]
+    (if-some [err (check-stmt-conflict bk tx input)]
+      ;; Conflict! return error or nil
+      (when-not (:statement-equal? err)
+        {:error (ex-info (format "Statement Conflict on ID %s" stmt-id)
+                         (-> err
+                             (dissoc :statement-equal?)
+                             (assoc :type ::lrsp/statement-conflict)))})
+      ;; No conflict! insert statement (and void if needed)
       (do
         (bp/-insert-statement! bk tx input)
         (when (:voiding? input)
@@ -51,9 +74,10 @@
 (defn- insert-activity!
   [bk tx input]
   (if-some [old-activ (some->> (select-keys input [:activity-iri])
-                               (bp/-query-activity bk tx)
-                               :payload)]
-    (let [{new-activ :payload} input]
+                                       (bp/-query-activity bk tx)
+                                       :payload)]
+    ;; add objectType for comparison in order to avoid unnecessary writes
+    (let [new-activ (assoc (:payload input) "objectType" "Activity")]
       (when-not (= old-activ new-activ)
         (let [activity' (au/merge-activities old-activ new-activ)
               input'    (assoc input :payload activity')]
@@ -78,6 +102,10 @@
         exists (bp/-query-statement-exists bk tx input')]
     (when exists (bp/-insert-statement-to-statement! bk tx input))))
 
+;; Need separate statement-id spec since we return string UUIDs, not
+;; java.util.UUID instances
+(s/def ::statement-id ::xs/uuid)
+
 (s/fdef insert-statement!
   :args (s/cat :bk (s/and statement-backend?
                            actor-backend?
@@ -85,7 +113,9 @@
                            attachment-backend?)
                :tx transaction?
                :inputs ss/insert-statement-input-spec)
-  :ret ::lrsp/store-statements-ret)
+  :ret (s/or :success             (s/keys :req-un [::statement-id])
+             :conflict-equals     (fn [m] (not (contains? m :statement-id)))
+             :conflict-not-equals (s/keys :req-un [::cs/error])))
 
 (defn insert-statement!
   "Insert the statement and auxillary objects and attachments that are given
@@ -99,15 +129,30 @@
                   stmt-activity-inputs
                   stmt-stmt-inputs]
            :as input}]
-  (if-some [stmt-id (insert-statement!* bk tx statement-input)]
-    (do
-      (dorun (map (partial insert-actor! bk tx) actor-inputs))
-      (dorun (map (partial insert-activity! bk tx) activity-inputs))
-      (dorun (map (partial insert-stmt-actor! bk tx) stmt-actor-inputs))
-      (dorun (map (partial insert-stmt-activity! bk tx) stmt-activity-inputs))
-      (dorun (map (partial insert-stmt-stmt! bk tx) stmt-stmt-inputs))
-      (dorun (map (partial insert-attachment! bk tx) attachment-inputs))
-      {:statement-ids [(u/uuid->str stmt-id)]})
-    {:error (ex-info "Could not insert statement."
-                     {:type  ::statement-insertion-error
-                      :input input})}))
+  (let [stmt-res (insert-statement!* bk tx statement-input)]
+    (cond
+      ;; Statement inserted; insert everything else
+      (uuid? stmt-res)
+      (do
+        (dorun (map (partial insert-actor! bk tx) actor-inputs))
+        (dorun (map (partial insert-activity! bk tx) activity-inputs))
+        (dorun (map (partial insert-stmt-actor! bk tx) stmt-actor-inputs))
+        (dorun (map (partial insert-stmt-activity! bk tx) stmt-activity-inputs))
+        (dorun (map (partial insert-stmt-stmt! bk tx) stmt-stmt-inputs))
+        (dorun (map (partial insert-attachment! bk tx) attachment-inputs))
+        {:statement-id (u/uuid->str stmt-res)})
+
+      ;; Equal statement exists; return nothing
+      (nil? stmt-res)
+      {}
+
+      ;; Statement conflict; return map containing `:error`
+      (contains? stmt-res :error)
+      stmt-res
+
+      ;; What the pineapple? Trigger a 500 Internal Server Error.
+      :else
+      {:error (ex-info "Unexpected error while inserting statement."
+                       {:type   ::statement-insertion-error
+                        :input  input
+                        :result stmt-res})})))

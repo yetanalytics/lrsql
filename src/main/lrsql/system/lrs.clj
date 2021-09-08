@@ -6,6 +6,7 @@
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.admin.protocol :as adp]
             [lrsql.init :as init]
+            [lrsql.backend.protocol :as bp]
             [lrsql.input.actor     :as agent-input]
             [lrsql.input.activity  :as activity-input]
             [lrsql.input.admin     :as admin-input]
@@ -26,7 +27,8 @@
             [lrsql.system.util :refer [assert-config]]
             [lrsql.util.auth      :as auth-util]
             [lrsql.util.statement :as stmt-util]
-            [lrsql.init.authority :refer [make-authority-fn]])
+            [lrsql.init.authority :refer [make-authority-fn]]
+            [lrsql.util.concurrency :refer [with-rerunable-txn]])
   (:import [java.time Instant]))
 
 (defn- lrs-conn
@@ -74,27 +76,41 @@
           stmt-inputs
           (-> (map stmt-input/insert-statement-input stmts)
               (stmt-input/add-insert-attachment-inputs
-               attachments))]
-      (jdbc/with-transaction [tx conn]
-        (let [stmt-results
-              (map (fn [stmt-input]
-                     (let [stmt-descs
-                           (stmt-q/query-descendants
-                            backend
-                            tx
-                            stmt-input)
-                           stmt-input'
-                           (stmt-input/add-insert-descendant-inputs
-                            stmt-input
-                            stmt-descs)]
-                       (stmt-cmd/insert-statement!
-                        backend
-                        tx
-                        stmt-input')))
-                   stmt-inputs)]
-          (if-some [ex (some :error stmt-results)]
-            {:error ex}
-            {:statement-ids (vec (mapcat :statement-ids stmt-results))})))))
+               attachments))
+          retry-limit  (:stmt-retry-limit config)
+          retry-budget (:stmt-retry-budget config)]
+      (with-rerunable-txn [tx conn {:retry-test  (partial bp/-txn-retry? backend)
+                                    :budget      retry-budget
+                                    :max-attempt retry-limit}]
+        (loop [stmt-ins stmt-inputs
+               stmt-res {:statement-ids []}]
+          (if-some [stmt-input (first stmt-ins)]
+               ;; Statement input available to insert
+            (let [stmt-descs  (stmt-q/query-descendants
+                               backend
+                               tx
+                               stmt-input)
+                  stmt-input' (stmt-input/add-insert-descendant-inputs
+                               stmt-input
+                               stmt-descs)
+                  stmt-result (stmt-cmd/insert-statement!
+                               backend
+                               tx
+                               stmt-input')]
+              (if (contains? stmt-result :error)
+                   ;; Statement conflict or some other error - stop and rollback
+                (do (log/error "Error on statement insertion; roll back transaction.")
+                    (.rollback tx)
+                    stmt-result)
+                   ;; Non-error result - continue
+                (if-some [stmt-id (:statement-id stmt-result)]
+                  (recur (rest stmt-ins)
+                         (update stmt-res :statement-ids conj stmt-id))
+                  (recur (rest stmt-ins)
+                         stmt-res))))
+               ;; No more statement inputs - return
+            stmt-res)))))
+
   (-get-statements
     [lrs _auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
