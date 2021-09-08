@@ -1,8 +1,23 @@
 (ns lrsql.util.concurrency
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.tools.logging :as log]
             [next.jdbc :refer [with-transaction]]))
 
 ;; `j-range` and `initial` are internal opts and should not be set by the user.
+
+(s/def ::budget pos-int?)
+(s/def ::max-attempt pos-int?)
+(s/def ::j-range (s/and nat-int? #(<= % Integer/MAX_VALUE)))
+(s/def ::initial nat-int?)
+
+(def backoff-opts-spec
+  (s/keys :req-un [::budget ::max-attempt]
+          :opt-un [::j-range ::initial]))
+
+(s/fdef backoff-ms
+  :args (s/cat :attempt pos-int?
+               :opts backoff-opts-spec)
+  :ret (s/nilable nat-int?))
 
 (defn backoff-ms
   "Take an overall time budget in ms, an attempt number, max attempts and
@@ -31,7 +46,7 @@
     (catch Exception e
       (if (and (< attempt max-attempt)
                (retry-test e))
-        (let [sleep (apply backoff-ms (inc attempt) opts)]
+        (let [sleep (backoff-ms (inc attempt) opts)]
           (Thread/sleep sleep)
           (rerunable-txn* txn-expr (inc attempt) opts))
         (do
