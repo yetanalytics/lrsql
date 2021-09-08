@@ -21,6 +21,7 @@ results/
 Test.java
 .DS_Store
 # VSCode
+.clj-kondo/.cache/
 .calva/
 .lsp/
 # Admin SPA
