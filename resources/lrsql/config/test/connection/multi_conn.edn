@@ -4,11 +4,12 @@
  :pool-idle-timeout       600000
  :pool-validation-timeout 5000
  :pool-max-lifetime       1800000
- :pool-minimum-idle       1
- :pool-maximum-size       1
  :pool-initialization-fail-timeout 1
  :pool-isolate-internal-queries    false
  :pool-leak-detection-threshold    0
  :pool-transaction-isolation       nil
  :pool-name               nil
- :pool-enable-jmx         false}
+ :pool-enable-jmx         false
+ ;; Different from single conn
+ :pool-minimum-idle       10
+ :pool-maximum-size       10}
