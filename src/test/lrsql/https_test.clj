@@ -1,10 +1,16 @@
 (ns lrsql.https-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [babashka.curl :as curl]
             [com.stuartsierra.component :as component]
             [lrsql.test-support :as support]))
 
+;; Init
+
 (support/instrument-lrsql)
+
+(use-fixtures :each support/fresh-h2-fixture)
+
+;; Tests
 
 (deftest https-test
   (testing "HTTPS connection"

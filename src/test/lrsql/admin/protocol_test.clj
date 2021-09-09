@@ -6,12 +6,16 @@
             [lrsql.admin.protocol :as adp]
             [lrsql.test-support   :as support]))
 
+;; Init
+
 (support/instrument-lrsql)
 
-(use-fixtures :each support/fresh-db-fixture)
+;; (use-fixtures :each support/fresh-h2-fixture)
 
 (def test-username "DonaldChamberlin123") ; co-inventor of SQL
 (def test-password "iLoveSql")
+
+;; Tests
 
 (deftest admin-test
   (let [sys  (support/test-system)

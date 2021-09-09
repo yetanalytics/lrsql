@@ -65,8 +65,17 @@
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}}}
   :test
-  {:extra-paths ["src/db/h2" "src/test" "dev-resources"]
-   :extra-deps  {com.h2database/h2      {:mvn/version "1.4.200"}
+  {:extra-paths ["src/db/h2"
+                 "src/db/sqlite"
+                 "src/db/postgres"
+                 "src/test"
+                 "dev-resources"]
+   :extra-deps  {;; DB deps
+                 com.h2database/h2             {:mvn/version "1.4.200"}
+                 org.xerial/sqlite-jdbc        {:mvn/version "3.36.0"}
+                 org.postgresql/postgresql     {:mvn/version "42.2.23"}
+                 org.testcontainers/postgresql {:mvn/version "1.16.0"}
+                 ;; Other test deps
                  org.clojure/test.check {:mvn/version "1.0.0"}
                  babashka/babashka.curl {:mvn/version "0.0.3"}
                  orchestra/orchestra    {:mvn/version "2021.01.01-1"}

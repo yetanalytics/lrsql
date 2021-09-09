@@ -15,7 +15,7 @@
 (support/instrument-lrsql)
 
 ;; New DB config
-(use-fixtures :each support/fresh-db-fixture)
+(use-fixtures :each support/fresh-h2-fixture)
 
 (def auth-ident
   {:agent {"objectType" "Agent"

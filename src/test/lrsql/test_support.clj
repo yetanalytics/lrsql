@@ -2,8 +2,10 @@
   (:require [clojure.spec.test.alpha :as stest]
             [orchestra.spec.test :as otest]
             [lrsql.init.config :refer [read-config]]
-            [lrsql.h2.record :as ir]
-            [lrsql.system :as system])
+            [lrsql.system :as system]
+            [lrsql.h2.record :as hr]
+            [lrsql.sqlite.record :as sr]
+            [lrsql.postgres.record :as pr])
   (:import [java.util UUID]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -25,22 +27,64 @@
   []
   (otest/unstrument (lrsql-syms)))
 
-(defn fresh-db-fixture
-  [f]
-  (let [id-str (str (UUID/randomUUID))
-        cfg (-> (read-config :test-h2-mem)
-                (assoc-in [:connection :database :db-name] id-str))]
-    (with-redefs
-     [read-config (constantly cfg)]
-      (f))))
-
 ;; TODO: Somehow allow other DMBSs to be tested
 (defn test-system
-  "Create a lrsql system specifically for tests:
-   - Uses the (in-mem) H2 DB backend
-   - Uses the `:test-h2-mem` profile"
+  "Create a lrsql system specifically for tests"
   []
-  (system/system (ir/map->H2Backend {}) :test-h2-mem))
+  {})
+
+(defn- throw-unsupported-profile
+  [profile]
+  (throw (ex-info "Unsupported profile!"
+                  {:type ::unsupported-profile
+                   :profile profile})))
+
+(defn fresh-h2-fixture
+  [f]
+  (let [id-str (str (UUID/randomUUID))
+        h2-cfg (-> (read-config :test-h2-mem)
+                   (assoc-in [:connection :database :db-name] id-str))]
+    (with-redefs
+     [read-config (fn [profile]
+                    (if (#{:test-h2-mem} profile)
+                      h2-cfg
+                      (throw-unsupported-profile profile)))
+      test-system (fn []
+                    (clojure.tools.logging/warn "Starting H2!")
+                    (system/system (hr/map->H2Backend {})
+                                        :test-h2-mem))]
+      (f))))
+
+(defn fresh-sqlite-fixture
+  [f]
+  (let [sl-cfg (-> (read-config :test-sqlite)
+                   (assoc-in [:connection :database :db-name] ":memory:"))]
+    (with-redefs
+     [read-config (fn [profile]
+                    (if (#{:test-sqlite} profile)
+                      sl-cfg
+                      (throw-unsupported-profile profile)))
+      test-system (fn []
+                    (clojure.tools.logging/warn "Starting SQLite!!!")
+                    (system/system (sr/map->SQLiteBackend {})
+                                   :test-sqlite))]
+      (f))))
+
+(defn fresh-postgres-fixture
+  [f]
+  (let [id-str (str (UUID/randomUUID))
+        pg-cfg (-> (read-config :test-postgres)
+                   (update-in [:connection :database :db-type] #(str % ":tc"))
+                   (assoc-in [:connection :database :db-name] id-str))]
+    (with-redefs
+     [read-config (fn [profile]
+                    (if (#{:test-postgres} profile)
+                      pg-cfg
+                      (throw-unsupported-profile profile)))
+      test-system (fn []
+                    (system/system (pr/map->PostgresBackend {})
+                                   :test-postgres))]
+      (f))))
 
 ;; Copied from training-commons.xapi.statement-gen-test
 (defn check-validate

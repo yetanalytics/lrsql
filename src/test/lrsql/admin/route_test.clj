@@ -8,9 +8,11 @@
             [lrsql.test-support :as support]
             [lrsql.util :as u]))
 
+;; Init
+
 (support/instrument-lrsql)
 
-(use-fixtures :each support/fresh-db-fixture)
+(use-fixtures :each support/fresh-h2-fixture)
 
 (def content-type {"Content-Type" "application/json"})
 
@@ -36,6 +38,8 @@
   (curl/delete "http://0.0.0.0:8080/admin/account"
                {:headers headers
                 :body    body}))
+
+;; Tests
 
 (defmacro is-err-code
   "Test that `expr` throws an exception with the correct HTTP error `code`."
