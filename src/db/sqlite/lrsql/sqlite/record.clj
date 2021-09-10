@@ -61,7 +61,7 @@
     nil)
 
   bp/BackendUtil
-  (-txn-retry? [_ ex]
+  (-txn-retry? [_ _ex]
     ;; No known retry cases for SQLite
     false)
 
@@ -185,7 +185,13 @@
     (bd/set-read-bytes->json! ; SQLite returns JSON data as byte arrays even
      #{"payload"})            ; though the data type is "BLOB"
     (sd/set-read-str->uuid-or-inst!
-     #{"id" "statement_id" "registration" "ancestor_id" "descendant_id" "account_id"}
+     #{"id"
+       "statement_id"
+       "registration"
+       "ancestor_id"
+       "descendant_id"
+       "cred_id"
+       "account_id"}
      #{"last_modified"}))
   (-set-write! [_]
     (bd/set-write-json->bytes!)
