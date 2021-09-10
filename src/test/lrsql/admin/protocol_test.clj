@@ -1,7 +1,7 @@
 (ns lrsql.admin.protocol-test
   "Test the protocol fns of `AdminAccountManager` and `APIKeyManager` directly."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [com.stuartsierra.component    :as component]
+            [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
             [lrsql.test-support   :as support]))
@@ -10,9 +10,12 @@
 
 (support/instrument-lrsql)
 
-;; (use-fixtures :each support/fresh-h2-fixture)
+(use-fixtures :each support/fresh-db-fixture)
+
+;; Test content
 
 (def test-username "DonaldChamberlin123") ; co-inventor of SQL
+
 (def test-password "iLoveSql")
 
 ;; Tests

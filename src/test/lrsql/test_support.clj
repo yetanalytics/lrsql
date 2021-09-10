@@ -1,6 +1,8 @@
 (ns lrsql.test-support
   (:require [clojure.spec.test.alpha :as stest]
+            [clojure.string :as cstr]
             [orchestra.spec.test :as otest]
+            [next.jdbc.connection :refer [jdbc-url]]
             [lrsql.init.config :refer [read-config]]
             [lrsql.system :as system]
             [lrsql.h2.record :as hr]
@@ -50,7 +52,6 @@
                       h2-cfg
                       (throw-unsupported-profile profile)))
       test-system (fn []
-                    (clojure.tools.logging/warn "Starting H2!")
                     (system/system (hr/map->H2Backend {})
                                         :test-h2-mem))]
       (f))))
@@ -65,7 +66,6 @@
                       sl-cfg
                       (throw-unsupported-profile profile)))
       test-system (fn []
-                    (clojure.tools.logging/warn "Starting SQLite!!!")
                     (system/system (sr/map->SQLiteBackend {})
                                    :test-sqlite))]
       (f))))
@@ -73,9 +73,18 @@
 (defn fresh-postgres-fixture
   [f]
   (let [id-str (str (UUID/randomUUID))
-        pg-cfg (-> (read-config :test-postgres)
-                   (update-in [:connection :database :db-type] #(str % ":tc"))
-                   (assoc-in [:connection :database :db-name] id-str))]
+        pg-cfg (let [{{{:keys [db-type db-host db-port]}
+                       :database} :connection :as raw-cfg}
+                     (read-config :test-postgres)]
+                 (assoc-in
+                  raw-cfg
+                  [:connection :database :db-jdbc-url]
+                  (-> {:dbtype db-type
+                       :dbname id-str
+                       :host   db-host
+                       :port   db-port}
+                      jdbc-url
+                      (cstr/replace #"postgresql:" "tc:postgresql:"))))]
     (with-redefs
      [read-config (fn [profile]
                     (if (#{:test-postgres} profile)
@@ -85,6 +94,8 @@
                     (system/system (pr/map->PostgresBackend {})
                                    :test-postgres))]
       (f))))
+
+(def fresh-db-fixture fresh-h2-fixture)
 
 ;; Copied from training-commons.xapi.statement-gen-test
 (defn check-validate

@@ -8,7 +8,7 @@
 
 (support/instrument-lrsql)
 
-(use-fixtures :each support/fresh-h2-fixture)
+(use-fixtures :each support/fresh-db-fixture)
 
 ;; Tests
 

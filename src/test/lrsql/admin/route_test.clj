@@ -12,7 +12,9 @@
 
 (support/instrument-lrsql)
 
-(use-fixtures :each support/fresh-h2-fixture)
+(use-fixtures :each support/fresh-db-fixture)
+
+;; Test content
 
 (def content-type {"Content-Type" "application/json"})
 
