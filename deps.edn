@@ -98,9 +98,7 @@
                   :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema
-                               com.yetanalytics/project-pan]}}
-   :exec-fn     cognitect.test-runner.api/test
-   :exec-args   {:dirs ["src/test"]}}
+                               com.yetanalytics/project-pan]}}}
   ;; build alias invoked like clojure -Xbuild uber
   :build
   {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
