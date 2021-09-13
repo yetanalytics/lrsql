@@ -35,6 +35,33 @@
   []
   {})
 
+;; Copied from training-commons.xapi.statement-gen-test
+(defn check-validate
+  "Given the function name `fname`, returns `nil` if its generative
+   tests passes, the erroneous result otherwise. If `num-tests` is
+   not provided, runs 50 tests by default."
+  ([fname]
+   (check-validate fname 50))
+  ([fname num-tests]
+   (let [opts {:clojure.spec.test.check/opts
+               {:num-tests num-tests
+                :seed      (rand-int Integer/MAX_VALUE)}}
+         res (stest/check fname opts)]
+     (when-not (true? (-> res first :clojure.spec.test.check/ret :pass?))
+       res))))
+
+(defmacro seq-is
+  "Apply `clojure.test/is` to each element of `exprs`, comapring each
+   result to `expected`."
+  [expected & exprs]
+  (let [is-exprs# (map (fn [expr] `(clojure.test/is (= ~expected ~expr)))
+                       exprs)]
+    `(do ~@is-exprs#)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; LRS test fixtures + systems
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn- throw-unsupported-profile
   [profile]
   (throw (ex-info "Unsupported profile!"
@@ -53,7 +80,7 @@
                       (throw-unsupported-profile profile)))
       test-system (fn []
                     (system/system (hr/map->H2Backend {})
-                                        :test-h2-mem))]
+                                   :test-h2-mem))]
       (f))))
 
 (defn fresh-sqlite-fixture
@@ -96,29 +123,6 @@
       (f))))
 
 (def fresh-db-fixture fresh-h2-fixture)
-
-;; Copied from training-commons.xapi.statement-gen-test
-(defn check-validate
-  "Given the function name `fname`, returns `nil` if its generative
-   tests passes, the erroneous result otherwise. If `num-tests` is
-   not provided, runs 50 tests by default."
-  ([fname]
-   (check-validate fname 50))
-  ([fname num-tests]
-   (let [opts {:clojure.spec.test.check/opts
-               {:num-tests num-tests
-                :seed      (rand-int Integer/MAX_VALUE)}}
-         res (stest/check fname opts)]
-     (when-not (true? (-> res first :clojure.spec.test.check/ret :pass?))
-       res))))
-
-(defmacro seq-is
-  "Apply `clojure.test/is` to each element of `exprs`, comapring each
-   result to `expected`."
-  [expected & exprs]
-  (let [is-exprs# (map (fn [expr] `(clojure.test/is (= ~expected ~expr)))
-                       exprs)]
-    `(do ~@is-exprs#)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Conformance test helpers
