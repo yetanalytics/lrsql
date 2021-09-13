@@ -1,5 +1,5 @@
 (ns lrsql.test-runner
-  (:require [cognitect.test-runner.api :as api]
+  (:require [cognitect.test-runner.api :as runner]
             [lrsql.test-support :as support]))
 
 (defn -main
@@ -10,4 +10,4 @@
                     "h2"       support/fresh-h2-fixture
                     "sqlite"   support/fresh-sqlite-fixture
                     "postgres" support/fresh-postgres-fixture)]
-      (api/test {:dirs ["src/test"]}))))
+      (runner/test {:dirs ["src/test"]}))))

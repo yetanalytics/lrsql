@@ -62,40 +62,31 @@
 ;; LRS test fixtures + systems
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- throw-unsupported-profile
-  [profile]
-  (throw (ex-info "Unsupported profile!"
-                  {:type ::unsupported-profile
-                   :profile profile})))
-
 (defn fresh-h2-fixture
   [f]
   (let [id-str (str (UUID/randomUUID))
         h2-cfg (-> (read-config :test-h2-mem)
                    (assoc-in [:connection :database :db-name] id-str))]
     (with-redefs
-     [read-config (fn [profile]
-                    (if (#{:test-h2-mem} profile)
-                      h2-cfg
-                      (throw-unsupported-profile profile)))
+     [read-config (constantly h2-cfg)
       test-system (fn []
-                    (system/system (hr/map->H2Backend {})
-                                   :test-h2-mem))]
+                    (system/system (hr/map->H2Backend {}) :test-h2-mem))]
       (f))))
+
+;; `:memory:` is a special db-name value that creates an in-memory SQLite DB.
 
 (defn fresh-sqlite-fixture
   [f]
   (let [sl-cfg (-> (read-config :test-sqlite)
                    (assoc-in [:connection :database :db-name] ":memory:"))]
     (with-redefs
-     [read-config (fn [profile]
-                    (if (#{:test-sqlite} profile)
-                      sl-cfg
-                      (throw-unsupported-profile profile)))
+     [read-config (constantly sl-cfg)
       test-system (fn []
-                    (system/system (sr/map->SQLiteBackend {})
-                                   :test-sqlite))]
+                    (system/system (sr/map->SQLiteBackend {}) :test-sqlite))]
       (f))))
+
+;; Need to manually override db-type because next.jdbc does not support
+;; `tc`-prefixed DB types.
 
 (defn fresh-postgres-fixture
   [f]
@@ -113,10 +104,7 @@
                       jdbc-url
                       (cstr/replace #"postgresql:" "tc:postgresql:"))))]
     (with-redefs
-     [read-config (fn [profile]
-                    (if (#{:test-postgres} profile)
-                      pg-cfg
-                      (throw-unsupported-profile profile)))
+     [read-config (constantly pg-cfg)
       test-system (fn []
                     (system/system (pr/map->PostgresBackend {})
                                    :test-postgres))]
