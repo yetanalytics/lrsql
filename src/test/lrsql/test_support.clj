@@ -29,12 +29,6 @@
   []
   (otest/unstrument (lrsql-syms)))
 
-;; TODO: Somehow allow other DMBSs to be tested
-(defn test-system
-  "Create a lrsql system specifically for tests"
-  []
-  {})
-
 ;; Copied from training-commons.xapi.statement-gen-test
 (defn check-validate
   "Given the function name `fname`, returns `nil` if its generative
@@ -61,6 +55,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; LRS test fixtures + systems
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Returns `{}` as default - need to be used in a fixture
+(defn test-system
+  "Create a lrsql system specifically for tests"
+  []
+  {})
 
 (defn fresh-h2-fixture
   [f]
