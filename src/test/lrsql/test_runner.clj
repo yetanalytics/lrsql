@@ -10,4 +10,4 @@
                     "h2"       support/fresh-h2-fixture
                     "sqlite"   support/fresh-sqlite-fixture
                     "postgres" support/fresh-postgres-fixture)]
-      (api/test {:dirs ["src/test/lrsql/admin"]}))))
+      (api/test {:dirs ["src/test"]}))))
