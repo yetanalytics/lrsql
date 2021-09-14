@@ -31,7 +31,6 @@
 
   bp/BackendInit
   (-create-all! [_ tx]
-    #_(ensure-foreign-keys! tx)
     (create-statement-table! tx)
     (create-desc-id-index! tx)
     (create-verb-iri-index! tx)
@@ -66,7 +65,7 @@
     nil)
 
   bp/BackendUtil
-  (-txn-retry? [_ ex]
+  (-txn-retry? [_ _ex]
     ;; No known retry cases for SQLite
     false)
 

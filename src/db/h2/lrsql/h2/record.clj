@@ -112,7 +112,6 @@
   (-query-state-document-exists [_ tx input]
     (query-state-document-exists tx input))
 
-
   bp/AgentProfileDocumentBackend
   (-insert-agent-profile-document! [_ tx input]
     (insert-agent-profile-document! tx input))
