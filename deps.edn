@@ -24,8 +24,8 @@
   org.clojure/core.memoize                 {:mvn/version "1.0.250"}
   camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
   com.yetanalytics/lrs
-  {:git/url    "git@github.com:yetanalytics/lrs.git"
-   :sha        "1765c48bac2f313099cfd59e08e2bd3ccd85b597"
+  {:git/url    "https://github.com/yetanalytics/lrs.git"
+   :sha        "76eb326a158800f5253b6eb642bbe06bdb51e77f"
    :exclusions [org.clojure/clojure
                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
