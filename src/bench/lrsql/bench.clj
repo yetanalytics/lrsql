@@ -1,5 +1,6 @@
 (ns lrsql.bench
-  (:require [clojure.string :refer [join]]
+  (:require [clojure.core.async :as a]
+            [clojure.string :refer [join]]
             [clojure.math.numeric-tower :as math]
             [clojure.tools.cli :as cli]
             [clojure.tools.logging :as log]
@@ -109,13 +110,34 @@
   (let [inputs  (read-insert-input input-uri)
         stmts   (generate-statements inputs size sref-type)]
     (loop [batches (partition-all batch-size stmts)]
-      (if-some [batch (first batches)]
-        (do
-          (curl/post endpoint
-                     {:headers    headers
-                      :body       (String. (u/write-json (vec batch)))
-                      :basic-auth [user pass]})
-          (recur (rest batches)))))))
+      (when-some [batch (first batches)]
+        (curl/post endpoint
+                   {:headers    headers
+                    :body       (String. (u/write-json (vec batch)))
+                    :basic-auth [user pass]})
+        (recur (rest batches))))))
+
+(defn store-statements-async
+  [endpoint input-uri size batch-size user pass sref-type]
+  (let [inputs   (read-insert-input input-uri)
+        stmts    (generate-statements inputs size sref-type)
+        requests (mapv (fn [batch]
+                         {:headers    headers
+                          :body       (String. (u/write-json (vec batch)))
+                          :basic-auth [user pass]})
+                       (partition-all batch-size stmts))
+        ;; ENTER THE ASYNC ZONE
+        post-af  (fn [req chan]
+                   (a/go (try (let [res (curl/post endpoint req)]
+                                (a/>! chan res))
+                              (catch Exception e
+                                (a/>! chan e)))
+                         (a/close! chan)))
+        req-chan (a/to-chan requests)
+        res-chan (a/chan (count requests))
+        _        (a/<!! (a/pipeline-async 10 res-chan post-af req-chan))
+        ;; LEAVE THE ASYNC ZONE
+        ]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Query
@@ -209,13 +231,15 @@
     ;; Store statements
     (when insert-input
       (log/info "Starting statement insertion...")
-      (store-statements lrs-endpoint
-                        insert-input
-                        insert-size
-                        batch-size
-                        user
-                        pass
-                        statement-ref-type)
+      (#_store-statements
+       store-statements-async
+       lrs-endpoint
+       insert-input
+       insert-size
+       batch-size
+       user
+       pass
+       statement-ref-type)
       (log/info "Statement insertion finished."))
     ;; Query statements
     (log/info "Starting statement query benching...")
