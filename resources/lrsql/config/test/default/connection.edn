@@ -1,0 +1,14 @@
+{:pool-auto-commit        true
+ :pool-keepalive-time     0
+ :pool-connection-timeout 30000
+ :pool-idle-timeout       600000
+ :pool-validation-timeout 5000
+ :pool-max-lifetime       1800000
+ :pool-minimum-idle       1
+ :pool-maximum-size       1
+ :pool-initialization-fail-timeout 1
+ :pool-isolate-internal-queries    false
+ :pool-leak-detection-threshold    0
+ :pool-transaction-isolation       nil
+ :pool-name               nil
+ :pool-enable-jmx         false}

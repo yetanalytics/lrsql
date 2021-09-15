@@ -24,6 +24,10 @@
   (start [this] this)
   (stop [this] this)
 
+  bp/ConnectionOps
+  (-conn-init-sql [_]
+    nil)
+
   bp/BackendInit
   (-create-all! [_ tx]
     ;; Enums
@@ -113,7 +117,6 @@
   (-query-state-document-exists [_ tx input]
     (query-state-document-exists tx input))
 
-
   bp/AgentProfileDocumentBackend
   (-insert-agent-profile-document! [_ tx input]
     (insert-agent-profile-document! tx input))
@@ -127,7 +130,6 @@
     (query-agent-profile-document-ids tx input))
   (-query-agent-profile-document-exists [_ tx input]
     (query-agent-profile-document-exists tx input))
-
 
   bp/ActivityProfileDocumentBackend
   (-insert-activity-profile-document! [_ tx input]
