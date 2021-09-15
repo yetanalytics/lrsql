@@ -11,7 +11,9 @@
   buddy/buddy-core                         {:mvn/version "1.10.1"}
   buddy/buddy-sign                         {:mvn/version "3.4.1"}
   buddy/buddy-hashers                      {:mvn/version "1.8.1"}
-  com.mchange/c3p0                         {:mvn/version "0.9.5.5"}
+  ;; Need to exclude slf4j to make logback work properly
+  com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
+                                            :exclusions  [org.slf4j/slf4j-api]}
   com.github.seancorfield/next.jdbc        {:mvn/version "1.2.674"}
   ;; com.layerware/hugsql                   {:mvn/version "0.5.1"}
   com.yetanalytics/hugsql                  {:mvn/version "0.6.0-SNAPSHOT"}

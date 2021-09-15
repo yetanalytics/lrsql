@@ -18,7 +18,7 @@
                       [])
          :connection (component/using
                       (db/map->Connection {})
-                      [])
+                      [:backend])
          :lrs        (component/using
                       (lrs/map->LearningRecordStore {})
                       [:connection :backend])

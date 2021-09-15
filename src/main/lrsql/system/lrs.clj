@@ -27,7 +27,7 @@
             [lrsql.system.util :refer [assert-config]]
             [lrsql.util.auth      :as auth-util]
             [lrsql.util.statement :as stmt-util]
-            [lrsql.init.authority :refer [make-authority-fn]]
+            [lrsql.init.authority   :refer [make-authority-fn]]
             [lrsql.util.concurrency :refer [with-rerunable-txn]])
   (:import [java.time Instant]))
 
@@ -77,15 +77,16 @@
           (-> (map stmt-input/insert-statement-input stmts)
               (stmt-input/add-insert-attachment-inputs
                attachments))
+          retry-test   (partial bp/-txn-retry? backend)
           retry-limit  (:stmt-retry-limit config)
           retry-budget (:stmt-retry-budget config)]
-      (with-rerunable-txn [tx conn {:retry-test  (partial bp/-txn-retry? backend)
+      (with-rerunable-txn [tx conn {:retry-test  retry-test
                                     :budget      retry-budget
                                     :max-attempt retry-limit}]
         (loop [stmt-ins stmt-inputs
                stmt-res {:statement-ids []}]
           (if-some [stmt-input (first stmt-ins)]
-               ;; Statement input available to insert
+            ;; Statement input available to insert
             (let [stmt-descs  (stmt-q/query-descendants
                                backend
                                tx
@@ -98,17 +99,17 @@
                                tx
                                stmt-input')]
               (if (contains? stmt-result :error)
-                   ;; Statement conflict or some other error - stop and rollback
+                ;; Statement conflict or some other error - stop and rollback
                 (do (log/error "Error on statement insertion; roll back transaction.")
                     (.rollback tx)
                     stmt-result)
-                   ;; Non-error result - continue
+                ;; Non-error result - continue
                 (if-some [stmt-id (:statement-id stmt-result)]
                   (recur (rest stmt-ins)
                          (update stmt-res :statement-ids conj stmt-id))
                   (recur (rest stmt-ins)
                          stmt-res))))
-               ;; No more statement inputs - return
+            ;; No more statement inputs - return
             stmt-res)))))
 
   (-get-statements

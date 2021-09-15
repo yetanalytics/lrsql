@@ -42,32 +42,21 @@ ci:
 	clojure -M:test -m lrsql.test-runner --database h2
 
 ephemeral: resources/public/admin
-	LRSQL_DB_NAME=ephemeral \
-		LRSQL_API_KEY_DEFAULT=username \
-		LRSQL_API_SECRET_DEFAULT=password \
-		clojure -M:db-h2 -m lrsql.h2.main --persistent false
+	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? false
 
 persistent: resources/public/admin
-	LRSQL_DB_NAME=persistent \
-		LRSQL_API_KEY_DEFAULT=username \
-		LRSQL_API_SECRET_DEFAULT=password \
-		clojure -M:db-h2 -m lrsql.h2.main --persistent true
+	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? true
 
 sqlite: resources/public/admin
-	LRSQL_DB_NAME=lrsql.sqlite.db \
-		LRSQL_API_KEY_DEFAULT=username \
-		LRSQL_API_SECRET_DEFAULT=password \
-		clojure -M:db-sqlite -m lrsql.sqlite.main
+	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite
 
-# NOTE: Requires a running Postgres instance!
+# NOTE: Requires a running Postgres instance where:
+# - user is lrsql_user
+# - password is swordfish
+# - db name is lrsql_pg
+# - schema is lrsql
 postgres: resources/public/admin
-	LRSQL_DB_NAME=lrsql_pg \
-		LRSQL_DB_USER=lrsql_user \
-		LRSQL_DB_PASSWORD=swordfish \
-		LRSQL_DB_PROPERTIES=currentSchema=lrsql \
-		LRSQL_API_KEY_DEFAULT=username \
-		LRSQL_API_SECRET_DEFAULT=password \
-		clojure -M:db-postgres -m lrsql.postgres.main
+	clojure -X:db-postgres lrsql.postgres.main/run-test-postgres
 
 # NOTE: Requires a running lrsql instance!
 bench:
@@ -122,11 +111,16 @@ target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/conf
 # Download the 3 runtimes from an AWS S3 bucket.
 
 # The given tag to pull down
-RUNTIME_TAG ?= 0.0.1-java-11-temurin
+RUNTIME_TAG ?= 0.1.0-java-11-temurin-test
 RUNTIME_MACHINE ?= macos
 RUNTIME_MACHINE_BUILD ?= macOS-latest
 RUNTIME_ZIP_DIR ?= tmp/runtimes/${RUNTIME_TAG}
 RUNTIME_ZIP ?= ${RUNTIME_ZIP_DIR}/${RUNTIME_MACHINE}.zip
+
+# DEBUG: Kept here for reference
+# target/bundle/runtimes: target/bundle/bin
+# 	mkdir target/bundle/runtimes
+# 	jlink --output target/bundle/runtimes/$(MACHINE_TYPE) --add-modules java.base,java.logging,java.naming,java.xml,java.sql,java.transaction.xa,java.security.sasl,java.management
 
 target/bundle/runtimes/%:
 	mkdir -p ${RUNTIME_ZIP_DIR}
@@ -173,6 +167,13 @@ bundle: target/bundle
 # `clean-exe` removes all pre-existing executables, so that they can be rebuilt.
 # This is not done as part of the regular `clean` target because we do not want
 # to rebuild the EXEs across multiple builds.
+
+# To build a new set of EXEs to commit, perform the following:
+# % make bundle # if you haven't built the new JAR yet
+# % make clean-exe
+# % make exe
+# Note that `make bundle` also builds the EXEs automatically, and also copies
+# them to `target/bundle`.
 
 .phony: clean-exe
 

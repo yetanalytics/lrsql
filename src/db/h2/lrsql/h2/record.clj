@@ -23,6 +23,10 @@
   (start [this] this)
   (stop [this] this)
 
+  bp/ConnectionOps
+  (-conn-init-sql [_]
+    nil)
+
   bp/BackendInit
   (-create-all! [_ tx]
     (create-statement-table! tx)
@@ -107,7 +111,6 @@
     (query-state-document-ids tx input))
   (-query-state-document-exists [_ tx input]
     (query-state-document-exists tx input))
-
 
   bp/AgentProfileDocumentBackend
   (-insert-agent-profile-document! [_ tx input]

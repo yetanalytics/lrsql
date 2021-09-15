@@ -24,9 +24,13 @@
   (start [this] this)
   (stop [this] this)
 
+  bp/ConnectionOps
+  (-conn-init-sql [_]
+    ;; Extract the SQL command string from the sqlvec
+    (first (ensure-foreign-keys-snip)))
+
   bp/BackendInit
   (-create-all! [_ tx]
-    (ensure-foreign-keys! tx)
     (create-statement-table! tx)
     (create-desc-id-index! tx)
     (create-verb-iri-index! tx)
