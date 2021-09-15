@@ -31,32 +31,21 @@ ci:
 	clojure -X:test
 
 ephemeral: resources/public/admin
-	LRSQL_DB_NAME=ephemeral \
-		LRSQL_API_KEY_DEFAULT=username \
-		LRSQL_API_SECRET_DEFAULT=password \
-		clojure -M:db-h2 -m lrsql.h2.main --persistent false
+	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? false
 
 persistent: resources/public/admin
-	LRSQL_DB_NAME=persistent \
-		LRSQL_API_KEY_DEFAULT=username \
-		LRSQL_API_SECRET_DEFAULT=password \
-		clojure -M:db-h2 -m lrsql.h2.main --persistent true
+	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? true
 
 sqlite: resources/public/admin
-	LRSQL_DB_NAME=lrsql.sqlite.db \
-		LRSQL_API_KEY_DEFAULT=username \
-		LRSQL_API_SECRET_DEFAULT=password \
-		clojure -M:db-sqlite -m lrsql.sqlite.main
+	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite
 
-# NOTE: Requires a running Postgres instance!
+# NOTE: Requires a running Postgres instance where:
+# - user is lrsql_user
+# - password is swordfish
+# - db name is lrsql_pg
+# - schema is lrsql
 postgres: resources/public/admin
-	LRSQL_DB_NAME=lrsql_pg \
-		LRSQL_DB_USER=lrsql_user \
-		LRSQL_DB_PASSWORD=swordfish \
-		LRSQL_DB_PROPERTIES=currentSchema=lrsql \
-		LRSQL_API_KEY_DEFAULT=username \
-		LRSQL_API_SECRET_DEFAULT=password \
-		clojure -M:db-postgres -m lrsql.postgres.main
+	clojure -X:db-postgres lrsql.postgres.main/run-test-postgres
 
 # NOTE: Requires a running lrsql instance!
 bench:
@@ -167,6 +156,13 @@ bundle: target/bundle
 # `clean-exe` removes all pre-existing executables, so that they can be rebuilt.
 # This is not done as part of the regular `clean` target because we do not want
 # to rebuild the EXEs across multiple builds.
+
+# To build a new set of EXEs to commit, perform the following:
+# % make bundle # if you haven't built the new JAR yet
+# % make clean-exe
+# % make exe
+# Note that `make bundle` also builds the EXEs automatically, and also copies
+# them to `target/bundle`.
 
 .phony: clean-exe
 
