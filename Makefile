@@ -100,11 +100,16 @@ target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/conf
 # Download the 3 runtimes from an AWS S3 bucket.
 
 # The given tag to pull down
-RUNTIME_TAG ?= 0.0.1-java-11-temurin
+RUNTIME_TAG ?= 0.1.0-java-11-temurin-test
 RUNTIME_MACHINE ?= macos
 RUNTIME_MACHINE_BUILD ?= macOS-latest
 RUNTIME_ZIP_DIR ?= tmp/runtimes/${RUNTIME_TAG}
 RUNTIME_ZIP ?= ${RUNTIME_ZIP_DIR}/${RUNTIME_MACHINE}.zip
+
+# DEBUG: Kept here for reference
+# target/bundle/runtimes: target/bundle/bin
+# 	mkdir target/bundle/runtimes
+# 	jlink --output target/bundle/runtimes/$(MACHINE_TYPE) --add-modules java.base,java.logging,java.naming,java.xml,java.sql,java.transaction.xa,java.security.sasl,java.management
 
 target/bundle/runtimes/%:
 	mkdir -p ${RUNTIME_ZIP_DIR}

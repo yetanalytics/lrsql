@@ -17,6 +17,8 @@
 
 (s/def ::db-user string?)
 (s/def ::db-password string?)
+(s/def ::db-schema string?)
+(s/def ::db-catalog string?)
 
 (s/def ::database
   (s/and (s/conformer u/remove-nil-vals)
@@ -24,35 +26,77 @@
          (s/or :no-jdbc-url
                (s/keys :req-un [::db-type
                                 ::db-name]
-                       :opt-un [::db-properties
-                                ::db-host
+                       :opt-un [::db-host
                                 ::db-port
+                                ::db-properties
                                 ::db-user
-                                ::db-password])
+                                ::db-password
+                                ::db-schema
+                                ::db-catalog])
                :jdbc-url
                (s/keys :req-un [::db-jdbc-url]
                        :opt-un [::db-user
-                                ::db-password]))))
+                                ::db-password
+                                ::db-schema]))))
 
-(s/def ::pool-init-size nat-int?)
-(s/def ::pool-min-size nat-int?)
-(s/def ::pool-inc nat-int?)
-(s/def ::pool-max-size nat-int?)
-(s/def ::pool-max-stmts nat-int?)
+(s/def ::pool-auto-commit boolean?)
+(s/def ::pool-initialization-fail-timeout int?)
+(s/def ::pool-minimum-idle nat-int?)
+(s/def ::pool-maximum-size pos-int?)
+(s/def ::pool-isolate-internal-queries boolean?)
+(s/def ::pool-name string?)
+(s/def ::pool-enable-jmx boolean?)
+
+(s/def ::pool-connection-timeout
+  (s/and pos-int? (partial <= 250)))
+(s/def ::pool-idle-timeout
+  (s/and pos-int? (partial <= 10000)))
+(s/def ::pool-validation-timeout
+  (s/and pos-int? (partial <= 250)))
+
+(s/def ::pool-keepalive-time
+  (s/or :disabled zero?
+        :enabled (s/and pos-int? (partial <= 10000))))
+(s/def ::pool-max-lifetime
+  (s/or :no-max-lifetime zero?
+        :max-lifetime (s/and pos-int? (partial <= 30000))))
+(s/def ::pool-leak-detection-threshold
+  (s/or :disabled zero?
+        :enabled (s/and pos-int? (partial <= 2000))))
+
+(s/def ::pool-transaction-isolation
+  #{"TRANSACTION_READ_UNCOMMITTED"
+    "TRANSACTION_READ_COMMITTED"
+    "TRANSACTION_REPEATABLE_READ"
+    "TRANSACTION_SERIALIZABLE"})
 
 (s/def ::connection
   (s/and (s/conformer u/remove-nil-vals)
          (s/conformer u/remove-neg-vals)
-         (s/keys :req-un [::database]
-                 :opt-un [::pool-init-size
-                          ::pool-min-size
-                          ::pool-inc
-                          ::pool-max-size
-                          ::pool-max-stmts])
-         (fn [{:keys [pool-min-size pool-max-size]
-               :or {pool-min-size 3 ; c3p0 defaults
-                    pool-max-size 15}}]
-           (<= pool-min-size pool-max-size))))
+         (s/keys :req-un [::database
+                          ::pool-auto-commit
+                          ::pool-keepalive-time
+                          ::pool-connection-timeout
+                          ::pool-idle-timeout
+                          ::pool-validation-timeout
+                          ::pool-initialization-fail-timeout
+                          ::pool-max-lifetime
+                          ::pool-minimum-idle
+                          ::pool-maximum-size
+                          ::pool-isolate-internal-queries
+                          ::pool-leak-detection-threshold
+                          ::pool-enable-jmx]
+                 :opt-un [::pool-name
+                          ::pool-transaction-isolation])
+         (fn keepalive-lt-max-lifetime?
+           [conn-config]
+           ;; Need to call `second` due to `s/or` conforming the key values.
+           (let [keep-alive (-> conn-config :pool-keepalive-time second)
+                 max-life   (-> conn-config :pool-max-lifetime second)]
+             (< keep-alive max-life)))
+         (fn validation-lt-connection-timeout?
+           [{:keys [pool-validation-timeout pool-connection-timeout]}]
+           (< pool-validation-timeout pool-connection-timeout))))
 
 (s/def ::api-key-default string?)
 (s/def ::api-secret-default string?)

@@ -23,6 +23,10 @@
   (start [this] this)
   (stop [this] this)
 
+  bp/ConnectionOps
+  (-conn-init-sql [_]
+    nil)
+
   bp/BackendInit
   (-create-all! [_ tx]
     (create-statement-table! tx)
@@ -41,6 +45,11 @@
   (-update-all! [_ _tx]
     ;; No-op for now; add functions if updates are needed
     nil)
+
+  bp/BackendUtil
+  (-txn-retry? [_ ex]
+    ;; TODO: add org.h2.jdbc.JdbcSQLTransactionRollbackException: Deadlock detected
+    (instance? org.h2.jdbc.JdbcSQLTimeoutException ex))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
@@ -102,7 +111,6 @@
     (query-state-document-ids tx input))
   (-query-state-document-exists [_ tx input]
     (query-state-document-exists tx input))
-
 
   bp/AgentProfileDocumentBackend
   (-insert-agent-profile-document! [_ tx input]

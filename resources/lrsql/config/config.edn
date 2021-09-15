@@ -24,15 +24,15 @@
  :connection
  #profile
   {;; Test/Dev
-   :test-h2-mem   {}
-   :test-h2       {}
-   :test-sqlite   #include "test/sqlite/connection.edn"
-   :test-postgres {}
+   :test-h2-mem   #include "test/default/connection.edn"
+   :test-h2       #include "test/default/connection.edn"
+   :test-sqlite   #include "test/default/connection.edn"
+   :test-postgres #include "test/postgres/connection.edn"
    ;; Production
    :prod-h2-mem   #include "prod/default/connection.edn"
    :prod-h2       #include "prod/default/connection.edn"
-   :prod-sqlite   #include "prod/sqlite/connection.edn"
-   :prod-postgres #include "prod/default/connection.edn"}
+   :prod-sqlite   #include "prod/default/connection.edn"
+   :prod-postgres #include "prod/postgres/connection.edn"}
  :lrs
  #profile
   {;; Test/Dev

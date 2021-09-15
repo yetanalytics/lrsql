@@ -4,6 +4,7 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.postgres.data :as pd]
+            [clojure.string :refer [includes?]]
             [lrsql.util :as u]))
 
 ;; Init HugSql functions
@@ -22,6 +23,10 @@
   cmp/Lifecycle
   (start [this] this)
   (stop [this] this)
+
+  bp/ConnectionOps
+  (-conn-init-sql [_]
+    nil)
 
   bp/BackendInit
   (-create-all! [_ tx]
@@ -47,6 +52,12 @@
   (-update-all! [_ _]
     ;; No-op for now; add functions if updates are needed
     nil)
+
+  bp/BackendUtil
+  (-txn-retry? [_ ex]
+    ;; only retry PGExceptions with a specified phrase
+    (and (instance? org.postgresql.util.PSQLException ex)
+         (includes? (.getMessage ex) "ERROR: deadlock detected")))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
@@ -106,7 +117,6 @@
   (-query-state-document-exists [_ tx input]
     (query-state-document-exists tx input))
 
-
   bp/AgentProfileDocumentBackend
   (-insert-agent-profile-document! [_ tx input]
     (insert-agent-profile-document! tx input))
@@ -120,7 +130,6 @@
     (query-agent-profile-document-ids tx input))
   (-query-agent-profile-document-exists [_ tx input]
     (query-agent-profile-document-exists tx input))
-
 
   bp/ActivityProfileDocumentBackend
   (-insert-activity-profile-document! [_ tx input]

@@ -1,9 +1,10 @@
 /* Pragmas */
 
--- :name ensure-foreign-keys!
--- :command :execute
--- :doc Allow foreign keys. SQLite only.
-PRAGMA foreign_keys = ON
+/* We maintain this as a snippet so that we have access to the SQL string
+   (as opposed to a HugSql function). */
+
+-- :snip ensure-foreign-keys-snip
+PRAGMA foreign_keys = ON;
 
 /* Statement + Attachment Tables */
 
