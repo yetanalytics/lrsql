@@ -15,6 +15,7 @@
                    :db-port       5432
                    :db-user       "lrsql_user"
                    :db-password   "swordfish"
+                   :db-schema     "lrsql"
                    :db-properties "currentSchema=lrsql"}
    ;; Production
    :prod-h2-mem   #include "prod/h2_mem/database.edn"

@@ -23,7 +23,7 @@ resources/public/admin: lrs-admin-ui/target/bundle
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench
+.phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench, bench-async
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp
@@ -63,6 +63,13 @@ bench:
 	clojure -M:bench -m lrsql.bench http://localhost:8080/xapi/statements \
 		-i dev-resources/default/insert_input.json \
 		-q dev-resources/default/query_input.json \
+		-u username -p password
+
+bench-async:
+	clojure -M:bench -m lrsql.bench http://localhost:8080/xapi/statements \
+		-i dev-resources/default/insert_input.json \
+		-q dev-resources/default/query_input.json \
+		-a true \
 		-u username -p password
 
 # *** Build ***
