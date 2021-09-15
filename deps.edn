@@ -26,8 +26,8 @@
   org.clojure/core.memoize                 {:mvn/version "1.0.250"}
   camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
   com.yetanalytics/lrs
-  {:git/url    "git@github.com:yetanalytics/lrs.git"
-   :sha        "1765c48bac2f313099cfd59e08e2bd3ccd85b597"
+  {:git/url    "https://github.com/yetanalytics/lrs.git"
+   :sha        "76eb326a158800f5253b6eb642bbe06bdb51e77f"
    :exclusions [org.clojure/clojure
                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
@@ -35,7 +35,7 @@
    :sha        "4b97122d839e895b9111e6ed62ae68bc0fdee723"
    :exclusions [org.clojure/clojure]}
   com.yetanalytics/colossal-squuid
-  {:git/url    "git@github.com:yetanalytics/colossal-squuid.git"
+  {:git/url    "https://github.com/yetanalytics/colossal-squuid.git"
    :sha        "a125975fc40b14bbba7e7fe4fbe4d9363f7c2202"
    :exclusions [org.clojure/clojure]}}
  :aliases
@@ -54,21 +54,30 @@
                  org.clojure/math.numeric-tower {:mvn/version "0.0.4"}
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
                  com.yetanalytics/datasim
-                 {:git/url    "git@github.com:yetanalytics/datasim.git"
+                 {:git/url    "https://github.com/yetanalytics/datasim.git"
                   :sha        "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}
                  ;; Override pan dep in DATASIM
                  com.yetanalytics/project-pan
-                 {:git/url    "git@github.com:yetanalytics/project-pan.git"
+                 {:git/url    "https://github.com/yetanalytics/project-pan.git"
                   :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}}}
   :test
-  {:extra-paths ["src/db/h2" "src/test" "dev-resources"]
-   :extra-deps  {com.h2database/h2      {:mvn/version "1.4.200"}
+  {:extra-paths ["src/db/h2"
+                 "src/db/sqlite"
+                 "src/db/postgres"
+                 "src/test"
+                 "dev-resources"]
+   :extra-deps  {;; DB deps
+                 com.h2database/h2             {:mvn/version "1.4.200"}
+                 org.xerial/sqlite-jdbc        {:mvn/version "3.36.0"}
+                 org.postgresql/postgresql     {:mvn/version "42.2.23"}
+                 org.testcontainers/postgresql {:mvn/version "1.16.0"}
+                 ;; Other test deps
                  org.clojure/test.check {:mvn/version "1.0.0"}
                  babashka/babashka.curl {:mvn/version "0.0.3"}
                  orchestra/orchestra    {:mvn/version "2021.01.01-1"}
@@ -76,24 +85,22 @@
                  {:git/url "https://github.com/cognitect-labs/test-runner.git"
                   :sha     "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
                  com.yetanalytics.lrs/test-runner
-                 {:git/url    "git@github.com:yetanalytics/lrs-test-runner.git"
+                 {:git/url    "https://github.com/yetanalytics/lrs-test-runner.git"
                   :sha        "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
                   :exclusions [org.clojure/data.json]}
                  com.yetanalytics/datasim
-                 {:git/url    "git@github.com:yetanalytics/datasim.git"
+                 {:git/url    "https://github.com/yetanalytics/datasim.git"
                   :sha        "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}
                  ;; Override pan dep in DATASIM
                  com.yetanalytics/project-pan
-                 {:git/url    "git@github.com:yetanalytics/project-pan.git"
+                 {:git/url    "https://github.com/yetanalytics/project-pan.git"
                   :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema
-                               com.yetanalytics/project-pan]}}
-   :exec-fn     cognitect.test-runner.api/test
-   :exec-args   {:dirs ["src/test"]}}
+                               com.yetanalytics/project-pan]}}}
   ;; build alias invoked like clojure -Xbuild uber
   :build
   {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
