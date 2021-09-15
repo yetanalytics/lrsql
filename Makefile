@@ -16,6 +16,7 @@ resources/public/admin: lrs-admin-ui/target/bundle
 # *** Development ***
 
 # `clean-dev` removes all development files.
+# `test-h2`, `test-sqlite`, `test-postgres` run tests on in-mem DB instances.
 # `ci` runs all tests and is called with every push to GitHub.
 # `bench` runs a query benchmarking session on a lrsql instance.
 
@@ -27,8 +28,18 @@ resources/public/admin: lrs-admin-ui/target/bundle
 clean-dev:
 	rm -rf *.db *.log resources/public tmp
 
+test-h2:
+	clojure -M:test -m lrsql.test-runner --database h2
+
+test-sqlite:
+	clojure -M:test -m lrsql.test-runner --database sqlite
+
+test-postgres:
+	clojure -M:test -m lrsql.test-runner --database postgres
+
+# TODO: Remove when we migrate to Github Actions
 ci:
-	clojure -X:test
+	clojure -M:test -m lrsql.test-runner --database h2
 
 ephemeral: resources/public/admin
 	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? false

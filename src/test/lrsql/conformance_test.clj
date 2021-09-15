@@ -4,9 +4,13 @@
             [com.yetanalytics.lrs.test-runner :as conf]
             [lrsql.test-support :as support]))
 
+;; Init
+
 (support/instrument-lrsql)
 
 (t/use-fixtures :each support/fresh-db-fixture)
+
+;; Tests
 
 (deftest conformance-test
   (conf/with-test-suite
