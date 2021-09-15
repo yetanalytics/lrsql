@@ -1,0 +1,39 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
+    - name: Setup Clojure
+      uses: DeLaGuardo/setup-clojure@3.5
+      with:
+        cli: 1.10.3.943
+    
+    - name: Build Bundle
+      run: | # Ensure that the EXEs have the latest metadata
+        make bundle
+        make clean-exe
+        make exe
+        make bundle
+
+    - name: Compress Bundle
+      run: zip -r lrsql.zip target/bundle
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: lrsql.zip
