@@ -26,16 +26,3 @@ jobs:
 
     - name: Run make target ${{ matrix.target }}
       run: make ${{ matrix.target }}
-
-    - name: Compress build artifact
-      if: ${{ matrix.target == 'bundle' }}
-      run: |
-        cd target/bundle
-        zip -r ../../lrsql.zip ./
-
-    - name: Archive build artifact
-      if: ${{ matrix.target == 'bundle' }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: Build artifact
-        path: lrsql.zip

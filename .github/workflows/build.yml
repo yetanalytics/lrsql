@@ -2,8 +2,8 @@ name: CD
 
 on:
   push:
-    tags:
-      - v*
+    branches:
+      - main
 
 jobs:
   release:
@@ -35,7 +35,9 @@ jobs:
         cd target/bundle
         zip -r ../../lrsql.zip ./
     
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
+    - name: Archive Bundle
+      if: ${{ matrix.target == 'bundle' }}
+      uses: actions/upload-artifact@v2
       with:
-        files: lrsql.zip
+        name: SQL LRS bundle
+        path: lrsql.zip
