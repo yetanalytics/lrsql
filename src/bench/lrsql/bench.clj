@@ -191,7 +191,9 @@
        :min   x-min
        :total x-sum})))
 
-(defn perform-queries
+;; Sync
+
+(defn- perform-queries
   [endpoint query query-times user pass]
   ;; `nil` = `{}` since babashka/curl does not like the latter
   (let [curl-input {:headers      headers
@@ -224,10 +226,52 @@
                (conj! results res)))
       (persistent! results))))
 
+;; Async
+
+(defn query-statements-async
+  [endpoint query-uri query-times user pass concurrency]
+  (let [queries  (if query-uri (read-query-input query-uri) [{}])
+        requests (mapcat (fn [query]
+                           (repeat query-times
+                                   {:headers      headers
+                                    :query-params (not-empty query)
+                                    :basic-auth   [user pass]}))
+                         queries)
+        ;; ENTER THE ASYNC ZONE
+        post-af  (fn [req chan]
+                   (a/go (try (let [qm  (if-some [q (:query-params req)] q {})
+                                    res {:ms    (perform-query endpoint req)
+                                         :query qm}]
+                                (a/>! chan res))
+                              (catch Exception e
+                                (a/>! chan e)))
+                         (a/close! chan)))
+        req-chan (a/to-chan requests)
+        res-chan (a/chan (count requests))
+        _        (a/<!! (a/pipeline-async concurrency
+                                          res-chan
+                                          post-af
+                                          req-chan))
+        results  (a/<!! (a/into [] res-chan))
+        ;; LEAVE THE ASYNC ZONE
+        _        (log/trace (pr-str results))
+        stats    (reduce
+                  (fn [m {:keys [ms query]}] (update m query conj ms))
+                  {}
+                  results)
+        stats'   (reduce-kv
+                  (fn [acc query x-vec]
+                    (->> (calc-statistics x-vec query-times)
+                         (merge {:query query})
+                         (conj acc)))
+                  []
+                  stats)]
+    stats'))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Putting it all together
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+  
 (defn -main
   [lrs-endpoint & args]
   (let [{:keys [summary errors]
@@ -243,7 +287,7 @@
                  _insert-size
                  _statement-ref-type
                  _batch-size
-                 _concurrency]
+                 concurrency]
           :as   opts} :options}
         (cli/parse-opts args cli-options)]
     ;; Check for errors
@@ -266,11 +310,18 @@
       (log/info "Statement insertion finished."))
     ;; Query statements
     (log/info "Starting statement query benching...")
-    (let [results (query-statements lrs-endpoint
-                                    query-input
-                                    query-number
-                                    user
-                                    pass)]
+    (let [results (if async?
+                    (query-statements-async lrs-endpoint
+                                            query-input
+                                            query-number
+                                            user
+                                            pass
+                                            concurrency)
+                    (query-statements lrs-endpoint
+                                      query-input
+                                      query-number
+                                      user
+                                      pass))]
       (log/info "Statement query benching finished.")
       (printf "\n%s Query benchmark results for n = %d (in ms) %s\n"
               "**********"
