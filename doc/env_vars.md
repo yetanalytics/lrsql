@@ -14,18 +14,54 @@ All environment variables can either be set directly via the command line, or ca
 | `LRSQL_DB_JDBC_URL` | `dbJdbcUrl` | Optional JDBC URL; this will override the above properties if set. URL syntax will depend on the DBMS. | Not set |
 | `LRSQL_DB_USER` | `dbUser` | The DB user. Optional. | Not set |
 | `LRSQL_DB_PASSWORD` | `dbPassword` | The DB password. Optional. | Not set |
+| `LRSQL_DB_SCHEMA` | `dbSchema` | The DB schema. Optional. | Not set |
+| `LRSQL_DB_CATALOG` | `dbCatalog` | The DB catalog. Optional. | Not set |
 
 ## Connection
 
-The following environment variables are aliases for c3p0 properties, each of which has their respective link to the c3p0 documentation. All of these variables are optional and are not set by default (in which case c3p0 uses its own default values). Note that SQLite uses its own defaults due to issues with multi-threading.
+### HikariCP Properties
 
-| Env Var | Config | c3p0 Property | c3p0 Default | SQLite Default |
-| --- | --- | --- | --- | --- |
-| `LRSQL_POOL_INIT_SIZE` | `poolInitSize` |  [initialPoolSize](https://www.mchange.com/projects/c3p0/#initialPoolSize) | 3 | 1 |
-| `LRSQL_POOL_MIN_SIZE` | `poolMinSize` | [minPoolSize](https://www.mchange.com/projects/c3p0/#minPoolSize) | 3 | 1 |
-| `LRSQL_POOL_INC` | `poolInc` | [acquireIncrement](https://www.mchange.com/projects/c3p0/#acquireIncrement) | 3 | 1 |
-| `LRSQL_POOL_MAX_SIZE` | `poolMaxSize` | [maxPoolSize](https://www.mchange.com/projects/c3p0/#maxPoolSize) | 15 | 1 |
-| `LRSQL_POOL_MAX_STMTS` | `poolMaxStmts` | [maxStatements](https://www.mchange.com/projects/c3p0/#maxStatements) | 0 | 0 |
+The following environment variables are aliases for [HikariCP properties](https://github.com/brettwooldridge/HikariCP#gear-configuration-knobs-baby). All of these variables (except for `poolName`) have default values that are already set. Note that SQLite uses its own defaults due to issues with multi-threading. All temporal values are in milliseconds.
+
+| Env Var | Config | Default | Valid Values |
+| --- | --- | --- | --- |
+| `LRSQL_POOL_AUTO_COMMIT` | `poolAutoCommit` | `true` | `true`/`false`
+| `LRSQL_POOL_KEEPALIVE_TIME` | `poolKeepaliveTime` | `0` (disabled) | `≥ 10000` or `0`, less than `poolMaxLifetime` |
+| `LRSQL_POOL_CONNECTION_TIMEOUT` | `poolConnectionTimeout` | `3000` | `≥ 250` |
+| `LRSQL_POOL_IDLE_TIMEOUT` | `poolIdleTimeout` | `600000` | `≥ 10000` or `0` |
+| `LRSQL_POOL_VALIDATION_TIMEOUT` | `poolValidationTimeout` | `5000` | `≥ 250`, less than `poolConnectionTimeout` |
+| `LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT` | `poolInitializationFailTimeout` | `1` | Any integer |
+| `LRSQL_POOL_MAX_LIFETIME` | `poolMaxLifetime` | `1800000` | `≥ 30000` or `0` |
+| `LRSQL_POOL_MINIMUM_IDLE` | `poolMinimumIdle` | `10` | `≥ 0` |
+| `LRSQL_POOL_MAXIMUM_SIZE` | `poolMaximumSize` | `10` | `≥ 1` |
+| `LRSQL_POOL_ISOLATE_INTERNAL_QUERIES` | `poolIsolateInternal` | `false` | `true`/`false` |
+| `LRSQL_POOL_LEAK_DETECTION_THRESHOLD` | `poolLeakDetectionThreshold` | `0` (disabled) | `≥ 2000` or `0` |
+| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | JDBC Connection transaction isolation string
+| `LRSQL_POOL_NAME` | `poolName` | Not set | Any string |
+
+### Metric Reporting via JMX
+
+The following config var is to activate metrics reporting via JMX.
+
+| Env Var | Config | Description | Default |
+| --- | --- | --- | --- |
+| `LRSQL_POOL_ENABLE_JMX` | `poolEnableJmx` | Activate metrics reporting via JMX. | `false` |
+
+Unlike the previous vars, which are one-to-one with HikariCP properties, the following sets multiple such properties:
+- `registerMbeans` is set in order to activate JMX reporting.
+- `allowPoolSuspension` is set to `true` to allow for user control over connection pools.
+- `metricRegistry` is set to be a Codahale/Dropwizard `MetricRegistry` instance.
+
+### Missing options?
+
+You may have noted that some options are not available:
+
+- `connectionTestQuery` is not recommended for JDBC4 (which all of our DBMS implementations use).
+- `readOnly` will cause the SQL LRS to not work if set to `true`.
+- `connectionInitSql` is set automatically by the SQL LRS system (e.g. to run pragmas in SQLite).
+- `driverClassName` and `dataSource` would clash with SQL LRS's approach to setting the JDBC driver, which is via an URL.
+- `healthCheckRegistry` cannot easily report via JMX, and most of its information should be covered by `metricRegistry` anyways.
+- `threadFactory` and `scheduledExecutor` are Java instances that should only be used in specific execution environments.
 
 ## LRS
 
