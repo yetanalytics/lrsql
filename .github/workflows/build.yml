@@ -1,9 +1,11 @@
 name: CD
 
-on: # TODO: tags
+on:
   push:
     branches:
       - '*'
+    tags:
+      - 'v*.*.*' # Enforce Semantic Versioning
 
 jobs:
   build:
@@ -32,16 +34,19 @@ jobs:
         zip -r ../../lrsql.zip ./
 
     - name: Archive Bundle (Branch Pushes)
-      if: ${{ startsWith(github.ref, 'refs/branches/') }}
+      if: ${{ startsWith(github.ref, 'refs/heads') }}
       uses: actions/upload-artifact@v2
       with:
         name: lrsql-artifact-${{ github.sha }}
         path: lrsql.zip
     
     - name: Craft Draft Release (Tag Pushes)
-      # if: ${{ startsWith(github.ref, 'refs/tags') }} # TODO: Uncomment
+      if: ${{ startsWith(github.ref, 'refs/tags') }}
       uses: softprops/action-gh-release@v1
-      with: # name defaults to tag name, tag_name defaults to github.ref
+      with:
+        # Defaults:
+        # name: [tag name]
+        # tag_name: github.ref
         body: "TODO: Create great release notes!"
         draft: true
         files: lrsql.zip
