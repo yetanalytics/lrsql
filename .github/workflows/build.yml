@@ -40,4 +40,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: SQL LRS bundle
-        path: lrsql.zip
+        path: lrsql-${{ github.sha }}.zip
