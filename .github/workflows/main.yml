@@ -8,7 +8,7 @@ jobs:
   
     strategy:
       matrix:
-        target: [test-h2, test-sqlite, test-postgres, bundle]
+        target: [test-h2, test-sqlite, test-postgres]
 
     steps:
     - uses: actions/checkout@v2
