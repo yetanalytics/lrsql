@@ -34,18 +34,15 @@
   "Enter the async zone and perform `curl-op` on `endpoint` and `requests`
    on `conc-size` concurrent threads."
   [curl-op endpoint requests conc-size]
-  (let [post-af (fn [req chan]
-                  (a/go (try (let [res (curl-op endpoint req)]
-                               (a/>! chan res))
-                             (catch Exception e
-                               (a/>! chan e)))
-                        (a/close! chan)))
+  (let [post-fn (fn [req]
+                  (try (curl-op endpoint req)
+                       (catch Exception e e)))
         req-chan (a/to-chan requests)
         res-chan (a/chan (count requests))]
-    (a/<!! (a/pipeline-async conc-size
-                             res-chan
-                             post-af
-                             req-chan))
+    (a/<!! (a/pipeline-blocking conc-size
+                                res-chan
+                                (map post-fn)
+                                req-chan))
     (a/<!! (a/into [] res-chan))))
 
 (deftest concurrency-test

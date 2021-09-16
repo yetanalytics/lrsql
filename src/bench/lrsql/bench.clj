@@ -147,21 +147,20 @@
                           :body       (String. (u/write-json (vec batch)))
                           :basic-auth [user pass]})
                        (partition-all batch-size stmts))
+        post-fn  (fn [req]
+                   (try
+                     (curl/post endpoint req)
+                     (catch Exception e e)))
         ;; ENTER THE ASYNC ZONE
-        post-af  (fn [req chan]
-                   (a/go (try (let [res (curl/post endpoint req)]
-                                (a/>! chan res))
-                              (catch Exception e
-                                (a/>! chan e)))
-                         (a/close! chan)))
         req-chan (a/to-chan requests)
         res-chan (a/chan (count requests))
-        _        (a/<!! (a/pipeline-async concurrency
-                                          res-chan
-                                          post-af
-                                          req-chan))
+        _        (a/<!! (a/pipeline-blocking concurrency
+                                             res-chan
+                                             (map post-fn)
+                                             req-chan))
         ;; LEAVE THE ASYNC ZONE
-        ]))
+        ]
+    nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Query
@@ -237,21 +236,19 @@
                                     :query-params (not-empty query)
                                     :basic-auth   [user pass]}))
                          queries)
+        post-fn  (fn [req]
+                   (try (let [qm (if-some [q (:query-params req)] q {})]
+                          {:ms    (perform-query endpoint req)
+                           :query qm})
+                        (catch Exception e
+                          e)))
         ;; ENTER THE ASYNC ZONE
-        post-af  (fn [req chan]
-                   (a/go (try (let [qm  (if-some [q (:query-params req)] q {})
-                                    res {:ms    (perform-query endpoint req)
-                                         :query qm}]
-                                (a/>! chan res))
-                              (catch Exception e
-                                (a/>! chan e)))
-                         (a/close! chan)))
         req-chan (a/to-chan requests)
         res-chan (a/chan (count requests))
-        _        (a/<!! (a/pipeline-async concurrency
-                                          res-chan
-                                          post-af
-                                          req-chan))
+        _        (a/<!! (a/pipeline-blocking concurrency
+                                             res-chan
+                                             (map post-fn)
+                                             req-chan))
         results  (a/<!! (a/into [] res-chan))
         ;; LEAVE THE ASYNC ZONE
         _        (log/trace (pr-str results))
@@ -329,3 +326,11 @@
               "**********")
       (pprint/print-table results)
       (println ""))))
+
+(comment
+  ;; Perform benching from the repl
+  (-main "http://localhost:8080/xapi/statements"
+		"-i" "dev-resources/default/insert_input.json"
+		"-q" "dev-resources/default/query_input.json"
+		"-a" "true"
+		"-u" "username" "-p" "password"))
