@@ -32,13 +32,13 @@
    environmental variables. The scope of the default credentials would be
    hardcoded as \"all\". Does not seed the tables when the username
    or password is nil, or if the tables were already seeded."
-  [backend tx ?username ?password]
+  [backend tx ?username ?password ?api-key ?secret-key]
   (when (and ?username ?password)
     (let [admin-in (admin-input/insert-admin-input
                     ?username
                     ?password)
-          key-pair {:api-key    ?username
-                    :secret-key ?password}
+          key-pair {:api-key    ?api-key
+                    :secret-key ?secret-key}
           cred-in  (auth-input/insert-credential-input
                     (:primary-key admin-in)
                     key-pair)

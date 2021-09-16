@@ -1,4 +1,6 @@
-{:api-key-default    "username"
+{:admin-user-default "username"
+ :admin-pass-default "password"
+ :api-key-default    "username"
  :api-secret-default "password"
  :stmt-get-default   50
  :stmt-get-max       50
