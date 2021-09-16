@@ -24,11 +24,7 @@ jobs:
         cli: 1.10.3.943
     
     - name: Build Bundle
-      run: | # Ensure that the EXEs have the latest metadata
-        make bundle
-        make clean-exe
-        make exe
-        make bundle
+      run: make bundle
 
     - name: Compress Bundle
       run: | # Need to cd so that the zip file doesn't contain the parent dirs
