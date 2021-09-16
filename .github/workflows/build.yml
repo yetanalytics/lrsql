@@ -29,10 +29,19 @@ jobs:
     - name: Compress Bundle
       run: | # Need to cd so that the zip file doesn't contain the parent dirs
         cd target/bundle
-        zip -r ../../lrsql-${{ github.sha }}.zip ./
+        zip -r ../../lrsql.zip ./
 
-    - name: Archive Bundle
+    - name: Archive Bundle (Branch Pushes)
+      if: ${{ startsWith(github.ref, 'refs/branches/') }}
       uses: actions/upload-artifact@v2
       with:
-        name: SQL LRS bundle
-        path: lrsql-${{ github.sha }}.zip
+        name: lrsql-artifact-${{ github.sha }}
+        path: lrsql.zip
+    
+    - name: Craft Draft Release (Tag Pushes)
+      # if: ${{ startsWith(github.ref, 'refs/tags') }} # TODO: Uncomment
+      uses: softprops/action-gh-release@v1
+      with: # name defaults to tag name, tag_name defaults to github.ref
+        body: "TODO: Create great release notes!"
+        draft: true
+        files: lrsql.zip
