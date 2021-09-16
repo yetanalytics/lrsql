@@ -32,7 +32,6 @@ jobs:
         zip -r ../../lrsql-${{ github.sha }}.zip ./
 
     - name: Archive Bundle
-      if: ${{ matrix.target == 'bundle' }}
       uses: actions/upload-artifact@v2
       with:
         name: SQL LRS bundle
