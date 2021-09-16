@@ -26,13 +26,8 @@ jobs:
     - name: Build Bundle
       run: make bundle
 
-    - name: Compress Bundle
-      run: | # Need to cd so that the zip file doesn't contain the parent dirs
-        cd target/bundle
-        zip -r ../../lrsql-${{ github.sha }}.zip ./
-
     - name: Archive Bundle
       uses: actions/upload-artifact@v2
       with:
-        name: SQL LRS bundle
-        path: lrsql-${{ github.sha }}.zip
+        name: lrsql-${{ github.sha }}
+        path: target/bundle/
