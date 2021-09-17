@@ -137,6 +137,6 @@ curl -X GET \
     http://[host]:[port]/xapi/statements \
     -H "Content-Type: application/json" \
     -H "X-Experience-API-Version: 1.0.3" \
-    -u "[username]:[password]"
+    -u "[api-key]:[api-secret]"
 ```
 This will run a query where all Statements will be returned - in this case, the one Statement we had just inserted.
