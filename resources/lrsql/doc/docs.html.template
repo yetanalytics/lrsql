@@ -83,10 +83,19 @@ div.logo {
   width: 800px;
 }
 div.footer {
-  margin-left: 40%;
+  margin-left: 20px;
   color: #ff0000;
   font-size: medium;
 }
+.footer a, .footer a:visited {
+  color: red !important;
+}
+
+.footer a:hover {
+  color: red !important;
+  text-decoration: underline;
+}
+
 </style>
     </head>
     <body>
@@ -95,7 +104,11 @@ div.footer {
           <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
         </div>
         {{content|safe}}
-        <div class="footer">&copy; 2021 Yet Analytics Inc.</>
+        <div class="footer">
+         &copy; 2021 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
+         Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+        </div>
       </div>
     </body>
 </html>
