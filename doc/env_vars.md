@@ -25,7 +25,7 @@ The following environment variables are aliases for [HikariCP properties](https:
 
 | Env Var | Config | Default | Valid Values |
 | --- | --- | --- | --- |
-| `LRSQL_POOL_AUTO_COMMIT` | `poolAutoCommit` | `true` | `true`/`false`
+| `LRSQL_POOL_AUTO_COMMIT` | `poolAutoCommit` | `true` | `true`/`false` |
 | `LRSQL_POOL_KEEPALIVE_TIME` | `poolKeepaliveTime` | `0` (disabled) | `≥ 10000` or `0`, less than `poolMaxLifetime` |
 | `LRSQL_POOL_CONNECTION_TIMEOUT` | `poolConnectionTimeout` | `3000` | `≥ 250` |
 | `LRSQL_POOL_IDLE_TIMEOUT` | `poolIdleTimeout` | `600000` | `≥ 10000` or `0` |
@@ -36,7 +36,7 @@ The following environment variables are aliases for [HikariCP properties](https:
 | `LRSQL_POOL_MAXIMUM_SIZE` | `poolMaximumSize` | `10` | `≥ 1` |
 | `LRSQL_POOL_ISOLATE_INTERNAL_QUERIES` | `poolIsolateInternal` | `false` | `true`/`false` |
 | `LRSQL_POOL_LEAK_DETECTION_THRESHOLD` | `poolLeakDetectionThreshold` | `0` (disabled) | `≥ 2000` or `0` |
-| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | JDBC Connection transaction isolation string
+| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | JDBC Connection transaction isolation string |
 | `LRSQL_POOL_NAME` | `poolName` | Not set | Any string |
 
 ### Metric Reporting via JMX
