@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
     <head>
+        <title>Yet SQL LRS Documentation</title>
         <style type="text/css">
 body{
     margin: 0 auto;
