@@ -43,13 +43,19 @@
   (start
     [lrs]
     (assert-config ::cs/lrs "LRS" config)
-    (let [conn    (-> connection :conn-pool)
-          uname   (-> config :api-key-default)
-          pass    (-> config :api-secret-default)
-          auth-tp (-> config :authority-template)
+    (let [;; Destructuring
+          {conn :conn-pool}
+          connection
+          {uname   :admin-user-default
+           pass    :admin-pass-default
+           api-key :api-key-default
+           srt-key :api-secret-default
+           auth-tp :authority-template}
+          config
+          ;; Authority function
           auth-fn (make-authority-fn auth-tp)]
       (init/init-backend! backend conn)
-      (init/insert-default-creds! backend conn uname pass)
+      (init/insert-default-creds! backend conn uname pass api-key srt-key)
       (log/info "Starting new LRS")
       (assoc lrs :connection connection :authority-fn auth-fn)))
   (stop

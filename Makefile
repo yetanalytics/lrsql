@@ -210,14 +210,34 @@ exe: exe/lrsql.exe exe/lrsql_pg.exe
 .phony: run-jar-h2, run-jar-sqlite, run-jar-h2-persistent, run-jar-postgres
 
 run-jar-h2: target/bundle
-	cd target/bundle; LRSQL_API_KEY_DEFAULT=username LRSQL_API_SECRET_DEFAULT=password bin/run_h2.sh
+	cd target/bundle; \
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_h2.sh
 
 run-jar-h2-persistent: target/bundle
-	cd target/bundle; LRSQL_API_KEY_DEFAULT=username LRSQL_API_SECRET_DEFAULT=password bin/run_h2_persistent.sh
+	cd target/bundle; \
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_h2_persistent.sh
 
 run-jar-sqlite: target/bundle
-	cd target/bundle; LRSQL_API_KEY_DEFAULT=username LRSQL_API_SECRET_DEFAULT=password bin/run_sqlite.sh
+	cd target/bundle; \
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_sqlite.sh
 
 # NOTE: Requires a running Postgres instance!
 run-jar-postgres: target/bundle
-	cd target/bundle; LRSQL_API_KEY_DEFAULT=username LRSQL_API_SECRET_DEFAULT=password bin/run_postgres.sh
+	cd target/bundle; \
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_postgres.sh

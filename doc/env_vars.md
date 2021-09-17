@@ -67,8 +67,10 @@ You may have noted that some options are not available:
 
 | Env Var | Config | Description | Default |
 | --- | --- | --- | --- |
-| `LRSQL_API_KEY_DEFAULT` | `apiKeyDefault` | The public API key that seeds the credential table, ie. added to the table upon initialization. Optional **but shouold be set**. | Not set |
-| `LRSQL_API_SECRET_DEFAULT` | `apiSecretDefault` | The secret API key that seeds the credential table, ie. added to the table upon initialization. Optional **but should be set**. | Not set |
+| `LRSQL_ADMIN_USER_DEFAULT` | `adminUserDefault` | The username of the account that seeds the account table, ie. added to the table upon initialization. Optional but **should be set in order to create other accounts**. | Not set |
+| `LRSQL_ADMIN_PASS_DEFAULT` | `adminPassDefault` | The password of the account that seeds the account table. Optional but **should be set in order to create other accounts**. | Not set |
+| `LRSQL_API_KEY_DEFAULT` | `apiKeyDefault` | The public API key that seeds the credential table. Optional, and is ignored if no seed admin account is set. | Not set |
+| `LRSQL_API_SECRET_DEFAULT` | `apiSecretDefault` | The secret API key that seeds the credential table. Optional, and is ignored if no seed admin account is set. | Not set |
 | `LRSQL_STMT_GET_DEFAULT` | `stmtGetDefault` | The default `limit` value in a statement query. Queries default to this value if not explicitly set. | `50` |
 | `LRSQL_STMT_GET_MAX` | `stmtGetMax` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |
 | `LRSQL_AUTHORITY_TEMPLATE` | `authorityTemplate` | The filepath to the Statement authority template file, which describes how authorities are constructed during statement insertion. If the file is not found, the system defaults to a default authority function. | <details>`config/authority.json.template`<summary>(Long string)</summary></details> |
