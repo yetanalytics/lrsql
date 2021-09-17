@@ -32,22 +32,26 @@
    environmental variables. The scope of the default credentials would be
    hardcoded as \"all\". Does not seed the tables when the username
    or password is nil, or if the tables were already seeded."
-  [backend tx ?username ?password]
+  [backend tx ?username ?password ?api-key ?secret-key]
+  ;; Seed Admin Account
   (when (and ?username ?password)
     (let [admin-in (admin-input/insert-admin-input
                     ?username
-                    ?password)
-          key-pair {:api-key    ?username
-                    :secret-key ?password}
-          cred-in  (auth-input/insert-credential-input
-                    (:primary-key admin-in)
-                    key-pair)
-          scope-in (auth-input/insert-credential-scopes-input
-                    key-pair
-                    #{"all"})]
+                    ?password)]
       ;; Don't insert if reconnecting to a previously-seeded DB
       (when-not (admin-q/query-admin backend tx admin-in)
-        (admin-cmd/insert-admin! backend tx admin-in)
-        (when-not (auth-q/query-credential-scopes* backend tx cred-in)
-          (auth-cmd/insert-credential! backend tx cred-in)
-          (auth-cmd/insert-credential-scopes! backend tx scope-in))))))
+        (admin-cmd/insert-admin! backend tx admin-in))
+      ;; Seed Credentials
+      (when (and ?api-key ?secret-key)
+        (let [key-pair {:api-key    ?api-key
+                        :secret-key ?secret-key}
+              cred-in  (auth-input/insert-credential-input
+                        (:primary-key admin-in)
+                        key-pair)
+              scope-in (auth-input/insert-credential-scopes-input
+                        key-pair
+                        #{"all"})]
+          ;; Don't insert if reconnecting to a previously-seeded DB
+          (when-not (auth-q/query-credential-scopes* backend tx cred-in)
+            (auth-cmd/insert-credential! backend tx cred-in)
+            (auth-cmd/insert-credential-scopes! backend tx scope-in)))))))

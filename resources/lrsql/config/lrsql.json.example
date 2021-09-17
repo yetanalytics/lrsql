@@ -5,6 +5,8 @@
     "dbPassword": "changeme"
   },
   "lrs" : {
+    "adminUserDefault" : "my-username",
+    "adminPassDefault" : "changeme",
     "apiKeyDefault" : "my-api-key",
     "apiSecretDefault" : "changeme",
     "stmtGetDefault" : 50,

@@ -1,0 +1,52 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - 'v*.*.*' # Enforce Semantic Versioning
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+
+    - name: Setup Clojure
+      uses: DeLaGuardo/setup-clojure@3.5
+      with:
+        cli: 1.10.3.943
+    
+    - name: Build Bundle
+      run: make bundle
+
+    - name: Compress Bundle
+      run: | # Need to cd so that the zip file doesn't contain the parent dirs
+        cd target/bundle
+        zip -r ../../lrsql.zip ./
+
+    - name: Archive Bundle (Branch Pushes)
+      if: ${{ startsWith(github.ref, 'refs/heads') }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: lrsql-artifact-${{ github.sha }}
+        path: lrsql.zip
+    
+    - name: Craft Draft Release (Tag Pushes)
+      if: ${{ startsWith(github.ref, 'refs/tags') }}
+      uses: softprops/action-gh-release@v1
+      with:
+        # Defaults:
+        # name: [tag name]
+        # tag_name: github.ref
+        body: "## Release Notes\nTODO: Create great release notes!"
+        draft: true
+        files: lrsql.zip
