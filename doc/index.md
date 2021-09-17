@@ -8,6 +8,7 @@
 ## DBMS-specific Sections
 
 - [Postgres](postgres.md)
+- [SQLite](sqlite.md)
 
 ## Reference
 

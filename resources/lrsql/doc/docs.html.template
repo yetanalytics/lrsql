@@ -34,10 +34,12 @@ textarea {
 	-moz-border-radius: 10px;
 }
 code {
-        background: #f6f8fa;
+  background: #eeeeee;
 }
 pre {
-        margin: 0 auto; background: #f6f8fa; padding: 20px;
+  margin: 0 auto;
+  background: #eeeeee;
+  padding: 20px;
 	font-size: 15px;
 	margin-bottom: 20px;
 }
