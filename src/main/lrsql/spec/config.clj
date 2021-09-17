@@ -98,6 +98,9 @@
            [{:keys [pool-validation-timeout pool-connection-timeout]}]
            (< pool-validation-timeout pool-connection-timeout))))
 
+(s/def ::admin-user-default string?)
+(s/def ::admin-pass-default string?)
+
 (s/def ::api-key-default string?)
 (s/def ::api-secret-default string?)
 
@@ -115,7 +118,9 @@
                           ::stmt-url-prefix
                           ::authority-template
                           ::authority-url]
-                 :opt-un [::api-key-default
+                 :opt-un [::admin-user-default
+                          ::admin-pass-default
+                          ::api-key-default
                           ::api-secret-default])))
 
 (s/def ::enable-http boolean?)

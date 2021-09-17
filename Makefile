@@ -3,8 +3,8 @@
 # Get and compile the admin UI SPA from the GitHub repo.
 
 lrs-admin-ui:
-	git clone git@github.com:yetanalytics/lrs-admin-ui.git
-	cd lrs-admin-ui; git checkout 4a990b8c6f8a218268521fd18290566ac9573292
+	git clone https://github.com/yetanalytics/lrs-admin-ui.git
+	cd lrs-admin-ui; git checkout cf6ff4edddf5ba3560869ca198930312a5cfc7ad
 
 lrs-admin-ui/target/bundle: lrs-admin-ui
 	cd lrs-admin-ui; make bundle
@@ -118,7 +118,7 @@ target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/conf
 # Download the 3 runtimes from an AWS S3 bucket.
 
 # The given tag to pull down
-RUNTIME_TAG ?= 0.1.0-java-11-temurin-test
+RUNTIME_TAG ?= 0.1.0-java-11-temurin
 RUNTIME_MACHINE ?= macos
 RUNTIME_MACHINE_BUILD ?= macOS-latest
 RUNTIME_ZIP_DIR ?= tmp/runtimes/${RUNTIME_TAG}
@@ -217,14 +217,34 @@ exe: exe/lrsql.exe exe/lrsql_pg.exe
 .phony: run-jar-h2, run-jar-sqlite, run-jar-h2-persistent, run-jar-postgres
 
 run-jar-h2: target/bundle
-	cd target/bundle; LRSQL_API_KEY_DEFAULT=username LRSQL_API_SECRET_DEFAULT=password bin/run_h2.sh
+	cd target/bundle; \
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_h2.sh
 
 run-jar-h2-persistent: target/bundle
-	cd target/bundle; LRSQL_API_KEY_DEFAULT=username LRSQL_API_SECRET_DEFAULT=password bin/run_h2_persistent.sh
+	cd target/bundle; \
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_h2_persistent.sh
 
 run-jar-sqlite: target/bundle
-	cd target/bundle; LRSQL_API_KEY_DEFAULT=username LRSQL_API_SECRET_DEFAULT=password bin/run_sqlite.sh
+	cd target/bundle; \
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_sqlite.sh
 
 # NOTE: Requires a running Postgres instance!
 run-jar-postgres: target/bundle
-	cd target/bundle; LRSQL_API_KEY_DEFAULT=username LRSQL_API_SECRET_DEFAULT=password bin/run_postgres.sh
+	cd target/bundle; \
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_postgres.sh
