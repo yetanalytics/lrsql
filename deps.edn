@@ -6,8 +6,8 @@
   clojure.java-time/clojure.java-time      {:mvn/version "0.3.2"}
   danlentz/clj-uuid                        {:mvn/version "0.1.9"}
   aero/aero                                {:mvn/version "1.1.6"}
-  io.pedestal/pedestal.jetty               {:mvn/version "0.5.7"}
-  org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.18.v20190429"}
+  io.pedestal/pedestal.jetty               {:mvn/version "0.5.9"}
+  org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.35.v20201120"}
   buddy/buddy-core                         {:mvn/version "1.10.1"}
   buddy/buddy-sign                         {:mvn/version "3.4.1"}
   buddy/buddy-hashers                      {:mvn/version "1.8.1"}
