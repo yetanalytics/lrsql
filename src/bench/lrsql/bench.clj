@@ -93,15 +93,13 @@
   [curl-op endpoint requests conc-size]
   (let [post-fn (fn [req]
                   (try (curl-op endpoint req)
-                       (catch Exception e
-                         (log/error "Exception encountered on async operation!")
-                         e)))
+                       (catch Exception e e)))
         req-chan (a/to-chan! requests)
         res-chan (a/chan (count requests))]
-    (a/pipeline-blocking conc-size
-                         res-chan
-                         (map post-fn)
-                         req-chan)
+    (a/<!! (a/pipeline-blocking conc-size
+                                res-chan
+                                (map post-fn)
+                                req-chan))
     (a/<!! (a/into [] res-chan))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
