@@ -4,7 +4,7 @@
 
 lrs-admin-ui:
 	git clone https://github.com/yetanalytics/lrs-admin-ui.git
-	cd lrs-admin-ui; git checkout 7fad7ecd970ebbc67a5b51f2f99e25b223dad88a
+	cd lrs-admin-ui; git checkout cf6ff4edddf5ba3560869ca198930312a5cfc7ad
 
 lrs-admin-ui/target/bundle: lrs-admin-ui
 	cd lrs-admin-ui; make bundle
