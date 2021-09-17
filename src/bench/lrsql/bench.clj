@@ -96,10 +96,10 @@
                        (catch Exception e e)))
         req-chan (a/to-chan! requests)
         res-chan (a/chan (count requests))]
-    (a/<!! (a/pipeline-blocking conc-size
-                                res-chan
-                                (map post-fn)
-                                req-chan))
+    (a/pipeline-blocking conc-size
+                         res-chan
+                         (map post-fn)
+                         req-chan)
     (a/<!! (a/into [] res-chan))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
