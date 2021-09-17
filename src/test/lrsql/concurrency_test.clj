@@ -37,7 +37,7 @@
   (let [post-fn (fn [req]
                   (try (curl-op endpoint req)
                        (catch Exception e e)))
-        req-chan (a/to-chan requests)
+        req-chan (a/to-chan! requests)
         res-chan (a/chan (count requests))]
     (a/<!! (a/pipeline-blocking conc-size
                                 res-chan

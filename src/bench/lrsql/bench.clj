@@ -152,7 +152,7 @@
                      (curl/post endpoint req)
                      (catch Exception e e)))
         ;; ENTER THE ASYNC ZONE
-        req-chan (a/to-chan requests)
+        req-chan (a/to-chan! requests)
         res-chan (a/chan (count requests))
         _        (a/<!! (a/pipeline-blocking concurrency
                                              res-chan
@@ -243,7 +243,7 @@
                         (catch Exception e
                           e)))
         ;; ENTER THE ASYNC ZONE
-        req-chan (a/to-chan requests)
+        req-chan (a/to-chan! requests)
         res-chan (a/chan (count requests))
         _        (a/<!! (a/pipeline-blocking concurrency
                                              res-chan
