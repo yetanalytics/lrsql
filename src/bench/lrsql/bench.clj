@@ -80,6 +80,25 @@
     (u/parse-json raw :object? false)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; The Async Zone
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- perform-async-op!
+  "Enter the async zone and perform `curl-op` on `endpoint` and `requests`
+   on `conc-size` concurrent threads."
+  [curl-op endpoint requests conc-size]
+  (let [post-fn (fn [req]
+                  (try (curl-op endpoint req)
+                       (catch Exception e e)))
+        req-chan (a/to-chan! requests)
+        res-chan (a/chan (count requests))]
+    (a/<!! (a/pipeline-blocking conc-size
+                                res-chan
+                                (map post-fn)
+                                req-chan))
+    (a/<!! (a/into [] res-chan))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -147,18 +166,10 @@
                           :body       (String. (u/write-json (vec batch)))
                           :basic-auth [user pass]})
                        (partition-all batch-size stmts))
-        post-fn  (fn [req]
-                   (try
-                     (curl/post endpoint req)
-                     (catch Exception e e)))
-        ;; ENTER THE ASYNC ZONE
-        req-chan (a/to-chan! requests)
-        res-chan (a/chan (count requests))
-        _        (a/<!! (a/pipeline-blocking concurrency
-                                             res-chan
-                                             (map post-fn)
-                                             req-chan))
-        ;; LEAVE THE ASYNC ZONE
+        _        (perform-async-op! curl/post
+                                    endpoint
+                                    requests
+                                    concurrency)
         ]
     nil))
 
@@ -236,22 +247,14 @@
                                     :query-params (not-empty query)
                                     :basic-auth   [user pass]}))
                          queries)
-        post-fn  (fn [req]
-                   (try (let [qm (if-some [q (:query-params req)] q {})]
-                          {:ms    (perform-query endpoint req)
-                           :query qm})
-                        (catch Exception e
-                          e)))
-        ;; ENTER THE ASYNC ZONE
-        req-chan (a/to-chan! requests)
-        res-chan (a/chan (count requests))
-        _        (a/<!! (a/pipeline-blocking concurrency
-                                             res-chan
-                                             (map post-fn)
-                                             req-chan))
-        results  (a/<!! (a/into [] res-chan))
-        ;; LEAVE THE ASYNC ZONE
-        _        (log/trace (pr-str results))
+        query-fn (fn [endpoint req]
+                   (let [qm (if-some [q (:query-params req)] q {})]
+                     {:ms    (perform-query endpoint req)
+                      :query qm}))
+        results  (perform-async-op! query-fn
+                                    endpoint
+                                    requests
+                                    concurrency)
         stats    (reduce
                   (fn [m {:keys [ms query]}] (update m query conj ms))
                   {}
@@ -332,5 +335,5 @@
   (-main "http://localhost:8080/xapi/statements"
 		"-i" "dev-resources/default/insert_input.json"
 		"-q" "dev-resources/default/query_input.json"
-		"-a" "true"
+		"-a" "true" "-c" "20"
 		"-u" "username" "-p" "password"))
