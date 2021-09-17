@@ -15,7 +15,7 @@
 
 (support/instrument-lrsql)
 
-(use-fixtures :each support/fresh-postgres-fixture)
+(use-fixtures :each support/fresh-db-fixture)
 
 (defn test-statements
   [num-stmts]
