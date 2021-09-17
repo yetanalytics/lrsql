@@ -2,20 +2,25 @@
 
 Using the Postgres implementation of the SQL LRS requires a pre-existing database (unlike the H2 and SQLite implementations, which create the database file if it does not exist). Therefore, you need to set up the Postgres user and database before you start using the SQL LRS.
 
-1. Log into `psql` as a user with user and database creation permissions.
+#### 1. Log into `psql` as a user with user and database creation permissions.
 
-2. Create the user that the SQL LRS will use (note the single quotes around the password):
+#### 2. Create User
+
+Create the user that the SQL LRS will use (note the single quotes around the password):
 ```
 postgres=# CREATE USER [username] WITH CREATEDB WITH PASSWORD '[password]';
 ```
 
-3. Log into `psql` as the new user and create the underlying database that SQL LRS will use:
+#### 3. Create Database
+Log into `psql` as the new user and create the underlying database that SQL LRS will use:
 ```
 % psql -U [username]
 [username]=# CREATE DATABASE [db_name];
 ```
 
-4. (Optional, but recommended) Connect to the database and create a new schema for all the database objects:
+#### 4. Create Schema (Optional, but recommended)
+
+Connect to the database and create a new schema for all the database objects:
 ```
 % psql -d [db_name]
 [db_name]=# CREATE SCHEMA IF NOT EXISTS [schema_name];
@@ -39,14 +44,16 @@ You can also set the search path as the value of the `currentSchema` property, w
   ...
   "database": {
     ...
-    "dbProperties": "currentSchema=[schema_name]",
+    "dbProperties": "currentSchema=[schema_name]"
   }
 }
 ```
 
 If you skip this step, then the default `public` schema will be used for all DB objects.
 
-5. Start up the SQL LRS and enjoy!
+#### 5. Start SQL LRS and enjoy!
+
+Startup instructions can be found [here](startup.md)
 
 ## Example lrsql.json configuration
 
@@ -64,4 +71,4 @@ Here is an example database config map in the `lrsql.json` configuration file. T
 }
 ```
 
-The `connection`, `lrs`, and `webserver` sections of the config can then be set with whatever properties you see fit, like the example in the [Getting Started](startup.md) page.
+The `connection`, `lrs`, and `webserver` sections of the config can then be set with whatever properties you see fit, like the example on the [Getting Started](startup.md) page.
