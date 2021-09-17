@@ -59,7 +59,3 @@ $ clojure -Mdb-h2 -m lrsql.h2.main
 11:25:54.085 [main] INFO  lrsql.util.cert - Generated keystore from key and cert(s)...
 
 ```
-
-
-//
-- If you are using Java Keystores, `keyFile` should point to a valid Keystore file; `keyAlias` and **especially** `keyPassword` should be overridden.
