@@ -50,17 +50,16 @@
 (deftest concurrency-test
   (let [sys        (support/test-system)
         sys'       (component/start sys)
-        backend    (:backend sys')
         ;; Curl
         headers    {"Content-Type"             "application/json"
                     "X-Experience-API-Version" "1.0.3"}
         basic-auth ["username" "password"]
         ;; Parameters
         endpoint    "http://localhost:8080/xapi/statements"
-        num-stmts   1000
-        batch-size  10
-        num-threads 10
-        query-mult  10]
+        num-stmts   100
+        batch-size  5
+        num-threads 5
+        query-mult  5]
     (testing "concurrent insertions"
       (let [insert-reqs (->> (test-statements num-stmts)
                              (partition batch-size)
