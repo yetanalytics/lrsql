@@ -20,7 +20,11 @@
    "X-Experience-API-Version" "1.0.3"})
 
 (def cli-options
-  [["-i" "--insert-input URI" "DATASIM input source"
+  [["-e" "--lrs-endpoint URI" "(SQL) LRS endpoint"
+    :id :lrs-endpoint
+    :default "http://localhost:8080/xapi/statements"
+    :desc "The HTTP(S) endpoint of the (SQL) LRS webserver for Statement POSTs and GETs."]
+   ["-i" "--insert-input URI" "DATASIM input source"
     :id :insert-input
     :desc "The location of a JSON file containing a DATASIM input spec. If given, this input is used to insert statements into the DB."]
    ["-s" "--input-size LONG" "Size"
@@ -135,12 +139,13 @@
     (cons (first tgts) refs')))
 
 (defn store-statements-sync!
-  [endpoint {input-uri  :insert-input
-             size       :insert-size
-             batch-size :batch-size
-             user       :user
-             pass       :pass
-             sref-type  :statement-ref-type}]
+  [{endpoint   :lrs-endpoint
+    input-uri  :insert-input
+    size       :insert-size
+    batch-size :batch-size
+    user       :user
+    pass       :pass
+    sref-type  :statement-ref-type}]
   (let [inputs  (read-insert-input input-uri)
         stmts   (generate-statements inputs size sref-type)]
     (loop [batches (partition-all batch-size stmts)]
@@ -152,13 +157,14 @@
         (recur (rest batches))))))
 
 (defn store-statements-async!
-  [endpoint {input-uri   :insert-input
-             size        :insert-size
-             batch-size  :batch-size
-             user        :user
-             pass        :pass
-             sref-type   :statement-ref-type
-             concurrency :concurrency}]
+  [{endpoint    :lrs-endpoint
+    input-uri   :insert-input
+    size        :insert-size
+    batch-size  :batch-size
+    user        :user
+    pass        :pass
+    sref-type   :statement-ref-type
+    concurrency :concurrency}]
   (let [inputs   (read-insert-input input-uri)
         stmts    (generate-statements inputs size sref-type)
         requests (mapv (fn [batch]
@@ -223,10 +229,11 @@
            (calc-statistics results query-times)))))))
 
 (defn query-statements-sync
-  [endpoint {query-uri   :query-input
-             query-times :query-number
-             user        :user
-             pass        :pass}]
+  [{endpoint    :lrs-endpoint
+    query-uri   :query-input
+    query-times :query-number
+    user        :user
+    pass        :pass}]
   (loop [queries (if query-uri (read-query-input query-uri) [{}])
          results (transient [])]
     (if-some [query (first queries)]
@@ -242,11 +249,12 @@
 ;; Async
 
 (defn query-statements-async
-  [endpoint {query-uri   :query-input
-             query-times :query-number
-             user        :user
-             pass        :pass
-             concurrency :concurrency}]
+  [{endpoint    :lrs-endpoint
+    query-uri   :query-input
+    query-times :query-number
+    user        :user
+    pass        :pass
+    concurrency :concurrency}]
   (let [queries  (if query-uri (read-query-input query-uri) [{}])
         requests (mapcat (fn [query]
                            (repeat query-times
@@ -280,7 +288,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
 (defn -main
-  [lrs-endpoint & args]
+  [& args]
   (let [{:keys [summary errors]
          :as _parsed-opts
          {:keys [insert-input
@@ -288,6 +296,7 @@
                  query-number
                  help
                  ;; Options that aren't used in `-main` but are later on
+                 _lrs-endpoint
                  _query-input
                  _insert-size
                  _statement-ref-type
@@ -313,14 +322,14 @@
       (let [store-statements! (if async?
                                store-statements-async!
                                store-statements-sync!)]
-        (store-statements! lrs-endpoint opts))
+        (store-statements! opts))
       (log/info "Statement insertion finished."))
     ;; Query statements
     (log/info "Starting statement query benching...")
     (let [query-statements (if async?
                              query-statements-async
                              query-statements-sync)
-          results          (query-statements lrs-endpoint opts)]
+          results          (query-statements opts)]
       (log/info "Statement query benching finished.")
       (printf "\n%s Query benchmark results for n = %d (in ms) %s\n"
               "**********"
@@ -331,8 +340,9 @@
 
 (comment
   ;; Perform benching from the repl
-  (-main "http://localhost:8080/xapi/statements"
-		"-i" "dev-resources/default/insert_input.json"
-		"-q" "dev-resources/default/query_input.json"
-		"-a" "true" "-c" "20"
-		"-u" "username" "-p" "password"))
+  (-main
+   "-e" "http://localhost:8080/xapi/statements"
+   "-i" "dev-resources/default/insert_input.json"
+   "-q" "dev-resources/default/query_input.json"
+   "-a" "true" "-c" "20"
+   "-u" "username" "-p" "password"))
