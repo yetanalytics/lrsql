@@ -134,7 +134,7 @@
         refs' (assoc-stmt-refs tgts refs)]
     (cons (first tgts) refs')))
 
-(defn store-statements-sync
+(defn store-statements-sync!
   [endpoint {input-uri  :insert-input
              size       :insert-size
              batch-size :batch-size
@@ -151,7 +151,7 @@
                     :basic-auth [user pass]})
         (recur (rest batches))))))
 
-(defn store-statements-async
+(defn store-statements-async!
   [endpoint {input-uri   :insert-input
              size        :insert-size
              batch-size  :batch-size
@@ -165,12 +165,11 @@
                          {:headers    headers
                           :body       (String. (u/write-json (vec batch)))
                           :basic-auth [user pass]})
-                       (partition-all batch-size stmts))
-        _        (perform-async-op! curl/post
-                                    endpoint
-                                    requests
-                                    concurrency)
-        ]
+                       (partition-all batch-size stmts))]
+    (perform-async-op! curl/post
+                       endpoint
+                       requests
+                       concurrency)
     nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -203,7 +202,8 @@
 
 ;; Sync
 
-(defn- perform-queries
+(defn- query-statements-sync*
+  "Perform one query `query-times`."
   [endpoint query query-times user pass]
   ;; `nil` = `{}` since babashka/curl does not like the latter
   (let [curl-input {:headers      headers
@@ -222,16 +222,19 @@
            {:query (pr-str query)}
            (calc-statistics results query-times)))))))
 
-(defn query-statements
-  [endpoint query-uri query-times user pass]
+(defn query-statements-sync
+  [endpoint {query-uri   :query-input
+             query-times :query-number
+             user        :user
+             pass        :pass}]
   (loop [queries (if query-uri (read-query-input query-uri) [{}])
          results (transient [])]
     (if-some [query (first queries)]
-      (let [res (perform-queries endpoint
-                                 query
-                                 query-times
-                                 user
-                                 pass)]
+      (let [res (query-statements-sync* endpoint
+                                        query
+                                        query-times
+                                        user
+                                        pass)]
         (recur (rest queries)
                (conj! results res)))
       (persistent! results))))
@@ -239,7 +242,11 @@
 ;; Async
 
 (defn query-statements-async
-  [endpoint query-uri query-times user pass concurrency]
+  [endpoint {query-uri   :query-input
+             query-times :query-number
+             user        :user
+             pass        :pass
+             concurrency :concurrency}]
   (let [queries  (if query-uri (read-query-input query-uri) [{}])
         requests (mapcat (fn [query]
                            (repeat query-times
@@ -278,16 +285,16 @@
          :as _parsed-opts
          {:keys [insert-input
                  async?
-                 query-input
                  query-number
-                 user
-                 pass
                  help
                  ;; Options that aren't used in `-main` but are later on
+                 _query-input
                  _insert-size
                  _statement-ref-type
                  _batch-size
-                 concurrency]
+                 _concurrency
+                 _user
+                 _pass]
           :as   opts} :options}
         (cli/parse-opts args cli-options)]
     ;; Check for errors
@@ -303,25 +310,17 @@
     ;; Store statements
     (when insert-input
       (log/info "Starting statement insertion...")
-      (let [store-statements (if async?
-                               store-statements-async
-                               store-statements-sync)]
-        (store-statements lrs-endpoint opts))
+      (let [store-statements! (if async?
+                               store-statements-async!
+                               store-statements-sync!)]
+        (store-statements! lrs-endpoint opts))
       (log/info "Statement insertion finished."))
     ;; Query statements
     (log/info "Starting statement query benching...")
-    (let [results (if async?
-                    (query-statements-async lrs-endpoint
-                                            query-input
-                                            query-number
-                                            user
-                                            pass
-                                            concurrency)
-                    (query-statements lrs-endpoint
-                                      query-input
-                                      query-number
-                                      user
-                                      pass))]
+    (let [query-statements (if async?
+                             query-statements-async
+                             query-statements-sync)
+          results          (query-statements lrs-endpoint opts)]
       (log/info "Statement query benching finished.")
       (printf "\n%s Query benchmark results for n = %d (in ms) %s\n"
               "**********"
