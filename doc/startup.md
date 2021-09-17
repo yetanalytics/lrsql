@@ -2,13 +2,11 @@
 
 ## Startup instructions
 
-1. [Install Java 11 or higher](https://java.com/en/download/help/download_options.html) if not installed already.
+1. Download and unzip the SQL LRS package and place it in your favorite directory.
 
-2. Download and unzip the SQL LRS package and place it in your favorite directory.
+2. In order to support HTTPS, you should either generate a Java Keystore file or PEM files in order to establish a certificate chain. More details can be found [here](https.md).
 
-3. In order to support HTTPS, you should either generate a Java Keystore file or PEM files in order to establish a certificate chain. More details can be found [here](https.md).
-
-4. Set configuration variables. Config vars can be set in `lrsql.json` or as environment variables; the following should be set:
+3. Set configuration variables. Config vars can be set in `lrsql.json` or as environment variables; the following should be set:
 - `adminUserDefault` and `adminPassDefault` MUST be set in order to create an initial admin account.
 - `httpHost` should be set to the domain you are running your webserver on; likewise for `httpPort` and `httpsPort` (which by default is `8080` and `8443`, respectively).
 - Likewise, `authorityUrl` should be set to a custom domain in order to uniquely identify Statements inserted into your LRS.
@@ -38,19 +36,19 @@ Note that this config file does not set any non-default values in the `database`
 
 For a complete list of config variables, see [here](env_vars.md).
 
-5. (Postgres only) Set up the Postgres DB; instructions for that can be found [here](postgres.md).
+4. (Postgres only) Set up the Postgres DB; instructions for that can be found [here](postgres.md).
 
-6. Start the LRS.
+5. Start the LRS.
 - Mac or Linux: Run the appropriate shell script from the command line, e.g. `./bin/run_sqlite.sh`. All scripts are located in the `bin` directory.
 - Windows: Run the appropriate executable: `lrsql.exe` for a SQLite database, `lrsql_pg.exe` for a Postgres one.
 
-7. Create Credentials and "Real" Accounts
+6. Create Credentials and "Real" Accounts
 Log into the LRS Admin UI using your seed admin account username and password. Then create a new credential key pair and account as so:
 - Under "Credentials Management", click "Add New Credentials," which will auto-generate a new API key and secret.
 - Under "Account Management," enter your new username and password and click "Create Account."
 
-8. Delete Seed Account
-- For security purposes, it is important to delete the seed account (as the username and password are stored in plaintext). To do so, log out of the seed account, log into your "real" account, then under "Account Management," click the "Delete" button corresponding to the seed account.
+7. Delete Seed Account
+For security purposes, it is important to delete the seed account (as the username and password are stored in plaintext). To do so, log out of the seed account, log into your "real" account, then under "Account Management," click the "Delete" button corresponding to the seed account.
 
 ## Your first Statement
 
