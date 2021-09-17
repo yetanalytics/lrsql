@@ -59,19 +59,19 @@ The LRS uses a slightly different startup procedure depending on what SQL databa
 
 In either case you should see a command line output resembling the following, which indicates you have started up successfully.
 
-![SQL LRS Logo](images/startup.png)
+![SQL LRS Startup](images/startup.png)
 
 During startup you may see a firewall/security warning depending on OS. In MacOS it may look like the following:
 
-![SQL LRS Logo](images/mac_sec_1.png)
+![Mac Security Warning 1](images/mac_sec_1.png)
 
 In which case go to your settings and click Allow Anyway on this screen:
 
-![SQL LRS Logo](images/mac_sec_2.png)
+![Mac Security Warning 2](images/mac_sec_2.png)
 
 In Windows you may see a similar warning that looks like this:
 
-![SQL LRS Logo](images/win_sec.png)
+![Windows Security Warning](images/win_sec.png)
 
 ### 6. Create Accounts and Credentials
 
@@ -79,7 +79,7 @@ Now that the LRS is running, let's set up a (non-seed) account and some credenti
 
 - First navigate in a browser to the LRS address. This will be `http(s)://[host]:[port]/`. For example, if you did not change the host and port variables in the sections above, then by default it should be accessible at `http://localhost:8080/`. You should see a login screen much like the following:
 
-![SQL LRS Logo](images/login.png)
+![Login Page](images/login.png)
 
 - Log into the LRS Admin UI using your seed admin account username and password that you set in `config/lrsql.json`.
 
@@ -92,7 +92,7 @@ Now that the LRS is running, let's set up a (non-seed) account and some credenti
 ### 7. Delete Seed Account
 For security purposes, it is important to delete the seed account (as the username and password are stored in plaintext). While logged in as the new account you just created in part 6, go to "Account Management," click the "Delete" button corresponding to the seed account.
 
-![SQL LRS Logo](images/delete_seed.png)
+![Delete Account](images/delete_seed.png)
 
 Additionally you should remove the `adminUserDefault` and `adminPassDefault` lines from `config/lrsql.json`. This will prevent the system from re-creating the seed accounts on future restarts.
 
