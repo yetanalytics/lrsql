@@ -47,6 +47,6 @@ jobs:
         # Defaults:
         # name: [tag name]
         # tag_name: github.ref
-        body: "## Changes\nTODO: Create great release notes!"
+        body: "## Release Notes\nTODO: Create great release notes!"
         draft: true
         files: lrsql.zip
