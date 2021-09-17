@@ -1,10 +1,12 @@
 (ns lrsql.concurrency-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
+            [clojure.spec.alpha :as s]
             [clojure.core.async :as a]
             [com.stuartsierra.component :as component]
             [babashka.curl :as curl]
             [com.yetanalytics.datasim.input :as sim-input]
             [com.yetanalytics.datasim.sim   :as sim]
+            [xapi-schema.spec :as xs]
             [lrsql.backend.protocol :as bp]
             [lrsql.test-support :as support]
             [lrsql.util :as u]))
@@ -85,19 +87,28 @@
                                           count))))
                     insert-res))))
     (testing "concurrent queries"
-      (try
-        (let [query-reqs (->> test-queries
-                              (mapcat (partial repeat query-mult))
-                              (map (fn [query]
-                                     {:headers      headers
-                                      :basic-auth   basic-auth
-                                      :query-params (not-empty query)})))
-              query-res  (do-async-op! curl/get
-                                       endpoint
-                                       query-reqs
-                                       num-threads)]
-          (is (= (* query-mult (count test-queries))
-                 (count query-res))))
-        (catch Exception e
-          (bp/-txn-retry? backend e))))
+      (let [query-reqs (->> test-queries
+                            (mapcat (partial repeat query-mult))
+                            (map (fn [query]
+                                   {:headers      headers
+                                    :basic-auth   basic-auth
+                                    :query-params (not-empty query)})))
+            query-res  (do-async-op! curl/get
+                                     endpoint
+                                     query-reqs
+                                     num-threads)]
+        (is (= (* query-mult (count test-queries))
+               (count query-res)))
+        (is (every? (fn [res]
+                      (cond
+                        (instance? Exception res)
+                        (bp/-txn-retry? backend res)
+                        
+                        (= 200 (:status res))
+                        (s/valid? (s/coll-of ::xs/statement)
+                                  (-> res
+                                      :body
+                                      u/parse-json
+                                      (get "statements")))))
+                    query-res))))
     (component/stop sys')))
