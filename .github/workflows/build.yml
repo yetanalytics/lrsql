@@ -40,20 +40,13 @@ jobs:
         name: lrsql-artifact-${{ github.sha }}
         path: lrsql.zip
     
-    - name: Generate Changelog (Tag Pushes)
-      id: generate_changelog
-      if: ${{ startsWith(github.ref, 'refs/tags') }}
-      uses: Bullrich/generate-release-changelog@master
-      env:
-        REPO: ${{ github.repository }}
-
-    - name: Create Draft Release (Tag Pushes)
+    - name: Craft Draft Release (Tag Pushes)
       if: ${{ startsWith(github.ref, 'refs/tags') }}
       uses: softprops/action-gh-release@v1
       with:
         # Defaults:
         # name: [tag name]
         # tag_name: github.ref
-        body: ${{ steps.generate_changelog.outputs.changelog }}
+        body: "## Changes\nTODO: Create great release notes!"
         draft: true
         files: lrsql.zip
