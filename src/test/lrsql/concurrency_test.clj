@@ -15,7 +15,7 @@
 
 (support/instrument-lrsql)
 
-(use-fixtures :each support/fresh-db-fixture)
+(use-fixtures :each support/fresh-postgres-fixture)
 
 (defn test-statements
   [num-stmts]
@@ -76,15 +76,24 @@
         (is (= (/ num-stmts batch-size)
                (count insert-res)))
         (is (every? (fn [res]
-                      (cond
-                        (instance? Exception res)
-                        (bp/-txn-retry? backend res)
+                      (cond ;; Best we can do to catch PG deadlock exn
+                        (instance? clojure.lang.ExceptionInfo res)
+                        (let [exd (ex-data res)]
+                          (and (= 500 (:status exd))
+                               (= "org.postgresql.util.PSQLException"
+                                  (-> exd
+                                      :body
+                                      u/parse-json
+                                      (get-in ["error" "type" "name"])))))
 
                         (= 200 (:status res))
                         (= batch-size (-> res
                                           :body
                                           (u/parse-json :object? false)
-                                          count))))
+                                          count))
+
+                        :else
+                        false))
                     insert-res))))
     (testing "concurrent queries"
       (let [query-reqs (->> test-queries
@@ -100,15 +109,15 @@
         (is (= (* query-mult (count test-queries))
                (count query-res)))
         (is (every? (fn [res]
-                      (cond
-                        (instance? Exception res)
-                        (bp/-txn-retry? backend res)
-                        
+                      (cond ;; Queries should never deadlock
                         (= 200 (:status res))
                         (s/valid? (s/coll-of ::xs/statement)
                                   (-> res
                                       :body
                                       u/parse-json
-                                      (get "statements")))))
+                                      (get "statements")))
+
+                        :else
+                        false))
                     query-res))))
     (component/stop sys')))

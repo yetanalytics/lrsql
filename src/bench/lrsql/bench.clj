@@ -92,6 +92,9 @@
    on `conc-size` concurrent threads."
   [curl-op endpoint requests conc-size]
   (let [post-fn (fn [req]
+                  ;; We return the exception in order to silently fail.
+                  ;; This is important since we don't want to be overly-
+                  ;; encumbered by Postgres deadlock errors.
                   (try (curl-op endpoint req)
                        (catch Exception e e)))
         req-chan (a/to-chan! requests)
