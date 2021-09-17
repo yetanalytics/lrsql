@@ -54,27 +54,36 @@
                     "X-Experience-API-Version" "1.0.3"}
         basic-auth ["username" "password"]
         ;; Parameters
+        endpoint    "http://localhost:8080/xapi/statements"
         num-stmts   1000
         batch-size  10
         num-threads 10
         query-mult  10]
     (testing "concurrent insertions"
-      (try
-        (let [insert-reqs (->> (test-statements num-stmts)
-                               (partition batch-size)
-                               (map (fn [batch]
-                                      {:headers    headers
-                                       :basic-auth basic-auth
-                                       :body       (String. (u/write-json
-                                                             (vec batch)))})))
-              insert-res  (do-async-op! curl/post
-                                        "http://localhost:8080/xapi"
-                                        insert-reqs
-                                        num-threads)]
-          (is (= (/ num-stmts batch-size)
-                 (count insert-res))))
-        (catch Exception e
-          (bp/-txn-retry? backend e))))
+      (let [insert-reqs (->> (test-statements num-stmts)
+                             (partition batch-size)
+                             (map (fn [batch]
+                                    {:headers    headers
+                                     :basic-auth basic-auth
+                                     :body       (String. (u/write-json
+                                                           (vec batch)))})))
+            insert-res  (do-async-op! curl/post
+                                      endpoint
+                                      insert-reqs
+                                      num-threads)]
+        (is (= (/ num-stmts batch-size)
+               (count insert-res)))
+        (is (every? (fn [res]
+                      (cond
+                        (instance? Exception res)
+                        (bp/-txn-retry? backend res)
+
+                        (= 200 (:status res))
+                        (= batch-size (-> res
+                                          :body
+                                          (u/parse-json :object? false)
+                                          count))))
+                    insert-res))))
     (testing "concurrent queries"
       (try
         (let [query-reqs (->> test-queries
@@ -84,7 +93,7 @@
                                       :basic-auth   basic-auth
                                       :query-params (not-empty query)})))
               query-res  (do-async-op! curl/get
-                                       "http://localhost:8080/xapi"
+                                       endpoint
                                        query-reqs
                                        num-threads)]
           (is (= (* query-mult (count test-queries))
