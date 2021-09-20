@@ -92,11 +92,9 @@
    on `conc-size` concurrent threads."
   [curl-op endpoint requests conc-size]
   (let [post-fn (fn [req]
-                  ;; We return the exception in order to silently fail.
-                  ;; This is important since we don't want to be overly-
-                  ;; encumbered by Postgres deadlock errors.
-                  (try (curl-op endpoint req)
-                       (catch Exception e e)))
+                  ;; Just throw any exceptions since if we silently fail
+                  ;; statistics may become unreliable
+                  (curl-op endpoint req))
         req-chan (a/to-chan! requests)
         res-chan (a/chan (count requests))]
     (a/pipeline-blocking conc-size
@@ -323,8 +321,8 @@
     (when insert-input
       (log/info "Starting statement insertion...")
       (let [store-statements! (if async?
-                               store-statements-async!
-                               store-statements-sync!)]
+                                store-statements-async!
+                                store-statements-sync!)]
         (store-statements! opts))
       (log/info "Statement insertion finished."))
     ;; Query statements
