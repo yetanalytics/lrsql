@@ -14,3 +14,4 @@
 
 - [Configuration Variables](env_vars.md)
 - [HTTP Endpoints](endpoints.md)
+- [Developer Documentation](dev.md)

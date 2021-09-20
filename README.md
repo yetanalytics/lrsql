@@ -1,21 +1,30 @@
 ![SQL LRS Logo](doc/images/doc_logo.png)
 
-# lrsql
-
-_lrsql (LER-skwəl) - The Learning Record Structured Query Language_
+# Yet Analytics SQL LRS
 
 A SQL-based Learning Record Store.
 
-Currently, lrsql is installed by pulling the latest commit from its GitHub repo. In the future it will be available as a packaged open-source runnable distribution.
+## What is SQL LRS?
 
-Note: lrsql is the development name of this project; SQL LRS is what this project is called in external communications.
+A Learning Record Store (LRS) is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in Part 3 of the ([xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md)). SQL LRS is distinct from other LRSs developed at Yet Analytics for being SQL-based and supporting multiple SQL database management systems (DBMSs) like H2, SQLite, and PostgreSQL.
 
 ## Index
 
-- [Overview](doc/overview.md) - What is lrsql?
-- [Environment Variables](doc/env_vars.md) - How to configure lrsql?
-- [HTTP Endpoints](doc/endpoints.md) - How to use the lrsql API?
-- [TLS/HTTPS](doc/https.md) - How to set up a secure connection with lrsql?
+- [Overview](doc/overview.md)
+- [Getting Started](doc/startup.md)
+- [Setting up TLS/HTTP](doc/https.md)
+- [Authority Configuration](doc/authority.md)
+
+## DBMS-specific Sections
+
+- [Postgres](doc/postgres.md)
+- [SQLite](doc/sqlite.md)
+
+## Reference
+
+- [Configuration Variables](doc/env_vars.md)
+- [HTTP Endpoints](doc/endpoints.md)
+- [Developer Documentation](doc/dev.md)
 
 ## License
 
