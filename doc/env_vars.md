@@ -23,7 +23,7 @@ All environment variables can either be set directly via the command line, or ca
 
 ### HikariCP Properties
 
-The following environment variables are aliases for [HikariCP properties](https://github.com/brettwooldridge/HikariCP#gear-configuration-knobs-baby). All of these variables (except for `poolName`) have default values that are already set. Note that SQLite uses its own defaults due to issues with multi-threading. All temporal values are in milliseconds.
+The following environment variables are aliases for [HikariCP properties](https://github.com/brettwooldridge/HikariCP#gear-configuration-knobs-baby). All of these variables (except for `poolName`) have default values that are already set. Note that H2 and SQLite use their own defaults for `poolMinimumIdle` and `poolMaximumSize` (both `1`) due to issues with multi-threading. All temporal values are in milliseconds.
 
 | Env Var | Config | Default | Valid Values |
 | --- | --- | --- | --- |

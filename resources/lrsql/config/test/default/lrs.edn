@@ -7,5 +7,5 @@
  :stmt-url-prefix    "/xapi"
  :authority-template "config/authority.json.template"
  :authority-url      "http://localhost"
- :stmt-retry-limit   10
- :stmt-retry-budget  1000}
+ :stmt-retry-limit   20
+ :stmt-retry-budget  10000}
