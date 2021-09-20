@@ -10,9 +10,10 @@ In addition to the LRS HTTP methods, the SQL LRS supports methods for admin acco
 
 The following examples use `http://example.org` as the URL body. All methods require that the request body is a JSON object that contains `username` and `password` string values; otherwise, a `400 BAD REQUEST` response is returned. All methods return `200 OK` on success.
 
-- `POST http://example.org/admin/account/login`: Log into an existing account. The response body contains a newly generated JSON Web Token (JWT) on success. A `401 FORBIDDEN` status code is returned if the credentials are incorrect.
+- `POST http://example.org/admin/account/login`: Log into an existing account. The response body contains a newly generated JSON Web Token (JWT) on success. A `401 UNAUTHORIZED` status code is returned if the credentials are incorrect.
 - `POST http://example.org/admin/account/create`: Create a new admin account. The request must contain a JWT in the Authorization header in the form of `Bearer [JWT]` and if it is not valid will return a `401 UNAUTHORIZED`. Returns a json object with the ID (UUID) of the newly created user. Returns a `400` error if the request body parameters are invalid, or a `409 CONFLICT` error if the account already exists.
 - `DELETE http://example.org/admin/account`: Delete an existing account. The request must contain a JWT in the Authorization header in the form of `Bearer [JWT]` and if it is not valid will return a `401 UNAUTHORIZED`. The endpoint returns a `200` and a json object with the ID of the deleted account on success. Returns a `404 NOT FOUND` error if the account does not exist.
+- `GET http://example.org/admin/account`: Return an array of all admin accounts in the system. The request must contain a JWT in the Authorization header in the form of `Bearer [JWT]` and if it is not valid will return a `401 UNAUTHORIZED`.
 
 ## Admin Credential Routes
 
