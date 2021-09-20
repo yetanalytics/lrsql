@@ -4,7 +4,7 @@ When running SQL LRS in SQLite mode (via `bin/run_sqlite.sh` or `lrsql.exe`), th
 
 #### Changing the DB Name
 
-If you wish to change the name of the db file that SQL LRS connects to, you can do so using a configuration variable. Changing `LRSQL_DB_NAME` (`dbName` in `config/lrsql.json` will accomplish this. The example below shows how to direct SQL LRS to another file.
+If you wish to change the name of the db file that SQL LRS connects to, you can do so using a configuration variable. Changing `LRSQL_DB_NAME` (`dbName` in `config/lrsql.json`) will accomplish this. The example below shows how to direct SQL LRS to another file.
 
 ```json
 {

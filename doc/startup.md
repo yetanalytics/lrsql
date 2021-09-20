@@ -3,10 +3,10 @@
 ## Startup instructions
 
 #### 1. Download
-- Download and unzip the SQL LRS package and place it in your preferred directory.
+- Download and unzip the SQL LRS package and place it in your preferred directory. Latest distributions can be found [here](https://github.com/yetanalytics/lrsql/releases)
 
 #### 2. HTTPS Config
-- In order to support HTTPS, SQL LRS creates a temporary self-signed certificate upon startup.
+- In order to support HTTPS, SQL LRS automatically creates a temporary self-signed certificate upon startup.
 - If you have a valid TLS certificate you would like to use you can find more instructions for installing it [here](https.md).
 
 #### 3. Configuration Variables
