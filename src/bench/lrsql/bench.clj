@@ -1,5 +1,6 @@
 (ns lrsql.bench
-  (:require [clojure.string :refer [join]]
+  (:require [clojure.core.async :as a]
+            [clojure.string :refer [join]]
             [clojure.math.numeric-tower :as math]
             [clojure.tools.cli :as cli]
             [clojure.tools.logging :as log]
@@ -19,7 +20,11 @@
    "X-Experience-API-Version" "1.0.3"})
 
 (def cli-options
-  [["-i" "--insert-input URI" "DATASIM input source"
+  [["-e" "--lrs-endpoint URI" "(SQL) LRS endpoint"
+    :id :lrs-endpoint
+    :default "http://localhost:8080/xapi/statements"
+    :desc "The HTTP(S) endpoint of the (SQL) LRS webserver for Statement POSTs and GETs."]
+   ["-i" "--insert-input URI" "DATASIM input source"
     :id :insert-input
     :desc "The location of a JSON file containing a DATASIM input spec. If given, this input is used to insert statements into the DB."]
    ["-s" "--input-size LONG" "Size"
@@ -32,6 +37,16 @@
     :parse-fn #(Long/parseLong %)
     :default 10
     :desc "The batch size to use for inserting statements. Ignored if `-i` is not given."]
+   ["-a" "--async? BOOLEAN" "Run asynchronously?"
+    :id :async?
+    :parse-fn #(Boolean/parseBoolean %)
+    :default false
+    :desc "Whether to insert asynchronously or not."]
+   ["-c" "--concurrency LONG" "Number of threads"
+    :id :concurrency
+    :parse-fn #(Long/parseLong %)
+    :default 10
+    :desc "The number of parallel threads to run during statement insertion. Ignored if `-i` is not given or `-a` is `false`."]
    ["-r" "--statement-refs STRING" "Statement Ref Insertion Type"
     :id :statement-ref-type
     :parse-fn keyword
@@ -69,6 +84,26 @@
     (u/parse-json raw :object? false)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; The Async Zone
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- perform-async-op!
+  "Enter the async zone and perform `curl-op` on `endpoint` and `requests`
+   on `conc-size` concurrent threads."
+  [curl-op endpoint requests conc-size]
+  (let [post-fn (fn [req]
+                  ;; Just throw any exceptions since if we silently fail
+                  ;; statistics may become unreliable
+                  (curl-op endpoint req))
+        req-chan (a/to-chan! requests)
+        res-chan (a/chan (count requests))]
+    (a/pipeline-blocking conc-size
+                         res-chan
+                         (map post-fn)
+                         req-chan)
+    (a/<!! (a/into [] res-chan))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -104,18 +139,45 @@
         refs' (assoc-stmt-refs tgts refs)]
     (cons (first tgts) refs')))
 
-(defn store-statements
-  [endpoint input-uri size batch-size user pass sref-type]
+(defn store-statements-sync!
+  [{endpoint   :lrs-endpoint
+    input-uri  :insert-input
+    size       :insert-size
+    batch-size :batch-size
+    user       :user
+    pass       :pass
+    sref-type  :statement-ref-type}]
   (let [inputs  (read-insert-input input-uri)
         stmts   (generate-statements inputs size sref-type)]
     (loop [batches (partition-all batch-size stmts)]
-      (if-some [batch (first batches)]
-        (do
-          (curl/post endpoint
-                     {:headers    headers
-                      :body       (String. (u/write-json (vec batch)))
-                      :basic-auth [user pass]})
-          (recur (rest batches)))))))
+      (when-some [batch (first batches)]
+        (curl/post endpoint
+                   {:headers    headers
+                    :body       (String. (u/write-json (vec batch)))
+                    :basic-auth [user pass]})
+        (recur (rest batches))))))
+
+(defn store-statements-async!
+  [{endpoint    :lrs-endpoint
+    input-uri   :insert-input
+    size        :insert-size
+    batch-size  :batch-size
+    user        :user
+    pass        :pass
+    sref-type   :statement-ref-type
+    concurrency :concurrency}]
+  (let [inputs   (read-insert-input input-uri)
+        stmts    (generate-statements inputs size sref-type)
+        requests (mapv (fn [batch]
+                         {:headers    headers
+                          :body       (String. (u/write-json (vec batch)))
+                          :basic-auth [user pass]})
+                       (partition-all batch-size stmts))]
+    (perform-async-op! curl/post
+                       endpoint
+                       requests
+                       concurrency)
+    nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Query
@@ -145,7 +207,10 @@
        :min   x-min
        :total x-sum})))
 
-(defn perform-queries
+;; Sync
+
+(defn- query-statements-sync*
+  "Perform one query `query-times`."
   [endpoint query query-times user pass]
   ;; `nil` = `{}` since babashka/curl does not like the latter
   (let [curl-input {:headers      headers
@@ -164,37 +229,83 @@
            {:query (pr-str query)}
            (calc-statistics results query-times)))))))
 
-(defn query-statements
-  [endpoint query-uri query-times user pass]
+(defn query-statements-sync
+  [{endpoint    :lrs-endpoint
+    query-uri   :query-input
+    query-times :query-number
+    user        :user
+    pass        :pass}]
   (loop [queries (if query-uri (read-query-input query-uri) [{}])
          results (transient [])]
     (if-some [query (first queries)]
-      (let [res (perform-queries endpoint
-                                 query
-                                 query-times
-                                 user
-                                 pass)]
+      (let [res (query-statements-sync* endpoint
+                                        query
+                                        query-times
+                                        user
+                                        pass)]
         (recur (rest queries)
                (conj! results res)))
       (persistent! results))))
 
+;; Async
+
+(defn query-statements-async
+  [{endpoint    :lrs-endpoint
+    query-uri   :query-input
+    query-times :query-number
+    user        :user
+    pass        :pass
+    concurrency :concurrency}]
+  (let [queries  (if query-uri (read-query-input query-uri) [{}])
+        requests (mapcat (fn [query]
+                           (repeat query-times
+                                   {:headers      headers
+                                    :query-params (not-empty query)
+                                    :basic-auth   [user pass]}))
+                         queries)
+        query-fn (fn [endpoint req]
+                   (let [qm (if-some [q (:query-params req)] q {})]
+                     {:ms    (perform-query endpoint req)
+                      :query qm}))
+        results  (perform-async-op! query-fn
+                                    endpoint
+                                    requests
+                                    concurrency)
+        stats    (reduce
+                  (fn [m {:keys [ms query]}] (update m query conj ms))
+                  {}
+                  results)
+        stats'   (reduce-kv
+                  (fn [acc query x-vec]
+                    (->> (calc-statistics x-vec query-times)
+                         (merge {:query query})
+                         (conj acc)))
+                  []
+                  stats)]
+    stats'))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Putting it all together
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+  
 (defn -main
-  [lrs-endpoint & args]
+  [& args]
   (let [{:keys [summary errors]
          :as _parsed-opts
          {:keys [insert-input
-                 insert-size
-                 statement-ref-type
-                 batch-size
-                 query-input
+                 async?
                  query-number
-                 user
-                 pass
-                 help]} :options}
+                 help
+                 ;; Options that aren't used in `-main` but are later on
+                 _lrs-endpoint
+                 _query-input
+                 _insert-size
+                 _statement-ref-type
+                 _batch-size
+                 _concurrency
+                 _user
+                 _pass]
+          :as   opts} :options}
         (cli/parse-opts args cli-options)]
     ;; Check for errors
     (when (not-empty errors)
@@ -209,21 +320,17 @@
     ;; Store statements
     (when insert-input
       (log/info "Starting statement insertion...")
-      (store-statements lrs-endpoint
-                        insert-input
-                        insert-size
-                        batch-size
-                        user
-                        pass
-                        statement-ref-type)
+      (let [store-statements! (if async?
+                                store-statements-async!
+                                store-statements-sync!)]
+        (store-statements! opts))
       (log/info "Statement insertion finished."))
     ;; Query statements
     (log/info "Starting statement query benching...")
-    (let [results (query-statements lrs-endpoint
-                                    query-input
-                                    query-number
-                                    user
-                                    pass)]
+    (let [query-statements (if async?
+                             query-statements-async
+                             query-statements-sync)
+          results          (query-statements opts)]
       (log/info "Statement query benching finished.")
       (printf "\n%s Query benchmark results for n = %d (in ms) %s\n"
               "**********"
@@ -231,3 +338,12 @@
               "**********")
       (pprint/print-table results)
       (println ""))))
+
+(comment
+  ;; Perform benching from the repl
+  (-main
+   "-e" "http://localhost:8080/xapi/statements"
+   "-i" "dev-resources/default/insert_input.json"
+   "-q" "dev-resources/default/query_input.json"
+   "-a" "true" "-c" "20"
+   "-u" "username" "-p" "password"))
