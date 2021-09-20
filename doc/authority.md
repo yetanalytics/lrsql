@@ -1,3 +1,5 @@
+[<- Back to Index](index.md)
+
 # Authority Configuration
 
 The SQL LRS allows for configuration of the Authority included in xAPI Statements that are written to the LRS.
@@ -57,3 +59,4 @@ If you do not configure a template, the default is to use the `cred-id` and `aut
     "objectType":"Agent"
 }
 ```
+[<- Back to Index](index.md)

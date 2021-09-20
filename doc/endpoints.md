@@ -1,3 +1,5 @@
+[<- Back to Index](index.md)
+
 # REST API
 
 The HTTP methods that are LRS-specific are given in [the xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#datatransfer). Requests to the LRS (which are denoted by the `xapi` path prefix) must contain a Base64 encoded, colon-separated public and secret API key pair in the `authorization` field of the header. For example (assuming `http://example` is the URL body), `http://example.org/xapi/statements` is the URL at which the user inserts and queries xAPI statements; other URLs are used to insert and query documents, agents, and activities.
@@ -20,3 +22,5 @@ The following examples use `http://example.org` as the URL body. All methods req
 - `PUT http://example.org/admin/creds`: Update an existing credential pair, given by `api-key` and `secret-key` properties in the request body, with the new scopes given by the `scopes` property.
 - `GET http://example.org/admin/creds`: Read all credential pairs and their associated scopes for a particular account (denoted by the JWT).
 - `DELETE http://example.org/admin/creds`: Delete an existing credential pair, given by the `api-key` and `secret-key` properties in the request body, as well as any associated scopes.
+
+[<- Back to Index](index.md)

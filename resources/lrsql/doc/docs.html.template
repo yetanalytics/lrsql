@@ -82,20 +82,31 @@ p {
   text-align: justify;
 }
 
+div.logo-container {
+  width: 100%;
+}
+
 div.logo {
-  width: 800px;
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 div.footer {
-  margin-left: 20px;
-  color: #ff0000;
   font-size: medium;
+  color:white;
+  background-color: rgb(17, 55, 92) !important;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding-top: 30px;
+  padding-bottom: 30px;
 }
 .footer a, .footer a:visited {
-  color: red !important;
+  color: white !important;
 }
 
 .footer a:hover {
-  color: red !important;
+  color: white !important;
   text-decoration: underline;
 }
 
@@ -103,8 +114,10 @@ div.footer {
     </head>
     <body>
       <div id="container">
-        <div class="logo">
-          <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
+        <div class="logo-container">
+          <div class="logo">
+            <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
+          </div>
         </div>
         {{content|safe}}
         <div class="footer">

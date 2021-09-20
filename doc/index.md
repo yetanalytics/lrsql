@@ -12,5 +12,5 @@
 
 ## Reference
 
-- [Configuration](env_vars.md)
+- [Configuration Variables](env_vars.md)
 - [HTTP Endpoints](endpoints.md)

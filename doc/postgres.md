@@ -1,3 +1,5 @@
+[<- Back to Index](index.md)
+
 # Postgres setup
 
 Using the Postgres implementation of the SQL LRS requires a pre-existing database (unlike the H2 and SQLite implementations, which create the database file if it does not exist). Therefore, you need to set up the Postgres user and database before you start using the SQL LRS.
@@ -72,3 +74,5 @@ Here is an example database config map in the `lrsql.json` configuration file. T
 ```
 
 The `connection`, `lrs`, and `webserver` sections of the config can then be set with whatever properties you see fit, like the example on the [Getting Started](startup.md) page.
+
+[<- Back to Index](index.md)

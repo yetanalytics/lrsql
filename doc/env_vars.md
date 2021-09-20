@@ -1,3 +1,5 @@
+[<- Back to Index](index.md)
+
 # Environment Variables
 
 All environment variables can either be set directly via the command line, or can be added to the config file `config/lrsql.json` as a JSON object property.
@@ -78,7 +80,7 @@ You may have noted that some options are not available:
 | `LRSQL_STMT_RETRY_LIMIT` | `stmtRetryLimit` | The number of times to retry a statement post transaction before failing. | `10` |
 | `LRSQL_STMT_RETRY_BUDGET` | `stmtRetryBudget` | The max amount of time allowed for statement POST transaction retries before failing (ms). | `1000` |
 
-*NOTE: `LRSQL_STMT_RETRY_LIMIT` and `LRSQL_STMT_RETRY_BUDGET` are used to mitigate a rare scenario where specific Actors or Activitys are updated many times in large concurrent batches. In this situation the DBMS can encounter locking and these settings are used to allow retries that eventually write all the conflicting transactions, but may incur performance degradation. If you are experiencing this situation the first step would be to look at why your data needs to rewrite specific Actors or Activities rapidly with different values and potentially solve it at the source. If the issue cannot be avoided by data design alone, another possible solution is reducing batch sizes to decrease or eliminate locks. As a last resort, increasing these settings will at least ensure the statements get written but as mentioned may incur a slowdown in concurrent throughput.*
+NOTE: `LRSQL_STMT_RETRY_LIMIT` and `LRSQL_STMT_RETRY_BUDGET` are used to mitigate a rare scenario where specific Actors or Activities are updated many times in large concurrent batches. In this situation the DBMS can encounter locking and these settings are used to allow retries that eventually write all the conflicting transactions, but may incur performance degradation. If you are experiencing this situation the first step would be to look at why your data needs to rewrite specific Actors or Activities rapidly with different values, which could potentially solve it at the source. If the issue cannot be avoided by data design alone, another possible solution is reducing batch sizes to decrease or eliminate locks. As a last resort, increasing these settings will at least ensure the statements get written but as mentioned may incur a slowdown in concurrent throughput.
 
 ## Webserver
 
@@ -99,3 +101,5 @@ You may have noted that some options are not available:
 | `LRSQL_SSL_PORT` | `sslPort` | The HTTPS port that the webserver will be open on. | `8443` |
 | `LRSQL_URL_PREFIX` | `urlPrefix` | The prefix of the webserver URL path, e.g. the prefix in `http://localhost/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi` |
 | `LRSQL_ENABLE_ADMIN_UI` | `enableAdminUi` | Whether or not to serve the administrative UI at `/admin` | `true` |
+
+[<- Back to Index](index.md)

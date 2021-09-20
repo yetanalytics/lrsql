@@ -1,3 +1,5 @@
+[<- Back to Index](index.md)
+
 # Getting Started
 
 ## Startup instructions
@@ -11,7 +13,7 @@
 
 #### 3. Configuration Variables
 Create initial configuration variables. Config vars can be set by creating and editing the file `config/lrsql.json` in your SQL LRS directory, or alternatively as environment variables; to start off with the following should be set:
-- `adminUserDefault` and `adminPassDefault` MUST be set in order to create an initial admin account. Otherwise you will not be able to use the LRS. These are temporary credentials we will use to log in the very first time.
+- `adminUserDefault` and `adminPassDefault` MUST be set in order to create an initial admin account. Otherwise you will not be able to use the LRS. These are temporary credentials that you will use to log in the very first time.
 - `httpHost` should be set to the domain you are running your webserver on if you are allowing network access (by default it is `0.0.0.0` for localhost); likewise for `httpPort` and `httpsPort` (which by default are `8080` and `8443`, respectively).
 - Likewise, `authorityUrl` should be set to a custom domain in order to uniquely identify Statements inserted into your LRS.
 - If you are running PostgreSQL, you should set `dbHost`, `dbUser`, and `dbPassword` to the appropriate PostgreSQL system, as well as `dbProperties` if needed.
@@ -139,4 +141,6 @@ curl -X GET \
     -H "X-Experience-API-Version: 1.0.3" \
     -u "[api-key]:[api-secret]"
 ```
-This will run a query where all Statements will be returned - in this case, the one Statement we had just inserted.
+This will run a query where all Statements will be returned - in this case, the one Statement you had just inserted.
+
+[<- Back to Index](index.md)
