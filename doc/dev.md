@@ -84,8 +84,8 @@ The following is the full list of arguments (which can also be accessed by passi
 | `-a`, `--async? BOOLEAN` | `false` | Whether to insert asynchronously or not. |
 | `-c`, `--concurrency LONG` | `10` | The number of parallel threads to run during statement insertion. Ignored if `-i` is not given or `-a` is `false`. |
 | `-r`, `--statement-refs STRING` | `none` | How Statement Refs should be inserted. Valid options are `none`, `half`, and `all`. |
-| `-q`, `--query-input URI` | The location of a JSON file containing an array of statement query params. If not given, the benchmark does a single query with no params. |
-| `-n`, `--query-number LONG` | `30` The number of times each query is performed. |
+| `-q`, `--query-input URI` | None | The location of a JSON file containing an array of statement query params. If not given, the benchmark does a single query with no params. |
+| `-n`, `--query-number LONG` | `30` | The number of times each query is performed. |
 | `-u`, `--user STRING` | None | HTTP Basic Auth user. |
 | `-p`, `--pass STRING` | None | HTTP Basic Auth password. |
 | `-h`, `--help` | None | Help menu. Does not take arguments. |
