@@ -44,7 +44,19 @@ If you did not set the keystore variables in the previous section, the SQL LRS w
 
 ### 3. Self-Signed Temporary TLS Certificate
 
-If no keystore or cert files are found, SQL LRS will create a self-signed cert and log a warning.
+If no keystore or cert files are found, the SQL LRS will create a self-signed cert by default and log a warning. This is not intended to be used in a production setting but can be used for testing and development. See below for how to disable certificate generation should you wish to do so.
+
+## HTTPS Configuration
+
+Additional variables can be set in `config/lrsql.json` that configure SSL behavior in the SQL LRS.
+
+- If you would like to change the HTTPS port (default `8443`) you can use `LRSQL_SSL_PORT` (`sslPort` in the config file).
+
+- If you would like to disable HTTP so that only HTTPS is served by the SQL LRS, you can do so by setting `LRSQL_ENABLE_HTTP` (`enableHttp` in config) to `false`.
+
+- If you would like to disable the generation of self-signed certificates entirely you can set `LRSQL_KEY_ENABLE_SELFIE` (`keyEnableSelfie` in config) to `false`.
+
+For more information on these and other options see [Configuration Variables](env_vars.md).
 
 ## Generating Dev Certs with `mkcert`
 
