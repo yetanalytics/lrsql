@@ -15,8 +15,12 @@
                    :db-port       5432
                    :db-user       "lrsql_user"
                    :db-password   "swordfish"
-                  ;;  :db-schema     "lrsql"
-                   :db-properties "currentSchema=lrsql"}
+                   ;; Schemas are commented out for testing (since all tests
+                   ;; happen in the default `public` schema). We can uncomment
+                   ;; these properties for manual schema testing.
+                   ;; :db-schema     "lrsql"
+                   ;; :db-properties "currentSchema=lrsql"
+                   }
    ;; Production
    :prod-h2-mem   #include "prod/h2_mem/database.edn"
    :prod-h2       #include "prod/h2/database.edn"

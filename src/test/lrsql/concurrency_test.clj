@@ -7,7 +7,6 @@
             [com.yetanalytics.datasim.input :as sim-input]
             [com.yetanalytics.datasim.sim   :as sim]
             [xapi-schema.spec :as xs]
-            [lrsql.backend.protocol :as bp]
             [lrsql.test-support :as support]
             [lrsql.util :as u]))
 
