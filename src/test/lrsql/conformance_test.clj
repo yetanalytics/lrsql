@@ -19,7 +19,8 @@
         (let [sys  (support/test-system)
               sys' (component/start sys)]
           (is (conf/conformant?
-               "-e" "http://localhost:8080/xapi" "-b" "-z" "-a"
+               "-e" "http://localhost:8080/xapi"
+               "-b" "-z" "-a"
                "-u" "username"
                "-p" "password"))
           (component/stop sys'))))))
