@@ -4,25 +4,25 @@
 
 Using the Postgres implementation of the SQL LRS requires a pre-existing database (unlike the H2 and SQLite implementations, which create the database file if it does not exist). Therefore, you need to set up the Postgres user and database before you start using the SQL LRS.
 
-#### 1. Log into `psql` as a user with user and database creation permissions.
+#### 1. Create User
 
-#### 2. Create User
-
-Create the user that the SQL LRS will use (note the single quotes around the password):
+Start `psql` as a user with user and database creation permissions. Create the user that the SQL LRS will use (note the single quotes around the password):
 ```
+% psql
 postgres=# CREATE USER [username] WITH CREATEDB WITH PASSWORD '[password]';
 ```
 
-#### 3. Create Database
-Log into `psql` as the new user and create the underlying database that SQL LRS will use:
+#### 2. Create Database
+
+Start `psql` as the new user and create the underlying database that SQL LRS will use:
 ```
 % psql -U [username]
 [username]=# CREATE DATABASE [db_name];
 ```
 
-#### 4. Create Schema (Optional, but recommended)
+#### 3. Create Schema (Optional, but recommended)
 
-If you skip this step, then the default `public` schema will be used for all DB objects.
+This step is for creating and using a new Postgres [schema](https://www.postgresql.org/docs/13/ddl-schemas.html). If you skip this step, then the default `public` schema will be used for all DB objects.
 
 Connect to the database and create a new schema for all the database objects:
 ```
@@ -41,17 +41,18 @@ Then you can set the `LRSQL_DB_SCHEMA` (`dbSchema` in `config/lrsql.json`) confi
 }
 ```
 
-You can also manually set the `search_path` property, which lists the schemas the DB will search in. You can do so by setting the value of the `currentSchema` property, which you can do by setting `LRSQL_DB_PROPERTIES` (`dbProperties` in `config/lrsql.json`):
+You can also manually set the `search_path` property, which lists one or more schemas for Postgres to recognize. An example `search_path` is `my_schema,public`; that will tell Postgres to search for tables, indexes, and other objects in the `my_schema` schema, then in the default `public` schema if needed.
+
+One way to set the search path is by setting the value of the `currentSchema` property, which you can do by setting `LRSQL_DB_PROPERTIES` (`dbProperties` in `config/lrsql.json`):
 ```json
 {
   ...
   "database": {
     ...
-    "dbProperties": "currentSchema=[schema_name]"
+    "dbProperties": "currentSchema=[search_path]"
   }
 }
 ```
-
 
 You can also fix `search_path` for the user in `psql`:
 ```
@@ -65,7 +66,7 @@ Or fix it for the database:
 
 Note that the above changes will only affect subsequent Postgres sessions, not the current one.
 
-#### 5. Start SQL LRS and enjoy!
+#### 4. Start SQL LRS and enjoy!
 
 Startup instructions can be found [here](startup.md)
 
