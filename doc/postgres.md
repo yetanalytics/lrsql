@@ -80,7 +80,7 @@ Here is an example database config map in `config/lrsql.json`. The user is `lrsq
   "database": {
     "dbHost": "myhost",
     "dbUser": "lrsql_user",
-    "dbPassword":  "my_password",
+    "dbPassword": "my_password",
     "dbSchema": "lrsql"
   }
 }
