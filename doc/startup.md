@@ -8,11 +8,11 @@
 - Download and unzip the SQL LRS package and place it in your preferred directory. Latest distributions can be found [here](https://github.com/yetanalytics/lrsql/releases)
 
 #### 2. HTTPS Config
-- In order to support HTTPS, SQL LRS automatically creates a temporary self-signed certificate upon startup. These are appropriate for testing and development but not for a production context.
+- In order to support HTTPS, SQL LRS automatically creates a temporary self-signed certificate upon startup. These are appropriate for testing and development, but not for a production context.
 - If you have a valid TLS certificate you would like to use you can find more instructions for installing it [here](https.md).
 
 #### 3. Configuration Variables
-Create initial configuration variables. Config vars can be set by creating and editing the file `config/lrsql.json` in your SQL LRS directory, or alternatively as environment variables; to start off with the following should be set:
+Create initial configuration variables. Config vars can be set by creating and editing the file `config/lrsql.json` in your SQL LRS directory or alternatively as environment variables; to start off with the following should be set:
 - `adminUserDefault` and `adminPassDefault` MUST be set in order to create an initial admin account. Otherwise you will not be able to use the LRS. These are temporary credentials that you will use to log in the very first time.
 - `httpHost` should be set to the domain you are running your webserver on if you are allowing network access (by default it is `0.0.0.0` for localhost); likewise for `httpPort` and `httpsPort` (which by default are `8080` and `8443`, respectively).
 - Likewise, `authorityUrl` should be set to a custom domain in order to uniquely identify Statements inserted into your LRS.
