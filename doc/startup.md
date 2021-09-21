@@ -2,7 +2,7 @@
 
 # Getting Started
 
-## Startup instructions
+### Startup instructions
 
 #### 1. Download
 - Download and unzip the SQL LRS package and place it in your preferred directory. Latest distributions can be found [here](https://github.com/yetanalytics/lrsql/releases)
@@ -75,7 +75,7 @@ In Windows you may see a similar warning that looks like this:
 
 ![Windows Security Warning](images/win_sec.png)
 
-### 6. Create Accounts and Credentials
+#### 6. Create Accounts and Credentials
 
 Now that the LRS is running, let's set up a (non-seed) account and some credentials to use it.
 
@@ -91,14 +91,14 @@ Now that the LRS is running, let's set up a (non-seed) account and some credenti
 
 - Under "Credentials Management", click "Add New Credentials," which will auto-generate a new API key and secret.
 
-### 7. Delete Seed Account
+#### 7. Delete Seed Account
 For security purposes, it is important to delete the seed account (as the username and password are stored in plaintext). While logged in as the new account you just created in part 6, go to "Account Management," click the "Delete" button corresponding to the seed account.
 
 ![Delete Account](images/delete_seed.png)
 
 Additionally you should remove the `adminUserDefault` and `adminPassDefault` lines from `config/lrsql.json`. This will prevent the system from re-creating the seed accounts on future restarts.
 
-## Your first Statement
+### Your first Statement
 
 xAPI Statements can be inserted into and queried from the SQL LRS using HTTP commands. Let us insert the following Statement:
 

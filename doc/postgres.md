@@ -57,7 +57,7 @@ If you skip this step, then the default `public` schema will be used for all DB 
 
 Startup instructions can be found [here](startup.md)
 
-## Example lrsql.json configuration
+### Example lrsql.json configuration
 
 Here is an example database config map in the `lrsql.json` configuration file. The user is `lrsql_user`, the password is `this_should_be_a_good_password`, and the schema is `lrsql`. The host is set to `myhost`, while the port is maintained at the Postgres default of `5432` (which is why it is not included in the sample).
 

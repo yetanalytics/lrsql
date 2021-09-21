@@ -2,9 +2,11 @@
 
 # TLS/HTTPS
 
+### Certificate Management
+
 SQL LRS has a number of ways of configuring a certificate for HTTPS. The system will attempt to use certificates in the following order when it starts up, based on configuration variables:
 
-### 1. Custom Keystore
+#### 1. Custom Keystore
 
 If you have created a keystore containing a certificate you wish to use with the SQL LRS, specify the following variables in `config/lrsql.json` (or as environment variables). See the guide on [configuration variables](env_vars.md) for more information.
 
@@ -24,7 +26,7 @@ Your `config/lrsql.json` should resemble the following:
   }
 }
 ```
-### 2. Custom PEM Files
+#### 2. Custom PEM Files
 
 If you did not set the keystore variables in the previous section, the SQL LRS will then look for pem files set with the following variables:
 
@@ -42,11 +44,11 @@ If you did not set the keystore variables in the previous section, the SQL LRS w
 }
 ```
 
-### 3. Self-Signed Temporary TLS Certificate
+#### 3. Self-Signed Temporary TLS Certificate
 
 If no keystore or cert files are found, the SQL LRS will create a self-signed cert by default and log a warning. This is not intended to be used in a production setting but can be used for testing and development. See below for how to disable certificate generation should you wish to do so.
 
-## HTTPS Configuration
+### HTTPS Configuration
 
 Additional variables can be set in `config/lrsql.json` that configure SSL behavior in the SQL LRS.
 
@@ -58,7 +60,7 @@ Additional variables can be set in `config/lrsql.json` that configure SSL behavi
 
 For more information on these and other options see [Configuration Variables](env_vars.md).
 
-## Generating Dev Certs with `mkcert`
+### Generating Dev Certs with `mkcert`
 
 If you install [mkcert](https://github.com/FiloSottile/mkcert) you can generate stable "valid" certs to use while developing the app. These should only be used locally for development purposes:
 

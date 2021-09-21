@@ -4,7 +4,7 @@
 
 The SQL LRS is a Clojure Web Application built on the Pedestal Framework.
 
-## Build
+### Build
 
 The SQL LRS can be built or run with the following Makefile targets. They can be executed with `make [target]`.
 
