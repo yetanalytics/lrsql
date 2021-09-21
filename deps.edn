@@ -29,15 +29,18 @@
   {:git/url    "https://github.com/yetanalytics/lrs.git"
    :sha        "804413fa4de08975a45e4d3b7062f590367994d2"
    :exclusions [org.clojure/clojure
+                org.clojure/clojurescript
                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
    :sha        "4b97122d839e895b9111e6ed62ae68bc0fdee723"
-   :exclusions [org.clojure/clojure]}
+   :exclusions [org.clojure/clojure
+                org.clojure/clojurescript]}
   com.yetanalytics/colossal-squuid
   {:git/url    "https://github.com/yetanalytics/colossal-squuid.git"
    :sha        "a125975fc40b14bbba7e7fe4fbe4d9363f7c2202"
-   :exclusions [org.clojure/clojure]}}
+   :exclusions [org.clojure/clojure
+                org.clojure/clojurescript]}}
  :aliases
  {:db-h2
   {:extra-paths ["src/db/h2"]
@@ -64,6 +67,7 @@
                  {:git/url    "https://github.com/yetanalytics/project-pan.git"
                   :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
                   :exclusions [org.clojure/clojure
+                               org.clojure/clojurescript
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}}}
   :test
@@ -99,6 +103,7 @@
                  {:git/url    "https://github.com/yetanalytics/project-pan.git"
                   :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
                   :exclusions [org.clojure/clojure
+                               org.clojure/clojurescript
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}}}
   ;; build alias invoked like clojure -Xbuild uber
