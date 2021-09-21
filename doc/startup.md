@@ -16,7 +16,7 @@ Create initial configuration variables. Config vars can be set by creating and e
 - `adminUserDefault` and `adminPassDefault` MUST be set in order to create an initial admin account. Otherwise you will not be able to use the LRS. These are temporary credentials that you will use to log in the very first time.
 - `httpHost` should be set to the domain you are running your webserver on if you are allowing network access (by default it is `0.0.0.0` for localhost); likewise for `httpPort` and `httpsPort` (which by default are `8080` and `8443`, respectively).
 - Likewise, `authorityUrl` should be set to a custom domain in order to uniquely identify Statements inserted into your LRS.
-- If you are running PostgreSQL, you should set `dbHost`, `dbUser`, and `dbPassword` to the appropriate PostgreSQL system, as well as `dbProperties` if needed.
+- If you are running Postgres, you should set `dbHost`, `dbUser`, and `dbPassword` to the appropriate Postgres system, as well as `dbProperties` if needed.
 
 The `config/lrsql.json` file does not need to contain _all_ config vars; those that are skipped will use their default values.
 

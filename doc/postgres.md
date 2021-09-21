@@ -1,6 +1,6 @@
 [<- Back to Index](index.md)
 
-# Postgres setup
+# Postgres Database Setup
 
 Using the Postgres implementation of the SQL LRS requires a pre-existing database (unlike the H2 and SQLite implementations, which create the database file if it does not exist). Therefore, you need to set up the Postgres user and database before you start using the SQL LRS.
 
@@ -22,25 +22,26 @@ Log into `psql` as the new user and create the underlying database that SQL LRS 
 
 #### 4. Create Schema (Optional, but recommended)
 
+If you skip this step, then the default `public` schema will be used for all DB objects.
+
 Connect to the database and create a new schema for all the database objects:
 ```
 % psql -d [db_name]
 [db_name]=# CREATE SCHEMA IF NOT EXISTS [schema_name];
 ```
 
-You must then set the schema search path, where the first schema listed is the one that you just created. You can do so for the user:
-```
-postgres=# ALTER ROLE [username] SET search_path TO [search_path];
+Then you can set the `LRSQL_DB_SCHEMA` (`dbSchema` in `config/lrsql.json`) config var to that schema; the JDBC driver will automatically use that schema during DB operation:
+```json
+{
+  ...
+  "database": {
+    ...
+    "dbSchema": "[schema_name]"
+  }
+}
 ```
 
-Or you can fix it for the database:
-```
-[username]=# ALTER DATABASE [db_name] SET search_path TO [search_path];
-```
-
-Note that the above changes will only affect subsequent Postgres sessions, not the current one.
-
-You can also set the search path as the value of the `currentSchema` property, which you can do in `lrsql.json`:
+You can also manually set the `search_path` property, which lists the schemas the DB will search in. You can do so by setting the value of the `currentSchema` property, which you can do by setting `LRSQL_DB_PROPERTIES` (`dbProperties` in `config/lrsql.json`):
 ```json
 {
   ...
@@ -51,7 +52,18 @@ You can also set the search path as the value of the `currentSchema` property, w
 }
 ```
 
-If you skip this step, then the default `public` schema will be used for all DB objects.
+
+You can also fix `search_path` for the user in `psql`:
+```
+postgres=# ALTER ROLE [username] SET search_path TO [search_path];
+```
+
+Or fix it for the database:
+```
+[username]=# ALTER DATABASE [db_name] SET search_path TO [search_path];
+```
+
+Note that the above changes will only affect subsequent Postgres sessions, not the current one.
 
 #### 5. Start SQL LRS and enjoy!
 
@@ -59,7 +71,7 @@ Startup instructions can be found [here](startup.md)
 
 ### Example lrsql.json configuration
 
-Here is an example database config map in the `lrsql.json` configuration file. The user is `lrsql_user`, the password is `this_should_be_a_good_password`, and the schema is `lrsql`. The host is set to `myhost`, while the port is maintained at the Postgres default of `5432` (which is why it is not included in the sample).
+Here is an example database config map in `config/lrsql.json`. The user is `lrsql_user`, the password is `my_password`, and the schema is `lrsql`. The host is set to `myhost`, while the port is maintained at the Postgres default of `5432` (which is why it is not included in the sample).
 
 ```json
 {
@@ -67,8 +79,8 @@ Here is an example database config map in the `lrsql.json` configuration file. T
   "database": {
     "dbHost": "myhost",
     "dbUser": "lrsql_user",
-    "dbPassword":  "this_should_be_a_good_password",
-    "dbProperties": "currentSchema=lrsql"
+    "dbPassword":  "my_password",
+    "dbSchema": "lrsql"
   }
 }
 ```
