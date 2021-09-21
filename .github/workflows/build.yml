@@ -6,6 +6,17 @@ on:
       - '*'
     tags:
       - 'v*.*.*' # Enforce Semantic Versioning
+    paths:
+      - deps.edn
+      - Makefile
+      - 'bin/**'
+      - 'doc/**'
+      - 'exe/**'
+      - 'resources/**'
+      - 'src/main/**'
+      - 'src/build/**'
+      - 'src/db/**'
+      - 'src/doc/**'
 
 jobs:
   build:
