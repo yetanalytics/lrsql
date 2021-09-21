@@ -3,7 +3,7 @@
  {org.clojure/clojure                      {:mvn/version "1.10.3"}
   clojure-interop/java.security            {:mvn/version "1.0.5"}
   cheshire/cheshire                        {:mvn/version "5.10.0"}
-  clojure.java-time/clojure.java-time      {:mvn/version "0.3.2"}
+  clojure.java-time/clojure.java-time      {:mvn/version "0.3.3"}
   danlentz/clj-uuid                        {:mvn/version "0.1.9"}
   aero/aero                                {:mvn/version "1.1.6"}
   io.pedestal/pedestal.jetty               {:mvn/version "0.5.9"}
@@ -14,13 +14,13 @@
   ;; Need to exclude slf4j to make logback work properly
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
-  com.github.seancorfield/next.jdbc        {:mvn/version "1.2.674"}
+  com.github.seancorfield/next.jdbc        {:mvn/version "1.2.709"}
   ;; com.layerware/hugsql                   {:mvn/version "0.5.1"}
   com.yetanalytics/hugsql                  {:mvn/version "0.6.0-SNAPSHOT"}
   com.layerware/hugsql-adapter-next-jdbc   {:mvn/version "0.5.1"}
   com.stuartsierra/component               {:mvn/version "1.0.0"}
   org.clojure/tools.logging                {:mvn/version "1.1.0"}
-  ch.qos.logback/logback-classic           {:mvn/version "1.2.3"}
+  ch.qos.logback/logback-classic           {:mvn/version "1.2.6"}
   less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
   selmer/selmer                            {:mvn/version "1.12.44"}
   org.clojure/core.memoize                 {:mvn/version "1.0.250"}
