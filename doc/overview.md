@@ -16,6 +16,6 @@ If you previously used Yet's Cloud LRS products, it is important to be aware of 
 - Tenancy is not supported in SQL LRS; the entire database can be considered to be a single default tenant.
 - All operations in SQL LRS are synchronous; async operations are not supported.
 - `stored` timestamps are not strictly monotonic in SQL LRS; two or more Statements may be assigned the same timestamp if stored in quick succession.
-- If a Statement voids a target Statement that is itself voiding, SQL LRS will accept it upon insertion, though it will not update the state of the target Statement as per the [xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#stmtres). (The Cloud LRS, on the other hand, will simply reject the voiding Statement.)
+- If a Statement voids a target Statement that is itself voiding, SQL LRS will accept it upon insertion, though it will not update the state of the target Statement as per the [xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#214-voided-statements). (The Cloud LRS, on the other hand, will simply reject the voiding Statement.)
 
 [<- Back to Index](index.md)
