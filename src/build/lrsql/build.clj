@@ -3,18 +3,18 @@
   (:require [hf.depstar :as depstar]))
 
 (def uber-params
-  {:jar "target/bundle/lrsql.jar"
-   :aot true
-   :aliases [:db-h2 :db-sqlite :db-postgres]
+  {:jar        "target/bundle/lrsql.jar"
+   :aot        true
+   :aliases    [:db-h2 :db-sqlite :db-postgres]
    :compile-ns :all
-   :no-pom true
-   :exclude ["^lrsql.*clj$"
-             "^.*sql$"
-             "^.*yetanalytics.*clj$"
-             ;; don't shyp crypto
-             "^.*jks$"
-             "^.*key$"
-             "^.*pem$"]})
+   :no-pom     true
+   :exclude    ["^lrsql.*clj$"
+                "^.*sql$"
+                "^.*yetanalytics.*clj$"
+                ;; don't ship crypto
+                "^.*jks$"
+                "^.*key$"
+                "^.*pem$"]})
 
 (defn uber
   "All backends, as an uberjar"
