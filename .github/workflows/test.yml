@@ -1,6 +1,14 @@
 name: CI
 
-on: push
+on:
+  push:
+    paths:
+    - deps.edn
+    - Makefile
+    - 'src/main/**'
+    - 'src/test/**'
+    - 'src/db/**'
+    - 'dev-resources/**'
 
 jobs:
   test:
