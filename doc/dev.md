@@ -17,6 +17,8 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 | `test-sqlite` | Run all tests with SQLite database. |
 | `test-postgres` | Run all tests with Postgres database. |
 | `bundle` | Build a complete distribution of the SQL LRS including the user interface and native runtimes for multiple operating systems. |
+| `bench` | Run a load test and benchmark performance, returning performance metrics on predefined test data. Requires a running SQL LRS instance to test against. This test sends requests synchronously one one thread. |
+| `bench-async` | Same as `bench` but it runs with concurrent requests on multiple threads. |
 
 #### Run Targets
 
@@ -37,6 +39,6 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 | --- | --- |
 | `clean` | Removes all build artifacts. |
 | `clean-dev` | Removes development files. |
-| `clean-exe` | Removes the finished Windows exeutables, allowing recreation. |
+| `clean-exe` | Removes the finished Windows executables, allowing recreation. |
 
 [<- Back to Index](index.md)
