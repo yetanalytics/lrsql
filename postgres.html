@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Yet SQL LRS Documentation</title>
+        <style type="text/css">
+body{
+    margin: 0 auto;
+    padding: 30px;
+    font: 20px Tahoma, Helvetica, Arial, Sans-Serif;
+    line-height: 1.5;
+}
+h1, h2, h3, h4 {
+	display: block; text-decoration: none;
+	font: Helvetica, Arial, Sans-Serif;
+ }
+h1 {
+  font-size: 35px;
+ }
+h2 {
+  font-size: 30px;
+ }
+h3 {
+  font-size: 25px;
+ }
+h4 {
+  font-size: 20px;
+ }
+textarea {
+	width: 600px; margin: 0 auto; background: #222; padding: 20px;
+	font-size: 22px; color: #555; text-shadow: 0px 2px 3px #171717;
+	-webkit-box-shadow: 0px 2px 3px #555;
+	-moz-box-shadow: 0px 2px 3px #555;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+}
+code {
+  background: #eeeeee;
+}
+pre {
+  margin: 0 auto;
+  background: #eeeeee;
+  padding: 20px;
+	font-size: 15px;
+	margin-bottom: 20px;
+}
+a {
+	text-decoration: none;
+	font: 18px Helvetica, Arial, Sans-Serif;
+ }
+hr {
+  height: 3px;
+  border: 0;
+  background-color: #333;
+}
+img {
+  max-width: 95%;
+  display: block;
+  margin: auto;
+}
+div#container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80%;
+}
+/* a la https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Styling_tables#Spacing_and_layout */
+table {
+  width: 95%;
+  margin-right: auto;
+  margin-left: auto;
+  border-collapse: collapse;
+  border: 1px solid #dee2e5;
+}
+th, td {
+  border: 1px solid #dee2e5;
+  padding: 20px;
+  line-height: 1.25;
+}
+tbody tr:nth-child(even) {
+  background-color: #f6f8fa;
+}
+p {
+  text-align: justify;
+}
+
+div.logo-container {
+  width: 100%;
+}
+
+div.logo {
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+div.footer {
+  font-size: medium;
+  color:white;
+  background-color: rgb(17, 55, 92) !important;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+.footer a, .footer a:visited {
+  color: white !important;
+}
+
+.footer a:hover {
+  color: white !important;
+  text-decoration: underline;
+}
+
+</style>
+    </head>
+    <body>
+      <div id="container">
+        <div class="logo-container">
+          <div class="logo">
+            <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
+          </div>
+        </div>
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="postgres&#95;database&#95;setup">Postgres Database Setup</h1><p>Using the Postgres implementation of the SQL LRS requires a pre-existing database (unlike the H2 and SQLite implementations, which create the database file if it does not exist). Therefore, you need to set up the Postgres user and database before you start using the SQL LRS.</p><h4 id="1.&#95;create&#95;user">1. Create User</h4><p>Start <code>psql</code> as a user with user and database creation permissions. Create the user that the SQL LRS will use (note the single quotes around the password):</p><pre><code>% psql
+postgres=# CREATE USER &#91;username&#93; WITH CREATEDB WITH PASSWORD '&#91;password&#93;';
+</code></pre><h4 id="2.&#95;create&#95;database">2. Create Database</h4><p>Start <code>psql</code> as the new user and create the underlying database that SQL LRS will use:</p><pre><code>% psql -U &#91;username&#93;
+&#91;username&#93;=# CREATE DATABASE &#91;db&#95;name&#93;;
+</code></pre><h4 id="3.&#95;create&#95;schema&#95;(optional,&#95;but&#95;recommended)">3. Create Schema (Optional, but recommended)</h4><p>This step is for creating and using a new Postgres <a href='https://www.postgresql.org/docs/13/ddl-schemas.html'>schema</a>. If you skip this step, then the default <code>public</code> schema will be used for all DB objects.</p><p>Connect to the database and create a new schema for all the database objects:</p><pre><code>% psql -d &#91;db&#95;name&#93;
+&#91;db&#95;name&#93;=# CREATE SCHEMA IF NOT EXISTS &#91;schema&#95;name&#93;;
+</code></pre><p>Then you can set the <code>LRSQL&#95;DB&#95;SCHEMA</code> (<code>dbSchema</code> in <code>config/lrsql.json</code>) config var to that schema; the JDBC driver will automatically use that schema during DB operation:<pre><code class="json">{
+  ...
+  &quot;database&quot;: {
+    ...
+    &quot;dbSchema&quot;: &quot;&#91;schema&#95;name&#93;&quot;
+  }
+}
+</code></pre></p><p>You can also manually set the <code>search&#95;path</code> property, which lists one or more schemas for Postgres to recognize. An example <code>search&#95;path</code> is <code>my&#95;schema,public</code>; that will tell Postgres to search for tables, indexes, and other objects in the <code>my&#95;schema</code> schema, then in the default <code>public</code> schema if needed.</p><p>One way to set the search path is by setting the value of the <code>currentSchema</code> property, which you can do by setting <code>LRSQL&#95;DB&#95;PROPERTIES</code> (<code>dbProperties</code> in <code>config/lrsql.json</code>):<pre><code class="json">{
+  ...
+  &quot;database&quot;: {
+    ...
+    &quot;dbProperties&quot;: &quot;currentSchema=&#91;search&#95;path&#93;&quot;
+  }
+}
+</code></pre></p><p>You can also fix <code>search&#95;path</code> for the user in <code>psql</code>:</p><pre><code>postgres=# ALTER ROLE &#91;username&#93; SET search&#95;path TO &#91;search&#95;path&#93;;
+</code></pre><p>Or fix it for the database:</p><pre><code>&#91;username&#93;=# ALTER DATABASE &#91;db&#95;name&#93; SET search&#95;path TO &#91;search&#95;path&#93;;
+</code></pre><p>Note that the above changes will only affect subsequent Postgres sessions, not the current one.</p><h4 id="4.&#95;start&#95;sql&#95;lrs&#95;and&#95;enjoy!">4. Start SQL LRS and enjoy!</h4><p>Startup instructions can be found <a href='startup.html'>here</a></p><h3 id="example&#95;lrsql.json&#95;configuration">Example lrsql.json configuration</h3><p>Here is an example database config map in <code>config/lrsql.json</code>. The user is <code>lrsql&#95;user</code>, the password is <code>my&#95;password</code>, and the schema is <code>lrsql</code>. The host is set to <code>myhost</code>, while the port is maintained at the Postgres default of <code>5432</code> (which is why it is not included in the sample).</p><pre><code class="json">{
+  ...
+  &quot;database&quot;: {
+    &quot;dbHost&quot;: &quot;myhost&quot;,
+    &quot;dbUser&quot;: &quot;lrsql&#95;user&quot;,
+    &quot;dbPassword&quot;: &quot;my&#95;password&quot;,
+    &quot;dbSchema&quot;: &quot;lrsql&quot;
+  }
+}
+</code></pre><p>The <code>connection</code>, <code>lrs</code>, and <code>webserver</code> sections of the config can then be set with whatever properties you see fit, like the example on the <a href='startup.html'>Getting Started</a> page.</p><p><a href='index.html'><- Back to Index</a></p>
+        <div class="footer">
+         &copy; 2021 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
+         Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+        </div>
+      </div>
+    </body>
+</html>

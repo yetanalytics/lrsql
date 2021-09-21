@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Yet SQL LRS Documentation</title>
+        <style type="text/css">
+body{
+    margin: 0 auto;
+    padding: 30px;
+    font: 20px Tahoma, Helvetica, Arial, Sans-Serif;
+    line-height: 1.5;
+}
+h1, h2, h3, h4 {
+	display: block; text-decoration: none;
+	font: Helvetica, Arial, Sans-Serif;
+ }
+h1 {
+  font-size: 35px;
+ }
+h2 {
+  font-size: 30px;
+ }
+h3 {
+  font-size: 25px;
+ }
+h4 {
+  font-size: 20px;
+ }
+textarea {
+	width: 600px; margin: 0 auto; background: #222; padding: 20px;
+	font-size: 22px; color: #555; text-shadow: 0px 2px 3px #171717;
+	-webkit-box-shadow: 0px 2px 3px #555;
+	-moz-box-shadow: 0px 2px 3px #555;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+}
+code {
+  background: #eeeeee;
+}
+pre {
+  margin: 0 auto;
+  background: #eeeeee;
+  padding: 20px;
+	font-size: 15px;
+	margin-bottom: 20px;
+}
+a {
+	text-decoration: none;
+	font: 18px Helvetica, Arial, Sans-Serif;
+ }
+hr {
+  height: 3px;
+  border: 0;
+  background-color: #333;
+}
+img {
+  max-width: 95%;
+  display: block;
+  margin: auto;
+}
+div#container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80%;
+}
+/* a la https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Styling_tables#Spacing_and_layout */
+table {
+  width: 95%;
+  margin-right: auto;
+  margin-left: auto;
+  border-collapse: collapse;
+  border: 1px solid #dee2e5;
+}
+th, td {
+  border: 1px solid #dee2e5;
+  padding: 20px;
+  line-height: 1.25;
+}
+tbody tr:nth-child(even) {
+  background-color: #f6f8fa;
+}
+p {
+  text-align: justify;
+}
+
+div.logo-container {
+  width: 100%;
+}
+
+div.logo {
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+div.footer {
+  font-size: medium;
+  color:white;
+  background-color: rgb(17, 55, 92) !important;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+.footer a, .footer a:visited {
+  color: white !important;
+}
+
+.footer a:hover {
+  color: white !important;
+  text-decoration: underline;
+}
+
+</style>
+    </head>
+    <body>
+      <div id="container">
+        <div class="logo-container">
+          <div class="logo">
+            <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
+          </div>
+        </div>
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="authority&#95;configuration">Authority Configuration</h1><p>The SQL LRS allows for configuration of the Authority included in xAPI Statements that are written to the LRS.</p><h3 id="configuring&#95;a&#95;custom&#95;authority&#95;template">Configuring a custom Authority template</h3><p>On startup the SQL LRS looks for the file <code>config/authority.json.template</code> and bases the authority on the template it finds there.</p><h4 id="static&#95;custom&#95;authority">Static Custom Authority</h4><p>The authority template file should contain an xAPI Agent object representing the desired authority. The object may contain static values, which would result in all statements in the LRS having the same authority.</p><p>Here is an example of a static Authority template file</p><pre><code class="JSON">{
+    &quot;account&quot;: {
+        &quot;homePage&quot;:&quot;https://www.yetanalytics.com&quot;,
+        &quot;name&quot;:&quot;Yet Analytics&quot;
+    },
+    &quot;objectType&quot;:&quot;Agent&quot;
+}
+</code></pre><h4 id="dynamic&#95;custom&#95;authority">Dynamic Custom Authority</h4><p>Alternatively, it can make use a few provided variables to make the Authority more dynamic with the Account or API Key used to write the statement. The following table contains the variables available for use in the Authority template:</p><table><thead><tr><th>Variable</th><th>Description</th></tr></thead><tbody><tr><td>authority-url</td><td><code>LRSQL&#95;AUTHORITY&#95;URL</code> (<code>authorityUrl</code>) config variable value set by an environment variable or <code>config/lrsql.json</code>.</td></tr><tr><td>cred-id</td><td>LRS Credential Pair ID (UUID). This can be used to form a unique Authority for each API Key.</td></tr><tr><td>account-id</td><td>LRS Admin Account ID (UUID). This can be used to make a unique Authority for each Account, but not necessarily for each API Key.</td></tr></tbody></table><p>Here is an example of an Authority template making use of some of these variables:</p><pre><code class="json">{
+    &quot;account&quot;: {
+        &quot;homePage&quot;:&quot;{{authority-url}}&quot;,
+        &quot;name&quot;:&quot;{{cred-id}}&quot;
+    },
+    &quot;objectType&quot;:&quot;Agent&quot;
+}
+</code></pre><h3 id="default&#95;authority">Default Authority</h3><p>If you do not configure a template, the default is to use the <code>cred-id</code> and <code>authority-url</code> variables like so:</p><pre><code class="json">{
+    &quot;account&quot;: {
+        &quot;homePage&quot;:&quot;{{authority-url}}&quot;,
+        &quot;name&quot;:&quot;{{cred-id}}&quot;
+    },
+    &quot;objectType&quot;:&quot;Agent&quot;
+}
+</code></pre><p><a href='index.html'><- Back to Index</a></p>
+        <div class="footer">
+         &copy; 2021 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
+         Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+        </div>
+      </div>
+    </body>
+</html>

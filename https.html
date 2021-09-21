@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Yet SQL LRS Documentation</title>
+        <style type="text/css">
+body{
+    margin: 0 auto;
+    padding: 30px;
+    font: 20px Tahoma, Helvetica, Arial, Sans-Serif;
+    line-height: 1.5;
+}
+h1, h2, h3, h4 {
+	display: block; text-decoration: none;
+	font: Helvetica, Arial, Sans-Serif;
+ }
+h1 {
+  font-size: 35px;
+ }
+h2 {
+  font-size: 30px;
+ }
+h3 {
+  font-size: 25px;
+ }
+h4 {
+  font-size: 20px;
+ }
+textarea {
+	width: 600px; margin: 0 auto; background: #222; padding: 20px;
+	font-size: 22px; color: #555; text-shadow: 0px 2px 3px #171717;
+	-webkit-box-shadow: 0px 2px 3px #555;
+	-moz-box-shadow: 0px 2px 3px #555;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+}
+code {
+  background: #eeeeee;
+}
+pre {
+  margin: 0 auto;
+  background: #eeeeee;
+  padding: 20px;
+	font-size: 15px;
+	margin-bottom: 20px;
+}
+a {
+	text-decoration: none;
+	font: 18px Helvetica, Arial, Sans-Serif;
+ }
+hr {
+  height: 3px;
+  border: 0;
+  background-color: #333;
+}
+img {
+  max-width: 95%;
+  display: block;
+  margin: auto;
+}
+div#container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80%;
+}
+/* a la https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Styling_tables#Spacing_and_layout */
+table {
+  width: 95%;
+  margin-right: auto;
+  margin-left: auto;
+  border-collapse: collapse;
+  border: 1px solid #dee2e5;
+}
+th, td {
+  border: 1px solid #dee2e5;
+  padding: 20px;
+  line-height: 1.25;
+}
+tbody tr:nth-child(even) {
+  background-color: #f6f8fa;
+}
+p {
+  text-align: justify;
+}
+
+div.logo-container {
+  width: 100%;
+}
+
+div.logo {
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+div.footer {
+  font-size: medium;
+  color:white;
+  background-color: rgb(17, 55, 92) !important;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+.footer a, .footer a:visited {
+  color: white !important;
+}
+
+.footer a:hover {
+  color: white !important;
+  text-decoration: underline;
+}
+
+</style>
+    </head>
+    <body>
+      <div id="container">
+        <div class="logo-container">
+          <div class="logo">
+            <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
+          </div>
+        </div>
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="tls/https">TLS/HTTPS</h1><h3 id="certificate&#95;management">Certificate Management</h3><p>SQL LRS has a number of ways of configuring a certificate for HTTPS. The system will attempt to use certificates in the following order when it starts up, based on configuration variables:</p><h4 id="1.&#95;custom&#95;keystore">1. Custom Keystore</h4><p>If you have created a keystore containing a certificate you wish to use with the SQL LRS, specify the following variables in <code>config/lrsql.json</code> (or as environment variables). See the guide on <a href='env_vars.html'>configuration variables</a> for more information.</p><ul><li>Set <code>LRSQL&#95;KEY&#95;FILE</code> (<code>keyFile</code> in <code>config/lrsql.json</code>) to the location of a valid keystore on disk</li><li>Set <code>LRSQL&#95;KEY&#95;ALIAS</code> and <code>LRSQL&#95;KEY&#95;PASSWORD</code> (<code>keyAlias</code> and <code>keyPassword</code> respectively in config file)</li></ul><p>Your <code>config/lrsql.json</code> should resemble the following:</p><pre><code class="JSON">{
+  ...
+  &quot;webserver&quot; : {
+    ...
+    &quot;keyFile&quot; : &quot;my&#95;keystore&#95;location.jks&quot;,
+    &quot;keyAlias&quot; : &quot;my&#95;certificate&#95;alias&quot;,
+    &quot;keyPassword&quot; : &quot;my&#95;key&#95;password&quot;
+  }
+}
+</code></pre><h4 id="2.&#95;custom&#95;pem&#95;files">2. Custom PEM Files</h4><p>If you did not set the keystore variables in the previous section, the SQL LRS will then look for pem files set with the following variables:</p><ul><li>Set <code>LRSQL&#95;KEY&#95;PKEY&#95;FILE</code> (<code>keyPkeyFile</code> in config file) to the location of your PEM private key</li><li>Set <code>LRSQL&#95;KEY&#95;CERT&#95;CHAIN</code> (<code>keyCertChain</code> in config file) to the location of the certificate PEM file and optionally additional cert chain pems (comma separated) provided by your registrar.<pre><code class="json">{
+  ...
+  &quot;webserver&quot; : {
+    ...
+    &quot;keyPkeyFile&quot; : &quot;config/my&#95;private.key.pem&quot;,
+    &quot;keyCertChain&quot; : &quot;config/my&#95;certificate.crt.pem,config/my&#95;cert&#95;chain.pem&quot;    
+  }
+}
+</code></pre></li></ul><h4 id="3.&#95;self-signed&#95;temporary&#95;tls&#95;certificate">3. Self-Signed Temporary TLS Certificate</h4><p>If no keystore or cert files are found, the SQL LRS will create a self-signed cert by default and log a warning. This is not intended to be used in a production setting but can be used for testing and development. See below for how to disable certificate generation should you wish to do so.</p><h3 id="https&#95;configuration">HTTPS Configuration</h3><p>Additional variables can be set in <code>config/lrsql.json</code> that configure SSL behavior in the SQL LRS.</p><ul><li>If you would like to change the HTTPS port (default <code>8443</code>) you can use <code>LRSQL&#95;SSL&#95;PORT</code> (<code>sslPort</code> in the config file).</li><li>If you would like to disable HTTP so that only HTTPS is served by the SQL LRS, you can do so by setting <code>LRSQL&#95;ENABLE&#95;HTTP</code> (<code>enableHttp</code> in config) to <code>false</code>.</li><li>If you would like to disable the generation of self-signed certificates entirely you can set <code>LRSQL&#95;KEY&#95;ENABLE&#95;SELFIE</code> (<code>keyEnableSelfie</code> in config) to <code>false</code>.</li></ul><p>For more information on these and other options see <a href='env_vars.html'>Configuration Variables</a>.</p><h3 id="generating&#95;dev&#95;certs&#95;with&#95;<code>mkcert</code>">Generating Dev Certs with <code>mkcert</code></h3><p>If you install <a href='https://github.com/FiloSottile/mkcert'>mkcert</a> you can generate stable "valid" certs to use while developing the app. These should only be used locally for development purposes:</p><pre><code class="shell">
+$ cp &quot;$&#40;mkcert -CAROOT&#41;&quot;/rootCA.pem config/cacert.pem
+$ mkcert -key-file config/server.key.pem \
+         -cert-file config/server.crt.pem \
+         example.com &quot;&#42;.example.com&quot; example.test localhost 127.0.0.1 ::1
+$ clojure -Mdb-h2 -m lrsql.h2.main
+...
+11:25:54.085 &#91;main&#93; INFO  lrsql.util.cert - Generated keystore from key and cert&#40;s&#41;...
+
+</code></pre><p><a href='index.html'><- Back to Index</a></p>
+        <div class="footer">
+         &copy; 2021 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
+         Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+        </div>
+      </div>
+    </body>
+</html>
