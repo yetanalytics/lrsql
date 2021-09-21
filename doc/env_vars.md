@@ -1,8 +1,10 @@
+[<- Back to Index](index.md)
+
 # Environment Variables
 
 All environment variables can either be set directly via the command line, or can be added to the config file `config/lrsql.json` as a JSON object property.
 
-## Database
+### Database
 
 | Env Var | Config | Description | Default |
 | --- | --- | --- | --- |
@@ -17,15 +19,15 @@ All environment variables can either be set directly via the command line, or ca
 | `LRSQL_DB_SCHEMA` | `dbSchema` | The DB schema. Optional. | Not set |
 | `LRSQL_DB_CATALOG` | `dbCatalog` | The DB catalog. Optional. | Not set |
 
-## Connection
+### Connection
 
-### HikariCP Properties
+#### HikariCP Properties
 
 The following environment variables are aliases for [HikariCP properties](https://github.com/brettwooldridge/HikariCP#gear-configuration-knobs-baby). All of these variables (except for `poolName`) have default values that are already set. Note that H2 and SQLite use their own defaults for `poolMinimumIdle` and `poolMaximumSize` (both `1`) due to issues with multi-threading. All temporal values are in milliseconds.
 
 | Env Var | Config | Default | Valid Values |
 | --- | --- | --- | --- |
-| `LRSQL_POOL_AUTO_COMMIT` | `poolAutoCommit` | `true` | `true`/`false`
+| `LRSQL_POOL_AUTO_COMMIT` | `poolAutoCommit` | `true` | `true`/`false` |
 | `LRSQL_POOL_KEEPALIVE_TIME` | `poolKeepaliveTime` | `0` (disabled) | `≥ 10000` or `0`, less than `poolMaxLifetime` |
 | `LRSQL_POOL_CONNECTION_TIMEOUT` | `poolConnectionTimeout` | `3000` | `≥ 250` |
 | `LRSQL_POOL_IDLE_TIMEOUT` | `poolIdleTimeout` | `600000` | `≥ 10000` or `0` |
@@ -36,10 +38,10 @@ The following environment variables are aliases for [HikariCP properties](https:
 | `LRSQL_POOL_MAXIMUM_SIZE` | `poolMaximumSize` | `10` | `≥ 1` |
 | `LRSQL_POOL_ISOLATE_INTERNAL_QUERIES` | `poolIsolateInternal` | `false` | `true`/`false` |
 | `LRSQL_POOL_LEAK_DETECTION_THRESHOLD` | `poolLeakDetectionThreshold` | `0` (disabled) | `≥ 2000` or `0` |
-| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | JDBC Connection transaction isolation string
+| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | JDBC Connection transaction isolation string |
 | `LRSQL_POOL_NAME` | `poolName` | Not set | Any string |
 
-### Metric Reporting via JMX
+#### Metric Reporting via JMX
 
 The following config var is to activate metrics reporting via JMX.
 
@@ -52,7 +54,7 @@ Unlike the previous vars, which are one-to-one with HikariCP properties, the fol
 - `allowPoolSuspension` is set to `true` to allow for user control over connection pools.
 - `metricRegistry` is set to be a Codahale/Dropwizard `MetricRegistry` instance.
 
-### Missing options?
+#### Missing options?
 
 You may have noted that some options are not available:
 
@@ -63,7 +65,7 @@ You may have noted that some options are not available:
 - `healthCheckRegistry` cannot easily report via JMX, and most of its information should be covered by `metricRegistry` anyways.
 - `threadFactory` and `scheduledExecutor` are Java instances that should only be used in specific execution environments.
 
-## LRS
+### LRS
 
 | Env Var | Config | Description | Default |
 | --- | --- | --- | --- |
@@ -78,7 +80,9 @@ You may have noted that some options are not available:
 | `LRSQL_STMT_RETRY_LIMIT` | `stmtRetryLimit` | The number of times to retry a statement post transaction before failing. | `10` |
 | `LRSQL_STMT_RETRY_BUDGET` | `stmtRetryBudget` | The max amount of time allowed for statement POST transaction retries before failing (ms). | `1000` |
 
-## Webserver
+*NOTE:* `LRSQL_STMT_RETRY_LIMIT` and `LRSQL_STMT_RETRY_BUDGET` are used to mitigate a rare scenario where specific Actors or Activities are updated many times in large concurrent batches. In this situation the DBMS can encounter locking and these settings are used to allow retries that eventually write all the conflicting transactions, but may incur performance degradation. If you are experiencing this situation the first step would be to look at why your data needs to rewrite specific Actors or Activities rapidly with different values, which could potentially solve it at the source. If the issue cannot be avoided by data design alone, another possible solution is reducing batch sizes to decrease or eliminate locks. As a last resort, increasing these settings will at least ensure the statements get written but as mentioned may incur a slowdown in concurrent throughput.
+
+### Webserver
 
 | Env Var | Config | Description | Default |
 | --- | --- | --- | --- |
@@ -97,3 +101,5 @@ You may have noted that some options are not available:
 | `LRSQL_SSL_PORT` | `sslPort` | The HTTPS port that the webserver will be open on. | `8443` |
 | `LRSQL_URL_PREFIX` | `urlPrefix` | The prefix of the webserver URL path, e.g. the prefix in `http://localhost/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi` |
 | `LRSQL_ENABLE_ADMIN_UI` | `enableAdminUi` | Whether or not to serve the administrative UI at `/admin` | `true` |
+
+[<- Back to Index](index.md)
