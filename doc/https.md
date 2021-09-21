@@ -15,7 +15,7 @@ If you have created a keystore containing a certificate you wish to use with the
 
 Your `config/lrsql.json` should resemble the following:
 
-``` json
+``` JSON
 {
   ...
   "webserver" : {

@@ -35,7 +35,7 @@ The following is an example of a basic (non-Postgres) `config/lrsql.json` config
 }
 ```
 
-For a complete list of config variables, see [here](env_vars.md). There is also a sample json config file provided for reference at `config/lrsql.json.example` which contains many more variables than the above.
+For a complete list of config variables, see [here](env_vars.md). There is also a sample JSON config file provided for reference at `config/lrsql.json.example` which contains many more variables than the above.
 
 #### 4. Setup Postgres DB (Optional)
 - If using Postgres, setup instructions can be found [here](postgres.md).
@@ -131,7 +131,7 @@ curl -X POST \
     -u "[api-key]:[api-secret]" \
     -d '[statement data]'
 ```
-where `api-key` and `api-secret` are the credential pair you created earlier, `host` and `port` are set for your webserver, and `statement data` is your Statement (which you can copy-paste from above). This should return a json array containing a single UUID; this is the Statement ID that the SQL LRS generated (since the Statement did not have a pre-existing ID).
+where `api-key` and `api-secret` are the credential pair you created earlier, `host` and `port` are set for your webserver, and `statement data` is your Statement (which you can copy-paste from above). This should return a JSON array containing a single UUID; this is the Statement ID that the SQL LRS generated (since the Statement did not have a pre-existing ID).
 
 In order to retrieve that statement, you can run the following command:
 ```
