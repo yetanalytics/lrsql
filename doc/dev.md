@@ -77,7 +77,7 @@ clojure -M:bench -m lrsql.bench [arguments]
 The following is the full list of arguments (which can also be accessed by passing the `--help` argument):
 | Argument | Default | Description |
 | --- | --- | --- |
-| `-e`, `--lrs-endpoint URI` | `http://localhost:8080/xapi/statements` | The HTTP(S) endpoint of the (SQL) LRS webserver for Statement POSTs and GETs. |
+| `-e`, `--lrs-endpoint URI` | <details>`http://localhost:8080/xapi/statements`<summary>(URL)</summary></details> | The HTTP(S) endpoint of the (SQL) LRS webserver for Statement POSTs and GETs. |
 | `-i`, `--insert-input URI` | None | The location of a JSON file containing a DATASIM input spec. If given, this input is used to insert statements into the DB. |
 | `-s`, `--input-size LONG` | `1000` | The total number of statements to insert. Ignored if `-i` is not given. |
 | `-b`, `--batch-size LONG` | `10` | The batch size to use for inserting statements. Ignored if `-i` is not given. |
