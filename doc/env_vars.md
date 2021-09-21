@@ -1,8 +1,8 @@
 [<- Back to Index](index.md)
 
-# Environment Variables
+# Configuration Variables
 
-All environment variables can either be set directly via the command line, or can be added to the config file `config/lrsql.json` as a JSON object property.
+All configuration variables can either be set directly via the command line as environment variables, or can be added to the config file `config/lrsql.json` as a JSON object property.
 
 ### Database
 
@@ -23,23 +23,27 @@ All environment variables can either be set directly via the command line, or ca
 
 #### HikariCP Properties
 
-The following environment variables are aliases for [HikariCP properties](https://github.com/brettwooldridge/HikariCP#gear-configuration-knobs-baby). All of these variables (except for `poolName`) have default values that are already set. Note that H2 and SQLite use their own defaults for `poolMinimumIdle` and `poolMaximumSize` (both `1`) due to issues with multi-threading. All temporal values are in milliseconds.
+The following environment variables are aliases for [HikariCP properties](https://github.com/brettwooldridge/HikariCP#gear-configuration-knobs-baby). All of these variables (except for `poolName`) have default values that are already set. Note that H2 and SQLite use different defaults for `poolMinimumIdle` and `poolMaximumSize` due to issues with multi-threading with those DBMSs. All temporal values are in milliseconds.
 
 | Env Var | Config | Default | Valid Values |
 | --- | --- | --- | --- |
 | `LRSQL_POOL_AUTO_COMMIT` | `poolAutoCommit` | `true` | `true`/`false` |
-| `LRSQL_POOL_KEEPALIVE_TIME` | `poolKeepaliveTime` | `0` (disabled) | `≥ 10000` or `0`, less than `poolMaxLifetime` |
+| `LRSQL_POOL_KEEPALIVE_TIME` | `poolKeepaliveTime` | `0`† | `≥ 10000` or `0`, less than `poolMaxLifetime` |
 | `LRSQL_POOL_CONNECTION_TIMEOUT` | `poolConnectionTimeout` | `3000` | `≥ 250` |
 | `LRSQL_POOL_IDLE_TIMEOUT` | `poolIdleTimeout` | `600000` | `≥ 10000` or `0` |
 | `LRSQL_POOL_VALIDATION_TIMEOUT` | `poolValidationTimeout` | `5000` | `≥ 250`, less than `poolConnectionTimeout` |
 | `LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT` | `poolInitializationFailTimeout` | `1` | Any integer |
 | `LRSQL_POOL_MAX_LIFETIME` | `poolMaxLifetime` | `1800000` | `≥ 30000` or `0` |
-| `LRSQL_POOL_MINIMUM_IDLE` | `poolMinimumIdle` | `10` | `≥ 0` |
-| `LRSQL_POOL_MAXIMUM_SIZE` | `poolMaximumSize` | `10` | `≥ 1` |
-| `LRSQL_POOL_ISOLATE_INTERNAL_QUERIES` | `poolIsolateInternal` | `false` | `true`/`false` |
-| `LRSQL_POOL_LEAK_DETECTION_THRESHOLD` | `poolLeakDetectionThreshold` | `0` (disabled) | `≥ 2000` or `0` |
-| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | JDBC Connection transaction isolation string |
+| `LRSQL_POOL_MINIMUM_IDLE` | `poolMinimumIdle` | `1`* or `10`** | `≥ 0` |
+| `LRSQL_POOL_MAXIMUM_SIZE` | `poolMaximumSize` | `1`* or `10`** | `≥ 1` |
+| `LRSQL_POOL_ISOLATE_INTERNAL_QUERIES` | `poolIsolateInternalQueries` | `false` | `true`/`false` |
+| `LRSQL_POOL_LEAK_DETECTION_THRESHOLD` | `poolLeakDetectionThreshold` | `0`† | `≥ 2000` or `0` |
+| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | [JDBC Connection constant](https://docs.oracle.com/javase/7/docs/api/java/sql/Connection.html) (e.g. `TRANSACTION_SERIALIZABLE`) |
 | `LRSQL_POOL_NAME` | `poolName` | Not set | Any string |
+
+\* H2/SQLite default.
+\*\* Postgres default.
+† The property is set to be disabled by default.
 
 #### Metric Reporting via JMX
 
