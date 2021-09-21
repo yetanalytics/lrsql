@@ -9,14 +9,15 @@ on:
     paths:
       - deps.edn
       - Makefile
+      - .github/workflows/build.yml
       - 'bin/**'
       - 'doc/**'
       - 'exe/**'
       - 'resources/**'
-      - 'src/main/**'
-      - 'src/build/**'
-      - 'src/db/**'
-      - 'src/doc/**'
+      - 'src/**'
+      - '!src/bench/**'
+      - '!src/dev/**'
+      - '!src/test/**'
 
 jobs:
   build:

@@ -5,9 +5,11 @@ on:
     paths:
     - deps.edn
     - Makefile
+    - .github/workflows/test.yml
     - 'src/main/**'
     - 'src/test/**'
     - 'src/db/**'
+    - 'resources/**'
     - 'dev-resources/**'
 
 jobs:
