@@ -55,7 +55,7 @@
                      first
                      :id
                      (.getName)))
-               (catch Exception e "No  build number found.")))
+               (catch Exception e "No build number found.")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Markdown file -> HTML file
