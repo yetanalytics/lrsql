@@ -1,43 +1,53 @@
 {:paths ["src/main" "resources"]
  :deps
- {org.clojure/clojure                      {:mvn/version "1.10.3"}
+ {;; Clojure core deps
+  org.clojure/clojure                      {:mvn/version "1.10.3"}
+  org.clojure/tools.logging                {:mvn/version "1.1.0"}
+  org.clojure/core.memoize                 {:mvn/version "1.0.250"}
   clojure-interop/java.security            {:mvn/version "1.0.5"}
+  ;; Util deps
+  ;; - java-time: Updating to 0.3.3 causes dep clash with DATASIM
+  camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
   cheshire/cheshire                        {:mvn/version "5.10.0"}
   clojure.java-time/clojure.java-time      {:mvn/version "0.3.2"}
   danlentz/clj-uuid                        {:mvn/version "0.1.9"}
   aero/aero                                {:mvn/version "1.1.6"}
+  selmer/selmer                            {:mvn/version "1.12.44"}
+  ch.qos.logback/logback-classic           {:mvn/version "1.2.6"}
+  ;; DB/JDBC deps
+  ;; - HikariCP: Need to exclude slf4j to make logback work properly
+  ;; - HugSql: Use custom version instead of the released version (0.5.1)
+  com.stuartsierra/component               {:mvn/version "1.0.0"}
+  com.github.seancorfield/next.jdbc        {:mvn/version "1.2.709"}
+  com.yetanalytics/hugsql                  {:mvn/version "0.6.0-SNAPSHOT"}
+  com.layerware/hugsql-adapter-next-jdbc   {:mvn/version "0.5.1"}
+  com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
+                                            :exclusions  [org.slf4j/slf4j-api]}
+  ;; Jetty webserver deps
   io.pedestal/pedestal.jetty               {:mvn/version "0.5.9"}
   org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.35.v20201120"}
+  ;; Security deps
   buddy/buddy-core                         {:mvn/version "1.10.1"}
   buddy/buddy-sign                         {:mvn/version "3.4.1"}
   buddy/buddy-hashers                      {:mvn/version "1.8.1"}
-  ;; Need to exclude slf4j to make logback work properly
-  com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
-                                            :exclusions  [org.slf4j/slf4j-api]}
-  com.github.seancorfield/next.jdbc        {:mvn/version "1.2.674"}
-  ;; com.layerware/hugsql                   {:mvn/version "0.5.1"}
-  com.yetanalytics/hugsql                  {:mvn/version "0.6.0-SNAPSHOT"}
-  com.layerware/hugsql-adapter-next-jdbc   {:mvn/version "0.5.1"}
-  com.stuartsierra/component               {:mvn/version "1.0.0"}
-  org.clojure/tools.logging                {:mvn/version "1.1.0"}
-  ch.qos.logback/logback-classic           {:mvn/version "1.2.3"}
   less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
-  selmer/selmer                            {:mvn/version "1.12.44"}
-  org.clojure/core.memoize                 {:mvn/version "1.0.250"}
-  camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
+  ;; Yet Analytics deps
   com.yetanalytics/lrs
   {:git/url    "https://github.com/yetanalytics/lrs.git"
    :sha        "804413fa4de08975a45e4d3b7062f590367994d2"
    :exclusions [org.clojure/clojure
+                org.clojure/clojurescript
                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
    :sha        "4b97122d839e895b9111e6ed62ae68bc0fdee723"
-   :exclusions [org.clojure/clojure]}
+   :exclusions [org.clojure/clojure
+                org.clojure/clojurescript]}
   com.yetanalytics/colossal-squuid
   {:git/url    "https://github.com/yetanalytics/colossal-squuid.git"
    :sha        "a125975fc40b14bbba7e7fe4fbe4d9363f7c2202"
-   :exclusions [org.clojure/clojure]}}
+   :exclusions [org.clojure/clojure
+                org.clojure/clojurescript]}}
  :aliases
  {:db-h2
   {:extra-paths ["src/db/h2"]
@@ -64,6 +74,7 @@
                  {:git/url    "https://github.com/yetanalytics/project-pan.git"
                   :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
                   :exclusions [org.clojure/clojure
+                               org.clojure/clojurescript
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}}}
   :test
@@ -99,17 +110,18 @@
                  {:git/url    "https://github.com/yetanalytics/project-pan.git"
                   :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
                   :exclusions [org.clojure/clojure
+                               org.clojure/clojurescript
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}}}
-  ;; build alias invoked like clojure -Xbuild uber
+  ;; Build alias invoked like clojure -Xbuild uber
   :build
   {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
    :extra-paths  ["src/build"]
    :ns-default   lrsql.build}
-  ;; alias for dev so you can use from repl w/o breakage
+  ;; Alias for dev so you can use from repl w/o breakage
+  ;; Note the :extra-deps instead of :replace-deps
   :build-dev
-  {;; note the :extra-deps instead of :replace-deps
-   :extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
+  {:extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
    :extra-paths ["src/build"]}
   :doc
   {:extra-deps  {markdown-clj/markdown-clj {:mvn/version "1.10.5"}}
