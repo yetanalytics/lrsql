@@ -106,7 +106,8 @@
                                stmt-input')]
               (if (contains? stmt-result :error)
                 ;; Statement conflict or some other error - stop and rollback
-                (do (log/error "Error on statement insertion; roll back transaction.")
+                ;; Return the error, which will then be displayed by lrs lib
+                (do (log/warnf "Rolling back transaction...")
                     (.rollback tx)
                     stmt-result)
                 ;; Non-error result - continue
