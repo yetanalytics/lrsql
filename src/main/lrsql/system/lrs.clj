@@ -104,10 +104,13 @@
                                backend
                                tx
                                stmt-input')]
-              (if (contains? stmt-result :error)
+              (if-some [err (:error stmt-result)]
                 ;; Statement conflict or some other error - stop and rollback
-                ;; Return the error, which will then be displayed by lrs lib
-                (do (log/warn "Rolling back transaction...")
+                ;; Return the error, which will either be logged here or
+                ;; (if it's unexpected) bubble up until the end
+                (do (when (= ::lrsp/statement-conflict (-> err ex-data :type))
+                      (log/warn (ex-message err)))
+                    (log/warn "Rolling back transaction...")
                     (.rollback tx)
                     stmt-result)
                 ;; Non-error result - continue
