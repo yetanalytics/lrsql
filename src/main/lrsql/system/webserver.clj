@@ -68,7 +68,7 @@
    (assert-config ::cs/webserver "webserver" config)
    (if server
      (do (log/info "Webserver already started; do nothing.")
-         (log/tracef "Server map: %s" server)
+         (log/debugf "Server map: %s" server)
          this)
      (if lrs
        (let [service (or service ;; accept passed in
@@ -90,7 +90,7 @@
                         host
                         ssl-port)))
          (log/info logo)
-         (log/tracef "Server map: %s" server)
+         (log/debugf "Server map: %s" server)
          ;; Return new webserver
          (assoc this
                 :service service
