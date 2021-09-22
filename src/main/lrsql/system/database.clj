@@ -97,7 +97,7 @@
       (if-not ?conn-pool
         (let [conn-pool (make-conn-pool backend config)]
           (log/infof "Starting new connection for %s database..." db-type)
-          (log/tracef "Config: %s" config)
+          (log/debugf "Config: %s" config)
           (assoc conn :conn-pool conn-pool))
         (do
           (log/info "Connection already started; do nothing.")
