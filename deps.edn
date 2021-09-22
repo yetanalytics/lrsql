@@ -34,18 +34,19 @@
   ;; Yet Analytics deps
   com.yetanalytics/lrs
   {:git/url    "https://github.com/yetanalytics/lrs.git"
-   :sha        "804413fa4de08975a45e4d3b7062f590367994d2"
+   :git/sha    "25bcc158c0b008301242aae5f8eec97da11aa7b3"
+   :git/tag    "v1.1.0"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript
                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
   {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
-   :sha        "4b97122d839e895b9111e6ed62ae68bc0fdee723"
+   :git/sha    "4b97122d839e895b9111e6ed62ae68bc0fdee723"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript]}
   com.yetanalytics/colossal-squuid
   {:git/url    "https://github.com/yetanalytics/colossal-squuid.git"
-   :sha        "a125975fc40b14bbba7e7fe4fbe4d9363f7c2202"
+   :git/sha    "a125975fc40b14bbba7e7fe4fbe4d9363f7c2202"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript]}}
  :aliases
@@ -65,14 +66,14 @@
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
                  com.yetanalytics/datasim
                  {:git/url    "https://github.com/yetanalytics/datasim.git"
-                  :sha        "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
+                  :git/sha    "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}
                  ;; Override pan dep in DATASIM
                  com.yetanalytics/project-pan
                  {:git/url    "https://github.com/yetanalytics/project-pan.git"
-                  :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
+                  :git/sha    "db90b60f90908de6c2a66928ea59654a8abeaead"
                   :exclusions [org.clojure/clojure
                                org.clojure/clojurescript
                                com.yetanalytics/xapi-schema
@@ -94,21 +95,21 @@
                  orchestra/orchestra    {:mvn/version "2021.01.01-1"}
                  io.github.cognitect-labs/test-runner
                  {:git/url "https://github.com/cognitect-labs/test-runner.git"
-                  :sha     "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
+                  :git/sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
                  com.yetanalytics.lrs/test-runner
                  {:git/url    "https://github.com/yetanalytics/lrs-test-runner.git"
-                  :sha        "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
+                  :git/sha    "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
                   :exclusions [org.clojure/data.json]}
                  com.yetanalytics/datasim
                  {:git/url    "https://github.com/yetanalytics/datasim.git"
-                  :sha        "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
+                  :git/sha    "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema
                                com.yetanalytics/project-pan]}
                  ;; Override pan dep in DATASIM
                  com.yetanalytics/project-pan
                  {:git/url    "https://github.com/yetanalytics/project-pan.git"
-                  :sha        "db90b60f90908de6c2a66928ea59654a8abeaead"
+                  :git/sha    "db90b60f90908de6c2a66928ea59654a8abeaead"
                   :exclusions [org.clojure/clojure
                                org.clojure/clojurescript
                                com.yetanalytics/xapi-schema
