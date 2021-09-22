@@ -49,13 +49,15 @@
 ;; Git API for SHA
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def git-sha (try
-               (with-repo "./"
-                 (-> (git-log repo :max-count 1)
-                     first
-                     :id
-                     (.getName)))
-               (catch Exception e "No build number found.")))
+(def git-sha
+  (delay
+    (try
+      (with-repo "./"
+        (-> (git-log repo :max-count 1)
+            first
+            :id
+            (.getName)))
+      (catch Exception e "No build number found."))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Markdown file -> HTML file
@@ -70,7 +72,7 @@
   "Add `content` to the HTML doc template."
   [content]
   (selm-parser/render-template doc-template {:content content
-                                             :sha git-sha}))
+                                             :sha @git-sha}))
 
 (defn all-paths-seq
   "Return a seq of all files located in `root`."

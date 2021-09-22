@@ -112,7 +112,7 @@
    :extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
    :extra-paths ["src/build"]}
   :doc
-  {:extra-deps  {markdown-clj/markdown-clj {:mvn/version "1.10.5"}
-                 ;; git dep for pulling version
-                 clj-jgit/clj-jgit         {:mvn/version "1.0.1"}}
+  {:extra-deps {markdown-clj/markdown-clj {:mvn/version "1.10.5"}
+                ;; git dep for pulling version
+                clj-jgit/clj-jgit         {:mvn/version "1.0.1"}}
    :extra-paths ["src/doc"]}}}
