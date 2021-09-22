@@ -24,14 +24,16 @@
    during compilation (instead of during runtime as in the original macro)."
   [file]
   (let [parsed-defs# (hug/parsed-defs-from-file file)]
-    `(doseq [~'pdef ~parsed-defs#]
-       (hug/validate-parsed-def! ~'pdef)
-       (let [~'exp-pdef (hug/expand-compile-frags ~'pdef)]
-         (hug/compile-exprs ~'exp-pdef)
-         (hug/dispatch-on-pdef ~'exp-pdef
-                               {} ; options - empty map is the hugsql default
-                               ~hug/intern-db-fn
-                               ~hug/intern-sqlvec-fn)))))
+    ;; Validate defs at compile time
+    (doseq [pdef parsed-defs#]
+      (hug/validate-parsed-def! pdef))
+    ;; Runtime actions
+    `(doseq [~'exp-pdef (map hug/expand-compile-frags ~parsed-defs#)]
+       (hug/compile-exprs ~'exp-pdef)
+       (hug/dispatch-on-pdef ~'exp-pdef
+                             {} ; options - empty map is the hugsql default
+                             ~hug/intern-db-fn
+                             ~hug/intern-sqlvec-fn))))
 
 (defmacro wrap-parse-fn
   "Wrap `(parse-fn s)` in an exception such that on parse failure, the

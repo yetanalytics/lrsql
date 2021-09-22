@@ -3,18 +3,18 @@
   (:require [hf.depstar :as depstar]))
 
 (def uber-params
-  {:jar "target/bundle/lrsql.jar"
-   :aot true
-   :aliases [:db-h2 :db-sqlite :db-postgres]
+  {:jar        "target/bundle/lrsql.jar"
+   :aot        true
+   :aliases    [:db-h2 :db-sqlite :db-postgres]
    :compile-ns :all
-   :no-pom true
-   :exclude ["^lrsql.*clj$"
-             "^.*sql$"
-             "^.*yetanalytics.*clj$"
-             ;; don't shyp crypto
-             "^.*jks$"
-             "^.*key$"
-             "^.*pem$"]})
+   :no-pom     true
+   ;; Don't ship crypto - shouldn't be included in the build path anyways,
+   ;; but we exclude them here as extra defense.
+   ;; On the other hand, we keep the unobfuscated OSS source code so that users
+   ;; have easy access to it.
+   :exclude    ["^.*jks$"
+                "^.*key$"
+                "^.*pem$"]})
 
 (defn uber
   "All backends, as an uberjar"
