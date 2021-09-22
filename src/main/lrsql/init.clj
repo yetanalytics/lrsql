@@ -38,20 +38,23 @@
     (let [admin-in (admin-input/insert-admin-input
                     ?username
                     ?password)]
-      ;; Don't insert if reconnecting to a previously-seeded DB
+      ;; Don't insert account or creds if reconnecting to a DB previously
+      ;; seeded with an account
       (when-not (admin-q/query-admin backend tx admin-in)
-        (admin-cmd/insert-admin! backend tx admin-in))
-      ;; Seed Credentials
-      (when (and ?api-key ?secret-key)
-        (let [key-pair {:api-key    ?api-key
-                        :secret-key ?secret-key}
-              cred-in  (auth-input/insert-credential-input
-                        (:primary-key admin-in)
-                        key-pair)
-              scope-in (auth-input/insert-credential-scopes-input
-                        key-pair
-                        #{"all"})]
-          ;; Don't insert if reconnecting to a previously-seeded DB
-          (when-not (auth-q/query-credential-scopes* backend tx cred-in)
-            (auth-cmd/insert-credential! backend tx cred-in)
-            (auth-cmd/insert-credential-scopes! backend tx scope-in)))))))
+        ;; Insert admin account
+        (admin-cmd/insert-admin! backend tx admin-in)
+        ;; Seed Credentials
+        (when (and ?api-key ?secret-key)
+          (let [key-pair {:api-key    ?api-key
+                          :secret-key ?secret-key}
+                cred-in  (auth-input/insert-credential-input
+                          (:primary-key admin-in)
+                          key-pair)
+                scope-in (auth-input/insert-credential-scopes-input
+                          key-pair
+                          #{"all"})]
+            ;; Don't insert creds if reconnecting to a DB previously seeded
+            ;; with a cred
+            (when-not (auth-q/query-credential-scopes* backend tx cred-in)
+              (auth-cmd/insert-credential! backend tx cred-in)
+              (auth-cmd/insert-credential-scopes! backend tx scope-in))))))))
