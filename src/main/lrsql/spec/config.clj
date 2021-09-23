@@ -96,7 +96,9 @@
            ;; Need to call `second` due to `s/or` conforming the key values.
            (let [keep-alive (-> conn-config :pool-keepalive-time second)
                  max-life   (-> conn-config :pool-max-lifetime second)]
-             (< keep-alive max-life)))
+             (or (= 0 keep-alive) ; keepalive time is disabled
+                 (= 0 max-life)   ; max lifetime is infinite
+                 (< keep-alive max-life))))
          (fn validation-lt-connection-timeout?
            [{:keys [pool-validation-timeout pool-connection-timeout]}]
            (< pool-validation-timeout pool-connection-timeout))))
