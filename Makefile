@@ -104,6 +104,7 @@ target/bundle/bin:
 
 target/bundle/doc:
 	clojure -M:doc -m lrsql.render-doc doc target/bundle/doc
+	cp -r doc/images/ target/bundle/doc/images/
 
 # Copy config
 

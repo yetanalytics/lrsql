@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
     <head>
+        <title>Yet SQL LRS Documentation</title>
         <style type="text/css">
 body{
     margin: 0 auto;
@@ -33,10 +34,12 @@ textarea {
 	-moz-border-radius: 10px;
 }
 code {
-        background: #f6f8fa;
+  background: #eeeeee;
 }
 pre {
-        margin: 0 auto; background: #f6f8fa; padding: 20px;
+  margin: 0 auto;
+  background: #eeeeee;
+  padding: 20px;
 	font-size: 15px;
 	margin-bottom: 20px;
 }
@@ -78,11 +81,56 @@ tbody tr:nth-child(even) {
 p {
   text-align: justify;
 }
+
+div.logo-container {
+  width: 100%;
+}
+
+div.logo {
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+div.footer {
+  font-size: medium;
+  color:white;
+  background-color: rgb(17, 55, 92) !important;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+.footer a, .footer a:visited {
+  color: white !important;
+}
+
+.footer a:hover {
+  color: white !important;
+  text-decoration: underline;
+}
+
+span.build {
+  display: block;
+  font-size: .7em;
+}
+
 </style>
     </head>
     <body>
-        <div id="container">
-            {{content|safe}}
+      <div id="container">
+        <div class="logo-container">
+          <div class="logo">
+            <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
+          </div>
         </div>
+        {{content|safe}}
+        <div class="footer">
+         &copy; 2021 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
+         Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+         <span class="build">Build: {{sha | safe}}</span>
+        </div>
+      </div>
     </body>
 </html>
