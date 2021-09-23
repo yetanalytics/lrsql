@@ -8,6 +8,10 @@ A SQL-based Learning Record Store.
 
 A Learning Record Store (LRS) is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in Part 3 of the [xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md). SQL LRS is distinct from other LRSs developed at Yet Analytics for being SQL-based and supporting multiple SQL database management systems (DBMSs) like H2, SQLite, and Postgres.
 
+## Releases 
+
+For releases and release notes, see the [Releases](https://github.com/yetanalytics/lrsql/releases) page.
+
 ## Index
 
 - [Overview](doc/overview.md)
