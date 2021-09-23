@@ -19,12 +19,12 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 - [Setting up TLS/HTTP](doc/https.md)
 - [Authority Configuration](doc/authority.md)
 
-## DBMS-specific Sections
+### DBMS-specific Sections
 
 - [Postgres](doc/postgres.md)
 - [SQLite](doc/sqlite.md)
 
-## Reference
+### Reference
 
 - [Configuration Variables](doc/env_vars.md)
 - [HTTP Endpoints](doc/endpoints.md)
