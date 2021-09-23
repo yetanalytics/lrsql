@@ -1,0 +1,427 @@
+SQL LRS
+Copyright (c) 2021 Yet Analytics Inc.
+
+---------------------------------------------------------------------------------
+This software uses Clojure (https://clojure.org/)
+Copyright (c) Rich Hickey. All rights reserved.
+The use and distribution terms for this software are covered by the
+Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php)
+which can be found in the file epl-v10.html at the root of this distribution.
+By using this software in any fashion, you are agreeing to be bound by
+   the terms of this license.
+You must not remove this notice, or any other, from this software.
+
+--------------------
+NOTICE
+
+This program uses the ASM bytecode engineering library which is distributed
+with the following notice:
+
+ ASM: a very small and fast Java bytecode manipulation framework
+ Copyright (c) 2000-2011 INRIA, France Telecom
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. Neither the name of the copyright holders nor the names of its
+    contributors may be used to endorse or promote products derived from
+    this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------
+NOTICE
+
+This program uses the Guava Murmur3 hash implementation which is distributed
+under the Apache License Version 2.0
+
+---------------------------------------------------------------------------------
+This software uses clojure/tools.logging (https://github.com/clojure/tools.logging)
+Copyright © 2009 Alex Taggart
+
+Licensed under the Eclipse Public License (https://www.eclipse.org/legal/epl-v10.html)
+
+---------------------------------------------------------------------------------
+This software uses clojure-interop/java-jdk (https://github.com/clojure/tools.logging)
+Created by Eugene Potapenko (https://github.com/potapenko/)
+
+Licensed under the Eclipse Public License (https://www.eclipse.org/legal/epl-v10.html)
+
+---------------------------------------------------------------------------------
+This software uses camel-snake-kebab (https://github.com/clj-commons/camel-snake-kebab)
+Copyright (c) Copyright (C) 2012-2020 the AUTHORS.
+- Christoffer Sawicki
+- ToBeReplaced
+- Brendan Bates
+- Vincent Pizzo
+- Sebastian Bensusan
+
+Licensed under the Eclipse Public License (https://www.eclipse.org/legal/epl-v10.html)
+
+---------------------------------------------------------------------------------
+This software uses cheshire (https://github.com/clojure/tools.logging)
+Created by Eugene Potapenko (https://github.com/potapenko/)
+
+Released under the MIT License.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------------------------------
+This software uses clojure.java-time (https://github.com/dm3/clojure.java-time)
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Vadim Platonov
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------------------------------
+This software uses clj-uuid (https://github.com/danlentz/clj-uuid)
+
+Copyright © 2015 Dan Lentz
+
+Distributed under the Eclipse Public License version 1.0 (https://www.eclipse.org/legal/epl-v10.html)
+
+---------------------------------------------------------------------------------
+This software uses aero (https://github.com/juxt/aero)
+
+The MIT License (MIT)
+
+Copyright © 2015 JUXT LTD.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------------------------------
+This software uses selmer (https://github.com/yogthos/Selmer)
+
+Copyright © 2015 Dmitri Sotnikov
+
+Distributed under the Eclipse Public License version 1.0 (https://www.eclipse.org/legal/epl-v10.html)
+
+---------------------------------------------------------------------------------
+This software uses logback (https://github.com/qos-ch/logback)
+
+Logback: the reliable, generic, fast and flexible logging framework.
+Copyright (C) 1999-2015, QOS.ch. All rights reserved.
+
+This program and the accompanying materials are dual-licensed under
+either the terms of the Eclipse Public License v1.0 as published by
+the Eclipse Foundation
+ 
+  or (per the licensee's choosing)
+ 
+under the terms of the GNU Lesser General Public License version 2.1
+as published by the Free Software Foundation.
+
+---------------------------------------------------------------------------------
+This software uses component (https://github.com/stuartsierra/component)
+
+The MIT License (MIT)
+
+Copyright © 2015 Stuart Sierra
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---------------------------------------------------------------------------------
+This software uses next.jdbc (https://github.com/seancorfield/next-jdbc)
+
+Copyright © 2018-2021 Sean Corfield
+
+Distributed under the Eclipse Public License version 1.0 (https://www.eclipse.org/legal/epl-v10.html)
+
+---------------------------------------------------------------------------------
+This software uses hugsql (https://github.com/layerware/hugsql)
+
+Copyright © 2018 Layerware, Inc.
+
+Distributed under the Apache License, Version 2.0
+
+---------------------------------------------------------------------------------
+This software uses HikariCP (https://github.com/brettwooldridge/HikariCP)
+
+Authored by Brett Wooldridge (https://github.com/brettwooldridge)
+
+Distributed under the Apache License, Version 2.0
+
+---------------------------------------------------------------------------------
+This software uses pedestal (https://github.com/pedestal/pedestal)
+
+Copyright 2013 Relevance, Inc.
+
+Copyright 2014-2020 Cognitect, Inc.
+
+The use and distribution terms for this software are covered by the Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0) which can be found in the file epl-v10.html at the root of this distribution.
+
+By using this software in any fashion, you are agreeing to be bound by the terms of this license.
+
+You must not remove this notice, or any other, from this software.
+
+--------------------
+NOTICE
+
+This project uses code from the Overtone project (https://github.com/overtone/overtone).
+
+The MIT License
+
+Copyright (c) 2012 <All contributors listed in the README.md file>. (https://github.com/overtone/overtone/blob/master/README.md)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+---------------------------------------------------------------------------------
+This software uses Eclipse Jetty ALPN API (fefef)
+
+Copyright (c) 1995-2015 Mort Bay Consulting Pty. Ltd.
+
+All rights reserved. This program and the accompanying materials
+are made available under the terms of the Eclipse Public License v1.0
+and Apache License v2.0 which accompanies this distribution.
+
+    The Eclipse Public License is available at
+    http://www.eclipse.org/legal/epl-v10.html
+
+    The Apache License v2.0 is available at
+    http://www.opensource.org/licenses/apache2.0.php
+
+You may elect to redistribute this code under either of these licenses.
+
+----------------------------------------------------------
+This software uses buddy (https://github.com/funcool/buddy-core)
+
+Distributed under the Apache License, Version 2.0
+
+----------------------------------------------------------
+This software uses less-awful-ssl (https://github.com/aphyr/less-awful-ssl)
+
+Copyright © 2013 Kyle Kingsbury (https://github.com/aphyr)
+
+Distributed under the Eclipse Public License version 1.0 (https://www.eclipse.org/legal/epl-v10.html)
+
+----------------------------------------------------------
+This software uses H2 (https://github.com/h2database/h2database)
+
+H2 is dual licensed and available under the MPL 2.0 (Mozilla Public License
+Version 2.0) or under the EPL 1.0 (Eclipse Public License).
+
+(https://www.eclipse.org/legal/epl-v10.html)
+
+----------------------------------------------------------
+This software uses xerial/sqlite-jdbc (https://github.com/xerial/sqlite-jdbc)
+
+This program follows the Apache License version 2.0 (http://www.apache.org/licenses/ ) That means:
+
+It allows you to:
+
+- freely download and use this software, in whole or in part, for personal, company internal, or commercial purposes;
+- use this software in packages or distributions that you create.
+
+It forbids you to:
+
+- redistribute any piece of our originated software without proper attribution;
+- use any marks owned by us in any way that might state or imply that we xerial.org endorse your distribution;
+- use any marks owned by us in any way that might state or imply that you created this software in question.
+
+It requires you to:
+
+- include a copy of the license in any redistribution you may make that includes this software;
+- provide clear attribution to us, xerial.org for any distributions that include this software
+
+It does not require you to:
+
+- include the source of this software itself, or of any modifications you may have made to it, in any redistribution you may assemble that includes it;
+- submit changes that you make to the software back to this software (though such feedback is encouraged).
+
+See License FAQ http://www.apache.org/foundation/licence-FAQ.html for more details.
+
+Distributed under the Apache License, Version 2.0
+
+--------------------
+NOTICE
+
+This product includes the following softwares developed by David Crawshaw.
+See LICENSE.zentus file.
+
+LICENSE.zentus:
+
+Copyright (c) 2006, David Crawshaw.  All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+
+--------------------
+NOTICE
+
+And also, NestedVM (Apache License Version 2.0) is used inside sqlite-
+
+----------------------------------------------------------
+This software uses PostgreSQL (https://www.postgresql.org/)
+
+PostgreSQL is released under the PostgreSQL License, a liberal Open Source license, similar to the BSD or MIT licenses.
+
+PostgreSQL Database Management System
+(formerly known as Postgres, then as Postgres95)
+
+Portions Copyright © 1996-2021, The PostgreSQL Global Development Group
+
+Portions Copyright © 1994, The Regents of the University of California
+
+Permission to use, copy, modify, and distribute this software and its documentation for any purpose, without fee, and without a written agreement is hereby granted, provided that the above copyright notice and this paragraph and the following two paragraphs appear in all copies.
+
+IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATIONS TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+
+----------------------------------------------------------
+This software uses clojure/tools.cli (https://github.com/clojure/tools.cli)
+
+Copyright (c) Rich Hickey and contributors. All rights reserved.
+
+The use and distribution terms for this software are covered by the Eclipse Public License 1.0 (http://opensource.org/licenses/eclipse-1.0.php) which can be found in the file epl.html at the root of this distribution. By using this software in any fashion, you are agreeing to be bound by the terms of this license.
+
+You must not remove this notice, or any other, from this software.
+
+----------------------------------------------------------
+This software uses clojure/tools.numeric-tower (https://github.com/clojure/math.numeric-tower)
+
+Distributed under the Eclipse Public License version 1.0 (https://www.eclipse.org/legal/epl-v10.html)
+
+----------------------------------------------------------
+This software uses babashka.curl (https://github.com/babashka/babashka.curl)
+
+Copyright © 2020 Michiel Borkent
+
+Distributed under the Eclipse Public License version 1.0 (https://www.eclipse.org/legal/epl-v10.html)
+
+----------------------------------------------------------
+This software uses testcontainers (https://www.testcontainers.org/)
+
+Copyright (c) 2015-2021 Richard North and other authors.
+
+See AUTHORS for contributors:
+https://github.com/testcontainers/testcontainers-java/graphs/contributors
+
+--------------------
+NOTICE
+
+This project includes a modified class (ScriptUtils) taken from the Spring JDBC project, adapted under the terms of the Apache license. Copyright for that class remains with the original authors.
+
+This project was initially inspired by a gist (https://gist.github.com/mosheeshel/c427b43c36b256731a0b) by Moshe Eshel (https://github.com/mosheeshel).
+
+----------------------------------------------------------
+This software uses org.clojure/test.check (https://github.com/clojure/test.check)
+
+Copyright © 2014-2020 Rich Hickey, Reid Draper and contributors
+
+Distributed under the Eclipse Public License version 1.0 (https://www.eclipse.org/legal/epl-v10.html)
+
+----------------------------------------------------------
+This software uses orchestra (https://github.com/jeaye/orchestra)
+
+Copyright © 2017 Jesse 'Jeaye' Wilkerson. All rights reserved.
+
+Eclipse Public License, Version 1.0 (EPL-1.0) (https://www.eclipse.org/legal/epl-v10.html)
+
+----------------------------------------------------------
+This software uses cognitect-labs/test-runner (fefef)
+
+Copyright © 2018-2021 Cognitect
+
+Licensed under the Eclipse Public License, Version 2.0 (https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html)
+
+----------------------------------------------------------
+This software uses depstar (https://github.com/seancorfield/depstar)
+
+Authored by Sean Corfield (https://github.com/seancorfield)
+
+The use and distribution terms for this software are covered by the Eclipse Public License 2.0 (https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html)
+
+----------------------------------------------------------
+This software uses markdown-clj (https://github.com/yogthos/markdown-clj)
+
+Copyright © 2015 Dmitri Sotnikov
+
+Distributed under the Eclipse Public License (https://www.eclipse.org/legal/epl-v10.html)
+
+----------------------------------------------------------
+This software uses clj-git (https://github.com/clj-jgit/clj-jgit)
+
+Copyright (C) 2019 FIXME
+
+Distributed under the Eclipse Public License (https://www.eclipse.org/legal/epl-v10.html)
