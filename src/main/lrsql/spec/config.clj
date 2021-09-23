@@ -37,7 +37,8 @@
                (s/keys :req-un [::db-jdbc-url]
                        :opt-un [::db-user
                                 ::db-password
-                                ::db-schema]))))
+                                ::db-schema
+                                ::db-catalog]))))
 
 (s/def ::pool-auto-commit boolean?)
 (s/def ::pool-initialization-fail-timeout int?)
