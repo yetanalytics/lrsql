@@ -49,14 +49,15 @@
 
 (s/def ::pool-connection-timeout
   (s/and pos-int? (partial <= 250)))
-(s/def ::pool-idle-timeout
-  (s/and pos-int? (partial <= 10000)))
 (s/def ::pool-validation-timeout
   (s/and pos-int? (partial <= 250)))
 
 (s/def ::pool-keepalive-time
   (s/or :disabled zero?
         :enabled (s/and pos-int? (partial <= 10000))))
+(s/def ::pool-idle-timeout
+  (s/or :removal-disabled zero?
+        :removal-enabled (s/and pos-int? (partial <= 10000))))
 (s/def ::pool-max-lifetime
   (s/or :no-max-lifetime zero?
         :max-lifetime (s/and pos-int? (partial <= 30000))))
@@ -65,7 +66,8 @@
         :enabled (s/and pos-int? (partial <= 2000))))
 
 (s/def ::pool-transaction-isolation
-  #{"TRANSACTION_READ_UNCOMMITTED"
+  #{"TRANSACTION_NONE" ; This level exists but might cause problems
+    "TRANSACTION_READ_UNCOMMITTED"
     "TRANSACTION_READ_COMMITTED"
     "TRANSACTION_REPEATABLE_READ"
     "TRANSACTION_SERIALIZABLE"})
