@@ -2,6 +2,8 @@
 
 # Yet Analytics SQL LRS
 
+[![CI](https://github.com/yetanalytics/lrsql/actions/workflows/main.yml/badge.svg)](https://github.com/yetanalytics/lrsql/actions/workflows/main.yml)
+
 A SQL-based Learning Record Store.
 
 ## What is SQL LRS?
