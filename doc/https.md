@@ -4,7 +4,7 @@
 
 ### Certificate Management
 
-SQL LRS has a number of ways of configuring a certificate for HTTPS. The system will attempt to use certificates in the following order when it starts up, based on configuration variables:
+SQL LRS has a number of ways to configure a certificate for HTTPS. The system will attempt to use certificates in the following order when it starts up, based on configuration variables:
 
 #### 1. Custom Keystore
 
@@ -46,7 +46,7 @@ If you did not set the keystore variables in the previous section, the SQL LRS w
 
 #### 3. Self-Signed Temporary TLS Certificate
 
-If no keystore or cert files are found, the SQL LRS will create a self-signed cert by default and log a warning. This is not intended to be used in a production setting but can be used for testing and development. See below for how to disable certificate generation should you wish to do so.
+If no keystore or cert files are found, the SQL LRS will create a self-signed cert by default and log a warning. This is not intended to be used in a production setting, but can be used for testing and development. See below for how to disable certificate generation.
 
 ### HTTPS Configuration
 
