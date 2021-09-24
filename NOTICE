@@ -227,7 +227,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 ---------------------------------------------------------------------------------
-This software uses Eclipse Jetty ALPN API (fefef)
+This software uses Eclipse Jetty ALPN API (https://github.com/eclipse/jetty.alpn.api)
 
 Copyright (c) 1995-2015 Mort Bay Consulting Pty. Ltd.
 
@@ -402,7 +402,7 @@ Copyright © 2017 Jesse 'Jeaye' Wilkerson. All rights reserved.
 Eclipse Public License, Version 1.0 (EPL-1.0) (https://www.eclipse.org/legal/epl-v10.html)
 
 ----------------------------------------------------------
-This software uses cognitect-labs/test-runner (fefef)
+This software uses cognitect-labs/test-runner (https://github.com/cognitect-labs/test-runner)
 
 Copyright © 2018-2021 Cognitect
 
