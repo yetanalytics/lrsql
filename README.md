@@ -15,7 +15,9 @@ A Learning Record Store (LRS) is a persistent store for xAPI statements and asso
 
 For releases and release notes, see the [Releases](https://github.com/yetanalytics/lrsql/releases) page.
 
-## Index
+## Documentation
+
+### Basic Configuration
 
 - [Overview](doc/overview.md)
 - [Getting Started](doc/startup.md)

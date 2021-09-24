@@ -1,4 +1,6 @@
-# Index
+# Documentation Index
+
+### Basic Configuration
 
 - [Overview](overview.md)
 - [Getting Started](startup.md)
