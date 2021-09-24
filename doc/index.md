@@ -4,7 +4,7 @@
 
 - [Overview](overview.md)
 - [Getting Started](startup.md)
-- [Setting up TLS/HTTP](https.md)
+- [Setting up TLS/HTTPS](https.md)
 - [Authority Configuration](authority.md)
 
 ### DBMS-specific Sections

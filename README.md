@@ -21,7 +21,7 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 
 - [Overview](doc/overview.md)
 - [Getting Started](doc/startup.md)
-- [Setting up TLS/HTTP](doc/https.md)
+- [Setting up TLS/HTTPS](doc/https.md)
 - [Authority Configuration](doc/authority.md)
 
 ### DBMS-specific Sections
