@@ -14,5 +14,5 @@ jobs:
     - name: Setup CI Environment
       uses: yetanalytics/actions/setup-env@v0
 
-    - name: Run make target ${{ matrix.target }}
+    - name: Run Makefile Target ${{ matrix.target }}
       run: make ${{ matrix.target }}
