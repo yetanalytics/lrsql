@@ -1,6 +1,6 @@
 [<- Back to Index](index.md)
 
-# Development
+# Developer Documentation
 
 The SQL LRS is a Clojure Web Application built on the Pedestal Framework.
 
