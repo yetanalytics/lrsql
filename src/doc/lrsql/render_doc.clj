@@ -49,6 +49,11 @@
 ;; Git API for SHA
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Shut up VSCode warnings.
+;; Unfortunately `with-repo` is a unique macro where you have a floating `repo`
+;; symbol that is only bound after macroexpansion, so we cannot use `lint-as`
+;; to lint it like a similar macro.
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (def git-sha
   (delay
     (try
@@ -57,7 +62,7 @@
             first
             :id
             (.getName)))
-      (catch Exception e "No build number found."))))
+      (catch Exception _ "No build number found."))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Markdown file -> HTML file
