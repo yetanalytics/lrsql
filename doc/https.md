@@ -1,6 +1,6 @@
 [<- Back to Index](index.md)
 
-# TLS/HTTPS
+# Setting Up TLS/HTTPS
 
 ### Certificate Management
 
