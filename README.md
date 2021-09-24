@@ -17,9 +17,10 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 
 ## Documentation
 
+[SQL LRS Overview](doc/overview.md)
+
 ### Basic Configuration
 
-- [Overview](doc/overview.md)
 - [Getting Started](doc/startup.md)
 - [Setting up TLS/HTTPS](doc/https.md)
 - [Authority Configuration](doc/authority.md)
