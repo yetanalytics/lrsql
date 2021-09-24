@@ -79,6 +79,8 @@ bench-async:
 # *** Build ***
 
 # `clean` removes all artifacts constructed during the build process.
+# `clean-non-dl` is like `clean` except that it does not delete downloaded
+# folders (namely `target/bundle/admin` and `target/bundle/runtimes`).
 # `bundle` creates a `target/bundle` directory that contains the entire
 # lrsql package, including config, docs, JARs, admin UI files, JREs,
 # Windows executables, NOTICE and LICENSE
@@ -87,6 +89,16 @@ bench-async:
 
 clean:
 	rm -rf target resources/public
+
+# TODO: Is there a smarter way to do this that works across all Unix shells?
+clean-non-dl:
+	rm -f target/bundle/lrsql.jar
+	rm -f target/bundle/*.exe
+	rm -f target/bundle/LICENSE
+	rm -f target/bundle/NOTICE
+	rm -rf target/bundle/bin
+	rm -rf target/bundle/doc
+	rm -rf target/bundle/config
 
 # Compile and make Uberjar
 
