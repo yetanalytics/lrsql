@@ -25,6 +25,6 @@ Test.java
 .calva/
 .lsp/
 # Admin SPA
-/lrs-admin-ui/
+lrs-admin-ui-*.zip
 /resources/public/admin/
 /tmp/

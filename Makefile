@@ -1,17 +1,18 @@
 # *** Admin Assets ***
 
-# Get and compile the admin UI SPA from the GitHub repo.
+# Version of LRS Admin UI to use
 
-lrs-admin-ui:
-	git clone https://github.com/yetanalytics/lrs-admin-ui.git
-	cd lrs-admin-ui; git checkout cf6ff4edddf5ba3560869ca198930312a5cfc7ad
+LRS_ADMIN_UI_VERSION ?= v0.1.0
+LRS_ADMIN_UI_LOCATION ?= https://github.com/yetanalytics/lrs-admin-ui/releases/download/${LRS_ADMIN_UI_VERSION}/lrs-admin-ui.zip
+LRS_ADMIN_ZIPFILE ?= lrs-admin-ui-${LRS_ADMIN_UI_VERSION}.zip
 
-lrs-admin-ui/target/bundle: lrs-admin-ui
-	cd lrs-admin-ui; make bundle
+# Get the admin UI SPA release from GitHub
+resources/public/admin:
+	curl -L ${LRS_ADMIN_UI_LOCATION} -o ${LRS_ADMIN_ZIPFILE}
+	mkdir -p resources/public/admin
+	unzip ${LRS_ADMIN_ZIPFILE} -d resources/public/admin
+	rm ${LRS_ADMIN_ZIPFILE}
 
-resources/public/admin: lrs-admin-ui/target/bundle
-	mkdir -p resources/public
-	cp -r lrs-admin-ui/target/bundle resources/public/admin
 
 # *** Development ***
 
