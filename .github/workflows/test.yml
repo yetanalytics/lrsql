@@ -11,18 +11,8 @@ jobs:
         target: [test-h2, test-sqlite, test-postgres]
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Setup CI Environment
+      uses: yetanalytics/actions/setup-env@v0
 
-    - name: Setup Java
-      uses: actions/setup-java@v2
-      with:
-        distribution: 'temurin'
-        java-version: '11'
-
-    - name: Setup Clojure
-      uses: DeLaGuardo/setup-clojure@3.5
-      with:
-        cli: 1.10.3.943 # Clojure CLI based on tools.deps
-
-    - name: Run make target ${{ matrix.target }}
+    - name: Run Makefile Target ${{ matrix.target }}
       run: make ${{ matrix.target }}
