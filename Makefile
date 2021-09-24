@@ -80,8 +80,8 @@ bench-async:
 
 # `clean` removes all artifacts constructed during the build process.
 # `bundle` creates a `target/bundle` directory that contains the entire
-# lrsql package, including config, docs, JARs, admin UI files, JREs, and
-# Windows executables.
+# lrsql package, including config, docs, JARs, admin UI files, JREs,
+# Windows executables, NOTICE and LICENSE
 
 .phony: clean, bundle
 
@@ -104,6 +104,14 @@ target/bundle/bin:
 
 target/bundle/doc:
 	clojure -M:doc -m lrsql.render-doc doc target/bundle/doc
+
+# Copy LICENSE and NOTICE
+
+target/bundle/LICENSE:
+	cp LICENSE target/bundle/LICENSE
+
+target/bundle/NOTICE:
+	cp NOTICE target/bundle/NOTICE
 
 # Copy config
 
@@ -169,7 +177,7 @@ target/bundle/admin: resources/public/admin
 
 # Create entire bundle
 
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/runtimes target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/runtimes target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE
 
 bundle: target/bundle
 
