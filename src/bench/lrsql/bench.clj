@@ -21,53 +21,54 @@
 
 (def cli-options
   [["-e" "--lrs-endpoint URI" "(SQL) LRS endpoint"
-    :id :lrs-endpoint
+    :id      :lrs-endpoint
     :default "http://localhost:8080/xapi/statements"
-    :desc "The HTTP(S) endpoint of the (SQL) LRS webserver for Statement POSTs and GETs."]
+    :desc    "The HTTP(S) endpoint of the (SQL) LRS webserver for Statement POSTs and GETs."]
    ["-i" "--insert-input URI" "DATASIM input source"
-    :id :insert-input
+    :id   :insert-input
     :desc "The location of a JSON file containing a DATASIM input spec. If given, this input is used to insert statements into the DB."]
    ["-s" "--input-size LONG" "Size"
-    :id :insert-size
+    :id       :insert-size
     :parse-fn #(Long/parseLong %)
-    :default 1000
-    :desc "The total number of statements to insert. Ignored if `-i` is not given."]
+    :default  1000
+    :desc     "The total number of statements to insert. Ignored if `-i` is not given."]
    ["-b" "--batch-size LONG" "Statements per batch"
-    :id :batch-size
+    :id       :batch-size
     :parse-fn #(Long/parseLong %)
-    :default 10
-    :desc "The batch size to use for inserting statements. Ignored if `-i` is not given."]
+    :default  10
+    :desc     "The batch size to use for inserting statements. Ignored if `-i` is not given."]
    ["-a" "--async? BOOLEAN" "Run asynchronously?"
-    :id :async?
+    :id       :async?
     :parse-fn #(Boolean/parseBoolean %)
-    :default false
-    :desc "Whether to insert asynchronously or not."]
+    :default  false
+    :desc     "Whether to insert asynchronously or not."]
    ["-c" "--concurrency LONG" "Number of threads"
-    :id :concurrency
+    :id       :concurrency
     :parse-fn #(Long/parseLong %)
-    :default 10
-    :desc "The number of parallel threads to run during statement insertion. Ignored if `-i` is not given or `-a` is `false`."]
+    :default  10
+    :desc     "The number of parallel threads to run during statement insertion. Ignored if `-a` is `false`."]
    ["-r" "--statement-refs STRING" "Statement Ref Insertion Type"
-    :id :statement-ref-type
+    :id       :statement-ref-type
     :parse-fn keyword
     :validate [#{:all :half :none} "Should be `all`, `half`, or `none`."]
-    :default :none
-    :desc "How Statement Refs should be inserted. Valid options are `none` (default), `half`, and `all`."]
+    :default  :none
+    :desc     "How Statement References should be generated and inserted. Valid options are none (no Statement References), half (half of the Statements have StatementRef objects), and all (all Statements have StatementRef objects)."]
    ["-q" "--query-input URI" "Query input source"
-    :id :query-input
+    :id   :query-input
     :desc "The location of a JSON file containing an array of statement query params. If not given, the benchmark does a single query with no params."]
    ["-n" "--query-number LONG" "Query execution number"
-    :id :query-number
+    :id       :query-number
     :parse-fn #(Long/parseLong %)
-    :default 30
-    :desc "The number of times each query is performed."]
+    :default  30
+    :desc     "The number of times each query is performed."]
    ["-u" "--user STRING" "LRS User"
-    :id :user
+    :id   :user
     :desc "HTTP Basic Auth user."]
    ["-p" "--pass STRING" "LRS Password"
-    :id :pass
+    :id   :pass
     :desc "HTTP Basic Auth password."]
-   ["-h" "--help"]])
+   ["-h" "--help"
+    :desc "Help menu."]])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Input Reading
