@@ -85,7 +85,7 @@ bench-async:
 # lrsql package, including config, docs, JARs, admin UI files, JREs,
 # Windows executables, NOTICE and LICENSE
 
-.phony: clean, bundle
+.phony: clean, clean-non-dl, bundle
 
 clean:
 	rm -rf target resources/public
