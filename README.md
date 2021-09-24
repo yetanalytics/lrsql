@@ -2,6 +2,9 @@
 
 # Yet Analytics SQL LRS
 
+[![CI](https://github.com/yetanalytics/lrsql/actions/workflows/test.yml/badge.svg)](https://github.com/yetanalytics/lrsql/actions/workflows/test.yml)
+[![CD](https://github.com/yetanalytics/lrsql/actions/workflows/build.yml/badge.svg)](https://github.com/yetanalytics/lrsql/actions/workflows/build.yml)
+
 A SQL-based Learning Record Store.
 
 ## What is SQL LRS?
@@ -12,19 +15,22 @@ A Learning Record Store (LRS) is a persistent store for xAPI statements and asso
 
 For releases and release notes, see the [Releases](https://github.com/yetanalytics/lrsql/releases) page.
 
-## Index
+## Documentation
 
-- [Overview](doc/overview.md)
+[SQL LRS Overview](doc/overview.md)
+
+### Basic Configuration
+
 - [Getting Started](doc/startup.md)
-- [Setting up TLS/HTTP](doc/https.md)
+- [Setting up TLS/HTTPS](doc/https.md)
 - [Authority Configuration](doc/authority.md)
 
-## DBMS-specific Sections
+### DBMS-specific Sections
 
 - [Postgres](doc/postgres.md)
 - [SQLite](doc/sqlite.md)
 
-## Reference
+### Reference
 
 - [Configuration Variables](doc/env_vars.md)
 - [HTTP Endpoints](doc/endpoints.md)
@@ -32,6 +38,6 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 
 ## License
 
-Copyright © 2021 Yet Analytics
+Copyright © 2021 Yet Analytics, Inc.
 
 Distributed under the Apache License version 2.0.
