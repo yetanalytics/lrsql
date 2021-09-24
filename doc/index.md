@@ -1,8 +1,11 @@
 # Documentation Index
 
+### Overview
+
+- [SQL LRS Overview](overview.md)
+
 ### Basic Configuration
 
-- [Overview](overview.md)
 - [Getting Started](startup.md)
 - [Setting up TLS/HTTP](https.md)
 - [Authority Configuration](authority.md)
@@ -21,4 +24,3 @@
 ### Releases
 
 For releases and release notes see the [Releases](https://github.com/yetanalytics/lrsql/releases) page on the SQL LRS GitHub repository.
-
