@@ -244,7 +244,10 @@ and Apache License v2.0 which accompanies this distribution.
 You may elect to redistribute this code under either of these licenses.
 
 ----------------------------------------------------------
-This software uses buddy (https://github.com/funcool/buddy-core)
+This software uses the buddy suite of libraries:
+- buddy-core (https://github.com/funcool/buddy-core)
+- buddy-hashers (https://github.com/funcool/buddy-hashers)
+- buddy-sign (https://github.com/funcool/buddy-sign)
 
 Distributed under the Apache License, Version 2.0
 
