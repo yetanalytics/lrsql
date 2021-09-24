@@ -17,9 +17,7 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 
 ## Documentation
 
-### Overview
-
-- [SQL LRS Overview](doc/overview.md)
+[SQL LRS Overview](doc/overview.md)
 
 ### Basic Configuration
 

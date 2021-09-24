@@ -1,8 +1,6 @@
 # Documentation Index
 
-### Overview
-
-- [SQL LRS Overview](overview.md)
+[SQL LRS Overview](overview.md)
 
 ### Basic Configuration
 
