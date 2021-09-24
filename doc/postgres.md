@@ -1,6 +1,8 @@
 [<- Back to Index](index.md)
 
-# Postgres Database Setup
+# Postgres Database
+
+### Setup Instructions
 
 Using the Postgres implementation of the SQL LRS requires a pre-existing database (unlike the H2 and SQLite implementations, which create the database file if it does not exist). Therefore, you need to set up the Postgres user and database before you start using the SQL LRS.
 
