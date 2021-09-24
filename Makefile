@@ -91,15 +91,10 @@ bench-async:
 clean:
 	rm -rf target resources/public
 
-# TODO: Is there a smarter way to do this that works across all Unix shells?
+# Combo of https://superuser.com/a/1592467
+# and https://unix.stackexchange.com/a/15309
 clean-non-dl:
-	rm -f target/bundle/lrsql.jar
-	rm -f target/bundle/*.exe
-	rm -f target/bundle/LICENSE
-	rm -f target/bundle/NOTICE
-	rm -rf target/bundle/bin
-	rm -rf target/bundle/doc
-	rm -rf target/bundle/config
+	find target/bundle -mindepth 1 -not \( -regex "^target/bundle/runtimes.*" -o -regex "^target/bundle/admin.*" \) -delete
 
 # Compile and make Uberjar
 
