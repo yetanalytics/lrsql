@@ -53,15 +53,11 @@ persistent: resources/public/admin
 sqlite: resources/public/admin
 	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite
 
-# NOTE: Requires a running Postgres instance where:
-# - user is lrsql_user
-# - password is swordfish
-# - db name is lrsql_pg
-# - schema is lrsql
-postgres: resources/public/admin
+postgres: resources/public/admin # Requires a running Postgres instance
 	clojure -X:db-postgres lrsql.postgres.main/run-test-postgres
 
-# NOTE: Requires a running lrsql instance!
+# Bench - requires a running lrsql instance
+
 bench:
 	clojure -M:bench -m lrsql.bench \
 	    -e http://localhost:8080/xapi/statements \
