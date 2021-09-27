@@ -136,9 +136,7 @@ target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/conf
 
 # Make Runtime Environment (i.e. JREs)
 
-# Download the 3 runtimes from an AWS S3 bucket.
-
-# The given tag to pull down
+# The given tag to pull down from yetanalytics/runtimer release
 RUNTIME_TAG ?= 0.1.1-java-11-temurin
 RUNTIME_MACHINE ?= macos
 RUNTIME_MACHINE_BUILD ?= macos-10.15
