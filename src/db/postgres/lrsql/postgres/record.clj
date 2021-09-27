@@ -57,7 +57,10 @@
   (-txn-retry? [_ ex]
     ;; only retry PGExceptions with a specified phrase
     (and (instance? org.postgresql.util.PSQLException ex)
-         (includes? (.getMessage ex) "ERROR: deadlock detected")))
+         (let [msg (.getMessage ex)]
+           (or (includes? msg "ERROR: deadlock detected")
+               (includes? msg "ERROR: could not serialize access due to concurrent update")
+               (includes? msg "ERROR: could not serialize access due to read/write dependencies among transactions")))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
