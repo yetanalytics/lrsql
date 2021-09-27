@@ -1,19 +1,22 @@
 {
   "database": {
-    "dbHost": "my-db-host",
+    "dbHost": "localhost",
+    "dbPort": 5432,
     "dbName": "my_db_name",
-    "dbUser": "my_user_name",
+    "dbUser": "my_db_user",
     "dbPassword": "changeme"
   },
   "connection": {
     "poolName": "my-pool-name"
   },
   "lrs" : {
-    "adminUserDefault" : "my-username",
-    "adminPassDefault" : "changeme",
-    "authorityUrl" : "http://my-custom-domain.com"
+    "adminUserDefault": "myUsername",
+    "adminPassDefault": "changeme",
+    "authorityUrl": "http://mydomain.com"
   },
-  "webserver" : {
-    "httpHost" : "my-custom-host",
+  "webserver": {
+    "httpHost": "localhost",
+    "httpPort": 8080,
+    "sslPort": 8443
   }
 }
