@@ -54,12 +54,16 @@
           config
           ;; Authority function
           auth-fn (make-authority-fn auth-tp)]
+      ;; Combine all init ops into a single txn, since the user would expect
+      ;; such actions to happen as a single unit. If init-backend! succeeds
+      ;; but insert-default-creds! fails, this would constitute a partial
+      ;; application of what the user wanted. It helps that the ops are
+      ;; idempotent so that the user can easily recover from partial failure.
       (jdbc/with-transaction [tx conn]
-        (init/init-backend! backend tx))
-      (jdbc/with-transaction [tx conn]
-        (init/insert-default-creds! backend tx uname pass api-key srt-key))
-      (log/info "Starting new LRS")
-      (assoc lrs :connection connection :authority-fn auth-fn)))
+        (init/init-backend! backend tx)
+        (init/insert-default-creds! backend tx uname pass api-key srt-key)
+        (log/info "Starting new LRS")
+        (assoc lrs :connection connection :authority-fn auth-fn))))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
