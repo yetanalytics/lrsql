@@ -1,9 +1,9 @@
 {
   "database": {
-    "dbHost": "localhost",
+    "dbHost": "0.0.0.0",
     "dbPort": 5432,
-    "dbName": "my_db_name",
-    "dbUser": "my_db_user",
+    "dbName": "lrsql_db",
+    "dbUser": "lrsql_user",
     "dbPassword": "changeme"
   },
   "connection": {
@@ -15,7 +15,7 @@
     "authorityUrl": "http://mydomain.com"
   },
   "webserver": {
-    "httpHost": "localhost",
+    "httpHost": "0.0.0.0",
     "httpPort": 8080,
     "sslPort": 8443
   }

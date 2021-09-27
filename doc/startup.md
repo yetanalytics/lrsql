@@ -25,15 +25,18 @@ The following is an example of a basic (non-Postgres) `config/lrsql.json` config
 ```json
 {
     "lrs": {
-        "adminUserDefault": "DonaldChamberlin44",
-        "adminPassDefault": "ILoveSql!",
+        "adminUserDefault": "myUsername",
+        "adminPassDefault": "thisIsMyPassword1!1",
         "authorityUrl": "http://mydomain.com"
     },
     "webserver": {
-        "httpHost": "localhost"
+        "httpHost": "0.0.0.0",
+        "httpPort": 8080,
+        "sslPort": 8443
     }
 }
 ```
+(Setting the `webserver` vars to these default values isn't necessary, but is shown here for demonstration purposes.)
 
 For a complete list of config variables, see [here](env_vars.md). There is also a sample JSON config file provided for reference at `config/lrsql.json.example` which contains many more variables than the above.
 

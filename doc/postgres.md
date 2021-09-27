@@ -74,13 +74,13 @@ Startup instructions can be found [here](startup.md)
 
 ### Example lrsql.json configuration
 
-Here is an example database config map in `config/lrsql.json`. The user is `lrsql_user`, the password is `my_password`, the DB name is `lrsql_db`, and the schema is `lrsql`. The host is set to `localhost` while the port is set to `5432` (technically not needed here since these are Postgres defaults, but they are provided here for demonstration).
+Here is an example database config map in `config/lrsql.json`. The user is `lrsql_user`, the password is `my_password`, the DB name is `lrsql_db`, and the schema is `lrsql`. The host is set to `0.0.0.0` while the port is set to `5432` (technically not needed here since these are Postgres defaults, but they are provided here for demonstration).
 
 ```json
 {
   ...
   "database": {
-    "dbHost": "localhost",
+    "dbHost": "0.0.0.0",
     "dbPort": 5432,
     "dbName": "lrsql_db",
     "dbUser": "lrsql_user",
