@@ -141,7 +141,7 @@ target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/conf
 # The given tag to pull down
 RUNTIME_TAG ?= 0.1.1-java-11-temurin
 RUNTIME_MACHINE ?= macos
-RUNTIME_MACHINE_BUILD ?= macOS-10.15
+RUNTIME_MACHINE_BUILD ?= macos-10.15
 RUNTIME_ZIP_DIR ?= tmp/runtimes/${RUNTIME_TAG}
 RUNTIME_ZIP ?= ${RUNTIME_ZIP_DIR}/${RUNTIME_MACHINE}.zip
 
@@ -158,7 +158,7 @@ target/bundle/runtimes/%:
 	mv target/bundle/runtimes/${RUNTIME_MACHINE_BUILD} target/bundle/runtimes/${RUNTIME_MACHINE}
 
 target/bundle/runtimes/macos: RUNTIME_MACHINE = macos
-target/bundle/runtimes/macos: RUNTIME_MACHINE_BUILD = macOS-10.15
+target/bundle/runtimes/macos: RUNTIME_MACHINE_BUILD = macos-10.15
 
 target/bundle/runtimes/linux: RUNTIME_MACHINE = linux
 target/bundle/runtimes/linux: RUNTIME_MACHINE_BUILD = ubuntu-20.04
