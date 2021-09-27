@@ -30,9 +30,9 @@ Alternatively, it can make use a few provided variables to make the Authority mo
 
 | Variable | Description |
 | --- | --- |
-| authority-url | `LRSQL_AUTHORITY_URL` (`authorityUrl`) config variable value set by an environment variable or `config/lrsql.json`. |
-| cred-id | LRS Credential Pair ID (UUID). This can be used to form a unique Authority for each API Key. |
-| account-id | LRS Admin Account ID (UUID). This can be used to make a unique Authority for each Account, but not necessarily for each API Key. |
+| `authority-url` | `LRSQL_AUTHORITY_URL` (`authorityUrl`) config variable value set by an environment variable or `config/lrsql.json`. Default is `http://example.org`. |
+| `cred-id` | LRS Credential Pair ID (UUID). This can be used to form a unique Authority for each API Key. |
+| `account-id` | LRS Admin Account ID (UUID). This can be used to make a unique Authority for each Account, but not necessarily for each API Key. |
 
 Here is an example of an Authority template making use of some of these variables:
 
