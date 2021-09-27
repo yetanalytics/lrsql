@@ -1,33 +1,21 @@
 {
   "database": {
-    "dbName": "example",
-    "dbUser": "dbusername",
+    "dbHost": "my-db-host",
+    "dbName": "my_db_name",
+    "dbUser": "my_user_name",
     "dbPassword": "changeme"
+  },
+  "connection": {
+    "poolName": "my-pool-name"
   },
   "lrs" : {
     "adminUserDefault" : "my-username",
     "adminPassDefault" : "changeme",
     "apiKeyDefault" : "my-api-key",
     "apiSecretDefault" : "changeme",
-    "stmtGetDefault" : 50,
-    "stmtGetMax" : 50,
-    "authorityTemplate" : "config/authority.json.template",
-    "authorityUrl" : "http://localhost"
+    "authorityUrl" : "http://my-custom-domain.com"
   },
   "webserver" : {
-    "keyFile" : "config/keystore.jks",
-    "keyAlias" : "lrsql_keystore",
-    "keyPassword" : "lrsql_pass",
-    "keyPkeyFile" : "config/server.key.pem",
-    "keyCertChain" : "config/server.crt.pem,config/cacert.pem",
-    "keyEnableSelfie" : true,
-    "jwtExpTime" : 3600,
-    "jwtExpLeeway" : 1,
-    "enableHttp" : true,
-    "enableHttp2" : true,
-    "httpHost" : "0.0.0.0",
-    "httpPort" : 8080,
-    "sslPort" : 8443,
-    "urlPrefix" : "/xapi"
+    "httpHost" : "my-custom-host",
   }
 }
