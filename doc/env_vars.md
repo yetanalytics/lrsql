@@ -38,7 +38,7 @@ The following environment variables are aliases for [HikariCP properties](https:
 | `LRSQL_POOL_MAXIMUM_SIZE` | `poolMaximumSize` | `1`* or `10`** | `≥ 1` |
 | `LRSQL_POOL_ISOLATE_INTERNAL_QUERIES` | `poolIsolateInternalQueries` | `false` | `true`/`false` |
 | `LRSQL_POOL_LEAK_DETECTION_THRESHOLD` | `poolLeakDetectionThreshold` | `0`† | `≥ 2000` or `0` |
-| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | [JDBC Connection constant](https://docs.oracle.com/javase/7/docs/api/java/sql/Connection.html) (e.g. `TRANSACTION_SERIALIZABLE`) |
+| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | [JDBC Connection constant](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/Connection.html) (e.g. `TRANSACTION_SERIALIZABLE`) |
 | `LRSQL_POOL_NAME` | `poolName` | Not set | Any string |
 
 \* H2/SQLite default.
