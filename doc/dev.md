@@ -38,6 +38,7 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 | Target | Description |
 | --- | --- |
 | `clean` | Removes all build artifacts. |
+| `clean-non-dl` | Same as `clean` except that it does not delete downloaded folders. |
 | `clean-dev` | Removes development files. |
 | `clean-exe` | Removes the finished Windows executables, allowing recreation. |
 

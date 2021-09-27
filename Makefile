@@ -80,14 +80,21 @@ bench-async:
 # *** Build ***
 
 # `clean` removes all artifacts constructed during the build process.
+# `clean-non-dl` is like `clean` except that it does not delete downloaded
+# folders (namely `target/bundle/admin` and `target/bundle/runtimes`).
 # `bundle` creates a `target/bundle` directory that contains the entire
 # lrsql package, including config, docs, JARs, admin UI files, JREs,
 # Windows executables, NOTICE and LICENSE
 
-.phony: clean, bundle
+.phony: clean, clean-non-dl, bundle
 
 clean:
 	rm -rf target resources/public
+
+# Combo of https://superuser.com/a/1592467
+# and https://unix.stackexchange.com/a/15309
+clean-non-dl:
+	find target/bundle -mindepth 1 -not \( -regex "^target/bundle/runtimes.*" -o -regex "^target/bundle/admin.*" \) -delete
 
 # Compile and make Uberjar
 
