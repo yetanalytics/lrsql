@@ -69,7 +69,7 @@ On some operating systems you will need to explicitly allow software from outsid
 
 ![Mac Security Preferences](images/mac_sec_0.png)
 
-Choose the "App Store and identified developers" option and then follow the procedure below.
+Choose the "App Store and identified developers" option. The first time you run SQL LRS you will need to follow the procedure below to approve it.
 
 During startup you may see a firewall/security warning depending on OS. In MacOS it may look like the following:
 
