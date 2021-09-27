@@ -63,6 +63,12 @@ In either case you should see a command line output resembling the following, wh
 
 ![SQL LRS Startup](images/startup.png)
 
+##### OS Security & Firewall Warnings
+
+On some operating systems you will need to explicitly allow software from outside an app store to run the SQL LRS. For instance on MacOS:
+
+![Mac Security Preferences](images/mac_sec_0.png)
+
 During startup you may see a firewall/security warning depending on OS. In MacOS it may look like the following:
 
 ![Mac Security Warning 1](images/mac_sec_1.png)
