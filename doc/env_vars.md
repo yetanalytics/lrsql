@@ -23,7 +23,7 @@ All configuration variables can either be set directly via the command line as e
 
 #### HikariCP Properties
 
-The following environment variables are aliases for [HikariCP properties](https://github.com/brettwooldridge/HikariCP#gear-configuration-knobs-baby). All of these variables (except for `poolName`) have default values that are already set. Note that H2 and SQLite use different defaults for `poolMinimumIdle` and `poolMaximumSize` due to issues with multi-threading with those DBMSs. All temporal values are in milliseconds.
+The following environment variables are aliases for [HikariCP properties](https://github.com/brettwooldridge/HikariCP#gear-configuration-knobs-baby). All of these variables (except for `poolName`) have default values that are already set, which may vary depending on the DBMS. All temporal values are in milliseconds.
 
 | Env Var | Config | Default | Valid Values |
 | --- | --- | --- | --- |
@@ -38,12 +38,16 @@ The following environment variables are aliases for [HikariCP properties](https:
 | `LRSQL_POOL_MAXIMUM_SIZE` | `poolMaximumSize` | `1`* or `10`** | `≥ 1` |
 | `LRSQL_POOL_ISOLATE_INTERNAL_QUERIES` | `poolIsolateInternalQueries` | `false` | `true`/`false` |
 | `LRSQL_POOL_LEAK_DETECTION_THRESHOLD` | `poolLeakDetectionThreshold` | `0`† | `≥ 2000` or `0` |
-| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | [JDBC Connection constant](https://docs.oracle.com/javase/7/docs/api/java/sql/Connection.html) (e.g. `TRANSACTION_SERIALIZABLE`) |
+| `LRSQL_POOL_TRANSACTION_ISOLATION` | `poolTransactionIsolation` | Not set | [JDBC Connection constant](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/Connection.html) (e.g. `TRANSACTION_SERIALIZABLE`) |
 | `LRSQL_POOL_NAME` | `poolName` | Not set | Any string |
 
 \* H2/SQLite default.
 \*\* Postgres default.
 † The property is set to be disabled by default.
+
+*NOTE 1:* H2 and SQLite use different defaults for `poolMinimumIdle` and `poolMaximumSize` than Postgres due to issues with multi-threading with those DBMSs. Setting `poolMaximumSize` to values other than `1` will potentially cause exceptions when running concurrent operations.
+
+*NOTE 2:* None of the DBMSs that SQL LRS currently supports allow for `TRANSACTION_NONE` as a `poolTransactionIsolation` value.
 
 #### Metric Reporting via JMX
 

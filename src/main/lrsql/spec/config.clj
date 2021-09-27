@@ -67,7 +67,7 @@
         :enabled (s/and pos-int? (partial <= 2000))))
 
 (s/def ::pool-transaction-isolation
-  #{"TRANSACTION_NONE" ; This level exists but might cause problems
+  #{"TRANSACTION_NONE" ; This level exists but will cause problems
     "TRANSACTION_READ_UNCOMMITTED"
     "TRANSACTION_READ_COMMITTED"
     "TRANSACTION_REPEATABLE_READ"
@@ -75,7 +75,6 @@
 
 (s/def ::connection
   (s/and (s/conformer u/remove-nil-vals)
-         (s/conformer u/remove-neg-vals)
          (s/keys :req-un [::database
                           ::pool-auto-commit
                           ::pool-keepalive-time
