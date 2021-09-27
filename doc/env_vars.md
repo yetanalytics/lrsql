@@ -10,7 +10,7 @@ All configuration variables can either be set directly via the command line as e
 | --- | --- | --- | --- |
 | `LRSQL_DB_TYPE` | `dbType` | The DBMS that lrsql will use. Currently supports `h2:mem`, `h2`, `sqlite`, and `postgres`/`postgresql`. The default value used depends on the `main` entry point used, e.g. `lrsql.sqlite.main` will use `sqlite` by default, so overriding the default is **not** recommended. | Varies |
 | `LRSQL_DB_NAME` | `dbName` | The name of the database. | `example` |
-| `LRSQL_DB_HOST` | `dbHost` | The host that the database will run on. Not supported by in-mem H2 or SQLite. | `localhost` |
+| `LRSQL_DB_HOST` | `dbHost` | The host that the database will run on. Not supported by in-mem H2 or SQLite. | `0.0.0.0` |
 | `LRSQL_DB_PORT` | `dbPort` | The port that the database will run on. Not supported by in-mem H2 or SQLite. | `9001` (H2), `5432` (PG) |
 | `LRSQL_DB_PROPERTIES` | `dbProperties` | Optional additional DB properties. Must be a string of key-val pairs that follow URL query parameter syntax (e.g. `key1=value1&key2=value2`). Any `&` character not used as a separator must be percent encoded. Supported properties will depend on the DBMS. | Not set |
 | `LRSQL_DB_JDBC_URL` | `dbJdbcUrl` | Optional JDBC URL; this will override the above properties if set. URL syntax will depend on the DBMS. | Not set |
@@ -100,10 +100,10 @@ You may have noted that some options are not available:
 | `LRSQL_JWT_EXP_LEEWAY` | `jwtExpLeeway` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
 | `LRSQL_ENABLE_HTTP` | `enableHttp` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
 | `LRSQL_ENABLE_HTTP2` | `enableHttp2` | Whether HTTP/2 is supported or not. | `true` |
-| `LRSQL_HTTP_HOST` | `httpHost` | The host that the webserver will run on. | `0.0.0.0` (localhost) |
+| `LRSQL_HTTP_HOST` | `httpHost` | The host that the webserver will run on. | `0.0.0.0` |
 | `LRSQL_HTTP_PORT` | `httpPort` | The HTTP port that the webserver will be open on. | `8080` |
 | `LRSQL_SSL_PORT` | `sslPort` | The HTTPS port that the webserver will be open on. | `8443` |
-| `LRSQL_URL_PREFIX` | `urlPrefix` | The prefix of the webserver URL path, e.g. the prefix in `http://localhost/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi` |
+| `LRSQL_URL_PREFIX` | `urlPrefix` | The prefix of the webserver URL path, e.g. the prefix in `http://0.0.0.0:8080/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi` |
 | `LRSQL_ENABLE_ADMIN_UI` | `enableAdminUi` | Whether or not to serve the administrative UI at `/admin` | `true` |
 
 [<- Back to Index](index.md)

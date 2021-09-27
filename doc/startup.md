@@ -90,7 +90,7 @@ In Windows you may see a similar warning that looks like this:
 
 Now that the LRS is running, let's set up a (non-seed) account and some credentials to use it.
 
-- First navigate in a browser to the LRS address. This will be `http(s)://[host]:[port]/`. For example, if you did not change the host and port variables in the sections above, then by default it should be accessible at `http://localhost:8080/`. You should see a login screen much like the following:
+- First navigate in a browser to the LRS address. This will be `http(s)://[host]:[port]/`. For example, if you did not change the host and port variables in the sections above, then by default it should be accessible at `http://0.0.0.0:8080/`. You should see a login screen much like the following:
 
 ![Login Page](images/login.png)
 
