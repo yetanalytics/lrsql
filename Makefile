@@ -64,14 +64,14 @@ postgres: resources/public/admin
 # NOTE: Requires a running lrsql instance!
 bench:
 	clojure -M:bench -m lrsql.bench \
-	    -e http://localhost:8080/xapi/statements \
+	    -e http://0.0.0.0:8080/xapi/statements \
 		-i dev-resources/default/insert_input.json \
 		-q dev-resources/default/query_input.json \
 		-u username -p password
 
 bench-async:
 	clojure -M:bench -m lrsql.bench \
-	    -e http://localhost:8080/xapi/statements \
+	    -e http://0.0.0.0:8080/xapi/statements \
 		-i dev-resources/default/insert_input.json \
 		-q dev-resources/default/query_input.json \
 		-a true \

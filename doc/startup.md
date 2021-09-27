@@ -14,9 +14,9 @@
 #### 3. Configuration Variables
 Create initial configuration variables. Config vars can be set by creating and editing the file `config/lrsql.json` in your SQL LRS directory or alternatively as environment variables; to start off with the following should be set:
 - `adminUserDefault` and `adminPassDefault` MUST be set in order to create an initial admin account. Otherwise you will not be able to use the LRS. These are temporary credentials that you will use to log in the very first time.
-- `httpHost` should be set to the domain you are running your webserver on if you are allowing network access (by default it is `0.0.0.0` for localhost); likewise for `httpPort` and `httpsPort` (which by default are `8080` and `8443`, respectively).
-- Likewise, `authorityUrl` should be set to a custom domain in order to uniquely identify Statements inserted into your LRS.
-- If you are running Postgres, you should set `dbHost`, `dbUser`, and `dbPassword` to the appropriate Postgres system, as well as `dbProperties` if needed.
+- `httpHost` should be set to the host address you are running your webserver on if you are allowing network access (by default it is `0.0.0.0` for localhost); likewise for `httpPort` and `sslPort` (which by default are `8080` and `8443`, respectively).
+- Likewise, `authorityUrl` should be set to a custom domain in order to uniquely identify Statements inserted into your LRS. (It is set to `http://example.org` by default.)
+- If you are running Postgres, you should set `dbHost`, `dbName`, `dbUser`, and `dbPassword` to the appropriate Postgres system, as well as `dbPort`, `dbSchema` and `dbProperties` if needed.
 
 The `config/lrsql.json` file does not need to contain _all_ config vars; those that are skipped will use their default values.
 
@@ -25,15 +25,18 @@ The following is an example of a basic (non-Postgres) `config/lrsql.json` config
 ```json
 {
     "lrs": {
-        "adminUserDefault": "DonaldChamberlin44",
-        "adminPassDefault": "ILoveSql!",
+        "adminUserDefault": "myUsername",
+        "adminPassDefault": "thisIsMyPassword1!1",
         "authorityUrl": "http://mydomain.com"
     },
     "webserver": {
-        "httpHost": "localhost"
+        "httpHost": "0.0.0.0",
+        "httpPort": 8080,
+        "sslPort": 8443
     }
 }
 ```
+(Setting the `webserver` vars to these default values isn't necessary, but is shown here for demonstration purposes.)
 
 For a complete list of config variables, see [here](env_vars.md). There is also a sample JSON config file provided for reference at `config/lrsql.json.example` which contains many more variables than the above.
 
@@ -87,7 +90,7 @@ In Windows you may see a similar warning that looks like this:
 
 Now that the LRS is running, let's set up a (non-seed) account and some credentials to use it.
 
-- First navigate in a browser to the LRS address. This will be `http(s)://[host]:[port]/`. For example, if you did not change the host and port variables in the sections above, then by default it should be accessible at `http://localhost:8080/`. You should see a login screen much like the following:
+- First navigate in a browser to the LRS address. This will be `http(s)://[host]:[port]/`. For example, if you did not change the host and port variables in the sections above, then by default it should be accessible at `http://0.0.0.0:8080/`. You should see a login screen much like the following:
 
 ![Login Page](images/login.png)
 

@@ -22,7 +22,7 @@
 (def cli-options
   [["-e" "--lrs-endpoint URI" "(SQL) LRS endpoint"
     :id      :lrs-endpoint
-    :default "http://localhost:8080/xapi/statements"
+    :default "http://0.0.0.0:8080/xapi/statements"
     :desc    "The HTTP(S) endpoint of the (SQL) LRS webserver for Statement POSTs and GETs."]
    ["-i" "--insert-input URI" "DATASIM input source"
     :id   :insert-input
