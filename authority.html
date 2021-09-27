@@ -110,6 +110,11 @@ div.footer {
   text-decoration: underline;
 }
 
+span.build {
+  display: block;
+  font-size: .7em;
+}
+
 </style>
     </head>
     <body>
@@ -126,7 +131,7 @@ div.footer {
     },
     &quot;objectType&quot;:&quot;Agent&quot;
 }
-</code></pre><h4 id="dynamic&#95;custom&#95;authority">Dynamic Custom Authority</h4><p>Alternatively, it can make use a few provided variables to make the Authority more dynamic with the Account or API Key used to write the statement. The following table contains the variables available for use in the Authority template:</p><table><thead><tr><th>Variable</th><th>Description</th></tr></thead><tbody><tr><td>authority-url</td><td><code>LRSQL&#95;AUTHORITY&#95;URL</code> (<code>authorityUrl</code>) config variable value set by an environment variable or <code>config/lrsql.json</code>.</td></tr><tr><td>cred-id</td><td>LRS Credential Pair ID (UUID). This can be used to form a unique Authority for each API Key.</td></tr><tr><td>account-id</td><td>LRS Admin Account ID (UUID). This can be used to make a unique Authority for each Account, but not necessarily for each API Key.</td></tr></tbody></table><p>Here is an example of an Authority template making use of some of these variables:</p><pre><code class="json">{
+</code></pre><h4 id="dynamic&#95;custom&#95;authority">Dynamic Custom Authority</h4><p>Alternatively, it can make use a few provided variables to make the Authority more dynamic with the Account or API Key used to write the statement. The following table contains the variables available for use in the Authority template:</p><table><thead><tr><th>Variable</th><th>Description</th></tr></thead><tbody><tr><td><code>authority-url</code></td><td><code>LRSQL&#95;AUTHORITY&#95;URL</code> (<code>authorityUrl</code>) config variable value set by an environment variable or <code>config/lrsql.json</code>. Default is <code>http://example.org</code>.</td></tr><tr><td><code>cred-id</code></td><td>LRS Credential Pair ID (UUID). This can be used to form a unique Authority for each API Key.</td></tr><tr><td><code>account-id</code></td><td>LRS Admin Account ID (UUID). This can be used to make a unique Authority for each Account, but not necessarily for each API Key.</td></tr></tbody></table><p>Here is an example of an Authority template making use of some of these variables:</p><pre><code class="json">{
     &quot;account&quot;: {
         &quot;homePage&quot;:&quot;{{authority-url}}&quot;,
         &quot;name&quot;:&quot;{{cred-id}}&quot;
@@ -145,6 +150,7 @@ div.footer {
          &copy; 2021 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+         <span class="build">Build: 81773ef615f203ceeaf559885ccb25fcadf718c0</span>
         </div>
       </div>
     </body>

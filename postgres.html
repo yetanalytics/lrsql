@@ -110,6 +110,11 @@ div.footer {
   text-decoration: underline;
 }
 
+span.build {
+  display: block;
+  font-size: .7em;
+}
+
 </style>
     </head>
     <body>
@@ -119,7 +124,7 @@ div.footer {
             <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
           </div>
         </div>
-        <p><a href='index.html'><- Back to Index</a></p><h1 id="postgres&#95;database&#95;setup">Postgres Database Setup</h1><p>Using the Postgres implementation of the SQL LRS requires a pre-existing database (unlike the H2 and SQLite implementations, which create the database file if it does not exist). Therefore, you need to set up the Postgres user and database before you start using the SQL LRS.</p><h4 id="1.&#95;create&#95;user">1. Create User</h4><p>Start <code>psql</code> as a user with user and database creation permissions. Create the user that the SQL LRS will use (note the single quotes around the password):</p><pre><code>% psql
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="postgres&#95;database">Postgres Database</h1><h3 id="setup&#95;instructions">Setup Instructions</h3><p>Using the Postgres implementation of the SQL LRS requires a pre-existing database (unlike the H2 and SQLite implementations, which create the database file if it does not exist). Therefore, you need to set up the Postgres user and database before you start using the SQL LRS.</p><h4 id="1.&#95;create&#95;user">1. Create User</h4><p>Start <code>psql</code> as a user with user and database creation permissions. Create the user that the SQL LRS will use (note the single quotes around the password):</p><pre><code>% psql
 postgres=# CREATE USER &#91;username&#93; WITH CREATEDB WITH PASSWORD '&#91;password&#93;';
 </code></pre><h4 id="2.&#95;create&#95;database">2. Create Database</h4><p>Start <code>psql</code> as the new user and create the underlying database that SQL LRS will use:</p><pre><code>% psql -U &#91;username&#93;
 &#91;username&#93;=# CREATE DATABASE &#91;db&#95;name&#93;;
@@ -141,10 +146,12 @@ postgres=# CREATE USER &#91;username&#93; WITH CREATEDB WITH PASSWORD '&#91;pass
 }
 </code></pre></p><p>You can also fix <code>search&#95;path</code> for the user in <code>psql</code>:</p><pre><code>postgres=# ALTER ROLE &#91;username&#93; SET search&#95;path TO &#91;search&#95;path&#93;;
 </code></pre><p>Or fix it for the database:</p><pre><code>&#91;username&#93;=# ALTER DATABASE &#91;db&#95;name&#93; SET search&#95;path TO &#91;search&#95;path&#93;;
-</code></pre><p>Note that the above changes will only affect subsequent Postgres sessions, not the current one.</p><h4 id="4.&#95;start&#95;sql&#95;lrs&#95;and&#95;enjoy!">4. Start SQL LRS and enjoy!</h4><p>Startup instructions can be found <a href='startup.html'>here</a></p><h3 id="example&#95;lrsql.json&#95;configuration">Example lrsql.json configuration</h3><p>Here is an example database config map in <code>config/lrsql.json</code>. The user is <code>lrsql&#95;user</code>, the password is <code>my&#95;password</code>, and the schema is <code>lrsql</code>. The host is set to <code>myhost</code>, while the port is maintained at the Postgres default of <code>5432</code> (which is why it is not included in the sample).</p><pre><code class="json">{
+</code></pre><p>Note that the above changes will only affect subsequent Postgres sessions, not the current one.</p><h4 id="4.&#95;start&#95;sql&#95;lrs&#95;and&#95;enjoy!">4. Start SQL LRS and enjoy!</h4><p>Startup instructions can be found <a href='startup.html'>here</a></p><h3 id="example&#95;lrsql.json&#95;configuration">Example lrsql.json configuration</h3><p>Here is an example database config map in <code>config/lrsql.json</code>. The user is <code>lrsql&#95;user</code>, the password is <code>my&#95;password</code>, the DB name is <code>lrsql&#95;db</code>, and the schema is <code>lrsql</code>. The host is set to <code>0.0.0.0</code> while the port is set to <code>5432</code> (technically not needed here since these are Postgres defaults, but they are provided here for demonstration).</p><pre><code class="json">{
   ...
   &quot;database&quot;: {
-    &quot;dbHost&quot;: &quot;myhost&quot;,
+    &quot;dbHost&quot;: &quot;0.0.0.0&quot;,
+    &quot;dbPort&quot;: 5432,
+    &quot;dbName&quot;: &quot;lrsql&#95;db&quot;,
     &quot;dbUser&quot;: &quot;lrsql&#95;user&quot;,
     &quot;dbPassword&quot;: &quot;my&#95;password&quot;,
     &quot;dbSchema&quot;: &quot;lrsql&quot;
@@ -155,6 +162,7 @@ postgres=# CREATE USER &#91;username&#93; WITH CREATEDB WITH PASSWORD '&#91;pass
          &copy; 2021 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+         <span class="build">Build: 81773ef615f203ceeaf559885ccb25fcadf718c0</span>
         </div>
       </div>
     </body>
