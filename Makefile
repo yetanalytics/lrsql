@@ -154,7 +154,7 @@ target/bundle/runtimes/%:
 	mkdir -p ${RUNTIME_ZIP_DIR}
 	mkdir -p target/bundle/runtimes
 	[ ! -f ${RUNTIME_ZIP} ] && curl -L -o ${RUNTIME_ZIP} https://github.com/yetanalytics/runtimer/releases/download/${RUNTIME_TAG}/${RUNTIME_MACHINE_BUILD}-jre.zip || echo 'already present'
-	unzip ${RUNTIME_ZIP} -d target/bundle/runtimes
+	unzip ${RUNTIME_ZIP} -d target/bundle/runtimes/
 	mv target/bundle/runtimes/${RUNTIME_MACHINE_BUILD} target/bundle/runtimes/${RUNTIME_MACHINE}
 
 target/bundle/runtimes/macos: RUNTIME_MACHINE = macos
