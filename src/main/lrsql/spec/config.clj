@@ -75,7 +75,6 @@
 
 (s/def ::connection
   (s/and (s/conformer u/remove-nil-vals)
-         (s/conformer u/remove-neg-vals)
          (s/keys :req-un [::database
                           ::pool-auto-commit
                           ::pool-keepalive-time
