@@ -54,8 +54,10 @@
           config
           ;; Authority function
           auth-fn (make-authority-fn auth-tp)]
-      (init/init-backend! backend conn)
-      (init/insert-default-creds! backend conn uname pass api-key srt-key)
+      (jdbc/with-transaction [tx conn]
+        (init/init-backend! backend tx))
+      (jdbc/with-transaction [tx conn]
+        (init/insert-default-creds! backend tx uname pass api-key srt-key))
       (log/info "Starting new LRS")
       (assoc lrs :connection connection :authority-fn auth-fn)))
   (stop
