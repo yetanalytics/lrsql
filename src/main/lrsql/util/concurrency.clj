@@ -17,7 +17,7 @@
           :opt-un [::j-range ::initial]))
 
 (s/fdef backoff-ms
-  :args (s/cat :attempt pos-int?
+  :args (s/cat :attempt nat-int?
                :opts backoff-opts-spec)
   :ret (s/nilable nat-int?))
 
