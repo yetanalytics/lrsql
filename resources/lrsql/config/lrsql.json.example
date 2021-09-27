@@ -11,8 +11,6 @@
   "lrs" : {
     "adminUserDefault" : "my-username",
     "adminPassDefault" : "changeme",
-    "apiKeyDefault" : "my-api-key",
-    "apiSecretDefault" : "changeme",
     "authorityUrl" : "http://my-custom-domain.com"
   },
   "webserver" : {
