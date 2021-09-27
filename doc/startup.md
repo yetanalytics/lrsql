@@ -69,6 +69,8 @@ On some operating systems you will need to explicitly allow software from outsid
 
 ![Mac Security Preferences](images/mac_sec_0.png)
 
+Choose the "App Store and identified developers" option and then follow the procedure below.
+
 During startup you may see a firewall/security warning depending on OS. In MacOS it may look like the following:
 
 ![Mac Security Warning 1](images/mac_sec_1.png)
