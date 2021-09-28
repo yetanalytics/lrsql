@@ -18,6 +18,8 @@ docker run \
     yetanalytics/lrsql:latest
 ```
 
+See [Configuration Variables](env_vars.md) for more options.
+
 ### Other DBMSs
 
 The SQL LRS Dockerfile uses the SQLite run script in `bin` as the default `CMD`. To change to another DBMS use the corresponding script. For instance to use PostgreSQL:
@@ -53,6 +55,6 @@ EXPOSE 8443
 CMD ["bin/run_postgres.sh"]
 ```
 
-The resulting image will use the provided configuration file and run PostgreSQL.
+The resulting image will use the provided configuration file and run PostgreSQL. See [Getting Started](startup.md) for more configuration information.
 
 [<- Back to Index](index.md)
