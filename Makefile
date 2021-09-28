@@ -13,6 +13,7 @@ resources/public/admin:
 	unzip ${LRS_ADMIN_ZIPFILE} -d resources/public/admin
 	rm ${LRS_ADMIN_ZIPFILE}
 
+# Test change 
 
 # *** Development ***
 
