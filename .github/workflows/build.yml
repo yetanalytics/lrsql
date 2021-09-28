@@ -15,6 +15,13 @@ jobs:
     - name: Setup CI Environment
       uses: yetanalytics/actions/setup-env@v0
 
+    - name: Log in to Docker Hub (Tag Pushes)
+      #if: ${{ startsWith(github.ref, 'refs/tags') }}
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_TOKEN }}
+
     - name: Build Bundle
       run: make bundle
 
@@ -47,3 +54,20 @@ jobs:
       with:
         branch: gh-pages
         folder: target/bundle/doc
+
+    - name: Extract metadata (tags, labels) for Docker
+      #if: ${{ startsWith(github.ref, 'refs/tags') }}
+      id: meta
+      uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+      with:
+        images: yetanalytics/lrsql
+
+    - name: Echo docker meta
+      run: echo '${{ steps.meta.outputs.tags }}'
+    # - name: Build and push Docker image
+    #   if: ${{ startsWith(github.ref, 'refs/tags') }}
+    #   uses: docker/build-push-action@v2
+    #   with:
+    #     context: .
+    #     push: true
+    #     tags: ${{ steps.meta.outputs.tags }}
