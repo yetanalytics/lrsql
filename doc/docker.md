@@ -2,7 +2,7 @@
 
 # Docker Image
 
-Yet Analytics publishes Docker container images of SQL LRS on [DockerHub](https://hub.docker.com/repository/docker/yetanalytics/lrsql).
+Yet Analytics publishes Docker container images of SQL LRS on [DockerHub](https://hub.docker.com/repository/docker/yetanalytics/lrsql) in the format `yetanalytics/lrsql:<release version | latest>`.
 
 ## Usage
 
