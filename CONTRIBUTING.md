@@ -22,7 +22,7 @@ If the repository has an Issue Template, please follow the template as much as p
 
 ### Security Issues
 
-If you believe you have found a potential security issue in the codebase of a Yet Analytics project, please do NOT open an issue. Email [team@yetanalytics.com](team@yetanalytics.com) directly instead.
+If you believe you have found a potential security issue in the codebase of a Yet Analytics project, please do NOT open an issue. Email [team@yetanalytics.com](mailto:team@yetanalytics.com) directly instead.
 
 ## Code Contributions
 
