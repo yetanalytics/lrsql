@@ -1,0 +1,29 @@
+# Runs SQL LRS with PostgreSQL
+# Provided for demonstration purposes only
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: my_db_user
+      POSTGRES_PASSWORD: my_db_password
+      POSTGRES_DB: lrsql_db
+  lrs:
+    # build: . # switch to this for active dev
+    image: yetanalytics/lrsql:latest
+    command:
+      - /lrsql/bin/run_postgres.sh
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      LRSQL_API_KEY_DEFAULT: my_key
+      LRSQL_API_SECRET_DEFAULT: my_secret
+      LRSQL_ADMIN_USER_DEFAULT: my_username
+      LRSQL_ADMIN_PASS_DEFAULT: my_password
+      LRSQL_DB_HOST: db
+      LRSQL_DB_NAME: lrsql_db
+      LRSQL_DB_USER: my_db_user
+      LRSQL_DB_PASSWORD: my_db_password
