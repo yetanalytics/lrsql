@@ -7,6 +7,7 @@
 - [Getting Started](startup.md)
 - [Setting up TLS/HTTPS](https.md)
 - [Authority Configuration](authority.md)
+- [Docker Image](docker.md)
 
 ### DBMS-specific Sections
 
