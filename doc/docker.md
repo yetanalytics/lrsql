@@ -46,7 +46,13 @@ docker run \
     /lrsql/bin/run_postgres.sh
 ```
 
-Note that you will also need to ensure that a PostgreSQL instance is accessible to the container for this command to work. For a demonstration of containerized SQL LRS with PostgreSQL please see the `docker-compose.yml` file in the project root.
+Note that you will also need to ensure that a PostgreSQL instance is accessible to the container for this command to work. For a demonstration of containerized SQL LRS with PostgreSQL you can use the `docker-compose.yml` file in the project root:
+
+``` shell
+docker compose up
+```
+
+Docker will start PostgreSQL and then SQL LRS. Note that PostgreSQL can sometimes take a while to start causing SQL LRS initialization to fail. If this happens, stop the system with ctrl-C and run the command again.
 
 ### Customization
 
