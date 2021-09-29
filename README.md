@@ -4,6 +4,7 @@
 
 [![CI](https://github.com/yetanalytics/lrsql/actions/workflows/test.yml/badge.svg)](https://github.com/yetanalytics/lrsql/actions/workflows/test.yml)
 [![CD](https://github.com/yetanalytics/lrsql/actions/workflows/build.yml/badge.svg)](https://github.com/yetanalytics/lrsql/actions/workflows/build.yml)
+[![Docker Image Version (latest semver)](https://img.shields.io/docker/v/yetanalytics/lrsql?label=docker&style=plastic)](https://hub.docker.com/r/yetanalytics/lrsql/tags?page=1&ordering=last_updated)
 
 A SQL-based Learning Record Store.
 
