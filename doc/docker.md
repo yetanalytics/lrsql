@@ -19,6 +19,8 @@ docker run \
     yetanalytics/lrsql:latest
 ```
 
+After SQL LRS starts and you see the logo, navigate to [http://0.0.0.0:8080/admin](http://0.0.0.0:8080/admin) to access the UI.
+
 Note that the `-it` option will give you a pseudo-TTY and attach you to the container, allowing you to stop the SQL LRS container with ^C. It is not needed for production use, where `-d` would be preferable. See the [docker run docs](https://docs.docker.com/engine/reference/commandline/run/) for more information.
 
 See [Configuration Variables](env_vars.md) for more options.
