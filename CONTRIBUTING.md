@@ -14,7 +14,7 @@ The Yet Analytics Open Source Community has a [Code of Conduct](CODE_OF_CONDUCT.
 
 Yet Analytics encourages users to contribute by reporting any issues or enhancement suggestions via [GitHub Issues](https://github.com/yetanalytics/lrsql/issues).
 
-Before submission, we encourage you to read through the existing [Documentation](docs/index.md) to ensure that the issue has not been addressed or explained.
+Before submission, we encourage you to read through the existing [Documentation](doc/index.md) to ensure that the issue has not been addressed or explained.
 
 ### Issue Templates
 
