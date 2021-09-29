@@ -27,7 +27,7 @@ See [Configuration Variables](env_vars.md) for more options.
 
 #### Other DBMSs
 
-The SQL LRS Dockerfile uses the SQLite run script in `bin` as the default `CMD`. To change to another DBMS use the corresponding script. For instance to use PostgreSQL:
+The SQL LRS Dockerfile uses the SQLite run script in `bin` as the default `CMD`. To change to another DBMS use the corresponding script. For instance to use Postgres:
 
 ``` shell
 docker run \
@@ -46,13 +46,13 @@ docker run \
     /lrsql/bin/run_postgres.sh
 ```
 
-Note that you will also need to ensure that a PostgreSQL instance is accessible to the container for this command to work. For a demonstration of containerized SQL LRS with PostgreSQL you can use the `docker-compose.yml` file in the project root:
+Note that you will also need to ensure that a Postgres instance is accessible to the container for this command to work. For a demonstration of containerized SQL LRS with Postgres you can use the `docker-compose.yml` file in the project root:
 
 ``` shell
 docker compose up
 ```
 
-Docker will start PostgreSQL and then SQL LRS. Note that PostgreSQL can sometimes take a while to start causing SQL LRS initialization to fail. If this happens, stop the system with ctrl-C and run the command again.
+Docker will start Postgres and then SQL LRS. Note that Postgres can sometimes take a while to start causing SQL LRS initialization to fail. If this happens, stop the system with ctrl-C and run the command again.
 
 ### Customization
 
@@ -68,6 +68,6 @@ EXPOSE 8443
 CMD ["/lrsql/bin/run_postgres.sh"]
 ```
 
-The resulting image will use the provided configuration file and run PostgreSQL. See [Getting Started](startup.md) for more configuration information.
+The resulting image will use the provided configuration file and run Postgres. See [Getting Started](startup.md) for more configuration information.
 
 [<- Back to Index](index.md)
