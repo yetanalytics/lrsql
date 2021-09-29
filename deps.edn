@@ -46,7 +46,8 @@
                 org.clojure/clojurescript]}
   com.yetanalytics/colossal-squuid
   {:git/url    "https://github.com/yetanalytics/colossal-squuid.git"
-   :git/sha    "a125975fc40b14bbba7e7fe4fbe4d9363f7c2202"
+   :git/sha    "2b96574407bfd55fa1deb21bf1e4572f6c91697a"
+   :git/tag    "v0.1.1"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript]}}
  :aliases
