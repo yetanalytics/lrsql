@@ -41,8 +41,7 @@ docker run \
     -e LRSQL_DB_PORT=5432 \
     -e LRSQL_DB_NAME=lrsql_db \
     -e LRSQL_DB_USER=lrsql_user \
-    -e LRSQL_DB_PASSWORD=my_password \
-    -e LRSQL_DB_SCHEMA=lrsql \
+    -e LRSQL_DB_PASSWORD=lrsql_password \
     yetanalytics/lrsql:latest \
     /lrsql/bin/run_postgres.sh
 ```
