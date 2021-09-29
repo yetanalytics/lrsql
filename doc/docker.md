@@ -47,6 +47,8 @@ docker run \
     /lrsql/bin/run_postgres.sh
 ```
 
+Note that you will also need to ensure that a PostgreSQL instance is accessible to the container for this command to work.
+
 ### Customization
 
 The SQL LRS image can be used as a base image for a customized docker image.
