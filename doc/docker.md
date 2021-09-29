@@ -23,7 +23,7 @@ Note that the `-it` option will give you a pseudo-TTY and attach you to the cont
 
 See [Configuration Variables](env_vars.md) for more options.
 
-### Other DBMSs
+#### Other DBMSs
 
 The SQL LRS Dockerfile uses the SQLite run script in `bin` as the default `CMD`. To change to another DBMS use the corresponding script. For instance to use PostgreSQL:
 
