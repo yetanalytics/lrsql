@@ -56,13 +56,24 @@ Docker will start Postgres and then SQL LRS. Note that Postgres can sometimes ta
 
 ### Customization
 
-The SQL LRS image can be used as a base image for a customized docker image.
+The SQL LRS image can be used as a base image for a customized docker image. This is how you would accomplish customizations such as a TLS certificate, configuration file, or custom authority.
 
-For instance, to make an image with a custom configuration:
+For instance, to make an image with custom configuration, certs and authority:
 
 ``` dockerfile
 FROM yetanalytics/lrsql:latest
-ADD my_lrsql.json /lrsql/config/lrsql.json
+
+# custom configuration
+ADD my_lrsql.json              /lrsql/config/lrsql.json
+
+# custom certs
+ADD my_server.key.pem          /lrsql/config/server.key.pem
+ADD my_server.crt.pem          /lrsql/config/server.crt.pem
+ADD my_cacert.pem              /lrsql/config/cacert.pem
+
+# custom authority
+ADD my_authority.json.template /lrsql/config/authority.json.template
+
 EXPOSE 8080
 EXPOSE 8443
 CMD ["/lrsql/bin/run_postgres.sh"]
