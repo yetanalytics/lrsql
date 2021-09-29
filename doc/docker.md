@@ -4,7 +4,7 @@
 
 Yet Analytics publishes Docker container images of SQL LRS on [DockerHub](https://hub.docker.com/repository/docker/yetanalytics/lrsql) in the format `yetanalytics/lrsql:<release version | latest>`.
 
-## Usage
+### Usage
 
 You can run SQL LRS directly from the Docker CLI in its default SQLite configuration:
 
