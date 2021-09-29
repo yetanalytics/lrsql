@@ -10,6 +10,7 @@ You can run SQL LRS directly from the Docker CLI in its default SQLite configura
 
 ``` shell
 docker run \
+    -it \
     -p 8080:8080 \
     -e LRSQL_API_KEY_DEFAULT=my_key \
     -e LRSQL_API_SECRET_DEFAULT=my_secret \
@@ -17,6 +18,8 @@ docker run \
     -e LRSQL_ADMIN_PASS_DEFAULT=my_password \
     yetanalytics/lrsql:latest
 ```
+
+Note that the `-it` option will give you a pseudo-TTY and attach you to the container, allowing you to stop the SQL LRS container with ^C. It is not needed for production use, where `-d` would be preferable. See the [docker run docs](https://docs.docker.com/engine/reference/commandline/run/) for more information.
 
 See [Configuration Variables](env_vars.md) for more options.
 
@@ -26,6 +29,7 @@ The SQL LRS Dockerfile uses the SQLite run script in `bin` as the default `CMD`.
 
 ``` shell
 docker run \
+    -it \
     -p 8080:8080 \
     -e LRSQL_API_KEY_DEFAULT=my_key \
     -e LRSQL_API_SECRET_DEFAULT=my_secret \
@@ -38,7 +42,7 @@ docker run \
     -e LRSQL_DB_PASSWORD=my_password \
     -e LRSQL_DB_SCHEMA=lrsql \
     yetanalytics/lrsql:latest \
-    bin/run_postgres.sh
+    /lrsql/bin/run_postgres.sh
 ```
 
 ### Customization
@@ -52,7 +56,7 @@ FROM yetanalytics/lrsql:latest
 ADD my_lrsql.json /lrsql/config/lrsql.json
 EXPOSE 8080
 EXPOSE 8443
-CMD ["bin/run_postgres.sh"]
+CMD ["/lrsql/bin/run_postgres.sh"]
 ```
 
 The resulting image will use the provided configuration file and run PostgreSQL. See [Getting Started](startup.md) for more configuration information.
