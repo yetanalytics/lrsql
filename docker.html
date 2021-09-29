@@ -1,0 +1,175 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Yet SQL LRS Documentation</title>
+        <style type="text/css">
+body{
+    margin: 0 auto;
+    padding: 30px;
+    font: 20px Tahoma, Helvetica, Arial, Sans-Serif;
+    line-height: 1.5;
+}
+h1, h2, h3, h4 {
+	display: block; text-decoration: none;
+	font: Helvetica, Arial, Sans-Serif;
+ }
+h1 {
+  font-size: 35px;
+ }
+h2 {
+  font-size: 30px;
+ }
+h3 {
+  font-size: 25px;
+ }
+h4 {
+  font-size: 20px;
+ }
+textarea {
+	width: 600px; margin: 0 auto; background: #222; padding: 20px;
+	font-size: 22px; color: #555; text-shadow: 0px 2px 3px #171717;
+	-webkit-box-shadow: 0px 2px 3px #555;
+	-moz-box-shadow: 0px 2px 3px #555;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+}
+code {
+  background: #eeeeee;
+}
+pre {
+  margin: 0 auto;
+  background: #eeeeee;
+  padding: 20px;
+	font-size: 15px;
+	margin-bottom: 20px;
+}
+a {
+	text-decoration: none;
+	font: 18px Helvetica, Arial, Sans-Serif;
+ }
+hr {
+  height: 3px;
+  border: 0;
+  background-color: #333;
+}
+img {
+  max-width: 95%;
+  display: block;
+  margin: auto;
+}
+div#container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80%;
+}
+/* a la https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Styling_tables#Spacing_and_layout */
+table {
+  width: 95%;
+  margin-right: auto;
+  margin-left: auto;
+  border-collapse: collapse;
+  border: 1px solid #dee2e5;
+}
+th, td {
+  border: 1px solid #dee2e5;
+  padding: 20px;
+  line-height: 1.25;
+}
+tbody tr:nth-child(even) {
+  background-color: #f6f8fa;
+}
+p {
+  text-align: justify;
+}
+
+div.logo-container {
+  width: 100%;
+}
+
+div.logo {
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+div.footer {
+  font-size: medium;
+  color:white;
+  background-color: rgb(17, 55, 92) !important;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+.footer a, .footer a:visited {
+  color: white !important;
+}
+
+.footer a:hover {
+  color: white !important;
+  text-decoration: underline;
+}
+
+span.build {
+  display: block;
+  font-size: .7em;
+}
+
+</style>
+    </head>
+    <body>
+      <div id="container">
+        <div class="logo-container">
+          <div class="logo">
+            <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
+          </div>
+        </div>
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="docker&#95;image">Docker Image</h1><p>Yet Analytics publishes Docker container images of SQL LRS on <a href='https://hub.docker.com/repository/docker/yetanalytics/lrsql'>DockerHub</a> in the format <code>yetanalytics/lrsql:&lt;release version | latest&gt;</code>.</p><h3 id="usage">Usage</h3><p>You can run SQL LRS directly from the Docker CLI in its default SQLite configuration:</p><pre><code class="shell">docker run \
+    -it \
+    -p 8080:8080 \
+    -e LRSQL&#95;API&#95;KEY&#95;DEFAULT=my&#95;key \
+    -e LRSQL&#95;API&#95;SECRET&#95;DEFAULT=my&#95;secret \
+    -e LRSQL&#95;ADMIN&#95;USER&#95;DEFAULT=my&#95;username \
+    -e LRSQL&#95;ADMIN&#95;PASS&#95;DEFAULT=my&#95;password \
+    yetanalytics/lrsql:latest
+</code></pre><p>After SQL LRS starts and you see the logo, navigate to <a href='http://0.0.0.0:8080/admin'>http://0.0.0.0:8080/admin</a> to access the UI.</p><p>Note that the <code>-it</code> option will give you a pseudo-TTY and attach you to the container, allowing you to stop the SQL LRS container with ^C. It is not needed for production use, where <code>-d</code> would be preferable. See the <a href='https://docs.docker.com/engine/reference/commandline/run/'>docker run docs</a> for more information.</p><p>See <a href='env_vars.html'>Configuration Variables</a> for more options.</p><h4 id="other&#95;dbmss">Other DBMSs</h4><p>The SQL LRS Dockerfile uses the SQLite run script in <code>bin</code> as the default <code>CMD</code>. To change to another DBMS use the corresponding script. For instance to use Postgres:</p><pre><code class="shell">docker run \
+    -it \
+    -p 8080:8080 \
+    -e LRSQL&#95;API&#95;KEY&#95;DEFAULT=my&#95;key \
+    -e LRSQL&#95;API&#95;SECRET&#95;DEFAULT=my&#95;secret \
+    -e LRSQL&#95;ADMIN&#95;USER&#95;DEFAULT=my&#95;username \
+    -e LRSQL&#95;ADMIN&#95;PASS&#95;DEFAULT=my&#95;password \
+    -e LRSQL&#95;DB&#95;HOST=0.0.0.0 \
+    -e LRSQL&#95;DB&#95;PORT=5432 \
+    -e LRSQL&#95;DB&#95;NAME=lrsql&#95;db \
+    -e LRSQL&#95;DB&#95;USER=lrsql&#95;user \
+    -e LRSQL&#95;DB&#95;PASSWORD=lrsql&#95;password \
+    yetanalytics/lrsql:latest \
+    /lrsql/bin/run&#95;postgres.sh
+</code></pre><p>Note that you will also need to ensure that a Postgres instance is accessible to the container for this command to work. For a demonstration of containerized SQL LRS with Postgres you can use the <code>docker-compose.yml</code> file in the project root:</p><pre><code class="shell">docker compose up
+</code></pre><p>Docker will start Postgres and then SQL LRS. Note that Postgres can sometimes take a while to start causing SQL LRS initialization to fail. If this happens, stop the system with ctrl-C and run the command again, optionally increasing the value of <code>LRSQL&#95;POOL&#95;INITIALIZATION&#95;FAIL&#95;TIMEOUT</code> to allow more time before the SQL LRS declares a connection failure (see <code>docker-compose.yml</code> file).</p><h3 id="customization">Customization</h3><p>The SQL LRS image can be used as a base image for a customized docker image. This is how you would accomplish customizations such as a TLS certificate, configuration file, or custom authority.</p><p>For instance, to make an image with custom configuration, certs and authority:</p><pre><code class="dockerfile">FROM yetanalytics/lrsql:latest
+
+# custom configuration
+ADD my&#95;lrsql.json              /lrsql/config/lrsql.json
+
+# custom certs
+ADD my&#95;server.key.pem          /lrsql/config/server.key.pem
+ADD my&#95;server.crt.pem          /lrsql/config/server.crt.pem
+ADD my&#95;cacert.pem              /lrsql/config/cacert.pem
+
+# custom authority
+ADD my&#95;authority.json.template /lrsql/config/authority.json.template
+
+EXPOSE 8080
+EXPOSE 8443
+CMD &#91;&quot;/lrsql/bin/run&#95;postgres.sh&quot;&#93;
+</code></pre><p>The resulting image will use the provided configuration file and run Postgres. See <a href='startup.html'>Getting Started</a> for more configuration information.</p><p><a href='index.html'><- Back to Index</a></p>
+        <div class="footer">
+         &copy; 2021 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
+         Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+         <span class="build">Build: 8aa2501f5ff517a978d8e28a7d2fec0dc4bdb31e</span>
+        </div>
+      </div>
+    </body>
+</html>
