@@ -1,7 +1,6 @@
 # Runs SQL LRS with PostgreSQL - Provided for demonstration purposes only!
 # To run: docker compose up
 # See the Docker Compose docs for more info: https://docs.docker.com/compose/
-
 services:
   db:
     image: postgres
@@ -29,3 +28,4 @@ services:
       LRSQL_DB_NAME: lrsql_db
       LRSQL_DB_USER: lrsql_user
       LRSQL_DB_PASSWORD: lrsql_password
+      LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
