@@ -16,14 +16,30 @@ docker run \
     -e LRSQL_API_SECRET_DEFAULT=my_secret \
     -e LRSQL_ADMIN_USER_DEFAULT=my_username \
     -e LRSQL_ADMIN_PASS_DEFAULT=my_password \
+    -e LRSQL_DB_NAME=db/lrsql.sqlite.db \
+    -v lrsql-db:/lrsql/db \
     yetanalytics/lrsql:latest
 ```
 
-After SQL LRS starts and you see the logo, navigate to [http://0.0.0.0:8080/admin](http://0.0.0.0:8080/admin) to access the UI.
+After SQL LRS starts and you see the logo, navigate to [http://0.0.0.0:8080/admin](http://0.0.0.0:8080/admin) to access the UI. Note that the `-it` option will give you a pseudo-TTY and attach you to the container, allowing you to stop the SQL LRS container with ^C. It is not needed for production use, where `-d` would be preferable. See the [docker run docs](https://docs.docker.com/engine/reference/commandline/run/) for more information.
 
-Note that the `-it` option will give you a pseudo-TTY and attach you to the container, allowing you to stop the SQL LRS container with ^C. It is not needed for production use, where `-d` would be preferable. See the [docker run docs](https://docs.docker.com/engine/reference/commandline/run/) for more information.
+The data from SQL LRS will be persisted to the Docker [named volume](https://docs.docker.com/engine/reference/run/#volume-shared-filesystems) supplied with the `-v` option, `lrs-db`. Note that `LRSQL_DB_NAME` is also set to write the database file to the volume.
 
-See [Configuration Variables](env_vars.md) for more options.
+#### Runtime Configuration Files
+
+Docker's volume mount feature can also be used to supply customized configuration from a directory on your filesystem:
+
+``` shell
+docker run \
+    -it \
+    -p 8080:8080 \
+    -v /home/alice/my_custom_config:/lrsql/config \
+    yetanalytics/lrsql:latest
+```
+
+This is the suggested method for supplying a custom JSON configuration file, authority template or TLS certificate to SQL LRS.
+
+See [Getting Started](startup.md) for more information on configuration files and [Configuration Variables](env_vars.md) for a full list of settings.
 
 #### Other DBMSs
 
@@ -56,7 +72,7 @@ Docker will start Postgres and then SQL LRS. Note that Postgres can sometimes ta
 
 ### Customization
 
-The SQL LRS image can be used as a base image for a customized docker image. This is how you would accomplish customizations such as a TLS certificate, configuration file, or custom authority.
+The SQL LRS image can be used as a base image for a customized docker image. This allows customizations such as a TLS certificate, configuration file, or custom authority.
 
 For instance, to make an image with custom configuration, certs and authority:
 
