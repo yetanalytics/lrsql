@@ -39,7 +39,7 @@ docker run \
 
 This is the suggested method for supplying a custom JSON configuration file, authority template or TLS certificate to SQL LRS.
 
-See [Getting Started](startup.md) for more information on configuration files [Configuration Variables](env_vars.md) for a full list of settings.
+See [Getting Started](startup.md) for more information on configuration files and [Configuration Variables](env_vars.md) for a full list of settings.
 
 #### Other DBMSs
 
