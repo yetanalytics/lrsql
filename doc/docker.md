@@ -16,10 +16,14 @@ docker run \
     -e LRSQL_API_SECRET_DEFAULT=my_secret \
     -e LRSQL_ADMIN_USER_DEFAULT=my_username \
     -e LRSQL_ADMIN_PASS_DEFAULT=my_password \
+    -e LRSQL_DB_NAME=db/lrsql.sqlite.db \
+    -v lrsql-db:/lrsql/db \
     yetanalytics/lrsql:latest
 ```
 
 After SQL LRS starts and you see the logo, navigate to [http://0.0.0.0:8080/admin](http://0.0.0.0:8080/admin) to access the UI.
+
+The data from SQL LRS will be persisted to the Docker [named volume](https://docs.docker.com/engine/reference/run/#volume-shared-filesystems) supplied with the `-v` option, `lrs-db`. Note that `LRSQL_DB_NAME` is also set to write the database file to the volume.
 
 Note that the `-it` option will give you a pseudo-TTY and attach you to the container, allowing you to stop the SQL LRS container with ^C. It is not needed for production use, where `-d` would be preferable. See the [docker run docs](https://docs.docker.com/engine/reference/commandline/run/) for more information.
 
