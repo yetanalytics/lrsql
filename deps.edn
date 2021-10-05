@@ -48,8 +48,7 @@
   {:git/url    "https://github.com/yetanalytics/colossal-squuid.git"
    :git/sha    "2b96574407bfd55fa1deb21bf1e4572f6c91697a"
    :git/tag    "v0.1.1"
-   :exclusions [org.clojure/clojure
-                org.clojure/clojurescript]}}
+   :exclusions [org.clojure/clojure org.clojure/clojurescript]}}
  :aliases
  {:db-h2
   {:extra-paths ["src/db/h2"]
