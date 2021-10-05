@@ -131,8 +131,15 @@ span.build {
     -e LRSQL&#95;API&#95;SECRET&#95;DEFAULT=my&#95;secret \
     -e LRSQL&#95;ADMIN&#95;USER&#95;DEFAULT=my&#95;username \
     -e LRSQL&#95;ADMIN&#95;PASS&#95;DEFAULT=my&#95;password \
+    -e LRSQL&#95;DB&#95;NAME=db/lrsql.sqlite.db \
+    -v lrsql-db:/lrsql/db \
     yetanalytics/lrsql:latest
-</code></pre><p>After SQL LRS starts and you see the logo, navigate to <a href='http://0.0.0.0:8080/admin'>http://0.0.0.0:8080/admin</a> to access the UI.</p><p>Note that the <code>-it</code> option will give you a pseudo-TTY and attach you to the container, allowing you to stop the SQL LRS container with ^C. It is not needed for production use, where <code>-d</code> would be preferable. See the <a href='https://docs.docker.com/engine/reference/commandline/run/'>docker run docs</a> for more information.</p><p>See <a href='env_vars.html'>Configuration Variables</a> for more options.</p><h4 id="other&#95;dbmss">Other DBMSs</h4><p>The SQL LRS Dockerfile uses the SQLite run script in <code>bin</code> as the default <code>CMD</code>. To change to another DBMS use the corresponding script. For instance to use Postgres:</p><pre><code class="shell">docker run \
+</code></pre><p>After SQL LRS starts and you see the logo, navigate to <a href='http://0.0.0.0:8080/admin'>http://0.0.0.0:8080/admin</a> to access the UI. Note that the <code>-it</code> option will give you a pseudo-TTY and attach you to the container, allowing you to stop the SQL LRS container with ^C. It is not needed for production use, where <code>-d</code> would be preferable. See the <a href='https://docs.docker.com/engine/reference/commandline/run/'>docker run docs</a> for more information.</p><p>The data from SQL LRS will be persisted to the Docker <a href='https://docs.docker.com/engine/reference/run/#volume-shared-filesystems'>named volume</a> supplied with the <code>-v</code> option, <code>lrs-db</code>. Note that <code>LRSQL&#95;DB&#95;NAME</code> is also set to write the database file to the volume.</p><h4 id="runtime&#95;configuration&#95;files">Runtime Configuration Files</h4><p>Docker's volume mount feature can also be used to supply customized configuration from a directory on your filesystem:</p><pre><code class="shell">docker run \
+    -it \
+    -p 8080:8080 \
+    -v /home/alice/my&#95;custom&#95;config:/lrsql/config \
+    yetanalytics/lrsql:latest
+</code></pre><p>This is the suggested method for supplying a custom JSON configuration file, authority template or TLS certificate to SQL LRS.</p><p>See <a href='startup.html'>Getting Started</a> for more information on configuration files and <a href='env_vars.html'>Configuration Variables</a> for a full list of settings.</p><h4 id="other&#95;dbmss">Other DBMSs</h4><p>The SQL LRS Dockerfile uses the SQLite run script in <code>bin</code> as the default <code>CMD</code>. To change to another DBMS use the corresponding script. For instance to use Postgres:</p><pre><code class="shell">docker run \
     -it \
     -p 8080:8080 \
     -e LRSQL&#95;API&#95;KEY&#95;DEFAULT=my&#95;key \
@@ -147,7 +154,7 @@ span.build {
     yetanalytics/lrsql:latest \
     /lrsql/bin/run&#95;postgres.sh
 </code></pre><p>Note that you will also need to ensure that a Postgres instance is accessible to the container for this command to work. For a demonstration of containerized SQL LRS with Postgres you can use the <code>docker-compose.yml</code> file in the project root:</p><pre><code class="shell">docker compose up
-</code></pre><p>Docker will start Postgres and then SQL LRS. Note that Postgres can sometimes take a while to start causing SQL LRS initialization to fail. If this happens, stop the system with ctrl-C and run the command again, optionally increasing the value of <code>LRSQL&#95;POOL&#95;INITIALIZATION&#95;FAIL&#95;TIMEOUT</code> to allow more time before the SQL LRS declares a connection failure (see <code>docker-compose.yml</code> file).</p><h3 id="customization">Customization</h3><p>The SQL LRS image can be used as a base image for a customized docker image. This is how you would accomplish customizations such as a TLS certificate, configuration file, or custom authority.</p><p>For instance, to make an image with custom configuration, certs and authority:</p><pre><code class="dockerfile">FROM yetanalytics/lrsql:latest
+</code></pre><p>Docker will start Postgres and then SQL LRS. Note that Postgres can sometimes take a while to start causing SQL LRS initialization to fail. If this happens, stop the system with ctrl-C and run the command again, optionally increasing the value of <code>LRSQL&#95;POOL&#95;INITIALIZATION&#95;FAIL&#95;TIMEOUT</code> to allow more time before the SQL LRS declares a connection failure (see <code>docker-compose.yml</code> file).</p><h3 id="customization">Customization</h3><p>The SQL LRS image can be used as a base image for a customized docker image. This allows customizations such as a TLS certificate, configuration file, or custom authority.</p><p>For instance, to make an image with custom configuration, certs and authority:</p><pre><code class="dockerfile">FROM yetanalytics/lrsql:latest
 
 # custom configuration
 ADD my&#95;lrsql.json              /lrsql/config/lrsql.json
@@ -168,7 +175,7 @@ CMD &#91;&quot;/lrsql/bin/run&#95;postgres.sh&quot;&#93;
          &copy; 2021 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
-         <span class="build">Build: 8aa2501f5ff517a978d8e28a7d2fec0dc4bdb31e</span>
+         <span class="build">Build: f396456433bdfdfa693a6b0297787bbb3253fcf6</span>
         </div>
       </div>
     </body>
