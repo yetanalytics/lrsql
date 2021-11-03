@@ -1,0 +1,15 @@
+{
+  "name": "lrsql-db-init",
+  "version": "0.0.1",
+  "description": "Lambda Function to init a fresh PostgreSQL DB in AWS for SQL LRS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Yet Analytics, Inc.",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "pg": "^8.7.1",
+    "pg-format": "^1.0.4"
+  }
+}

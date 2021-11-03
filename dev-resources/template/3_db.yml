@@ -1,0 +1,139 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'LRSQL db testing temp profile'
+Parameters:
+  # Networking
+  VPCId:
+    Description: 'VPC on which to run SQL LRS'
+    Type: AWS::EC2::VPC::Id
+  DBSubnets:
+    Description: Subnets on which to run services
+    Type: List<AWS::EC2::Subnet::Id>
+
+  # Postgres
+  # PostgreSQL Storage
+  DBSnapshotIdentifier:
+    Description: Snapshot identifier to restore DB from. Note that some other params will be ignored if you set this
+    Type: String
+
+  DBEngineMode:
+    Description: PostgreSQL Engine mode on RDS
+    Type: String
+    Default: 'provisioned'
+    AllowedValues:
+      - 'provisioned'
+      - 'serverless'
+  DBEngineVersion:
+    Description: PostgreSQL engine version on RDS
+    Type: String
+    Default: '10.12'
+    AllowedValues:
+      - '10.12'
+  DBInstanceClass:
+    Description: For provisioned aurora, the instance class to use
+    Type: String
+    Default: 'db.r4.large'
+  DBName:
+    Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
+    Type: String
+    Default: 'lrsql_demo'
+  DBMasterUserName:
+    Description: Name of admin user
+    Type: String
+    Default: yetadmin
+  DBAppUserName:
+    Description: Name of app db user
+    Type: String
+    Default: lrsqldbuser
+  DBMasterUserPasswordPath:
+    Description: SSM Path to the secret password
+    Type: String
+    Default: '/lrsql/demo/DB_MASTER_USER_PASSWORD'
+  DBMasterUserPasswordVersion:
+    Description: SSM version
+    Type: Number
+    Default: 1
+  DBAppUserPasswordPath:
+    Description: SSM Path to the secret password
+    Type: String
+    Default: '/lrsql/demo/DB_APP_USER_PASSWORD'
+  DBAppUserPasswordVersion:
+    Description: SSM version
+    Type: Number
+    Default: 1
+  DBBackupRetentionPeriod:
+    Description: Retention period for PG backups
+    Type: Number
+    Default: 1
+  DBDeletionProtection:
+    Description: Enable/disable deletion protection on the DB
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: true
+
+Conditions:
+  DBProvisioned:
+    !Equals [!Ref DBEngineMode, 'provisioned']
+  DBSnapshotIdentifierProvided:
+    !Not [!Equals [!Ref DBSnapshotIdentifier, '']]
+
+Resources:
+
+  DBSubnetGroup:
+    Description: Subnet group to allow instance access to db
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: SQL LRS App Instance Subnet Group
+      SubnetIds: !Ref DBSubnets
+
+  DBInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to RDS instances
+      VpcId: !Ref VPCId
+
+  DBCluster:
+    Description: PostgreSQL DB Cluster
+    Type: AWS::RDS::DBCluster
+    Properties:
+      Engine: aurora-postgresql
+      EngineMode: !Ref DBEngineMode
+      EngineVersion: !Ref DBEngineVersion
+      DatabaseName: !Ref DBName
+      SnapshotIdentifier: !If
+        - DBSnapshotIdentifierProvided
+        - !Ref DBSnapshotIdentifier
+        - !Ref AWS::NoValue
+      MasterUsername: !If
+        - DBSnapshotIdentifierProvided
+        - !Ref AWS::NoValue
+        - !Ref DBMasterUserName
+      MasterUserPassword: !If
+        - DBSnapshotIdentifierProvided
+        - !Ref AWS::NoValue
+        - !Sub '{{resolve:ssm-secure:${DBMasterUserPasswordPath}:${DBMasterUserPasswordVersion}}}'
+      # DBClusterIdentifier: !Sub '${AWS::StackName}-db'
+      BackupRetentionPeriod: !If
+        - DBSnapshotIdentifierProvided
+        - !Ref AWS::NoValue
+        - !Ref DBBackupRetentionPeriod
+      DeletionProtection: !Ref DBDeletionProtection
+      VpcSecurityGroupIds:
+        - !Ref DBInstanceSG
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      DBClusterParameterGroupName: default.aurora-postgresql10
+      EnableCloudwatchLogsExports: !If
+        - DBProvisioned
+        - [postgresql]
+        - !Ref AWS::NoValue
+
+  DBInstance0:
+    Condition: DBProvisioned
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: aurora-postgresql
+      EngineVersion: !Ref DBEngineVersion
+      DBClusterIdentifier: !Ref DBCluster
+      PubliclyAccessible: false
+      DBInstanceClass: !Ref DBInstanceClass

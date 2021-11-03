@@ -28,3 +28,5 @@ Test.java
 lrs-admin-ui-*.zip
 /resources/public/admin/
 /tmp/
+# Templates
+node_modules/
