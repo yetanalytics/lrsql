@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: SQL LRS VPC With public Subnets
+Description: SQL LRS VPC With public & private Subnets
 Parameters:
   VpcCidr:
     Description: CIDR block for the vpc itself
@@ -13,6 +13,14 @@ Parameters:
     Description: CIDR block for public subnet two
     Type: String
     Default: '173.147.1.0/24'
+  PrivateOneCidr:
+    Description: CIDR block for private subnet one
+    Type: String
+    Default: '173.147.2.0/24'
+  PrivateTwoCidr:
+    Description: CIDR block for private subnet two
+    Type: String
+    Default: '173.147.3.0/24'
 
 Resources:
   # VPC
@@ -54,7 +62,33 @@ Resources:
         - Key: Name
           Value: !Sub '${AWS::StackName}-public-2'
 
-  #Public Subnet Routing
+  # Two Private subnets
+  PrivateSubnetOne:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 0
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref 'VPC'
+      CidrBlock: !Ref PrivateOneCidr
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-1'
+  PrivateSubnetTwo:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 1
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref 'VPC'
+      CidrBlock: !Ref PrivateTwoCidr
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-2'
+
+  # Public Subnet Routing
   InternetGateway:
     Type: AWS::EC2::InternetGateway
   GatewayAttachement:
@@ -84,6 +118,59 @@ Resources:
       SubnetId: !Ref PublicSubnetTwo
       RouteTableId: !Ref PublicRouteTable
 
+
+  # Private Subnet Routing
+  NatGatewayOneAttachment:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachement
+    Properties:
+        Domain: vpc
+  NatGatewayTwoAttachment:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachement
+    Properties:
+        Domain: vpc
+  NatGatewayOne:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayOneAttachment.AllocationId
+      SubnetId: !Ref PublicSubnetOne
+  NatGatewayTwo:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayTwoAttachment.AllocationId
+      SubnetId: !Ref PublicSubnetTwo
+  PrivateRouteTableOne:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref 'VPC'
+  PrivateRouteOne:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableOne
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGatewayOne
+  PrivateRouteTableOneAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableOne
+      SubnetId: !Ref PrivateSubnetOne
+  PrivateRouteTableTwo:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref 'VPC'
+  PrivateRouteTwo:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableTwo
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGatewayTwo
+  PrivateRouteTableTwoAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableTwo
+      SubnetId: !Ref PrivateSubnetTwo
+
 Outputs:
   VPCId:
     Description: The ID of the VPC that this stack is deployed in
@@ -100,6 +187,36 @@ Outputs:
     Value: !Ref 'PublicSubnetTwo'
     Export:
       Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PublicSubnetTwo' ] ]
+  PrivateSubnetOne:
+    Description: Private subnet one
+    Value: !Ref 'PrivateSubnetOne'
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PrivateSubnetOne' ] ]
+  PrivateSubnetOneAZ:
+    Description: Private subnet one AZ
+    Value: !GetAtt 'PrivateSubnetOne.AvailabilityZone'
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PrivateSubnetOneAZ' ] ]
+  PrivateSubnetTwo:
+    Description: Private subnet two
+    Value: !Ref 'PrivateSubnetTwo'
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PrivateSubnetTwo' ] ]
+  PrivateSubnetTwoAZ:
+    Description: Private subnet two AZ
+    Value: !GetAtt 'PrivateSubnetTwo.AvailabilityZone'
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PrivateSubnetTwoAZ' ] ]
+  PrivateRouteTableOneId:
+    Description: Private route table 1 id
+    Value: !Ref PrivateRouteTableOne
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PrivateRouteTableOneId' ] ]
+  PrivateRouteTableTwoId:
+    Description: Private route table 2 id
+    Value: !Ref PrivateRouteTableTwo
+    Export:
+      Name: !Join [ ':', [ !Ref 'AWS::StackName', 'PrivateRouteTableTwoId' ] ]
   PublicRouteTableId:
     Description: Public Route table id
     Value: !Ref PublicRouteTable

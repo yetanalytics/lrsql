@@ -1,0 +1,147 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SQL LRS and DB Init Script'
+Parameters:
+  # Networking
+  VPCId:
+    Description: 'VPC on which to run SQL LRS'
+    Type: AWS::EC2::VPC::Id
+  DBSubnets:
+    Description: Subnets on which to run services
+    Type: List<AWS::EC2::Subnet::Id>
+  # DB Details
+  DBName:
+    Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
+    Type: String
+    Default: 'lrsql_demo'
+  DBHost:
+    Description: Write hostname of PG db
+    Type: String
+  DBInstanceSG:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: DB instance security group
+  DBMasterUserName:
+    Description: Name of admin user
+    Type: String
+    Default: yetadmin
+  DBAppUserName:
+    Description: Name of app db user
+    Type: String
+    Default: lrsqldbuser
+  DBMasterUserPasswordPath:
+    Description: SSM Path to the secret password
+    Type: String
+    Default: '/lrsql/demo/DB_MASTER_USER_PASSWORD'
+  DBMasterUserPasswordVersion:
+    Description: SSM version
+    Type: Number
+    Default: 1
+  DBAppUserPasswordPath:
+    Description: SSM Path to the secret password
+    Type: String
+    Default: '/lrsql/demo/DB_APP_USER_PASSWORD'
+  DBAppUserPasswordVersion:
+    Description: SSM version
+    Type: Number
+    Default: 1
+  # Lambda Script
+  S3Bucket:
+    Type: String
+    Default: lrsql-demo
+  S3Key:
+    Type: String
+    Default: db-init.zip
+
+
+Resources:
+
+  # DB Initialization Function and custom resource to run it
+
+  DBInitFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref S3Key
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Timeout: 15
+      Role: !GetAtt DBInitFnExecRole.Arn
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref DBInitFnSG
+        SubnetIds: !Ref DBSubnets
+
+  DBInitFnSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG For Lambda Init Fn
+      VpcId: !Ref VPCId
+
+  DBInstanceInitIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from the init fn to RDS instance
+      GroupId: !Ref DBInstanceSG
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !Ref DBInitFnSG
+
+  DBInitPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Description: IAM Policy for db init lambda access.
+    Properties:
+      ManagedPolicyName: !Sub '${AWS::StackName}-${AWS::Region}-lambda-dbinit-policy'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # Allow access to SSM and VPC related networking
+          - Effect: Allow
+            Action:
+              - "ssm:GetParameter"
+              - "secretsmanager:GetSecretValue"
+            Resource:
+              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}'
+              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBMasterUserPasswordPath}'
+          - Effect: Allow
+            Action:
+              - ec2:DescribeNetworkInterfaces
+              - ec2:CreateNetworkInterface
+              - ec2:DeleteNetworkInterface
+              - ec2:DescribeInstances
+              - ec2:AttachNetworkInterface
+            Resource: '*'
+
+  DBInitFnExecRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [lambda.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - !Ref DBInitPolicy
+
+  InitDBCustomResource:
+    # Run the lambda init fn as a custom resource
+    Type: Custom::initDBCustomResource
+    DependsOn: DBInitFn
+    Properties:
+      ServiceToken: !Ref DBInitFn
+      DBMasterUsername: !Ref DBMasterUserName
+      DBMasterPasswordPath: !Join
+            - ':'
+            - - !Ref DBMasterUserPasswordPath
+              - !Ref DBMasterUserPasswordVersion
+      DBUsername: !Ref DBAppUserName
+      DBPassword: !Join
+            - ':'
+            - - !Ref DBAppUserPasswordPath
+              - !Ref DBAppUserPasswordVersion
+      DBHost: !Ref DBHost
+      DBPort: 3306
+      DBName: !Ref DBName

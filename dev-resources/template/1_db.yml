@@ -40,23 +40,11 @@ Parameters:
     Description: Name of admin user
     Type: String
     Default: yetadmin
-  DBAppUserName:
-    Description: Name of app db user
-    Type: String
-    Default: lrsqldbuser
   DBMasterUserPasswordPath:
     Description: SSM Path to the secret password
     Type: String
     Default: '/lrsql/demo/DB_MASTER_USER_PASSWORD'
   DBMasterUserPasswordVersion:
-    Description: SSM version
-    Type: Number
-    Default: 1
-  DBAppUserPasswordPath:
-    Description: SSM Path to the secret password
-    Type: String
-    Default: '/lrsql/demo/DB_APP_USER_PASSWORD'
-  DBAppUserPasswordVersion:
     Description: SSM version
     Type: Number
     Default: 1
@@ -80,6 +68,7 @@ Conditions:
 
 Resources:
 
+  # PostgreSQL Database
   DBSubnetGroup:
     Description: Subnet group to allow instance access to db
     Type: AWS::RDS::DBSubnetGroup
