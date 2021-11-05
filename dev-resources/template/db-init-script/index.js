@@ -2,6 +2,7 @@ const { Client } = require('pg')
 var pgformat = require('pg-format');
 const AWS = require("aws-sdk");
 const sm = new AWS.SSM();
+const cfnr = require('./cfn-response.js');
 
 //helper to grab and parse secure strings from ssm
 const getParam = async (path, secure) => {
@@ -18,7 +19,7 @@ const getParam = async (path, secure) => {
 };
 
 //lambda takes db info from custom resolver and inits app db user idempotently
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
 
     console.log("init db started");
     console.log(event);
@@ -59,15 +60,21 @@ exports.handler = async (event) => {
                 console.log("User already exists. Exiting.");
             }
             await client.query("COMMIT");
-            console.log("Finished db init");
         } catch(err) {
             console.log("db init transaction failed");
-            console.log(err);
+            console.error(err);
             await client.query("ROLLBACK");
+            await cfnr.send(event, context, cfnr.FAILED);
         }
+        console.log("Finished db init");
+        await cfnr.send(event, context, cfnr.SUCCESS, {
+            dbAppUser: appUser,
+            dbAppPass: appPass
+        });
     } catch (err) {
         console.log("Error connecting to database");
-        console.log(err);
+        console.error(err);
+        await cfnr.send(event, context, cfnr.FAILED);
     } finally {
         client.end();
     }

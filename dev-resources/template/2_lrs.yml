@@ -16,6 +16,10 @@ Parameters:
   DBHost:
     Description: Write hostname of PG db
     Type: String
+  DBPort:
+    Description: Write hostname of PG db
+    Type: String
+    Default: 3306
   DBInstanceSG:
     Type: AWS::EC2::SecurityGroup::Id
     Description: DB instance security group
@@ -51,6 +55,38 @@ Parameters:
     Type: String
     Default: db-init.zip
 
+  # Server(s)
+  InstanceType:
+    Type: String
+    Description: EC2 Instance Type to launch.
+    Default: c5.large
+    AllowedValues:
+      - c5.large
+      - c5.xlarge
+      - c5.2xlarge
+      - c5.4xlarge
+  InstanceAmiId:
+    Description: AMI (image) to use on EC2 instances.
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  InstanceKeyName:
+    Description: Name of an EC2 key pair that can be used to connect to the server
+    Type: String
+    Default: ps-neptune-dev
+  InstanceSubnet:
+    Description: Subnet on which to run the lrsql server
+    Type: AWS::EC2::Subnet::Id
+  DefaultAdminUser:
+    Description: Username of seed lrs admin
+    Type: String
+    Default: lrsqladmin
+  DefaultAdminPass:
+    Description: Initial seed password for lrs admin
+    Type: String
+  LrsVersion:
+    Description: Version of SQL LRS to download and install (public release versions on GitHub)
+    Type: String
+    Default: v0.1.3
 
 Resources:
 
@@ -83,8 +119,8 @@ Resources:
       Description: Ingress from the init fn to RDS instance
       GroupId: !Ref DBInstanceSG
       IpProtocol: tcp
-      FromPort: 3306
-      ToPort: 3306
+      FromPort: !Ref DBPort
+      ToPort: !Ref DBPort
       SourceSecurityGroupId: !Ref DBInitFnSG
 
   DBInitPolicy:
@@ -131,17 +167,204 @@ Resources:
     Type: Custom::initDBCustomResource
     DependsOn: DBInitFn
     Properties:
-      ServiceToken: !Ref DBInitFn
+      ServiceToken: !GetAtt DBInitFn.Arn
       DBMasterUsername: !Ref DBMasterUserName
       DBMasterPasswordPath: !Join
             - ':'
             - - !Ref DBMasterUserPasswordPath
               - !Ref DBMasterUserPasswordVersion
       DBUsername: !Ref DBAppUserName
-      DBPassword: !Join
+      DBPasswordPath: !Join
             - ':'
             - - !Ref DBAppUserPasswordPath
               - !Ref DBAppUserPasswordVersion
       DBHost: !Ref DBHost
-      DBPort: 3306
+      DBPort: !Ref DBPort
       DBName: !Ref DBName
+
+  # Servers
+
+  InstancePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Description: IAM Policy for a SQL LRS Server.
+    Properties:
+      ManagedPolicyName: !Sub '${AWS::StackName}-${AWS::Region}-lrsql-instance-policy'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # Allow pulling DB password
+          - Effect: Allow
+            Action:
+              - "ssm:GetParameter"
+              - "secretsmanager:GetSecretValue"
+            Resource:
+              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}'
+          # Allegedly needed for securestring...
+          - Effect: Allow
+            Action:
+              - "kms:Decrypt"
+            Resource:
+              - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/secretsmanager'
+              - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm'
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: [ec2.amazonaws.com]
+          Action: ['sts:AssumeRole']
+      Path: /
+      ManagedPolicyArns:
+        - !Ref InstancePolicy
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [!Ref InstanceRole]
+
+  InstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the bastion
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: '73.133.206.211/32'
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: '73.133.206.211/32'
+
+
+  DBInstanceIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from the Bastion instance to RDS instance
+      GroupId: !Ref DBInstanceSG
+      IpProtocol: tcp
+      FromPort: !Ref DBPort
+      ToPort: !Ref DBPort
+      SourceSecurityGroupId: !Ref InstanceSG
+
+  LrsInstance:
+    Type: AWS::EC2::Instance
+    DependsOn: InitDBCustomResource
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          default:
+            - 00_installLrs
+            - 01_setupCfnHup
+            - 02_configureLrs
+            - 02_startLrs
+          UpdateEnvironment:
+            - 01_configureLrs
+            - 02_startLrs
+        00_installLrs:
+          files:
+            "/tmp/lrsql.zip":
+              source: !Join
+                - '/'
+                - - "https://github.com/yetanalytics/lrsql/releases/download"
+                  - !Ref LrsVersion
+                  - "lrsql.zip"
+              mode: "000755"
+              owner: "root"
+              group: "root"
+          commands:
+            01unzip_lrs:
+              cwd: "~"
+              command: "unzip /tmp/lrsql.zip /opt/lrsql/"
+        01_setupCfnHup:
+          files:
+            '/etc/cfn/cfn-hup.conf':
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+                interval=1
+              mode: '000400'
+              owner: root
+              group: root
+            "/lib/systemd/system/cfn-hup.service":
+              content: !Sub |
+                [Unit]
+                Description=cfn-hup daemon
+                [Service]
+                Type=simple
+                ExecStart=/opt/aws/bin/cfn-hup
+                Restart=always
+                [Install]
+                WantedBy=multi-user.target
+            '/etc/cfn/hooks.d/tc-auto-reloader.conf':
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.BastionInstance.Metadata.AWS::CloudFormation::Init.02_configureLrs
+                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource BastionInstance --region ${AWS::Region} --configsets UpdateEnvironment
+                runas=root
+              mode: '000400'
+              owner: root
+              group: root
+          commands:
+            01enable_cfn_hup:
+              command: !Sub |
+                systemctl enable cfn-hup.service
+            02start_cfn_hup:
+              command: !Sub |
+                systemctl start cfn-hup.service
+        02_configureLrs:
+          files:
+            '/opt/lrsql/conf/lrsql.json':
+              content: !Sub |
+                {
+                  "database": {
+                    "dbHost": ${DBHost},
+                    "dbPort": ${DBPort},
+                    "dbName": ${DBName},
+                    "dbUser": ${DBAppUserName},
+                    "dbPassword": ${InitDBCustomResource.dbAppPass}
+                  },
+                  "lrs" : {
+                    "adminUserDefault": ${DefaultAdminUser},
+                    "adminPassDefault": ${DefaultAdminPass},
+                    "authorityUrl": "http://mydomain.com"
+                  },
+                  "webserver": {
+                    "httpHost": "0.0.0.0",
+                    "httpPort": 8080,
+                    "sslPort": 8443
+                  }
+                }
+              mode: '000750'
+              owner: root
+              group: root
+        03_startLrs:
+          commands:
+            01unzip_lrs:
+              cwd: "/opt/lrsql"
+              command: "bin/run_postgres.sh"
+    Properties:
+      ImageId: !Ref InstanceAmiId
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref InstanceKeyName
+      SecurityGroupIds:
+        - !Ref InstanceSG
+      SubnetId: !Ref InstanceSubnet
+      IamInstanceProfile: !Ref InstanceProfile
+      # TODO: Python 3.8 is now the default and this install doesn't seem to work
+      # You can get past the initial installs, but rlwrap fails.
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region} --configsets default > /init-attempt.txt
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LrsInstance --region ${AWS::Region} > /signal-attempt.txt
