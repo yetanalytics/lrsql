@@ -265,10 +265,12 @@ Resources:
             - 00_installLrs
             - 01_setupCfnHup
             - 02_configureLrs
-            - 02_startLrs
+            - 03_enableLrs
+            - 04_startLrs
           UpdateEnvironment:
-            - 01_configureLrs
-            - 02_startLrs
+            - 00_installLrs
+            - 02_configureLrs
+            - 05_restartLrs
         00_installLrs:
           files:
             "/tmp/lrsql.zip":
@@ -281,9 +283,12 @@ Resources:
               owner: "root"
               group: "root"
           commands:
+            00make_dir:
+              cwd: "~"
+              command: "sudo mkdir /opt/lrsql"
             01unzip_lrs:
               cwd: "~"
-              command: "unzip /tmp/lrsql.zip /opt/lrsql/"
+              command: "sudo unzip /tmp/lrsql.zip -d /opt/lrsql/"
         01_setupCfnHup:
           files:
             '/etc/cfn/cfn-hup.conf':
@@ -310,7 +315,7 @@ Resources:
                 [cfn-auto-reloader-hook]
                 triggers=post.update
                 path=Resources.BastionInstance.Metadata.AWS::CloudFormation::Init.02_configureLrs
-                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource BastionInstance --region ${AWS::Region} --configsets UpdateEnvironment
+                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region} --configsets UpdateEnvironment
                 runas=root
               mode: '000400'
               owner: root
@@ -324,19 +329,19 @@ Resources:
                 systemctl start cfn-hup.service
         02_configureLrs:
           files:
-            '/opt/lrsql/conf/lrsql.json':
+            '/opt/lrsql/config/lrsql.json':
               content: !Sub |
                 {
                   "database": {
-                    "dbHost": ${DBHost},
+                    "dbHost": "${DBHost}",
                     "dbPort": ${DBPort},
-                    "dbName": ${DBName},
-                    "dbUser": ${DBAppUserName},
-                    "dbPassword": ${InitDBCustomResource.dbAppPass}
+                    "dbName": "${DBName}",
+                    "dbUser": "${DBAppUserName}",
+                    "dbPassword": "${InitDBCustomResource.dbAppPass}"
                   },
                   "lrs" : {
-                    "adminUserDefault": ${DefaultAdminUser},
-                    "adminPassDefault": ${DefaultAdminPass},
+                    "adminUserDefault": "${DefaultAdminUser}",
+                    "adminPassDefault": "${DefaultAdminPass}",
                     "authorityUrl": "http://mydomain.com"
                   },
                   "webserver": {
@@ -345,14 +350,45 @@ Resources:
                     "sslPort": 8443
                   }
                 }
-              mode: '000750'
+              mode: '000755'
               owner: root
               group: root
-        03_startLrs:
+            '/lib/systemd/system/lrsql.service':
+              content: !Sub |
+                [Unit]
+                Description=SQL LRS Service
+                [Service]
+                User=root
+                # The configuration file application.properties should be here:
+                WorkingDirectory=/opt/lrsql
+                ExecStart=/opt/lrsql/bin/run_postgres.sh
+                SuccessExitStatus=143
+                TimeoutStopSec=10
+                Restart=on-failure
+                RestartSec=5
+                [Install]
+                WantedBy=multi-user.target
+              mode: '000755'
+              owner: root
+              group: root
+        03_enableLrs:
           commands:
-            01unzip_lrs:
-              cwd: "/opt/lrsql"
-              command: "bin/run_postgres.sh"
+            01enable_tc:
+              command: !Sub |
+                systemctl enable lrsql.service
+        04_startLrs:
+          commands:
+            01start_tc:
+              command: !Sub |
+                systemctl start lrsql.service
+        05_restartLrs:
+          commands:
+            01daemon_reload:
+              command: |
+                systemctl daemon-reload
+            02start_tc:
+              command: !Sub |
+                systemctl restart lrsql.service
     Properties:
       ImageId: !Ref InstanceAmiId
       InstanceType: !Ref InstanceType
@@ -361,10 +397,11 @@ Resources:
         - !Ref InstanceSG
       SubnetId: !Ref InstanceSubnet
       IamInstanceProfile: !Ref InstanceProfile
-      # TODO: Python 3.8 is now the default and this install doesn't seem to work
-      # You can get past the initial installs, but rlwrap fails.
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region} --configsets default > /init-attempt.txt
-          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource LrsInstance --region ${AWS::Region} > /signal-attempt.txt
+          echo 'Yet SQL LRS ${LrsVersion}'
+          # run configsets
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region} --configsets default
+          # signal CF
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region}
