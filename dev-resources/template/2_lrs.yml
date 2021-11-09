@@ -88,6 +88,27 @@ Parameters:
     Type: String
     Default: v0.1.3
 
+  # Front-end (ALB) specific settings
+  ALBSubnets:
+    Description: Subnets on which to run the ALB.
+    Type: List<AWS::EC2::Subnet::Id>
+  ALBHostName:
+    Type: String
+    Description: The hostname to use for the Elastic Load Balancer.
+    Default: 'sqllrs.yetanalytics.io'
+  ALBCertArn:
+    Type: String
+    Description: The ARN of an ACM cert to use on the ALB
+  ALBHostedZone:
+    Type: String
+    Description: Route53 Hosted Zone in which to set a DNS record. If unset no record will be updated
+    Default: ''
+
+
+Conditions:
+  SetDNS:
+    !Not [!Equals [!Ref ALBHostedZone, '']]
+
 Resources:
 
   # DB Initialization Function and custom resource to run it
@@ -405,3 +426,105 @@ Resources:
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region} --configsets default
           # signal CF
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region}
+
+  # Load Balancer
+
+  LoadBalancerSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the load balancer
+      VpcId: !Ref VPCId
+      SecurityGroupIngress:
+        # Allow access to ALB from anywhere on the internet
+        # on 80 as redirect-only
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+        # on http:443 for https
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+      - Key: idle_timeout.timeout_seconds
+        Value: '30'
+      Subnets: !Ref ALBSubnets
+      SecurityGroups:
+        - !Ref LoadBalancerSG
+
+  LoadBalancerListenerHTTP:
+    #redirect to https
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - LoadBalancer
+    Properties:
+      DefaultActions:
+        - RedirectConfig:
+            Protocol: HTTPS
+            StatusCode: HTTP_301
+            Port: "443"
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "{query}"
+          Type: 'redirect'
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  LoadBalancerListenerHTTPS:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - LoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: 'forward'
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref ALBCertArn
+
+  IngressFromALB:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from the ALB
+      GroupId: !Ref InstanceSG
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      SourceSecurityGroupId: !Ref LoadBalancerSG
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Port: 8080
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId: !Ref VPCId
+      Targets:
+        - Id: !Ref LrsInstance
+          Port: 8080
+
+  DNSRecordSet:
+    Condition: SetDNS
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !Ref ALBHostName
+      HostedZoneId: !Ref ALBHostedZone
+      # Set the target, depending if we are on APIGW or EC2
+      AliasTarget:
+        DNSName: !GetAtt LoadBalancer.DNSName
+        HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
