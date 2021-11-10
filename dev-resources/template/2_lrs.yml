@@ -6,7 +6,7 @@ Parameters:
     Description: 'VPC on which to run SQL LRS'
     Type: AWS::EC2::VPC::Id
   DBSubnets:
-    Description: Subnets on which to run services
+    Description: Subnets on which the DB is running
     Type: List<AWS::EC2::Subnet::Id>
   # DB Details
   DBName:
@@ -72,7 +72,6 @@ Parameters:
   InstanceKeyName:
     Description: Name of an EC2 key pair that can be used to connect to the server
     Type: String
-    Default: ps-neptune-dev
   InstanceSubnet:
     Description: Subnet on which to run the lrsql server
     Type: AWS::EC2::Subnet::Id
@@ -528,3 +527,10 @@ Resources:
       AliasTarget:
         DNSName: !GetAtt LoadBalancer.DNSName
         HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
+
+Outputs:
+  LBEndpoint:
+    Description: Load Balancer Endpoint
+    Value: !GetAtt LoadBalancer.DNSName
+    Export:
+      Name: !Sub '${AWS::StackName}:LBEndpoint'

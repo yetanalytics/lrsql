@@ -129,25 +129,21 @@ Resources:
 
 Outputs:
   DBEndpoint:
-    Condition: DBEnabled
     Description: Postgresql db endpoint
     Value: !GetAtt DBCluster.Endpoint.Address
     Export:
       Name: !Sub '${AWS::StackName}:DBEndpoint'
   DBReadOnlyEndpoint:
-    Condition: DBEnabled
     Description: Postgresql db readonly endpoint
     Value: !GetAtt DBCluster.ReadEndpoint.Address
     Export:
       Name: !Sub '${AWS::StackName}:DBEndpointRO'
   DBPort:
-    Condition: DBEnabled
     Description: Postgresql db port
     Value: !GetAtt DBCluster.Endpoint.Port
     Export:
       Name: !Sub '${AWS::StackName}:DBPort'
   DBInstanceSG:
-    Condition: DBEnabled
     Description: Postgresql instance security group
     Value: !Ref DBInstanceSG
     Export:
