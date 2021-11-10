@@ -17,7 +17,7 @@ Parameters:
     Description: Write hostname of PG db
     Type: String
   DBPort:
-    Description: Write hostname of PG db
+    Description: Port of PG db
     Type: String
     Default: 3306
   DBInstanceSG:
@@ -75,6 +75,10 @@ Parameters:
   InstanceSubnet:
     Description: Subnet on which to run the lrsql server
     Type: AWS::EC2::Subnet::Id
+  InstanceHttpPort:
+    Description: Port on which the server runs HTTP
+    Type: String
+    Default: 8080
   DefaultAdminUser:
     Description: Username of seed lrs admin
     Type: String
@@ -249,7 +253,7 @@ Resources:
   InstanceSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Access to the bastion
+      GroupDescription: Access to the LRS Instance
       VpcId: !Ref VPCId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -257,15 +261,15 @@ Resources:
           ToPort: 22
           CidrIp: '73.133.206.211/32'
         - IpProtocol: tcp
-          FromPort: 8080
-          ToPort: 8080
+          FromPort: !Ref InstanceHttpPort
+          ToPort: !Ref InstanceHttpPort
           CidrIp: '73.133.206.211/32'
 
 
   DBInstanceIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      Description: Ingress from the Bastion instance to RDS instance
+      Description: Ingress from the LRS instance to RDS instance
       GroupId: !Ref DBInstanceSG
       IpProtocol: tcp
       FromPort: !Ref DBPort
@@ -330,11 +334,11 @@ Resources:
                 Restart=always
                 [Install]
                 WantedBy=multi-user.target
-            '/etc/cfn/hooks.d/tc-auto-reloader.conf':
+            '/etc/cfn/hooks.d/lrsql-auto-reloader.conf':
               content: !Sub |
                 [cfn-auto-reloader-hook]
                 triggers=post.update
-                path=Resources.BastionInstance.Metadata.AWS::CloudFormation::Init.02_configureLrs
+                path=Resources.LrsInstance.Metadata.AWS::CloudFormation::Init.02_configureLrs
                 action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region} --configsets UpdateEnvironment
                 runas=root
               mode: '000400'
@@ -366,8 +370,7 @@ Resources:
                   },
                   "webserver": {
                     "httpHost": "0.0.0.0",
-                    "httpPort": 8080,
-                    "sslPort": 8443
+                    "httpPort": ${InstanceHttpPort}
                   }
                 }
               mode: '000755'
@@ -393,12 +396,12 @@ Resources:
               group: root
         03_enableLrs:
           commands:
-            01enable_tc:
+            01enable_lrsql:
               command: !Sub |
                 systemctl enable lrsql.service
         04_startLrs:
           commands:
-            01start_tc:
+            01start_lrsql:
               command: !Sub |
                 systemctl start lrsql.service
         05_restartLrs:
@@ -406,7 +409,7 @@ Resources:
             01daemon_reload:
               command: |
                 systemctl daemon-reload
-            02start_tc:
+            02restart_lrsql:
               command: !Sub |
                 systemctl restart lrsql.service
     Properties:
@@ -496,8 +499,8 @@ Resources:
       Description: Ingress from the ALB
       GroupId: !Ref InstanceSG
       IpProtocol: tcp
-      FromPort: 8080
-      ToPort: 8080
+      FromPort: !Ref InstanceHttpPort
+      ToPort: !Ref InstanceHttpPort
       SourceSecurityGroupId: !Ref LoadBalancerSG
 
   TargetGroup:
@@ -508,13 +511,13 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
-      Port: 8080
+      Port: !Ref InstanceHttpPort
       Protocol: HTTP
       UnhealthyThresholdCount: 2
       VpcId: !Ref VPCId
       Targets:
         - Id: !Ref LrsInstance
-          Port: 8080
+          Port: !Ref InstanceHttpPort
 
   DNSRecordSet:
     Condition: SetDNS
