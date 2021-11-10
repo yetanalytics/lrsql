@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'LRSQL db testing temp profile'
+Description: 'Postgres DB for SQL LRS'
 Parameters:
   # Networking
   VPCId:
@@ -126,3 +126,29 @@ Resources:
       DBClusterIdentifier: !Ref DBCluster
       PubliclyAccessible: false
       DBInstanceClass: !Ref DBInstanceClass
+
+Outputs:
+  DBEndpoint:
+    Condition: DBEnabled
+    Description: Postgresql db endpoint
+    Value: !GetAtt DBCluster.Endpoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}:DBEndpoint'
+  DBReadOnlyEndpoint:
+    Condition: DBEnabled
+    Description: Postgresql db readonly endpoint
+    Value: !GetAtt DBCluster.ReadEndpoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}:DBEndpointRO'
+  DBPort:
+    Condition: DBEnabled
+    Description: Postgresql db port
+    Value: !GetAtt DBCluster.Endpoint.Port
+    Export:
+      Name: !Sub '${AWS::StackName}:DBPort'
+  DBInstanceSG:
+    Condition: DBEnabled
+    Description: Postgresql instance security group
+    Value: !Ref DBInstanceSG
+    Export:
+      Name: !Sub '${AWS::StackName}:DBInstanceSG'

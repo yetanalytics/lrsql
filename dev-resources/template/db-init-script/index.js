@@ -23,6 +23,10 @@ exports.handler = async (event, context) => {
 
     console.log("init db started");
     console.log(event);
+    if (event.RequestType === 'Delete') {
+        console.log("Deleting Custom Resource");
+        return await cfnr.send(event, context, cfnr.SUCCESS, {});
+    }
     const input = event.ResourceProperties;
     const appUser = input.DBUsername;
     const appPass = await getParam(input.DBPasswordPath, true);
