@@ -72,9 +72,9 @@ Parameters:
   InstanceKeyName:
     Description: Name of an EC2 key pair that can be used to connect to the server
     Type: String
-  InstanceSubnet:
+  InstanceSubnets:
     Description: Subnet on which to run the lrsql server
-    Type: AWS::EC2::Subnet::Id
+    Type: List<AWS::EC2::Subnet::Id>
   InstanceHttpPort:
     Description: Port on which the server runs HTTP
     Type: String
@@ -90,6 +90,27 @@ Parameters:
     Description: Version of SQL LRS to download and install (public release versions on GitHub)
     Type: String
     Default: v0.1.3
+
+  ASGMinSize:
+    Type: Number
+    Default: 1
+    Description: Minimum number of instances to launch in the autoscaling group.
+  ASGDesiredSize:
+    Type: Number
+    Description: Desired number of instances to launch in the autoscaling group.
+    Default: 1
+  ASGMaxSize:
+    Type: Number
+    Description: Maximum number of instances to launch in the autoscaling group.
+    Default: 2
+  ASGCPUPolicyTargetValue:
+    Type: String # according to docs a Double
+    Description: Target CPU utilization of instances. Leave blank to disable CPU autoscaling.
+    Default: '' # '60.0'
+  ASGALBRequestCountTargetValue:
+    Type: String # according to docs a Double
+    Description: Target requests per instance. Leave blank to disable request count autoscaling.
+    Default: '' # '10000.0'
 
   # Front-end (ALB) specific settings
   ALBSubnets:
@@ -111,6 +132,10 @@ Parameters:
 Conditions:
   SetDNS:
     !Not [!Equals [!Ref ALBHostedZone, '']]
+  ASGCPUPolicyTargetValueProvided:
+    !Not [!Equals [!Ref ASGCPUPolicyTargetValue, '']]
+  ASGALBRequestCountTargetValueProvided:
+    !Not [!Equals [!Ref ASGALBRequestCountTargetValue, '']]
 
 Resources:
 
@@ -276,8 +301,8 @@ Resources:
       ToPort: !Ref DBPort
       SourceSecurityGroupId: !Ref InstanceSG
 
-  LrsInstance:
-    Type: AWS::EC2::Instance
+  LrsInstances:
+    Type: AWS::AutoScaling::LaunchConfiguration
     DependsOn: InitDBCustomResource
     CreationPolicy:
       ResourceSignal:
@@ -338,8 +363,8 @@ Resources:
               content: !Sub |
                 [cfn-auto-reloader-hook]
                 triggers=post.update
-                path=Resources.LrsInstance.Metadata.AWS::CloudFormation::Init.02_configureLrs
-                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region} --configsets UpdateEnvironment
+                path=Resources.LrsInstances.Metadata.AWS::CloudFormation::Init.02_configureLrs
+                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets UpdateEnvironment
                 runas=root
               mode: '000400'
               owner: root
@@ -416,18 +441,82 @@ Resources:
       ImageId: !Ref InstanceAmiId
       InstanceType: !Ref InstanceType
       KeyName: !Ref InstanceKeyName
-      SecurityGroupIds:
+      SecurityGroups:
         - !Ref InstanceSG
-      SubnetId: !Ref InstanceSubnet
       IamInstanceProfile: !Ref InstanceProfile
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
           echo 'Yet SQL LRS ${LrsVersion}'
           # run configsets
-          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region} --configsets default
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets default
           # signal CF
-          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource LrsInstance --region ${AWS::Region}
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
+
+  # Autoscaling Policies
+
+  # Average CPU utilization of instances
+  ASGCPUPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: ASGCPUPolicyTargetValueProvided
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: !Ref ASGCPUPolicyTargetValue
+
+  # Requests inbound to the ALB Target
+  ASGALBRequestCountPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: ASGALBRequestCountTargetValueProvided
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ALBRequestCountPerTarget
+          ResourceLabel: !Join
+            - '/'
+            - - !GetAtt LoadBalancer.LoadBalancerFullName
+              - !GetAtt TargetGroup.TargetGroupFullName
+        TargetValue: !Ref ASGALBRequestCountTargetValue
+
+
+  # ASG
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier: !Ref InstanceSubnets
+      LaunchConfigurationName: !Ref LrsInstances
+      MinSize: !Ref ASGMinSize
+      MaxSize: !Ref ASGMaxSize
+      DesiredCapacity: !Ref ASGDesiredSize
+      # Attach to Target Group for ALB
+      TargetGroupARNs:
+        - !Ref TargetGroup
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 120
+      # Enable Group Metrics Collection
+      MetricsCollection:
+        - Granularity: '1Minute'
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: '1'
+        MaxBatchSize: '1'
+        PauseTime: PT15M
+        WaitOnResourceSignals: 'true'
+        SuspendProcesses:
+          - HealthCheck
+          - ReplaceUnhealthy
+          - AZRebalance
+          - AlarmNotification
+          - ScheduledActions
+
 
   # Load Balancer
 
@@ -515,9 +604,8 @@ Resources:
       Protocol: HTTP
       UnhealthyThresholdCount: 2
       VpcId: !Ref VPCId
-      Targets:
-        - Id: !Ref LrsInstance
-          Port: !Ref InstanceHttpPort
+
+  #DNS Update for Domain
 
   DNSRecordSet:
     Condition: SetDNS
