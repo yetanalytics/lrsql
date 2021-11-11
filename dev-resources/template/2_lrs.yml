@@ -136,6 +136,8 @@ Conditions:
     !Not [!Equals [!Ref ASGCPUPolicyTargetValue, '']]
   ASGALBRequestCountTargetValueProvided:
     !Not [!Equals [!Ref ASGALBRequestCountTargetValue, '']]
+  InstanceKeyNameProvided:
+    !Not [!Equals [!Ref InstanceKeyName, '']]
 
 Resources:
 
@@ -440,7 +442,10 @@ Resources:
     Properties:
       ImageId: !Ref InstanceAmiId
       InstanceType: !Ref InstanceType
-      KeyName: !Ref InstanceKeyName
+      KeyName: !If
+        - InstanceKeyNameProvided
+        - !Ref InstanceKeyName
+        - !Ref AWS::NoValue
       SecurityGroups:
         - !Ref InstanceSG
       IamInstanceProfile: !Ref InstanceProfile
