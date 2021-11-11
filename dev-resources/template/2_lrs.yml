@@ -630,3 +630,9 @@ Outputs:
     Value: !GetAtt LoadBalancer.DNSName
     Export:
       Name: !Sub '${AWS::StackName}:LBEndpoint'
+  LrsAddress:
+    Description: Location of the LRS and Admin application
+    Value: !Join
+            - ''
+            - - 'https://'
+              - !Ref ALBHostName
