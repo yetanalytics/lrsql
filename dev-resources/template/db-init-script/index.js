@@ -7,11 +7,11 @@ const cfnr = require('./cfn-response.js');
 //helper to grab and parse secure strings from ssm
 const getParam = async (path, secure) => {
    try {
-        const appPassword = await sm.getParameter({
+        const param = await sm.getParameter({
           Name: path,
           WithDecryption: secure,
         }).promise();
-        return await appPassword.Parameter.Value;
+        return await param.Parameter.Value;
     } catch (e)  {
         console.log(e);
         return null;
