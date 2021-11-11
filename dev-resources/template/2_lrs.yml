@@ -70,7 +70,7 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
   InstanceKeyName:
-    Description: Name of an EC2 key pair that can be used to connect to the server
+    Description: Name of an EC2 key pair that can be used to connect to the server (optional)
     Type: String
   InstanceSubnets:
     Description: Subnet on which to run the lrsql server
