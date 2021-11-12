@@ -4,7 +4,7 @@
 
 In order to make it easy to get started deploying the SQL LRS, included in this repository is a set of sample Amazon Web Services (AWS) CloudFormation Templates. When deployed, the templates create a scalable and secured cloud installation of the SQL LRS.
 
-__NOTE:__ *This configuration is not one-size-fits-all and you may require a different configuration for your particular needs. It is provided for demonstration purposes only and can be used as a reference to adapt to your particular enterprise's needs. If you apply these templates in your own AWS account it can and will incur charges from Amazon Web Services. If your team is interested in consulting or support in setting up or maintaining a SQL LRS please [contact Yet here](https://www.sqllrs.com/contact)*.
+__NOTE:__ *This configuration is not one-size-fits-all and you may require a different configuration for your particular needs. It is provided for demonstration purposes only and can be used as a reference to adapt to your particular enterprise's needs. If you apply these templates in your own AWS account, it can and will incur charges from Amazon Web Services. Yet Analytics is in no way responsible for any charges due to applying and implementing these templates, and is in no way responsible for any outcomes of applying these templates or implementing SQL LRS. If your team is interested in consulting or support in setting up or maintaining a SQL LRS please [contact Yet here](https://www.sqllrs.com/contact)*.
 
 ### Deployment Overview
 
