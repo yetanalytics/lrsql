@@ -38,6 +38,7 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 - [Configuration Variables](doc/env_vars.md)
 - [HTTP Endpoints](doc/endpoints.md)
 - [Developer Documentation](doc/dev.md)
+- [Example AWS Deployment](doc/aws.md)
 
 ## Contribution
 
