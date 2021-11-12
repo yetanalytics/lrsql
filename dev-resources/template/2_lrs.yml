@@ -73,7 +73,7 @@ Parameters:
     Description: Name of an EC2 key pair that can be used to connect to the server (optional)
     Type: String
   InstanceSSHCidr:
-    Description: CIDR Range for SSH Access to instances (Typically VPC CIDR Range
+    Description: CIDR Range for SSH Access to instances (Typically VPC CIDR Range)
     Type: String
     Default: '173.147.0.0/16'
   InstanceSubnets:
