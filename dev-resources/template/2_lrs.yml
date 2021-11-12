@@ -72,6 +72,10 @@ Parameters:
   InstanceKeyName:
     Description: Name of an EC2 key pair that can be used to connect to the server (optional)
     Type: String
+  InstanceSSHCidr:
+    Description: CIDR Range for SSH Access to instances (Typically VPC CIDR Range
+    Type: String
+    Default: '173.147.0.0/16'
   InstanceSubnets:
     Description: Subnet on which to run the lrsql server
     Type: List<AWS::EC2::Subnet::Id>
@@ -286,12 +290,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: '73.133.206.211/32'
-        - IpProtocol: tcp
-          FromPort: !Ref InstanceHttpPort
-          ToPort: !Ref InstanceHttpPort
-          CidrIp: '73.133.206.211/32'
-
+          CidrIp: !Ref InstanceSSHCidr
 
   DBInstanceIngress:
     Type: AWS::EC2::SecurityGroupIngress

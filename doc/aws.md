@@ -30,8 +30,8 @@ A script is needed during the deployment and the S3 Bucket is the location where
 
 - In your SQL LRS codebase navigate to `dev-resources/template/db-init-script/`
 - Build the script and dependencies by typing `npm install`
-- Zip the package. In Linux/MacOS this would be `zip -r db-init.zip .`
-- In Amazon S3 create a new Bucket. You will need the bucket's name later
+- Zip the `db-init-script` directory. In Linux/MacOS this would be `zip -r db-init.zip .`
+- In Amazon S3 create a new Bucket, you will need the bucket's name later
 - Upload the zip to the bucket, you will need the filename later as well
 
 #### Database Passwords in Systems Manager
@@ -47,7 +47,7 @@ The deployment requires two passwords for the Postgres database. One 'Master' pa
 
 #### EC2 Key-Pair (optional)
 
-If you foresee needing to access the servers directly you'll want to have the name of the EC2 Key-Pair of your choice ready to provide during deployment.
+If you foresee needing SSH access to the servers directly you'll want to have the name of the EC2 Key-Pair of your choice ready to provide during deployment. In practice if you wish to ssh into the servers you will likely also need another EC2 instance (not covered in this guide) in a public subnet, because the servers themselves will be deployed into private subnets inaccessible from the internet directly.
 
 ### Step 2: Networking (optional)
 
