@@ -89,7 +89,7 @@ Parameters:
   LrsVersion:
     Description: Version of SQL LRS to download and install (public release versions on GitHub)
     Type: String
-    Default: v0.1.3
+    Default: v0.1.4
 
   ASGMinSize:
     Type: Number
