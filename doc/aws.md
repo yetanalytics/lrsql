@@ -26,7 +26,7 @@ In these templates the Load Balancer expects to provide access to the LRS via HT
 
 #### S3 Bucket
 
-A script is needed during the deployment and the S3 Bucket is the location where the template accesses the script. This step assumes you have a current nodeJS 14+ installed.
+A script is needed during the deployment and the S3 Bucket is the location where the template accesses the script. This step assumes you have a current nodeJS 12+ and npm installed.
 
 - In your SQL LRS codebase navigate to `dev-resources/template/db-init-script/`
 - Build the script and dependencies by typing `npm install`
