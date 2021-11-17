@@ -47,7 +47,7 @@ The deployment requires two passwords for the Postgres database. One 'Master' pa
 
 #### EC2 Key-Pair (optional)
 
-If you foresee needing SSH access to the servers directly you'll want to have the name of the EC2 Key-Pair of your choice ready to provide during deployment. In practice if you wish to ssh into the servers you will likely also need another EC2 instance (not covered in this guide) in a public subnet, because the servers themselves will be deployed into private subnets inaccessible from the internet directly.
+If you foresee needing SSH access to the servers directly, you'll want to have the name of the EC2 Key-Pair of your choice ready to provide during deployment. In practice if you wish to SSH into the servers you will likely also need another EC2 instance (not covered in this guide) in a public subnet, because the servers themselves will be deployed into private subnets inaccessible from the internet directly.
 
 ### Step 2: Networking (optional)
 
@@ -61,11 +61,11 @@ This step creates a VPC with two public subnets and two private subnets with rou
 - Name the Stack, and review the CIDR ranges to make sure they do not conflict with existing network topology in your AWS account, and adjust as needed
 - Deploy the Stack
 
-After deployment is complete CloudFormation should give you access to an 'Outputs' tab which contains the details about the created subnets. You will be referencing these subnets extensively in the next steps so it's advisable to keep this tab open.
+After deployment is complete CloudFormation should give you access to an 'Outputs' tab which contains the details about the created subnets. You will be referencing these subnets extensively in the next steps, so it's advisable to keep this tab open.
 
 ### Step 3: Database
 
-In this step you will deploy the Postgres Aurora database. In this step and the next one this guide will only cover the necessary parameters for deployment, and will assume that the default was accepted for all the others.
+In this step you will deploy the Postgres Aurora database. The remainder of this guide will only cover the necessary parameters for deployment, and will assume that the default was accepted for all the others.
 
 - Similar to Step 2, create and name a new stack and upload the DB template (1_db.yml)
 - Parameters
