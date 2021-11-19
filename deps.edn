@@ -34,8 +34,8 @@
   ;; Yet Analytics deps
   com.yetanalytics/lrs
   {:git/url    "https://github.com/yetanalytics/lrs.git"
-   :git/sha    "8fd39674de436b9b1e2ac87f656d8e40d2743c41"
-   :git/tag    "v1.1.3"
+   :git/sha    "df64ade872d2892d521aa9d0df7ba8eb967eb788"
+   :git/tag    "v1.2.0"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript
                 com.yetanalytics/xapi-schema]}
