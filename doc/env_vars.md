@@ -109,5 +109,6 @@ You may have noted that some options are not available:
 | `LRSQL_SSL_PORT` | `sslPort` | The HTTPS port that the webserver will be open on. | `8443` |
 | `LRSQL_URL_PREFIX` | `urlPrefix` | The prefix of the webserver URL path, e.g. the prefix in `http://0.0.0.0:8080/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi` |
 | `LRSQL_ENABLE_ADMIN_UI` | `enableAdminUi` | Whether or not to serve the administrative UI at `/admin` | `true` |
+| `LRSQL_ENABLE_STMT_HTML` | `enableStmtHtml` | Whether or not HTML data is returned in the LRS HTTP response. If `false` disables HTML rendering even if `LRSQL_ENABLE_ADMIN_UI` is `true`. | `true` |
 
 [<- Back to Index](index.md)

@@ -146,6 +146,7 @@
 (s/def ::key-enable-selfie boolean?)
 
 (s/def ::enable-admin-ui boolean?)
+(s/def ::enable-stmt-html boolean?)
 
 (s/def ::webserver
   (s/keys :req-un [::http-host
@@ -159,7 +160,8 @@
                    ::key-enable-selfie
                    ::jwt-exp-time
                    ::jwt-exp-leeway
-                   ::enable-admin-ui]
+                   ::enable-admin-ui
+                   ::enable-stmt-html]
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain]))
