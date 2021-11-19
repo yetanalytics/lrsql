@@ -11,4 +11,4 @@
  :http-port         8080
  :url-prefix        "/xapi"
  :enable-admin-ui   true
- :enable-stmt-html  false}
+ :enable-stmt-html  true}

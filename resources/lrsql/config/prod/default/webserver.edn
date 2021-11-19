@@ -13,4 +13,4 @@
  :ssl-port          #long #or [#env LRSQL_SSL_PORT 8443]
  :url-prefix        #or [#env LRSQL_URL_PREFIX "/xapi"]
  :enable-admin-ui   #boolean #or [#env LRSQL_ENABLE_ADMIN_UI true]
- :enable-stmt-html  #boolean #or [#env LRSQL_ENABLE_STMT_HTML false]}
+ :enable-stmt-html  #boolean #or [#env LRSQL_ENABLE_STMT_HTML true]}
