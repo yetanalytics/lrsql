@@ -21,7 +21,8 @@
                 ssl-port
                 url-prefix
                 key-password
-                enable-admin-ui]
+                enable-admin-ui
+                enable-stmt-html]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway}
         config
@@ -37,16 +38,16 @@
                                        :leeway jwt-lwy
                                        :secret private-key
                                        :enable-admin-ui enable-admin-ui}))]
-    {:env                 :prod
-     ::http/routes        routes
-     ::http/resource-path (when enable-admin-ui
-                            ;; only serve assets if the admin ui is enabled
-                            "/public")
-     ::http/type          :jetty
-     ::http/host          http-host
-     ::http/port          (when enable-http http-port) ; nil = no HTTP
-     ::http/join?         false
-     ::i/url-prefix       url-prefix
+    {:env                      :prod
+     ::http/routes             routes
+     ;; only serve assets if the admin ui is enabled
+     ::http/resource-path      (when enable-admin-ui "/public")
+     ::http/type               :jetty
+     ::http/host               http-host
+     ::http/port               (when enable-http http-port) ; nil = no HTTP
+     ::http/join?              false
+     ::i/url-prefix            url-prefix ; TODO: This is never used in lrs
+     ::i/enable-statement-html enable-stmt-html
      ::http/allowed-origins
      {:creds           true
       :allowed-origins (constantly true)}
