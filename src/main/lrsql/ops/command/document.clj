@@ -74,9 +74,6 @@
 
 (defn- invalid-merge-error
   [old-doc input]
-  (log/errorf "Invalid document merge:\nOld document: %s\nNew document: %s"
-              (pr-str old-doc)
-              (pr-str input))
   {:error
    (ex-info "Invalid Merge"
             {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
@@ -85,7 +82,6 @@
 
 (defn- json-read-error
   [input]
-  (log/errorf "Invalid JSON object:\nDocument: %s" (pr-str input))
   {:error
    (ex-info "Invalid JSON object"
             {:type :com.yetanalytics.lrs.xapi.document/json-read-error
