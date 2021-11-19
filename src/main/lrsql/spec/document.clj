@@ -1,7 +1,8 @@
 (ns lrsql.spec.document
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [com.yetanalytics.lrs.xapi.document :as lrs-doc]
+            ; [com.yetanalytics.lrs.xapi.document :as lrs-doc]
+            [com.yetanalytics.lrs.spec.common :refer [string-ascii-not-empty]]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common    :as c]
             [lrsql.spec.activity  :as hs-activ]
@@ -44,7 +45,7 @@
 ;; These are overrides for the nilable specs in the `lrs` lib, made as part of
 ;; the emergency change https://github.com/yetanalytics/lrs/pull/69.
 ;; TODO: Use the original specs again once things settle down.
-(s/def ::content-type string?)
+(s/def ::content-type string-ascii-not-empty)
 (s/def ::content-length nat-int?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -90,7 +91,7 @@
                    ::hs-stmt/registration ; nilable
                    ::last-modified
                    ::content-type
-                   ::content-lengths
+                   ::content-length
                    ::contents]))
 
 ;; Agent-Profile-Document
