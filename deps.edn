@@ -32,6 +32,8 @@
   buddy/buddy-hashers                      {:mvn/version "1.8.1"}
   less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
   ;; Yet Analytics deps
+  ;; TODO: The lrs dep is set to a non-tagged commit as part of an emergency
+  ;; fix to SQL-124. Update this to a tagged version down the line.
   com.yetanalytics/lrs
   {:git/url    "https://github.com/yetanalytics/lrs.git"
    :git/sha    "8cbbf64b5dbe2c3239a67301b21decee99123787"
