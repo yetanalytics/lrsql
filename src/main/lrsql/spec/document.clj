@@ -41,6 +41,12 @@
 ;; Query-specific params
 (s/def ::since c/instant-spec)
 
+;; These are overrides for the nilable specs in the `lrs` lib, made as part of
+;; the emergency change https://github.com/yetanalytics/lrs/pull/69.
+;; TODO: Use the original specs again once things settle down.
+(s/def ::content-type string?)
+(s/def ::content-length nat-int?)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params specs
 ;; These spec the data received by functions in `lrsql.hugsq.input`.
@@ -83,8 +89,8 @@
                    ::hs-actor/agent-ifi
                    ::hs-stmt/registration ; nilable
                    ::last-modified
-                   ::lrs-doc/content-type
-                   ::lrs-doc/content-length
+                   ::content-type
+                   ::content-lengths
                    ::contents]))
 
 ;; Agent-Profile-Document
@@ -102,8 +108,8 @@
                    ::profile-id
                    ::hs-actor/agent-ifi
                    ::last-modified
-                   ::lrs-doc/content-type
-                   ::lrs-doc/content-length
+                   ::content-type
+                   ::content-length
                    ::contents]))
 
 ;; Activity-Profile-Resource
@@ -121,8 +127,8 @@
                    ::profile-id
                    ::hs-activ/activity-iri
                    ::last-modified
-                   ::lrs-doc/content-type
-                   ::lrs-doc/content-length
+                   ::content-type
+                   ::content-length
                    ::contents]))
 
 ;; Putting it all together
