@@ -63,12 +63,18 @@
    modified time, and `document`"
   [document]
   (let [{squuid    :squuid
-         squuid-ts :timestamp} (u/generate-squuid*)]
-    (merge {:primary-key   squuid
-            :last-modified squuid-ts}
-           (-> document
-               (select-keys [:content-type :content-length :contents])
-               (update :contents u/data->bytes)))))
+         squuid-ts :timestamp}  (u/generate-squuid*)
+        {?ctyp :content-type
+         ?clen :content-length
+         ctnt* :content}        document
+        ctnt (u/data->bytes ctnt*)
+        ctyp (when ?ctyp ?ctyp "application/octet-stream")
+        clen (when ?clen ?clen (count ctnt))]
+    {:primary-key   squuid
+     :last-modified squuid-ts
+     :content-type  ctyp
+     :content-len   clen
+     :contents      ctnt}))
 
 (s/fdef insert-document-input
   :args (s/cat :params ds/set-document-params
