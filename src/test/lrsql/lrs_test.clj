@@ -672,6 +672,14 @@
    :content-type  "text/plain"
    :contents      (.getBytes "Example Document 2")})
 
+(def bad-doc-params
+  {:profileId "https://example.org/some-profile"
+   :agent     {"mbox" "mailto:badguy@evil.org"
+               "name" "Bad Guy"}})
+
+(def bad-doc
+  {:contents (.getBytes "I'm a bad guy")})
+
 (defn- get-doc
   "Same as lrsp/-get-documents except automatically formats the result."
   [lrs auth-ident params]
@@ -715,6 +723,11 @@
                            auth-ident
                            activity-prof-id-params
                            activity-prof-doc
+                           false)
+       (lrsp/-set-document lrs
+                           auth-ident
+                           bad-doc-params
+                           bad-doc
                            false)))
 
     (testing "document query"
@@ -741,7 +754,13 @@
                :content-length 18
                :content-type   "text/plain"
                :id             "https://example.org/some-profile"}}
-             (get-doc lrs auth-ident activity-prof-id-params))))
+             (get-doc lrs auth-ident activity-prof-id-params)))
+      (is (= {:document
+              {:contents       "I'm a bad guy"
+               :content-length 13
+               :content-type   "application/octet-stream"
+               :id             "https://example.org/some-profile"}}
+             (get-doc lrs auth-ident bad-doc-params))))
   
     (testing "document ID query"
       (is (= {:document-ids ["some-id" "some-other-id"]}
