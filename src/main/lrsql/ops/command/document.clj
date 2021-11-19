@@ -1,7 +1,6 @@
 (ns lrsql.ops.command.document
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as cstr]
-            [clojure.tools.logging :as log]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
