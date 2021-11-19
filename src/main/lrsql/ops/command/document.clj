@@ -1,6 +1,7 @@
 (ns lrsql.ops.command.document
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as cstr]
+            [clojure.tools.logging :as log]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
@@ -73,6 +74,9 @@
 
 (defn- invalid-merge-error
   [old-doc input]
+  (log/errorf (format "Invalid document merge:\nOld document: %s\nNew document: %s" 
+                      (pr-str old-doc)
+                      (pr-str input)))
   {:error
    (ex-info "Invalid Merge"
             {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
@@ -81,6 +85,8 @@
 
 (defn- json-read-error
   [input]
+  (log/errorf (format "Invalid JSON object:\nDocument: %s"
+                      (pr-str input)))
   {:error
    (ex-info "Invalid JSON object"
             {:type :com.yetanalytics.lrs.xapi.document/json-read-error
