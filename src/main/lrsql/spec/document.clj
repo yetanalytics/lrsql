@@ -1,8 +1,7 @@
 (ns lrsql.spec.document
   (:require [clojure.spec.alpha :as s]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            ; [com.yetanalytics.lrs.xapi.document :as lrs-doc]
-            [com.yetanalytics.lrs.spec.common :refer [string-ascii-not-empty]]
+            [com.yetanalytics.lrs.xapi.document :as lrs-doc]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common    :as c]
             [lrsql.spec.activity  :as hs-activ]
@@ -41,12 +40,6 @@
 
 ;; Query-specific params
 (s/def ::since c/instant-spec)
-
-;; These are overrides for the nilable specs in the `lrs` lib, made as part of
-;; the emergency change https://github.com/yetanalytics/lrs/pull/69.
-;; TODO: Use the original specs again once things settle down.
-(s/def ::content-type string-ascii-not-empty)
-(s/def ::content-length nat-int?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Params specs
@@ -90,8 +83,8 @@
                    ::hs-actor/agent-ifi
                    ::hs-stmt/registration ; nilable
                    ::last-modified
-                   ::content-type
-                   ::content-length
+                   ::lrs-doc/content-type
+                   ::lrs-doc/content-length
                    ::contents]))
 
 ;; Agent-Profile-Document
@@ -109,8 +102,8 @@
                    ::profile-id
                    ::hs-actor/agent-ifi
                    ::last-modified
-                   ::content-type
-                   ::content-length
+                   ::lrs-doc/content-type
+                   ::lrs-doc/content-length
                    ::contents]))
 
 ;; Activity-Profile-Resource
@@ -128,8 +121,8 @@
                    ::profile-id
                    ::hs-activ/activity-iri
                    ::last-modified
-                   ::content-type
-                   ::content-length
+                   ::lrs-doc/content-type
+                   ::lrs-doc/content-length
                    ::contents]))
 
 ;; Putting it all together
