@@ -47,9 +47,10 @@
 (defn- mergeable-json
   "Checks that json is returned, and that it is mergeable"
   [{:keys [json]}]
-  (when (and json
-             (map? json))
-    json))
+  (if (and json
+           (map? json))
+    json
+    (log/errorf "Cannot merge JSON: %s" (pr-str json))))
 
 (defn- wrapped-parse-json
   "Wraps `parse-json` in a try-catch block, returning a map with :json
@@ -57,7 +58,9 @@
   [data]
   (try {:json (u/parse-json data)}
        (catch Exception ex
-         {:exception ex})))
+         (do
+           (log/error (.getMessage ex))
+           {:exception ex}))))
 
 (defn- doc->json
   "Given a document map with `:contents` property, return the parsed
@@ -74,9 +77,9 @@
 
 (defn- invalid-merge-error
   [old-doc input]
-  (log/errorf (format "Invalid document merge:\nOld document: %s\nNew document: %s" 
-                      (pr-str old-doc)
-                      (pr-str input)))
+  (log/errorf "Invalid document merge:\nOld document: %s\nNew document: %s"
+              (pr-str old-doc)
+              (pr-str input))
   {:error
    (ex-info "Invalid Merge"
             {:type :com.yetanalytics.lrs.xapi.document/invalid-merge
@@ -85,8 +88,8 @@
 
 (defn- json-read-error
   [input]
-  (log/errorf (format "Invalid JSON object:\nDocument: %s"
-                      (pr-str input)))
+  (log/errorf "Invalid JSON object:\nDocument: %s"
+              (pr-str input))
   {:error
    (ex-info "Invalid JSON object"
             {:type :com.yetanalytics.lrs.xapi.document/json-read-error
