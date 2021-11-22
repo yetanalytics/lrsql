@@ -54,7 +54,9 @@
                                 merge-user-config)]
     ;; form the final config the app will use
     {:connection (assoc connection :database database)
-     :lrs        (assoc lrs :stmt-url-prefix (:url-prefix webserver))
+     :lrs        (assoc lrs
+                        :stmt-url-prefix (:url-prefix webserver)
+                        :enable-stmt-html (:enable-stmt-html webserver))
      :webserver  webserver}))
 
 (def read-config
