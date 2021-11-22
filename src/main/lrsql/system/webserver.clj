@@ -46,7 +46,7 @@
      ::http/host               http-host
      ::http/port               (when enable-http http-port) ; nil = no HTTP
      ::http/join?              false
-     ::i/url-prefix            url-prefix ; TODO: This is never used in lrs
+     ::i/path-prefix           url-prefix
      ::i/enable-statement-html enable-stmt-html
      ::http/allowed-origins
      {:creds           true
