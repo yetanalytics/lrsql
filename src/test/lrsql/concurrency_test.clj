@@ -54,7 +54,7 @@
                     "X-Experience-API-Version" "1.0.3"}
         basic-auth ["username" "password"]
         ;; Parameters
-        endpoint    "http://localhost:8080/yet/xapi/statements"
+        endpoint    "http://localhost:8080/xapi/statements"
         num-stmts   100
         batch-size  5
         num-threads 5
