@@ -15,14 +15,15 @@
 (deftest https-test
   (testing "HTTPS connection"
     (let [sys  (support/test-system)
-          sys' (component/start sys)]
+          sys' (component/start sys)
+          pre  (-> sys' :webserver :config :url-prefix)]
       ;; We need to pass the `--insecure` arg because curl would otherwise
       ;; not accept our generate selfie certs
       (is (= 200
              (:status (curl/get "https://0.0.0.0:8443/health"
                                 {:raw-args ["--insecure"]}))))
       (is (some?
-           (:body (curl/get "https://0.0.0.0:8443/xapi/about"
+           (:body (curl/get (format "https://0.0.0.0:8443%s/about" pre)
                             {:raw-args ["--insecure"]}))))
       (testing "is not over the HTTP port"
         (is (thrown-with-msg?
