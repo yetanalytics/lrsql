@@ -22,7 +22,7 @@
              (:status (curl/get "https://0.0.0.0:8443/health"
                                 {:raw-args ["--insecure"]}))))
       (is (some?
-           (:body (curl/get "https://0.0.0.0:8443/xapi/about"
+           (:body (curl/get "https://0.0.0.0:8443/yet/xapi/about"
                             {:raw-args ["--insecure"]}))))
       (testing "is not over the HTTP port"
         (is (thrown-with-msg?

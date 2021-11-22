@@ -9,6 +9,6 @@
  :ssl-port          8443
  :http-host         "0.0.0.0"
  :http-port         8080
- :url-prefix        "/xapi"
+ :url-prefix        "/yet/xapi"
  :enable-admin-ui   true
  :enable-stmt-html  true}
