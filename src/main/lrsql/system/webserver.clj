@@ -30,9 +30,9 @@
         ;; The private key is used as the JWT symmetric secret
         {:keys [keystore
                 private-key]} (cu/init-keystore config)
-
         ;; Make routes
-        routes (->> (build {:lrs lrs})
+        routes (->> (build {:lrs         lrs
+                            :path-prefix url-prefix})
                     (add-admin-routes {:lrs    lrs
                                        :exp    jwt-exp
                                        :leeway jwt-lwy
