@@ -29,6 +29,7 @@
   (curl/post "http://0.0.0.0:8080/admin/account/create"
              {:headers headers
               :body    body}))
+
 (defn- get-env
   [headers]
   (curl/get "http://0.0.0.0:8080/admin/env"
