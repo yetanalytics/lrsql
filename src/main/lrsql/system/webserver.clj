@@ -37,9 +37,7 @@
                                        :exp    jwt-exp
                                        :leeway jwt-lwy
                                        :secret private-key
-                                       :enable-admin-ui enable-admin-ui
-                                       :enable-stmt-html enable-stmt-html
-                                       :url-prefix url-prefix}))]
+                                       :enable-admin-ui enable-admin-ui}))]
     {:env                      :prod
      ::http/routes             routes
      ;; only serve assets if the admin ui is enabled

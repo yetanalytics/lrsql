@@ -77,7 +77,7 @@
      :route-name :lrsql.admin.creds/delete]})
 
 (defn admin-ui-routes
-  [common-interceptors enable-stmt-html url-prefix]
+  [common-interceptors]
   #{;; Redirect root to admin UI
     ["/" :get `ui/admin-ui-redirect
      :route-name :lrsql.admin.ui/root-redirect]
@@ -88,18 +88,17 @@
     ["/admin/" :get `ui/admin-ui-redirect
      :route-name :lrsql.admin.ui/slash-redirect]
     ["/admin/env" :get (conj common-interceptors
-                             (ui/get-env enable-stmt-html url-prefix))
+                             ui/get-env)
      :route-name :lrsql.admin.ui/get-env]})
 
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
    add additional routes specific to creating and updating admin
    accounts."
-  [{:keys [lrs exp leeway secret enable-admin-ui enable-stmt-html url-prefix]} routes]
+  [{:keys [lrs exp leeway secret enable-admin-ui]} routes]
   (let [common-interceptors (make-common-interceptors lrs)]
     (cset/union routes
                 (admin-account-routes common-interceptors secret exp leeway)
                 (admin-cred-routes common-interceptors secret leeway)
                 (when enable-admin-ui
-                  (admin-ui-routes common-interceptors
-                                   enable-stmt-html url-prefix)))))
+                  (admin-ui-routes common-interceptors)))))

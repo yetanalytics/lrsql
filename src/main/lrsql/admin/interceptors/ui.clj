@@ -7,13 +7,14 @@
   [_]
   (resp/redirect "/admin/index.html"))
 
-(defn get-env
+(def get-env
   "Provide select config data to client upon request"
-  [enable-stmt-html url-prefix]
   (interceptor
    {:name ::get-env
     :enter
     (fn get-env [ctx]
-      (assoc ctx :response
-             {:status 200 :body {:urlPrefix      url-prefix
-                                 :enableStmtHtml enable-stmt-html}}))}))
+      (let [{url-prefix :com.yetanalytics.lrs.pedestal.interceptor/path-prefix
+             enable-stmt-html :com.yetanalytics.lrs.pedestal.interceptor/statement-html?} ctx]
+        (assoc ctx :response
+               {:status 200 :body {:urlPrefix url-prefix
+                                   :enableStmtHtml (some? enable-stmt-html)}})))}))
