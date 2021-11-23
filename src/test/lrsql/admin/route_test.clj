@@ -30,6 +30,11 @@
              {:headers headers
               :body    body}))
 
+(defn- get-env
+  [headers]
+  (curl/get "http://0.0.0.0:8080/admin/env"
+            {:headers headers}))
+
 (defn- get-account
   [headers]
   (curl/get "http://0.0.0.0:8080/admin/account"
@@ -72,6 +77,12 @@
     (testing "seed jwt retrieved"
       ;; Sanity check that the test credentials are in place
       (is (some? seed-jwt)))
+    (testing "got environment vars"
+      (let [{:keys [status body]} (get-env content-type)
+            edn-body (u/parse-json body)]
+        (is (= 200 status))
+        (is (= (get edn-body "url-prefix") "/xapi"))
+        (is (= (get edn-body "enable-stmt-html") true))))
     (testing "create account with username `myname` and password `swordfish`"
       (let [{:keys [status
                     body]} (create-account headers req-body)

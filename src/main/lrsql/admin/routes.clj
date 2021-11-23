@@ -76,7 +76,8 @@
                                   ci/delete-api-keys)
      :route-name :lrsql.admin.creds/delete]})
 
-(def admin-ui-routes
+(defn admin-ui-routes
+  [common-interceptors]
   #{;; Redirect root to admin UI
     ["/" :get `ui/admin-ui-redirect
      :route-name :lrsql.admin.ui/root-redirect]
@@ -85,7 +86,10 @@
      :route-name :lrsql.admin.ui/path-redirect]
     ;; Redirect admin with slash to admin UI
     ["/admin/" :get `ui/admin-ui-redirect
-     :route-name :lrsql.admin.ui/slash-redirect]})
+     :route-name :lrsql.admin.ui/slash-redirect]
+    ["/admin/env" :get (conj common-interceptors
+                             ui/get-env)
+     :route-name :lrsql.admin.ui/get-env]})
 
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
@@ -97,4 +101,4 @@
                 (admin-account-routes common-interceptors secret exp leeway)
                 (admin-cred-routes common-interceptors secret leeway)
                 (when enable-admin-ui
-                  admin-ui-routes))))
+                  (admin-ui-routes common-interceptors)))))
