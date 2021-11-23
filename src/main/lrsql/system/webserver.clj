@@ -32,7 +32,8 @@
                 private-key]} (cu/init-keystore config)
 
         ;; Make routes
-        routes (->> (build {:lrs lrs})
+        routes (->> (build {:lrs         lrs
+                            :path-prefix url-prefix})
                     (add-admin-routes {:lrs    lrs
                                        :exp    jwt-exp
                                        :leeway jwt-lwy
@@ -46,7 +47,7 @@
      ::http/host               http-host
      ::http/port               (when enable-http http-port) ; nil = no HTTP
      ::http/join?              false
-     ::i/url-prefix            url-prefix ; TODO: This is never used in lrs
+     ::i/path-prefix           url-prefix
      ::i/enable-statement-html enable-stmt-html
      ::http/allowed-origins
      {:creds           true

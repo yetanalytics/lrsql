@@ -49,12 +49,13 @@
 (deftest concurrency-test
   (let [sys        (support/test-system)
         sys'       (component/start sys)
+        url-prefix (-> sys' :webserver :config :url-prefix)
         ;; Curl
         headers    {"Content-Type"             "application/json"
                     "X-Experience-API-Version" "1.0.3"}
         basic-auth ["username" "password"]
         ;; Parameters
-        endpoint    "http://localhost:8080/xapi/statements"
+        endpoint    (format "http://localhost:8080%s/statements" url-prefix)
         num-stmts   100
         batch-size  5
         num-threads 5

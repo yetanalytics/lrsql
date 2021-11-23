@@ -134,7 +134,9 @@
 (deftest test-statement-fns
   (let [sys   (support/test-system)
         sys'  (component/start sys)
-        lrs   (:lrs sys')
+        lrs   (-> sys' :lrs)
+        pre   (-> sys' :webserver :config :url-prefix)
+        _     (println pre)
         id-0  (get stmt-0 "id")
         id-1  (get stmt-1 "id")
         id-2  (get stmt-2 "id")
@@ -268,7 +270,7 @@
       (testing "(descending)"
         (is (= {:statement-result
                 {:statements [stmt-4 stmt-3]
-                 :more       "/xapi/statements?limit=2&from="}
+                 :more       (format "%s/statements?limit=2&from=" pre)}
                 :attachments []}
                (-> (get-ss lrs auth-ident {:limit 2} #{})
                    (update-in [:statement-result :more]
@@ -282,7 +284,8 @@
     (testing "(ascending)"
       (is (= {:statement-result
               {:statements [stmt-1 stmt-2]
-               :more       "/xapi/statements?limit=2&ascending=true&from="}
+               :more       (format "%s/statements?limit=2&ascending=true&from="
+                                   pre)}
               :attachments []}
              (-> (get-ss lrs auth-ident {:limit 2 :ascending true} #{})
                  (update-in [:statement-result :more]
@@ -304,7 +307,8 @@
                     :related_agents true}]
         (is (= {:statement-result
                 {:statements [stmt-3]
-                 :more       (str "/xapi/statements"
+                 :more       (str pre
+                                  "/statements"
                                   "?" "limit=1"
                                   "&" "agent=%7B%22name%22%3A%22Sample+Agent+1%22%2C%22mbox%22%3A%22mailto%3Asample.agent%40example.com%22%7D"
                                   "&" "related_agents=true"
