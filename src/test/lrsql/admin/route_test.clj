@@ -81,8 +81,8 @@
       (let [{:keys [status body]} (get-env content-type)
             edn-body (u/parse-json body)]
         (is (= 200 status))
-        (is (= (get edn-body "urlPrefix") "/xapi"))
-        (is (= (get edn-body "enableStmtHtml") true))))
+        (is (= (get edn-body "url-prefix") "/xapi"))
+        (is (= (get edn-body "enable-stmt-html") true))))
     (testing "create account with username `myname` and password `swordfish`"
       (let [{:keys [status
                     body]} (create-account headers req-body)
