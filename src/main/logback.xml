@@ -4,6 +4,8 @@
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover -->
       <fileNamePattern>logs/lrsql.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <maxHistory>60</maxHistory> <!-- Purge archives after 60 days... -->
+      <totalSizeCap>1GB</totalSizeCap> <!-- or 1GB, whichever comes first -->
     </rollingPolicy>
     <encoder>
       <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
