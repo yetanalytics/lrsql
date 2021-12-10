@@ -3,7 +3,7 @@
             [com.stuartsierra.component :as component]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config make-jdbc-url]])
+            [lrsql.system.util :as cu :refer [assert-config make-jdbc-url]])
   (:import [com.zaxxer.hikari HikariConfig HikariDataSource]
            [com.codahale.metrics MetricRegistry]
            [com.codahale.metrics.jmx JmxReporter]))
@@ -97,7 +97,7 @@
       (if-not ?conn-pool
         (let [conn-pool (make-conn-pool backend config)]
           (log/infof "Starting new connection for %s database..." db-type)
-          (log/debugf "Config: %s" config)
+          (log/debugf "Config: %s" (cu/redact-config-vars config))
           (assoc conn :conn-pool conn-pool))
         (do
           (log/info "Connection already started; do nothing.")

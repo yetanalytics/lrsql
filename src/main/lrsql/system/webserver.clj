@@ -7,7 +7,7 @@
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config]]
+            [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]))
 
 (defn- service-map
@@ -70,7 +70,7 @@
    (assert-config ::cs/webserver "webserver" config)
    (if server
      (do (log/info "Webserver already started; do nothing.")
-         (log/debugf "Server map: %s" server)
+         (log/debugf "Server map: %s" (redact-config-vars server))
          this)
      (if lrs
        (let [service (or service ;; accept passed in
@@ -92,7 +92,7 @@
                         host
                         ssl-port)))
          (log/info logo)
-         (log/debugf "Server map: %s" server)
+         (log/debugf "Server map: %s" (redact-config-vars server))
          ;; Return new webserver
          (assoc this
                 :service service
