@@ -10,9 +10,9 @@
 
 (defn- make-common-interceptors
   [lrs]
-  [i/x-forwarded-for-interceptor
+  [i/error-interceptor
+   i/x-forwarded-for-interceptor
    json-body
-   i/error-interceptor
    (body-params)
    (i/lrs-interceptor lrs)])
 
