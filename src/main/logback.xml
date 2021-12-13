@@ -19,11 +19,4 @@
     <appender-ref ref="FILE" />
   </root>
   <logger name="io.pedestal.http" level="warn" />
-  <!--IMPORTANT: We need to turn Pedestal logging off because on an
-      error, Pedestal will spew out the entire request/response map,
-      which may contain sensitive info.-->
-  <!--TODO: Perhaps we can create a custom error logger to replace
-      Pedestal's logger that applies redaction to the request/response
-      map before logging?-->
-  <logger name="io.pedestal.http.impl.servlet-interceptor" level="off" />
 </configuration>
