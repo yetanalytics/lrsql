@@ -34,7 +34,7 @@
   ;; Yet Analytics deps
   com.yetanalytics/lrs
   {:git/url    "https://github.com/yetanalytics/lrs.git"
-   :git/sha    "69aa67e5345f9101002dc4880621180fa8ac4390"
+   :git/sha    "d940f9264455ef083e37e7f216a576debaded4d9"
    ; :git/sha    "c4ddd589a1559bcaeee256857eed7516cf05d6e2"
    ; :git/tag    "v1.2.1"
    :exclusions [org.clojure/clojure
