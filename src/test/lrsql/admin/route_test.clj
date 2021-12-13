@@ -113,16 +113,27 @@
                  (catch Exception _ false)))
         (is (re-matches #".*\..*\..*"
                         (get edn-body "json-web-token"))))
+      ;; Parse errors
+      (testing "- failure due to JSONEOFException"
+        (let [bad-body "{\"username\": \"foo\", \"password\": \"bar}"]
+          (is-err-code (login-account content-type bad-body) 400)))
+      (testing "- failure due to JSONParseException"
+        (let [bad-body "{\"username\": \"foo\", \"password\": bar\"}"]
+          (is-err-code (login-account content-type bad-body) 400)))
+      ;; Other errors
       (let [bad-body (String. (u/write-json
                                {"username" "foo"
                                 "password" "swordfish"}))]
-        (is-err-code (login-account content-type bad-body) 401))  ; Bad User 401
+        ;; Bad User 401
+        (is-err-code (login-account content-type bad-body) 401))
       (let [bad-body (String. (u/write-json
                                {"username" "myname"
                                 "password" "badpass"}))]
-        (is-err-code (login-account content-type bad-body) 401))  ; Bad Pass 401
+        ;; Bad Pass 401
+        (is-err-code (login-account content-type bad-body) 401))
+      ;; Bad Request
       (let [bad-body ""]
-        (is-err-code (login-account content-type bad-body) 400))) ; Bad Request
+        (is-err-code (login-account content-type bad-body) 400)))
     (testing "delete the `myname` account using the seed account"
       (let [del-jwt  (-> (login-account content-type req-body)
                          :body

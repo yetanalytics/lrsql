@@ -8,7 +8,8 @@
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
-            [lrsql.util.cert :as cu]))
+            [lrsql.util.cert :as cu]
+            [lrsql.util.interceptor :refer [handle-json-parse-exn]]))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -34,7 +35,8 @@
         ;; start to all lrs routes
         routes (->> (build {:lrs               lrs
                             :path-prefix       url-prefix
-                            :wrap-interceptors [i/error-interceptor]})
+                            :wrap-interceptors [i/error-interceptor
+                                                (handle-json-parse-exn)]})
                     (add-admin-routes {:lrs    lrs
                                        :exp    jwt-exp
                                        :leeway jwt-lwy

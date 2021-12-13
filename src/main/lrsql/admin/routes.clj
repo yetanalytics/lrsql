@@ -6,11 +6,13 @@
             [lrsql.admin.interceptors.account :as ai]
             [lrsql.admin.interceptors.credentials :as ci]
             [lrsql.admin.interceptors.ui :as ui]
-            [lrsql.admin.interceptors.jwt :as ji]))
+            [lrsql.admin.interceptors.jwt :as ji]
+            [lrsql.util.interceptor :as util-i]))
 
 (defn- make-common-interceptors
   [lrs]
   [i/error-interceptor
+   (util-i/handle-json-parse-exn true)
    i/x-forwarded-for-interceptor
    json-body
    (body-params)
