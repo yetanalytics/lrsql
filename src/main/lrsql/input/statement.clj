@@ -340,8 +340,8 @@
 (defn- warn-on-dupe-shas
   [attachments shas]
   (when (not= (count attachments) (count shas))
-    (log/warnf "%s\nAttachments: %s"
-               duplicate-sha-emsg
+    (log/warn duplicate-sha-emsg)
+    (log/debug "Attachments: %s"
                (mapv #(dissoc % :content) attachments))))
 
 (defn add-insert-attachment-inputs

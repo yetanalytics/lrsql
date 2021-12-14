@@ -7,8 +7,9 @@
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config]]
-            [lrsql.util.cert :as cu]))
+            [lrsql.system.util :refer [assert-config redact-config-vars]]
+            [lrsql.util.cert :as cu]
+            [lrsql.util.interceptor :refer [handle-json-parse-exn]]))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -30,10 +31,12 @@
         ;; The private key is used as the JWT symmetric secret
         {:keys [keystore
                 private-key]} (cu/init-keystore config)
-
-        ;; Make routes
-        routes (->> (build {:lrs         lrs
-                            :path-prefix url-prefix})
+        ;; Make routes - the lrs error interceptor is appended to the
+        ;; start to all lrs routes
+        routes (->> (build {:lrs               lrs
+                            :path-prefix       url-prefix
+                            :wrap-interceptors [i/error-interceptor
+                                                (handle-json-parse-exn)]})
                     (add-admin-routes {:lrs    lrs
                                        :exp    jwt-exp
                                        :leeway jwt-lwy
@@ -70,7 +73,7 @@
    (assert-config ::cs/webserver "webserver" config)
    (if server
      (do (log/info "Webserver already started; do nothing.")
-         (log/debugf "Server map: %s" server)
+         (log/debugf "Server map: %s" (redact-config-vars server))
          this)
      (if lrs
        (let [service (or service ;; accept passed in
@@ -92,7 +95,7 @@
                         host
                         ssl-port)))
          (log/info logo)
-         (log/debugf "Server map: %s" server)
+         (log/debugf "Server map: %s" (redact-config-vars server))
          ;; Return new webserver
          (assoc this
                 :service service
