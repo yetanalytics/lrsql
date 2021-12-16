@@ -27,7 +27,7 @@ resources/public/admin:
 .phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench, bench-async, check-vuln
 
 clean-dev:
-	rm -rf *.db *.log resources/public tmp
+	rm -rf *.db *.log resources/public tmp target/nvd
 
 # Tests
 
@@ -75,8 +75,10 @@ bench-async:
 
 # Vulnerability check
 
-check-vuln:
+target/nvd:
 	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-h2:db-sqlite:db-postgres)"'"'
+
+check-vuln: target/nvd
 
 # *** Build ***
 
