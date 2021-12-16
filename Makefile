@@ -75,10 +75,8 @@ bench-async:
 
 # Vulnerability check
 
-CLASSPATH ?= $(shell clojure -Spath -A:db-h2:db-sqlite:db-postgres)
-
 check-vuln:
-	clojure -Xnvd check :classpath '"'"${CLASSPATH}"'"'
+	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-h2:db-sqlite:db-postgres)"'"'
 
 # *** Build ***
 
