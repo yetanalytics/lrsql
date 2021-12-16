@@ -23,7 +23,10 @@
   com.layerware/hugsql-adapter-next-jdbc   {:mvn/version "0.5.1"}
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
-  ;; Jetty webserver deps
+  ;; Pedestal and Jetty webserver deps
+  ;; TODO: The ring-core and jetty-* deps are temporary patches to
+  ;; fix CVEs until the Pedestal lib is updated.
+  ring/ring-core                           {:mvn/version "1.9.4"}
   io.pedestal/pedestal.jetty               {:mvn/version "0.5.9"}
   org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.35.v20201120"}
   ;; Security deps
