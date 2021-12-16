@@ -129,4 +129,7 @@
   {:extra-deps  {markdown-clj/markdown-clj {:mvn/version "1.10.5"}
                  ;; git dep for pulling version
                  clj-jgit/clj-jgit         {:mvn/version "1.0.1"}}
-   :extra-paths ["src/doc"]}}}
+   :extra-paths ["src/doc"]}
+  :nvd
+  {:replace-deps {nvd-clojure/nvd-clojure {:mvn/version "1.9.0"}}
+   :ns-default   nvd.task}}}
