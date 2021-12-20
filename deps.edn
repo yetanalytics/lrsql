@@ -126,7 +126,9 @@
   {:extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
    :extra-paths ["src/build"]}
   :doc
-  {:extra-deps  {markdown-clj/markdown-clj {:mvn/version "1.10.5"}
-                 ;; git dep for pulling version
-                 clj-jgit/clj-jgit         {:mvn/version "1.0.1"}}
-   :extra-paths ["src/doc"]}}}
+  {:replace-deps {com.yetanalytics/markdoc {:git/url "https://github.com/yetanalytics/markdoc"
+                                            :sha "1a57b934dc92e539e858223ef33eb6a5fcf439a0"}}
+   :exec-fn      com.yetanalytics.markdoc/convert
+   :exec-args    {:in-root  "doc/"
+                  :out-root "target/bundle/doc/"
+                  :template-file "resources/lrsql/doc/docs.html.template"}}}}
