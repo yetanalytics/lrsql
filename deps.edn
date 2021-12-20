@@ -127,7 +127,7 @@
    :extra-paths ["src/build"]}
   :doc
   {:replace-deps {com.yetanalytics/markdoc {:git/url "https://github.com/yetanalytics/markdoc"
-                                            :sha "f5c23ef55a8e509794377e65881165d82649639d"}}
+                                            :sha "1a57b934dc92e539e858223ef33eb6a5fcf439a0"}}
    :exec-fn      com.yetanalytics.markdoc/convert
    :exec-args    {:in-root  "doc/"
                   :out-root "target/bundle/doc/"
