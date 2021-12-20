@@ -107,8 +107,7 @@ target/bundle/bin:
 # Create HTML docs
 
 target/bundle/doc:
-	clojure -M:doc -m lrsql.render-doc doc target/bundle/doc
-	cp -r doc/images/ target/bundle/doc/images/
+	clojure -X:doc
 
 # Copy LICENSE and NOTICE
 
