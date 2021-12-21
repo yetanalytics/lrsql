@@ -26,7 +26,6 @@
   ;; Pedestal and Jetty webserver deps
   ;; TODO: The ring-core and jetty-* deps (except for jetty-alpn-java-server)
   ;; are temporary patches to fix CVEs until the Pedestal lib is updated.
-  ring/ring-core                                {:mvn/version "1.9.4"}
   io.pedestal/pedestal.jetty                    {:mvn/version "0.5.9"}
   org.eclipse.jetty/jetty-server                {:mvn/version "9.4.44.v20210927"}
   org.eclipse.jetty/jetty-servlet               {:mvn/version "9.4.44.v20210927"}
@@ -44,8 +43,8 @@
   ;; Yet Analytics deps
   com.yetanalytics/lrs
   {:git/url    "https://github.com/yetanalytics/lrs.git"
-   :git/sha    "31af5d99bb1d7cc636f6074b9c2efe3e185dde4b"
-   :git/tag    "v1.2.2"
+   :git/sha    "a34f2c004daf9066b0282a6b63901fe07863598d"
+   :git/tag    "v1.2.3"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript
                 com.yetanalytics/xapi-schema]}
@@ -55,9 +54,7 @@
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript]}
   com.yetanalytics/colossal-squuid
-  {:git/url    "https://github.com/yetanalytics/colossal-squuid.git"
-   :git/sha    "2b96574407bfd55fa1deb21bf1e4572f6c91697a"
-   :git/tag    "v0.1.1"
+  {:mvn/version "0.1.3"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript]}}
  :aliases
