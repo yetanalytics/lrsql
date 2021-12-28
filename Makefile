@@ -24,10 +24,10 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench, bench-async
+.phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench, bench-async, check-vuln
 
 clean-dev:
-	rm -rf *.db *.log resources/public tmp
+	rm -rf *.db *.log resources/public tmp target/nvd
 
 # Tests
 
@@ -72,6 +72,13 @@ bench-async:
 		-q dev-resources/default/query_input.json \
 		-a true \
 		-u username -p password
+
+# Vulnerability check
+
+target/nvd:
+	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-h2:db-sqlite:db-postgres)"'"'
+
+check-vuln: target/nvd
 
 # *** Build ***
 
