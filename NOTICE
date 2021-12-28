@@ -1,5 +1,5 @@
 SQL LRS
-Copyright (c) 2021 Yet Analytics Inc.
+Copyright (c) 2021-2022 Yet Analytics Inc.
 
 ---------------------------------------------------------------------------------
 This software uses Clojure (https://clojure.org/)
@@ -173,7 +173,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ---------------------------------------------------------------------------------
 This software uses next.jdbc (https://github.com/seancorfield/next-jdbc)
 
-Copyright © 2018-2021 Sean Corfield
+Copyright © 2018-2022 Sean Corfield
 
 Distributed under the Eclipse Public License version 1.0 (https://www.eclipse.org/legal/epl-v10.html)
 
