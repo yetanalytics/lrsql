@@ -3,6 +3,12 @@ name: CI
 on: push
 
 jobs:
+  nvd_scan:
+    uses: yetanalytics/actions/.github/workflows/nvd-scan.yml@v0.0.2
+    with:
+      nvd-clojure-version: '2.0.0'
+      classpath-command: 'clojure -Spath -A:db-h2:db-sqlite:db-postgres'
+  
   test:
     runs-on: ubuntu-latest
   
