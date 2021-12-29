@@ -173,8 +173,6 @@ else
 target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE
 endif
 
-target/bundle:
-
 bundle: target/bundle
 
 # *** Build Windows EXEs with launch4j ***
