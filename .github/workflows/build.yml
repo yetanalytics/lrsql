@@ -8,15 +8,58 @@ on:
       - 'v*.*.*' # Enforce Semantic Versioning
 
 jobs:
+  get_modules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - id: echo-modules
+        run: echo "::set-output name=modules::$(cat .java_modules)"
+    outputs:
+      modules: ${{ steps.echo-modules.outputs.modules }}
+  build_jre:
+    needs: get_modules
+    uses: yetanalytics/runtimer/.github/workflows/runtimer.yml@3c6a902caaf0c6db272842055d9f8cca5cb3fcbc
+    with:
+      java-version: '11'
+      java-distribution: 'temurin'
+      java-modules: ${{ needs.get_modules.outputs.modules }}
   build:
     runs-on: ubuntu-latest
-
+    needs: build_jre
     steps:
     - name: Setup CI Environment
       uses: yetanalytics/actions/setup-env@v0
 
+    # BUILD WITHOUT RUNTIME
     - name: Build Bundle
-      run: make bundle
+      run: make bundle BUNDLE_RUNTIMES=false
+
+    # GET RUNTIMES FROM ARTIFACTS
+    - name: Download ubuntu-latest Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: ubuntu-20.04-jre
+
+    - name: Download macOS-latest Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: macos-10.15-jre
+
+    - name: Download windows-latest Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: windows-2019-jre
+
+    # UNZIP RUNTIMES INTO OS-SPECIFIC RUNTIME DIRS
+    - name: Unzip the runtimes
+      run: |
+        mkdir -p target/bundle/runtimes
+        unzip ubuntu-20.04-jre.zip -d target/bundle/runtimes
+        mv target/bundle/runtimes/ubuntu-20.04 target/bundle/runtimes/linux
+        unzip macos-10.15-jre.zip -d target/bundle/runtimes
+        mv target/bundle/runtimes/macos-10.15 target/bundle/runtimes/macos
+        unzip windows-2019-jre.zip -d target/bundle/runtimes
+        mv target/bundle/runtimes/windows-2019 target/bundle/runtimes/windows
 
     - name: Compress Bundle
       run: | # Need to cd so that the zip file doesn't contain the parent dirs

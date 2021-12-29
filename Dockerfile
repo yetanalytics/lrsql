@@ -1,6 +1,7 @@
 FROM alpine:3.14
 
 ADD target/bundle /lrsql
+ADD .java_modules /xapipe/.java_modules
 
 # replace the linux runtime via jlink
 RUN apk update \
@@ -9,7 +10,7 @@ RUN apk update \
         && update-ca-certificates \
         && apk add --no-cache openjdk11 \
         && mkdir -p /lrsql/runtimes \
-        && jlink --output /lrsql/runtimes/linux/ --add-modules java.base,java.logging,java.naming,java.xml,java.sql,java.transaction.xa,java.security.sasl,java.management \
+        && jlink --output /lrsql/runtimes/linux/ --add-modules $(cat /xapipe/.java_modules) \
         && apk del openjdk11 \
         && rm -rf /var/cache/apk/*
 
