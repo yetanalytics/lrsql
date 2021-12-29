@@ -54,6 +54,7 @@ The LRS uses a slightly different startup procedure depending on what SQL databa
 | H2 In-Memory | `bin/run_h2.sh` | `n/a` | In-memory H2 db mostly used for development. This will not save your data after a restart. There is not a windows executable for this mode. |
 | H2 Persistent | `bin/run_h2_persistent.sh` | `n/a` | H2 db mostly used for development. There is not a windows executable for this mode. |
 
+*NOTE:* All attachments and documents have a maximum size of 1 megabyte in H2 (the maximum size of a [variable byte array](http://www.h2database.com/html/datatypes.html#binary_varying_type) in H2). As such, we strongly recommend using SQLite over H2 for a non-external database.
 
 ##### Mac or Linux
 - In terminal/shell navigate to the root of the SQL LRS directory
