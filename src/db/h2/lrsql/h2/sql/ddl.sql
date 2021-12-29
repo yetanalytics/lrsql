@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS attachment (
   attachment_sha VARCHAR(255) NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  contents       BINARY NOT NULL, -- TODO: Switch to BLOB?
+  contents       BINARY VARYING NOT NULL, -- TODO: Switch to BLOB?
   FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
 )
 
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS state_document (
   last_modified  TIMESTAMP NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  contents       BINARY NOT NULL,
+  contents       BINARY VARYING NOT NULL,
   UNIQUE (state_id, activity_iri, agent_ifi, registration)
 )
 
@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
   last_modified  TIMESTAMP NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  contents       BINARY NOT NULL,
+  contents       BINARY VARYING NOT NULL,
   UNIQUE (profile_id, agent_ifi)
 )
 
@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
   last_modified  TIMESTAMP NOT NULL,
   content_type   VARCHAR(255) NOT NULL,
   content_length INTEGER NOT NULL,
-  contents       BINARY NOT NULL,
+  contents       BINARY VARYING NOT NULL,
   UNIQUE (profile_id, activity_iri)
 )
 
