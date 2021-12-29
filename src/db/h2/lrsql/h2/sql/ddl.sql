@@ -156,6 +156,7 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
   api_key    VARCHAR(255) NOT NULL,
   secret_key VARCHAR(255) NOT NULL,
   account_id UUID NOT NULL,
+  UNIQUE (api_key, secret_key),
   FOREIGN KEY (account_id)
     REFERENCES admin_account(id)
     ON DELETE CASCADE
