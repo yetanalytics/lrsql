@@ -1,4 +1,4 @@
-name: NVD Scan
+name: Periodic NVD Scan
 
 on:
   schedule:
