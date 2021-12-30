@@ -136,7 +136,6 @@
         sys'  (component/start sys)
         lrs   (-> sys' :lrs)
         pre   (-> sys' :webserver :config :url-prefix)
-        _     (println pre)
         id-0  (get stmt-0 "id")
         id-1  (get stmt-1 "id")
         id-2  (get stmt-2 "id")

@@ -60,7 +60,7 @@
  :aliases
  {:db-h2
   {:extra-paths ["src/db/h2"]
-   :extra-deps  {com.h2database/h2 {:mvn/version "1.4.200"}}}
+   :extra-deps  {com.h2database/h2 {:mvn/version "2.0.202"}}}
   :db-sqlite
   {:extra-paths ["src/db/sqlite"]
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
@@ -93,7 +93,7 @@
                  "src/test"
                  "dev-resources"]
    :extra-deps  {;; DB deps
-                 com.h2database/h2             {:mvn/version "1.4.200"}
+                 com.h2database/h2             {:mvn/version "2.0.202"}
                  org.xerial/sqlite-jdbc        {:mvn/version "3.36.0"}
                  org.postgresql/postgresql     {:mvn/version "42.2.23"}
                  org.testcontainers/postgresql {:mvn/version "1.16.0"}
