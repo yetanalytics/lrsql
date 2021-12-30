@@ -18,7 +18,7 @@ If you wish to change the name of the db file that SQL LRS connects to, you can 
 ```
 
 ### Deleting the Database
-Since the database is just a file, it should be no surprise that you can delete it and this will reset the LRS, starting over again from scratch. Alternatively changing the dbName variable as in the section above will keep the old file around but similarly allow you to start over fresh with a new one.
+Since the database is just a file, it should be no surprise that you can delete it and this will reset the LRS, starting over again from scratch. Alternatively changing the `dbName` variable as in the section above will keep the old file around but similarly allow you to start over fresh with a new one.
 
 *WARNING:* Keep in mind there will be no ability to recover the LRS data if the file is deleted! This includes xAPI data as well as all accounts and credentials.
 
