@@ -24,17 +24,8 @@
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
   ;; Pedestal and Jetty webserver deps
-  ;; TODO: The ring-core and jetty-* deps (except for jetty-alpn-java-server)
-  ;; are temporary patches to fix CVEs until the Pedestal lib is updated.
-  io.pedestal/pedestal.jetty                    {:mvn/version "0.5.9"}
-  org.eclipse.jetty/jetty-server                {:mvn/version "9.4.44.v20210927"}
-  org.eclipse.jetty/jetty-servlet               {:mvn/version "9.4.44.v20210927"}
-  org.eclipse.jetty/jetty-alpn-server           {:mvn/version "9.4.44.v20210927"}
-  org.eclipse.jetty.http2/http2-server          {:mvn/version "9.4.44.v20210927"}
-  org.eclipse.jetty.websocket/websocket-api     {:mvn/version "9.4.44.v20210927"}
-  org.eclipse.jetty.websocket/websocket-server  {:mvn/version "9.4.44.v20210927"}
-  org.eclipse.jetty.websocket/websocket-servlet {:mvn/version "9.4.44.v20210927"}
-  org.eclipse.jetty/jetty-alpn-java-server      {:mvn/version "9.4.44.v20210927"}
+  io.pedestal/pedestal.jetty               {:mvn/version "0.5.10"}
+  org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.44.v20210927"}
   ;; Security deps
   buddy/buddy-core                         {:mvn/version "1.10.1"}
   buddy/buddy-sign                         {:mvn/version "3.4.1"}
@@ -43,8 +34,8 @@
   ;; Yet Analytics deps
   com.yetanalytics/lrs
   {:git/url    "https://github.com/yetanalytics/lrs.git"
-   :git/sha    "a34f2c004daf9066b0282a6b63901fe07863598d"
-   :git/tag    "v1.2.3"
+   :git/sha    "4741cb1eb20a281abc1579e7d41a1d2056571dbf"
+   :git/tag    "v1.2.4"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript
                 com.yetanalytics/xapi-schema]}
