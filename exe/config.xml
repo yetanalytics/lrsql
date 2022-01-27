@@ -3,12 +3,11 @@
   <dontWrapJar>true</dontWrapJar>
   <headerType>console</headerType>
   <classPath>
-    <mainClass>clojure.main</mainClass>
+    <mainClass>lrsql.sqlite.main</mainClass>
     <cp>lrsql.jar</cp>
   </classPath>
   <outfile>lrsql.exe</outfile>
   <errTitle>You must have Java 11+ installed to run SQL LRS</errTitle>
-  <cmdLine>-m lrsql.sqlite.main</cmdLine>
   <chdir>.</chdir>
   <priority>normal</priority>
   <downloadUrl>http://java.com/download</downloadUrl>
