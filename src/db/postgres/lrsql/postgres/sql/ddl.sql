@@ -223,7 +223,7 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
     REFERENCES admin_account(id)
     ON DELETE CASCADE
 );
-CREATE INDEX IF NOT EXISTS cred_account_fk ON lrs_credential(account_id)
+CREATE INDEX IF NOT EXISTS cred_account_fk ON lrs_credential(account_id);
 
 -- :name create-credential-to-scope-table!
 -- :command :execute
@@ -238,4 +238,4 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
     REFERENCES lrs_credential(api_key, secret_key)
     ON DELETE CASCADE
 );
-CREATE INDEX IF NOT EXISTS cred_keypair_fk ON credential_to_scope(api_key, secret_key)
+CREATE INDEX IF NOT EXISTS cred_keypair_fk ON credential_to_scope(api_key, secret_key);
