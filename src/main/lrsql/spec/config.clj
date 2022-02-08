@@ -20,6 +20,8 @@
 (s/def ::db-schema string?)
 (s/def ::db-catalog string?)
 
+(s/def ::test-db-version string?)
+
 (s/def ::database
   (s/and (s/conformer u/remove-nil-vals)
          (s/conformer u/remove-neg-vals)
@@ -32,13 +34,15 @@
                                 ::db-user
                                 ::db-password
                                 ::db-schema
-                                ::db-catalog])
+                                ::db-catalog
+                                ::test-db-version])
                :jdbc-url
                (s/keys :req-un [::db-jdbc-url]
                        :opt-un [::db-user
                                 ::db-password
                                 ::db-schema
-                                ::db-catalog]))))
+                                ::db-catalog
+                                ::test-db-version]))))
 
 (s/def ::pool-auto-commit boolean?)
 (s/def ::pool-initialization-fail-timeout int?)
