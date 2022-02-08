@@ -91,7 +91,8 @@
 (defn fresh-postgres-fixture
   [f]
   (let [id-str (str (UUID/randomUUID))
-        pg-cfg (let [{{{:keys [db-type db-host db-port]}
+        pg-cfg (let [{{{:keys [db-type db-host db-port
+                               test-db-version]}
                        :database} :connection :as raw-cfg}
                      (read-config :test-postgres)]
                  (assoc-in
@@ -102,7 +103,9 @@
                        :host   db-host
                        :port   db-port}
                       jdbc-url
-                      (cstr/replace #"postgresql:" "tc:postgresql:"))))]
+                      (cstr/replace #"postgresql:"
+                                    (format "tc:postgresql:%s:"
+                                            test-db-version)))))]
     (with-redefs
      [read-config (constantly pg-cfg)
       test-system (fn []
