@@ -89,7 +89,8 @@
 ;; `tc`-prefixed DB types.
 
 (defn fresh-postgres-fixture
-  [f]
+  [f & {:keys [version]
+        :or {version "latest"}}]
   (let [id-str (str (UUID/randomUUID))
         pg-cfg (let [{{{:keys [db-type db-host db-port]}
                        :database} :connection :as raw-cfg}
@@ -102,7 +103,9 @@
                        :host   db-host
                        :port   db-port}
                       jdbc-url
-                      (cstr/replace #"postgresql:" "tc:postgresql:"))))]
+                      (cstr/replace #"postgresql:"
+                                    (format "tc:postgresql:%s:"
+                                            version)))))]
     (with-redefs
      [read-config (constantly pg-cfg)
       test-system (fn []
