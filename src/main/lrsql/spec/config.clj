@@ -20,6 +20,7 @@
 (s/def ::db-schema string?)
 (s/def ::db-catalog string?)
 
+;; This is used in testing only, not configurable for production
 (s/def ::test-db-version string?)
 
 (s/def ::database
