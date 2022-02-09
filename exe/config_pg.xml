@@ -3,12 +3,11 @@
   <dontWrapJar>true</dontWrapJar>
   <headerType>console</headerType>
   <classPath>
-    <mainClass>clojure.main</mainClass>
+    <mainClass>lrsql.postgres.main</mainClass>
     <cp>lrsql.jar</cp>
   </classPath>
   <outfile>lrsql_pg.exe</outfile>
   <errTitle>You must have Java 11+ installed to run SQL LRS</errTitle>
-  <cmdLine>-m lrsql.postgres.main</cmdLine>
   <chdir>.</chdir>
   <priority>normal</priority>
   <downloadUrl>http://java.com/download</downloadUrl>
