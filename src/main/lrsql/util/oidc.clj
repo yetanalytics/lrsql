@@ -2,6 +2,7 @@
   "OpenID Connect Utilities"
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as cs]
+            [com.yetanalytics.lrs.auth :as lrs-auth]
             [com.yetanalytics.pedestal-oidc.discovery :as disco]
             [com.yetanalytics.pedestal-oidc.interceptor :as oidc-i]
             [com.yetanalytics.pedestal-oidc.jwt :as jwt]
@@ -81,3 +82,39 @@
   [scope-str]
   (keep auth/scope-str->kw
        (cs/split scope-str #"\s")))
+
+(s/fdef token-auth-identity
+  :args (s/cat :ctx map?)
+  :ret (s/nilable
+        ::lrs-auth/identity))
+
+(defn token-auth-identity
+  "For the given context, return a valid auth identity from token claims. If no
+  claims are present, return nil"
+  [ctx]
+  (when-let [token (:com.yetanalytics.pedestal-oidc/token ctx)]
+    (let [{:keys [scope
+                  iss
+                  azp
+                  sub]} (get-in ctx
+                                [:request
+                                 :com.yetanalytics.pedestal-oidc/claims])]
+      {:result
+       (if-let [scopes (some-> scope
+                               parse-scope-claim
+                               not-empty
+                               (->> (into #{})))]
+         (let [;; Roughly following https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#oauth-credentials-as-authority
+               authority {"objectType" "Group"
+                          "member"     [{"account"
+                                         {"homePage" iss
+                                          "name"     azp}}
+                                        {"account"
+                                         {"homePage" iss
+                                          "name"     sub}}]}]
+           {:scopes scopes
+            :prefix ""
+            :auth   {:token token}
+            :agent  authority})
+         ;; no valid scopes, can't do anything
+         :com.yetanalytics.lrs.auth/unauthorized)})))

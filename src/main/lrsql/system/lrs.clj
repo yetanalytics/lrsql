@@ -28,7 +28,8 @@
             [lrsql.util.auth      :as auth-util]
             [lrsql.util.statement :as stmt-util]
             [lrsql.init.authority   :refer [make-authority-fn]]
-            [lrsql.util.concurrency :refer [with-rerunable-txn]])
+            [lrsql.util.concurrency :refer [with-rerunable-txn]]
+            [lrsql.util.oidc :as oidc])
   (:import [java.time Instant]))
 
 (defn- lrs-conn
@@ -196,18 +197,22 @@
   lrsp/LRSAuth
   (-authenticate
     [lrs ctx]
-    (let [conn   (lrs-conn lrs)
-          header (get-in ctx [:request :headers "authorization"])]
-      (if-some [key-pair (auth-util/header->key-pair header)]
-        (let [{:keys [authority-url]} config
-              input (auth-input/query-credential-scopes-input
-                     authority-fn
-                     authority-url
-                     key-pair)]
-          (jdbc/with-transaction [tx conn]
-            (auth-q/query-credential-scopes backend tx input)))
-        ;; No authorization header = no entry
-        {:result :com.yetanalytics.lrs.auth/unauthorized})))
+    (or
+     ;; Token Authentication
+     (oidc/token-auth-identity ctx)
+     ;; Basic Authentication
+     (let [conn   (lrs-conn lrs)
+           header (get-in ctx [:request :headers "authorization"])]
+       (if-some [key-pair (auth-util/header->key-pair header)]
+         (let [{:keys [authority-url]} config
+               input (auth-input/query-credential-scopes-input
+                      authority-fn
+                      authority-url
+                      key-pair)]
+           (jdbc/with-transaction [tx conn]
+             (auth-q/query-credential-scopes backend tx input)))
+         ;; No authorization header = no entry
+         {:result :com.yetanalytics.lrs.auth/unauthorized}))))
   (-authorize
     [_lrs ctx auth-identity]
     (auth-util/authorize-action ctx auth-identity))
