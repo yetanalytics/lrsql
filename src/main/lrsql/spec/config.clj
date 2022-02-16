@@ -148,9 +148,9 @@
 (s/def ::enable-admin-ui boolean?)
 (s/def ::enable-stmt-html boolean?)
 
-(s/def ::openid-issuer string?)
-(s/def ::openid-config string?)
-(s/def ::jwks-uri string?)
+(s/def ::openid-issuer (s/nilable string?))
+(s/def ::openid-config (s/nilable string?))
+(s/def ::jwks-uri (s/nilable string?))
 
 (s/def ::webserver
   (s/keys :req-un [::http-host
