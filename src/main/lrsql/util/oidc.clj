@@ -1,9 +1,11 @@
 (ns lrsql.util.oidc
   "OpenID Connect Utilities"
   (:require [clojure.spec.alpha :as s]
+            [clojure.string :as cs]
             [com.yetanalytics.pedestal-oidc.discovery :as disco]
             [com.yetanalytics.pedestal-oidc.interceptor :as oidc-i]
             [com.yetanalytics.pedestal-oidc.jwt :as jwt]
+            [lrsql.util.auth :as auth]
             [lrsql.spec.config :as config]
             [io.pedestal.interceptor :as i]))
 
@@ -70,3 +72,12 @@
         {:type ::init-failure
          :oidc-config (select-config config)}
         ex)))))
+
+(s/fdef parse-scope-claim
+  :args (s/cat :scope-str string?)
+  :ret (s/every ::auth/scope))
+
+(defn parse-scope-claim
+  [scope-str]
+  (keep auth/scope-str->kw
+       (cs/split scope-str #"\s")))
