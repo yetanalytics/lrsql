@@ -61,8 +61,4 @@
     (is (nil?
          (token-auth-identity
           {:request
-           {:com.yetanalytics.pedestal-oidc/claims
-            {:scope "openid all"
-             :iss   "http://example.com/realm"
-             :azp   "someapp"
-             :sub   "1234"}}})))))
+           {}})))))
