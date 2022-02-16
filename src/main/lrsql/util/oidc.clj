@@ -1,7 +1,6 @@
 (ns lrsql.util.oidc
   "OpenID Connect Utilities"
   (:require [clojure.spec.alpha :as s]
-            [clojure.string :as cs]
             [com.yetanalytics.pedestal-oidc.discovery :as disco]
             [lrsql.spec.config :as config]))
 
