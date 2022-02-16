@@ -148,6 +148,10 @@
 (s/def ::enable-admin-ui boolean?)
 (s/def ::enable-stmt-html boolean?)
 
+(s/def ::openid-issuer string?)
+(s/def ::openid-config string?)
+(s/def ::jwks-uri string?)
+
 (s/def ::webserver
   (s/keys :req-un [::http-host
                    ::http-port
@@ -164,7 +168,10 @@
                    ::enable-stmt-html]
           :opt-un [::key-file
                    ::key-pkey-file
-                   ::key-cert-chain]))
+                   ::key-cert-chain
+                   ::openid-issuer
+                   ::openid-config
+                   ::jwks-uri]))
 
 (def config-spec
   (s/keys :req-un [::connection
