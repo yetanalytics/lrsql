@@ -62,7 +62,8 @@
                    (get (reset! keyset-cache (jwt/get-keyset jwks-uri))
                         kid))))
           :required? false)
-         ;; TODO: parse out scopes + authorize
+         ;; This is a vector in case we need additional interceptors. At present
+         ;; we do not.
          ])
       ;; If no config, don't return any
       [])
