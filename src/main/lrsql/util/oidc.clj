@@ -3,6 +3,7 @@
   (:require [clojure.core.memoize :as mem]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as sgen]
             [clojure.string :as cs]
             [clojure.tools.logging :as log]
             [com.yetanalytics.lrs.auth :as lrs-auth]
@@ -139,7 +140,14 @@
   :args (s/cat :template-path (s/nilable string?)
                :threshold (s/? pos-int?))
   :ret (s/fspec
-        :args (s/cat :context-map map?)
+        :args (s/cat :context-map
+                     (s/with-gen map?
+                       (fn []
+                         (sgen/return
+                          {:scope "openid all"
+                           :iss   "http://example.com/realm"
+                           :aud   "someapp"
+                           :sub   "1234"}))))
         :ret ::xs/agent))
 
 (def default-authority-fn
