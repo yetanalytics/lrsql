@@ -148,7 +148,7 @@
                            :iss   "http://example.com/realm"
                            :aud   "someapp"
                            :sub   "1234"}))))
-        :ret ::xs/agent))
+        :ret :statement/authority))
 
 (def default-authority-fn
   "The default precompiled function to render authority"
