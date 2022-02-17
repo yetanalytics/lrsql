@@ -1,11 +1,12 @@
-{:admin-user-default "username"
- :admin-pass-default "password"
- :api-key-default    "username"
- :api-secret-default "password"
- :stmt-get-default   50
- :stmt-get-max       50
- :stmt-url-prefix    "/xapi"
- :authority-template "config/authority.json.template"
- :authority-url      "http://example.org"
- :stmt-retry-limit   20
- :stmt-retry-budget  10000}
+{:admin-user-default        "username"
+ :admin-pass-default        "password"
+ :api-key-default           "username"
+ :api-secret-default        "password"
+ :stmt-get-default          50
+ :stmt-get-max              50
+ :stmt-url-prefix           "/xapi"
+ :authority-template        "config/authority.json.template"
+ :authority-url             "http://example.org"
+ :openid-authority-template "config/openid_authority.json.template"
+ :stmt-retry-limit          20
+ :stmt-retry-budget         10000}

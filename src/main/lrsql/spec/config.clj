@@ -113,6 +113,7 @@
 
 (s/def ::authority-template string?)
 (s/def ::authority-url ::xs/irl)
+(s/def ::openid-authority-template string?)
 
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
@@ -121,7 +122,8 @@
                           ::stmt-get-max
                           ::stmt-url-prefix
                           ::authority-template
-                          ::authority-url]
+                          ::authority-url
+                          ::openid-authority-template]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default

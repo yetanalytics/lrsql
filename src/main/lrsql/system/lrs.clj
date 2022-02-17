@@ -39,7 +39,11 @@
       :connection
       :conn-pool))
 
-(defrecord LearningRecordStore [connection backend config authority-fn]
+(defrecord LearningRecordStore [connection
+                                backend
+                                config
+                                authority-fn
+                                openid-authority-fn]
   cmp/Lifecycle
   (start
     [lrs]
@@ -47,14 +51,16 @@
     (let [;; Destructuring
           {conn :conn-pool}
           connection
-          {uname   :admin-user-default
-           pass    :admin-pass-default
-           api-key :api-key-default
-           srt-key :api-secret-default
-           auth-tp :authority-template}
+          {uname          :admin-user-default
+           pass           :admin-pass-default
+           api-key        :api-key-default
+           srt-key        :api-secret-default
+           auth-tp        :authority-template
+           openid-auth-tp :openid-authority-template}
           config
           ;; Authority function
-          auth-fn (make-authority-fn auth-tp)]
+          auth-fn        (make-authority-fn auth-tp)
+          openid-auth-fn (oidc/make-authority-fn openid-auth-tp)]
       ;; Combine all init ops into a single txn, since the user would expect
       ;; such actions to happen as a single unit. If init-backend! succeeds
       ;; but insert-default-creds! fails, this would constitute a partial
@@ -63,7 +69,10 @@
         (init/init-backend! backend tx)
         (init/insert-default-creds! backend tx uname pass api-key srt-key)
         (log/info "Starting new LRS")
-        (assoc lrs :connection connection :authority-fn auth-fn))))
+        (assoc lrs
+               :connection connection
+               :authority-fn auth-fn
+               :openid-authority-fn openid-auth-fn))))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
@@ -199,7 +208,7 @@
     [lrs ctx]
     (or
      ;; Token Authentication
-     (oidc/token-auth-identity ctx)
+     (oidc/token-auth-identity ctx openid-authority-fn)
      ;; Basic Authentication
      (let [conn   (lrs-conn lrs)
            header (get-in ctx [:request :headers "authorization"])]
