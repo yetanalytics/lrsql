@@ -45,7 +45,7 @@
                {:com.yetanalytics.pedestal-oidc/claims
                 {:scope "openid all"
                  :iss   "http://example.com/realm"
-                 :azp   "someapp"
+                 :aud   "someapp"
                  :sub   "1234"}}}
               auth-fn))))
     (testing "Fails without any valid scopes"
@@ -57,7 +57,7 @@
                {:com.yetanalytics.pedestal-oidc/claims
                 {:scope "openid"
                  :iss   "http://example.com/realm"
-                 :azp   "someapp"
+                 :aud   "someapp"
                  :sub   "1234"}}}
               auth-fn))))
     (testing "nil w/o token"

@@ -1,7 +1,7 @@
 {# for template syntax see: https://github.com/yogthos/Selmer#templates
 
    Use any variable present in token claims
-   https://datatracker.ietf.org/doc/html/rfc7519#section-4.1
+   https://datatracker.ietf.org/doc/html/rfc9068
 
 #}
 {
@@ -10,7 +10,7 @@
     {
       "account": {
         "homePage": "{{iss}}",
-        "name": "{{azp}}"
+        "name": "{{aud}}"
       }
     },
     {

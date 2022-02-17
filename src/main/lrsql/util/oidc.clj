@@ -169,12 +169,12 @@
   ;; default resource
   (let [a-fn (make-authority-fn nil)]
     (a-fn {:iss "foo"
-           :azp "bar"
+           :aud "bar"
            :sub "baz"}))
   ;; file path
   (let [a-fn (make-authority-fn "resources/lrsql/config/oidc_authority.json.template")]
     (a-fn {:iss "foo"
-           :azp "bar"
+           :aud "bar"
            :sub "baz"}))
 
   )
