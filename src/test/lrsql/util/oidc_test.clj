@@ -66,3 +66,25 @@
             {:request
              {}}
             auth-fn))))))
+
+(deftest make-authority-fn-test
+  (testing "default, from resource"
+    (let [a-fn (make-authority-fn nil)]
+      (is
+       (= {"objectType" "Group",
+           "member"
+           [{"account" {"homePage" "foo", "name" "bar"}}
+            {"account" {"homePage" "foo", "name" "baz"}}]}
+          (a-fn {:iss "foo"
+                 :aud "bar"
+                 :sub "baz"})))))
+  (testing "from file path"
+    (let [a-fn (make-authority-fn "resources/lrsql/config/oidc_authority.json.template")]
+      (is
+       (= {"objectType" "Group",
+           "member"
+           [{"account" {"homePage" "foo", "name" "bar"}}
+            {"account" {"homePage" "foo", "name" "baz"}}]}
+          (a-fn {:iss "foo"
+                 :aud "bar"
+                 :sub "baz"}))))))

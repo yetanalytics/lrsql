@@ -164,17 +164,3 @@
           default-authority-fn)]
     (mem/lru authority-fn
              :lru/threshold (or threshold 512))))
-
-(comment
-  ;; default resource
-  (let [a-fn (make-authority-fn nil)]
-    (a-fn {:iss "foo"
-           :aud "bar"
-           :sub "baz"}))
-  ;; file path
-  (let [a-fn (make-authority-fn "resources/lrsql/config/oidc_authority.json.template")]
-    (a-fn {:iss "foo"
-           :aud "bar"
-           :sub "baz"}))
-
-  )
