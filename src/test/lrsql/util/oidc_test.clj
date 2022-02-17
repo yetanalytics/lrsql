@@ -1,6 +1,9 @@
 (ns lrsql.util.oidc-test
-  (:require [clojure.test :refer :all]
-            [lrsql.util.oidc :refer :all]))
+  (:require [clojure.test    :refer [deftest is testing]]
+            [lrsql.util.oidc :refer [get-configuration
+                                     parse-scope-claim
+                                     token-auth-identity
+                                     make-authority-fn]]))
 
 (deftest get-configuration-test
   (testing "Slurps configuration"
