@@ -21,8 +21,8 @@
   [config]
   (select-keys
    config
-   [:openid-issuer
-    :openid-config
+   [:oidc-issuer
+    :oidc-config
     :jwks-uri]))
 
 (s/fdef get-configuration
@@ -31,17 +31,17 @@
 
 (defn get-configuration
   "Given webserver config, return an openid configuration if one is specified
-  via :openid-issuer or :openid-config."
-  [{:keys [openid-issuer
-           openid-config] :as config}]
+  via :oidc-issuer or :oidc-config."
+  [{:keys               [oidc-issuer
+           oidc-config] :as config}]
   (try
-    (when-let [config-uri (or openid-config
-                              (and openid-issuer
-                                   (disco/issuer->config-uri openid-issuer)))]
+    (when-let [config-uri (or oidc-config
+                              (and oidc-issuer
+                                   (disco/issuer->config-uri oidc-issuer)))]
       (disco/get-openid-config config-uri))
     (catch AssertionError ae
       (ex-info "Invalid OIDC Config"
-               {:type ::invalid-config
+               {:type        ::invalid-config
                 :oidc-config (select-config config)}
                ae))))
 
@@ -78,7 +78,7 @@
       (throw
        (ex-info
         "OIDC Initialization Failure"
-        {:type ::init-failure
+        {:type        ::init-failure
          :oidc-config (select-config config)}
         ex)))))
 
@@ -89,7 +89,7 @@
 (defn parse-scope-claim
   [scope-str]
   (keep auth/scope-str->kw
-       (cs/split scope-str #"\s")))
+        (cs/split scope-str #"\s")))
 
 (s/fdef token-auth-identity
   :args (s/cat :ctx map?
@@ -104,7 +104,7 @@
    authority-fn]
   (when-let [token (:com.yetanalytics.pedestal-oidc/token ctx)]
     (let [{:keys [scope]
-           :as claims} (get-in ctx
+           :as   claims} (get-in ctx
                                [:request
                                 :com.yetanalytics.pedestal-oidc/claims])]
       {:result
@@ -144,7 +144,7 @@
 
 (def default-authority-fn
   "The default precompiled function to render authority"
-  (-> "lrsql/config/openid_authority.json.template"
+  (-> "lrsql/config/oidc_authority.json.template"
       io/resource
       selm-parser/parse*
       authority/make-authority-fn*))
@@ -172,7 +172,7 @@
            :azp "bar"
            :sub "baz"}))
   ;; file path
-  (let [a-fn (make-authority-fn "resources/lrsql/config/openid_authority.json.template")]
+  (let [a-fn (make-authority-fn "resources/lrsql/config/oidc_authority.json.template")]
     (a-fn {:iss "foo"
            :azp "bar"
            :sub "baz"}))

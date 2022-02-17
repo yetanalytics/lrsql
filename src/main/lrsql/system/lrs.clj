@@ -43,7 +43,7 @@
                                 backend
                                 config
                                 authority-fn
-                                openid-authority-fn]
+                                oidc-authority-fn]
   cmp/Lifecycle
   (start
     [lrs]
@@ -56,11 +56,11 @@
            api-key        :api-key-default
            srt-key        :api-secret-default
            auth-tp        :authority-template
-           openid-auth-tp :openid-authority-template}
+           oidc-auth-tp :oidc-authority-template}
           config
           ;; Authority function
           auth-fn        (make-authority-fn auth-tp)
-          openid-auth-fn (oidc/make-authority-fn openid-auth-tp)]
+          oidc-auth-fn (oidc/make-authority-fn oidc-auth-tp)]
       ;; Combine all init ops into a single txn, since the user would expect
       ;; such actions to happen as a single unit. If init-backend! succeeds
       ;; but insert-default-creds! fails, this would constitute a partial
@@ -72,7 +72,7 @@
         (assoc lrs
                :connection connection
                :authority-fn auth-fn
-               :openid-authority-fn openid-auth-fn))))
+               :oidc-authority-fn oidc-auth-fn))))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
@@ -208,7 +208,7 @@
     [lrs ctx]
     (or
      ;; Token Authentication
-     (oidc/token-auth-identity ctx openid-authority-fn)
+     (oidc/token-auth-identity ctx oidc-authority-fn)
      ;; Basic Authentication
      (let [conn   (lrs-conn lrs)
            header (get-in ctx [:request :headers "authorization"])]
@@ -279,7 +279,7 @@
       (jdbc/with-transaction [tx conn]
         (auth-q/query-credentials backend tx input))))
   (-update-api-keys
-   ;; TODO: Verify the key pair is associated with the account ID
+    ;; TODO: Verify the key pair is associated with the account ID
     [this _account-id api-key secret-key scopes]
     (let [conn  (lrs-conn this)
           input (auth-input/query-credential-scopes*-input api-key secret-key)]

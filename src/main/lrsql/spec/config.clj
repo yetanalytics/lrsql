@@ -113,7 +113,7 @@
 
 (s/def ::authority-template string?)
 (s/def ::authority-url ::xs/irl)
-(s/def ::openid-authority-template string?)
+(s/def ::oidc-authority-template string?)
 
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
@@ -123,7 +123,7 @@
                           ::stmt-url-prefix
                           ::authority-template
                           ::authority-url
-                          ::openid-authority-template]
+                          ::oidc-authority-template]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default
@@ -150,8 +150,8 @@
 (s/def ::enable-admin-ui boolean?)
 (s/def ::enable-stmt-html boolean?)
 
-(s/def ::openid-issuer (s/nilable string?))
-(s/def ::openid-config (s/nilable string?))
+(s/def ::oidc-issuer (s/nilable string?))
+(s/def ::oidc-config (s/nilable string?))
 (s/def ::jwks-uri (s/nilable string?))
 
 (s/def ::webserver
@@ -171,8 +171,8 @@
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain
-                   ::openid-issuer
-                   ::openid-config
+                   ::oidc-issuer
+                   ::oidc-config
                    ::jwks-uri]))
 
 (def config-spec
