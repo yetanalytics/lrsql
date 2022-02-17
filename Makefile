@@ -24,7 +24,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench, bench-async, check-vuln
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, persistent, sqlite, postgres, bench, bench-async, check-vuln
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp target/nvd
@@ -46,6 +46,10 @@ ci: test-h2 test-sqlite test-postgres
 
 ephemeral: resources/public/admin
 	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? false
+
+# like ephemeral, but takes env vars
+ephemeral-prod: resources/public/admin
+	clojure -M:db-h2 -m lrsql.h2.main --persistent false
 
 persistent: resources/public/admin
 	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? true
