@@ -6,11 +6,11 @@
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes]]
+            [lrsql.init.oidc :as oidc]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
-            [lrsql.util.interceptor :refer [handle-json-parse-exn]]
-            [lrsql.util.oidc :as oidc]))
+            [lrsql.util.interceptor :refer [handle-json-parse-exn]]))
 
 (defn- service-map
   "Create a new service map for the webserver."

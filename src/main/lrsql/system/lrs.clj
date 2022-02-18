@@ -5,7 +5,8 @@
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.admin.protocol :as adp]
-            [lrsql.init :as init]
+            [lrsql.init      :as init]
+            [lrsql.init.oidc :as oidc-init]
             [lrsql.backend.protocol :as bp]
             [lrsql.input.actor     :as agent-input]
             [lrsql.input.activity  :as activity-input]
@@ -26,10 +27,10 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
             [lrsql.util.auth      :as auth-util]
+            [lrsql.util.oidc      :as oidc-util]
             [lrsql.util.statement :as stmt-util]
             [lrsql.init.authority   :refer [make-authority-fn]]
-            [lrsql.util.concurrency :refer [with-rerunable-txn]]
-            [lrsql.util.oidc :as oidc])
+            [lrsql.util.concurrency :refer [with-rerunable-txn]])
   (:import [java.time Instant]))
 
 (defn- lrs-conn
@@ -60,7 +61,7 @@
           config
           ;; Authority function
           auth-fn      (make-authority-fn auth-tp)
-          oidc-auth-fn (oidc/make-authority-fn oidc-auth-tp)]
+          oidc-auth-fn (oidc-init/make-authority-fn oidc-auth-tp)]
       ;; Combine all init ops into a single txn, since the user would expect
       ;; such actions to happen as a single unit. If init-backend! succeeds
       ;; but insert-default-creds! fails, this would constitute a partial
@@ -208,7 +209,7 @@
     [lrs ctx]
     (or
      ;; Token Authentication
-     (oidc/token-auth-identity ctx oidc-authority-fn)
+     (oidc-util/token-auth-identity ctx oidc-authority-fn)
      ;; Basic Authentication
      (let [conn   (lrs-conn lrs)
            header (get-in ctx [:request :headers "authorization"])]
