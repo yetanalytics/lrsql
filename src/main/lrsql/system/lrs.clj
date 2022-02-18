@@ -51,15 +51,15 @@
     (let [;; Destructuring
           {conn :conn-pool}
           connection
-          {uname          :admin-user-default
-           pass           :admin-pass-default
-           api-key        :api-key-default
-           srt-key        :api-secret-default
-           auth-tp        :authority-template
-           oidc-auth-tp   :oidc-authority-template}
+          {uname        :admin-user-default
+           pass         :admin-pass-default
+           api-key      :api-key-default
+           srt-key      :api-secret-default
+           auth-tp      :authority-template
+           oidc-auth-tp :oidc-authority-template}
           config
           ;; Authority function
-          auth-fn        (make-authority-fn auth-tp)
+          auth-fn      (make-authority-fn auth-tp)
           oidc-auth-fn (oidc/make-authority-fn oidc-auth-tp)]
       ;; Combine all init ops into a single txn, since the user would expect
       ;; such actions to happen as a single unit. If init-backend! succeeds
