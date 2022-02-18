@@ -123,8 +123,7 @@
                (case ex-type
                  ::authority/unknown-variable
                  (do
-                   (log/warnf "Could not render authority for OIDC claims %s"
-                              (pr-str claims))
+                   (log/warn "Could not render authority for OIDC claims")
                    :com.yetanalytics.lrs.auth/unauthorized)
                  ::authority/invalid-json
                  (do
