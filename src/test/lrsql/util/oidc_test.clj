@@ -1,8 +1,9 @@
 (ns lrsql.util.oidc-test
-  (:require [clojure.test    :refer [deftest is testing]]
+  (:require [clojure.test    :refer [deftest is testing are]]
             [lrsql.util.oidc :refer [get-configuration
                                      parse-scope-claim
                                      token-auth-identity
+                                     resolve-authority-claims
                                      make-authority-fn]]))
 
 (deftest get-configuration-test
@@ -69,6 +70,26 @@
             {:request
              {}}
             auth-fn))))))
+
+(deftest resolve-authority-claims-test
+  (testing "resolves client id"
+    (are [claims resolved-id]
+        (= (:lrsql/resolved-client-id
+            (resolve-authority-claims
+             (merge
+              ;; other unrelated claims so spec is satisfied
+              {:scope "openid all"
+               :iss   "http://example.com/realm"
+               :sub   "1234"}
+              claims)))
+           resolved-id)
+      {:aud "foo"}         "foo"
+      {:aud ["foo" "bar"]} "foo"
+      {:aud       "foo"
+       :client_id "bar"
+       :azp       "baz"}   "bar"
+      {:aud       "foo"
+       :azp       "baz"}   "baz")))
 
 (deftest make-authority-fn-test
   (testing "default, from resource"

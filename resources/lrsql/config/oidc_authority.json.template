@@ -3,6 +3,10 @@
    Use any variable present in token claims
    https://datatracker.ietf.org/doc/html/rfc9068
 
+   Special Variables:
+
+   * lrsql/resolved-client-id - Replacement for aud that is always a string.
+
 #}
 {
   "objectType": "Group",
@@ -10,7 +14,7 @@
     {
       "account": {
         "homePage": "{{iss}}",
-        "name": "{{aud}}"
+        "name": "{{lrsql/resolved-client-id}}"
       }
     },
     {

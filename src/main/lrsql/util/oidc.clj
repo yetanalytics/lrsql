@@ -93,7 +93,6 @@
   (keep auth/scope-str->kw
         (cs/split scope-str #"\s")))
 
-
 (s/fdef token-auth-identity
   :args (s/cat :ctx map?
                :authority-fn fn?)
@@ -138,6 +137,26 @@
 
 ;; Authority
 
+(s/fdef resolve-authority-claims
+  :args (s/cat :claims ::oidc/claims)
+  :ret ::oidc/authority-claims)
+
+(defn resolve-authority-claims
+  "Given claims from an Access Token derive and add:
+  * :lrsql/resolved-client-id - a reliable client id to use in the authority
+    template."
+  [{:keys [aud
+           azp
+           client_id]
+    :as claims}]
+  (assoc claims
+         :lrsql/resolved-client-id
+         (or client_id
+             azp
+             (if (string? aud)
+               aud
+               (first aud)))))
+
 (s/fdef make-authority-fn
   :args (s/cat :template-path (s/nilable string?)
                :threshold (s/? pos-int?))
@@ -165,5 +184,6 @@
             (authority/make-authority-fn* template))
           ;; Override template not supplied - fall back to default
           default-authority-fn)]
-    (mem/lru authority-fn
+    (mem/lru (comp authority-fn
+                   resolve-authority-claims)
              :lru/threshold (or threshold 512))))
