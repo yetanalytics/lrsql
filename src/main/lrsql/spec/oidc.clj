@@ -20,14 +20,25 @@
 (s/def ::client_id string?)
 
 (s/def ::claims
-  (s/keys :req-un [::scope
-                   ::iss
-                   ::sub
-                   ::aud]
-          :opt-un [::azp
-                   ::client_id]))
+  (s/with-gen
+    (s/keys :req-un [::scope
+                     ::iss
+                     ::sub
+                     ::aud]
+            :opt-un [::azp
+                     ::client_id])
+    (fn []
+      (sgen/return {:scope "openid all"
+                    :iss   "http://example.com/realm"
+                    :aud   "someapp"
+                    :sub   "1234"}))))
 
-;; This is a special namespaced keyword with a single segment for inclusion in
-;; the OIDC authority template so we don't need to escape the dots
+;; This is a special namespaced keyword with a single segment (so we don't need
+;; to escape the dots) for inclusion in the OIDC authority template
 ;; https://github.com/yogthos/Selmer#namespaced-keys
 (s/def :lrsql/resolved-client-id string?)
+
+(s/def ::authority-claims
+  (s/merge
+   (s/keys :req [:lrsql/resolved-client-id])
+   ::claims))
