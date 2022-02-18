@@ -13,6 +13,7 @@
             [io.pedestal.interceptor :as i]
             [lrsql.init.authority :as authority]
             [lrsql.spec.config :as config]
+            [lrsql.spec.oidc :as oidc]
             [lrsql.util.auth :as auth]
             [selmer.parser :as selm-parser]
             [xapi-schema.spec :as xs])
@@ -92,6 +93,7 @@
   (keep auth/scope-str->kw
         (cs/split scope-str #"\s")))
 
+
 (s/fdef token-auth-identity
   :args (s/cat :ctx map?
                :authority-fn fn?)
@@ -140,14 +142,7 @@
   :args (s/cat :template-path (s/nilable string?)
                :threshold (s/? pos-int?))
   :ret (s/fspec
-        :args (s/cat :context-map
-                     (s/with-gen map?
-                       (fn []
-                         (sgen/return
-                          {:scope "openid all"
-                           :iss   "http://example.com/realm"
-                           :aud   "someapp"
-                           :sub   "1234"}))))
+        :args (s/cat :context-map ::oidc/claims)
         :ret :statement/authority))
 
 (def default-authority-fn
@@ -158,8 +153,8 @@
       authority/make-authority-fn*))
 
 (defn make-authority-fn
-  "Like authority/make-authority-fn but does not have a specified context map.
-  Does not perform assertions."
+  "Like authority/make-authority-fn but produces a function expecting OIDC
+  claims."
   [template-path & [threshold]]
   (let [^File f
         (io/file template-path)
