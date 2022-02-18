@@ -22,7 +22,7 @@
                    ;; :db-properties "currentSchema=lrsql"
 
                    ;; Testing Only! Specify the version used with testcontainers
-                   :test-db-version "latest"}
+                   :test-db-version "11.9"}
    ;; Production
    :prod-h2-mem   #include "prod/h2_mem/database.edn"
    :prod-h2       #include "prod/h2/database.edn"
