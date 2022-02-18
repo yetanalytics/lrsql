@@ -209,7 +209,11 @@
     [lrs ctx]
     (or
      ;; Token Authentication
-     (oidc-util/token-auth-identity ctx oidc-authority-fn)
+     (let [{:keys [oidc-scope-prefix]} config]
+       (oidc-util/token-auth-identity
+        ctx
+        oidc-authority-fn
+        oidc-scope-prefix))
      ;; Basic Authentication
      (let [conn   (lrs-conn lrs)
            header (get-in ctx [:request :headers "authorization"])]

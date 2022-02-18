@@ -86,6 +86,7 @@ You may have noted that some options are not available:
 | `LRSQL_AUTHORITY_TEMPLATE` | `authorityTemplate` | The filepath to the Statement authority template file, which describes how authorities are constructed during statement insertion. If the file is not found, the system defaults to a default authority function. | <details>`config/authority.json.template`<summary>(Filepath)</summary></details> |
 | `LRSQL_AUTHORITY_URL` | `authorityUrl` | The URL that is set as the `authority-url` value when constructing an authority from a template. | `http://example.org` |
 | `LRSQL_OIDC_AUTHORITY_TEMPLATE` | `oidcAuthorityTemplate` | Like `LRSQL_AUTHORITY_TEMPLATE`, but only used when forming an authority from an OIDC access token. | <details>`config/oidc_authority.json.template`<summary>(Filepath)</summary></details> |
+| `LRSQL_OIDC_SCOPE_PREFIX` | `oidcScopePrefix` | An optional prefix prepended to OIDC scope. For example, setting this to `lrs:` would change the expected `all` scope to `lrs:all` | `""` |
 | `LRSQL_STMT_RETRY_LIMIT` | `stmtRetryLimit` | The number of times to retry a statement post transaction before failing. | `10` |
 | `LRSQL_STMT_RETRY_BUDGET` | `stmtRetryBudget` | The max amount of time allowed for statement POST transaction retries before failing (ms). | `1000` |
 

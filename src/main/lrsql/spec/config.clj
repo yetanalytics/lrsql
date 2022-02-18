@@ -114,6 +114,7 @@
 (s/def ::authority-template string?)
 (s/def ::authority-url ::xs/irl)
 (s/def ::oidc-authority-template string?)
+(s/def ::oidc-scope-prefix string?)
 
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
@@ -123,7 +124,8 @@
                           ::stmt-url-prefix
                           ::authority-template
                           ::authority-url
-                          ::oidc-authority-template]
+                          ::oidc-authority-template
+                          ::oidc-scope-prefix]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default
