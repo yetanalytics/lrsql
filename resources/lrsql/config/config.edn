@@ -9,18 +9,20 @@
                    :db-port 9001}
    :test-sqlite   {:db-type "sqlite"
                    :db-name "example.sqlite.db"}
-   :test-postgres {:db-type       "postgres"
-                   :db-name       "lrsql_pg"
-                   :db-host       "0.0.0.0"
-                   :db-port       5432
-                   :db-user       "lrsql_user"
-                   :db-password   "swordfish"
+   :test-postgres {:db-type         "postgres"
+                   :db-name         "lrsql_pg"
+                   :db-host         "0.0.0.0"
+                   :db-port         5432
+                   :db-user         "lrsql_user"
+                   :db-password     "swordfish"
                    ;; Schemas are commented out for testing (since all tests
                    ;; happen in the default `public` schema). We can uncomment
                    ;; these properties for manual schema testing.
                    ;; :db-schema     "lrsql"
                    ;; :db-properties "currentSchema=lrsql"
-                   }
+
+                   ;; Testing Only! Specify the version used with testcontainers
+                   :test-db-version "11.9"}
    ;; Production
    :prod-h2-mem   #include "prod/h2_mem/database.edn"
    :prod-h2       #include "prod/h2/database.edn"
