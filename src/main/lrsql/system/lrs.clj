@@ -56,7 +56,7 @@
            api-key        :api-key-default
            srt-key        :api-secret-default
            auth-tp        :authority-template
-           oidc-auth-tp :oidc-authority-template}
+           oidc-auth-tp   :oidc-authority-template}
           config
           ;; Authority function
           auth-fn        (make-authority-fn auth-tp)
