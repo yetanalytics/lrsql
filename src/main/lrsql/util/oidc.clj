@@ -3,7 +3,6 @@
   (:require [clojure.core.memoize :as mem]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as sgen]
             [clojure.string :as cs]
             [clojure.tools.logging :as log]
             [com.yetanalytics.lrs.auth :as lrs-auth]
