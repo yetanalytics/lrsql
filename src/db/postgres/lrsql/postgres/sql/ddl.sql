@@ -239,3 +239,8 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
     ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS cred_keypair_fk ON credential_to_scope(api_key, secret_key);
+
+-- :name alter-admin-account-passhash-optional!
+-- :command :execute
+-- :doc Set `admin_account.passhash` to optional.
+ALTER TABLE IF EXISTS admin_account ALTER COLUMN IF EXISTS passhash SET NULL;

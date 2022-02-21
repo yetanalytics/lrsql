@@ -49,9 +49,8 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
-  (-update-all! [_ _]
-    ;; No-op for now; add functions if updates are needed
-    nil)
+  (-update-all! [_ tx]
+    (alter-admin-account-passhash-optional! tx))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
