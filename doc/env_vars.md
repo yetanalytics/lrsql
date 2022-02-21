@@ -85,6 +85,8 @@ You may have noted that some options are not available:
 | `LRSQL_STMT_GET_MAX` | `stmtGetMax` | The maximum allowed `limit` value for a statement query. If an explicit `limit` value exceeds this value, it will be overridden. | `50` |
 | `LRSQL_AUTHORITY_TEMPLATE` | `authorityTemplate` | The filepath to the Statement authority template file, which describes how authorities are constructed during statement insertion. If the file is not found, the system defaults to a default authority function. | <details>`config/authority.json.template`<summary>(Filepath)</summary></details> |
 | `LRSQL_AUTHORITY_URL` | `authorityUrl` | The URL that is set as the `authority-url` value when constructing an authority from a template. | `http://example.org` |
+| `LRSQL_OIDC_AUTHORITY_TEMPLATE` | `oidcAuthorityTemplate` | Like `LRSQL_AUTHORITY_TEMPLATE`, but only used when forming an authority from an OIDC access token. | <details>`config/oidc_authority.json.template`<summary>(Filepath)</summary></details> |
+| `LRSQL_OIDC_SCOPE_PREFIX` | `oidcScopePrefix` | An optional prefix prepended to OIDC scope. For example, setting this to `lrs:` would change the expected `all` scope to `lrs:all` | `""` |
 | `LRSQL_STMT_RETRY_LIMIT` | `stmtRetryLimit` | The number of times to retry a statement post transaction before failing. | `10` |
 | `LRSQL_STMT_RETRY_BUDGET` | `stmtRetryBudget` | The max amount of time allowed for statement POST transaction retries before failing (ms). | `1000` |
 
@@ -110,8 +112,8 @@ You may have noted that some options are not available:
 | `LRSQL_URL_PREFIX` | `urlPrefix` | The prefix of the webserver URL path, e.g. the prefix in `http://0.0.0.0:8080/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi` |
 | `LRSQL_ENABLE_ADMIN_UI` | `enableAdminUi` | Whether or not to serve the administrative UI at `/admin` | `true` |
 | `LRSQL_ENABLE_STMT_HTML` | `enableStmtHtml` | Whether or not HTML data is returned in the LRS HTTP response. If `false` disables HTML rendering even if `LRSQL_ENABLE_ADMIN_UI` is `true`. In that case the UI will not display the Statement Browser feature. | `true` |
-| `LRSQL_OPENID_ISSUER` | `openidIssuer` | OIDC Issuer address used for [discovery](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig) | Not set |
-| `LRSQL_OPENID_CONFIG` | `openidConfig` | Custom OIDC configuration location | Not set |
+| `LRSQL_OIDC_ISSUER` | `oidcIssuer` | OIDC Issuer address used for [discovery](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig) | Not set |
+| `LRSQL_OIDC_CONFIG` | `oidcConfig` | Custom OIDC configuration location | Not set |
 | `LRSQL_JWKS_URI` | `jwksUri` | Custom JWKS [keyset](https://datatracker.ietf.org/doc/html/rfc7517#section-5) location | Not set |
 
 [<- Back to Index](index.md)

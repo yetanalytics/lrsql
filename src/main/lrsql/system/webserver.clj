@@ -6,6 +6,7 @@
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes]]
+            [lrsql.init.oidc :as oidc]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
@@ -35,8 +36,11 @@
         ;; start to all lrs routes
         routes (->> (build {:lrs               lrs
                             :path-prefix       url-prefix
-                            :wrap-interceptors [i/error-interceptor
-                                                (handle-json-parse-exn)]})
+                            :wrap-interceptors (into
+                                                [i/error-interceptor
+                                                 (handle-json-parse-exn)]
+                                                (oidc/resource-interceptors
+                                                 config))})
                     (add-admin-routes {:lrs    lrs
                                        :exp    jwt-exp
                                        :leeway jwt-lwy

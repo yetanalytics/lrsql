@@ -1,11 +1,13 @@
-{:admin-user-default #or [#env LRSQL_ADMIN_USER_DEFAULT nil]
- :admin-pass-default #or [#env LRSQL_ADMIN_PASS_DEFAULT nil]
- :api-key-default    #or [#env LRSQL_API_KEY_DEFAULT nil]
- :api-secret-default #or [#env LRSQL_API_SECRET_DEFAULT nil]
- :stmt-get-default   #long #or [#env LRSQL_STMT_GET_DEFAULT 50]
- :stmt-get-max       #long #or [#env LRSQL_STMT_GET_MAX 50]
- :stmt-url-prefix    "/xapi" ; overriden by ::webserver/url-prefix
- :authority-template #or [#env LRSQL_AUTHORITY_TEMPLATE "config/authority.json.template"]
- :authority-url      #or [#env LRSQL_AUTHORITY_URL "http://example.org"]
- :stmt-retry-limit   #or [#env LRSQL_STMT_RETRY_LIMIT 10]
- :stmt-retry-budget  #or [#env LRSQL_STMT_RETRY_BUDGET 1000]}
+{:admin-user-default      #or [#env LRSQL_ADMIN_USER_DEFAULT nil]
+ :admin-pass-default      #or [#env LRSQL_ADMIN_PASS_DEFAULT nil]
+ :api-key-default         #or [#env LRSQL_API_KEY_DEFAULT nil]
+ :api-secret-default      #or [#env LRSQL_API_SECRET_DEFAULT nil]
+ :stmt-get-default        #long #or [#env LRSQL_STMT_GET_DEFAULT 50]
+ :stmt-get-max            #long #or [#env LRSQL_STMT_GET_MAX 50]
+ :stmt-url-prefix         "/xapi" ; overriden by ::webserver/url-prefix
+ :authority-template      #or [#env LRSQL_AUTHORITY_TEMPLATE "config/authority.json.template"]
+ :authority-url           #or [#env LRSQL_AUTHORITY_URL "http://example.org"]
+ :oidc-authority-template #or [#env LRSQL_OIDC_AUTHORITY_TEMPLATE "config/oidc_authority.json.template"]
+ :oidc-scope-prefix       #or [#env LRSQL_OIDC_SCOPE_PREFIX ""]
+ :stmt-retry-limit        #or [#env LRSQL_STMT_RETRY_LIMIT 10]
+ :stmt-retry-budget       #or [#env LRSQL_STMT_RETRY_BUDGET 1000]}
