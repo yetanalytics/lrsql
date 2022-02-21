@@ -1,7 +1,10 @@
 {# for template syntax see: https://github.com/yogthos/Selmer#templates
 
    Use any variable present in token claims
-   https://datatracker.ietf.org/doc/html/rfc9068
+   https://www.iana.org/assignments/jwt/jwt.xhtml
+
+   This default template uses the "iss" claim to represent the IDP and the "sub"
+   claim to represent the user.
 
    Special Variables:
 
