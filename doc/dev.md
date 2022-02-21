@@ -26,6 +26,7 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 | Target | Description |
 | --- | --- |
 | `ephemeral` | Start an in-memory SQL LRS based on H2 DB. |
+| `ephemeral-prod` | Similar to `ephemeral`, except that the `:prod` profile is used, enabling the use of environment variables without full compilation. |
 | `persistent` | Similar to `ephemeral`, except that the H2 DB is stored on-disk, not in-memory. |
 | `sqlite` | Start a SQLite-based SQL LRS. |
 | `postgres` | Start a Postgres SQL LRS. Requires a running Postgres instance. |
