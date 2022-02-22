@@ -67,11 +67,11 @@
     (when (= 1 (:notnull (query-admin-account-passhash-notnull tx)))
       (let [{schema-version :schema_version} (query-schema-version tx)]
         (log/info "Setting admin account passhash to optional")
-        (enable-writable-schema-snip tx)
+        (enable-writable-schema! tx)
         (alter-admin-account-passhash-optional! tx)
-        (update-schema-version! tx {:schema-version (inc schema-version)})
-        (disable-writable-schema-snip tx)
-        (integrity-check-snip tx))))
+        (update-schema-version! tx {:version (inc schema-version)})
+        (disable-writable-schema! tx)
+        (run-integrity-check tx))))
 
   bp/BackendUtil
   (-txn-retry? [_ _ex]

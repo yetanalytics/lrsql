@@ -6,15 +6,6 @@
 -- :snip ensure-foreign-keys-snip
 PRAGMA foreign_keys = ON;
 
--- :snip enable-writable-schema-snip
-PRAGMA writable_schema = ON;
-
--- :snip disable-writable-schema-snip
-PRAGMA writable_schema = OFF;
-
--- :snip integrity-check-snip
-PRAGMA integrity_check;
-
 /* Statement + Attachment Tables */
 
 -- :name create-statement-table!
@@ -251,6 +242,36 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
     ON DELETE CASCADE
 )
 
+/* Migration */
+
+-- :name enable-writable-schema!
+-- :command :execute
+PRAGMA writable_schema = ON
+
+-- :name disable-writable-schema!
+-- :command :execute
+PRAGMA writable_schema = OFF
+
+-- :name run-integrity-check
+-- :command :execute
+PRAGMA integrity_check
+
+-- :name query-admin-account-passhash-notnull
+-- :command :query
+-- :result :one
+-- :doc Query to see if admin_account passhash is required.
+SELECT "notnull" FROM pragma_table_info('admin_account') where name='passhash'
+
+-- :name query-schema-version
+-- :command :query
+-- :result :one
+-- :doc Query the db schema version
+PRAGMA schema_version
+
+-- :name update-schema-version!
+-- :command :execute
+PRAGMA schema_version = :sql:version
+
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
 -- :doc Set `admin_account.passhash` to optional.
@@ -258,4 +279,4 @@ UPDATE sqlite_schema SET sql='CREATE TABLE IF NOT EXISTS admin_account (
 id       TEXT NOT NULL PRIMARY KEY,
 username TEXT NOT NULL UNIQUE,
 passhash TEXT
-)' WHERE type='table' AND name='admin_account';
+)' WHERE type='table' AND name='admin_account'

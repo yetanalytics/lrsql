@@ -62,8 +62,3 @@ SET
   last_modified = :last-modified
 WHERE profile_id = :profile-id
 AND activity_iri = :activity-iri
-
--- :name update-schema-version!
--- :command :execute
--- :result :affected
-PRAGMA schema_version = :schema-version;

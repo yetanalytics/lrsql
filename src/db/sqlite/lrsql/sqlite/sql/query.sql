@@ -225,17 +225,3 @@ AND secret_key = :secret-key
 SELECT scope FROM credential_to_scope
 WHERE api_key = :api-key
 AND secret_key = :secret-key
-
-/* Migration Utility Queries */
-
--- :name query-admin-account-passhash-notnull
--- :command :query
--- :result :one
--- :doc Query to see if admin_account passhash is required.
-SELECT "notnull" FROM pragma_table_info('admin_account') where name='passhash'
-
--- :name query-schema-version
--- :command :query
--- :result :one
--- :doc Query the db schema version
-PRAGMA schema_version;
