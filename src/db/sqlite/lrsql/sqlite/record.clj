@@ -1,5 +1,6 @@
 (ns lrsql.sqlite.record
-  (:require [com.stuartsierra.component :as cmp]
+  (:require [clojure.tools.logging :as log]
+            [com.stuartsierra.component :as cmp]
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.data :as bd]
             [lrsql.init :refer [init-hugsql-adapter!]]
@@ -61,7 +62,16 @@
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
   (-update-all! [_ tx]
-    (alter-admin-account-passhash-optional! tx))
+    (log/info "Updating DB schema...")
+    (log/infof "schema version %s" (query-schema-version tx))
+    (when (= 1 (:notnull (query-admin-account-passhash-notnull tx)))
+      (let [{schema-version :schema_version} (query-schema-version tx)]
+        (log/info "Setting admin account passhash to optional")
+        (enable-writable-schema-snip tx)
+        (alter-admin-account-passhash-optional! tx)
+        (update-schema-version! tx {:schema-version (inc schema-version)})
+        (disable-writable-schema-snip tx)
+        (integrity-check-snip tx))))
 
   bp/BackendUtil
   (-txn-retry? [_ _ex]

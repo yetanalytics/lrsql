@@ -6,6 +6,15 @@
 -- :snip ensure-foreign-keys-snip
 PRAGMA foreign_keys = ON;
 
+-- :snip enable-writable-schema-snip
+PRAGMA writable_schema = ON;
+
+-- :snip disable-writable-schema-snip
+PRAGMA writable_schema = OFF;
+
+-- :snip integrity-check-snip
+PRAGMA integrity_check;
+
 /* Statement + Attachment Tables */
 
 -- :name create-statement-table!
@@ -245,4 +254,8 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
 -- :doc Set `admin_account.passhash` to optional.
-ALTER TABLE IF EXISTS admin_account ALTER COLUMN IF EXISTS passhash SET NULL
+UPDATE sqlite_schema SET sql='CREATE TABLE IF NOT EXISTS admin_account (
+id       TEXT NOT NULL PRIMARY KEY,
+username TEXT NOT NULL UNIQUE,
+passhash TEXT
+)' WHERE type='table' AND name='admin_account';
