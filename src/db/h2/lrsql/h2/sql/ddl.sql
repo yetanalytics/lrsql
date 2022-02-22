@@ -178,6 +178,8 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
     ON DELETE CASCADE
 )
 
+/* Migration 2022-02-22-00 - Set admin_account.passhash to optional */
+
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
 -- :doc Set `admin_account.passhash` to optional.

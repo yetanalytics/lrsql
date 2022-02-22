@@ -240,6 +240,8 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
 );
 CREATE INDEX IF NOT EXISTS cred_keypair_fk ON credential_to_scope(api_key, secret_key);
 
+/* Migration 2022-02-22-00 - Set admin_account.passhash to optional */
+
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
 -- :doc Set `admin_account.passhash` to optional.
