@@ -272,12 +272,6 @@ PRAGMA schema_version = :sql:schema_version
 
 /* Migration 2022-02-22-00 - Set admin_account.passhash to optional */
 
--- :name query-admin-account-passhash-notnull
--- :command :query
--- :result :one
--- :doc Query to see if admin_account passhash is required.
-SELECT "notnull" FROM pragma_table_info('admin_account') where name='passhash'
-
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
 -- :doc Set `admin_account.passhash` to optional.

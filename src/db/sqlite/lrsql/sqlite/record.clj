@@ -78,7 +78,8 @@
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
   (-update-all! [_ tx]
-    (when (= 1 (:notnull (query-admin-account-passhash-notnull tx)))
+    ;; For each update, expect a version. Requery on each
+    (when (= 23 (:schema_version (query-schema-version tx)))
       (update-schema-simple tx alter-admin-account-passhash-optional!))
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
