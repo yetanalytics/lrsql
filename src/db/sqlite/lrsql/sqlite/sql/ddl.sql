@@ -242,35 +242,41 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
     ON DELETE CASCADE
 )
 
-/* Migration */
+/* Schema Update */
 
 -- :name enable-writable-schema!
 -- :command :execute
+-- :doc Enable writing to the sqlite schema.
 PRAGMA writable_schema = ON
 
 -- :name disable-writable-schema!
 -- :command :execute
+-- :doc Disable writing to the sqlite schema.
 PRAGMA writable_schema = OFF
 
 -- :name run-integrity-check
 -- :command :execute
+-- :doc Run the sqlite schema integrity check.
 PRAGMA integrity_check
+
+-- :name query-schema-version
+-- :command :query
+-- :result :one
+-- :doc Query the db schema version.
+PRAGMA schema_version
+
+-- :name update-schema-version!
+-- :command :execute
+-- :doc Set the db schema version.
+PRAGMA schema_version = :sql:version
+
+/* Migration 2022-02-22-00 - Set admin_account.passhash to optional */
 
 -- :name query-admin-account-passhash-notnull
 -- :command :query
 -- :result :one
 -- :doc Query to see if admin_account passhash is required.
 SELECT "notnull" FROM pragma_table_info('admin_account') where name='passhash'
-
--- :name query-schema-version
--- :command :query
--- :result :one
--- :doc Query the db schema version
-PRAGMA schema_version
-
--- :name update-schema-version!
--- :command :execute
-PRAGMA schema_version = :sql:version
 
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
