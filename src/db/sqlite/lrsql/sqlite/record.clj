@@ -17,6 +17,22 @@
 (u/def-hugsql-db-fns "lrsql/sqlite/sql/update.sql")
 (u/def-hugsql-db-fns "lrsql/sqlite/sql/delete.sql")
 
+;; Schema Update Helpers
+
+(defn- update-schema-simple
+  "Given a tx and a db-fn that updates schema to remove CHECK or FOREIGN KEY or NOT NULL constraints or to add, remove, or change default values on a column, wraps it with an update to the schema version and associated checks.
+
+  See https://www.sqlite.org/lang_altertable.html Section 7 part 2"
+  [tx db-fn]
+  (enable-writable-schema! tx)
+  (db-fn tx)
+  (update-schema-version!
+   tx
+   (update (query-schema-version tx)
+           :schema_version inc))
+  (disable-writable-schema! tx)
+  (run-integrity-check tx))
+
 ;; Define record
 
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
@@ -62,16 +78,10 @@
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
   (-update-all! [_ tx]
-    (log/info "Updating DB schema...")
-    (log/infof "schema version %s" (query-schema-version tx))
     (when (= 1 (:notnull (query-admin-account-passhash-notnull tx)))
-      (let [{schema-version :schema_version} (query-schema-version tx)]
-        (log/info "Setting admin account passhash to optional")
-        (enable-writable-schema! tx)
-        (alter-admin-account-passhash-optional! tx)
-        (update-schema-version! tx {:version (inc schema-version)})
-        (disable-writable-schema! tx)
-        (run-integrity-check tx))))
+      (update-schema-simple tx alter-admin-account-passhash-optional!))
+    (log/infof "sqlite schema_version: %d"
+               (:schema_version (query-schema-version tx))))
 
   bp/BackendUtil
   (-txn-retry? [_ _ex]

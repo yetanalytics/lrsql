@@ -268,7 +268,7 @@ PRAGMA schema_version
 -- :name update-schema-version!
 -- :command :execute
 -- :doc Set the db schema version.
-PRAGMA schema_version = :sql:version
+PRAGMA schema_version = :sql:schema_version
 
 /* Migration 2022-02-22-00 - Set admin_account.passhash to optional */
 
