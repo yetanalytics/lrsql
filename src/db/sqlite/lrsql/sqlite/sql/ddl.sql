@@ -281,8 +281,4 @@ SELECT "notnull" FROM pragma_table_info('admin_account') where name='passhash'
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
 -- :doc Set `admin_account.passhash` to optional.
-UPDATE sqlite_schema SET sql='CREATE TABLE IF NOT EXISTS admin_account (
-id       TEXT NOT NULL PRIMARY KEY,
-username TEXT NOT NULL UNIQUE,
-passhash TEXT
-)' WHERE type='table' AND name='admin_account'
+UPDATE sqlite_schema SET sql='CREATE TABLE admin_account (id TEXT NOT NULL PRIMARY KEY, username TEXT NOT NULL UNIQUE, passhash TEXT)' WHERE type='table' AND name='admin_account'
