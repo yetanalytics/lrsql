@@ -19,7 +19,9 @@
 (s/def ::account-id ::c/primary-key)
 (s/def ::username string?)
 (s/def ::password string?)
-(s/def ::passhash string?) ; format may vary by password lib
+;; passhash format may vary by password lib
+;; admins with nil passhash have not set passwords (for instance OIDC)
+(s/def ::passhash (s/nilable string?))
 (s/def ::uuid ::xs/uuid)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
