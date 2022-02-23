@@ -20,8 +20,10 @@
 (s/def ::username string?)
 (s/def ::password string?)
 ;; passhash format may vary by password lib
-;; admins with nil passhash have not set passwords (for instance OIDC)
-(s/def ::passhash (s/nilable string?))
+;; Input passhash is not nilable
+(s/def :lrsql.spec.admin.input/passhash string?)
+;; Ret passhash (from SQL) is nilable
+(s/def :lrsql.spec.admin.ret/passhash (s/nilable string?))
 (s/def ::uuid ::xs/uuid)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -38,7 +40,7 @@
 (def insert-admin-input-spec
   (s/keys :req-un [::c/primary-key
                    ::username
-                   ::passhash]))
+                   :lrsql.spec.admin.input/passhash]))
 
 (def query-validate-admin-input-spec
   (s/keys :req-un [::username
@@ -75,7 +77,7 @@
 
 (def query-admin-ret-spec
   (s/keys :req-un [::account-id
-                   ::passhash]))
+                   :lrsql.spec.admin.ret/passhash]))
 
 (def query-all-admin-accounts-ret-spec
   (s/every (s/keys :req-un [::account-id
