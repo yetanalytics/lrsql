@@ -80,6 +80,8 @@
   (-update-all! [_ tx]
     (when (= 1 (:notnull (query-admin-account-passhash-notnull tx)))
       (update-schema-simple tx alter-admin-account-passhash-optional!))
+    (when-not (some? (query-admin-account-oidc-issuer-exists tx))
+      (alter-admin-account-add-openid-issuer! tx))
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
 

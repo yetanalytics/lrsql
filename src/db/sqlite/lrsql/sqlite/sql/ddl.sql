@@ -282,3 +282,16 @@ SELECT "notnull" FROM pragma_table_info('admin_account') where name='passhash'
 -- :command :execute
 -- :doc Set `admin_account.passhash` to optional.
 UPDATE sqlite_schema SET sql='CREATE TABLE admin_account (id TEXT NOT NULL PRIMARY KEY, username TEXT NOT NULL UNIQUE, passhash TEXT)' WHERE type='table' AND name='admin_account'
+
+/* Migration 2022-02-23-00 - Add oidc_issuer to admin_account */
+
+-- :name query-admin-account-oidc-issuer-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `admin_account.oidc_issuer` exists.
+SELECT 1 FROM pragma_table_info('admin_account') where name='oidc_issuer'
+
+-- :name alter-admin-account-add-openid-issuer!
+-- :command :execute
+-- :doc Add `admin_account.oidc_issuer` to record OIDC identity source.
+ALTER TABLE admin_account ADD COLUMN oidc_issuer TEXT
