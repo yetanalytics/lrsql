@@ -70,7 +70,13 @@
                    ;; again
                    (get (reset! keyset-cache (jwt/get-keyset jwks-uri))
                         kid))))
-          :required? false)
+          :required? false
+          :unauthorized
+          ;; Allow unknown/nil key IDs through for possible subsequent handling
+          (fn [ctx failure & rest-args]
+            (if (= :kid-not-found failure)
+              ctx
+              (apply oidc-i/default-unauthorized ctx failure rest-args))))
          ;; This is a vector in case we need additional interceptors. At present
          ;; we do not.
          ])

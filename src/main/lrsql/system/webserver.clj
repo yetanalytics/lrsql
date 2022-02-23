@@ -32,6 +32,8 @@
         ;; The private key is used as the JWT symmetric secret
         {:keys [keystore
                 private-key]} (cu/init-keystore config)
+        ;; OIDC Resource Interceptors
+        oidc-interceptors (oidc/resource-interceptors config)
         ;; Make routes - the lrs error interceptor is appended to the
         ;; start to all lrs routes
         routes (->> (build {:lrs               lrs
@@ -39,13 +41,13 @@
                             :wrap-interceptors (into
                                                 [i/error-interceptor
                                                  (handle-json-parse-exn)]
-                                                (oidc/resource-interceptors
-                                                 config))})
-                    (add-admin-routes {:lrs    lrs
-                                       :exp    jwt-exp
-                                       :leeway jwt-lwy
-                                       :secret private-key
-                                       :enable-admin-ui enable-admin-ui}))]
+                                                oidc-interceptors)})
+                    (add-admin-routes {:lrs               lrs
+                                       :exp               jwt-exp
+                                       :leeway            jwt-lwy
+                                       :secret            private-key
+                                       :enable-admin-ui   enable-admin-ui
+                                       :oidc-interceptors oidc-interceptors}))]
     {:env                      :prod
      ::http/routes             routes
      ;; only serve assets if the admin ui is enabled
