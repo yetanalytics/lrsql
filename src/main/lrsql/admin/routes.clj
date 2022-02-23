@@ -106,7 +106,7 @@
     :or {oidc-interceptors []}}
    routes]
   (let [common-interceptors (make-common-interceptors lrs)
-        common-interceptors-oidc (into common-interceptors)]
+        common-interceptors-oidc (into common-interceptors oidc-interceptors)]
     (cset/union routes
                 (admin-account-routes common-interceptors-oidc secret exp leeway)
                 (admin-cred-routes common-interceptors-oidc secret leeway)
