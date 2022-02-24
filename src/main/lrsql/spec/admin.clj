@@ -46,6 +46,10 @@
                    ::username
                    :lrsql.spec.admin.input/passhash]))
 
+(def ensure-admin-oidc-input-spec
+  (s/keys :req-un [:lrsql.spec.admin.input/oidc-issuer
+                   ::username]))
+
 (def insert-admin-oidc-input-spec
   (s/keys :req-un [::c/primary-key
                    ::username
@@ -69,6 +73,14 @@
 
 (def insert-admin-ret-spec
   (s/keys :req-un [:lrsql.spec.admin.insert/result]))
+
+(s/def :lrsql.spec.admin.ensure/result
+  (s/nonconforming
+   (s/or :success uuid?
+         :failure #{:lrsql.admin/oidc-issuer-mismatch-error})))
+
+(def ensure-admin-ret-spec
+  (s/keys :req-un [:lrsql.spec.admin.ensure/result]))
 
 (s/def :lrsql.spec.admin.delete/result
   (s/nonconforming

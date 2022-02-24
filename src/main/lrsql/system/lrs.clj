@@ -261,6 +261,12 @@
           input (admin-input/delete-admin-input account-id)]
       (jdbc/with-transaction [tx conn]
         (admin-cmd/delete-admin! backend tx input))))
+  (-ensure-account-oidc
+    [this username oidc-issuer]
+    (let [conn  (lrs-conn this)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/ensure-admin-oidc! backend tx {:username    username
+                                                  :oidc-issuer oidc-issuer}))))
 
   adp/APIKeyManager
   (-create-api-keys
