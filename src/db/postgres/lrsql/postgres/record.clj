@@ -50,7 +50,8 @@
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
   (-update-all! [_ tx]
-    (alter-admin-account-passhash-optional! tx))
+    (alter-admin-account-passhash-optional! tx)
+    (alter-admin-account-add-openid-issuer! tx))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
