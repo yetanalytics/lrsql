@@ -187,6 +187,8 @@
     (delete-admin-account! tx input))
   (-query-account [_ tx input]
     (query-account tx input))
+  (-query-account-oidc [_ tx input]
+    (query-account-oidc tx input))
   (-query-account-exists [_ tx input]
     (query-account-exists tx input))
 

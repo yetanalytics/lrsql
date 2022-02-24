@@ -93,6 +93,7 @@
   (-delete-admin-account! [this tx input])
   ;; Queries
   (-query-account [this tx input])
+  (-query-account-oidc [this tx input])
   (-query-account-exists [this tx input])
   (-query-all-admin-accounts [this tx]))
 
