@@ -94,9 +94,12 @@
   :args (s/cat :ctx map?
                :scope-prefix ::config/oidc-scope-prefix)
   :ret (s/nilable
-        (s/keys :req-un [::auth/scopes
-                         ::admin/username
-                         :lrsql.spec.admin.input/oidc-issuer])))
+        (s/nonconforming
+         (s/or :unauthorized #{::unauthorized}
+               :admin-identity
+               (s/keys :req-un [::auth/scopes
+                                ::admin/username
+                                :lrsql.spec.admin.input/oidc-issuer])))))
 
 (defn token-auth-admin-identity
   "For the given context, return a valid OIDC admin auth identity from token
