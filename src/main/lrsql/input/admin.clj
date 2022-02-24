@@ -17,7 +17,7 @@
    :passhash    (adu/hash-password password)})
 
 (s/fdef insert-admin-oidc-input
-  :args (s/cat :username ::ads/username :oidc-issuer ::ads/oidc-issuer)
+  :args (s/cat :username ::ads/username :oidc-issuer :lrsql.spec.admin.input/oidc-issuer)
   :ret ads/insert-admin-oidc-input-spec)
 
 (defn insert-admin-oidc-input
