@@ -1,7 +1,8 @@
 (ns lrsql.util.oidc-test
   (:require [clojure.test    :refer [deftest is testing are]]
-            [lrsql.util.oidc :refer [parse-scope-claim
-                                     token-auth-identity]]
+            [lrsql.util.oidc :as oidc :refer [parse-scope-claim
+                                              token-auth-identity
+                                              token-auth-admin-identity]]
             [lrsql.init.oidc :refer [make-authority-fn]]))
 
 (deftest parse-scope-claim-test
@@ -67,4 +68,37 @@
             {:request
              {}}
             auth-fn
+            scope-prefix))))))
+
+(deftest token-auth-admin-identity-test
+  (let [scope-prefix ""]
+    (testing "Returns an admin identity"
+      (is (= {:scopes #{:scope/admin}
+              :username "1234"
+              :oidc-issuer "http://example.com/realm"}
+             (token-auth-admin-identity
+              {:com.yetanalytics.pedestal-oidc/token "foo"
+               :request
+               {:com.yetanalytics.pedestal-oidc/claims
+                {:scope "openid admin"
+                 :iss   "http://example.com/realm"
+                 :aud   "someapp"
+                 :sub   "1234"}}}
+              scope-prefix))))
+    (testing "Fails without any valid scopes"
+      (is (= ::oidc/unauthorized
+             (token-auth-admin-identity
+              {:com.yetanalytics.pedestal-oidc/token "foo"
+               :request
+               {:com.yetanalytics.pedestal-oidc/claims
+                {:scope "openid"
+                 :iss   "http://example.com/realm"
+                 :aud   "someapp"
+                 :sub   "1234"}}}
+              scope-prefix))))
+    (testing "nil w/o token"
+      (is (nil?
+           (token-auth-admin-identity
+            {:request
+             {}}
             scope-prefix))))))

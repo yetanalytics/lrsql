@@ -5,6 +5,7 @@
             [clojure.tools.logging :as log]
             [com.yetanalytics.lrs.auth :as lrs-auth]
             [lrsql.init.authority :as authority]
+            [lrsql.spec.admin :as admin]
             [lrsql.spec.config :as config]
             [lrsql.util.auth :as auth])
   (:import [java.io File]))
@@ -88,3 +89,37 @@
                  (throw ex)))))
          ;; no valid scopes, can't do anything
          :com.yetanalytics.lrs.auth/unauthorized)})))
+
+(s/fdef token-auth-admin-identity
+  :args (s/cat :ctx map?
+               :scope-prefix ::config/oidc-scope-prefix)
+  :ret (s/nilable
+        (s/keys :req-un [::auth/scopes
+                         ::admin/username
+                         :lrsql.spec.admin.input/oidc-issuer])))
+
+(defn token-auth-admin-identity
+  "For the given context, return a valid OIDC admin auth identity from token
+  claims.
+  args:
+    ctx - Pedestal context that may contain claims.
+    scope-prefix - Prefix to add to expected scopes."
+  [ctx
+   scope-prefix]
+  (when-let [token (:com.yetanalytics.pedestal-oidc/token ctx)]
+    (let [{:keys [scope iss sub]
+           :as   claims} (get-in ctx
+                                 [:request
+                                  :com.yetanalytics.pedestal-oidc/claims])]
+      (if-let [scopes (and (not-empty iss)
+                           (not-empty sub)
+                           (some-> scope
+                                   (parse-scope-claim
+                                    :scope-prefix scope-prefix)
+                                   not-empty
+                                   (->> (into #{}))))]
+        {:scopes      scopes
+         :username    sub
+         :oidc-issuer iss}
+        ;; no valid scopes, can't do anything
+        ::unauthorized))))
