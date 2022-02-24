@@ -25,6 +25,10 @@
 ;; Ret passhash (from SQL) is nilable
 (s/def :lrsql.spec.admin.ret/passhash (s/nilable string?))
 (s/def ::uuid ::xs/uuid)
+;; Likewise, OIDC issuer is not nilable for inputs
+(s/def :lrsql.spec.admin.input/oidc-issuer string?)
+;; But is for ret
+(s/def :lrsql.spec.admin.ret/oidc-issuer (s/nilable string?))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inputs
@@ -41,6 +45,11 @@
   (s/keys :req-un [::c/primary-key
                    ::username
                    :lrsql.spec.admin.input/passhash]))
+
+(def insert-admin-oidc-input-spec
+  (s/keys :req-un [::c/primary-key
+                   ::username
+                   :lrsql.spec.admin.input/oidc-issuer]))
 
 (def query-validate-admin-input-spec
   (s/keys :req-un [::username

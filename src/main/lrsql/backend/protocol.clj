@@ -89,6 +89,7 @@
 (defprotocol AdminAccountBackend
   ;; Commands
   (-insert-admin-account! [this tx input])
+  (-insert-admin-account-oidc! [this tx input])
   (-delete-admin-account! [this tx input])
   ;; Queries
   (-query-account [this tx input])

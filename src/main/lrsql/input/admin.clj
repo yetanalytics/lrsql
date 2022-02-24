@@ -16,6 +16,18 @@
    :username    username
    :passhash    (adu/hash-password password)})
 
+(s/fdef insert-admin-oidc-input
+  :args (s/cat :username ::ads/username :oidc-issuer ::ads/oidc-issuer)
+  :ret ads/insert-admin-oidc-input-spec)
+
+(defn insert-admin-oidc-input
+  "Given `username` and `oidc-issuer`, construct the input param map for
+  `insert-admin-oidc!`"
+  [username oidc-issuer]
+  {:primary-key (u/generate-squuid)
+   :username    username
+   :oidc-issuer oidc-issuer})
+
 (s/fdef delete-admin-input
   :args (s/cat :account-id ::ads/account-id)
   :ret ads/admin-id-input-spec)
