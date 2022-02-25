@@ -7,6 +7,7 @@
             [com.yetanalytics.pedestal-oidc.interceptor :as oidc-i]
             [com.yetanalytics.pedestal-oidc.jwt :as jwt]
             [io.pedestal.interceptor :as i]
+            [lrsql.admin.interceptors.oidc :as admin-oidc]
             [lrsql.init.authority :as authority]
             [lrsql.spec.config :as config]
             [lrsql.spec.oidc :as oidc]
@@ -53,7 +54,7 @@
 
 (defn resource-interceptors
   "Given a webserver config, return a (possibly empty) vector of interceptors.
-  Interceptors will enable token auth against OIDC"
+  Interceptors will enable token auth against OIDC."
   [{:keys [jwks-uri] :as config}]
   (try
     (if-let [jwks-uri (or jwks-uri
@@ -89,6 +90,25 @@
         {:type        ::init-failure
          :oidc-config (select-config config)}
         ex)))))
+
+(s/fdef admin-interceptors
+  :args (s/cat :config partial-config-spec)
+  :ret (s/every i/interceptor?))
+
+(defn admin-interceptors
+  "Given a webserver config, return a (possibly empty) vector of interceptors
+  for use with the admin API. These validate token claims and ensure an admin
+  account is made."
+  [{:keys [jwks-uri
+           oidc-issuer
+           oidc-config] :as config}]
+  (if (or jwks-uri
+          oidc-issuer
+          oidc-config)
+    [admin-oidc/validate-oidc-identity
+     admin-oidc/authorize-oidc-request
+     admin-oidc/ensure-oidc-identity]
+    []))
 
 ;; Authority
 

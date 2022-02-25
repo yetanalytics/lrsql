@@ -60,7 +60,7 @@
   "Create a new admin with OIDC issuer or verify issuer of an existing admin.
   Returns a map where `:result` is the account ID."
   [bk tx {:keys [username oidc-issuer]}]
-  (if-let [{extant-issuer :oidc-issuer
+  (if-let [{extant-issuer :oidc_issuer ;; TODO: is not coerced to kebab?
             id            :id} (bp/-query-account-oidc
                                 bk tx {:username username})]
     {:result
