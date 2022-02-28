@@ -19,7 +19,7 @@
 
 ;; Schema Update Helpers
 
-(defn- update-schema-simple
+(defn- update-schema-simple!
   "Given a tx and a db-fn that updates schema to remove CHECK or FOREIGN KEY or NOT NULL constraints or to add, remove, or change default values on a column, wraps it with an update to the schema version and associated checks.
 
   See https://www.sqlite.org/lang_altertable.html Section 7 part 2"
@@ -79,7 +79,7 @@
     (create-credential-to-scope-table! tx))
   (-update-all! [_ tx]
     (when (= 1 (:notnull (query-admin-account-passhash-notnull tx)))
-      (update-schema-simple tx alter-admin-account-passhash-optional!))
+      (update-schema-simple! tx alter-admin-account-passhash-optional!))
     (when-not (some? (query-admin-account-oidc-issuer-exists tx))
       (alter-admin-account-add-openid-issuer! tx))
     (log/infof "sqlite schema_version: %d"
