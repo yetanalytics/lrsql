@@ -12,18 +12,18 @@
 (s/fdef insert-admin!
   :args (s/cat :bk ads/admin-backend?
                :tx transaction?
-               :input ads/insert-admin-input-spec)
+               :admin-input ads/insert-admin-input-spec)
   :ret ads/insert-admin-ret-spec)
 
 (defn insert-admin!
   "Insert a new admin username, hashed password, and the hash salt into the
    `admin_account` table. Returns a map with `:result` either being the
    account ID on success or an error keyword on failure."
-  [bk tx input]
-  (if-not (bp/-query-account-exists bk tx (select-keys input [:username]))
-    (do
-      (bp/-insert-admin-account! bk tx input)
-      {:result (:primary-key input)})
+  [bk tx admin-input]
+  (if-not (bp/-query-account-exists bk tx (select-keys admin-input [:username]))
+    (let [account-input (admin-i/insert-admin-account-input admin-input)]
+      (bp/-insert-admin-account! bk tx account-input)
+      {:result (:primary-key account-input)})
     {:result :lrsql.admin/existing-account-error}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -53,7 +53,7 @@
 (s/fdef ensure-admin-oidc!
   :args (s/cat :bk ads/admin-backend?
                :tx transaction?
-               :input ads/ensure-admin-oidc-input-spec)
+               :ensure-input ads/ensure-admin-oidc-input-spec)
   :ret ads/ensure-admin-ret-spec)
 
 (defn ensure-admin-oidc!
