@@ -263,10 +263,10 @@
         (admin-cmd/delete-admin! backend tx input))))
   (-ensure-account-oidc
     [this username oidc-issuer]
-    (let [conn  (lrs-conn this)]
+    (let [conn  (lrs-conn this)
+          input (admin-input/ensure-admin-oidc-input username oidc-issuer)]
       (jdbc/with-transaction [tx conn]
-        (admin-cmd/ensure-admin-oidc! backend tx {:username    username
-                                                  :oidc-issuer oidc-issuer}))))
+        (admin-cmd/ensure-admin-oidc! backend tx input))))
 
   adp/APIKeyManager
   (-create-api-keys

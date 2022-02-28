@@ -10,7 +10,7 @@
             [com.yetanalytics.squuid :as squuid]
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
             [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
-            [lrsql.spec.common :refer [instant-spec]])
+            [lrsql.spec.common :as cs :refer [instant-spec]])
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]))
@@ -168,6 +168,15 @@
   "Convert a UUID into a string."
   [uuid]
   (clj-uuid/to-string uuid))
+
+(s/fdef add-primary-key
+  :args (s/cat :input map?)
+  :ret (s/keys :req-un [::cs/primary-key]))
+
+(defn add-primary-key
+  "Add a :primary-key squuid to an input map."
+  [input]
+  (assoc input :primary-key (generate-squuid)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; JSON

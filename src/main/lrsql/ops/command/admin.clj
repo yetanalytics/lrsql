@@ -59,7 +59,8 @@
 (defn ensure-admin-oidc!
   "Create a new admin with OIDC issuer or verify issuer of an existing admin.
   Returns a map where `:result` is the account ID."
-  [bk tx {:keys [username oidc-issuer]}]
+  [bk tx {:keys [username oidc-issuer]
+          :as   ensure-input}]
   (if-let [{extant-issuer :oidc_issuer ;; TODO: is not coerced to kebab?
             id            :id} (bp/-query-account-oidc
                                 bk tx {:username username})]
@@ -68,7 +69,8 @@
        id
        :lrsql.admin/oidc-issuer-mismatch-error)}
     (let [{:keys [primary-key]
-           :as   input} (admin-i/insert-admin-oidc-input username oidc-issuer)]
+           :as   insert-input} (admin-i/insert-admin-oidc-input
+                                ensure-input)]
       (do
-        (bp/-insert-admin-account-oidc! bk tx input)
+        (bp/-insert-admin-account-oidc! bk tx insert-input)
         {:result primary-key}))))
