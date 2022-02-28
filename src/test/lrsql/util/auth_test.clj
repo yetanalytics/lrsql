@@ -119,14 +119,6 @@
              :scopes         #{}}
       false {:request-method :delete
              :path-info      "xapi/activities/state"
-             :scopes         #{}}
-      ;; Admin Scope
-      ;; Not used for xAPI, only for Admin requests
-      true {:request-method :get
-            :path-info      "/admin/account"
-            :scopes         #{:scope/admin}}
-      false {:request-method :get
-             :path-info      "/admin/account"
              :scopes         #{}}))
   (testing "authorize-action gentest"
     (is (nil? (check-validate `au/authorize-action)))))

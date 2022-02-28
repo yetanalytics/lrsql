@@ -14,8 +14,7 @@
   {"all"                  :scope/all
    "all/read"             :scope/all.read
    "statements/read"      :scope/statements.read
-   "statements/write"     :scope/statements.write
-   "admin"                :scope/admin})
+   "statements/write"     :scope/statements.write})
 
 (def scope-kw-str-map
   (cset/map-invert scope-str-kw-map))
@@ -79,8 +78,7 @@
 (s/def ::scope #{:scope/all
                  :scope/all.read
                  :scope/statements.read
-                 :scope/statements.write
-                 :scope/admin})
+                 :scope/statements.write})
 (s/def ::scopes (s/coll-of ::scope :kind set?))
 
 (s/def ::result boolean?)
@@ -102,9 +100,6 @@
   {:result
    (boolean
     (or
-     ;; Admin access via OIDC
-     (and (cstr/starts-with? path-info "/admin")
-          (contains? scopes :scope/admin))
      ;; `all` scope: everything is permitted
      (contains? scopes :scope/all)
      ;; `all/read` scope: only GET/HEAD requests permitted

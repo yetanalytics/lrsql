@@ -10,8 +10,17 @@
             [lrsql.util.auth :as auth])
   (:import [java.io File]))
 
+;; OIDC supports an additional scope `admin` that allows all admin actions
+
+(def oidc-scope-str-kw-map
+  {"admin" :scope/admin})
+
+(s/def ::scope
+  #{:scope/admin})
+
 (defn- get-scope-map*
-  [prefix]
+  [scope-map
+   prefix]
   (reduce-kv
    (fn [m k v]
      (assoc
@@ -19,34 +28,48 @@
       (str prefix k)
       v))
    {}
-   auth/scope-str-kw-map))
+   scope-map))
 
 (def get-scope-map
   (memoize get-scope-map*))
 
 (s/def ::scope-prefix ::config/oidc-scope-prefix)
+(s/def ::scope-map (s/map-of string? qualified-keyword?))
 
 (s/fdef parse-scope-claim
   :args (s/cat :scope-str string?
                :kwargs (s/keys*
-                        :opt-un [::scope-prefix]))
-  :ret (s/every ::auth/scope))
+                        :opt-un [::scope-prefix
+                                 ::scope-map]))
+  :ret (s/nonconforming
+        (s/or
+         :lrs-scopes
+         (s/every ::auth/scope)
+         :admin-scopes
+         (s/every ::scope))))
 
 (defn parse-scope-claim
   "Parse the scope claim and match to lrsql scope keywords, prepending
   any scope-prefix provided before matching"
   [scope-str
-   & {:keys [scope-prefix]
-      :or   {scope-prefix ""}}]
-  (keep (get-scope-map scope-prefix)
+   & {:keys [scope-map
+             scope-prefix]
+      :or   {scope-map    auth/scope-str-kw-map
+             scope-prefix ""}}]
+  (keep (get-scope-map scope-map scope-prefix)
         (cs/split scope-str #"\s")))
+
+(s/def :lrsql.util.oidc.token-auth-identity/result
+  (s/nonconforming
+   (s/or :unauthorized #{::lrs-auth/unauthorized}
+         :auth-identity (s/keys :req-un [::auth/scopes]))))
 
 (s/fdef token-auth-identity
   :args (s/cat :ctx map?
                :authority-fn fn?
                :scope-prefix ::config/oidc-scope-prefix)
   :ret (s/nilable
-        ::lrs-auth/identity))
+        (s/keys :req-un [:lrsql.util.oidc.token-auth-identity/result])))
 
 (defn token-auth-identity
   "For the given context, return a valid auth identity from token claims. If no
@@ -90,16 +113,26 @@
          ;; no valid scopes, can't do anything
          :com.yetanalytics.lrs.auth/unauthorized)})))
 
+;; Only auth scopes
+(s/def ::scopes
+  (s/every ::scope :kind set? :into #{}))
+
+(s/def ::oidc-admin-identity
+  (s/keys :req-un [::scopes
+                   ::admin/username
+                   :lrsql.spec.admin.input/oidc-issuer]))
+
+(s/def :lrsql.util.oidc.token-auth-admin-identity/result
+  (s/nonconforming
+   (s/or :unauthorized #{::unauthorized}
+         :auth-identity
+         ::oidc-admin-identity)))
+
 (s/fdef token-auth-admin-identity
   :args (s/cat :ctx map?
                :scope-prefix ::config/oidc-scope-prefix)
   :ret (s/nilable
-        (s/nonconforming
-         (s/or :unauthorized #{::unauthorized}
-               :admin-identity
-               (s/keys :req-un [::auth/scopes
-                                ::admin/username
-                                :lrsql.spec.admin.input/oidc-issuer])))))
+        :lrsql.util.oidc.token-auth-admin-identity/result))
 
 (defn token-auth-admin-identity
   "For the given context, return a valid OIDC admin auth identity from token
@@ -118,7 +151,8 @@
                            (not-empty sub)
                            (some-> scope
                                    (parse-scope-claim
-                                    :scope-prefix scope-prefix)
+                                    :scope-prefix scope-prefix
+                                    :scope-map oidc-scope-str-kw-map)
                                    not-empty
                                    (->> (into #{}))))]
         {:scopes      scopes
@@ -126,3 +160,19 @@
          :oidc-issuer iss}
         ;; no valid scopes, can't do anything
         ::unauthorized))))
+
+(s/fdef authorize-admin-action
+  :args (s/cat :ctx           (s/keys :req-un [::auth/request])
+               :auth-identity (s/keys :req-un [::scopes]))
+  :ret (s/keys :req-un [::auth/result]))
+
+(defn authorize-admin-action
+  "Given a pedestal context and an OIDC admin auth identity, authorize or deny."
+  [{{:keys [request-method path-info]} :request
+    :as _ctx}
+   {:keys [scopes]
+    :as _auth-identity}]
+  {:result
+   (boolean
+    (and (cs/starts-with? path-info "/admin")
+         (contains? scopes :scope/admin)))})
