@@ -42,10 +42,6 @@
   (s/keys :req-un [::account-id]))
 
 (def insert-admin-input-spec
-  (s/keys :req-un [::username
-                   :lrsql.spec.admin.input/passhash]))
-
-(def insert-admin-account-input-spec
   (s/keys :req-un [::c/primary-key
                    ::username
                    :lrsql.spec.admin.input/passhash]))

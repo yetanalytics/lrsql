@@ -12,18 +12,9 @@
   "Given `username` and `password`, construct the input param map for
    `insert-admin!`."
   [username password]
-  {:username    username
+  {:primary-key (u/generate-squuid)
+   :username    username
    :passhash    (adu/hash-password password)})
-
-(s/fdef insert-admin-account-input
-  :args (s/cat :insert-admin-input ads/insert-admin-input-spec)
-  :ret ads/insert-admin-account-input-spec)
-
-(defn insert-admin-account-input
-  "Given an input for the insert-admin! command, add a primary key suitable for
-  `-insert-admin-account!`"
-  [insert-admin-input]
-  (u/add-primary-key insert-admin-input))
 
 (s/fdef ensure-admin-oidc-input
   :args (s/cat :username ::ads/username
