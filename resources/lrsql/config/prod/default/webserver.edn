@@ -1,20 +1,21 @@
-{:key-file          #or [#env LRSQL_KEY_FILE "config/keystore.jks"]
- :key-alias         #or [#env LRSQL_KEY_ALIAS "lrsql_keystore"]
- :key-password      #or [#env LRSQL_KEY_PASSWORD "lrsql_pass"]
- :key-pkey-file     #or [#env LRSQL_KEY_PKEY_FILE "config/server.key.pem"]
- :key-cert-chain    #or [#env LRSQL_KEY_CERT_FILE "config/server.crt.pem,config/cacert.pem"]
- :key-enable-selfie #boolean #or [#env LRSQL_KEY_ENABLE_SELFIE true]
- :jwt-exp-time      #long #or [#env LRSQL_JWT_EXP_TIME 3600]
- :jwt-exp-leeway    #long #or [#env LRSQL_JWT_EXP_LEEWAY 1]
- :enable-http       #boolean #or [#env LRSQL_ENABLE_HTTP true]
- :enable-http2      #boolean #or [#env LRSQL_ENABLE_HTTP2 true]
- :http-host         #or [#env LRSQL_HTTP_HOST "0.0.0.0"]
- :http-port         #long #or [#env LRSQL_HTTP_PORT 8080]
- :ssl-port          #long #or [#env LRSQL_SSL_PORT 8443]
- :url-prefix        #or [#env LRSQL_URL_PREFIX "/xapi"]
- :enable-admin-ui   #boolean #or [#env LRSQL_ENABLE_ADMIN_UI true]
- :enable-stmt-html  #boolean #or [#env LRSQL_ENABLE_STMT_HTML true]
- :oidc-issuer       #env LRSQL_OIDC_ISSUER
- :oidc-config       #env LRSQL_OIDC_CONFIG
- :oidc-audience     #env LRSQL_OIDC_AUDIENCE
- :jwks-uri          #env LRSQL_JWKS_URI}
+{:key-file                  #or [#env LRSQL_KEY_FILE "config/keystore.jks"]
+ :key-alias                 #or [#env LRSQL_KEY_ALIAS "lrsql_keystore"]
+ :key-password              #or [#env LRSQL_KEY_PASSWORD "lrsql_pass"]
+ :key-pkey-file             #or [#env LRSQL_KEY_PKEY_FILE "config/server.key.pem"]
+ :key-cert-chain            #or [#env LRSQL_KEY_CERT_FILE "config/server.crt.pem,config/cacert.pem"]
+ :key-enable-selfie         #boolean #or [#env LRSQL_KEY_ENABLE_SELFIE true]
+ :jwt-exp-time              #long #or [#env LRSQL_JWT_EXP_TIME 3600]
+ :jwt-exp-leeway            #long #or [#env LRSQL_JWT_EXP_LEEWAY 1]
+ :enable-http               #boolean #or [#env LRSQL_ENABLE_HTTP true]
+ :enable-http2              #boolean #or [#env LRSQL_ENABLE_HTTP2 true]
+ :http-host                 #or [#env LRSQL_HTTP_HOST "0.0.0.0"]
+ :http-port                 #long #or [#env LRSQL_HTTP_PORT 8080]
+ :ssl-port                  #long #or [#env LRSQL_SSL_PORT 8443]
+ :url-prefix                #or [#env LRSQL_URL_PREFIX "/xapi"]
+ :enable-admin-ui           #boolean #or [#env LRSQL_ENABLE_ADMIN_UI true]
+ :enable-stmt-html          #boolean #or [#env LRSQL_ENABLE_STMT_HTML true]
+ :oidc-issuer               #env LRSQL_OIDC_ISSUER
+ :oidc-config               #env LRSQL_OIDC_CONFIG
+ :oidc-audience             #env LRSQL_OIDC_AUDIENCE
+ :oidc-verify-remote-issuer #or [#env LRSQL_OIDC_VERIFY_REMOTE_ISSUER true]
+ :jwks-uri                  #env LRSQL_JWKS_URI}

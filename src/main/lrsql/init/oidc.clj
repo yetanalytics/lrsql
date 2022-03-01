@@ -21,11 +21,15 @@
   (select-keys
    config
    [:oidc-issuer
+    :oidc-audience
+    :oidc-verify-remote-issuer
     :oidc-config
     :jwks-uri]))
 
 (def partial-config-spec
   (s/keys :opt-un [::config/oidc-issuer
+                   ::config/oidc-audience
+                   ::config/oidc-verify-remote-issuer
                    ::config/oidc-config
                    ::config/jwks-uri]))
 
@@ -37,7 +41,10 @@
   "Given webserver config, return an openid configuration if one is specified
   via :oidc-issuer or :oidc-config."
   [{:keys [oidc-issuer
-           oidc-config] :as config}]
+           oidc-verify-remote-issuer
+           oidc-config]
+    :or {oidc-verify-remote-issuer true}
+    :as config}]
   (try
     (when-let [config-uri (or oidc-config
                               (and oidc-issuer
@@ -45,7 +52,7 @@
       (let [{:strs [issuer]
              :as   remote-config} (disco/get-openid-config config-uri)]
         ;; Verify that issuer matches if passed in
-        (when oidc-issuer
+        (when (and oidc-issuer oidc-verify-remote-issuer)
           (when-not (= oidc-issuer issuer)
             (throw
              (ex-info

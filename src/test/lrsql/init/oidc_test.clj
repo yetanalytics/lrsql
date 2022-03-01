@@ -8,12 +8,14 @@
   (testing "Slurps configuration"
     (testing "From issuer"
       (is (= "https://server.example.com"
-             (-> {:oidc-issuer "dev-resources/oidc"}
+             (-> {:oidc-issuer "dev-resources/oidc"
+                  :oidc-verify-remote-issuer false}
                  get-configuration
                  (get "issuer")))))
     (testing "From custom config loc"
       (is (= "https://server.example.com"
-             (-> {:oidc-config "dev-resources/oidc/.well-known/openid-configuration"}
+             (-> {:oidc-config "dev-resources/oidc/.well-known/openid-configuration"
+                  :oidc-verify-remote-issuer false}
                  get-configuration
                  (get "issuer")))))))
 

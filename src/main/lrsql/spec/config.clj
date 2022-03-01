@@ -155,6 +155,7 @@
 (s/def ::oidc-issuer (s/nilable string?))
 (s/def ::oidc-config (s/nilable string?))
 (s/def ::oidc-audience (s/nilable string?))
+(s/def ::oidc-verify-remote-issuer boolean?)
 (s/def ::jwks-uri (s/nilable string?))
 
 (s/def ::webserver
@@ -170,7 +171,8 @@
                    ::jwt-exp-time
                    ::jwt-exp-leeway
                    ::enable-admin-ui
-                   ::enable-stmt-html]
+                   ::enable-stmt-html
+                   ::oidc-verify-remote-issuer]
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain
