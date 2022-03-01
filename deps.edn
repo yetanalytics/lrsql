@@ -49,7 +49,7 @@
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript]}
   com.yetanalytics/pedestal-oidc
-  {:mvn/version "0.0.7"
+  {:mvn/version "0.0.8"
    :exclusions [org.clojure/clojure]}}
  :aliases
  {:db-h2
