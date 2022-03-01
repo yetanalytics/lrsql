@@ -3,6 +3,7 @@
   (:require [clojure.core.memoize :as mem]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
+            [clojure.tools.logging :as log]
             [com.yetanalytics.pedestal-oidc.discovery :as disco]
             [com.yetanalytics.pedestal-oidc.interceptor :as oidc-i]
             [com.yetanalytics.pedestal-oidc.jwt :as jwt]
@@ -56,13 +57,18 @@
   "Given a webserver config, return a (possibly empty) vector of interceptors.
   Interceptors will enable token auth against OIDC."
   [{:keys [jwks-uri
+           oidc-issuer
            oidc-audience] :as config}]
   (try
     (if-let [jwks-uri (or jwks-uri
                           (some-> config
                                   get-configuration
                                   (get "jwks_uri")))]
-      (let [keyset-cache (atom (jwt/get-keyset jwks-uri))]
+      (let [_ (when-not oidc-issuer
+                (log/warn "oidc-issuer should be provided for verification"))
+            _ (when-not oidc-audience
+                (log/warn "oidc-audience should be provided for verification"))
+            keyset-cache (atom (jwt/get-keyset jwks-uri))]
         [;; Decode/Unsign tokens
          (oidc-i/decode-interceptor
           (fn [_]
@@ -81,6 +87,8 @@
               (apply oidc-i/default-unauthorized ctx failure rest-args)))
           :unsign-opts
           (cond-> {}
+            ;; Apply issuer verification
+            oidc-issuer (assoc :iss oidc-issuer)
             ;; Apply audience verification
             oidc-audience (assoc :aud oidc-audience)))
          ;; This is a vector in case we need additional interceptors. At present
