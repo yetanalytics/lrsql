@@ -114,6 +114,7 @@ You may have noted that some options are not available:
 | `LRSQL_ENABLE_STMT_HTML` | `enableStmtHtml` | Whether or not HTML data is returned in the LRS HTTP response. If `false` disables HTML rendering even if `LRSQL_ENABLE_ADMIN_UI` is `true`. In that case the UI will not display the Statement Browser feature. | `true` |
 | `LRSQL_OIDC_ISSUER` | `oidcIssuer` | OIDC Issuer address used for [discovery](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig) | Not set |
 | `LRSQL_OIDC_CONFIG` | `oidcConfig` | Custom OIDC configuration location | Not set |
+| `LRSQL_OIDC_AUDIENCE` | `oidcAudience` | Optional OIDC audience for token claim verification. | Not set |
 | `LRSQL_JWKS_URI` | `jwksUri` | Custom JWKS [keyset](https://datatracker.ietf.org/doc/html/rfc7517#section-5) location | Not set |
 
 [<- Back to Index](index.md)

@@ -154,6 +154,7 @@
 
 (s/def ::oidc-issuer (s/nilable string?))
 (s/def ::oidc-config (s/nilable string?))
+(s/def ::oidc-audience (s/nilable string?))
 (s/def ::jwks-uri (s/nilable string?))
 
 (s/def ::webserver
@@ -175,6 +176,7 @@
                    ::key-cert-chain
                    ::oidc-issuer
                    ::oidc-config
+                   ::oidc-audience
                    ::jwks-uri]))
 
 (def config-spec

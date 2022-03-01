@@ -16,4 +16,5 @@
  :enable-stmt-html  #boolean #or [#env LRSQL_ENABLE_STMT_HTML true]
  :oidc-issuer       #env LRSQL_OIDC_ISSUER
  :oidc-config       #env LRSQL_OIDC_CONFIG
+ :oidc-audience     #env LRSQL_OIDC_AUDIENCE
  :jwks-uri          #env LRSQL_JWKS_URI}

@@ -55,7 +55,8 @@
 (defn resource-interceptors
   "Given a webserver config, return a (possibly empty) vector of interceptors.
   Interceptors will enable token auth against OIDC."
-  [{:keys [jwks-uri] :as config}]
+  [{:keys [jwks-uri
+           oidc-audience] :as config}]
   (try
     (if-let [jwks-uri (or jwks-uri
                           (some-> config
@@ -77,7 +78,11 @@
           (fn [ctx failure & rest-args]
             (if (= :kid-not-found failure)
               ctx
-              (apply oidc-i/default-unauthorized ctx failure rest-args))))
+              (apply oidc-i/default-unauthorized ctx failure rest-args)))
+          :unsign-opts
+          (cond-> {}
+            ;; Apply audience verification
+            oidc-audience (assoc :aud oidc-audience)))
          ;; This is a vector in case we need additional interceptors. At present
          ;; we do not.
          ])
