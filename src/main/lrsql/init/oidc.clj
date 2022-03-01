@@ -42,12 +42,28 @@
     (when-let [config-uri (or oidc-config
                               (and oidc-issuer
                                    (disco/issuer->config-uri oidc-issuer)))]
-      (disco/get-openid-config config-uri))
-    (catch AssertionError ae
-      (ex-info "Invalid OIDC Config"
-               {:type        ::invalid-config
-                :oidc-config (select-config config)}
-               ae))))
+      (let [{:strs [issuer]
+             :as   remote-config} (disco/get-openid-config config-uri)]
+        ;; Verify that issuer matches if passed in
+        (when oidc-issuer
+          (when-not (= oidc-issuer issuer)
+            (throw
+             (ex-info
+              (format
+               "Specified oidc-issuer %s does not match remote %s."
+               oidc-issuer
+               issuer)
+              {:type          ::issuer-mismatch
+               :local-issuer  oidc-issuer
+               :remote-issuer issuer}))))
+        ;; Return it
+        remote-config))
+    (catch Exception ex
+      (throw
+       (ex-info "Invalid OIDC Config"
+                {:type        ::invalid-config
+                 :oidc-config (select-config config)}
+                ex)))))
 
 (s/fdef resource-interceptors
   :args (s/cat :config partial-config-spec)
