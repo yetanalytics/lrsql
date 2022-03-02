@@ -22,16 +22,12 @@
    config
    [:oidc-issuer
     :oidc-audience
-    :oidc-verify-remote-issuer
-    :oidc-config
-    :jwks-uri]))
+    :oidc-verify-remote-issuer]))
 
 (def partial-config-spec
   (s/keys :opt-un [::config/oidc-issuer
                    ::config/oidc-audience
-                   ::config/oidc-verify-remote-issuer
-                   ::config/oidc-config
-                   ::config/jwks-uri]))
+                   ::config/oidc-verify-remote-issuer]))
 
 (s/fdef get-configuration
   :args (s/cat :config partial-config-spec)
@@ -39,20 +35,18 @@
 
 (defn get-configuration
   "Given webserver config, return an openid configuration if one is specified
-  via :oidc-issuer or :oidc-config."
+  via :oidc-issuer."
   [{:keys [oidc-issuer
-           oidc-verify-remote-issuer
-           oidc-config]
+           oidc-verify-remote-issuer]
     :or {oidc-verify-remote-issuer true}
     :as config}]
   (try
-    (when-let [config-uri (or oidc-config
-                              (and oidc-issuer
-                                   (disco/issuer->config-uri oidc-issuer)))]
+    (when-let [config-uri (and oidc-issuer
+                               (disco/issuer->config-uri oidc-issuer))]
       (let [{:strs [issuer]
              :as   remote-config} (disco/get-openid-config config-uri)]
         ;; Verify that issuer matches if passed in
-        (when (and oidc-issuer oidc-verify-remote-issuer)
+        (when oidc-verify-remote-issuer
           (when-not (= oidc-issuer issuer)
             (throw
              (ex-info
@@ -79,17 +73,13 @@
 (defn resource-interceptors
   "Given a webserver config, return a (possibly empty) vector of interceptors.
   Interceptors will enable token auth against OIDC."
-  [{:keys [jwks-uri
-           oidc-issuer
+  [{:keys [oidc-issuer
            oidc-audience] :as config}]
   (try
-    (if-let [jwks-uri (or jwks-uri
-                          (some-> config
-                                  get-configuration
-                                  (get "jwks_uri")))]
-      (let [_ (when-not oidc-issuer
-                (log/warn "oidc-issuer should be provided for verification"))
-            _ (when-not oidc-audience
+    (if-let [jwks-uri (some-> config
+                              get-configuration
+                              (get "jwks_uri"))]
+      (let [_ (when-not oidc-audience
                 (log/warn "oidc-audience should be provided for verification"))
             keyset-cache (atom (jwt/get-keyset jwks-uri))]
         [;; Decode/Unsign tokens
@@ -109,9 +99,7 @@
               ctx
               (apply oidc-i/default-unauthorized ctx failure rest-args)))
           :unsign-opts
-          (cond-> {}
-            ;; Apply issuer verification
-            oidc-issuer (assoc :iss oidc-issuer)
+          (cond-> {:iss oidc-issuer}
             ;; Apply audience verification
             oidc-audience (assoc :aud oidc-audience)))
          ;; This is a vector in case we need additional interceptors. At present
@@ -135,12 +123,8 @@
   "Given a webserver config, return a (possibly empty) vector of interceptors
   for use with the admin API. These validate token claims and ensure an admin
   account is made."
-  [{:keys [jwks-uri
-           oidc-issuer
-           oidc-config] :as config}]
-  (if (or jwks-uri
-          oidc-issuer
-          oidc-config)
+  [{:keys [oidc-issuer] :as config}]
+  (if oidc-issuer
     [admin-oidc/validate-oidc-identity
      admin-oidc/authorize-oidc-request
      admin-oidc/ensure-oidc-identity]

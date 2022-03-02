@@ -15,7 +15,5 @@
  :enable-admin-ui           #boolean #or [#env LRSQL_ENABLE_ADMIN_UI true]
  :enable-stmt-html          #boolean #or [#env LRSQL_ENABLE_STMT_HTML true]
  :oidc-issuer               #env LRSQL_OIDC_ISSUER
- :oidc-config               #env LRSQL_OIDC_CONFIG
  :oidc-audience             #env LRSQL_OIDC_AUDIENCE
- :oidc-verify-remote-issuer #or [#env LRSQL_OIDC_VERIFY_REMOTE_ISSUER true]
- :jwks-uri                  #env LRSQL_JWKS_URI}
+ :oidc-verify-remote-issuer #or [#env LRSQL_OIDC_VERIFY_REMOTE_ISSUER true]}
