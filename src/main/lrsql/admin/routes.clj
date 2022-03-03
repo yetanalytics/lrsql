@@ -91,8 +91,10 @@
      :route-name :lrsql.admin.ui/slash-redirect]
     ["/admin/env" :get (conj common-interceptors
                              ui/get-env)
-     :route-name :lrsql.admin.ui/get-env]
-    ;; OIDC Redirects
+     :route-name :lrsql.admin.ui/get-env]})
+
+(def admin-oidc-ui-routes
+  #{;; OIDC Redirects
     ["/admin/oidc/login" :get `ui/admin-ui-redirect-with-query
      :route-name :lrsql.admin.ui/oidc-login-redirect]
     ["/admin/oidc/logout" :get `ui/admin-ui-redirect-with-query
@@ -118,5 +120,8 @@
                 (admin-account-routes common-interceptors-oidc secret exp leeway)
                 (admin-cred-routes common-interceptors-oidc secret leeway)
                 (when enable-admin-ui
-                  (admin-ui-routes (into common-interceptors
-                                         oidc-ui-interceptors))))))
+                  (cond-> (admin-ui-routes
+                           (into common-interceptors
+                                 oidc-ui-interceptors))
+                    (not-empty oidc-ui-interceptors)
+                    (cset/union admin-oidc-ui-routes))))))
