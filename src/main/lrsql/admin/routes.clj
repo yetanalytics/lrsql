@@ -91,7 +91,12 @@
      :route-name :lrsql.admin.ui/slash-redirect]
     ["/admin/env" :get (conj common-interceptors
                              ui/get-env)
-     :route-name :lrsql.admin.ui/get-env]})
+     :route-name :lrsql.admin.ui/get-env]
+    ;; OIDC Redirects
+    ["/admin/oidc/login" :get `ui/admin-ui-redirect-with-query
+     :route-name :lrsql.admin.ui/oidc-login-redirect]
+    ["/admin/oidc/logout" :get `ui/admin-ui-redirect-with-query
+     :route-name :lrsql.admin.ui/oidc-logout-redirect]})
 
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
