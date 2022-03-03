@@ -119,7 +119,9 @@
 (s/def ::authority-template string?)
 (s/def ::authority-url ::xs/irl)
 (s/def ::oidc-authority-template string?)
+(s/def ::oidc-client-template string?)
 (s/def ::oidc-scope-prefix string?)
+(s/def ::oidc-client-id (s/nilable string?))
 
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
@@ -130,11 +132,13 @@
                           ::authority-template
                           ::authority-url
                           ::oidc-authority-template
+                          ::oidc-client-template
                           ::oidc-scope-prefix]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default
-                          ::api-secret-default])))
+                          ::api-secret-default
+                          ::oidc-client-id])))
 
 (s/def ::enable-http boolean?)
 (s/def ::enable-http2 boolean?)

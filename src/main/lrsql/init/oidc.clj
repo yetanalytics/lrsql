@@ -1,6 +1,7 @@
 (ns lrsql.init.oidc
   "OIDC initialization"
-  (:require [clojure.core.memoize :as mem]
+  (:require [cheshire.core :as json]
+            [clojure.core.memoize :as mem]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.tools.logging :as log]
@@ -13,6 +14,7 @@
             [lrsql.spec.config :as config]
             [lrsql.spec.oidc :as oidc]
             [selmer.parser :as selm-parser]
+            [selmer.util :as selm-u]
             xapi-schema.spec)
   (:import [java.io File]))
 
@@ -182,3 +184,56 @@
     (mem/lru (comp authority-fn
                    resolve-authority-claims)
              :lru/threshold (or threshold 512))))
+
+(def default-client-template
+  (-> "lrsql/config/oidc_client.json.template"
+      io/resource
+      selm-parser/parse*))
+
+(defn- get-client-template
+  [template-loc]
+  (if (not-empty template-loc)
+    (let [f (io/file template-loc)]
+      (if (.exists f)
+        (selm-parser/parse* f)
+        default-client-template))
+    default-client-template))
+
+(defn- throw-on-missing
+  "When a user enters a variable and it is not in our context map, throw!
+   Used by selmer when context map validation fails."
+  [tag context-map]
+  (throw
+   (ex-info (format "\"%s\" is not a valid variable for OIDC client config template."
+                    (:tag-value tag))
+            {:type        ::unknown-variable
+             :tag         tag
+             :context-map context-map})))
+
+(s/def :lrsql.init.oidc.render-client-config/lrs
+  (s/keys :req-un [::config/oidc-client-template
+                   ::config/oidc-client-id
+                   ::config/oidc-scope-prefix]))
+
+(s/def :lrsql.init.oidc.render-client-config/webserver
+  (s/keys :req-un [::config/oidc-issuer
+                   ::config/oidc-audience]))
+
+(s/fdef render-client-config
+  :args (s/cat :config
+               (s/keys
+                :req-un
+                [:lrsql.init.oidc.render-client-config/lrs
+                 :lrsql.init.oidc.render-client-config/webserver]))
+  :ret map?)
+
+(defn render-client-config
+  "Render OIDC client config from template."
+  [{{:keys [oidc-client-template]} :lrs
+    :as                            config}]
+  (binding [selm-u/*missing-value-formatter* throw-on-missing
+            selm-u/*filter-missing-values*   (constantly false)]
+    (json/parse-string
+     (selm-parser/render-template
+      (get-client-template oidc-client-template)
+      config))))
