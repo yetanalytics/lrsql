@@ -87,3 +87,13 @@
                  [:request :session ::jwt/data :account-id]
                  result))))
         ctx))}))
+
+(defn inject-client-config-interceptor
+  "Inject an OIDC client configuration to be picked up by the admin env
+  interceptor."
+  [client-config]
+  (interceptor
+   {:name ::inject-client-config
+    :enter
+    (fn inject-client-config [ctx]
+      (assoc ctx ::client-config client-config))}))

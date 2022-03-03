@@ -237,3 +237,21 @@
      (selm-parser/render-template
       (get-client-template oidc-client-template)
       config))))
+
+(s/fdef admin-ui-interceptors
+  :args (s/cat :webserver-config ::config/webserver
+               :lrs-config       ::config/lrs)
+  :ret (s/every i/interceptor?))
+
+(defn admin-ui-interceptors
+  "Given webserver and LRS configs, return a vector of interceptors to apply to
+  Admin UI routes. If LRS oidc-client-id is not specified, returns an empty
+  vector."
+  [{:keys [oidc-issuer] :as webserver-config}
+   {:keys [oidc-client-id] :as lrs-config}]
+  (if (and oidc-issuer
+           oidc-client-id)
+    [(admin-oidc/inject-client-config-interceptor
+      (render-client-config {:webserver webserver-config
+                             :lrs       lrs-config}))]
+    []))

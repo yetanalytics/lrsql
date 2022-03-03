@@ -38,6 +38,11 @@
         oidc-admin-interceptors
         (into oidc-interceptors
               (oidc/admin-interceptors config))
+        ;; OIDC Admin UI
+        oidc-admin-ui-interceptors (oidc/admin-ui-interceptors
+                                    config
+                                    (:config lrs))
+
         ;; Make routes - the lrs error interceptor is appended to the
         ;; start to all lrs routes
         routes
@@ -47,12 +52,13 @@
                                          [i/error-interceptor
                                           (handle-json-parse-exn)]
                                          oidc-interceptors)})
-             (add-admin-routes {:lrs               lrs
-                                :exp               jwt-exp
-                                :leeway            jwt-lwy
-                                :secret            private-key
-                                :enable-admin-ui   enable-admin-ui
-                                :oidc-interceptors oidc-admin-interceptors}))]
+             (add-admin-routes {:lrs                  lrs
+                                :exp                  jwt-exp
+                                :leeway               jwt-lwy
+                                :secret               private-key
+                                :enable-admin-ui      enable-admin-ui
+                                :oidc-interceptors    oidc-admin-interceptors
+                                :oidc-ui-interceptors oidc-admin-ui-interceptors}))]
     {:env                      :prod
      ::http/routes             routes
      ;; only serve assets if the admin ui is enabled
