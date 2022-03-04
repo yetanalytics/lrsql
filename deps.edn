@@ -101,13 +101,14 @@
                   :exclusions [org.clojure/data.json]}
                  com.yetanalytics/datasim
                  {:git/url    "https://github.com/yetanalytics/datasim.git"
-                  :git/sha    "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
+                  :git/sha    "d0c9cb662abc93935e4261da6162f263beeb3842"
+                  #_"d55f24098aca78db69e2f03d4f202ce58b5fdb49"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema
-                               com.yetanalytics/project-pan]}
+                               #_com.yetanalytics/project-pan]}
                  ;; Override pan dep in DATASIM
-                 com.yetanalytics/project-pan
-                 {:git/url    "https://github.com/yetanalytics/project-pan.git"
+                 #_com.yetanalytics/project-pan
+                 #_{:git/url    "https://github.com/yetanalytics/project-pan.git"
                   :git/sha    "db90b60f90908de6c2a66928ea59654a8abeaead"
                   :exclusions [org.clojure/clojure
                                org.clojure/clojurescript
