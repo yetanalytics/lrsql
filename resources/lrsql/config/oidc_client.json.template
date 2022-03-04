@@ -10,9 +10,7 @@
 {
     "authority": "{{webserver.oidc-issuer}}",
     "client_id": "{{lrs.oidc-client-id}}",
-    "redirect_uri": "{{webserver.oidc-audience}}/admin/oidc/login",
     "response_type": "code",
-    "post_logout_redirect_uri": "{{webserver.oidc-audience}}/admin/oidc/logout",
     "scope": "openid profile {{lrs.oidc-scope-prefix}}admin",
     "automaticSilentRenew": true,
     "monitorSession": false,

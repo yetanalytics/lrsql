@@ -65,14 +65,12 @@
   (testing "Renders OIDC Client config."
     (is
      (= {"authority"                "https://idp.example.com/realm",
-         "post_logout_redirect_uri" "https://lrs.example.com/admin/oidc/logout",
          "automaticSilentRenew"     true,
          "extraQueryParams"         {"audience" "https://lrs.example.com"},
          "monitorSession"           false,
          "filterProtocolClaims"     false,
          "response_type"            "code",
          "scope"                    "openid profile lrs:admin",
-         "redirect_uri"             "https://lrs.example.com/admin/oidc/login",
          "client_id"                "1234"}
         (render-client-config
          {:webserver {:oidc-issuer   "https://idp.example.com/realm"

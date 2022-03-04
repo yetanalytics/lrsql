@@ -9,15 +9,6 @@
   [_]
   (resp/redirect "/admin/index.html"))
 
-(defn admin-ui-redirect-with-query
-  "Like admin-ui-redirect, but preserves query string."
-  [{:keys [query-string]}]
-  (resp/redirect
-   (str "/admin/index.html"
-        (when query-string
-          (str "?"
-               query-string)))))
-
 (def get-env
   "Provide select config data to client upon request"
   (interceptor
