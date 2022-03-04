@@ -113,7 +113,7 @@ You may have noted that some options are not available:
 | `LRSQL_ENABLE_ADMIN_UI` | `enableAdminUi` | Whether or not to serve the administrative UI at `/admin` | `true` |
 | `LRSQL_ENABLE_STMT_HTML` | `enableStmtHtml` | Whether or not HTML data is returned in the LRS HTTP response. If `false` disables HTML rendering even if `LRSQL_ENABLE_ADMIN_UI` is `true`. In that case the UI will not display the Statement Browser feature. | `true` |
 | `LRSQL_OIDC_ISSUER` | `oidcIssuer` | OIDC Issuer address used for [discovery](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig). Will enable OIDC if present. | Not set |
-| `LRSQL_OIDC_AUDIENCE` | `oidcAudience` | Optional OIDC audience for token claim verification. | Not set |
-| `LRSQL_OIDC_VERIFY_REMOTE_ISSUER` | `oidcVerifyRemoteIssuer` | Verify on startup that the issuer in remote configuration matches `LRSQL_OIDC_ISSUER` (if provided). | `true` |
+| `LRSQL_OIDC_AUDIENCE` | `oidcAudience` | Optional OIDC audience for token claim verification. No effect if `LRSQL_OIDC_ISSUER` is not set. | Not set |
+| `LRSQL_OIDC_VERIFY_REMOTE_ISSUER` | `oidcVerifyRemoteIssuer` | Verify on startup that the issuer in remote configuration matches `LRSQL_OIDC_ISSUER`. No effect if `LRSQL_OIDC_ISSUER` is not set. | `true` |
 
 [<- Back to Index](index.md)
