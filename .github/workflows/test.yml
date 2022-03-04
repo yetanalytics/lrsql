@@ -22,7 +22,7 @@ jobs:
       uses: yetanalytics/actions/setup-env@v0
     
     - name: Run clj-kondo linting
-      run: clj-kondo --lint src
+      run: clj-kondo --lint src/bench src/build src/db src/main src/test
 
   test:
     runs-on: ubuntu-latest
