@@ -123,7 +123,7 @@
   "Given a webserver config, return a (possibly empty) vector of interceptors
   for use with the admin API. These validate token claims and ensure an admin
   account is made."
-  [{:keys [oidc-issuer] :as config}]
+  [{:keys [oidc-issuer]}]
   (if oidc-issuer
     [admin-oidc/validate-oidc-identity
      admin-oidc/authorize-oidc-request
