@@ -3,7 +3,6 @@
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.interceptors.jwt :as jwt]
             [lrsql.admin.protocol :as adp]
-            [lrsql.util.auth :as auth]
             [lrsql.util.oidc :as oidc]))
 
 (def validate-oidc-identity
