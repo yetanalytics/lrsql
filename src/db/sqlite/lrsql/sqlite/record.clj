@@ -19,6 +19,7 @@
 
 ;; Schema Update Helpers
 
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defn- update-schema-simple!
   "Given a tx and a db-fn that updates schema to remove CHECK or FOREIGN KEY or NOT NULL constraints or to add, remove, or change default values on a column, wraps it with an update to the schema version and associated checks.
 
