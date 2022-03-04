@@ -16,6 +16,28 @@
    :username    username
    :passhash    (adu/hash-password password)})
 
+(s/fdef ensure-admin-oidc-input
+  :args (s/cat :username ::ads/username
+               :oidc-issuer :lrsql.spec.admin.input/oidc-issuer)
+  :ret ads/ensure-admin-oidc-input-spec)
+
+(defn ensure-admin-oidc-input
+  "Given `username` and `oidc-issuer`, construct the input param map for
+  `ensure-admin-oidc!`"
+  [username oidc-issuer]
+  {:username    username
+   :oidc-issuer oidc-issuer})
+
+(s/fdef insert-admin-oidc-input
+  :args (s/cat :ensure-input ads/ensure-admin-oidc-input-spec)
+  :ret ads/insert-admin-oidc-input-spec)
+
+(defn insert-admin-oidc-input
+  "Given an input from ensure-admin-oidc-input, add a primary key for use in
+  `insert-admin-oidc!`"
+  [ensure-input]
+  (u/add-primary-key ensure-input))
+
 (s/fdef delete-admin-input
   :args (s/cat :account-id ::ads/account-id)
   :ret ads/admin-id-input-spec)

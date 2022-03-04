@@ -3,10 +3,12 @@
   (:require [clojure.core.memoize :as mem]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
+            [clojure.tools.logging :as log]
             [com.yetanalytics.pedestal-oidc.discovery :as disco]
             [com.yetanalytics.pedestal-oidc.interceptor :as oidc-i]
             [com.yetanalytics.pedestal-oidc.jwt :as jwt]
             [io.pedestal.interceptor :as i]
+            [lrsql.admin.interceptors.oidc :as admin-oidc]
             [lrsql.init.authority :as authority]
             [lrsql.spec.config :as config]
             [lrsql.spec.oidc :as oidc]
@@ -19,13 +21,13 @@
   (select-keys
    config
    [:oidc-issuer
-    :oidc-config
-    :jwks-uri]))
+    :oidc-audience
+    :oidc-verify-remote-issuer]))
 
 (def partial-config-spec
   (s/keys :opt-un [::config/oidc-issuer
-                   ::config/oidc-config
-                   ::config/jwks-uri]))
+                   ::config/oidc-audience
+                   ::config/oidc-verify-remote-issuer]))
 
 (s/fdef get-configuration
   :args (s/cat :config partial-config-spec)
@@ -33,19 +35,36 @@
 
 (defn get-configuration
   "Given webserver config, return an openid configuration if one is specified
-  via :oidc-issuer or :oidc-config."
+  via :oidc-issuer."
   [{:keys [oidc-issuer
-           oidc-config] :as config}]
+           oidc-verify-remote-issuer]
+    :or {oidc-verify-remote-issuer true}
+    :as config}]
   (try
-    (when-let [config-uri (or oidc-config
-                              (and oidc-issuer
-                                   (disco/issuer->config-uri oidc-issuer)))]
-      (disco/get-openid-config config-uri))
-    (catch AssertionError ae
-      (ex-info "Invalid OIDC Config"
-               {:type        ::invalid-config
-                :oidc-config (select-config config)}
-               ae))))
+    (when-let [config-uri (and oidc-issuer
+                               (disco/issuer->config-uri oidc-issuer))]
+      (let [{:strs [issuer]
+             :as   remote-config} (disco/get-openid-config config-uri)]
+        ;; Verify that issuer matches if passed in
+        (when oidc-verify-remote-issuer
+          (when-not (= oidc-issuer issuer)
+            (throw
+             (ex-info
+              (format
+               "Specified oidc-issuer %s does not match remote %s."
+               oidc-issuer
+               issuer)
+              {:type          ::issuer-mismatch
+               :local-issuer  oidc-issuer
+               :remote-issuer issuer}))))
+        ;; Return it
+        remote-config))
+    (catch Exception ex
+      (throw
+       (ex-info "Invalid OIDC Config"
+                {:type        ::invalid-config
+                 :oidc-config (select-config config)}
+                ex)))))
 
 (s/fdef resource-interceptors
   :args (s/cat :config partial-config-spec)
@@ -53,14 +72,16 @@
 
 (defn resource-interceptors
   "Given a webserver config, return a (possibly empty) vector of interceptors.
-  Interceptors will enable token auth against OIDC"
-  [{:keys [jwks-uri] :as config}]
+  Interceptors will enable token auth against OIDC."
+  [{:keys [oidc-issuer
+           oidc-audience] :as config}]
   (try
-    (if-let [jwks-uri (or jwks-uri
-                          (some-> config
-                                  get-configuration
-                                  (get "jwks_uri")))]
-      (let [keyset-cache (atom (jwt/get-keyset jwks-uri))]
+    (if-let [jwks-uri (some-> config
+                              get-configuration
+                              (get "jwks_uri"))]
+      (let [_ (when-not oidc-audience
+                (log/warn "oidc-audience should be provided for verification"))
+            keyset-cache (atom (jwt/get-keyset jwks-uri))]
         [;; Decode/Unsign tokens
          (oidc-i/decode-interceptor
           (fn [_]
@@ -70,7 +91,17 @@
                    ;; again
                    (get (reset! keyset-cache (jwt/get-keyset jwks-uri))
                         kid))))
-          :required? false)
+          :required? false
+          :unauthorized
+          ;; Allow unknown/nil key IDs through for possible subsequent handling
+          (fn [ctx failure & rest-args]
+            (if (= :kid-not-found failure)
+              ctx
+              (apply oidc-i/default-unauthorized ctx failure rest-args)))
+          :unsign-opts
+          (cond-> {:iss oidc-issuer}
+            ;; Apply audience verification
+            oidc-audience (assoc :aud oidc-audience)))
          ;; This is a vector in case we need additional interceptors. At present
          ;; we do not.
          ])
@@ -83,6 +114,21 @@
         {:type        ::init-failure
          :oidc-config (select-config config)}
         ex)))))
+
+(s/fdef admin-interceptors
+  :args (s/cat :config partial-config-spec)
+  :ret (s/every i/interceptor?))
+
+(defn admin-interceptors
+  "Given a webserver config, return a (possibly empty) vector of interceptors
+  for use with the admin API. These validate token claims and ensure an admin
+  account is made."
+  [{:keys [oidc-issuer]}]
+  (if oidc-issuer
+    [admin-oidc/validate-oidc-identity
+     admin-oidc/authorize-oidc-request
+     admin-oidc/ensure-oidc-identity]
+    []))
 
 ;; Authority
 

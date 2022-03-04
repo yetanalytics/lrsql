@@ -1,8 +1,13 @@
 (ns lrsql.util.oidc-test
   (:require [clojure.test    :refer [deftest is testing are]]
-            [lrsql.util.oidc :refer [parse-scope-claim
-                                     token-auth-identity]]
-            [lrsql.init.oidc :refer [make-authority-fn]]))
+            [lrsql.util.oidc :as oidc :refer [parse-scope-claim
+                                              token-auth-identity
+                                              token-auth-admin-identity
+                                              authorize-admin-action]]
+            [lrsql.init.oidc :refer [make-authority-fn]]
+            [lrsql.test-support :refer [check-validate instrument-lrsql]]))
+
+(instrument-lrsql)
 
 (deftest parse-scope-claim-test
   (testing "Gets valid scopes, skips others"
@@ -68,3 +73,56 @@
              {}}
             auth-fn
             scope-prefix))))))
+
+(deftest token-auth-admin-identity-test
+  (let [scope-prefix ""]
+    (testing "Returns an admin identity"
+      (is (= {:scopes #{:scope/admin}
+              :username "1234"
+              :oidc-issuer "http://example.com/realm"}
+             (token-auth-admin-identity
+              {:com.yetanalytics.pedestal-oidc/token "foo"
+               :request
+               {:com.yetanalytics.pedestal-oidc/claims
+                {:scope "openid admin"
+                 :iss   "http://example.com/realm"
+                 :aud   "someapp"
+                 :sub   "1234"}}}
+              scope-prefix))))
+    (testing "Fails without any valid scopes"
+      (is (= ::oidc/unauthorized
+             (token-auth-admin-identity
+              {:com.yetanalytics.pedestal-oidc/token "foo"
+               :request
+               {:com.yetanalytics.pedestal-oidc/claims
+                {:scope "openid"
+                 :iss   "http://example.com/realm"
+                 :aud   "someapp"
+                 :sub   "1234"}}}
+              scope-prefix))))
+    (testing "nil w/o token"
+      (is (nil?
+           (token-auth-admin-identity
+            {:request
+             {}}
+            scope-prefix))))))
+
+(deftest authorize-admin-action-test
+  (testing "authorize-admin-action function"
+    (are [expected input]
+         (= expected
+            (let [{:keys [request-method path-info scopes]} input]
+              (:result (authorize-admin-action
+                        {:request {:request-method request-method
+                                   :path-info path-info}}
+                        {:scopes scopes}))))
+      ;; Admin Scope
+      ;; Currently one for all admin requests
+      true {:request-method :get
+            :path-info      "/admin/account"
+            :scopes         #{:scope/admin}}
+      false {:request-method :get
+             :path-info      "/admin/account"
+             :scopes         #{}}))
+  (testing "authorize-admin-action gentest"
+    (is (nil? (check-validate `authorize-admin-action)))))

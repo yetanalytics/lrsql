@@ -239,3 +239,17 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
     ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS cred_keypair_fk ON credential_to_scope(api_key, secret_key);
+
+/* Migration 2022-02-22-00 - Set admin_account.passhash to optional */
+
+-- :name alter-admin-account-passhash-optional!
+-- :command :execute
+-- :doc Set `admin_account.passhash` to optional.
+ALTER TABLE IF EXISTS admin_account ALTER COLUMN passhash DROP NOT NULL;
+
+/* Migration 2022-02-23-00 - Add oidc_issuer to admin_account */
+
+-- :name alter-admin-account-add-openid-issuer!
+-- :command :execute
+-- :doc Add `admin_account.oidc_issuer` to record OIDC identity source.
+ALTER TABLE IF EXISTS admin_account ADD COLUMN IF NOT EXISTS oidc_issuer VARCHAR(255);

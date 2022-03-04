@@ -158,8 +158,8 @@
 (s/def ::enable-stmt-html boolean?)
 
 (s/def ::oidc-issuer (s/nilable string?))
-(s/def ::oidc-config (s/nilable string?))
-(s/def ::jwks-uri (s/nilable string?))
+(s/def ::oidc-audience (s/nilable string?))
+(s/def ::oidc-verify-remote-issuer boolean?)
 
 (s/def ::webserver
   (s/keys :req-un [::http-host
@@ -174,13 +174,13 @@
                    ::jwt-exp-time
                    ::jwt-exp-leeway
                    ::enable-admin-ui
-                   ::enable-stmt-html]
+                   ::enable-stmt-html
+                   ::oidc-verify-remote-issuer]
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain
                    ::oidc-issuer
-                   ::oidc-config
-                   ::jwks-uri]))
+                   ::oidc-audience]))
 
 (def config-spec
   (s/keys :req-un [::connection
