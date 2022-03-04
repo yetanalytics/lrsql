@@ -7,8 +7,7 @@
             [lrsql.init.authority :as authority]
             [lrsql.spec.admin :as admin]
             [lrsql.spec.config :as config]
-            [lrsql.util.auth :as auth])
-  (:import [java.io File]))
+            [lrsql.util.auth :as auth]))
 
 ;; OIDC supports an additional scope `admin` that allows all admin actions
 
@@ -142,11 +141,10 @@
     scope-prefix - Prefix to add to expected scopes."
   [ctx
    scope-prefix]
-  (when-let [token (:com.yetanalytics.pedestal-oidc/token ctx)]
-    (let [{:keys [scope iss sub]
-           :as   claims} (get-in ctx
-                                 [:request
-                                  :com.yetanalytics.pedestal-oidc/claims])]
+  (when (:com.yetanalytics.pedestal-oidc/token ctx)
+    (let [{:keys [scope iss sub]} (get-in ctx
+                                          [:request
+                                           :com.yetanalytics.pedestal-oidc/claims])]
       (if-let [scopes (and (not-empty iss)
                            (not-empty sub)
                            (some-> scope
@@ -168,7 +166,7 @@
 
 (defn authorize-admin-action
   "Given a pedestal context and an OIDC admin auth identity, authorize or deny."
-  [{{:keys [request-method path-info]} :request
+  [{{:keys [path-info]} :request
     :as _ctx}
    {:keys [scopes]
     :as _auth-identity}]
