@@ -71,6 +71,5 @@
     (let [{:keys [primary-key]
            :as   insert-input} (admin-i/insert-admin-oidc-input
                                 ensure-input)]
-      (do
-        (bp/-insert-admin-account-oidc! bk tx insert-input)
-        {:result primary-key}))))
+      (bp/-insert-admin-account-oidc! bk tx insert-input)
+      {:result primary-key})))
