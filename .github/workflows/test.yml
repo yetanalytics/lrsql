@@ -9,6 +9,21 @@ jobs:
       nvd-clojure-version: '2.0.0'
       classpath-command: 'clojure -Spath -A:db-h2:db-sqlite:db-postgres'
   
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup clj-kondo
+      uses: DeLaGuardo/setup-clj-kondo@master
+      with:
+        version: '2022.03.04'
+
+    - name: Setup CI Environment
+      uses: yetanalytics/actions/setup-env@v0
+    
+    - name: Run clj-kondo linting
+      run: clj-kondo --lint src/bench src/build src/db src/main src/test
+
   test:
     runs-on: ubuntu-latest
   
