@@ -1,0 +1,18 @@
+version: "3.9"
+
+configs:
+  test_realm:
+    file: ./test-realm.json
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:16.1.0
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: changeme123
+      KEYCLOAK_IMPORT: /tmp/test-realm.json
+    configs:
+      - source: test_realm
+        target: /tmp/test-realm.json
+    ports:
+      - "8081:8080"
