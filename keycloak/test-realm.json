@@ -579,7 +579,7 @@
         "optionalClientScopes" : [ "address", "phone", "offline_access", "microprofile-jwt" ]
     }, {
         "clientId": "lrs_admin_ui",
-        "name": "LRS Admin UI Figwheel Server",
+        "name": "LRS Admin UI/Figwheel Server",
         "rootUrl": "http://localhost:9500/",
         "adminUrl": "http://localhost:9500/",
         "surrogateAuthRequired": false,
@@ -588,10 +588,12 @@
         "clientAuthenticatorType": "client-secret",
         "redirectUris": [
             "http://localhost:9500/",
+            "http://0.0.0.0:8080/admin/index.html",
             "http://localhost:9500/*"
         ],
         "webOrigins": [
-            "http://localhost:9500"
+            "http://localhost:9500",
+            "http://0.0.0.0:8080"
         ],
         "notBefore": 0,
         "bearerOnly": false,
@@ -642,7 +644,8 @@
                 "config": {
                     "id.token.claim": "false",
                     "access.token.claim": "true",
-                    "included.custom.audience": "http://0.0.0.0:8080"
+                    "included.custom.audience": "http://0.0.0.0:8080",
+                    "userinfo.token.claim": "false"
                 }
             }
         ],
