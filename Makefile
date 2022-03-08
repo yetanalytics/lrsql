@@ -91,7 +91,7 @@ check-vuln: target/nvd
 # Demo instance of Keycloak used for interactive development
 
 keycloak-demo:
-	cd keycloak; docker compose up
+	cd dev-resources/keycloak_demo; docker compose up
 
 # *** Build ***
 
