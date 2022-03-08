@@ -40,8 +40,7 @@
                 org.clojure/clojurescript
                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
-  {:git/url    "https://github.com/yetanalytics/xapi-schema.git"
-   :git/sha    "13b4e1a0da7676f61edb2344c47d6b71e32e846d"
+  {:mvn/version "1.2.0"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript]}
   com.yetanalytics/colossal-squuid
@@ -65,18 +64,10 @@
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
                  com.yetanalytics/datasim
                  {:git/url    "https://github.com/yetanalytics/datasim.git"
-                  :git/sha    "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
+                  :git/sha    "684fdefed81972093b56556d7f60a637457a6a06"
+                  :git/tag    "v0.1.2"
                   :exclusions [org.clojure/clojure
-                               com.yetanalytics/xapi-schema
-                               com.yetanalytics/project-pan]}
-                 ;; Override pan dep in DATASIM
-                 com.yetanalytics/project-pan
-                 {:git/url    "https://github.com/yetanalytics/project-pan.git"
-                  :git/sha    "db90b60f90908de6c2a66928ea59654a8abeaead"
-                  :exclusions [org.clojure/clojure
-                               org.clojure/clojurescript
-                               com.yetanalytics/xapi-schema
-                               com.yetanalytics/project-pan]}}}
+                               com.yetanalytics/xapi-schema]}}}
   :test
   {:extra-paths ["src/db/h2"
                  "src/db/sqlite"
@@ -101,18 +92,10 @@
                   :exclusions [org.clojure/data.json]}
                  com.yetanalytics/datasim
                  {:git/url    "https://github.com/yetanalytics/datasim.git"
-                  :git/sha    "d55f24098aca78db69e2f03d4f202ce58b5fdb49"
+                  :git/sha    "684fdefed81972093b56556d7f60a637457a6a06"
+                  :git/tag    "v0.1.2"
                   :exclusions [org.clojure/clojure
-                               com.yetanalytics/xapi-schema
-                               com.yetanalytics/project-pan]}
-                 ;; Override pan dep in DATASIM
-                 com.yetanalytics/project-pan
-                 {:git/url    "https://github.com/yetanalytics/project-pan.git"
-                  :git/sha    "db90b60f90908de6c2a66928ea59654a8abeaead"
-                  :exclusions [org.clojure/clojure
-                               org.clojure/clojurescript
-                               com.yetanalytics/xapi-schema
-                               com.yetanalytics/project-pan]}}}
+                               com.yetanalytics/xapi-schema]}}}
   ;; Build alias invoked like clojure -Xbuild uber
   :build
   {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
