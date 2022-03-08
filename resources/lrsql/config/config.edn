@@ -23,6 +23,9 @@
 
                    ;; Testing Only! Specify the version used with testcontainers
                    :test-db-version "11.9"}
+   :test-oidc     {:db-type "h2:mem"
+                   :db-name "ephemeral"}
+
    ;; Production
    :prod-h2-mem   #include "prod/h2_mem/database.edn"
    :prod-h2       #include "prod/h2/database.edn"
@@ -35,6 +38,7 @@
    :test-h2       #include "test/default/connection.edn"
    :test-sqlite   #include "test/default/connection.edn"
    :test-postgres #include "test/postgres/connection.edn"
+   :test-oidc     #include "test/default/connection.edn"
    ;; Production
    :prod-h2-mem   #include "prod/default/connection.edn"
    :prod-h2       #include "prod/default/connection.edn"
@@ -47,6 +51,7 @@
    :test-h2       #include "test/default/lrs.edn"
    :test-sqlite   #include "test/default/lrs.edn"
    :test-postgres #include "test/default/lrs.edn"
+   :test-oidc     #include "test/oidc/lrs.edn"
    ;; Production
    :prod-h2-mem   #include "prod/default/lrs.edn"
    :prod-h2       #include "prod/default/lrs.edn"
@@ -59,6 +64,7 @@
   :test-h2       #include "test/default/webserver.edn"
   :test-sqlite   #include "test/default/webserver.edn"
   :test-postgres #include "test/default/webserver.edn"
+  :test-oidc     #include "test/oidc/webserver.edn"
   ;; Production
   :prod-h2-mem   #include "prod/default/webserver.edn"
   :prod-h2       #include "prod/default/webserver.edn"

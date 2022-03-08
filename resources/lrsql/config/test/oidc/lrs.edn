@@ -1,0 +1,4 @@
+#merge
+[#include "test/default/lrs.edn"
+ {:oidc-scope-prefix "lrs:"
+  :oidc-client-id    "lrs_admin_ui"}]
