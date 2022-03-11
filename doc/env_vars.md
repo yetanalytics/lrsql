@@ -103,7 +103,7 @@ You may have noted that some options are not available:
 | `LRSQL_KEY_CERT_CHAIN` | `keyCertChain` | Comma separated PEM files for cert. See the TLS/HTTPS section below. | <details>`config/server.crt.pem,config/cacert.pem`<summary>(Filepaths)</summary></details> |
 | `LRSQL_KEY_ENABLE_SELFIE` | `keyEnableSelfie` | Boolean, whether or not to enable self-signed cert generation. | `true` |
 | `LRSQL_JWT_EXP_TIME` | `jwtExpTime` | The amount of time, in seconds, after a JWT is created when it expires. Since JWTs are not revocable, **this this time should be short** (i.e. one hour or less). | `3600` (one hour) |
-| `LRSQL_JWT_EXP_LEEWAY` | `jwtExpLeeway` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
+| `LRSQL_JWT_EXP_LEEWAY` | `jwtExpLeeway` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. Applied to both LRS and OIDC tokens. | `1` (one second) |
 | `LRSQL_ENABLE_HTTP` | `enableHttp` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
 | `LRSQL_ENABLE_HTTP2` | `enableHttp2` | Whether HTTP/2 is supported or not. | `true` |
 | `LRSQL_HTTP_HOST` | `httpHost` | The host that the webserver will run on. | `0.0.0.0` |
