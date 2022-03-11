@@ -75,7 +75,7 @@
         (render-client-config
          {:webserver {:oidc-issuer    "https://idp.example.com/realm"
                       :oidc-audience  "https://lrs.example.com"
-                      :oidc-client-id "1234"}
-          :lrs       {:oidc-scope-prefix "lrs:"
+                      :oidc-client-id "1234"
                       :oidc-client-template
-                      "resources/lrsql/config/oidc_client.json.template"}})))))
+                      "resources/lrsql/config/oidc_client.json.template"}
+          :lrs       {:oidc-scope-prefix "lrs:"}})))))

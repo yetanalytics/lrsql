@@ -87,7 +87,6 @@ You may have noted that some options are not available:
 | `LRSQL_AUTHORITY_URL` | `authorityUrl` | The URL that is set as the `authority-url` value when constructing an authority from a template. | `http://example.org` |
 | `LRSQL_OIDC_AUTHORITY_TEMPLATE` | `oidcAuthorityTemplate` | Like `LRSQL_AUTHORITY_TEMPLATE`, but only used when forming an authority from an OIDC access token. | <details>`config/oidc_authority.json.template`<summary>(Filepath)</summary></details> |
 | `LRSQL_OIDC_SCOPE_PREFIX` | `oidcScopePrefix` | An optional prefix prepended to OIDC scope. For example, setting this to `lrs:` would change the expected `all` scope to `lrs:all` | `""` |
-| `LRSQL_OIDC_CLIENT_TEMPLATE` | `oidcClientTemplate` | An optional template to modify LRS Admin UI client OIDC configuration. | Not Set |
 | `LRSQL_STMT_RETRY_LIMIT` | `stmtRetryLimit` | The number of times to retry a statement post transaction before failing. | `10` |
 | `LRSQL_STMT_RETRY_BUDGET` | `stmtRetryBudget` | The max amount of time allowed for statement POST transaction retries before failing (ms). | `1000` |
 
@@ -116,6 +115,7 @@ You may have noted that some options are not available:
 | `LRSQL_OIDC_ISSUER` | `oidcIssuer` | OIDC Issuer address used for [discovery](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig). Will enable OIDC if present. | Not set |
 | `LRSQL_OIDC_AUDIENCE` | `oidcAudience` | Optional OIDC audience for token claim verification. No effect if `LRSQL_OIDC_ISSUER` is not set. | Not set |
 | `LRSQL_OIDC_CLIENT_ID` | `oidcClientId` | An optional OIDC client ID for the SQL LRS Admin SPA. If provided, along with the `LRSQL_OIDC_ISSUER` and `LRSQL_OIDC_AUDIENCE` variables, will enable OIDC access to the Admin UI. | Not Set |
+| `LRSQL_OIDC_CLIENT_TEMPLATE` | `oidcClientTemplate` | An optional template to modify LRS Admin UI client OIDC configuration. | Not Set |
 | `LRSQL_OIDC_VERIFY_REMOTE_ISSUER` | `oidcVerifyRemoteIssuer` | Verify on startup that the issuer in remote configuration matches `LRSQL_OIDC_ISSUER`. No effect if `LRSQL_OIDC_ISSUER` is not set. | `true` |
 
 [<- Back to Index](index.md)

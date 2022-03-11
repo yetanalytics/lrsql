@@ -211,13 +211,13 @@
              :context-map context-map})))
 
 (s/def :lrsql.init.oidc.render-client-config/lrs
-  (s/keys :req-un [::config/oidc-client-template
-                   ::config/oidc-scope-prefix]))
+  (s/keys :req-un [::config/oidc-scope-prefix]))
 
 (s/def :lrsql.init.oidc.render-client-config/webserver
   (s/keys :req-un [::config/oidc-issuer
                    ::config/oidc-audience
-                   ::config/oidc-client-id]))
+                   ::config/oidc-client-id
+                   ::config/oidc-client-template]))
 
 (s/fdef render-client-config
   :args (s/cat :config
@@ -229,7 +229,7 @@
 
 (defn render-client-config
   "Render OIDC client config from template."
-  [{{:keys [oidc-client-template]} :lrs
+  [{{:keys [oidc-client-template]} :webserver
     :as                            config}]
   (binding [selm-u/*missing-value-formatter* throw-on-missing
             selm-u/*filter-missing-values*   (constantly false)]

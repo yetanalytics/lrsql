@@ -119,7 +119,6 @@
 (s/def ::authority-template string?)
 (s/def ::authority-url ::xs/irl)
 (s/def ::oidc-authority-template string?)
-(s/def ::oidc-client-template string?)
 (s/def ::oidc-scope-prefix string?)
 
 (s/def ::lrs
@@ -131,7 +130,6 @@
                           ::authority-template
                           ::authority-url
                           ::oidc-authority-template
-                          ::oidc-client-template
                           ::oidc-scope-prefix]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
@@ -162,6 +160,7 @@
 (s/def ::oidc-issuer (s/nilable string?))
 (s/def ::oidc-audience (s/nilable string?))
 (s/def ::oidc-client-id (s/nilable string?))
+(s/def ::oidc-client-template string?)
 (s/def ::oidc-verify-remote-issuer boolean?)
 
 (s/def ::webserver
@@ -178,7 +177,8 @@
                    ::jwt-exp-leeway
                    ::enable-admin-ui
                    ::enable-stmt-html
-                   ::oidc-verify-remote-issuer]
+                   ::oidc-verify-remote-issuer
+                   ::oidc-client-template]
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain

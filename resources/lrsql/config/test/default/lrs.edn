@@ -8,7 +8,6 @@
  :authority-template      "config/authority.json.template"
  :authority-url           "http://example.org"
  :oidc-authority-template "config/oidc_authority.json.template"
- :oidc-client-template    "config/oidc_client.json.template"
  :oidc-scope-prefix       ""
  :stmt-retry-limit        20
  :stmt-retry-budget       10000}
