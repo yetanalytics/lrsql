@@ -27,6 +27,7 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 - [Setting up TLS/HTTPS](doc/https.md)
 - [Authority Configuration](doc/authority.md)
 - [Docker Image](doc/docker.md)
+- [OpenID Connect Support](doc/oidc.md)
 
 ### DBMS-specific Sections
 
