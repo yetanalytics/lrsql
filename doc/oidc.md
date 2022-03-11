@@ -71,6 +71,14 @@ When Keycloak is up, start SQL LRS with the following config variables:
 | `LRSQL_OIDC_CLIENT_ID`    | `lrs_admin_ui`                         | This is the ID of the preconfigured client in Keycloak.           |
 | `LRSQL_OIDC_SCOPE_PREFIX` | `lrs:`                                 | Prefix scopes so general names like `all` do not cause collision. |
 
+Like so:
+
+    LRSQL_OIDC_ISSUER=http://0.0.0.0:8081/auth/realms/test \
+    LRSQL_OIDC_AUDIENCE=http://0.0.0.0:8080 \
+    LRSQL_OIDC_CLIENT_ID=lrs_admin_ui \
+    LRSQL_OIDC_SCOPE_PREFIX=lrs: \
+    ./bin/run_h2.sh
+
 When SQL LRS has started navigate to the [Admin UI](http://0.0.0.0:8080/admin/index.html) and log in with the username `dev_user` and password `changeme123`.
 
 [<- Back to Index](index.md)
