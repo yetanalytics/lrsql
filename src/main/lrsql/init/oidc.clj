@@ -69,14 +69,16 @@
                 ex)))))
 
 (s/fdef resource-interceptors
-  :args (s/cat :config partial-config-spec)
+  :args (s/cat :config (s/merge partial-config-spec
+                                (s/keys :req-un [::config/jwt-exp-leeway])))
   :ret (s/every i/interceptor?))
 
 (defn resource-interceptors
   "Given a webserver config, return a (possibly empty) vector of interceptors.
   Interceptors will enable token auth against OIDC."
   [{:keys [oidc-issuer
-           oidc-audience] :as config}]
+           oidc-audience
+           jwt-exp-leeway] :as config}]
   (try
     (if-let [jwks-uri (some-> config
                               get-configuration
@@ -101,7 +103,8 @@
               ctx
               (apply oidc-i/default-unauthorized ctx failure rest-args)))
           :unsign-opts
-          (cond-> {:iss oidc-issuer}
+          (cond-> {:iss    oidc-issuer
+                   :leeway jwt-exp-leeway}
             ;; Apply audience verification
             oidc-audience (assoc :aud oidc-audience)))
          ;; This is a vector in case we need additional interceptors. At present
