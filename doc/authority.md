@@ -93,6 +93,6 @@ Possible claims vary by identity provider, see the [comprehensive list here](htt
 
 Note that the request will fail if expected claims are not present on the token.
 
-As with the normal authority template, you can provide a custom version by setting the `LRSQL_OIDC_AUTHORITY_TEMPLATE` (`oidcAuthorityTemplate`) config variable.
+As with the normal authority template, you can provide a custom version by setting the `LRSQL_OIDC_AUTHORITY_TEMPLATE` (`lrs.oidcAuthorityTemplate`) config variable.
 
 [<- Back to Index](index.md)

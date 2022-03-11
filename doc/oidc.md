@@ -12,11 +12,11 @@ SQL LRS supports [OpenID Connect (OIDC)](https://openid.net/connect/) on top of 
 
 SQL LRS supports OIDC token authentication to all [endpoints](endpoints.md), allowing the use of an OIDC access token to make requests. In this context SQL LRS acts as an OAuth 2.0 "resource server".
 
-To enable OIDC auth, set the `LRSQL_OIDC_ISSUER` (`oidcIssuer` in JSON) configuration variable to your identity provider's [Issuer Identifier](https://openid.net/specs/openid-connect-core-1_0.html#IssuerIdentifier) URI. This address must be accessible to the LRS on startup as it will perform [OIDC Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html) to retrieve public keys and other information about the OIDC environment. It is also *strongly* recommended that you set the optional `LRSQL_OIDC_AUDIENCE` (`oidcAudience`) variable to the origin address of the LRS itself (ex. "http://0.0.0.0:8080") to enable verification that a given token was issued specifically for the LRS.
+To enable OIDC auth, set the `LRSQL_OIDC_ISSUER` (`webserver.oidcIssuer` in JSON) configuration variable to your identity provider's [Issuer Identifier](https://openid.net/specs/openid-connect-core-1_0.html#IssuerIdentifier) URI. This address must be accessible to the LRS on startup as it will perform [OIDC Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html) to retrieve public keys and other information about the OIDC environment. It is also *strongly* recommended that you set the optional `LRSQL_OIDC_AUDIENCE` (`webserver.oidcAudience`) variable to the origin address of the LRS itself (ex. "http://0.0.0.0:8080") to enable verification that a given token was issued specifically for the LRS.
 
 #### Scope
 
-Resource authorization is determined by the scopes present in the token's `scope` claim. Note that the resource scopes discussed below can be prefixed with an arbitrary string by setting the `LRSQL_OIDC_SCOPE_PREFIX` (`oidcScopePrefix`). This is useful if the scopes used by SQL LRS might conflict with others used by your identity provider. For example, setting the variable to `lrs:` will change the `all` scope to `lrs:all`.
+Resource authorization is determined by the scopes present in the token's `scope` claim. Note that the resource scopes discussed below can be prefixed with an arbitrary string by setting the `LRSQL_OIDC_SCOPE_PREFIX` (`lrs.oidcScopePrefix`). This is useful if the scopes used by SQL LRS might conflict with others used by your identity provider. For example, setting the variable to `lrs:` will change the `all` scope to `lrs:all`.
 
 OIDC Clients making requests to SQL LRS will need to request the desired scopes, and it is responsibility of the identity provider to grant them (or not). Configuration of scopes and associated behavior varies by identity provider.
 
@@ -41,13 +41,13 @@ Administrative functions like credential provisioning require a local admin acco
 
 ### Admin UI Authentication
 
-The LRS Admin UI supports interactive login via an OIDC identity provider. To enable this functionality you must provide the OIDC issuer and audience (not optional in this case) as above and additionally set the `LRSQL_OIDC_CLIENT_ID` (`oidcClientId`) to the Client ID representing your Admin UI.
+The LRS Admin UI supports interactive login via an OIDC identity provider. To enable this functionality you must provide the OIDC issuer and audience (not optional in this case) as above and additionally set the `LRSQL_OIDC_CLIENT_ID` (`webserver.oidcClientId`) to the Client ID representing your Admin UI.
 
 When enabled the LRS will send configuration to the Admin UI directing it to offer OIDC login. Click the OIDC login link to be redirected to your identity provider for login. Upon a successful login you will be redirected to the Admin UI.
 
 #### Client Template
 
-The LRS Admin UI uses [oidc-client-js](https://github.com/IdentityModel/oidc-client-js) to manage communication with the OIDC identity provider. For some providers it may be necessary to customize client configuration in which case the `LRSQL_OIDC_CLIENT_TEMPLATE` (`oidcClientTemplate`) variable can be set. Note that the `redirect_uri` and `post_logout_redirect_uri` will be set by the Admin UI client and should not be provided.
+The LRS Admin UI uses [oidc-client-js](https://github.com/IdentityModel/oidc-client-js) to manage communication with the OIDC identity provider. For some providers it may be necessary to customize client configuration in which case the `LRSQL_OIDC_CLIENT_TEMPLATE` (`lrs.oidcClientTemplate`) variable can be set. Note that the `redirect_uri` and `post_logout_redirect_uri` will be set by the Admin UI client and should not be provided.
 
 ### Identity Providers
 
@@ -64,12 +64,12 @@ This will start a Keycloak server available at port 8081. You can adminster Keyc
 
 When Keycloak is up, start SQL LRS with the following config variables:
 
-| Variable                  | Value                                  | Notes                                                             |
-| ---                       | ---                                    | ---                                                               |
-| `LRSQL_OIDC_ISSUER`       | `http://0.0.0.0:8081/auth/realms/test` | Keycloak realm uri.                                               |
-| `LRSQL_OIDC_AUDIENCE`     | `http://0.0.0.0:8080`                  | The origin address of the LRS.                                    |
-| `LRSQL_OIDC_CLIENT_ID`    | `lrs_admin_ui`                         | This is the ID of the preconfigured client in Keycloak.           |
-| `LRSQL_OIDC_SCOPE_PREFIX` | `lrs:`                                 | Prefix scopes so general names like `all` do not cause collision. |
+| Environment Variable      | JSON                     | Value                                  | Notes                                                             |
+| ---                       | ---                      | ---                                    | ---                                                               |
+| `LRSQL_OIDC_ISSUER`       | `webserver.oidcIssuer`   | `http://0.0.0.0:8081/auth/realms/test` | Keycloak realm uri.                                               |
+| `LRSQL_OIDC_AUDIENCE`     | `webserver.oidcAudience` | `http://0.0.0.0:8080`                  | The origin address of the LRS.                                    |
+| `LRSQL_OIDC_CLIENT_ID`    | `webserver.oidcClientId` | `lrs_admin_ui`                         | This is the ID of the preconfigured client in Keycloak.           |
+| `LRSQL_OIDC_SCOPE_PREFIX` | `lrs.oidcScopePrefix`    | `lrs:`                                 | Prefix scopes so general names like `all` do not cause collision. |
 
 Like so:
 
