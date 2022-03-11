@@ -22,7 +22,7 @@ OIDC Clients making requests to SQL LRS will need to request the desired scopes,
 
 #### xAPI Resources
 
-xAPI resources currently accept requests with the following scopes:
+xAPI resources accept tokens with the following scopes:
 
 | Scope              | Capability                                    |
 | ---                | ---                                           |
@@ -35,7 +35,19 @@ When SQL LRS accepts xAPI statements via OIDC auth it uses token claims to form 
 
 #### Admin API Resources
 
+Admin API resources share a single scope `admin` that represents full administrative control over SQL LRS.
+
+Administrative functions like credential provisioning require a local admin account. After decoding the token SQL LRS will ensure that an account exists (or is created) with a `username` matching the token's `sub` claim and an `oidc_issuer` matching the `iss` claim. If the user exists but the issuer does not match the request will fail with a 401 status.
+
 ### Admin UI Authentication
+
+The LRS Admin UI supports interactive login via an OIDC identity provider. To enable this functionality you must provide the OIDC issuer and audience (not optional in this case) as above and additionally set the `LRSQL_OIDC_CLIENT_ID` (`oidcClientId`) to the Client ID representing your Admin UI.
+
+When enabled the LRS will send configuration to the Admin UI directing it to offer OIDC login. Click the OIDC login link to be redirected to your identity provider for login. Upon a successful login you will be redirected to the Admin UI.
+
+#### Client Template
+
+The LRS Admin UI uses [oidc-client-js](https://github.com/IdentityModel/oidc-client-js) to manage communication with the OIDC identity provider. For some providers it may be necessary to customize client configuration in which case the `LRSQL_OIDC_CLIENT_TEMPLATE` (`oidcClientTemplate`) variable can be set. Note that the `redirect_uri` and `post_logout_redirect_uri` will be set by the Admin UI client and should not be provided.
 
 ### Identity Providers
 
