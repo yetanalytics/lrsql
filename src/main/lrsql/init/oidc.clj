@@ -212,12 +212,12 @@
 
 (s/def :lrsql.init.oidc.render-client-config/lrs
   (s/keys :req-un [::config/oidc-client-template
-                   ::config/oidc-client-id
                    ::config/oidc-scope-prefix]))
 
 (s/def :lrsql.init.oidc.render-client-config/webserver
   (s/keys :req-un [::config/oidc-issuer
-                   ::config/oidc-audience]))
+                   ::config/oidc-audience
+                   ::config/oidc-client-id]))
 
 (s/fdef render-client-config
   :args (s/cat :config
@@ -245,10 +245,11 @@
 
 (defn admin-ui-interceptors
   "Given webserver and LRS configs, return a vector of interceptors to apply to
-  Admin UI routes. If LRS oidc-client-id is not specified, returns an empty
-  vector."
-  [{:keys [oidc-issuer] :as webserver-config}
-   {:keys [oidc-client-id] :as lrs-config}]
+  Admin UI routes. If webserver oidc-client-id is not specified, returns an
+  empty vector."
+  [{:keys [oidc-issuer
+           oidc-client-id] :as webserver-config}
+   lrs-config]
   (if (and oidc-issuer
            oidc-client-id)
     [(admin-oidc/inject-client-config-interceptor

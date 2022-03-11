@@ -16,4 +16,5 @@
  :enable-stmt-html          #boolean #or [#env LRSQL_ENABLE_STMT_HTML true]
  :oidc-issuer               #env LRSQL_OIDC_ISSUER
  :oidc-audience             #env LRSQL_OIDC_AUDIENCE
+ :oidc-client-id            #env LRSQL_OIDC_CLIENT_ID
  :oidc-verify-remote-issuer #or [#env LRSQL_OIDC_VERIFY_REMOTE_ISSUER true]}

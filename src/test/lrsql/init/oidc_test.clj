@@ -73,9 +73,9 @@
          "scope"                    "openid profile lrs:admin",
          "client_id"                "1234"}
         (render-client-config
-         {:webserver {:oidc-issuer   "https://idp.example.com/realm"
-                      :oidc-audience "https://lrs.example.com"}
+         {:webserver {:oidc-issuer    "https://idp.example.com/realm"
+                      :oidc-audience  "https://lrs.example.com"
+                      :oidc-client-id "1234"}
           :lrs       {:oidc-scope-prefix "lrs:"
-                      :oidc-client-id    "1234"
                       :oidc-client-template
                       "resources/lrsql/config/oidc_client.json.template"}})))))

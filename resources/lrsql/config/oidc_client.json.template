@@ -9,7 +9,7 @@
 #}
 {
     "authority": "{{webserver.oidc-issuer}}",
-    "client_id": "{{lrs.oidc-client-id}}",
+    "client_id": "{{webserver.oidc-client-id}}",
     "response_type": "code",
     "scope": "openid profile {{lrs.oidc-scope-prefix}}admin",
     "automaticSilentRenew": true,

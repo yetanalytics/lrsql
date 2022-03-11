@@ -10,6 +10,5 @@
  :oidc-authority-template #or [#env LRSQL_OIDC_AUTHORITY_TEMPLATE "config/oidc_authority.json.template"]
  :oidc-client-template    #or [#env LRSQL_OIDC_CLIENT_TEMPLATE "config/oidc_client.json.template"]
  :oidc-scope-prefix       #or [#env LRSQL_OIDC_SCOPE_PREFIX ""]
- :oidc-client-id          #env LRSQL_OIDC_CLIENT_ID
  :stmt-retry-limit        #or [#env LRSQL_STMT_RETRY_LIMIT 10]
  :stmt-retry-budget       #or [#env LRSQL_STMT_RETRY_BUDGET 1000]}

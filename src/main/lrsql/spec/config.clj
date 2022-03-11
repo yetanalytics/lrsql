@@ -121,7 +121,6 @@
 (s/def ::oidc-authority-template string?)
 (s/def ::oidc-client-template string?)
 (s/def ::oidc-scope-prefix string?)
-(s/def ::oidc-client-id (s/nilable string?))
 
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
@@ -137,8 +136,7 @@
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default
-                          ::api-secret-default
-                          ::oidc-client-id])))
+                          ::api-secret-default])))
 
 (s/def ::enable-http boolean?)
 (s/def ::enable-http2 boolean?)
@@ -163,6 +161,7 @@
 
 (s/def ::oidc-issuer (s/nilable string?))
 (s/def ::oidc-audience (s/nilable string?))
+(s/def ::oidc-client-id (s/nilable string?))
 (s/def ::oidc-verify-remote-issuer boolean?)
 
 (s/def ::webserver
@@ -184,7 +183,8 @@
                    ::key-pkey-file
                    ::key-cert-chain
                    ::oidc-issuer
-                   ::oidc-audience]))
+                   ::oidc-audience
+                   ::oidc-client-id]))
 
 (def config-spec
   (s/keys :req-un [::connection
