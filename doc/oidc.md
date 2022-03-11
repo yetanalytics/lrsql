@@ -47,7 +47,7 @@ When enabled the LRS will send configuration to the Admin UI directing it to off
 
 #### Client Template
 
-The LRS Admin UI uses [oidc-client-js](https://github.com/IdentityModel/oidc-client-js) to manage communication with the OIDC identity provider. For some providers it may be necessary to customize client configuration in which case the `LRSQL_OIDC_CLIENT_TEMPLATE` (`lrs.oidcClientTemplate`) variable can be set. Note that the `redirect_uri` and `post_logout_redirect_uri` will be set by the Admin UI client and should not be provided.
+The LRS Admin UI uses [oidc-client-js](https://github.com/IdentityModel/oidc-client-js) to manage communication with the OIDC identity provider. For some providers it may be necessary to customize client configuration in which case the `LRSQL_OIDC_CLIENT_TEMPLATE` (`webserver.oidcClientTemplate`) variable can be set. Note that the `redirect_uri` and `post_logout_redirect_uri` will be set by the Admin UI client and should not be provided.
 
 ### Identity Providers
 
