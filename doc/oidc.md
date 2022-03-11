@@ -12,7 +12,7 @@ SQL LRS supports [OpenID Connect (OIDC)](https://openid.net/connect/) on top of 
 
 SQL LRS supports OIDC token authentication to all [endpoints](endpoints.md), allowing the use of an OIDC access token to make requests. In this context SQL LRS acts as an OAuth 2.0 "resource server".
 
-To enable OIDC auth, set the `LRSQL_OIDC_ISSUER` (`oidcIssuer` in json) configuration variable to your identity provider's [Issuer Identifier](https://openid.net/specs/openid-connect-core-1_0.html#IssuerIdentifier) URI. This address must be accessible to the LRS on startup as it will perform [OIDC Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html) to retrieve public keys and other information about the OIDC environment. It is also *strongly* recommended that you set the optional `LRSQL_OIDC_AUDIENCE` (`oidcAudience`) variable to the origin address of the LRS itself (ex. "http://0.0.0.0:8080") to enable verification that a given token was issued specifically for the LRS.
+To enable OIDC auth, set the `LRSQL_OIDC_ISSUER` (`oidcIssuer` in JSON) configuration variable to your identity provider's [Issuer Identifier](https://openid.net/specs/openid-connect-core-1_0.html#IssuerIdentifier) URI. This address must be accessible to the LRS on startup as it will perform [OIDC Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html) to retrieve public keys and other information about the OIDC environment. It is also *strongly* recommended that you set the optional `LRSQL_OIDC_AUDIENCE` (`oidcAudience`) variable to the origin address of the LRS itself (ex. "http://0.0.0.0:8080") to enable verification that a given token was issued specifically for the LRS.
 
 #### Scope
 
