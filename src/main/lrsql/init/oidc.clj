@@ -259,3 +259,34 @@
       (render-client-config {:webserver webserver-config
                              :lrs       lrs-config}))]
     []))
+
+(s/def ::resource-interceptors
+  (s/every i/interceptor?))
+(s/def ::admin-interceptors
+  (s/every i/interceptor?))
+(s/def ::admin-ui-interceptors
+  (s/every i/interceptor?))
+
+(s/fdef interceptors
+  :args (s/cat :webserver-config ::config/webserver
+               :lrs-config       ::config/lrs)
+  :ret (s/keys :req-un [::resource-interceptors
+                        ::admin-interceptors
+                        ::admin-ui-interceptors]))
+
+(defn interceptors
+  "Given webserver and LRS configs, return a map with three (possibly empty)
+  vectors of interceptors:
+    :resource-interceptors - API-side OIDC token support.
+    :admin-interceptors - Validation and authn for admin resources.
+    :admin-ui-interceptors - Inject OIDC client configuration."
+  [webserver-config
+   lrs-config]
+  (let [resource (resource-interceptors webserver-config)]
+    {:resource-interceptors resource
+     :admin-interceptors    (into resource
+                               (admin-interceptors
+                                webserver-config))
+     :admin-ui-interceptors (admin-ui-interceptors
+                             webserver-config
+                             lrs-config)}))
