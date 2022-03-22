@@ -15,6 +15,10 @@
     com.fasterxml.jackson.dataformat/jackson-dataformat-smile
     com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]}
   com.fasterxml.jackson.core/jackson-core  {:mvn/version "2.13.2"}
+  com.fasterxml.jackson.dataformat/jackson-dataformat-smile
+  {:mvn/version "2.13.2"}
+  com.fasterxml.jackson.dataformat/jackson-dataformat-cbor
+  {:mvn/version "2.13.2"}
   clojure.java-time/clojure.java-time      {:mvn/version "0.3.2"}
   danlentz/clj-uuid                        {:mvn/version "0.1.9"}
   aero/aero                                {:mvn/version "1.1.6"}
