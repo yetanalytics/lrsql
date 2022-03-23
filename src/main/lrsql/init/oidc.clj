@@ -138,7 +138,7 @@
              admin-oidc/ensure-oidc-identity]
       ;; If local admin is disabled (default), prevent subsequent login
       (not oidc-enable-local-admin)
-      (conj admin-oidc/require-oidc-identity-interceptor))
+      (conj admin-oidc/require-oidc-identity))
     []))
 
 ;; Authority
@@ -261,7 +261,7 @@
    lrs-config]
   (if (and oidc-issuer
            oidc-client-id)
-    [(admin-oidc/inject-client-config-interceptor
+    [(admin-oidc/inject-client-config
       (render-client-config {:webserver webserver-config
                              :lrs       lrs-config}))]
     []))

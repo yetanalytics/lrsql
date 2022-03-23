@@ -88,7 +88,7 @@
                  result))))
         ctx))}))
 
-(defn inject-client-config-interceptor
+(defn inject-client-config
   "Inject an OIDC client configuration to be picked up by the admin env
   interceptor."
   [client-config]
@@ -98,7 +98,7 @@
     (fn inject-client-config [ctx]
       (assoc ctx ::client-config client-config))}))
 
-(def require-oidc-identity-interceptor
+(def require-oidc-identity
   "Verify that there is an OIDC admin identity or return a 401.
   Used to implement the oidc-enable-local-admin webserver config variable."
   (interceptor
