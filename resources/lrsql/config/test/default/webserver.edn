@@ -13,4 +13,5 @@
  :enable-admin-ui           true
  :enable-stmt-html          true
  :oidc-verify-remote-issuer true
- :oidc-client-template      "config/oidc_client.json.template"}
+ :oidc-client-template      "config/oidc_client.json.template"
+ :oidc-enable-local-admin   false}

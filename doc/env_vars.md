@@ -117,5 +117,6 @@ You may have noted that some options are not available:
 | `LRSQL_OIDC_CLIENT_ID` | `oidcClientId` | An optional OIDC client ID for the SQL LRS Admin SPA. If provided, along with the `LRSQL_OIDC_ISSUER` and `LRSQL_OIDC_AUDIENCE` variables, will enable OIDC access to the Admin UI. | Not Set |
 | `LRSQL_OIDC_CLIENT_TEMPLATE` | `oidcClientTemplate` | An optional template to modify LRS Admin UI client OIDC configuration. | Not Set |
 | `LRSQL_OIDC_VERIFY_REMOTE_ISSUER` | `oidcVerifyRemoteIssuer` | Verify on startup that the issuer in remote configuration matches `LRSQL_OIDC_ISSUER`. No effect if `LRSQL_OIDC_ISSUER` is not set. | `true` |
+| `LRSQL_OIDC_ENABLE_LOCAL_ADMIN` | `oidcEnableLocalAdmin` | Whether or not to enable local administrative account login when `LRSQL_OIDC_CLIENT_ID` is set. | `false` |
 
 [<- Back to Index](index.md)

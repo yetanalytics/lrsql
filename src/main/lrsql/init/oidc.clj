@@ -24,12 +24,14 @@
    config
    [:oidc-issuer
     :oidc-audience
-    :oidc-verify-remote-issuer]))
+    :oidc-verify-remote-issuer
+    :oidc-enable-local-admin]))
 
 (def partial-config-spec
   (s/keys :opt-un [::config/oidc-issuer
                    ::config/oidc-audience
-                   ::config/oidc-verify-remote-issuer]))
+                   ::config/oidc-verify-remote-issuer
+                   ::config/oidc-enable-local-admin]))
 
 (s/fdef get-configuration
   :args (s/cat :config partial-config-spec)
@@ -128,11 +130,15 @@
   "Given a webserver config, return a (possibly empty) vector of interceptors
   for use with the admin API. These validate token claims and ensure an admin
   account is made."
-  [{:keys [oidc-issuer]}]
+  [{:keys [oidc-issuer
+           oidc-enable-local-admin]}]
   (if oidc-issuer
-    [admin-oidc/validate-oidc-identity
-     admin-oidc/authorize-oidc-request
-     admin-oidc/ensure-oidc-identity]
+    (cond-> [admin-oidc/validate-oidc-identity
+             admin-oidc/authorize-oidc-request
+             admin-oidc/ensure-oidc-identity]
+      ;; If local admin is disabled (default), prevent subsequent login
+      (not oidc-enable-local-admin)
+      (conj admin-oidc/require-oidc-identity-interceptor))
     []))
 
 ;; Authority
@@ -285,8 +291,8 @@
   (let [resource (resource-interceptors webserver-config)]
     {:resource-interceptors resource
      :admin-interceptors    (into resource
-                               (admin-interceptors
-                                webserver-config))
+                                  (admin-interceptors
+                                   webserver-config))
      :admin-ui-interceptors (admin-ui-interceptors
                              webserver-config
                              lrs-config)}))

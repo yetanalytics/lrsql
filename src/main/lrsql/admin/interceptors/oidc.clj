@@ -97,3 +97,17 @@
     :enter
     (fn inject-client-config [ctx]
       (assoc ctx ::client-config client-config))}))
+
+(def require-oidc-identity-interceptor
+  "Verify that there is an OIDC admin identity or return a 401.
+  Used to implement the oidc-enable-local-admin webserver config variable."
+  (interceptor
+   {:name ::require-oidc-identity
+    :enter
+    (fn require-oidc-identity [ctx]
+      (if (::admin-identity ctx)
+        ctx
+        (assoc (chain/terminate ctx)
+               :response
+               {:status 401
+                :body   {:error "Admin authentication requires OIDC!"}})))}))
