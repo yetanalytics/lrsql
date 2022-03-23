@@ -1,0 +1,21 @@
+{# for template syntax see: https://github.com/yogthos/Selmer#templates
+
+   This template maps config to oidc-client-js configuration.
+
+   Variables:
+   * lrs - The LRS configuration.
+   * webserver - The webserver configuration.
+
+#}
+{
+    "authority": "{{webserver.oidc-issuer}}",
+    "client_id": "{{webserver.oidc-client-id}}",
+    "response_type": "code",
+    "scope": "openid profile {{lrs.oidc-scope-prefix}}admin",
+    "automaticSilentRenew": true,
+    "monitorSession": false,
+    "filterProtocolClaims": false,
+    "extraQueryParams": {
+        "audience": "{{webserver.oidc-audience}}"
+    }
+}

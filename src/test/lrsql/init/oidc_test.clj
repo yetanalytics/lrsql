@@ -1,8 +1,12 @@
 (ns lrsql.init.oidc-test
-  (:require [clojure.test    :refer [deftest is testing are]]
-            [lrsql.init.oidc :refer [get-configuration
-                                     resolve-authority-claims
-                                     make-authority-fn]]))
+  (:require [clojure.test       :refer [deftest is testing are]]
+            [lrsql.init.oidc    :refer [get-configuration
+                                        resolve-authority-claims
+                                        make-authority-fn
+                                        render-client-config]]
+            [lrsql.test-support :refer [instrument-lrsql]]))
+
+(instrument-lrsql)
 
 (deftest get-configuration-test
   (testing "Slurps configuration"
@@ -56,3 +60,22 @@
                  :iss   "foo"
                  :aud   "bar"
                  :sub   "baz"}))))))
+
+(deftest render-client-config-test
+  (testing "Renders OIDC Client config."
+    (is
+     (= {"authority"                "https://idp.example.com/realm",
+         "automaticSilentRenew"     true,
+         "extraQueryParams"         {"audience" "https://lrs.example.com"},
+         "monitorSession"           false,
+         "filterProtocolClaims"     false,
+         "response_type"            "code",
+         "scope"                    "openid profile lrs:admin",
+         "client_id"                "1234"}
+        (render-client-config
+         {:webserver {:oidc-issuer    "https://idp.example.com/realm"
+                      :oidc-audience  "https://lrs.example.com"
+                      :oidc-client-id "1234"
+                      :oidc-client-template
+                      "resources/lrsql/config/oidc_client.json.template"}
+          :lrs       {:oidc-scope-prefix "lrs:"}})))))
