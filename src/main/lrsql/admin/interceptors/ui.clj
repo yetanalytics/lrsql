@@ -17,13 +17,12 @@
     (fn get-env [ctx]
       (let [{url-prefix          ::i/path-prefix
              enable-stmt-html    ::i/statement-html?
-             ?oidc-client-config ::oidc-i/client-config} ctx]
+             oidc-env            ::oidc-i/admin-env} ctx]
         (assoc ctx
                :response
                {:status 200
                 :body
-                (cond-> {:url-prefix       url-prefix
-                         :enable-stmt-html (some? enable-stmt-html)}
-                  ?oidc-client-config
-                  (assoc :oidc
-                         ?oidc-client-config))})))}))
+                (merge
+                 {:url-prefix       url-prefix
+                  :enable-stmt-html (some? enable-stmt-html)}
+                 oidc-env)})))}))

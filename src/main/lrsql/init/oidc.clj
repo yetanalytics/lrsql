@@ -256,14 +256,17 @@
   "Given webserver and LRS configs, return a vector of interceptors to apply to
   Admin UI routes. If webserver oidc-client-id is not specified, returns an
   empty vector."
-  [{:keys [oidc-issuer
-           oidc-client-id] :as webserver-config}
+  [{:keys                           [oidc-issuer
+           oidc-client-id
+           oidc-enable-local-admin] :as webserver-config}
    lrs-config]
   (if (and oidc-issuer
            oidc-client-id)
-    [(admin-oidc/inject-client-config
-      (render-client-config {:webserver webserver-config
-                             :lrs       lrs-config}))]
+    [(admin-oidc/inject-admin-env
+      {:oidc                    (render-client-config
+                                 {:webserver webserver-config
+                                  :lrs       lrs-config})
+       :oidc-enable-local-admin oidc-enable-local-admin})]
     []))
 
 (s/def ::resource-interceptors
