@@ -5,7 +5,7 @@
 SQL LRS supports [OpenID Connect (OIDC)](https://openid.net/connect/) on top of [OAuth 2.0](https://oauth.net/2/) for authentication and authorization to access xAPI resources and administrative functions. OIDC support enables several integration use cases:
 
 * Send xAPI statements to the LRS from OIDC-authenticated client applications
-* Provision LRS credentials and admin users programatically via the API
+* Provision LRS credentials programatically via the API
 * Log in to the LRS Admin UI with a foreign identity (SSO)
 
 ### Resource Server
@@ -38,6 +38,10 @@ When SQL LRS accepts xAPI statements via OIDC auth it uses token claims to form 
 Admin API resources share a single scope `admin` that represents full administrative control over SQL LRS.
 
 Administrative functions like credential provisioning require a local admin account. After decoding the token SQL LRS will ensure that an account exists (or is created) with a `username` matching the token's `sub` claim and an `oidc_issuer` matching the `iss` claim. If the user exists but the issuer does not match the request will fail with a 401 status.
+
+##### Local Admins
+
+By default SQL LRS will disable local administrator account usage and management when `LRSQL_OIDC_ISSUER` is provided. To enable local admin accounts when using OIDC, set the `LRSQL_OIDC_ENABLE_LOCAL_ADMIN` (`lrs.oidcEnableLocalAdmin`) variable to `true`.
 
 ### Admin UI Authentication
 
