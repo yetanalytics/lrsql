@@ -18,5 +18,5 @@
  :oidc-audience             #env LRSQL_OIDC_AUDIENCE
  :oidc-client-id            #env LRSQL_OIDC_CLIENT_ID
  :oidc-client-template      #or [#env LRSQL_OIDC_CLIENT_TEMPLATE "config/oidc_client.json.template"]
- :oidc-verify-remote-issuer #or [#env LRSQL_OIDC_VERIFY_REMOTE_ISSUER true]
+ :oidc-verify-remote-issuer #boolean #or [#env LRSQL_OIDC_VERIFY_REMOTE_ISSUER true]
  :oidc-enable-local-admin   #boolean #or [#env LRSQL_OIDC_ENABLE_LOCAL_ADMIN false]}
