@@ -256,9 +256,10 @@
   "Given webserver and LRS configs, return a vector of interceptors to apply to
   Admin UI routes. If webserver oidc-client-id is not specified, returns an
   empty vector."
-  [{:keys                           [oidc-issuer
+  [{:keys [oidc-issuer
            oidc-client-id
-           oidc-enable-local-admin] :as webserver-config}
+           oidc-enable-local-admin]
+    :as   webserver-config}
    lrs-config]
   (if (and oidc-issuer
            oidc-client-id)
