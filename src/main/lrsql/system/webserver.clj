@@ -36,7 +36,7 @@
         {{oidc-resource-interceptors :resource-interceptors
           oidc-admin-interceptors    :admin-interceptors
           oidc-admin-ui-interceptors :admin-ui-interceptors} :interceptors
-         :keys [enable-local-admin]}
+         :keys                                               [enable-local-admin]}
         (oidc/init
          config
          (:config lrs))
