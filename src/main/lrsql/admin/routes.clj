@@ -102,15 +102,19 @@
            leeway
            secret
            enable-admin-ui
+           enable-account-routes
            oidc-interceptors
            oidc-ui-interceptors]
-    :or {oidc-interceptors    []
-         oidc-ui-interceptors []}}
+    :or   {oidc-interceptors     []
+           oidc-ui-interceptors  []
+           enable-account-routes true}}
    routes]
-  (let [common-interceptors (make-common-interceptors lrs)
+  (let [common-interceptors      (make-common-interceptors lrs)
         common-interceptors-oidc (into common-interceptors oidc-interceptors)]
     (cset/union routes
-                (admin-account-routes common-interceptors-oidc secret exp leeway)
+                (when enable-account-routes
+                  (admin-account-routes
+                   common-interceptors-oidc secret exp leeway))
                 (admin-cred-routes common-interceptors-oidc secret leeway)
                 (when enable-admin-ui
                   (admin-ui-routes

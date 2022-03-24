@@ -277,12 +277,15 @@
 (s/def ::admin-ui-interceptors
   (s/every i/interceptor?))
 
+(s/def ::interceptors
+  (s/keys :req-un [::resource-interceptors
+                   ::admin-interceptors
+                   ::admin-ui-interceptors]))
+
 (s/fdef interceptors
   :args (s/cat :webserver-config ::config/webserver
                :lrs-config       ::config/lrs)
-  :ret (s/keys :req-un [::resource-interceptors
-                        ::admin-interceptors
-                        ::admin-ui-interceptors]))
+  :ret  ::interceptors)
 
 (defn interceptors
   "Given webserver and LRS configs, return a map with three (possibly empty)
@@ -300,3 +303,35 @@
      :admin-ui-interceptors (admin-ui-interceptors
                              webserver-config
                              lrs-config)}))
+
+(s/def ::enable-local-admin boolean?)
+
+(s/fdef enable-local-admin?
+  :args (s/cat :webserver-config ::config/webserver)
+  :ret  ::enable-local-admin)
+
+(defn enable-local-admin?
+  "Given a webserver configuration, determine if local admin account routes
+  should be enabled."
+  [{:keys [oidc-issuer
+           oidc-enable-local-admin]}]
+  (if (not-empty oidc-issuer)
+    oidc-enable-local-admin
+    true))
+
+(s/fdef init
+  :args (s/cat :webserver-config ::config/webserver
+               :lrs-config       ::config/lrs)
+  :ret  (s/keys :req-un [::interceptors
+                         ::enable-local-admin]))
+
+(defn init
+  "Given a webserver and LRS configurations, return init data for OIDC:
+    * :interceptors - A map of OIDC interceptors for resources and the Admin
+      API/UI.
+    * :enable-local-admin - A boolean indicating whether or not SQL LRS should
+      offer routes for local admin management."
+  [webserver-config
+   lrs-config]
+  {:interceptors       (interceptors webserver-config lrs-config)
+   :enable-local-admin (enable-local-admin? webserver-config)})
