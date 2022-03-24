@@ -159,6 +159,8 @@
 
 (s/def ::oidc-issuer (s/nilable string?))
 (s/def ::oidc-audience (s/nilable string?))
+(s/def ::oidc-client-id (s/nilable string?))
+(s/def ::oidc-client-template string?)
 (s/def ::oidc-verify-remote-issuer boolean?)
 
 (s/def ::webserver
@@ -175,12 +177,14 @@
                    ::jwt-exp-leeway
                    ::enable-admin-ui
                    ::enable-stmt-html
-                   ::oidc-verify-remote-issuer]
+                   ::oidc-verify-remote-issuer
+                   ::oidc-client-template]
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain
                    ::oidc-issuer
-                   ::oidc-audience]))
+                   ::oidc-audience
+                   ::oidc-client-id]))
 
 (def config-spec
   (s/keys :req-un [::connection

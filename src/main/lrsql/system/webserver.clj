@@ -32,12 +32,14 @@
         ;; The private key is used as the JWT symmetric secret
         {:keys [keystore
                 private-key]} (cu/init-keystore config)
-        ;; OIDC Resource Interceptors
-        oidc-interceptors (oidc/resource-interceptors config)
-        ;; OIDC Admin Interceptors
-        oidc-admin-interceptors
-        (into oidc-interceptors
-              (oidc/admin-interceptors config))
+        ;; OIDC Interceptors
+        {oidc-resource-interceptors :resource-interceptors
+         oidc-admin-interceptors    :admin-interceptors
+         oidc-admin-ui-interceptors :admin-ui-interceptors}
+        (oidc/interceptors
+         config
+         (:config lrs))
+
         ;; Make routes - the lrs error interceptor is appended to the
         ;; start to all lrs routes
         routes
@@ -46,13 +48,14 @@
                      :wrap-interceptors (into
                                          [i/error-interceptor
                                           (handle-json-parse-exn)]
-                                         oidc-interceptors)})
-             (add-admin-routes {:lrs               lrs
-                                :exp               jwt-exp
-                                :leeway            jwt-lwy
-                                :secret            private-key
-                                :enable-admin-ui   enable-admin-ui
-                                :oidc-interceptors oidc-admin-interceptors}))]
+                                         oidc-resource-interceptors)})
+             (add-admin-routes {:lrs                  lrs
+                                :exp                  jwt-exp
+                                :leeway               jwt-lwy
+                                :secret               private-key
+                                :enable-admin-ui      enable-admin-ui
+                                :oidc-interceptors    oidc-admin-interceptors
+                                :oidc-ui-interceptors oidc-admin-ui-interceptors}))]
     {:env                      :prod
      ::http/routes             routes
      ;; only serve assets if the admin ui is enabled

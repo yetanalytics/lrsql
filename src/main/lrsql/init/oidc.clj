@@ -1,6 +1,7 @@
 (ns lrsql.init.oidc
   "OIDC initialization"
-  (:require [clojure.core.memoize :as mem]
+  (:require [cheshire.core :as json]
+            [clojure.core.memoize :as mem]
             [clojure.java.io :as io]
             [clojure.spec.alpha :as s]
             [clojure.tools.logging :as log]
@@ -13,6 +14,7 @@
             [lrsql.spec.config :as config]
             [lrsql.spec.oidc :as oidc]
             [selmer.parser :as selm-parser]
+            [selmer.util :as selm-u]
             xapi-schema.spec)
   (:import [java.io File]))
 
@@ -67,14 +69,16 @@
                 ex)))))
 
 (s/fdef resource-interceptors
-  :args (s/cat :config partial-config-spec)
+  :args (s/cat :config (s/merge partial-config-spec
+                                (s/keys :req-un [::config/jwt-exp-leeway])))
   :ret (s/every i/interceptor?))
 
 (defn resource-interceptors
   "Given a webserver config, return a (possibly empty) vector of interceptors.
   Interceptors will enable token auth against OIDC."
   [{:keys [oidc-issuer
-           oidc-audience] :as config}]
+           oidc-audience
+           jwt-exp-leeway] :as config}]
   (try
     (if-let [jwks-uri (some-> config
                               get-configuration
@@ -99,7 +103,8 @@
               ctx
               (apply oidc-i/default-unauthorized ctx failure rest-args)))
           :unsign-opts
-          (cond-> {:iss oidc-issuer}
+          (cond-> {:iss    oidc-issuer
+                   :leeway jwt-exp-leeway}
             ;; Apply audience verification
             oidc-audience (assoc :aud oidc-audience)))
          ;; This is a vector in case we need additional interceptors. At present
@@ -182,3 +187,106 @@
     (mem/lru (comp authority-fn
                    resolve-authority-claims)
              :lru/threshold (or threshold 512))))
+
+(def default-client-template
+  (-> "lrsql/config/oidc_client.json.template"
+      io/resource
+      selm-parser/parse*))
+
+(defn- get-client-template
+  [template-loc]
+  (if (not-empty template-loc)
+    (let [f (io/file template-loc)]
+      (if (.exists f)
+        (selm-parser/parse* f)
+        default-client-template))
+    default-client-template))
+
+(defn- throw-on-missing
+  "When a user enters a variable and it is not in our context map, throw!
+   Used by selmer when context map validation fails."
+  [tag context-map]
+  (throw
+   (ex-info (format "\"%s\" is not a valid variable for OIDC client config template."
+                    (:tag-value tag))
+            {:type        ::unknown-variable
+             :tag         tag
+             :context-map context-map})))
+
+(s/def :lrsql.init.oidc.render-client-config/lrs
+  (s/keys :req-un [::config/oidc-scope-prefix]))
+
+(s/def :lrsql.init.oidc.render-client-config/webserver
+  (s/keys :req-un [::config/oidc-issuer
+                   ::config/oidc-audience
+                   ::config/oidc-client-id
+                   ::config/oidc-client-template]))
+
+(s/fdef render-client-config
+  :args (s/cat :config
+               (s/keys
+                :req-un
+                [:lrsql.init.oidc.render-client-config/lrs
+                 :lrsql.init.oidc.render-client-config/webserver]))
+  :ret map?)
+
+(defn render-client-config
+  "Render OIDC client config from template."
+  [{{:keys [oidc-client-template]} :webserver
+    :as                            config}]
+  (binding [selm-u/*missing-value-formatter* throw-on-missing
+            selm-u/*filter-missing-values*   (constantly false)]
+    (json/parse-string
+     (selm-parser/render-template
+      (get-client-template oidc-client-template)
+      config))))
+
+(s/fdef admin-ui-interceptors
+  :args (s/cat :webserver-config ::config/webserver
+               :lrs-config       ::config/lrs)
+  :ret (s/every i/interceptor?))
+
+(defn admin-ui-interceptors
+  "Given webserver and LRS configs, return a vector of interceptors to apply to
+  Admin UI routes. If webserver oidc-client-id is not specified, returns an
+  empty vector."
+  [{:keys [oidc-issuer
+           oidc-client-id] :as webserver-config}
+   lrs-config]
+  (if (and oidc-issuer
+           oidc-client-id)
+    [(admin-oidc/inject-client-config-interceptor
+      (render-client-config {:webserver webserver-config
+                             :lrs       lrs-config}))]
+    []))
+
+(s/def ::resource-interceptors
+  (s/every i/interceptor?))
+(s/def ::admin-interceptors
+  (s/every i/interceptor?))
+(s/def ::admin-ui-interceptors
+  (s/every i/interceptor?))
+
+(s/fdef interceptors
+  :args (s/cat :webserver-config ::config/webserver
+               :lrs-config       ::config/lrs)
+  :ret (s/keys :req-un [::resource-interceptors
+                        ::admin-interceptors
+                        ::admin-ui-interceptors]))
+
+(defn interceptors
+  "Given webserver and LRS configs, return a map with three (possibly empty)
+  vectors of interceptors:
+    :resource-interceptors - API-side OIDC token support.
+    :admin-interceptors - Validation and authn for admin resources.
+    :admin-ui-interceptors - Inject OIDC client configuration."
+  [webserver-config
+   lrs-config]
+  (let [resource (resource-interceptors webserver-config)]
+    {:resource-interceptors resource
+     :admin-interceptors    (into resource
+                               (admin-interceptors
+                                webserver-config))
+     :admin-ui-interceptors (admin-ui-interceptors
+                             webserver-config
+                             lrs-config)}))

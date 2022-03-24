@@ -103,7 +103,7 @@ You may have noted that some options are not available:
 | `LRSQL_KEY_CERT_CHAIN` | `keyCertChain` | Comma separated PEM files for cert. See the TLS/HTTPS section below. | <details>`config/server.crt.pem,config/cacert.pem`<summary>(Filepaths)</summary></details> |
 | `LRSQL_KEY_ENABLE_SELFIE` | `keyEnableSelfie` | Boolean, whether or not to enable self-signed cert generation. | `true` |
 | `LRSQL_JWT_EXP_TIME` | `jwtExpTime` | The amount of time, in seconds, after a JWT is created when it expires. Since JWTs are not revocable, **this this time should be short** (i.e. one hour or less). | `3600` (one hour) |
-| `LRSQL_JWT_EXP_LEEWAY` | `jwtExpLeeway` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. | `1` (one second) |
+| `LRSQL_JWT_EXP_LEEWAY` | `jwtExpLeeway` | The amount of time, in seconds, before or after the expiration instant when a JWT should still count as un-expired. Used to compensate for clock desync. Applied to both LRS and OIDC tokens. | `1` (one second) |
 | `LRSQL_ENABLE_HTTP` | `enableHttp` | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true` |
 | `LRSQL_ENABLE_HTTP2` | `enableHttp2` | Whether HTTP/2 is supported or not. | `true` |
 | `LRSQL_HTTP_HOST` | `httpHost` | The host that the webserver will run on. | `0.0.0.0` |
@@ -114,6 +114,8 @@ You may have noted that some options are not available:
 | `LRSQL_ENABLE_STMT_HTML` | `enableStmtHtml` | Whether or not HTML data is returned in the LRS HTTP response. If `false` disables HTML rendering even if `LRSQL_ENABLE_ADMIN_UI` is `true`. In that case the UI will not display the Statement Browser feature. | `true` |
 | `LRSQL_OIDC_ISSUER` | `oidcIssuer` | OIDC Issuer address used for [discovery](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig). Will enable OIDC if present. | Not set |
 | `LRSQL_OIDC_AUDIENCE` | `oidcAudience` | Optional OIDC audience for token claim verification. No effect if `LRSQL_OIDC_ISSUER` is not set. | Not set |
+| `LRSQL_OIDC_CLIENT_ID` | `oidcClientId` | An optional OIDC client ID for the SQL LRS Admin SPA. If provided, along with the `LRSQL_OIDC_ISSUER` and `LRSQL_OIDC_AUDIENCE` variables, will enable OIDC access to the Admin UI. | Not Set |
+| `LRSQL_OIDC_CLIENT_TEMPLATE` | `oidcClientTemplate` | An optional template to modify LRS Admin UI client OIDC configuration. | Not Set |
 | `LRSQL_OIDC_VERIFY_REMOTE_ISSUER` | `oidcVerifyRemoteIssuer` | Verify on startup that the issuer in remote configuration matches `LRSQL_OIDC_ISSUER`. No effect if `LRSQL_OIDC_ISSUER` is not set. | `true` |
 
 [<- Back to Index](index.md)
