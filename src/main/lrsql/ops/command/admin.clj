@@ -61,7 +61,7 @@
   Returns a map where `:result` is the account ID."
   [bk tx {:keys [username oidc-issuer]
           :as   ensure-input}]
-  (if-let [{extant-issuer :oidc_issuer ;; TODO: is not coerced to kebab?
+  (if-let [{extant-issuer :oidc_issuer
             id            :id} (bp/-query-account-oidc
                                 bk tx {:username username})]
     {:result
