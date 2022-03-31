@@ -88,12 +88,25 @@
                  result))))
         ctx))}))
 
-(defn inject-client-config-interceptor
-  "Inject an OIDC client configuration to be picked up by the admin env
-  interceptor."
-  [client-config]
+(defn inject-admin-env
+  "Inject OIDC client configuration to merge with the admin env."
+  [admin-env]
   (interceptor
-   {:name ::inject-client-config
+   {:name ::inject-admin-env
     :enter
-    (fn inject-client-config [ctx]
-      (assoc ctx ::client-config client-config))}))
+    (fn inject-admin-env [ctx]
+      (assoc ctx ::admin-env admin-env))}))
+
+(def require-oidc-identity
+  "Verify that there is an OIDC admin identity or return a 401.
+  Used to implement the oidc-enable-local-admin webserver config variable."
+  (interceptor
+   {:name ::require-oidc-identity
+    :enter
+    (fn require-oidc-identity [ctx]
+      (if (::admin-identity ctx)
+        ctx
+        (assoc (chain/terminate ctx)
+               :response
+               {:status 401
+                :body   {:error "Admin authentication requires OIDC!"}})))}))

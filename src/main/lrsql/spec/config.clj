@@ -162,6 +162,7 @@
 (s/def ::oidc-client-id (s/nilable string?))
 (s/def ::oidc-client-template string?)
 (s/def ::oidc-verify-remote-issuer boolean?)
+(s/def ::oidc-enable-local-admin boolean?)
 
 (s/def ::webserver
   (s/keys :req-un [::http-host
@@ -178,7 +179,8 @@
                    ::enable-admin-ui
                    ::enable-stmt-html
                    ::oidc-verify-remote-issuer
-                   ::oidc-client-template]
+                   ::oidc-client-template
+                   ::oidc-enable-local-admin]
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain

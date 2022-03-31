@@ -24,12 +24,14 @@
    config
    [:oidc-issuer
     :oidc-audience
-    :oidc-verify-remote-issuer]))
+    :oidc-verify-remote-issuer
+    :oidc-enable-local-admin]))
 
 (def partial-config-spec
   (s/keys :opt-un [::config/oidc-issuer
                    ::config/oidc-audience
-                   ::config/oidc-verify-remote-issuer]))
+                   ::config/oidc-verify-remote-issuer
+                   ::config/oidc-enable-local-admin]))
 
 (s/fdef get-configuration
   :args (s/cat :config partial-config-spec)
@@ -128,11 +130,15 @@
   "Given a webserver config, return a (possibly empty) vector of interceptors
   for use with the admin API. These validate token claims and ensure an admin
   account is made."
-  [{:keys [oidc-issuer]}]
+  [{:keys [oidc-issuer
+           oidc-enable-local-admin]}]
   (if oidc-issuer
-    [admin-oidc/validate-oidc-identity
-     admin-oidc/authorize-oidc-request
-     admin-oidc/ensure-oidc-identity]
+    (cond-> [admin-oidc/validate-oidc-identity
+             admin-oidc/authorize-oidc-request
+             admin-oidc/ensure-oidc-identity]
+      ;; If local admin is disabled (default), prevent subsequent login
+      (not oidc-enable-local-admin)
+      (conj admin-oidc/require-oidc-identity))
     []))
 
 ;; Authority
@@ -251,13 +257,17 @@
   Admin UI routes. If webserver oidc-client-id is not specified, returns an
   empty vector."
   [{:keys [oidc-issuer
-           oidc-client-id] :as webserver-config}
+           oidc-client-id
+           oidc-enable-local-admin]
+    :as   webserver-config}
    lrs-config]
   (if (and oidc-issuer
            oidc-client-id)
-    [(admin-oidc/inject-client-config-interceptor
-      (render-client-config {:webserver webserver-config
-                             :lrs       lrs-config}))]
+    [(admin-oidc/inject-admin-env
+      {:oidc                    (render-client-config
+                                 {:webserver webserver-config
+                                  :lrs       lrs-config})
+       :oidc-enable-local-admin oidc-enable-local-admin})]
     []))
 
 (s/def ::resource-interceptors
@@ -267,12 +277,15 @@
 (s/def ::admin-ui-interceptors
   (s/every i/interceptor?))
 
+(s/def ::interceptors
+  (s/keys :req-un [::resource-interceptors
+                   ::admin-interceptors
+                   ::admin-ui-interceptors]))
+
 (s/fdef interceptors
   :args (s/cat :webserver-config ::config/webserver
                :lrs-config       ::config/lrs)
-  :ret (s/keys :req-un [::resource-interceptors
-                        ::admin-interceptors
-                        ::admin-ui-interceptors]))
+  :ret  ::interceptors)
 
 (defn interceptors
   "Given webserver and LRS configs, return a map with three (possibly empty)
@@ -285,8 +298,40 @@
   (let [resource (resource-interceptors webserver-config)]
     {:resource-interceptors resource
      :admin-interceptors    (into resource
-                               (admin-interceptors
-                                webserver-config))
+                                  (admin-interceptors
+                                   webserver-config))
      :admin-ui-interceptors (admin-ui-interceptors
                              webserver-config
                              lrs-config)}))
+
+(s/def ::enable-local-admin boolean?)
+
+(s/fdef enable-local-admin?
+  :args (s/cat :webserver-config ::config/webserver)
+  :ret  ::enable-local-admin)
+
+(defn enable-local-admin?
+  "Given a webserver configuration, determine if local admin account routes
+  should be enabled."
+  [{:keys [oidc-issuer
+           oidc-enable-local-admin]}]
+  (if (not-empty oidc-issuer)
+    oidc-enable-local-admin
+    true))
+
+(s/fdef init
+  :args (s/cat :webserver-config ::config/webserver
+               :lrs-config       ::config/lrs)
+  :ret  (s/keys :req-un [::interceptors
+                         ::enable-local-admin]))
+
+(defn init
+  "Given a webserver and LRS configurations, return init data for OIDC:
+    * :interceptors - A map of OIDC interceptors for resources and the Admin
+      API/UI.
+    * :enable-local-admin - A boolean indicating whether or not SQL LRS should
+      offer routes for local admin management."
+  [webserver-config
+   lrs-config]
+  {:interceptors       (interceptors webserver-config lrs-config)
+   :enable-local-admin (enable-local-admin? webserver-config)})
