@@ -2,7 +2,7 @@
 
 # Version of LRS Admin UI to use
 
-LRS_ADMIN_UI_VERSION ?= v0.1.6-pre3
+LRS_ADMIN_UI_VERSION ?= v0.1.6
 
 LRS_ADMIN_UI_LOCATION ?= https://github.com/yetanalytics/lrs-admin-ui/releases/download/${LRS_ADMIN_UI_VERSION}/lrs-admin-ui.zip
 LRS_ADMIN_ZIPFILE ?= lrs-admin-ui-${LRS_ADMIN_UI_VERSION}.zip
