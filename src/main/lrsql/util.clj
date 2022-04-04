@@ -19,11 +19,12 @@
 ;; Macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmacro def-hugsql-db-fns
+(defn def-hugsql-db-fns
   "A custom version of `hugsql.core/def-db-fns` that reads .sql files
    during compilation (instead of during runtime as in the original macro)."
   [file]
-  (let [parsed-defs# (hug/parsed-defs-from-file file)]
+  (hug/def-db-fns file {})
+  #_(let [parsed-defs# (hug/parsed-defs-from-file file)]
     ;; Validate defs at compile time
     (doseq [pdef parsed-defs#]
       (hug/validate-parsed-def! pdef))
