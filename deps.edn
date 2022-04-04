@@ -32,7 +32,7 @@
   ;; - HugSql: Use custom version instead of the released version (0.5.1)
   com.stuartsierra/component               {:mvn/version "1.0.0"}
   com.github.seancorfield/next.jdbc        {:mvn/version "1.2.709"}
-  com.yetanalytics/hugsql                  {:mvn/version "0.6.0-SNAPSHOT"}
+  com.yetanalytics/hugsql                  {:mvn/version "0.6.1-SNAPSHOT"}
   com.layerware/hugsql-adapter-next-jdbc   {:mvn/version "0.5.1"}
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
