@@ -74,11 +74,10 @@
     ;; If JDBC URL is given directly, this overrides all
     db-jdbc-url
     ;; Construct a new JDBC URL from config vars
-    (cond-> {:dbtype db-type
-             :dbname db-name
-             :host   db-host
-             :port   db-port}
-      db-properties
-      (merge (parse-db-props db-properties))
-      true
-      jdbc-conn/jdbc-url)))
+    (jdbc-conn/jdbc-url
+     (cond-> {:dbtype db-type
+              :dbname db-name
+              :host   db-host
+              :port   db-port}
+       db-properties
+       (merge (parse-db-props db-properties))))))
