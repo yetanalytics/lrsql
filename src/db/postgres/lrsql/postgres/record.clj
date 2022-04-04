@@ -1,21 +1,21 @@
 (ns lrsql.postgres.record
   (:require [com.stuartsierra.component :as cmp]
+            [hugsql.core :as hug]
             [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.postgres.data :as pd]
-            [clojure.string :refer [includes?]]
-            [lrsql.util :as u]))
+            [clojure.string :refer [includes?]]))
 
 ;; Init HugSql functions
 
 (init-hugsql-adapter!)
 
-(u/def-hugsql-db-fns "lrsql/postgres/sql/ddl.sql")
-(u/def-hugsql-db-fns "lrsql/postgres/sql/insert.sql")
-(u/def-hugsql-db-fns "lrsql/postgres/sql/query.sql")
-(u/def-hugsql-db-fns "lrsql/postgres/sql/update.sql")
-(u/def-hugsql-db-fns "lrsql/postgres/sql/delete.sql")
+(hug/def-db-fns "lrsql/postgres/sql/ddl.sql")
+(hug/def-db-fns "lrsql/postgres/sql/insert.sql")
+(hug/def-db-fns "lrsql/postgres/sql/query.sql")
+(hug/def-db-fns "lrsql/postgres/sql/update.sql")
+(hug/def-db-fns "lrsql/postgres/sql/delete.sql")
 
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
