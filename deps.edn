@@ -32,7 +32,7 @@
   ;; - HugSql: Use custom version instead of the released version (0.5.1)
   com.stuartsierra/component               {:mvn/version "1.0.0"}
   com.github.seancorfield/next.jdbc        {:mvn/version "1.2.709"}
-  com.yetanalytics/hugsql                  {:mvn/version "0.6.0-SNAPSHOT"}
+  com.yetanalytics/hugsql                  {:mvn/version "0.6.1-YetAnalytics"}
   com.layerware/hugsql-adapter-next-jdbc   {:mvn/version "0.5.1"}
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
@@ -72,7 +72,7 @@
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
   :db-postgres
   {:extra-paths ["src/db/postgres"]
-   :extra-deps  {org.postgresql/postgresql {:mvn/version "42.2.25"}}}
+   :extra-deps  {org.postgresql/postgresql {:mvn/version "42.3.3"}}}
   :bench
   {:extra-paths ["src/bench" "dev-resources"]
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
@@ -93,8 +93,8 @@
    :extra-deps  {;; DB deps
                  com.h2database/h2             {:mvn/version "2.1.210"}
                  org.xerial/sqlite-jdbc        {:mvn/version "3.36.0"}
-                 org.postgresql/postgresql     {:mvn/version "42.2.23"}
-                 org.testcontainers/postgresql {:mvn/version "1.16.0"}
+                 org.postgresql/postgresql     {:mvn/version "42.3.3"}
+                 org.testcontainers/postgresql {:mvn/version "1.16.3"}
                  ;; Other test deps
                  org.clojure/test.check {:mvn/version "1.0.0"}
                  babashka/babashka.curl {:mvn/version "0.0.3"}
@@ -121,7 +121,7 @@
   ;; Note the :extra-deps instead of :replace-deps
   :build-dev
   {:extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
-   :extra-paths ["src/build"]} 
+   :extra-paths ["src/build"]}
   :nvd
   {:replace-deps {nvd-clojure/nvd-clojure {:mvn/version "2.0.0"}}
    :ns-default   nvd.task}
@@ -132,4 +132,3 @@
    :exec-args    {:in-root       "doc/"
                   :out-root      "target/bundle/doc/"
                   :template-file "resources/lrsql/doc/docs.html.template"}}}}
-

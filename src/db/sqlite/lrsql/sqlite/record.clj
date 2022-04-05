@@ -1,21 +1,21 @@
 (ns lrsql.sqlite.record
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as cmp]
+            [hugsql.core :as hug]
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.data :as bd]
             [lrsql.init :refer [init-hugsql-adapter!]]
-            [lrsql.sqlite.data :as sd]
-            [lrsql.util :as u]))
+            [lrsql.sqlite.data :as sd]))
 
 ;; Init HugSql functions
 
 (init-hugsql-adapter!)
 
-(u/def-hugsql-db-fns "lrsql/sqlite/sql/ddl.sql")
-(u/def-hugsql-db-fns "lrsql/sqlite/sql/insert.sql")
-(u/def-hugsql-db-fns "lrsql/sqlite/sql/query.sql")
-(u/def-hugsql-db-fns "lrsql/sqlite/sql/update.sql")
-(u/def-hugsql-db-fns "lrsql/sqlite/sql/delete.sql")
+(hug/def-db-fns "lrsql/sqlite/sql/ddl.sql")
+(hug/def-db-fns "lrsql/sqlite/sql/insert.sql")
+(hug/def-db-fns "lrsql/sqlite/sql/query.sql")
+(hug/def-db-fns "lrsql/sqlite/sql/update.sql")
+(hug/def-db-fns "lrsql/sqlite/sql/delete.sql")
 
 ;; Schema Update Helpers
 
