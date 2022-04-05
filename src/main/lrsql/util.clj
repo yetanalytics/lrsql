@@ -2,7 +2,6 @@
   (:require [clj-uuid]
             [java-time]
             [java-time.properties :as jt-props]
-            [hugsql.core :as hug]
             [clojure.spec.alpha :as s]
             [clojure.java.io    :as io]
             [cheshire.core      :as cjson]
@@ -18,22 +17,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmacro def-hugsql-db-fns
-  "A custom version of `hugsql.core/def-db-fns` that reads .sql files
-   during compilation (instead of during runtime as in the original macro)."
-  [file]
-  (let [parsed-defs# (hug/parsed-defs-from-file file)]
-    ;; Validate defs at compile time
-    (doseq [pdef parsed-defs#]
-      (hug/validate-parsed-def! pdef))
-    ;; Runtime actions
-    `(doseq [~'exp-pdef (map hug/expand-compile-frags ~parsed-defs#)]
-       (hug/compile-exprs ~'exp-pdef)
-       (hug/dispatch-on-pdef ~'exp-pdef
-                             {} ; options - empty map is the hugsql default
-                             ~hug/intern-db-fn
-                             ~hug/intern-sqlvec-fn))))
 
 (defmacro wrap-parse-fn
   "Wrap `(parse-fn s)` in an exception such that on parse failure, the
