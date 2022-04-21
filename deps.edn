@@ -46,9 +46,7 @@
   less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
-  {:git/url    "https://github.com/yetanalytics/lrs.git"
-   :git/sha    "4741cb1eb20a281abc1579e7d41a1d2056571dbf"
-   :git/tag    "v1.2.4"
+  {:mvn/version "1.2.6-SNAPSHOT"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript
                 com.yetanalytics/xapi-schema]}
@@ -118,7 +116,7 @@
   ;; Note the :extra-deps instead of :replace-deps
   :build-dev
   {:extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
-   :extra-paths ["src/build"]} 
+   :extra-paths ["src/build"]}
   :nvd
   {:replace-deps {nvd-clojure/nvd-clojure {:mvn/version "2.0.0"}}
    :ns-default   nvd.task}
@@ -129,4 +127,3 @@
    :exec-args    {:in-root       "doc/"
                   :out-root      "target/bundle/doc/"
                   :template-file "resources/lrsql/doc/docs.html.template"}}}}
-
