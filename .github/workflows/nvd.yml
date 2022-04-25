@@ -6,7 +6,7 @@ on:
 
 jobs:
   nvd_scan:
-    uses: yetanalytics/actions/.github/workflows/nvd-scan.yml@e8fef49925c85c461ee5c5b3d08d78fff282a54d
+    uses: yetanalytics/actions/.github/workflows/nvd-scan.yml@v0.0.3
     with:
       nvd-clojure-version: '2.0.0'
       classpath-command: 'clojure -Spath -A:db-h2:db-sqlite:db-postgres'
