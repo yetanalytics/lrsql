@@ -10,4 +10,4 @@ jobs:
     with:
       nvd-clojure-version: '2.0.0'
       classpath-command: 'clojure -Spath -A:db-h2:db-sqlite:db-postgres'
-      nvd-config-filename: 'nvd_config.json'
+      nvd-config-filename: '.nvd/config.json'
