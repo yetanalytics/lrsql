@@ -46,9 +46,7 @@
   less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
-  {:git/url    "https://github.com/yetanalytics/lrs.git"
-   :git/sha    "4741cb1eb20a281abc1579e7d41a1d2056571dbf"
-   :git/tag    "v1.2.4"
+  {:mvn/version "1.2.6"
    :exclusions [org.clojure/clojure
                 org.clojure/clojurescript
                 com.yetanalytics/xapi-schema]}
@@ -129,4 +127,3 @@
    :exec-args    {:in-root       "doc/"
                   :out-root      "target/bundle/doc/"
                   :template-file "resources/lrsql/doc/docs.html.template"}}}}
-
