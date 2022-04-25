@@ -76,7 +76,7 @@ bench-async:
 # Vulnerability check
 
 target/nvd:
-	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-h2:db-sqlite:db-postgres)"'"'
+	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-h2:db-sqlite:db-postgres)"'"' :config-filename '"nvd_config.json"'
 
 check-vuln: target/nvd
 
