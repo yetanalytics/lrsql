@@ -16,6 +16,7 @@ jobs:
         run: echo "::set-output name=modules::$(cat .java_modules)"
     outputs:
       modules: ${{ steps.echo-modules.outputs.modules }}
+  
   build_jre:
     needs: get_modules
     uses: yetanalytics/runtimer/.github/workflows/runtimer.yml@3c6a902caaf0c6db272842055d9f8cca5cb3fcbc
@@ -23,6 +24,7 @@ jobs:
       java-version: '11'
       java-distribution: 'temurin'
       java-modules: ${{ needs.get_modules.outputs.modules }}
+  
   build:
     runs-on: ubuntu-latest
     needs: build_jre
@@ -66,7 +68,7 @@ jobs:
         cd target/bundle
         zip -r ../../lrsql.zip ./
 
-    - name: Archive Bundle (Branch Pushes)
+    - name: Archive Bundle
       if: ${{ startsWith(github.ref, 'refs/heads') }}
       uses: actions/upload-artifact@v2
       with:
