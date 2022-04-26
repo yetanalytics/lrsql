@@ -14,7 +14,7 @@ jobs:
   
   notify_slack:
     runs-on: ubuntu-latest
-    needs: [nvd_scan]
+    needs: nvd_scan
     if: ${{ always() && (needs.nvd_scan.result == 'failure') }}
     steps:
     - name: Notify Slack SQL LRS NVD Scan Reporter 
