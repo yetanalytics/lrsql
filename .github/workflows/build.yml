@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      
       - id: echo-modules
         run: echo "::set-output name=modules::$(cat .java_modules)"
     outputs:
@@ -88,10 +89,13 @@ jobs:
     needs: build
     if: ${{ github.ref_type == 'tag' }}
     steps:
+    - uses: actions/checkout@v2
+    
     - name: Download Bundle Artifact
       uses: actions/download-artifact@v2
       with:
         name: lrsql-artifact-${{ github.ref_name }}
+        path: lrsql.zip
 
     - name: Craft Draft Release
       uses: softprops/action-gh-release@v1
