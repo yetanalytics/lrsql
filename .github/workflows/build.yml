@@ -84,6 +84,27 @@ jobs:
         name: lrsql-artifact-${{ github.ref_name }}
         path: lrsql.zip
   
+  release_test:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ github.ref_type == 'branch' }}
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Download Bundle Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: lrsql-artifact-${{ github.sha }}
+    
+    - name: Display structure of downloaded files
+      run: ls -R
+    
+    - name: Unzip Bundle Artifact
+      run: |
+        mkdir -p target/bundle
+        unzip lrsql-artifact-${{ github.sha }}.zip
+        unzip lrsql.zip -d target/bundle
+
   release:
     runs-on: ubuntu-latest
     needs: build
