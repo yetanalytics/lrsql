@@ -102,7 +102,6 @@ jobs:
     - name: Unzip Bundle Artifact
       run: |
         mkdir -p target/bundle
-        unzip lrsql-artifact-${{ github.sha }}.zip
         unzip lrsql.zip -d target/bundle
 
   release:
@@ -120,7 +119,6 @@ jobs:
     - name: Unzip Bundle Artifact
       run: |
         mkdir -p target/bundle
-        unzip lrsql-artifact-${{ github.ref_name }}.zip
         unzip lrsql.zip -d target/bundle
 
     - name: Craft Draft Release
