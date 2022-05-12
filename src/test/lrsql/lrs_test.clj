@@ -47,6 +47,16 @@
         (update-in [:statement-result :statements]
                    (partial map remove-props)))))
 
+(defn- string-result-attachment-content
+  [get-ss-result]
+  (update get-ss-result
+          :attachments
+          (fn [atts]
+            (mapv
+             (fn [att]
+               (update att :content #(String. %)))
+             atts))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -162,16 +172,6 @@
    :contentType "text/plain"
    :length      33
    :sha2        "7063d0a4cfa93373753ad2f5a6ffcf684559fb1df3c2f0473a14ece7d4edb06a"})
-
-(defn- string-result-attachment-content
-  [get-ss-result]
-  (update get-ss-result
-          :attachments
-          (fn [atts]
-            (mapv
-             (fn [att]
-               (update att :content #(String. %)))
-             atts))))
 
 (deftest test-statement-fns
   (let [sys   (support/test-system)
