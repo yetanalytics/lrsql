@@ -420,7 +420,7 @@
                               id-6]}
              (lrsp/-store-statements
               ;; stmt-5 references stmt-4-attach
-              ;; stmt-6 references stmt-4-attach AND stmt-5-attach (twice)
+              ;; stmt-6 references stmt-4-attach AND stmt-6-attach (twice)
               lrs auth-ident [stmt-4 stmt-5 stmt-6] [stmt-4-attach stmt-6-attach]))))
 
     (testing "returns normalized attachments"
