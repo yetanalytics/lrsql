@@ -15,6 +15,21 @@
   [format ltags query-res]
   (-> query-res :payload (us/format-statement format ltags)))
 
+(defn- dedupe-attachment-res
+  [attachment-query-res]
+  (loop [res-in  attachment-query-res
+         res-out []
+         seen    #{}]
+    (if-let [{att-sha :attachment_sha :as att} (first res-in)]
+      (if (contains? seen att-sha)
+        (recur (rest res-in)
+               res-out
+               seen)
+        (recur (rest res-in)
+               (conj res-out att)
+               (conj seen att-sha)))
+      res-out)))
+
 (defn- conform-attachment-res
   [{att-sha      :attachment_sha
     content-type :content_type
@@ -56,13 +71,14 @@
                              (butlast query-results)
                              query-results))
         att-results   (if attachments?
-                        (doall (->> (map (fn [stmt]
-                                           (->> (get stmt "id")
-                                                u/str->uuid
-                                                (assoc {} :statement-id)
-                                                (bp/-query-attachments bk tx)))
-                                         stmt-results)
-                                    (apply concat)
+                        (doall (->> (mapcat
+                                     (fn [stmt]
+                                       (->> (get stmt "id")
+                                            u/str->uuid
+                                            (assoc {} :statement-id)
+                                            (bp/-query-attachments bk tx)))
+                                     stmt-results)
+                                    dedupe-attachment-res
                                     (map conform-attachment-res)))
                         [])]
     {:statement-result
