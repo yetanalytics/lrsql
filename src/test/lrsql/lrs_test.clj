@@ -420,22 +420,26 @@
     (testing "returns normalized attachments"
       (testing "(multiple)"
         (is (= {:statement-result {:statements [stmt-5 stmt-4] :more ""}
-                :attachments      [(update stmt-5-attach :content #(String. %))
-                                   (update stmt-4-attach :content #(String. %))]}
+                ;; Compare attachments as a set, their order is different on the
+                ;; postgres backend
+                :attachments      #{(update stmt-5-attach :content #(String. %))
+                                    (update stmt-4-attach :content #(String. %))}}
                (-> (get-ss lrs
                            auth-ident
                            {:attachments true}
                            #{})
-                   string-result-attachment-content))))
+                   string-result-attachment-content
+                   (update :attachments set)))))
       (testing "(single)"
         (is (= {:statement   stmt-5
-                :attachments [(update stmt-5-attach :content #(String. %))
-                              (update stmt-4-attach :content #(String. %))]}
+                :attachments #{(update stmt-5-attach :content #(String. %))
+                               (update stmt-4-attach :content #(String. %))}}
                (-> (get-ss lrs
                            auth-ident
                            {:statementId id-5 :attachments true}
                            #{})
-                   string-result-attachment-content)))))
+                   string-result-attachment-content
+                   (update :attachments set))))))
     (component/stop sys')
     (support/unstrument-lrsql)))
 
