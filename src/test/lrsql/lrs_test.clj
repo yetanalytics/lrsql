@@ -414,7 +414,7 @@
       (is (= {:statement-ids [id-4
                               id-5]}
              (lrsp/-store-statements
-              ;; stmt-5 references stmt-4-attach AND stmt-5-attach
+              ;; stmt-5 references stmt-4-attach AND stmt-5-attach (twice)
               lrs auth-ident [stmt-4 stmt-5] [stmt-4-attach stmt-5-attach]))))
 
     (testing "returns normalized attachments"
