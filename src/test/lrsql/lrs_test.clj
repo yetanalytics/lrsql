@@ -47,6 +47,16 @@
         (update-in [:statement-result :statements]
                    (partial map remove-props)))))
 
+(defn- string-result-attachment-content
+  [get-ss-result]
+  (update get-ss-result
+          :attachments
+          (fn [atts]
+            (mapv
+             (fn [att]
+               (update att :content #(String. %)))
+             atts))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -130,6 +140,40 @@
    :contentType "text/plain"
    :length      27
    :sha2        "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"})
+
+(def stmt-5 (assoc stmt-4 "id" "00000000-0000-4000-8000-000000000006"))
+
+(def stmt-6
+  {"id"          "00000000-0000-4000-8000-000000000005"
+   "actor"       {"mbox"       "mailto:sample.foo@example.com"
+                  "objectType" "Agent"}
+   "verb"        {"id"      "http://adlnet.gov/expapi/verbs/answered"
+                  "display" {"en-US" "answered"}}
+   "object"      {"id" "http://www.example.com/tincan/activities/multipart"}
+   "attachments" [{"usageType"   "http://example.com/attachment-usage/test"
+                   "display"     {"en-US" "A test attachment"}
+                   "description" {"en-US" "A test attachment (description)"}
+                   "contentType" "text/plain"
+                   "length"      27
+                   "sha2"        "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"}
+                  {"usageType"   "http://example.com/attachment-usage/test"
+                   "display"     {"en-US" "A test attachment"}
+                   "description" {"en-US" "A test attachment (description)"}
+                   "contentType" "text/plain"
+                   "length"      33
+                   "sha2"        "7063d0a4cfa93373753ad2f5a6ffcf684559fb1df3c2f0473a14ece7d4edb06a"}
+                  {"usageType"   "http://example.com/attachment-usage/test"
+                   "display"     {"en-US" "A test attachment"}
+                   "description" {"en-US" "A test attachment (description)"}
+                   "contentType" "text/plain"
+                   "length"      33
+                   "sha2"        "7063d0a4cfa93373753ad2f5a6ffcf684559fb1df3c2f0473a14ece7d4edb06a"}]})
+
+(def stmt-6-attach
+  {:content     (.getBytes "here is a simple attachment")
+   :contentType "text/plain"
+   :length      33
+   :sha2        "7063d0a4cfa93373753ad2f5a6ffcf684559fb1df3c2f0473a14ece7d4edb06a"})
 
 (deftest test-statement-fns
   (let [sys   (support/test-system)
@@ -331,10 +375,7 @@
                            auth-ident
                            {:activity act-4 :attachments true}
                            #{})
-                   (update-in [:attachments]
-                              vec)
-                   (update-in [:attachments 0 :content]
-                              #(String. %))))))
+                   string-result-attachment-content))))
 
       (testing "(single)"
         (is (= {:statement    stmt-4
@@ -343,10 +384,7 @@
                            auth-ident
                            {:statementId (get stmt-4 "id") :attachments true}
                            #{})
-                   (update-in [:attachments]
-                              vec)
-                   (update-in [:attachments 0 :content]
-                              #(String. %)))))))
+                   string-result-attachment-content)))))
 
     (testing "agent query"
       (is (= {:person
@@ -364,6 +402,62 @@
                              "description" {"en-US" "Multi Part Activity Description"}}}}
              (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
 
+    (component/stop sys')
+    (support/unstrument-lrsql)))
+
+(deftest attachment-normalization-test
+  (let [sys   (support/test-system)
+        sys'  (component/start sys)
+        lrs   (-> sys' :lrs)
+        id-4  (get stmt-4 "id")
+        id-5  (get stmt-5 "id")
+        id-6  (get stmt-6 "id")
+        act-4 (get-in stmt-4 ["object" "id"])]
+
+    (testing "accepts normalized attachments"
+      (is (= {:statement-ids [id-4
+                              id-5
+                              id-6]}
+             (lrsp/-store-statements
+              ;; stmt-5 references stmt-4-attach
+              ;; stmt-6 references stmt-4-attach AND stmt-6-attach (twice)
+              lrs auth-ident [stmt-4 stmt-5 stmt-6] [stmt-4-attach stmt-6-attach]))))
+
+    (testing "returns normalized attachments"
+      (testing "(multiple)"
+        (testing "single attachment"
+          (is (= {:statement-result {:statements [stmt-5 stmt-4] :more ""}
+                  :attachments      [(update stmt-4-attach :content #(String. %))]}
+                 (-> (get-ss lrs
+                             auth-ident
+                             {:activity act-4
+                              :attachments true}
+                             #{})
+                     string-result-attachment-content))))
+
+        (testing "multiple attachments"
+          (is (= {:statement-result {:statements [stmt-6 stmt-5 stmt-4] :more ""}
+                  ;; Compare attachments as a set, their order is different on the
+                  ;; postgres backend
+                  :attachments      #{(update stmt-6-attach :content #(String. %))
+                                      (update stmt-4-attach :content #(String. %))}}
+                 (-> (get-ss lrs
+                             auth-ident
+                             {:attachments true}
+                             #{})
+                     string-result-attachment-content
+                     (update :attachments set))))))
+
+      (testing "(single)"
+        (is (= {:statement   stmt-6
+                :attachments #{(update stmt-6-attach :content #(String. %))
+                               (update stmt-4-attach :content #(String. %))}}
+               (-> (get-ss lrs
+                           auth-ident
+                           {:statementId id-6 :attachments true}
+                           #{})
+                   string-result-attachment-content
+                   (update :attachments set))))))
     (component/stop sys')
     (support/unstrument-lrsql)))
 
