@@ -97,10 +97,26 @@
   "Given a set of routes `routes` for a default LRS implementation,
    add additional routes specific to creating and updating admin
    accounts."
-  [{:keys [lrs exp leeway secret enable-admin-ui]} routes]
-  (let [common-interceptors (make-common-interceptors lrs)]
+  [{:keys [lrs
+           exp
+           leeway
+           secret
+           enable-admin-ui
+           enable-account-routes
+           oidc-interceptors
+           oidc-ui-interceptors]
+    :or   {oidc-interceptors     []
+           oidc-ui-interceptors  []
+           enable-account-routes true}}
+   routes]
+  (let [common-interceptors      (make-common-interceptors lrs)
+        common-interceptors-oidc (into common-interceptors oidc-interceptors)]
     (cset/union routes
-                (admin-account-routes common-interceptors secret exp leeway)
-                (admin-cred-routes common-interceptors secret leeway)
+                (when enable-account-routes
+                  (admin-account-routes
+                   common-interceptors-oidc secret exp leeway))
+                (admin-cred-routes common-interceptors-oidc secret leeway)
                 (when enable-admin-ui
-                  (admin-ui-routes common-interceptors)))))
+                  (admin-ui-routes
+                   (into common-interceptors
+                         oidc-ui-interceptors))))))

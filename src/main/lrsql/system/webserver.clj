@@ -6,6 +6,7 @@
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes]]
+            [lrsql.init.oidc :as oidc]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
@@ -31,17 +32,33 @@
         ;; The private key is used as the JWT symmetric secret
         {:keys [keystore
                 private-key]} (cu/init-keystore config)
+        ;; OIDC Interceptors & derived settings
+        {{oidc-resource-interceptors :resource-interceptors
+          oidc-admin-interceptors    :admin-interceptors
+          oidc-admin-ui-interceptors :admin-ui-interceptors} :interceptors
+         :keys                                               [enable-local-admin]}
+        (oidc/init
+         config
+         (:config lrs))
+
         ;; Make routes - the lrs error interceptor is appended to the
         ;; start to all lrs routes
-        routes (->> (build {:lrs               lrs
-                            :path-prefix       url-prefix
-                            :wrap-interceptors [i/error-interceptor
-                                                (handle-json-parse-exn)]})
-                    (add-admin-routes {:lrs    lrs
-                                       :exp    jwt-exp
-                                       :leeway jwt-lwy
-                                       :secret private-key
-                                       :enable-admin-ui enable-admin-ui}))]
+        routes
+        (->> (build {:lrs               lrs
+                     :path-prefix       url-prefix
+                     :wrap-interceptors (into
+                                         [i/error-interceptor
+                                          (handle-json-parse-exn)]
+                                         oidc-resource-interceptors)})
+             (add-admin-routes
+              {:lrs                   lrs
+               :exp                   jwt-exp
+               :leeway                jwt-lwy
+               :secret                private-key
+               :enable-admin-ui       enable-admin-ui
+               :enable-account-routes enable-local-admin
+               :oidc-interceptors     oidc-admin-interceptors
+               :oidc-ui-interceptors  oidc-admin-ui-interceptors}))]
     {:env                      :prod
      ::http/routes             routes
      ;; only serve assets if the admin ui is enabled

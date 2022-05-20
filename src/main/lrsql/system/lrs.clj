@@ -5,7 +5,8 @@
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.admin.protocol :as adp]
-            [lrsql.init :as init]
+            [lrsql.init      :as init]
+            [lrsql.init.oidc :as oidc-init]
             [lrsql.backend.protocol :as bp]
             [lrsql.input.actor     :as agent-input]
             [lrsql.input.activity  :as activity-input]
@@ -26,6 +27,7 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config]]
             [lrsql.util.auth      :as auth-util]
+            [lrsql.util.oidc      :as oidc-util]
             [lrsql.util.statement :as stmt-util]
             [lrsql.init.authority   :refer [make-authority-fn]]
             [lrsql.util.concurrency :refer [with-rerunable-txn]])
@@ -38,7 +40,11 @@
       :connection
       :conn-pool))
 
-(defrecord LearningRecordStore [connection backend config authority-fn]
+(defrecord LearningRecordStore [connection
+                                backend
+                                config
+                                authority-fn
+                                oidc-authority-fn]
   cmp/Lifecycle
   (start
     [lrs]
@@ -46,14 +52,16 @@
     (let [;; Destructuring
           {conn :conn-pool}
           connection
-          {uname   :admin-user-default
-           pass    :admin-pass-default
-           api-key :api-key-default
-           srt-key :api-secret-default
-           auth-tp :authority-template}
+          {uname        :admin-user-default
+           pass         :admin-pass-default
+           api-key      :api-key-default
+           srt-key      :api-secret-default
+           auth-tp      :authority-template
+           oidc-auth-tp :oidc-authority-template}
           config
           ;; Authority function
-          auth-fn (make-authority-fn auth-tp)]
+          auth-fn      (make-authority-fn auth-tp)
+          oidc-auth-fn (oidc-init/make-authority-fn oidc-auth-tp)]
       ;; Combine all init ops into a single txn, since the user would expect
       ;; such actions to happen as a single unit. If init-backend! succeeds
       ;; but insert-default-creds! fails, this would constitute a partial
@@ -62,7 +70,10 @@
         (init/init-backend! backend tx)
         (init/insert-default-creds! backend tx uname pass api-key srt-key)
         (log/info "Starting new LRS")
-        (assoc lrs :connection connection :authority-fn auth-fn))))
+        (assoc lrs
+               :connection connection
+               :authority-fn auth-fn
+               :oidc-authority-fn oidc-auth-fn))))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
@@ -196,18 +207,26 @@
   lrsp/LRSAuth
   (-authenticate
     [lrs ctx]
-    (let [conn   (lrs-conn lrs)
-          header (get-in ctx [:request :headers "authorization"])]
-      (if-some [key-pair (auth-util/header->key-pair header)]
-        (let [{:keys [authority-url]} config
-              input (auth-input/query-credential-scopes-input
-                     authority-fn
-                     authority-url
-                     key-pair)]
-          (jdbc/with-transaction [tx conn]
-            (auth-q/query-credential-scopes backend tx input)))
-        ;; No authorization header = no entry
-        {:result :com.yetanalytics.lrs.auth/unauthorized})))
+    (or
+     ;; Token Authentication
+     (let [{:keys [oidc-scope-prefix]} config]
+       (oidc-util/token-auth-identity
+        ctx
+        oidc-authority-fn
+        oidc-scope-prefix))
+     ;; Basic Authentication
+     (let [conn   (lrs-conn lrs)
+           header (get-in ctx [:request :headers "authorization"])]
+       (if-some [key-pair (auth-util/header->key-pair header)]
+         (let [{:keys [authority-url]} config
+               input (auth-input/query-credential-scopes-input
+                      authority-fn
+                      authority-url
+                      key-pair)]
+           (jdbc/with-transaction [tx conn]
+             (auth-q/query-credential-scopes backend tx input)))
+         ;; No authorization header = no entry
+         {:result :com.yetanalytics.lrs.auth/unauthorized}))))
   (-authorize
     [_lrs ctx auth-identity]
     (auth-util/authorize-action ctx auth-identity))
@@ -242,6 +261,12 @@
           input (admin-input/delete-admin-input account-id)]
       (jdbc/with-transaction [tx conn]
         (admin-cmd/delete-admin! backend tx input))))
+  (-ensure-account-oidc
+    [this username oidc-issuer]
+    (let [conn  (lrs-conn this)
+          input (admin-input/ensure-admin-oidc-input username oidc-issuer)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/ensure-admin-oidc! backend tx input))))
 
   adp/APIKeyManager
   (-create-api-keys
@@ -265,7 +290,7 @@
       (jdbc/with-transaction [tx conn]
         (auth-q/query-credentials backend tx input))))
   (-update-api-keys
-   ;; TODO: Verify the key pair is associated with the account ID
+    ;; TODO: Verify the key pair is associated with the account ID
     [this _account-id api-key secret-key scopes]
     (let [conn  (lrs-conn this)
           input (auth-input/query-credential-scopes*-input api-key secret-key)]

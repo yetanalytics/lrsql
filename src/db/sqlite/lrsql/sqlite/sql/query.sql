@@ -187,6 +187,13 @@ WHERE activity_iri = :activity-iri
 SELECT id, passhash FROM admin_account
 WHERE username = :username
 
+-- :name query-account-oidc
+-- :command :query
+-- :result :one
+-- :doc Given an account `username`, return the ID and OIDC issuer, which can be used to verify the OIDC identity.
+SELECT id, oidc_issuer FROM admin_account
+WHERE username = :username
+
 -- :name query-all-accounts
 -- :command :query
 -- :result :many

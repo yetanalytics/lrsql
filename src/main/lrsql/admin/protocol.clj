@@ -12,7 +12,9 @@
   (-existing-account? [this account-id]
     "Check that the account with the given ID exists in the account table. Returns a boolean.")
   (-delete-account [this account-id]
-    "Delete the account and all associated creds. Assumes the account has already been authenticated."))
+    "Delete the account and all associated creds. Assumes the account has already been authenticated.")
+  (-ensure-account-oidc [this username oidc-issuer]
+    "Create or verify an existing admin account with the given username and oidc-issuer."))
 
 (defprotocol APIKeyManager
   (-create-api-keys [this account-id scopes]

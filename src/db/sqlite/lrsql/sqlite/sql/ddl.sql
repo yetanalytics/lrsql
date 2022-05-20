@@ -241,3 +241,57 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
     REFERENCES lrs_credential(api_key, secret_key)
     ON DELETE CASCADE
 )
+
+/* Schema Update */
+
+-- :name enable-writable-schema!
+-- :command :execute
+-- :doc Enable writing to the sqlite schema.
+PRAGMA writable_schema = ON
+
+-- :name disable-writable-schema!
+-- :command :execute
+-- :doc Disable writing to the sqlite schema.
+PRAGMA writable_schema = OFF
+
+-- :name run-integrity-check
+-- :command :execute
+-- :doc Run the sqlite schema integrity check.
+PRAGMA integrity_check
+
+-- :name query-schema-version
+-- :command :query
+-- :result :one
+-- :doc Query the db schema version.
+PRAGMA schema_version
+
+-- :name update-schema-version!
+-- :command :execute
+-- :doc Set the db schema version.
+PRAGMA schema_version = :sql:schema_version
+
+/* Migration 2022-02-22-00 - Set admin_account.passhash to optional */
+
+-- :name query-admin-account-passhash-notnull
+-- :command :query
+-- :result :one
+-- :doc Query to see if admin_account passhash is required.
+SELECT "notnull" FROM pragma_table_info('admin_account') where name='passhash'
+
+-- :name alter-admin-account-passhash-optional!
+-- :command :execute
+-- :doc Set `admin_account.passhash` to optional.
+UPDATE sqlite_schema SET sql='CREATE TABLE admin_account (id TEXT NOT NULL PRIMARY KEY, username TEXT NOT NULL UNIQUE, passhash TEXT)' WHERE type='table' AND name='admin_account'
+
+/* Migration 2022-02-23-00 - Add oidc_issuer to admin_account */
+
+-- :name query-admin-account-oidc-issuer-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `admin_account.oidc_issuer` exists.
+SELECT 1 FROM pragma_table_info('admin_account') where name='oidc_issuer'
+
+-- :name alter-admin-account-add-openid-issuer!
+-- :command :execute
+-- :doc Add `admin_account.oidc_issuer` to record OIDC identity source.
+ALTER TABLE admin_account ADD COLUMN oidc_issuer TEXT

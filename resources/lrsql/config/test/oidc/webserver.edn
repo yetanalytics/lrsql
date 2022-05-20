@@ -1,0 +1,5 @@
+#merge
+[#include "test/default/webserver.edn"
+ {:oidc-issuer    "http://0.0.0.0:8081/auth/realms/test"
+  :oidc-audience  "http://0.0.0.0:8080"
+  :oidc-client-id "lrs_admin_ui"}]

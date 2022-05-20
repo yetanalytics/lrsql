@@ -62,6 +62,21 @@
         (is (-> (adp/-authenticate-account lrs test-username test-password)
                 :result
                 (= :lrsql.admin/missing-account-error)))))
+    (testing "Admin account OIDC bootstrap"
+      (let [username    "oidcsub"
+            oidc-issuer "https://example.com/realm"
+            bad-issuer  "https://impostor.com/realm"]
+        ;; Creates if does not exist
+        (is (-> (adp/-ensure-account-oidc lrs username oidc-issuer)
+                :result
+                uuid?))
+        ;; Idempotent
+        (is (= (adp/-ensure-account-oidc lrs username oidc-issuer)
+               (adp/-ensure-account-oidc lrs username oidc-issuer)))
+        ;; OIDC issuer must match
+        (is (-> (adp/-ensure-account-oidc lrs username bad-issuer)
+                :result
+                (= :lrsql.admin/oidc-issuer-mismatch-error)))))
     (component/stop sys')))
 
 ;; TODO: Add tests for creds with no explicit scopes, once

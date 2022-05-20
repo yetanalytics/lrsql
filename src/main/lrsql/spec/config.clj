@@ -118,6 +118,8 @@
 
 (s/def ::authority-template string?)
 (s/def ::authority-url ::xs/irl)
+(s/def ::oidc-authority-template string?)
+(s/def ::oidc-scope-prefix string?)
 
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
@@ -126,7 +128,9 @@
                           ::stmt-get-max
                           ::stmt-url-prefix
                           ::authority-template
-                          ::authority-url]
+                          ::authority-url
+                          ::oidc-authority-template
+                          ::oidc-scope-prefix]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default
@@ -153,6 +157,13 @@
 (s/def ::enable-admin-ui boolean?)
 (s/def ::enable-stmt-html boolean?)
 
+(s/def ::oidc-issuer (s/nilable string?))
+(s/def ::oidc-audience (s/nilable string?))
+(s/def ::oidc-client-id (s/nilable string?))
+(s/def ::oidc-client-template string?)
+(s/def ::oidc-verify-remote-issuer boolean?)
+(s/def ::oidc-enable-local-admin boolean?)
+
 (s/def ::webserver
   (s/keys :req-un [::http-host
                    ::http-port
@@ -166,10 +177,16 @@
                    ::jwt-exp-time
                    ::jwt-exp-leeway
                    ::enable-admin-ui
-                   ::enable-stmt-html]
+                   ::enable-stmt-html
+                   ::oidc-verify-remote-issuer
+                   ::oidc-client-template
+                   ::oidc-enable-local-admin]
           :opt-un [::key-file
                    ::key-pkey-file
-                   ::key-cert-chain]))
+                   ::key-cert-chain
+                   ::oidc-issuer
+                   ::oidc-audience
+                   ::oidc-client-id]))
 
 (def config-spec
   (s/keys :req-un [::connection

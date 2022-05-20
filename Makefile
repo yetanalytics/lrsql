@@ -2,7 +2,7 @@
 
 # Version of LRS Admin UI to use
 
-LRS_ADMIN_UI_VERSION ?= v0.1.5
+LRS_ADMIN_UI_VERSION ?= v0.1.6
 LRS_ADMIN_UI_LOCATION ?= https://github.com/yetanalytics/lrs-admin-ui/releases/download/${LRS_ADMIN_UI_VERSION}/lrs-admin-ui.zip
 LRS_ADMIN_ZIPFILE ?= lrs-admin-ui-${LRS_ADMIN_UI_VERSION}.zip
 
@@ -24,7 +24,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, persistent, sqlite, postgres, bench, bench-async, check-vuln
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, persistent, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp target/nvd
@@ -46,6 +46,14 @@ ci: test-h2 test-sqlite test-postgres
 
 ephemeral: resources/public/admin
 	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? false
+
+# like ephemeral, but takes env vars
+ephemeral-prod: resources/public/admin
+	clojure -M:db-h2 -m lrsql.h2.main --persistent false
+
+# like ephemeral, but includes OIDC config for use with `keycloak-demo`
+ephemeral-oidc: resources/public/admin
+	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? false :override-profile :test-oidc
 
 persistent: resources/public/admin
 	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? true
@@ -79,6 +87,11 @@ target/nvd:
 	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-h2:db-sqlite:db-postgres)"'"' :config-filename '".nvd/config.json"'
 
 check-vuln: target/nvd
+
+# Demo instance of Keycloak used for interactive development
+
+keycloak-demo:
+	cd dev-resources/keycloak_demo; docker compose up
 
 # *** Build ***
 

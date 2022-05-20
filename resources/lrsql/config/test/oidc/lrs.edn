@@ -1,0 +1,3 @@
+#merge
+[#include "test/default/lrs.edn"
+ {:oidc-scope-prefix "lrs:"}]

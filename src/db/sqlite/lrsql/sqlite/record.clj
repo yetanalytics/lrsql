@@ -1,5 +1,6 @@
 (ns lrsql.sqlite.record
-  (:require [com.stuartsierra.component :as cmp]
+  (:require [clojure.tools.logging :as log]
+            [com.stuartsierra.component :as cmp]
             [hugsql.core :as hug]
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.data :as bd]
@@ -15,6 +16,23 @@
 (hug/def-db-fns "lrsql/sqlite/sql/query.sql")
 (hug/def-db-fns "lrsql/sqlite/sql/update.sql")
 (hug/def-db-fns "lrsql/sqlite/sql/delete.sql")
+
+;; Schema Update Helpers
+
+#_{:clj-kondo/ignore [:unresolved-symbol]}
+(defn- update-schema-simple!
+  "Given a tx and a db-fn that updates schema to remove CHECK or FOREIGN KEY or NOT NULL constraints or to add, remove, or change default values on a column, wraps it with an update to the schema version and associated checks.
+
+  See https://www.sqlite.org/lang_altertable.html Section 7 part 2"
+  [tx db-fn]
+  (enable-writable-schema! tx)
+  (db-fn tx)
+  (update-schema-version!
+   tx
+   (update (query-schema-version tx)
+           :schema_version inc))
+  (disable-writable-schema! tx)
+  (run-integrity-check tx))
 
 ;; Define record
 
@@ -60,9 +78,13 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
-  (-update-all! [_ _]
-    ;; No-op for now; add functions if updates are needed
-    nil)
+  (-update-all! [_ tx]
+    (when (= 1 (:notnull (query-admin-account-passhash-notnull tx)))
+      (update-schema-simple! tx alter-admin-account-passhash-optional!))
+    (when-not (some? (query-admin-account-oidc-issuer-exists tx))
+      (alter-admin-account-add-openid-issuer! tx))
+    (log/infof "sqlite schema_version: %d"
+               (:schema_version (query-schema-version tx))))
 
   bp/BackendUtil
   (-txn-retry? [_ _ex]
@@ -158,12 +180,16 @@
   bp/AdminAccountBackend
   (-insert-admin-account! [_ tx input]
     (insert-admin-account! tx input))
+  (-insert-admin-account-oidc! [_ tx input]
+    (insert-admin-account-oidc! tx input))
   (-query-all-admin-accounts [_ tx]
     (query-all-accounts tx))
   (-delete-admin-account! [_ tx input]
     (delete-admin-account! tx input))
   (-query-account [_ tx input]
     (query-account tx input))
+  (-query-account-oidc [_ tx input]
+    (query-account-oidc tx input))
   (-query-account-exists [_ tx input]
     (query-account-exists tx input))
 

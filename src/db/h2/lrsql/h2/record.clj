@@ -42,9 +42,9 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
-  (-update-all! [_ _tx]
-    ;; No-op for now; add functions if updates are needed
-    nil)
+  (-update-all! [_ tx]
+    (alter-admin-account-passhash-optional! tx)
+    (alter-admin-account-add-openid-issuer! tx))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
@@ -143,12 +143,16 @@
   bp/AdminAccountBackend
   (-insert-admin-account! [_ tx input]
     (insert-admin-account! tx input))
+  (-insert-admin-account-oidc! [_ tx input]
+    (insert-admin-account-oidc! tx input))
   (-query-all-admin-accounts [_ tx]
     (query-all-accounts tx))
   (-delete-admin-account! [_ tx input]
     (delete-admin-account! tx input))
   (-query-account [_ tx input]
     (query-account tx input))
+  (-query-account-oidc [_ tx input]
+    (query-account-oidc tx input))
   (-query-account-exists [_ tx input]
     (query-account-exists tx input))
 

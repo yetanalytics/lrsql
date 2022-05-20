@@ -19,8 +19,16 @@
 (s/def ::account-id ::c/primary-key)
 (s/def ::username string?)
 (s/def ::password string?)
-(s/def ::passhash string?) ; format may vary by password lib
+;; passhash format may vary by password lib
+;; Input passhash is not nilable
+(s/def :lrsql.spec.admin.input/passhash string?)
+;; Ret passhash (from SQL) is nilable
+(s/def :lrsql.spec.admin.ret/passhash (s/nilable string?))
 (s/def ::uuid ::xs/uuid)
+;; Likewise, OIDC issuer is not nilable for inputs
+(s/def :lrsql.spec.admin.input/oidc-issuer string?)
+;; But is for ret
+(s/def :lrsql.spec.admin.ret/oidc-issuer (s/nilable string?))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inputs
@@ -36,7 +44,16 @@
 (def insert-admin-input-spec
   (s/keys :req-un [::c/primary-key
                    ::username
-                   ::passhash]))
+                   :lrsql.spec.admin.input/passhash]))
+
+(def ensure-admin-oidc-input-spec
+  (s/keys :req-un [:lrsql.spec.admin.input/oidc-issuer
+                   ::username]))
+
+(def insert-admin-oidc-input-spec
+  (s/keys :req-un [::c/primary-key
+                   ::username
+                   :lrsql.spec.admin.input/oidc-issuer]))
 
 (def query-validate-admin-input-spec
   (s/keys :req-un [::username
@@ -57,6 +74,14 @@
 (def insert-admin-ret-spec
   (s/keys :req-un [:lrsql.spec.admin.insert/result]))
 
+(s/def :lrsql.spec.admin.ensure/result
+  (s/nonconforming
+   (s/or :success uuid?
+         :failure #{:lrsql.admin/oidc-issuer-mismatch-error})))
+
+(def ensure-admin-ret-spec
+  (s/keys :req-un [:lrsql.spec.admin.ensure/result]))
+
 (s/def :lrsql.spec.admin.delete/result
   (s/nonconforming
    (s/or :success uuid?
@@ -73,7 +98,7 @@
 
 (def query-admin-ret-spec
   (s/keys :req-un [::account-id
-                   ::passhash]))
+                   :lrsql.spec.admin.ret/passhash]))
 
 (def query-all-admin-accounts-ret-spec
   (s/every (s/keys :req-un [::account-id

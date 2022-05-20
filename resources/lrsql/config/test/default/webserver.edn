@@ -1,14 +1,17 @@
-{:key-file          "config/keystore.jks"
- :key-alias         "lrsql_keystore"
- :key-password      "lrsql_pass"
- :key-enable-selfie true
- :jwt-exp-time      3600
- :jwt-exp-leeway    1
- :enable-http       true
- :enable-http2      true
- :ssl-port          8443
- :http-host         "0.0.0.0"
- :http-port         8080
- :url-prefix        "/xapi"
- :enable-admin-ui   true
- :enable-stmt-html  true}
+{:key-file                  "config/keystore.jks"
+ :key-alias                 "lrsql_keystore"
+ :key-password              "lrsql_pass"
+ :key-enable-selfie         true
+ :jwt-exp-time              3600
+ :jwt-exp-leeway            1
+ :enable-http               true
+ :enable-http2              true
+ :ssl-port                  8443
+ :http-host                 "0.0.0.0"
+ :http-port                 8080
+ :url-prefix                "/xapi"
+ :enable-admin-ui           true
+ :enable-stmt-html          true
+ :oidc-verify-remote-issuer true
+ :oidc-client-template      "config/oidc_client.json.template"
+ :oidc-enable-local-admin   false}

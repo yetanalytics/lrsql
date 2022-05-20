@@ -126,6 +126,14 @@ id = :primary-key,
 username = :username,
 passhash = :passhash
 
+-- :name insert-admin-account-oidc!
+-- :command :insert
+-- :doc Insert a new admin account to shadow an OIDC user.
+INSERT INTO admin_account SET
+id = :primary-key,
+username = :username,
+oidc_issuer = :oidc-issuer
+
 /* Credentials */
 
 -- :name insert-credential!
