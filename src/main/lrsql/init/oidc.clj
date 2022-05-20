@@ -92,11 +92,15 @@
          (oidc-i/decode-interceptor
           (fn [_]
             (fn [kid]
-              (get @keyset-cache kid
-                   ;; If kid is not found in the keyset, attempt refresh and try
-                   ;; again
-                   (get (reset! keyset-cache (jwt/get-keyset jwks-uri))
-                        kid))))
+              (or
+               (get @keyset-cache kid)
+               ;; If kid is not found in the keyset, attempt refresh and try
+               ;; again
+               (do
+                 (log/debugf "key id %s not found in cache, retrieving from %s"
+                             kid jwks-uri)
+                 (get (reset! keyset-cache (jwt/get-keyset jwks-uri))
+                      kid)))))
           :required? false
           :unauthorized
           ;; Allow unknown/nil key IDs through for possible subsequent handling
