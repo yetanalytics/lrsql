@@ -24,6 +24,7 @@ Test.java
 .clj-kondo/.cache/
 .calva/
 .lsp/
+.vscode/
 # Admin SPA
 lrs-admin-ui-*.zip
 /resources/public/admin/
