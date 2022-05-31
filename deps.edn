@@ -9,7 +9,7 @@
   ;; - java-time: Updating to 0.3.3 causes dep clash with DATASIM
   camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
   cheshire/cheshire
-  {:mvn/version "5.10.1"
+  {:mvn/version "5.11.0"
    :exclusions
    [com.fasterxml.jackson.core/jackson-core
     com.fasterxml.jackson.dataformat/jackson-dataformat-smile
@@ -64,7 +64,7 @@
  :aliases
  {:db-h2
   {:extra-paths ["src/db/h2"]
-   :extra-deps  {com.h2database/h2 {:mvn/version "2.1.210"}}}
+   :extra-deps  {com.h2database/h2 {:mvn/version "2.1.212"}}}
   :db-sqlite
   {:extra-paths ["src/db/sqlite"]
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
@@ -89,7 +89,7 @@
                  "src/test"
                  "dev-resources"]
    :extra-deps  {;; DB deps
-                 com.h2database/h2             {:mvn/version "2.1.210"}
+                 com.h2database/h2             {:mvn/version "2.1.212"}
                  org.xerial/sqlite-jdbc        {:mvn/version "3.36.0"}
                  org.postgresql/postgresql     {:mvn/version "42.3.3"}
                  org.testcontainers/postgresql {:mvn/version "1.16.3"}
