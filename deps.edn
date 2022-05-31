@@ -121,7 +121,7 @@
   {:extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
    :extra-paths ["src/build"]}
   :nvd
-  {:replace-deps {nvd-clojure/nvd-clojure {:mvn/version "2.5.0"}}
+  {:replace-deps {nvd-clojure/nvd-clojure {:mvn/version "2.6.0"}}
    :ns-default   nvd.task}
   :doc
   {:replace-deps {com.yetanalytics/markdoc {:git/url "https://github.com/yetanalytics/markdoc"
