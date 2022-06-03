@@ -7,5 +7,12 @@
       <packageUrl regex="true">^pkg:maven/org\.clojure/core\.async@.*$</packageUrl>
       <cpe>cpe:/a:async_project:async</cpe>
    </suppress>
-
+   <suppress base="true">
+      <notes><![CDATA[
+      FP per issue #4555
+      ]]></notes>
+      <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
+      <cpe>cpe:/a:h2database:h2</cpe>
+      <vulnerabilityName>CVE-2018-14335</vulnerabilityName>
+   </suppress>
 </suppressions>

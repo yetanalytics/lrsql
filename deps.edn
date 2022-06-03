@@ -8,20 +8,7 @@
   ;; Util deps
   ;; - java-time: Updating to 0.3.3 causes dep clash with DATASIM
   camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
-  cheshire/cheshire
-  {:mvn/version "5.10.1"
-   :exclusions
-   [com.fasterxml.jackson.core/jackson-core
-    com.fasterxml.jackson.dataformat/jackson-dataformat-smile
-    com.fasterxml.jackson.dataformat/jackson-dataformat-cbor
-    com.fasterxml.jackson.core/jackson-databind]}
-  com.fasterxml.jackson.core/jackson-core  {:mvn/version "2.13.2"}
-  com.fasterxml.jackson.dataformat/jackson-dataformat-smile
-  {:mvn/version "2.13.2"}
-  com.fasterxml.jackson.dataformat/jackson-dataformat-cbor
-  {:mvn/version "2.13.2"}
-  com.fasterxml.jackson.core/jackson-databind
-  {:mvn/version "2.13.2.1"}
+  cheshire/cheshire                        {:mvn/version "5.11.0"}
   clojure.java-time/clojure.java-time      {:mvn/version "0.3.2"}
   danlentz/clj-uuid                        {:mvn/version "0.1.9"}
   aero/aero                                {:mvn/version "1.1.6"}
@@ -64,7 +51,7 @@
  :aliases
  {:db-h2
   {:extra-paths ["src/db/h2"]
-   :extra-deps  {com.h2database/h2 {:mvn/version "2.1.210"}}}
+   :extra-deps  {com.h2database/h2 {:mvn/version "2.1.212"}}}
   :db-sqlite
   {:extra-paths ["src/db/sqlite"]
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
@@ -89,7 +76,7 @@
                  "src/test"
                  "dev-resources"]
    :extra-deps  {;; DB deps
-                 com.h2database/h2             {:mvn/version "2.1.210"}
+                 com.h2database/h2             {:mvn/version "2.1.212"}
                  org.xerial/sqlite-jdbc        {:mvn/version "3.36.0"}
                  org.postgresql/postgresql     {:mvn/version "42.3.3"}
                  org.testcontainers/postgresql {:mvn/version "1.16.3"}
@@ -121,7 +108,7 @@
   {:extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
    :extra-paths ["src/build"]}
   :nvd
-  {:replace-deps {nvd-clojure/nvd-clojure {:mvn/version "2.5.0"}}
+  {:replace-deps {nvd-clojure/nvd-clojure {:mvn/version "2.6.0"}}
    :ns-default   nvd.task}
   :doc
   {:replace-deps {com.yetanalytics/markdoc {:git/url "https://github.com/yetanalytics/markdoc"
