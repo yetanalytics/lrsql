@@ -2,7 +2,7 @@
 
 # Authority Configuration
 
-The SQL LRS allows for configuration of the Authority included in xAPI Statements that are written to the LRS.
+The SQL LRS allows for configuration of the Authority included in xAPI statements that are written to the LRS. This authority will overwrite any authority present on incoming statements.
 
 ### Configuring a custom Authority template
 
