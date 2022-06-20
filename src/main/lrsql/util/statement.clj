@@ -23,7 +23,6 @@
   [authority statement]
   (let [{?id        "id"
          ?timestamp "timestamp"
-         ?authority "authority"
          ?version   "version"}
         statement
         {squuid      :squuid
