@@ -47,12 +47,12 @@
       (vary-meta assoc :primary-key squuid)
       true
       (assoc-to-stmt "stored" squuid-ts-str)
+      true
+      (assoc-to-stmt "authority" authority)
       (not ?id)
       (assoc-to-stmt "id" (u/uuid->str squuid-base))
       (not ?timestamp)
       (assoc-to-stmt "timestamp" squuid-ts-str)
-      (not ?authority)
-      (assoc-to-stmt "authority" authority)
       (not ?version)
       (assoc-to-stmt "version" xapi-version))))
 
