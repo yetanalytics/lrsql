@@ -42,6 +42,22 @@
   {"id"         "http://www.example.com/tincan/activities/multipart"
    "objectType" "Activity"})
 
+(deftest prepare-statement-test
+  (let [lrs-authority     {"mbox"       "mailto:a@example.com"
+                           "objectType" "Agent"}
+        foreign-authority {"mbox"       "mailto:b@example.com"
+                           "objectType" "Agent"}]
+    (testing "overwrites authority"
+      (is (= lrs-authority
+             (-> (su/prepare-statement
+                  lrs-authority
+                  {"id"        sample-id
+                   "actor"     sample-group
+                   "verb"      sample-verb
+                   "object"    sample-activity
+                   "authority" foreign-authority})
+                 (get "authority")))))))
+
 (deftest statements-equal-test
   (testing "statement equality"
     (is (su/statement-equal?

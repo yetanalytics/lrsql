@@ -11,10 +11,9 @@
 ;; TODO: Change for version 2.0.0
 (def xapi-version "1.0.0")
 
-;; NOTE: It is recommended that we override any pre-existing authorities
-;; in a statement, unless there's a high degree of trust. We assume such
-;; a degree of trust (e.g. if the LRSs are part of the same system), but
-;; we may need to address this in the future (e.g. set using env vars).
+;; NOTE: SQL LRS overwrites any pre-existing authority object in a statement, as
+;; suggested by the spec:
+;; https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#requirements-14
 
 (defn prepare-statement
   "Prepare `statement` for LRS storage by coll-ifying context activities
@@ -23,7 +22,6 @@
   [authority statement]
   (let [{?id        "id"
          ?timestamp "timestamp"
-         ?authority "authority"
          ?version   "version"}
         statement
         {squuid      :squuid
@@ -47,12 +45,12 @@
       (vary-meta assoc :primary-key squuid)
       true
       (assoc-to-stmt "stored" squuid-ts-str)
+      true
+      (assoc-to-stmt "authority" authority)
       (not ?id)
       (assoc-to-stmt "id" (u/uuid->str squuid-base))
       (not ?timestamp)
       (assoc-to-stmt "timestamp" squuid-ts-str)
-      (not ?authority)
-      (assoc-to-stmt "authority" authority)
       (not ?version)
       (assoc-to-stmt "version" xapi-version))))
 
