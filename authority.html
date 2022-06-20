@@ -124,7 +124,7 @@ span.build {
             <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
           </div>
         </div>
-        <p><a href='index.html'><- Back to Index</a></p><h1 id="authority&#95;configuration">Authority Configuration</h1><p>The SQL LRS allows for configuration of the Authority included in xAPI Statements that are written to the LRS.</p><h3 id="configuring&#95;a&#95;custom&#95;authority&#95;template">Configuring a custom Authority template</h3><p>On startup the SQL LRS looks for the file <code>config/authority.json.template</code> and bases the authority on the template it finds there.</p><h4 id="static&#95;custom&#95;authority">Static Custom Authority</h4><p>The authority template file should contain an xAPI Agent object representing the desired authority. The object may contain static values, which would result in all statements in the LRS having the same authority.</p><p>Here is an example of a static Authority template file</p><pre><code class="JSON">{
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="authority&#95;configuration">Authority Configuration</h1><p>The SQL LRS allows for configuration of the Authority included in xAPI statements that are written to the LRS. This authority will overwrite any authority present on incoming statements.</p><h3 id="configuring&#95;a&#95;custom&#95;authority&#95;template">Configuring a custom Authority template</h3><p>On startup the SQL LRS looks for the file <code>config/authority.json.template</code> and bases the authority on the template it finds there.</p><h4 id="static&#95;custom&#95;authority">Static Custom Authority</h4><p>The authority template file should contain an xAPI Agent object representing the desired authority. The object may contain static values, which would result in all statements in the LRS having the same authority.</p><p>Here is an example of a static Authority template file</p><pre><code class="JSON">{
     &quot;account&quot;: {
         &quot;homePage&quot;:&quot;https://www.yetanalytics.com&quot;,
         &quot;name&quot;:&quot;Yet Analytics&quot;
@@ -167,7 +167,7 @@ span.build {
          &copy; 2021-2022 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
-         <span class="build">Build: 4605ca44391355b3ad661ec2f5c67b2b0c8d1180</span>
+         <span class="build">Build: ba870f205263ad7c0c437afa565c9406cad39438</span>
         </div>
       </div>
     </body>
