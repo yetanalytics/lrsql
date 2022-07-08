@@ -21,13 +21,13 @@
                       [:logger])
          :connection (component/using
                       (db/map->Connection {})
-                      [:logger :backend])
+                      [:backend])
          :lrs        (component/using
                       (lrs/map->LearningRecordStore {})
-                      [:logger :connection :backend])
+                      [:connection :backend])
          :webserver  (component/using
                       (webserver/map->Webserver {})
-                      [:logger :lrs]))
+                      [:lrs]))
         assoc-config
         (fn [m config-m] (assoc m :config config-m))]
     (-> (merge-with assoc-config initial-sys config)
