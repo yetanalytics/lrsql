@@ -14,7 +14,7 @@
         (read-config profile)
         initial-sys ; init without configuration
         (component/system-map
-         ;; Logger is required by all other components so it initializes first
+         ;; Logger is required by backend so it happens first
          :logger     (logger/map->Logger {})
          :backend    (component/using
                       backend
