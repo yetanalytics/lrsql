@@ -4,6 +4,12 @@
 
 All configuration variables can either be set directly via the command line as environment variables, or can be added to the config file `config/lrsql.json` as a JSON object property.
 
+### Logger
+
+| Env Var | Config | Description | Default |
+| --- | --- | --- | --- |
+| `LRSQL_LOG_LEVEL` | `logLevel` | The logging level to use. Can be `ALL`, `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR` or `OFF` | `INFO` |
+
 ### Database
 
 | Env Var | Config | Description | Default |
