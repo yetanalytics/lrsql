@@ -15,4 +15,11 @@
       <cpe>cpe:/a:h2database:h2</cpe>
       <vulnerabilityName>CVE-2018-14335</vulnerabilityName>
    </suppress>
+   <suppress>
+     <notes><![CDATA[
+     file name: jetty-io-9.4.48.v20220622.jar
+     ]]></notes>
+     <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty/jetty\-io@.*$</packageUrl>
+     <vulnerabilityName>CVE-2022-2191</vulnerabilityName>
+   </suppress>
 </suppressions>
