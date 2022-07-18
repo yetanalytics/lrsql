@@ -24,7 +24,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, persistent, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, persistent, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp target/nvd
@@ -92,6 +92,9 @@ check-vuln: target/nvd
 
 keycloak-demo:
 	cd dev-resources/keycloak_demo; docker compose up
+
+superset-demo:
+	cd dev-resources/superset_demo; docker compose up
 
 # *** Build ***
 
