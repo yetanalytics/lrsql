@@ -1,6 +1,7 @@
 (ns lrsql.system
   (:require [com.stuartsierra.component :as component]
             [lrsql.system.database :as db]
+            [lrsql.system.logger :as logger]
             [lrsql.system.lrs :as lrs]
             [lrsql.system.webserver :as webserver]
             [lrsql.init.config :refer [read-config]]))
@@ -13,9 +14,11 @@
         (read-config profile)
         initial-sys ; init without configuration
         (component/system-map
+         ;; Logger is required by backend so it happens first
+         :logger     (logger/map->Logger {})
          :backend    (component/using
                       backend
-                      [])
+                      [:logger])
          :connection (component/using
                       (db/map->Connection {})
                       [:backend])
