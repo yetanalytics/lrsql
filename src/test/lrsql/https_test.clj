@@ -28,7 +28,7 @@
       (testing "is not over the HTTP port"
         (is (thrown-with-msg?
              clojure.lang.ExceptionInfo
-             #"curl: \(35\).*wrong version number"
+             #"curl: \(35\).+"
              (curl/get "https://0.0.0.0:8080/health"
                        {:raw-args ["--insecure"]}))))
       (component/stop sys'))))
