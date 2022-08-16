@@ -584,6 +584,50 @@
     (component/stop sys')))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Read Scope Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Make it look like 3-legged OAuth
+;; See: https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#example-7
+(def auth-ident-2
+  {:agent {"objectType" "Group"
+           "member"     [{"account" {"homePage" "http://example.com/xAPI/OAuth/Token"
+                                     "name"     "oauth_consumer_x75db"}}
+                         {"mbox" "mailto:bob@example.com"}]}})
+
+(defn- get-ss-authority
+  [lrs auth-ident params ltags]
+  (-> (lrsp/-get-statements lrs auth-ident params ltags)
+      :statement
+      (get "authority")
+      (update "member" set)))
+
+(deftest test-statement-read-scopes
+  (let [sys  (support/test-system)
+        sys' (component/start sys)
+        lrs  (:lrs sys')
+        id-1 (get stmt-1 "id")
+        id-2 (get stmt-2 "id")]
+    (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+    (lrsp/-store-statements lrs auth-ident-2 [stmt-2] [])
+    (testing "statements/read"
+      (is (= {:statement stmt-1}
+             (get-ss lrs auth-ident {:statementId id-1} #{})
+             (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
+      (is (= {:statement stmt-2}
+             (get-ss lrs auth-ident {:statementId id-2} #{})
+             (get-ss lrs auth-ident-2 {:statementId id-2} #{})))
+      (is (= {:statement stmt-2}
+             (get-ss lrs auth-ident-2 {:statementId id-2} #{})))
+      (is (= (-> auth-ident :agent (update "member" set))
+             (get-ss-authority lrs auth-ident {:statementId id-1} #{})
+             (get-ss-authority lrs auth-ident-2 {:statementId id-1} #{})))
+      (is (= (-> auth-ident-2 :agent (update "member" set))
+             (get-ss-authority lrs auth-ident {:statementId id-2} #{})
+             (get-ss-authority lrs auth-ident-2 {:statementId id-2} #{}))))
+    (component/stop sys')))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement DATASIM Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -601,9 +645,9 @@
         sys'    (component/start sys)
         lrs     (:lrs sys')
         get-ss' (fn [params]
-                 (-> (lrsp/-get-statements lrs auth-ident params #{"en-US"})
-                     :statement-result
-                     :statements))]
+                  (-> (lrsp/-get-statements lrs auth-ident params #{"en-US"})
+                      :statement-result
+                      :statements))]
     (lrsp/-store-statements lrs auth-ident test-statements [])
     (testing "descending query"
       (let [query-res (get-ss' {:limit 50})]
@@ -665,7 +709,7 @@
                  (count (get-ss' {:ascending true
                                   :since     snd-stored
                                   :limit     50})))))
-        
+
         (testing "until only"
           (is (= 50
                  (count (get-ss' {:until lst-stored
@@ -681,7 +725,7 @@
                  (count (get-ss' {:ascending true
                                   :until     pen-stored
                                   :limit     50})))))
-        
+
         (testing "both"
           (is (= (count since-fst)
                  (count (get-ss' {:since fst-stored
@@ -701,7 +745,7 @@
                          {:statementId (cstr/upper-case id)}
                          #{})))
         (is (not-empty (get-ss' {:registration (cstr/upper-case reg)})))))
-    
+
     (testing "UUID keys ignore case"
       (let [id "00000000-0000-4000-8000-abcdefabcdef"
             stmt (-> test-statements
@@ -889,7 +933,7 @@
                :content-type   "application/json"
                :id             "https://example.org/some-profile"}}
              (get-doc lrs auth-ident bad-doc-params-2))))
-  
+
     (testing "document ID query"
       (is (= {:document-ids ["some-id" "some-other-id"]}
              (lrsp/-get-document-ids
@@ -906,7 +950,7 @@
               lrs
               auth-ident
               (dissoc activity-prof-id-params :profileId)))))
-  
+
     (testing "document deletion"
       (support/seq-is
        {}
@@ -930,5 +974,5 @@
        (lrsp/-get-document lrs
                            auth-ident
                            activity-prof-id-params)))
-    
+
     (component/stop sys')))
