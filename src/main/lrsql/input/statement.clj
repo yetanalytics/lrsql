@@ -3,6 +3,7 @@
             [clojure.tools.logging :as log]
             [clojure.set :as cset]
             ;; Specs
+            [lrsql.spec.authority :as as]
             [lrsql.spec.statement :as ss]
             ;; Inputs
             [lrsql.input.actor      :as i-ac]
@@ -404,13 +405,15 @@
 ;; would have been filtered out earlier by interceptors.
 
 (s/fdef query-statement-input
-  :args (s/cat :params ::ss/query-params)
+  :args (s/cat :params ::ss/query-params
+               :authority (s/nilable as/query-authority-spec))
   :ret ss/statement-query-spec)
 
 (defn query-statement-input
   "Given `params`, construct the input for `query-statement!`. The input can be
    for a single-statement query (if it has a statement ID), or a multi-statement
-   query (if not)."
+   query (if not). A nilable `?authority` arg can be passed to add additional
+   query params based on the authority agents."
   [{?stmt-id     :statementId
     ?vstmt-id    :voidedStatementId
     ?verb-iri    :verb
@@ -427,8 +430,10 @@
     ?format      :format
     ?from        :from ; Not a stmt res param; added by lrsql for pagination
     ?url-prefix  :more-url-prefix ; Added by `add-more-url-prefix`
-    :as          params}]
-  (let [?stmt-id    (when ?stmt-id (u/str->uuid ?stmt-id))
+    :as          params}
+   ?authority]
+  (let [?auth-ifis  (when ?authority (au/actor->ifi-coll ?authority))
+        ?stmt-id    (when ?stmt-id (u/str->uuid ?stmt-id))
         ?vstmt-id   (when ?vstmt-id (u/str->uuid ?vstmt-id))
         ?actor-ifi  (when ?actor (au/actor->ifi ?actor))
         ?reg        (when ?reg (u/str->uuid ?reg))
@@ -441,8 +446,10 @@
         format      (if ?format (keyword ?format) :exact)
         atts?       (boolean ?atts?)
         url-prefix  (if ?url-prefix ?url-prefix "")
-        comm-params {:format       format
-                     :attachments? atts?}]
+        comm-params (cond-> {:format       format
+                             :attachments? atts?}
+                      ?auth-ifis
+                      (assoc :authority-ifis ?auth-ifis))]
     (if-some [stmt-id (or ?stmt-id ?vstmt-id)]
       ;; Single statement query
       (merge comm-params

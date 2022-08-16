@@ -114,7 +114,6 @@
   "Log an error if the scope fail happened due to non-existent scopes (as
    opposed to authorization denial)."
   [scopes]
-  (log/error (str "Scopes: " scopes))
   (when-some [err (s/explain-data ::scopes scopes)]
     (log/errorf "Scope set included unimplemented or non-existent scopes.\nErrors:\n%s"
                 (with-out-str (s/explain-out err)))))

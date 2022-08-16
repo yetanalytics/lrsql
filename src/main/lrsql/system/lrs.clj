@@ -139,13 +139,17 @@
             stmt-res)))))
 
   (-get-statements
-    [lrs _auth-identity params ltags]
+    [lrs auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
           prefix (:stmt-url-prefix config)
-          inputs (->> params
-                      (stmt-util/ensure-default-max-limit config)
-                      stmt-input/query-statement-input)]
+          auth?  (-> auth-identity
+                     auth-util/most-permissive-statement-read-scope
+                     #{:scope/statements.read.mine})
+          ?auth  (if auth? (:agent auth-identity) nil)
+          inputs (-> params
+                     (stmt-util/ensure-default-max-limit config)
+                     (stmt-input/query-statement-input ?auth))]
       (jdbc/with-transaction [tx conn]
         (stmt-q/query-statements backend tx inputs ltags prefix))))
   (-consistent-through

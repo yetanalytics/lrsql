@@ -22,13 +22,14 @@
                 (str "account::" acc-name "@" acc-page))
       :else    nil)))
 
-(defn actor->ifi-or-members
-  "Similar to `actor->ifi`, except that if `actor` doesn't have its own
-   IFI (i.e. it's an Anonymous Group), it returns the IRIs of its
-   `member` value."
+(defn actor->ifi-coll
+  "Similar to `actor->ifi`, except that it returns a vector of IFIs. If
+   `actor` has a `member` field (i.e. it's a group), return the vector
+   of those IFIs (even if it's an identified group)."
   [actor]
-  (or (actor->ifi actor)
-      (mapv actor->ifi (get actor "member"))))
+  (if-some [member (get actor "member")]
+    (mapv actor->ifi member)
+    [(actor->ifi actor)]))
 
 (defn actor->person
   "Given the Agent or Group `actor`, return an equivalent Person object with
