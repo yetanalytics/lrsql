@@ -183,7 +183,7 @@
                    ::query-params
                    ::more-url-prefix]
           :opt-un [::hs-actor/actor-ifi
-                   ::hs-actor/activity-iri
+                   ::hs-activ/activity-iri
                    ::hs-auth/authority-ifis
                    ::verb-iri
                    ::registration
