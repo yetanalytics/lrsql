@@ -11,24 +11,7 @@
    which is not good enough for deterministic results.
 */
 
-/* Single-statement query */
-
--- :name query-statement
--- :command :query
--- :result :one
--- :doc Query for one statement using statement IDs.
-SELECT payload FROM xapi_statement
-WHERE statement_id = :statement-id
---~ (when (some? (:voided? params)) "AND is_voided = :voided?")
-
--- :name query-statement-exists
--- :command :query
--- :result :one
--- :doc Check for the existence of a Statement with `:statement-id`. Returns nil iff not found. Includes voided Statements.
-SELECT 1 FROM xapi_statement
-WHERE statement_id = :statement-id
-
-/* Multi-statement query */
+/* Table fragments */
 
 -- :frag actors-table-frag
 actors AS (
@@ -45,6 +28,42 @@ activs AS (
   WHERE stmt_activ.activity_iri = :activity-iri
   --~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'")
 )
+
+-- :frag authority-table-frag
+authos AS (
+  SELECT stmt_autho.statement_id
+  FROM statement_to_actor stmt_autho
+  WHERE stmt_autho.actor_ifi IN (:v*:authority-ifis)
+  AND stmt_auth.usage = 'Authority'
+)
+
+/* Single-statement query */
+
+-- :name query-statement
+-- :command :query
+-- :result :one
+-- :doc Query for one statement using statement IDs.
+SELECT stmt.payload
+FROM xapi_statement stmt
+/*~ (when (:authority-ifis params)
+      "INNER JOIN statement_to_actor stmt_auth
+       ON stmt.statement_id = stmt_auth.statement_id")
+~*/
+WHERE stmt.statement_id = :statement-id
+--~ (when (some? (:voided? params)) "AND stmt.is_voided = :voided?")
+/*~ (when (:authority-ifis params)
+      "AND stmt_auth.actor_ifi IN (:v*:authority-ifis)
+       AND stmt_auth.usage = 'Authority'")
+~*/
+
+-- :name query-statement-exists
+-- :command :query
+-- :result :one
+-- :doc Check for the existence of a Statement with `:statement-id`. Returns nil iff not found. Includes voided Statements.
+SELECT 1 FROM xapi_statement
+WHERE statement_id = :statement-id
+
+/* Multi-statement query */
 
 -- :frag stmt-no-ref-subquery-frag
 SELECT stmt.id, stmt.payload

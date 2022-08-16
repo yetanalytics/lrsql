@@ -232,26 +232,26 @@
         ;; Actor HugSql Inputs
         [actor-inputs stmt-actor-inputs]
         (insert-stmt-actor-inputs stmt-id
-                                       stmt-act
-                                       stmt-obj
-                                       ?stmt-auth
-                                       ?stmt-inst
-                                       ?stmt-team
-                                       {:act-enum  "Actor"
-                                        :obj-enum  "Object"
-                                        :auth-enum "Authority"
-                                        :inst-enum "Instructor"
-                                        :team-enum "Team"})
+                                  stmt-act
+                                  stmt-obj
+                                  ?stmt-auth
+                                  ?stmt-inst
+                                  ?stmt-team
+                                  {:act-enum  "Actor"
+                                   :obj-enum  "Object"
+                                   :auth-enum "Authority"
+                                   :inst-enum "Instructor"
+                                   :team-enum "Team"})
         ;; Activity HugSql Inputs
         [activ-inputs stmt-activ-inputs]
         (insert-stmt-activity-inputs stmt-id
-                                          stmt-obj
-                                          ?stmt-ctx-acts
-                                          {:obj-enum "Object"
-                                           :cat-enum "Category"
-                                           :grp-enum "Grouping"
-                                           :prt-enum "Parent"
-                                           :oth-enum "Other"})
+                                     stmt-obj
+                                     ?stmt-ctx-acts
+                                     {:obj-enum "Object"
+                                      :cat-enum "Category"
+                                      :grp-enum "Grouping"
+                                      :prt-enum "Parent"
+                                      :oth-enum "Other"})
         ;; SubStatement HugSql Inputs
         [sactor-inputs sactiv-inputs sstmt-actor-inputs sstmt-activ-inputs]
         (when (= "SubStatement" stmt-obj-type)

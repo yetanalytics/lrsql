@@ -587,12 +587,17 @@
 ;; Statement Read Scope Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO: If more special scopes are added, put the tests here
+
 ;; Make it look like 3-legged OAuth
 ;; See: https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#example-7
-(def auth-ident-2
+(def auth-ident-oauth
   {:agent {"objectType" "Group"
-           "member"     [{"account" {"homePage" "http://example.com/xAPI/OAuth/Token"
-                                     "name"     "oauth_consumer_x75db"}}
+           "member"     [;; Make account identical to that of `auth-ident` so
+                         ;; we can test overlapping authority agents
+                         {"account" {"homePage" "http://example.org2"
+                                     #_"http://example.org"
+                                     "name"     "12341234-0000-4000-1234-123412341234"}}
                          {"mbox" "mailto:bob@example.com"}]}})
 
 (defn- get-ss-authority
@@ -609,22 +614,37 @@
         id-1 (get stmt-1 "id")
         id-2 (get stmt-2 "id")]
     (lrsp/-store-statements lrs auth-ident [stmt-1] [])
-    (lrsp/-store-statements lrs auth-ident-2 [stmt-2] [])
+    (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
     (testing "statements/read"
-      (is (= {:statement stmt-1}
-             (get-ss lrs auth-ident {:statementId id-1} #{})
-             (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
-      (is (= {:statement stmt-2}
-             (get-ss lrs auth-ident {:statementId id-2} #{})
-             (get-ss lrs auth-ident-2 {:statementId id-2} #{})))
-      (is (= {:statement stmt-2}
-             (get-ss lrs auth-ident-2 {:statementId id-2} #{})))
-      (is (= (-> auth-ident :agent (update "member" set))
-             (get-ss-authority lrs auth-ident {:statementId id-1} #{})
-             (get-ss-authority lrs auth-ident-2 {:statementId id-1} #{})))
-      (is (= (-> auth-ident-2 :agent (update "member" set))
-             (get-ss-authority lrs auth-ident {:statementId id-2} #{})
-             (get-ss-authority lrs auth-ident-2 {:statementId id-2} #{}))))
+      (let [auth-ident-1 (assoc auth-ident
+                                :scopes #{:scope/statements.read})
+            auth-ident-2 (assoc auth-ident-oauth
+                                :scopes #{:scope/statements.read})]
+        (is (= {:statement stmt-1}
+               (get-ss lrs auth-ident-1 {:statementId id-1} #{})
+               (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
+        (is (= {:statement stmt-2}
+               (get-ss lrs auth-ident-1 {:statementId id-2} #{})
+               (get-ss lrs auth-ident-2 {:statementId id-2} #{}))) 
+        (is (= (-> auth-ident :agent (update "member" set))
+               (get-ss-authority lrs auth-ident-1 {:statementId id-1} #{})
+               (get-ss-authority lrs auth-ident-2 {:statementId id-1} #{})))
+        (is (= (-> auth-ident-oauth :agent (update "member" set))
+               (get-ss-authority lrs auth-ident-1 {:statementId id-2} #{})
+               (get-ss-authority lrs auth-ident-2 {:statementId id-2} #{})))))
+    (testing "statements/read/mine"
+      (let [auth-ident-1 (assoc auth-ident
+                                :scopes #{:scope/statements.read.mine})
+            auth-ident-2 (assoc auth-ident-oauth
+                                :scopes #{:scope/statements.read.mine})]
+        (is (= {:statement stmt-1}
+               (get-ss lrs auth-ident-1 {:statementId id-1} #{})))
+        (is (= {:statement nil}
+               (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
+        (is (= {:statement nil}
+               (get-ss lrs auth-ident-1 {:statementId id-2} #{})))
+        (is (= {:statement stmt-2}
+               (get-ss lrs auth-ident-2 {:statementId id-2} #{})))))
     (component/stop sys')))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
