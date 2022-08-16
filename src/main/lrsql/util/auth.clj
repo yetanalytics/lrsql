@@ -14,7 +14,8 @@
   {"all"                  :scope/all
    "all/read"             :scope/all.read
    "statements/read"      :scope/statements.read
-   "statements/write"     :scope/statements.write})
+   "statements/write"     :scope/statements.write
+   "statements/read/mine" :scope/statements.read.mine})
 
 (def scope-kw-str-map
   (cset/map-invert scope-str-kw-map))
@@ -78,7 +79,8 @@
 (s/def ::scope #{:scope/all
                  :scope/all.read
                  :scope/statements.read
-                 :scope/statements.write})
+                 :scope/statements.write
+                 :scope/statements.read.mine})
 (s/def ::scopes (s/coll-of ::scope :kind set?))
 
 (s/def ::result boolean?)
@@ -96,6 +98,7 @@
     :scope/all :scope/all
     :scope/all.read :scope/all.read
     :scope/statements.read :scope/statements.read
+    :scope/statements.read.mine :scope/statements.read.mine
     nil))
 
 (defn most-permissive-statement-write-scope

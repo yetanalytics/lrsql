@@ -79,6 +79,22 @@
       false {:request-method :get
              :path-info      "xapi/activities/state"
              :scopes         #{:scope/statements.read}}
+      ;; statements/read/mine scope
+      true {:request-method :get
+            :path-info      "xapi/statements"
+            :scopes         #{:scope/statements.read.mine}}
+      true {:request-method :head
+            :path-info      "xapi/statements"
+            :scopes         #{:scope/statements.read.mine}}
+      false {:request-method :put
+             :path-info      "xapi/statements"
+             :scopes         #{:scope/statements.read.mine}}
+      false {:request-method :post
+             :path-info      "xapi/statements"
+             :scopes         #{:scope/statements.read.mine}}
+      false {:request-method :get
+             :path-info      "xapi/activities/state"
+             :scopes         #{:scope/statements.read.mine}}
       ;; statements/write scope
       true {:request-method :put
             :path-info      "xapi/statements"
@@ -102,6 +118,9 @@
       true {:request-method :post
             :path-info      "xapi/statements"
             :scopes         #{:scope/statements.read :scope/statements.write}}
+      true {:request-method :get
+            :path-info      "xapi/statements"
+            :scopes         #{:scope/statements.read :scope/statements.read.mine}}
       true {:request-method :get
             :path-info      "xapi/activities/state"
             :scopes         #{:scope/all :scope/statements.read}}
