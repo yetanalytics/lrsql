@@ -229,7 +229,9 @@
          {:result :com.yetanalytics.lrs.auth/unauthorized}))))
   (-authorize
     [_lrs ctx auth-identity]
-    (auth-util/authorize-action ctx auth-identity))
+    ;; We need to wrap the boolean in a map or else the LRS lib will get
+    ;; angry. This isn't documented, but tests will fail w/o the wrapping.
+    {:result (auth-util/authorized-action? ctx auth-identity)})
 
   adp/AdminAccountManager
   (-create-account

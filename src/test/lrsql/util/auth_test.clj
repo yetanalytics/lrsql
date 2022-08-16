@@ -27,10 +27,10 @@
     (are [expected input]
          (= expected
             (let [{:keys [request-method path-info scopes]} input]
-              (:result (au/authorize-action
-                        {:request {:request-method request-method
-                                   :path-info path-info}}
-                        {:scopes scopes}))))
+              (au/authorized-action?
+               {:request {:request-method request-method
+                          :path-info path-info}}
+               {:scopes scopes})))
       ;; all scopes
       true {:request-method :get
             :path-info      "xapi/statements"
@@ -44,6 +44,9 @@
       true {:request-method :post
             :path-info      "xapi/statements"
             :scopes         #{:scope/all}}
+      true {:request-method :delete
+            :path-info      "xapi/activities/state"
+            :scopes         #{:scope/all}}
       ;; all/read scope
       true {:request-method :get
             :path-info      "xapi/statements"
@@ -56,6 +59,9 @@
              :scopes         #{:scope/all.read}}
       false {:request-method :post
              :path-info      "xapi/statements"
+             :scopes         #{:scope/all.read}}
+      false {:request-method :delete
+             :path-info      "xapi/activities/state"
              :scopes         #{:scope/all.read}}
       ;; statements/read scope
       true {:request-method :get
@@ -121,4 +127,4 @@
              :path-info      "xapi/activities/state"
              :scopes         #{}}))
   (testing "authorize-action gentest"
-    (is (nil? (check-validate `au/authorize-action)))))
+    (is (nil? (check-validate `au/authorized-action?)))))
