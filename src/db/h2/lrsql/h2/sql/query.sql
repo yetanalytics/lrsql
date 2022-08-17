@@ -11,7 +11,27 @@
    which is not good enough for deterministic results.
 */
 
-/* Table fragments */
+/* Single-statement query */
+
+-- :name query-statement
+-- :command :query
+-- :result :one
+-- :doc Query for one statement using statement IDs.
+SELECT stmt.payload
+FROM xapi_statement stmt
+--~ (when (:authority-ifis params) "INNER JOIN statement_to_actor stmt_auth ON stmt.statement_id = stmt_auth.statement_id")
+WHERE stmt.statement_id = :statement-id
+--~ (when (some? (:voided? params)) "AND stmt.is_voided = :voided?")
+--~ (when (:authority-ifis params) "AND stmt_auth.actor_ifi IN (:v*:authority-ifis) AND stmt_auth.usage = 'Authority'")
+
+-- :name query-statement-exists
+-- :command :query
+-- :result :one
+-- :doc Check for the existence of a Statement with `:statement-id`. Returns nil iff not found. Includes voided Statements.
+SELECT 1 FROM xapi_statement
+WHERE statement_id = :statement-id
+
+/* Multi-statement query */
 
 -- :frag actors-table-frag
 actors AS (
@@ -34,57 +54,31 @@ authos AS (
   SELECT stmt_autho.statement_id
   FROM statement_to_actor stmt_autho
   WHERE stmt_autho.actor_ifi IN (:v*:authority-ifis)
-  AND stmt_auth.usage = 'Authority'
+  AND stmt_autho.usage = 'Authority'
 )
-
-/* Single-statement query */
-
--- :name query-statement
--- :command :query
--- :result :one
--- :doc Query for one statement using statement IDs.
-SELECT stmt.payload
-FROM xapi_statement stmt
-/*~ (when (:authority-ifis params)
-      "INNER JOIN statement_to_actor stmt_auth
-       ON stmt.statement_id = stmt_auth.statement_id")
-~*/
-WHERE stmt.statement_id = :statement-id
---~ (when (some? (:voided? params)) "AND stmt.is_voided = :voided?")
-/*~ (when (:authority-ifis params)
-      "AND stmt_auth.actor_ifi IN (:v*:authority-ifis)
-       AND stmt_auth.usage = 'Authority'")
-~*/
-
--- :name query-statement-exists
--- :command :query
--- :result :one
--- :doc Check for the existence of a Statement with `:statement-id`. Returns nil iff not found. Includes voided Statements.
-SELECT 1 FROM xapi_statement
-WHERE statement_id = :statement-id
-
-/* Multi-statement query */
 
 -- :frag stmt-no-ref-subquery-frag
 SELECT stmt.id, stmt.payload
 FROM xapi_statement stmt
---~ (when (:actor-ifi params)    "INNER JOIN actors stmt_actors ON stmt.statement_id = stmt_actors.statement_id")
---~ (when (:activity-iri params) "INNER JOIN activs stmt_activs ON stmt.statement_id = stmt_activs.statement_id")
+--~ (when (:authority-ifis params) "INNER JOIN authos stmt_authos ON stmt.statement_id = stmt_authos.statement_id")
+--~ (when (:actor-ifi params)      "INNER JOIN actors stmt_actors ON stmt.statement_id = stmt_actors.statement_id")
+--~ (when (:activity-iri params)   "INNER JOIN activs stmt_activs ON stmt.statement_id = stmt_activs.statement_id")
 WHERE stmt.is_voided = FALSE
 /*~ (when (:from params)
-      (if (:ascending? params) "AND stmt.id >= :from" "AND stmt.id <= :from")) ~*/
+      (if (:ascending? params)   "AND stmt.id >= :from" "AND stmt.id <= :from")) ~*/
 --~ (when (:since params)        "AND stmt.id > :since")
 --~ (when (:until params)        "AND stmt.id <= :until")
 --~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params) "AND stmt.registration = :registration")
---~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
+--~ (if (:ascending? params)     "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 LIMIT :limit
 
 -- :frag stmt-ref-subquery-frag
 SELECT stmt_a.id, stmt_a.payload
 FROM xapi_statement stmt_d
---~ (when (:actor-ifi params)    "INNER JOIN actors stmt_d_actors ON stmt_d.statement_id = stmt_d_actors.statement_id")
---~ (when (:activity-iri params) "INNER JOIN activs stmt_d_activs ON stmt_d.statement_id = stmt_d_activs.statement_id")
+--~ (when (:authority-ifis params) "INNER JOIN authos stmt_a_authos ON stmt_a.statement_id = stmt_a_authos.statement_id")
+--~ (when (:actor-ifi params)      "INNER JOIN actors stmt_d_actors ON stmt_d.statement_id = stmt_d_actors.statement_id")
+--~ (when (:activity-iri params)   "INNER JOIN activs stmt_d_activs ON stmt_d.statement_id = stmt_d_activs.statement_id")
 INNER JOIN statement_to_statement sts ON stmt_d.statement_id = sts.descendant_id
 INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
 WHERE stmt_a.is_voided = FALSE
@@ -103,8 +97,9 @@ LIMIT :limit
 -- :doc Query for one or more statements using statement resource parameters.
 /*~
 (some->> (cond-> []
-           (:actor-ifi params)    (conj ":frag:actors-table-frag")
-           (:activity-iri params) (conj ":frag:activities-table-frag"))
+           (:authority-ifis params) (conj ":frag:authority-table-frag")
+           (:actor-ifi params)      (conj ":frag:actors-table-frag")
+           (:activity-iri params)   (conj ":frag:activities-table-frag"))
          not-empty
          (clojure.string/join ", ")
          (str "WITH "))

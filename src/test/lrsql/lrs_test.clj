@@ -592,13 +592,15 @@
 ;; Make it look like 3-legged OAuth
 ;; See: https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#example-7
 (def auth-ident-oauth
+  ;; Make user identical to that of `auth-ident` so
+  ;; we can test overlapping authority agents
   {:agent {"objectType" "Group"
-           "member"     [;; Make account identical to that of `auth-ident` so
-                         ;; we can test overlapping authority agents
+           "member"     [;; OAuth consumer
+                         {"account" {"homePage" "http://example.com/xAPI/OAuth/Token"
+                                     "name"     "oauth_consumer_x75db"}}
+                         ;; OAuth user
                          {"account" {"homePage" "http://example.org2"
-                                     #_"http://example.org"
-                                     "name"     "12341234-0000-4000-1234-123412341234"}}
-                         {"mbox" "mailto:bob@example.com"}]}})
+                                     "name"     "12341234-0000-4000-1234-123412341234"}}]}})
 
 (defn- get-ss-authority
   [lrs auth-ident params ltags]
@@ -608,11 +610,13 @@
       (update "member" set)))
 
 (deftest test-statement-read-scopes
-  (let [sys  (support/test-system)
-        sys' (component/start sys)
-        lrs  (:lrs sys')
-        id-1 (get stmt-1 "id")
-        id-2 (get stmt-2 "id")]
+  (let [sys   (support/test-system)
+        sys'  (component/start sys)
+        lrs   (:lrs sys')
+        id-1  (get stmt-1 "id")
+        id-2  (get stmt-2 "id")
+        agt-1 (get stmt-1 "actor")
+        agt-2 (get stmt-2 "actor")]
     (lrsp/-store-statements lrs auth-ident [stmt-1] [])
     (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
     (testing "statements/read"
@@ -620,6 +624,7 @@
                                 :scopes #{:scope/statements.read})
             auth-ident-2 (assoc auth-ident-oauth
                                 :scopes #{:scope/statements.read})]
+        ;; Statement ID query
         (is (= {:statement stmt-1}
                (get-ss lrs auth-ident-1 {:statementId id-1} #{})
                (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
@@ -631,12 +636,22 @@
                (get-ss-authority lrs auth-ident-2 {:statementId id-1} #{})))
         (is (= (-> auth-ident-oauth :agent (update "member" set))
                (get-ss-authority lrs auth-ident-1 {:statementId id-2} #{})
-               (get-ss-authority lrs auth-ident-2 {:statementId id-2} #{})))))
+               (get-ss-authority lrs auth-ident-2 {:statementId id-2} #{})))
+        ;; Statement Property query
+        (is (= {:statement-result {:statements [stmt-1] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident-1 {:agent agt-1} #{})
+               (get-ss lrs auth-ident-2 {:agent agt-1} #{})))
+        (is (= {:statement-result {:statements [stmt-2] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident-1 {:agent agt-2} #{})
+               (get-ss lrs auth-ident-2 {:agent agt-2} #{})))))
     (testing "statements/read/mine"
       (let [auth-ident-1 (assoc auth-ident
                                 :scopes #{:scope/statements.read.mine})
             auth-ident-2 (assoc auth-ident-oauth
                                 :scopes #{:scope/statements.read.mine})]
+        ;; Statement ID query
         (is (= {:statement stmt-1}
                (get-ss lrs auth-ident-1 {:statementId id-1} #{})))
         (is (= {:statement nil}
@@ -644,7 +659,20 @@
         (is (= {:statement nil}
                (get-ss lrs auth-ident-1 {:statementId id-2} #{})))
         (is (= {:statement stmt-2}
-               (get-ss lrs auth-ident-2 {:statementId id-2} #{})))))
+               (get-ss lrs auth-ident-2 {:statementId id-2} #{})))
+        ;; Statement Property query
+        (is (= {:statement-result {:statements [stmt-1] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident-1 {:agent agt-1} #{})))
+        (is (= {:statement-result {:statements [] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident-2 {:agent agt-1} #{})))
+        (is (= {:statement-result {:statements [] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident-1 {:agent agt-2} #{})))
+        (is (= {:statement-result {:statements [stmt-2] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident-2 {:agent agt-2} #{})))))
     (component/stop sys')))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
