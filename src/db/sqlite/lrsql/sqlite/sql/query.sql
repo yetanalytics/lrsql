@@ -1,4 +1,5 @@
 /* Authority subquery fragments */
+-- See: https://stackoverflow.com/a/70099691 and https://stackoverflow.com/a/10410317
 
 -- :frag authority-subquery-frag
 (

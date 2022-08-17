@@ -11,7 +11,9 @@
    which is not good enough for deterministic results.
 */
 
+/* Authority subquery fragments */
 -- Solution taken from https://stackoverflow.com/a/66315951
+
 -- :frag authority-subquery
 AND (
   SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
@@ -65,14 +67,6 @@ activs AS (
   FROM statement_to_activity stmt_activ
   WHERE stmt_activ.activity_iri = :activity-iri
   --~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'")
-)
-
--- :frag authority-table-frag
-authos AS (
-  SELECT stmt_autho.statement_id
-  FROM statement_to_actor stmt_autho
-  WHERE stmt_autho.actor_ifi IN (:v*:authority-ifis)
-  AND stmt_autho.usage = 'Authority'
 )
 
 -- :frag stmt-no-ref-subquery-frag
