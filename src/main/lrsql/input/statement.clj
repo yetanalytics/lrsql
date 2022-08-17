@@ -449,7 +449,8 @@
         comm-params (cond-> {:format       format
                              :attachments? atts?}
                       ?auth-ifis
-                      (assoc :authority-ifis ?auth-ifis))]
+                      (merge {:authority-ifis      ?auth-ifis
+                              :authority-ifi-count (count ?auth-ifis)}))]
     (if-some [stmt-id (or ?stmt-id ?vstmt-id)]
       ;; Single statement query
       (merge comm-params

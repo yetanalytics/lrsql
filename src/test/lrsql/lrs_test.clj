@@ -624,55 +624,55 @@
                                 :scopes #{:scope/statements.read})
             auth-ident-2 (assoc auth-ident-oauth
                                 :scopes #{:scope/statements.read})]
-        ;; Statement ID query
-        (is (= {:statement stmt-1}
-               (get-ss lrs auth-ident-1 {:statementId id-1} #{})
-               (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
-        (is (= {:statement stmt-2}
-               (get-ss lrs auth-ident-1 {:statementId id-2} #{})
-               (get-ss lrs auth-ident-2 {:statementId id-2} #{}))) 
-        (is (= (-> auth-ident :agent (update "member" set))
-               (get-ss-authority lrs auth-ident-1 {:statementId id-1} #{})
-               (get-ss-authority lrs auth-ident-2 {:statementId id-1} #{})))
-        (is (= (-> auth-ident-oauth :agent (update "member" set))
-               (get-ss-authority lrs auth-ident-1 {:statementId id-2} #{})
-               (get-ss-authority lrs auth-ident-2 {:statementId id-2} #{})))
-        ;; Statement Property query
-        (is (= {:statement-result {:statements [stmt-1] :more ""}
-                :attachments      []}
-               (get-ss lrs auth-ident-1 {:agent agt-1} #{})
-               (get-ss lrs auth-ident-2 {:agent agt-1} #{})))
-        (is (= {:statement-result {:statements [stmt-2] :more ""}
-                :attachments      []}
-               (get-ss lrs auth-ident-1 {:agent agt-2} #{})
-               (get-ss lrs auth-ident-2 {:agent agt-2} #{})))))
+        (testing "- statement ID query"
+          (is (= {:statement stmt-1}
+                 (get-ss lrs auth-ident-1 {:statementId id-1} #{})
+                 (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
+          (is (= {:statement stmt-2}
+                 (get-ss lrs auth-ident-1 {:statementId id-2} #{})
+                 (get-ss lrs auth-ident-2 {:statementId id-2} #{})))
+          (is (= (-> auth-ident :agent (update "member" set))
+                 (get-ss-authority lrs auth-ident-1 {:statementId id-1} #{})
+                 (get-ss-authority lrs auth-ident-2 {:statementId id-1} #{})))
+          (is (= (-> auth-ident-oauth :agent (update "member" set))
+                 (get-ss-authority lrs auth-ident-1 {:statementId id-2} #{})
+                 (get-ss-authority lrs auth-ident-2 {:statementId id-2} #{}))))
+        (testing "- statement property query"
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-1} #{})
+                 (get-ss lrs auth-ident-2 {:agent agt-1} #{})))
+          (is (= {:statement-result {:statements [stmt-2] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-2} #{})
+                 (get-ss lrs auth-ident-2 {:agent agt-2} #{}))))))
     (testing "statements/read/mine"
       (let [auth-ident-1 (assoc auth-ident
                                 :scopes #{:scope/statements.read.mine})
             auth-ident-2 (assoc auth-ident-oauth
                                 :scopes #{:scope/statements.read.mine})]
-        ;; Statement ID query
-        (is (= {:statement stmt-1}
-               (get-ss lrs auth-ident-1 {:statementId id-1} #{})))
-        (is (= {:statement nil}
-               (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
-        (is (= {:statement nil}
-               (get-ss lrs auth-ident-1 {:statementId id-2} #{})))
-        (is (= {:statement stmt-2}
-               (get-ss lrs auth-ident-2 {:statementId id-2} #{})))
-        ;; Statement Property query
-        (is (= {:statement-result {:statements [stmt-1] :more ""}
-                :attachments      []}
-               (get-ss lrs auth-ident-1 {:agent agt-1} #{})))
-        (is (= {:statement-result {:statements [] :more ""}
-                :attachments      []}
-               (get-ss lrs auth-ident-2 {:agent agt-1} #{})))
-        (is (= {:statement-result {:statements [] :more ""}
-                :attachments      []}
-               (get-ss lrs auth-ident-1 {:agent agt-2} #{})))
-        (is (= {:statement-result {:statements [stmt-2] :more ""}
-                :attachments      []}
-               (get-ss lrs auth-ident-2 {:agent agt-2} #{})))))
+        (testing "- statement ID query"
+          (is (= {:statement stmt-1}
+                 (get-ss lrs auth-ident-1 {:statementId id-1} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-1 {:statementId id-2} #{})))
+          (is (= {:statement stmt-2}
+                 (get-ss lrs auth-ident-2 {:statementId id-2} #{}))))
+        (testing "- statement property query"
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-1} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:agent agt-1} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-2} #{})))
+          (is (= {:statement-result {:statements [stmt-2] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:agent agt-2} #{}))))))
     (component/stop sys')))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
