@@ -21,6 +21,15 @@ AND (
     AND stmt_auth.usage = 'Authority'
 )
 
+-- :frag authority-ref-subquery
+AND (
+  SELECT (CASE WHEN COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count THEN 1 ELSE 0 END)
+  FROM statement_to_actor stmt_auth
+  WHERE stmt_auth.statement_id = stmt_desc.statement_id
+    AND stmt_auth.actor_ifi IN (:v*:authority-ifis)
+    AND stmt_auth.usage = 'Authority'
+)
+
 /* Single-statement query */
 
 -- :name query-statement
@@ -84,20 +93,21 @@ LIMIT :limit
 
 -- FIXME Add authority subquery
 -- :frag stmt-ref-subquery-frag
-SELECT stmt_a.id, stmt_a.payload
-FROM xapi_statement stmt_d
---~ (when (:actor-ifi params)      "INNER JOIN actors stmt_d_actors ON stmt_d.statement_id = stmt_d_actors.statement_id")
---~ (when (:activity-iri params)   "INNER JOIN activs stmt_d_activs ON stmt_d.statement_id = stmt_d_activs.statement_id")
-INNER JOIN statement_to_statement sts ON stmt_d.statement_id = sts.descendant_id
-INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
-WHERE stmt_a.is_voided = FALSE
+SELECT stmt.id, stmt.payload
+FROM xapi_statement stmt_desc
+--~ (when (:actor-ifi params)      "INNER JOIN actors stmt_d_actors ON stmt_desc.statement_id = stmt_d_actors.statement_id")
+--~ (when (:activity-iri params)   "INNER JOIN activs stmt_d_activs ON stmt_desc.statement_id = stmt_d_activs.statement_id")
+INNER JOIN statement_to_statement sts ON stmt_desc.statement_id = sts.descendant_id
+INNER JOIN xapi_statement stmt ON sts.ancestor_id = stmt.statement_id
+WHERE stmt.is_voided = FALSE
 /*~ (when (:from params)
-      (if (:ascending? params)   "AND stmt_a.id >= :from" "AND stmt_a.id <= :from"))  ~*/
---~ (when (:since params)        "AND stmt_a.id > :since")
---~ (when (:until params)        "AND stmt_a.id <= :until")
---~ (when (:verb-iri params)     "AND stmt_d.verb_iri = :verb-iri")
---~ (when (:registration params) "AND stmt_d.registration = :registration")
---~ (if (:ascending? params)     "ORDER BY stmt_a.id ASC" "ORDER BY stmt_a.id DESC")
+      (if (:ascending? params)     "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
+--~ (when (:since params)          "AND stmt.id > :since")
+--~ (when (:until params)          "AND stmt.id <= :until")
+--~ (when (:verb-iri params)       "AND stmt_desc.verb_iri = :verb-iri")
+--~ (when (:registration params)   "AND stmt_desc.registration = :registration")
+--~ (when (:authority-ifis params) ":frag:authority-subquery :frag:authority-ref-subquery")
+--~ (if (:ascending? params)       "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 LIMIT :limit
 
 -- :name query-statements

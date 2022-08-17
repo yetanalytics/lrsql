@@ -610,13 +610,16 @@
       (update "member" set)))
 
 (deftest test-statement-read-scopes
-  (let [sys   (support/test-system)
-        sys'  (component/start sys)
-        lrs   (:lrs sys')
-        id-1  (get stmt-1 "id")
-        id-2  (get stmt-2 "id")
-        agt-1 (get stmt-1 "actor")
-        agt-2 (get stmt-2 "actor")]
+  (let [sys    (support/test-system)
+        sys'   (component/start sys)
+        lrs    (:lrs sys')
+        id-0   (get stmt-0 "id")
+        id-1   (get stmt-1 "id")
+        id-2   (get stmt-2 "id")
+        agt-0  (get stmt-0 "actor")
+        agt-1  (get stmt-1 "actor")
+        agt-2  (get stmt-2 "actor")]
+    (lrsp/-store-statements lrs auth-ident [stmt-0] [])
     (lrsp/-store-statements lrs auth-ident [stmt-1] [])
     (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
     (testing "statements/read"
@@ -625,6 +628,9 @@
             auth-ident-2 (assoc auth-ident-oauth
                                 :scopes #{:scope/statements.read})]
         (testing "- statement ID query"
+          (is (= {:statement stmt-0}
+                 (get-ss lrs auth-ident-1 {:voidedStatementId id-0} #{})
+                 (get-ss lrs auth-ident-2 {:voidedStatementId id-0} #{})))
           (is (= {:statement stmt-1}
                  (get-ss lrs auth-ident-1 {:statementId id-1} #{})
                  (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
@@ -632,17 +638,28 @@
                  (get-ss lrs auth-ident-1 {:statementId id-2} #{})
                  (get-ss lrs auth-ident-2 {:statementId id-2} #{})))
           (is (= (-> auth-ident :agent (update "member" set))
+                 (get-ss-authority lrs auth-ident-1 {:voidedStatementId id-0} #{})
+                 (get-ss-authority lrs auth-ident-2 {:voidedStatementId id-0} #{})))
+          (is (= (-> auth-ident :agent (update "member" set))
                  (get-ss-authority lrs auth-ident-1 {:statementId id-1} #{})
                  (get-ss-authority lrs auth-ident-2 {:statementId id-1} #{})))
           (is (= (-> auth-ident-oauth :agent (update "member" set))
                  (get-ss-authority lrs auth-ident-1 {:statementId id-2} #{})
                  (get-ss-authority lrs auth-ident-2 {:statementId id-2} #{}))))
         (testing "- statement property query"
-          (is (= {:statement-result {:statements [stmt-1] :more ""}
+          ;; stmt-0 is not returned since it was voided by stmt-2
+          (is (= {:statement-result {:statements [stmt-2]
+                                     :more       ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-0} #{})
+                 (get-ss lrs auth-ident-2 {:agent agt-0} #{})))
+          (is (= {:statement-result {:statements [stmt-1]
+                                     :more       ""}
                   :attachments      []}
                  (get-ss lrs auth-ident-1 {:agent agt-1} #{})
                  (get-ss lrs auth-ident-2 {:agent agt-1} #{})))
-          (is (= {:statement-result {:statements [stmt-2] :more ""}
+          (is (= {:statement-result {:statements [stmt-2]
+                                     :more       ""}
                   :attachments      []}
                  (get-ss lrs auth-ident-1 {:agent agt-2} #{})
                  (get-ss lrs auth-ident-2 {:agent agt-2} #{}))))))
@@ -652,6 +669,10 @@
             auth-ident-2 (assoc auth-ident-oauth
                                 :scopes #{:scope/statements.read.mine})]
         (testing "- statement ID query"
+          (is (= {:statement stmt-0}
+                 (get-ss lrs auth-ident-1 {:voidedStatementId id-0} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-2 {:voidedStatementId id-0} #{})))
           (is (= {:statement stmt-1}
                  (get-ss lrs auth-ident-1 {:statementId id-1} #{})))
           (is (= {:statement nil}
@@ -661,16 +682,32 @@
           (is (= {:statement stmt-2}
                  (get-ss lrs auth-ident-2 {:statementId id-2} #{}))))
         (testing "- statement property query"
-          (is (= {:statement-result {:statements [stmt-1] :more ""}
+          ;; stmt-2 not returned since it's outside the scope of auth-ident-1
+          ;; stmt-0 not returned since it was voided
+          (is (= {:statement-result {:statements []
+                                     :more       ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-0} #{})))
+          ;; stmt-2 not returned since its target statement (stmt-0) is
+          ;; outside the scope of auth-ident-2
+          (is (= {:statement-result {:statements []
+                                     :more       ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:agent agt-0} #{})))
+          (is (= {:statement-result {:statements [stmt-1]
+                                     :more       ""}
                   :attachments      []}
                  (get-ss lrs auth-ident-1 {:agent agt-1} #{})))
-          (is (= {:statement-result {:statements [] :more ""}
+          (is (= {:statement-result {:statements []
+                                     :more       ""}
                   :attachments      []}
                  (get-ss lrs auth-ident-2 {:agent agt-1} #{})))
-          (is (= {:statement-result {:statements [] :more ""}
+          (is (= {:statement-result {:statements []
+                                     :more       ""}
                   :attachments      []}
                  (get-ss lrs auth-ident-1 {:agent agt-2} #{})))
-          (is (= {:statement-result {:statements [stmt-2] :more ""}
+          (is (= {:statement-result {:statements [stmt-2]
+                                     :more       ""}
                   :attachments      []}
                  (get-ss lrs auth-ident-2 {:agent agt-2} #{}))))))
     (component/stop sys')))

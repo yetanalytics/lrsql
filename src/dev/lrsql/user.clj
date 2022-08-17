@@ -25,6 +25,13 @@
   (println
    (jdbc/execute! ds
                   ["EXPLAIN ANALYZE
+                   SELECT COUNT(*)
+                  FROM xapi_statement stmt
+                    "]))
+  
+  (println
+   (jdbc/execute! ds
+                  ["EXPLAIN ANALYZE
                     SELECT stmt.payload
                   FROM xapi_statement stmt
                   WHERE stmt.statement_id = ?
@@ -36,20 +43,21 @@
    (jdbc/execute! ds
                   ["EXPLAIN ANALYZE
                     SELECT stmt.payload
-                  FROM xapi_statement stmt
-                  INNER JOIN statement_to_actor stmt_actors ON stmt.statement_id = stmt_actors.statement_id
-                  WHERE stmt.statement_id = ?
-                    AND stmt_actors.actor_ifi IN (?, ?)
+                    FROM xapi_statement stmt
+                    WHERE stmt.verb_iri = ?
+                    AND (
+                    SELECT (CASE WHEN COUNT(DISTINCT stmt_actors.actor_ifi) = 2 THEN 1 ELSE 0 END)
+                    FROM statement_to_actor stmt_actors
+                    WHERE stmt_actors.statement_id = stmt.statement_id
+                    AND stmt_actors.actor_ifi IN (?, ?) 
                     AND stmt_actors.usage = 'Authority'
-                    GROUP BY stmt.statement_id
-                    HAVING COUNT(stmt_actors.actor_ifi) = COUNT((?, ?))
+                    )
                     "
-                   (get stmt-2 "id")
-                   #_(a-util/actor->ifi (:agent auth-ident))
+                   (get-in stmt-2 ["verb" "id"])
                    (first (a-util/actor->ifi-coll (:agent auth-ident-oauth)))
                    (second (a-util/actor->ifi-coll (:agent auth-ident-oauth)))
-                   (first (a-util/actor->ifi-coll (:agent auth-ident-oauth)))
-                   (second (a-util/actor->ifi-coll (:agent auth-ident-oauth)))
+                   
+                   #_(second (a-util/actor->ifi-coll (:agent auth-ident-oauth)))
                    ]))
 
   (do
