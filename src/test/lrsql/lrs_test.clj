@@ -598,8 +598,8 @@
            "member"     [;; OAuth consumer
                          {"account" {"homePage" "http://example.com/xAPI/OAuth/Token"
                                      "name"     "oauth_consumer_x75db"}}
-                         ;; OAuth user
-                         {"account" {"homePage" "http://example.org2"
+                         ;; OAuth user - identical to `auth-ident`
+                         {"account" {"homePage" "http://example.org"
                                      "name"     "12341234-0000-4000-1234-123412341234"}}]}})
 
 (defn- get-ss-authority

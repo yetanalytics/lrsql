@@ -14,19 +14,19 @@
 -- Solution taken from https://stackoverflow.com/a/66315951
 -- :frag authority-subquery
 AND (
-  SELECT (CASE WHEN COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count THEN 1 ELSE 0 END)
+  SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
+     AND EVERY(stmt_auth.actor_ifi IN (:v*:authority-ifis))
   FROM statement_to_actor stmt_auth
   WHERE stmt_auth.statement_id = stmt.statement_id
-    AND stmt_auth.actor_ifi IN (:v*:authority-ifis)
     AND stmt_auth.usage = 'Authority'
 )
 
 -- :frag authority-ref-subquery
 AND (
-  SELECT (CASE WHEN COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count THEN 1 ELSE 0 END)
+  SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
+     AND EVERY(stmt_auth.actor_ifi IN (:v*:authority-ifis))
   FROM statement_to_actor stmt_auth
   WHERE stmt_auth.statement_id = stmt_desc.statement_id
-    AND stmt_auth.actor_ifi IN (:v*:authority-ifis)
     AND stmt_auth.usage = 'Authority'
 )
 
