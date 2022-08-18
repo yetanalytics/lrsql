@@ -36,7 +36,7 @@
     (fn authorize-oidc-request [{admin-identity ::admin-identity
                                  :as            ctx}]
       (if admin-identity
-        (if (oidc/authorize-admin-action ctx admin-identity)
+        (if (oidc/authorize-admin-action? ctx admin-identity)
           ctx
           (assoc (chain/terminate ctx)
                  :response
