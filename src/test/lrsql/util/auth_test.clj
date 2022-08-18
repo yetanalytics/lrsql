@@ -145,5 +145,7 @@
       false {:request-method :delete
              :path-info      "xapi/activities/state"
              :scopes         #{}}))
-  (testing "authorize-action gentest"
+  (testing "authorization fn gentest"
+    (is (nil? (check-validate `au/most-permissive-statement-read-scope)))
+    (is (nil? (check-validate `au/most-permissive-statement-write-scope)))
     (is (nil? (check-validate `au/authorized-action?)))))

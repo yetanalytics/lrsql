@@ -75,20 +75,14 @@
 (s/def ::path-info string?)
 (s/def ::request (s/keys :req-un [::request-method ::path-info]))
 
-;; Need separate spec since the one in spec.auth is for the string versions.
-(s/def ::scope #{:scope/all
-                 :scope/all.read
-                 :scope/statements.read
-                 :scope/statements.write
-                 :scope/statements.read.mine})
+(s/def ::scope as/keyword-scopes)
 (s/def ::scopes (s/coll-of ::scope :kind set?))
 
 (s/def ::result boolean?)
 
-(s/fdef authorized-action?
-  :args (s/cat :ctx           (s/keys :req-un [::request])
-               :auth-identity (s/keys :req-un [::scopes]))
-  :ret boolean?)
+(s/fdef most-permissive-statement-read-scope
+  :args (s/cat :auth-identity (s/keys :req-un [::scopes]))
+  :ret (s/nilable as/keyword-scopes))
 
 (defn most-permissive-statement-read-scope
   "Given a read action on statements, return the most permissive scope
@@ -100,6 +94,10 @@
     :scope/statements.read :scope/statements.read
     :scope/statements.read.mine :scope/statements.read.mine
     nil))
+
+(s/fdef most-permissive-statement-write-scope
+  :args (s/cat :auth-identity (s/keys :req-un [::scopes]))
+  :ret (s/nilable as/keyword-scopes))
 
 (defn most-permissive-statement-write-scope
   "Given a write action on statements, return the most permissive scope
@@ -117,6 +115,11 @@
   (when-some [err (s/explain-data ::scopes scopes)]
     (log/errorf "Scope set included unimplemented or non-existent scopes.\nErrors:\n%s"
                 (with-out-str (s/explain-out err)))))
+
+(s/fdef authorized-action?
+  :args (s/cat :ctx           (s/keys :req-un [::request])
+               :auth-identity (s/keys :req-un [::scopes]))
+  :ret boolean?)
 
 (defn authorized-action?
   "Given a pedestal context and an auth identity, return `true` and authorize

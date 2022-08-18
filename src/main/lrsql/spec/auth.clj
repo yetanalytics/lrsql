@@ -40,17 +40,24 @@
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/def ::api-key string?)
-(s/def ::secret-key string?)
-
-(s/def ::account-id ::ats/account-id)
-
-(s/def ::scope
+(def string-scopes
   #{"all"
     "all/read"
     "statements/read"
     "statements/read/mine"
     "statements/write"})
+
+(def keyword-scopes
+  #{:scope/all
+    :scope/all.read
+    :scope/statements.read
+    :scope/statements.read.mine
+    :scope/statements.write})
+
+(s/def ::api-key string?)
+(s/def ::secret-key string?)
+
+(s/def ::scope string-scopes)
 
 (s/def ::ids
   (s/keys :req-un [::ats/cred-id ::ats/account-id]))
