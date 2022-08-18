@@ -271,7 +271,7 @@ CREATE TYPE scope_enum AS ENUM (
   'statements/read',
   'statements/read/mine', -- new
   'all/read',
-  'all'
+  'all',
    -- unimplemented, but added for future-proofing
    -- state/read and profile/read are not listed in spec, but make logical sense
   'define',

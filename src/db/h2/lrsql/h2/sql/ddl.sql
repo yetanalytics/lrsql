@@ -206,7 +206,7 @@ ENUM('statements/read',
      'all',
      -- unimplemented, but added for future-proofing
      -- state/read and profile/read are not listed in spec, but make logical sense
-     'define'
+     'define',
      'state',
      'state/read',
      'profile',
