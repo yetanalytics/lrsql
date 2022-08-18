@@ -1,5 +1,5 @@
 (ns lrsql.lrs-test
-  (:require [clojure.test :refer [deftest testing is are use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.string :as cstr]
             [com.stuartsierra.component     :as component]
             [com.yetanalytics.datasim.input :as sim-input]
