@@ -25,6 +25,9 @@
              :tag         tag
              :context-map context-map})))
 
+(def default-authority-path
+  "lrsql/config/authority.json.template")
+
 (def sample-authority-fn-input
   {:authority-url "https://lrs.example.com"
    :cred-id       #uuid "00000000-0000-4000-0000-000000000001"
@@ -32,15 +35,21 @@
 
 (defn- valid-authority-fn?
   [authority-fn]
+  ;; When adding basic authorities (i.e. NOT 3-legged OAuth),
+  ;; the authority MUST be an Agent.
   (s/valid? ::xs/agent (authority-fn sample-authority-fn-input)))
 
-(defn- assert-authority-fn
-  [template-path authority-fn]
-  (when-not (valid-authority-fn? authority-fn)
-    (throw
-     (ex-info "Authority template does not produce a valid xAPI Agent"
-              {:type          ::invalid-json
-               :template-path template-path}))))
+(defn- validate-authority-fn
+  "Returns `authority-fn` if it's valid, throws an exception otherwise.
+   `template-path` defaults to the `default-authority-path`."
+  ([authority-fn]
+   (validate-authority-fn authority-fn default-authority-path))
+  ([authority-fn template-path]
+   (if (valid-authority-fn? authority-fn)
+     authority-fn
+     (throw (ex-info "Authority template does not produce a valid xAPI Agent"
+                     {:type          ::invalid-json
+                      :template-path template-path})))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Make authority function
@@ -64,31 +73,36 @@
 
 (def default-authority-fn
   "The default precompiled function to render authority"
-  (-> "lrsql/config/authority.json.template"
+  (-> default-authority-path
       io/resource
       selm-parser/parse*
-      make-authority-fn*))
+      make-authority-fn*
+      ;; Validation should always pass but we should still sanity check
+      ;; (e.g. during dev changes).
+      validate-authority-fn))
 
 (defn make-authority-fn
   "Returns a function that will render the template to data, using the
    template read at `template-path`. `make-authority-fn*` itself is not
    memoized, but it returns a memoized function, with `threshold` setting
    how many authorities will be cached before least recently used (LRU)
-   clearing."
-  [template-path & [threshold]]
-  (let [^File f
-        (io/file template-path)
-        authority-fn
-        (if (and f (.exists f))
-          ;; Override template supplied - use that
-          (let [template     (selm-parser/parse* f)
-                authority-fn (make-authority-fn* template)]
-            (assert-authority-fn template-path authority-fn)
-            authority-fn)
-          ;; Override template not supplied - fall back to default
-          default-authority-fn)]
-    (mem/lru authority-fn
-             :lru/threshold (or threshold 512))))
+   clearing (default 512)."
+  ([template-path]
+   (make-authority-fn template-path 512))
+  ([template-path threshold]
+   (let [^File f
+         (io/file template-path)
+         authority-fn
+         (if (and f (.exists f))
+           ;; Override template supplied - use that
+           (-> f
+               selm-parser/parse*
+               make-authority-fn*
+               validate-authority-fn)
+           ;; Override template not supplied - fall back to default
+           default-authority-fn)]
+     (mem/lru authority-fn
+              :lru/threshold threshold))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
