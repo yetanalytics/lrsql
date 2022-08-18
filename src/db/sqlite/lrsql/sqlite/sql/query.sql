@@ -1,7 +1,7 @@
 /* Authority subquery fragments */
 -- See: https://stackoverflow.com/a/70099691 and https://stackoverflow.com/a/10410317
 
--- :frag authority-subquery-frag
+-- :frag sqlite-auth-subquery
 (
   SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
      AND COUNT(stmt_auth.actor_ifi) = COUNT(IIF(stmt_auth.actor_ifi IN (:v*:authority-ifis), 1, NULL))
@@ -10,7 +10,7 @@
     AND stmt_auth.usage = 'Authority'
 )
 
--- :frag authority-ref-subquery-frag
+-- :frag sqlite-auth-ref-subquery
 (
   SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
      AND COUNT(stmt_auth.actor_ifi) = COUNT(IIF(stmt_auth.actor_ifi IN (:v*:authority-ifis), 1, NULL))
@@ -30,7 +30,7 @@ SELECT stmt.payload
 FROM xapi_statement stmt
 WHERE statement_id = :statement-id
 --~ (when (some? (:voided? params)) "AND is_voided = :voided?")
---~ (when (:authority-ifis params)  "AND :frag:authority-subquery-frag")
+--~ (when (:authority-ifis params)  "AND :frag:sqlite-auth-subquery")
 
 -- :name query-statement-exists
 -- :command :query
@@ -42,11 +42,11 @@ WHERE statement_id = :statement-id
 
 /* Multi-statement query */
 
--- :frag actors-joins
+-- :frag sqlite-actors-join
 LEFT JOIN statement_to_actor stmt_actor ON stmt.statement_id = stmt_actor.statement_id
 LEFT JOIN statement_to_actor stmt_d_actor ON stmt_d.statement_id = stmt_d_actor.statement_id
 
--- :frag activities-joins
+-- :frag sqlite-activities-join
 LEFT JOIN statement_to_activity stmt_activ ON stmt.statement_id = stmt_activ.statement_id
 LEFT JOIN statement_to_activity stmt_d_activ ON stmt_d.statement_id = stmt_d_activ.statement_id
 
@@ -58,8 +58,8 @@ SELECT DISTINCT stmt.id, stmt.payload
 FROM xapi_statement stmt
 LEFT JOIN statement_to_statement sts on sts.ancestor_id = stmt.statement_id
 LEFT JOIN xapi_statement stmt_d on sts.descendant_id = stmt_d.statement_id
---~ (when (:activity-iri params) ":frag:activities-joins")
---~ (when (:actor-ifi params)    ":frag:actors-joins")
+--~ (when (:activity-iri params) ":frag:sqlite-activities-join")
+--~ (when (:actor-ifi params)    ":frag:sqlite-actors-join")
 WHERE stmt.is_voided = 0
 /*~ (when (:from params)
      (if (:ascending? params) "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
@@ -74,7 +74,7 @@ AND ((TRUE
 --~ (when (:activity-iri params)   "AND stmt_activ.activity_iri = :activity-iri")
 /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
                                    "AND stmt_activ.usage = 'Object'") ~*/
---~ (when (:authority-ifis params) "AND :frag:authority-subquery-frag")
+--~ (when (:authority-ifis params) "AND :frag:sqlite-auth-subquery")
 ) OR (
 TRUE
 --~ (when (:verb-iri params)       "AND stmt_d.verb_iri = :verb-iri")
@@ -85,8 +85,8 @@ TRUE
 --~ (when (:activity-iri params)   "AND stmt_d_activ.activity_iri = :activity-iri")
 /*~ (when (and (:activity-iri params) (not (:related-activities? params)))
                                    "AND stmt_d_activ.usage = 'Object'") ~*/
---~ (when (:authority-ifis params) "AND :frag:authority-subquery-frag")
---~ (when (:authority-ifis params) "AND :frag:authority-ref-subquery-frag")
+--~ (when (:authority-ifis params) "AND :frag:sqlite-auth-subquery")
+--~ (when (:authority-ifis params) "AND :frag:sqlite-auth-ref-subquery")
 ))
 --~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 LIMIT :limit

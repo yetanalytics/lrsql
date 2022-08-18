@@ -1,7 +1,7 @@
 /* Authority subquery fragments */
 -- Solution taken from https://stackoverflow.com/a/66315951
 
--- :frag authority-subquery-frag
+-- :frag postgres-auth-subquery
 (
   SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
      AND EVERY(stmt_auth.actor_ifi IN (:v*:authority-ifis))
@@ -10,7 +10,7 @@
     AND stmt_auth.usage = 'Authority'
 )
 
--- :frag authority-ans-subquery-frag
+-- :frag postgres-auth-ans-subquery
 (
   SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
      AND EVERY(stmt_auth.actor_ifi IN (:v*:authority-ifis))
@@ -29,7 +29,7 @@ SELECT stmt.payload
 FROM xapi_statement stmt
 WHERE statement_id = :statement-id
 --~ (when (some? (:voided? params)) "AND is_voided = :voided?")
---~ (when (:authority-ifis params)  "AND :frag:authority-subquery-frag")
+--~ (when (:authority-ifis params)  "AND :frag:postgres-auth-subquery")
 ;
 
 -- :name query-statement-exists
@@ -41,13 +41,13 @@ WHERE statement_id = :statement-id;
 
 /* Multi-statement query */
 
--- :frag actors-join-frag
+-- :frag postgres-actors-join
 INNER JOIN statement_to_actor stmt_actor
 ON stmt.statement_id = stmt_actor.statement_id
 AND stmt_actor.actor_ifi = :actor-ifi
 --~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'::actor_usage_enum")
 
--- :frag activs-join-frag
+-- :frag postgres-activities-join
 INNER JOIN statement_to_activity stmt_activ
 ON stmt.statement_id = stmt_activ.statement_id
 AND stmt_activ.activity_iri = :activity-iri
@@ -56,8 +56,8 @@ AND stmt_activ.activity_iri = :activity-iri
 -- :frag stmt-no-ref-subquery-frag
 SELECT stmt.id, stmt.payload
 FROM xapi_statement stmt
---~ (when (:actor-ifi params)    ":frag:actors-join-frag")
---~ (when (:activity-iri params) ":frag:activs-join-frag")
+--~ (when (:actor-ifi params)    ":frag:postgres-actors-join")
+--~ (when (:activity-iri params) ":frag:postgres-activities-join")
 WHERE stmt.is_voided = FALSE
 /*~ (when (:from params)
      (if (:ascending? params)      "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
@@ -65,7 +65,7 @@ WHERE stmt.is_voided = FALSE
 --~ (when (:until params)          "AND stmt.id <= :until")
 --~ (when (:verb-iri params)       "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params)   "AND stmt.registration = :registration")
---~ (when (:authority-ifis params) "AND :frag:authority-subquery-frag")
+--~ (when (:authority-ifis params) "AND :frag:postgres-auth-subquery")
 --~ (if (:ascending? params)       "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 LIMIT :limit
 
@@ -77,8 +77,8 @@ LIMIT :limit
 -- :frag stmt-ref-subquery-frag
 SELECT stmt_a.id, stmt_a.payload
 FROM xapi_statement stmt
---~ (when (:actor-ifi params)    ":frag:actors-join-frag")
---~ (when (:activity-iri params) ":frag:activs-join-frag")
+--~ (when (:actor-ifi params)    ":frag:postgres-actors-join")
+--~ (when (:activity-iri params) ":frag:postgres-activities-join")
 INNER JOIN statement_to_statement sts ON stmt.statement_id = sts.descendant_id
 INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
 WHERE stmt_a.is_voided = FALSE
@@ -88,8 +88,8 @@ WHERE stmt_a.is_voided = FALSE
 --~ (when (:until params)          "AND stmt_a.id <= :until")
 --~ (when (:verb-iri params)       "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params)   "AND stmt.registration = :registration")
---~ (when (:authority-ifis params) "AND :frag:authority-ans-subquery-frag")
---~ (when (:authority-ifis params) "AND :frag:authority-subquery-frag")
+--~ (when (:authority-ifis params) "AND :frag:postgres-auth-ans-subquery")
+--~ (when (:authority-ifis params) "AND :frag:postgres-auth-subquery")
 /*~ (if (:ascending? params)       "ORDER BY (stmt_a.id, stmt_a.statement_id) ASC"
                                    "ORDER BY (stmt_a.id, stmt_a.statement_id) DESC") ~*/
 LIMIT :limit

@@ -14,7 +14,7 @@
 /* Authority subquery fragments */
 -- Solution taken from https://stackoverflow.com/a/66315951
 
--- :frag authority-subquery
+-- :frag h2-auth-subquery
 AND (
   SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
      AND EVERY(stmt_auth.actor_ifi IN (:v*:authority-ifis))
@@ -23,7 +23,7 @@ AND (
     AND stmt_auth.usage = 'Authority'
 )
 
--- :frag authority-ref-subquery
+-- :frag h2-auth-ref-subquery
 AND (
   SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
      AND EVERY(stmt_auth.actor_ifi IN (:v*:authority-ifis))
@@ -42,7 +42,7 @@ SELECT stmt.payload
 FROM xapi_statement stmt
 WHERE stmt.statement_id = :statement-id
 --~ (when (some? (:voided? params)) "AND stmt.is_voided = :voided?")
---~ (when (:authority-ifis params)  ":frag:authority-subquery")
+--~ (when (:authority-ifis params)  ":frag:h2-auth-subquery")
 
 -- :name query-statement-exists
 -- :command :query
@@ -53,7 +53,7 @@ WHERE statement_id = :statement-id
 
 /* Multi-statement query */
 
--- :frag actors-table-frag
+-- :frag h2-actors-table
 actors AS (
   SELECT stmt_actor.statement_id
   FROM statement_to_actor stmt_actor
@@ -61,7 +61,7 @@ actors AS (
   --~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'")
 )
 
--- :frag activities-table-frag
+-- :frag h2-activities-table
 activs AS (
   SELECT stmt_activ.statement_id
   FROM statement_to_activity stmt_activ
@@ -81,7 +81,7 @@ WHERE stmt.is_voided = FALSE
 --~ (when (:until params)          "AND stmt.id <= :until")
 --~ (when (:verb-iri params)       "AND stmt.verb_iri = :verb-iri")
 --~ (when (:registration params)   "AND stmt.registration = :registration")
---~ (when (:authority-ifis params) ":frag:authority-subquery")
+--~ (when (:authority-ifis params) ":frag:h2-auth-subquery")
 --~ (if (:ascending? params)       "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 LIMIT :limit
 
@@ -99,7 +99,7 @@ WHERE stmt.is_voided = FALSE
 --~ (when (:until params)          "AND stmt.id <= :until")
 --~ (when (:verb-iri params)       "AND stmt_desc.verb_iri = :verb-iri")
 --~ (when (:registration params)   "AND stmt_desc.registration = :registration")
---~ (when (:authority-ifis params) ":frag:authority-subquery :frag:authority-ref-subquery")
+--~ (when (:authority-ifis params) ":frag:h2-auth-subquery :frag:h2-auth-ref-subquery")
 --~ (if (:ascending? params)       "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 LIMIT :limit
 
@@ -109,8 +109,8 @@ LIMIT :limit
 -- :doc Query for one or more statements using statement resource parameters.
 /*~
 (some->> (cond-> []
-           (:actor-ifi params)    (conj ":frag:actors-table-frag")
-           (:activity-iri params) (conj ":frag:activities-table-frag"))
+           (:actor-ifi params)    (conj ":frag:h2-actors-table")
+           (:activity-iri params) (conj ":frag:h2-activities-table"))
          not-empty
          (clojure.string/join ", ")
          (str "WITH "))
