@@ -46,10 +46,11 @@
 (s/def ::account-id ::ats/account-id)
 
 (s/def ::scope
-  #{"statements/write"
-    "statements/read"
+  #{"all"
     "all/read"
-    "all"})
+    "statements/read"
+    "statements/read/mine"
+    "statements/write"})
 
 (s/def ::ids
   (s/keys :req-un [::ats/cred-id ::ats/account-id]))

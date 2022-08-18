@@ -253,3 +253,30 @@ ALTER TABLE IF EXISTS admin_account ALTER COLUMN passhash DROP NOT NULL;
 -- :command :execute
 -- :doc Add `admin_account.oidc_issuer` to record OIDC identity source.
 ALTER TABLE IF EXISTS admin_account ADD COLUMN IF NOT EXISTS oidc_issuer VARCHAR(255);
+
+/* Migration 2022-08-18-00 - Add statements/read/mine to credential_to_scope.scope enum */
+
+/* The obvious way would be to execute ALTER TYPE ... ADD VALUE but that will
+   fail inside a transaction. Therefore we have to use this circuitous route:
+   https://stackoverflow.com/a/56376907 */
+
+
+-- :name alter-scope-enum-type!
+-- :command :execute
+-- :doc Add `statements/read/mine` to `credential-to-scope.scope` enum.
+ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE VARCHAR(255);
+DROP TYPE IF EXISTS scope_enum;
+CREATE TYPE scope_enum AS ENUM (
+  'statements/write',
+  'statements/read',
+  'statements/read/mine', -- new
+  'all/read',
+  'all'
+   -- unimplemented, but added for future-proofing
+   -- state/read and profile/read are not listed in spec, but make logical sense
+  'define',
+  'state',
+  'state/read',
+  'profile',
+  'profile/read');
+ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USING (scope::scope_enum);

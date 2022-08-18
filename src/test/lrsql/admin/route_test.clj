@@ -229,7 +229,7 @@
                        first)))))
         (testing "and updating"
           (let [req-scopes
-                ["all/read" "statements/read"]
+                ["all/read" "statements/read" "statements/read/mine"]
                 {:keys [status body]}
                 (curl/put
                  "http://0.0.0.0:8080/admin/creds"
@@ -240,7 +240,8 @@
                 {:strs [scopes]}
                 (u/parse-json body)]
             (is (= 200 status))
-            (is (= #{"all/read" "statements/read"} (set scopes)))))
+            (is (= #{"all/read" "statements/read" "statements/read/mine"}
+                   (set scopes)))))
         (testing "and reading after updating"
           (let [{:keys [status body]}
                 (curl/get
@@ -256,10 +257,11 @@
             (is (= 200 status))
             (is (= api-key api-key'))
             (is (= secret-key secret-key'))
-            (is (= #{"all/read" "statements/read"} (set scopes')))))
+            (is (= #{"all/read" "statements/read" "statements/read/mine"}
+                   (set scopes')))))
         (testing "and no-op scope update"
           (let [req-scopes
-                ["all/read" "statements/read"]
+                ["all/read" "statements/read" "statements/read/mine"]
                 {:keys [status body]}
                 (curl/put
                  "http://0.0.0.0:8080/admin/creds"
@@ -270,7 +272,8 @@
                 {:strs [scopes]}
                 (u/parse-json body)]
             (is (= 200 status))
-            (is (= #{"all/read" "statements/read"} (set scopes)))))
+            (is (= #{"all/read" "statements/read" "statements/read/mine"}
+                   (set scopes)))))
         (testing "and deleting all scopes"
           (let [{:keys [status body]}
                 (curl/put

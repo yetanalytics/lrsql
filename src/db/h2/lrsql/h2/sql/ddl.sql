@@ -191,3 +191,23 @@ ALTER TABLE IF EXISTS admin_account ALTER COLUMN IF EXISTS passhash SET NULL
 -- :command :execute
 -- :doc Add `admin_account.oidc_issuer` to record OIDC identity source.
 ALTER TABLE IF EXISTS admin_account ADD COLUMN IF NOT EXISTS oidc_issuer VARCHAR(255)
+
+/* Migration 2022-08-18-00 - Add statements/read/mine to credential_to_scope.scope enum */
+
+-- :name alter-credential-to-scope-scope-enum!
+-- :command :execute
+-- :doc Add `statements/read/mine` to `credential-to-scope.scope` enum.
+ALTER TABLE IF EXISTS credential_to_scope
+ALTER COLUMN scope
+ENUM('statements/read',
+     'statements/read/mine', -- new
+     'statements/write',
+     'all/read',
+     'all',
+     -- unimplemented, but added for future-proofing
+     -- state/read and profile/read are not listed in spec, but make logical sense
+     'define'
+     'state',
+     'state/read',
+     'profile',
+     'profile/read')
