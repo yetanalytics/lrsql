@@ -18,9 +18,10 @@
 (use-fixtures :each support/fresh-db-fixture)
 
 (def auth-ident
-  {:agent {"objectType" "Agent"
-           "account"    {"homePage" "http://example.org"
-                         "name"     "12341234-0000-4000-1234-123412341234"}}})
+  {:agent  {"objectType" "Agent"
+            "account"    {"homePage" "http://example.org"
+                          "name"     "12341234-0000-4000-1234-123412341234"}}
+   :scopes #{:scope/all}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helper Functions
@@ -600,7 +601,8 @@
                                      "name"     "oauth_consumer_x75db"}}
                          ;; OAuth user - identical to `auth-ident`
                          {"account" {"homePage" "http://example.org"
-                                     "name"     "12341234-0000-4000-1234-123412341234"}}]}})
+                                     "name"     "12341234-0000-4000-1234-123412341234"}}]}
+   :scopes #{:scope/all}})
 
 (defn- get-ss-authority
   [lrs auth-ident params ltags]
