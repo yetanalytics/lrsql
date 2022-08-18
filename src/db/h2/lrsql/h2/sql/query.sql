@@ -85,7 +85,6 @@ WHERE stmt.is_voided = FALSE
 --~ (if (:ascending? params)       "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 LIMIT :limit
 
--- FIXME Add authority subquery
 -- :frag stmt-ref-subquery-frag
 SELECT stmt.id, stmt.payload
 FROM xapi_statement stmt_desc
