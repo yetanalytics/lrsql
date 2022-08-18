@@ -3,7 +3,7 @@
             [lrsql.util.oidc :as oidc :refer [parse-scope-claim
                                               token-auth-identity
                                               token-auth-admin-identity
-                                              authorize-admin-action]]
+                                              authorize-admin-action?]]
             [lrsql.init.oidc :refer [make-authority-fn]]
             [lrsql.test-support :refer [check-validate instrument-lrsql]]))
 
@@ -112,10 +112,10 @@
     (are [expected input]
          (= expected
             (let [{:keys [request-method path-info scopes]} input]
-              (:result (authorize-admin-action
-                        {:request {:request-method request-method
-                                   :path-info path-info}}
-                        {:scopes scopes}))))
+              (authorize-admin-action?
+               {:request {:request-method request-method
+                          :path-info path-info}}
+               {:scopes scopes})))
       ;; Admin Scope
       ;; Currently one for all admin requests
       true {:request-method :get
@@ -125,4 +125,4 @@
              :path-info      "/admin/account"
              :scopes         #{}}))
   (testing "authorize-admin-action gentest"
-    (is (nil? (check-validate `authorize-admin-action)))))
+    (is (nil? (check-validate `authorize-admin-action?)))))
