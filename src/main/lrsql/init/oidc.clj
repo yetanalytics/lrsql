@@ -186,20 +186,18 @@
    :sub   "1234"
    :lrsql/resolved-client-id "someapp"})
 
-(defn- valid-authority-fn?
-  [authority-fn]
-  (s/valid? ::xs/tlo-group ; 3-legged OAuth group
-            (authority-fn sample-authority-fn-input)))
-
 (defn- validate-authority-fn
+  "Similar to `authority/validate-authority-fn`, but for OIDC authorities.
+   Logs a warning if the authority is not an xAPI group for 3-legged OAuth."
   ([authority-fn]
    (validate-authority-fn authority-fn default-authority-path))
   ([authority-fn template-path]
-   (if (valid-authority-fn? authority-fn)
-     authority-fn
-     (throw (ex-info "Authority template does not produce a valid xAPI Group for 3-legged OAuth"
-                     {:type          ::invalid-json
-                      :template-path template-path})))))
+   (authority/validate-authority-fn*
+    authority-fn
+    template-path
+    ::xs/tlo-group
+    sample-authority-fn-input
+    "Authority template for OIDC Auth does not produce a valid xAPI Group.")))
 
 (s/fdef make-authority-fn
   :args (s/cat :template-path (s/nilable string?)
