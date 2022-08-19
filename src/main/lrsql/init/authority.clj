@@ -44,6 +44,7 @@
       (throw (ex-info "Authority template does not produce a valid xAPI Authority."
                       {:type          ::invalid-json
                        :template-path template-path})))
+    ;; TODO: Remove warning on inappropriate Authority type on xAPI 2.0
     (when-not (s/valid? warn-spec sample-authority)
       (log/warn warn-msg))
     authority-fn))
