@@ -69,7 +69,7 @@ activs AS (
   --~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'")
 )
 
--- :frag stmt-no-ref-subquery-frag
+-- :frag h2-stmt-no-ref-subquery-frag
 SELECT stmt.id, stmt.payload
 FROM xapi_statement stmt
 --~ (when (:actor-ifi params)      "INNER JOIN actors stmt_actors ON stmt.statement_id = stmt_actors.statement_id")
@@ -85,7 +85,7 @@ WHERE stmt.is_voided = FALSE
 --~ (if (:ascending? params)       "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 LIMIT :limit
 
--- :frag stmt-ref-subquery-frag
+-- :frag h2-stmt-ref-subquery-frag
 SELECT stmt.id, stmt.payload
 FROM xapi_statement stmt_desc
 --~ (when (:actor-ifi params)      "INNER JOIN actors stmt_d_actors ON stmt_desc.statement_id = stmt_d_actors.statement_id")
@@ -116,7 +116,7 @@ LIMIT :limit
          (str "WITH "))
 ~*/
 SELECT id, payload FROM
-((:frag:stmt-no-ref-subquery-frag) UNION (:frag:stmt-ref-subquery-frag))
+((:frag:h2-stmt-no-ref-subquery-frag) UNION (:frag:h2-stmt-ref-subquery-frag))
 --~ (if (:ascending? params) "ORDER BY id ASC" "ORDER BY id DESC")
 LIMIT :limit
 

@@ -7,7 +7,7 @@
      AND EVERY(stmt_auth.actor_ifi IN (:v*:authority-ifis))
   FROM statement_to_actor stmt_auth
   WHERE stmt_auth.statement_id = stmt.statement_id
-    AND stmt_auth.usage = 'Authority'
+    AND stmt_auth.usage = 'Authority'::actor_usage_enum
 )
 
 -- :frag postgres-auth-ans-subquery
@@ -16,7 +16,7 @@
      AND EVERY(stmt_auth.actor_ifi IN (:v*:authority-ifis))
   FROM statement_to_actor stmt_auth
   WHERE stmt_auth.statement_id = stmt_a.statement_id
-    AND stmt_auth.usage = 'Authority'
+    AND stmt_auth.usage = 'Authority'::actor_usage_enum
 )
 
 /* Single-statement query */
@@ -53,7 +53,7 @@ ON stmt.statement_id = stmt_activ.statement_id
 AND stmt_activ.activity_iri = :activity-iri
 --~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'::activity_usage_enum")
 
--- :frag stmt-no-ref-subquery-frag
+-- :frag postgres-stmt-no-ref-subquery-frag
 SELECT stmt.id, stmt.payload
 FROM xapi_statement stmt
 --~ (when (:actor-ifi params)    ":frag:postgres-actors-join")
@@ -74,7 +74,7 @@ LIMIT :limit
    joining on `statement_to_statement` (at least when the number of such links
    is lower than the number of statements, which is most cases). */
 
--- :frag stmt-ref-subquery-frag
+-- :frag postgres-stmt-ref-subquery-frag
 SELECT stmt_a.id, stmt_a.payload
 FROM xapi_statement stmt
 --~ (when (:actor-ifi params)    ":frag:postgres-actors-join")
@@ -102,9 +102,9 @@ SELECT DISTINCT ON (all_stmt.id)
   all_stmt.id,
   all_stmt.payload
 FROM (
-  (:frag:stmt-no-ref-subquery-frag)
+  (:frag:postgres-stmt-no-ref-subquery-frag)
   UNION ALL
-  (:frag:stmt-ref-subquery-frag))
+  (:frag:postgres-stmt-ref-subquery-frag))
 AS all_stmt
 --~ (if (:ascending? params) "ORDER BY all_stmt.id ASC" "ORDER BY all_stmt.id DESC")
 LIMIT :limit;
