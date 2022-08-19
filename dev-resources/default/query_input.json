@@ -9,6 +9,5 @@
     {"activity": "https://w3id.org/xapi/video/activity-type/video", "related_activities": "true"},
     {"registration": "00000000-4000-8000-0000-000000000000"},
     {"since": "2020-02-20T01:01:01Z"},
-    {"until": "2020-02-20T01:01:01Z"},
-    {"limit": "50"}
+    {"until": "2020-02-20T01:01:01Z"}
 ]
