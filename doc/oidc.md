@@ -12,7 +12,7 @@ SQL LRS supports [OpenID Connect (OIDC)](https://openid.net/connect/) on top of 
 
 SQL LRS supports OIDC token authentication to all [endpoints](endpoints.md), allowing the use of an OIDC access token to make requests. In this context SQL LRS acts as an OAuth 2.0 "resource server".
 
-To enable OIDC auth, set the `LRSQL_OIDC_ISSUER` (`webserver.oidcIssuer` in JSON) configuration variable to your identity provider's [Issuer Identifier](https://openid.net/specs/openid-connect-core-1_0.html#IssuerIdentifier) URI. This address must be accessible to the LRS on startup as it will perform [OIDC Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html) to retrieve public keys and other information about the OIDC environment. It is also *strongly* recommended that you set the optional `LRSQL_OIDC_AUDIENCE` (`webserver.oidcAudience`) variable to the origin address of the LRS itself (ex. "http://0.0.0.0:8080") to enable verification that a given token was issued specifically for the LRS.
+To enable OIDC auth, set the `LRSQL_OIDC_ISSUER` (`webserver.oidcIssuer` in JSON) configuration variable to your identity provider's [Issuer Identifier](https://openid.net/specs/openid-connect-core-1_0.html#IssuerIdentifier) URI. This address must be accessible to the LRS on startup as it will perform [OIDC Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html) to retrieve public keys and other information about the OIDC environment. It is also *strongly* recommended that you set the optional `LRSQL_OIDC_AUDIENCE` (`webserver.oidcAudience`) variable to the origin address of the LRS itself (ex. "http://localhost:8080") to enable verification that a given token was issued specifically for the LRS.
 
 #### Scope
 
@@ -64,25 +64,25 @@ This repository contains a Docker Compose file and configuration for a demo inst
     cd dev-resources/keycloak_demo
     docker compose up
 
-This will start a Keycloak server available at port 8081. You can adminster Keycloak via the [admin console](http://0.0.0.0:8081/auth/admin/master/console/) with the username `admin` and the password `changeme123`.
+This will start a Keycloak server available at port 8081. You can adminster Keycloak via the [admin console](http://localhost:8081/auth/admin/master/console/) with the username `admin` and the password `changeme123`.
 
 When Keycloak is up, start SQL LRS with the following config variables:
 
 | Environment Variable      | JSON                     | Value                                  | Notes                                                             |
 | ---                       | ---                      | ---                                    | ---                                                               |
-| `LRSQL_OIDC_ISSUER`       | `webserver.oidcIssuer`   | `http://0.0.0.0:8081/auth/realms/test` | Keycloak realm uri.                                               |
-| `LRSQL_OIDC_AUDIENCE`     | `webserver.oidcAudience` | `http://0.0.0.0:8080`                  | The origin address of the LRS.                                    |
+| `LRSQL_OIDC_ISSUER`       | `webserver.oidcIssuer`   | `http://localhost:8081/auth/realms/test` | Keycloak realm uri.                                               |
+| `LRSQL_OIDC_AUDIENCE`     | `webserver.oidcAudience` | `http://localhost:8080`                  | The origin address of the LRS.                                    |
 | `LRSQL_OIDC_CLIENT_ID`    | `webserver.oidcClientId` | `lrs_admin_ui`                         | This is the ID of the preconfigured client in Keycloak.           |
 | `LRSQL_OIDC_SCOPE_PREFIX` | `lrs.oidcScopePrefix`    | `lrs:`                                 | Prefix scopes so general names like `all` do not cause collision. |
 
 Like so:
 
-    LRSQL_OIDC_ISSUER=http://0.0.0.0:8081/auth/realms/test \
-    LRSQL_OIDC_AUDIENCE=http://0.0.0.0:8080 \
+    LRSQL_OIDC_ISSUER=http://localhost:8081/auth/realms/test \
+    LRSQL_OIDC_AUDIENCE=http://localhost:8080 \
     LRSQL_OIDC_CLIENT_ID=lrs_admin_ui \
     LRSQL_OIDC_SCOPE_PREFIX=lrs: \
     ./bin/run_h2.sh
 
-When SQL LRS has started navigate to the [Admin UI](http://0.0.0.0:8080/admin/index.html) and log in with the username `dev_user` and password `changeme123`.
+When SQL LRS has started navigate to the [Admin UI](http://localhost:8080/admin/index.html) and log in with the username `dev_user` and password `changeme123`.
 
 [<- Back to Index](index.md)
