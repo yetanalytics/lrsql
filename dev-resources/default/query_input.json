@@ -1,8 +1,6 @@
 [
     {},
-    {"limit": "50"},
     {"ascending": "true"},
-    {"ascending": "true", "limit": "50"},
     {"agent": "{\"mbox\": \"mailto:bob@example.com\"}"},
     {"agent": "{\"mbox\": \"mailto:bob@example.com\"}", "related_agents": "true"},
     {"activity": "https://w3id.org/xapi/video/activity-type/video"},
