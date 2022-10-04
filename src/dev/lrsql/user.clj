@@ -83,44 +83,44 @@
    '[lrsql.postgres.record :as rp]
    '[hugsql.core :as hug])
 
-  (hug/def-sqlvec-fns "lrsql/postgres/sql/query.sql")
-
   (def sys (system/system (rp/map->PostgresBackend {}) :test-postgres))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
 
+  ;; Sanity check queries
   (jdbc/execute! ds
                  ["SELECT stmt.payload FROM xapi_statement stmt LIMIT 1"])
   
   (jdbc/execute! ds
                  ["SELECT COUNT(*) FROM xapi_statement"])
   
-  #_{:clj-kondo/ignore [:unresolved-symbol]}
-  (def q
-    (query-statements-sqlvec
-     {
-      :authority-ifis
-      (a-util/actor->ifi-coll
-       {"account" {"homePage" "http://example.org"
-                   "name" "0182eadf-808e-870b-9479-2b66719c11d8"}})
-      :authority-ifi-count 1
-      ; :actor-ifi (a-util/actor->ifi {"name" "Alice Edwards", "mbox" "mailto:alice@example.org"})
-      :actor-ifi (a-util/actor->ifi {"name" "Bob Nelson", "mbox" "mailto:bob@example.org"})
-      :ascending? false
-      :limit 50}))
+  (jdbc/execute! ds
+                 ["ALTER TABLE statement_to_actor ALTER COLUMN actor_ifi TYPE text"])
   
-  (println (first q))
+  ;; Real query test
+  (do
+    (hug/def-sqlvec-fns "lrsql/postgres/sql/query.sql")
 
-  (jdbc/execute! ds ["SET enable_indexscan = ON;
-                      SET enable_seqscan = OFF"])
+    #_{:clj-kondo/ignore [:unresolved-symbol]}
+    (def q
+      (query-statements-sqlvec
+       {:actor-ifi (a-util/actor->ifi {"name" "Bob Nelson", "mbox" "mailto:bob@example.org"})
+        :ascending? true
+        :related-actors? true
+        :limit 10})))
+  (println (first q))
   (count (jdbc/execute! ds q))
+  
+  (jdbc/execute! ds ["SET enable_indexscan = ON;
+                      SET enable_seqscan = ON"])
+  (jdbc/execute! ds ["SET enable_hashjoin = OFF;"]) 
+
   (->> (update q 0 (fn [qstr] (str "EXPLAIN ANALYZE\n" qstr)))
        (jdbc/execute! ds)
-       last
-       ; (run! println)
-       )
+       (map (fn [x] (get x (keyword "QUERY PLAN"))))
+       (run! println))
 
   (component/stop sys')
   )
