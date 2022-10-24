@@ -19,8 +19,11 @@ jobs:
       with:
         version: '2022.03.04'
 
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
     - name: Setup CI Environment
-      uses: yetanalytics/actions/setup-env@v0
+      uses: yetanalytics/actions/setup-env@v0.0.4
     
     - name: Run clj-kondo linting
       run: clj-kondo --lint src/bench src/build src/db src/main src/test
@@ -33,8 +36,11 @@ jobs:
         target: [test-h2, test-sqlite, test-postgres]
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
     - name: Setup CI Environment
-      uses: yetanalytics/actions/setup-env@v0
+      uses: yetanalytics/actions/setup-env@v0.0.4
 
     - name: Run Makefile Target ${{ matrix.target }}
       run: make ${{ matrix.target }}
