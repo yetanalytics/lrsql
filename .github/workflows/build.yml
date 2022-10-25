@@ -11,10 +11,13 @@ jobs:
   get_modules:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - id: echo-modules
-        run: echo "::set-output name=modules::$(cat .java_modules)"
+      - name: List Java modules
+        id: echo-modules
+        run: echo "modules=$(cat .java_modules)" >> $GITHUB_OUTPUT
+
     outputs:
       modules: ${{ steps.echo-modules.outputs.modules }}
   
