@@ -20,7 +20,7 @@ jobs:
   
   build_jre:
     needs: get_modules
-    uses: yetanalytics/runtimer/.github/workflows/runtimer.yml@3c6a902caaf0c6db272842055d9f8cca5cb3fcbc
+    uses: yetanalytics/runtimer/.github/workflows/runtimer.yml@0.1.2-java-11-temurin
     with:
       java-version: '11'
       java-distribution: 'temurin'
@@ -49,12 +49,12 @@ jobs:
     - name: Download macOS-latest Artifact
       uses: actions/download-artifact@v3
       with:
-        name: macos-10.15-jre
+        name: macos-11-jre
 
     - name: Download windows-latest Artifact
       uses: actions/download-artifact@v3
       with:
-        name: windows-2019-jre
+        name: windows-2022-jre
 
     # UNZIP RUNTIMES INTO OS-SPECIFIC RUNTIME DIRS
     - name: Unzip the runtimes
@@ -62,10 +62,10 @@ jobs:
         mkdir -p target/bundle/runtimes
         unzip ubuntu-20.04-jre.zip -d target/bundle/runtimes
         mv target/bundle/runtimes/ubuntu-20.04 target/bundle/runtimes/linux
-        unzip macos-10.15-jre.zip -d target/bundle/runtimes
-        mv target/bundle/runtimes/macos-10.15 target/bundle/runtimes/macos
-        unzip windows-2019-jre.zip -d target/bundle/runtimes
-        mv target/bundle/runtimes/windows-2019 target/bundle/runtimes/windows
+        unzip macos-11-jre.zip -d target/bundle/runtimes
+        mv target/bundle/runtimes/macos-11 target/bundle/runtimes/macos
+        unzip windows-2022-jre.zip -d target/bundle/runtimes
+        mv target/bundle/runtimes/windows-2022 target/bundle/runtimes/windows
 
     # ARCHIVE BUNDLE - LABEL WITH COMMIT SHA OR TAG NAME
     - name: Compress Bundle
