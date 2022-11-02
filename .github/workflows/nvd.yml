@@ -18,7 +18,7 @@ jobs:
     if: ${{ always() && (needs.nvd_scan.result == 'failure') }}
     steps:
     - name: Notify Slack SQL LRS NVD Scan Reporter 
-      uses: slackapi/slack-github-action@v1.18.0
+      uses: slackapi/slack-github-action@v1.23.0
       with:
         payload: |
           {

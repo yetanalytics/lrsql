@@ -119,7 +119,7 @@ jobs:
         files: lrsql.zip
 
     - name: Deploy Documentation
-      uses: JamesIves/github-pages-deploy-action@4.4.1 # TODO: Check for set-output
+      uses: JamesIves/github-pages-deploy-action@4.4.1
       with:
         branch: gh-pages
         folder: target/bundle/doc
