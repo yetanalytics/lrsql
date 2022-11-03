@@ -18,9 +18,10 @@
 (use-fixtures :each support/fresh-db-fixture)
 
 (def auth-ident
-  {:agent {"objectType" "Agent"
-           "account"    {"homePage" "http://example.org"
-                         "name"     "12341234-0000-4000-1234-123412341234"}}})
+  {:agent  {"objectType" "Agent"
+            "account"    {"homePage" "http://example.org"
+                          "name"     "12341234-0000-4000-1234-123412341234"}}
+   :scopes #{:scope/all}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helper Functions
@@ -584,6 +585,300 @@
     (component/stop sys')))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Read Scope Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; TODO: If more special scopes are added, put the tests here
+
+;; Make it look like 3-legged OAuth
+;; See: https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#example-7
+(def auth-ident-oauth
+  ;; Make user identical to that of `auth-ident` so
+  ;; we can test overlapping authority agents
+  {:agent {"objectType" "Group"
+           "member"     [;; OAuth consumer
+                         {"account" {"homePage" "http://example.com/xAPI/OAuth/Token"
+                                     "name"     "oauth_consumer_x75db"}}
+                         ;; OAuth user - identical to `auth-ident`
+                         {"account" {"homePage" "http://example.org"
+                                     "name"     "12341234-0000-4000-1234-123412341234"}}]}
+   :scopes #{:scope/all}})
+
+;; It is a common scenario for two OAuth authorities to share the
+;; same client ID but different user account IDs
+(def auth-ident-oauth*
+  (assoc-in auth-ident-oauth
+            [:agent "member" 1 "account" "name"]
+            "55555555-0000-4000-5555-555555555555"))
+
+(defn- get-ss-authority
+  [lrs auth-ident params ltags]
+  (-> (lrsp/-get-statements lrs auth-ident params ltags)
+      :statement
+      (get "authority")
+      (update "member" set)))
+
+(deftest test-statement-read-scopes
+  (let [sys    (support/test-system)
+        sys'   (component/start sys)
+        lrs    (:lrs sys')
+        id-0   (get stmt-0 "id")
+        id-1   (get stmt-1 "id")
+        id-2   (get stmt-2 "id")
+        id-3   (get stmt-3 "id")
+        id-4   (get stmt-4 "id")
+        agt-0  (get stmt-0 "actor")
+        agt-1  (get stmt-1 "actor")
+        agt-2  (get stmt-2 "actor")
+        agt-3  (get stmt-3 "actor")
+        agt-4  (get stmt-4 "actor")
+        ans-v  (get-in stmt-1 ["verb" "id"])
+        mp-obj (get-in stmt-1 ["object" "id"])
+        vrb-4  (get-in stmt-4 ["verb" "id"])
+        obj-4  (get-in stmt-4 ["object" "id"])]
+    (lrsp/-store-statements lrs auth-ident [stmt-0] [])
+    (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+    (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
+    (lrsp/-store-statements lrs auth-ident-oauth [stmt-3] [])
+    (lrsp/-store-statements lrs auth-ident-oauth* [stmt-4] [stmt-4-attach])
+    (testing "statements/read"
+      (let [auth-ident-1 (assoc auth-ident
+                                :scopes #{:scope/statements.read})
+            auth-ident-2 (assoc auth-ident-oauth
+                                :scopes #{:scope/statements.read})
+            auth-ident-3 (assoc auth-ident-oauth*
+                                :scopes #{:scope/statements.read})]
+        (testing "- statement ID query"
+          (is (= {:statement stmt-0}
+                 (get-ss lrs auth-ident-1 {:voidedStatementId id-0} #{})
+                 (get-ss lrs auth-ident-2 {:voidedStatementId id-0} #{})
+                 (get-ss lrs auth-ident-3 {:voidedStatementId id-0} #{})))
+          (is (= {:statement stmt-1}
+                 (get-ss lrs auth-ident-1 {:statementId id-1} #{})
+                 (get-ss lrs auth-ident-2 {:statementId id-1} #{})
+                 (get-ss lrs auth-ident-3 {:statementId id-1} #{})))
+          (is (= {:statement stmt-2}
+                 (get-ss lrs auth-ident-1 {:statementId id-2} #{})
+                 (get-ss lrs auth-ident-2 {:statementId id-2} #{})
+                 (get-ss lrs auth-ident-3 {:statementId id-2} #{})))
+          (is (= {:statement stmt-3}
+                 (get-ss lrs auth-ident-1 {:statementId id-3} #{})
+                 (get-ss lrs auth-ident-2 {:statementId id-3} #{})
+                 (get-ss lrs auth-ident-3 {:statementId id-3} #{})))
+          (is (= {:statement stmt-4}
+                 (get-ss lrs auth-ident-1 {:statementId id-4} #{})
+                 (get-ss lrs auth-ident-2 {:statementId id-4} #{})
+                 (get-ss lrs auth-ident-3 {:statementId id-4} #{})))
+          (is (= (-> auth-ident :agent (update "member" set))
+                 (get-ss-authority lrs auth-ident-1 {:voidedStatementId id-0} #{})
+                 (get-ss-authority lrs auth-ident-2 {:voidedStatementId id-0} #{})
+                 (get-ss-authority lrs auth-ident-3 {:voidedStatementId id-0} #{})))
+          (is (= (-> auth-ident :agent (update "member" set))
+                 (get-ss-authority lrs auth-ident-1 {:statementId id-1} #{})
+                 (get-ss-authority lrs auth-ident-2 {:statementId id-1} #{})
+                 (get-ss-authority lrs auth-ident-3 {:statementId id-1} #{})))
+          (is (= (-> auth-ident-oauth :agent (update "member" set))
+                 (get-ss-authority lrs auth-ident-1 {:statementId id-2} #{})
+                 (get-ss-authority lrs auth-ident-2 {:statementId id-2} #{})
+                 (get-ss-authority lrs auth-ident-3 {:statementId id-2} #{})))
+          (is (= (-> auth-ident-oauth :agent (update "member" set))
+                 (get-ss-authority lrs auth-ident-1 {:statementId id-3} #{})
+                 (get-ss-authority lrs auth-ident-2 {:statementId id-3} #{})
+                 (get-ss-authority lrs auth-ident-3 {:statementId id-3} #{})))
+          (is (= (-> auth-ident-oauth* :agent (update "member" set))
+                 (get-ss-authority lrs auth-ident-1 {:statementId id-4} #{})
+                 (get-ss-authority lrs auth-ident-2 {:statementId id-4} #{})
+                 (get-ss-authority lrs auth-ident-3 {:statementId id-4} #{}))))
+        (testing "- statement property query"
+          ;; stmt-0 is not returned since it was voided by stmt-2
+          (is (= {:statement-result {:statements [stmt-2] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-0} #{})
+                 (get-ss lrs auth-ident-2 {:agent agt-0} #{})
+                 (get-ss lrs auth-ident-3 {:agent agt-0} #{})))
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-1} #{})
+                 (get-ss lrs auth-ident-2 {:agent agt-1} #{})
+                 (get-ss lrs auth-ident-3 {:agent agt-1} #{})))
+          (is (= {:statement-result {:statements [stmt-2] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-2} #{})
+                 (get-ss lrs auth-ident-2 {:agent agt-2} #{})
+                 (get-ss lrs auth-ident-3 {:agent agt-2} #{})))
+          (is (= {:statement-result {:statements [stmt-3] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-3} #{})
+                 (get-ss lrs auth-ident-2 {:agent agt-3} #{})
+                 (get-ss lrs auth-ident-3 {:agent agt-3} #{})))
+          ;; Querying on verb
+          ;; stmt-2 references voided stmt-0 with ans-v
+          (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1]
+                                     :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:verb ans-v} #{})
+                 (get-ss lrs auth-ident-2 {:verb ans-v} #{})
+                 (get-ss lrs auth-ident-3 {:verb ans-v} #{})))
+          ;; Querying on activity
+          ;; stmt-2 references voided stmt-0 with mp-obj
+          (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:activity mp-obj} #{})
+                 (get-ss lrs auth-ident-2 {:activity mp-obj} #{})
+                 (get-ss lrs auth-ident-3 {:activity mp-obj} #{})))
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-1 :activity mp-obj} #{})
+                 (get-ss lrs auth-ident-2 {:agent agt-1 :activity mp-obj} #{})
+                 (get-ss lrs auth-ident-3 {:agent agt-1 :activity mp-obj} #{})))
+          ;; Querying with attachments
+          (is (= {:statement-result {:statements [stmt-4] :more ""}
+                  :attachments      [(update stmt-4-attach :content #(String. %))]}
+                 (string-result-attachment-content
+                  (get-ss lrs auth-ident-1 {:agent agt-4 :attachments true} #{}))
+                 (string-result-attachment-content
+                  (get-ss lrs auth-ident-2 {:agent agt-4 :attachments true} #{}))
+                 (string-result-attachment-content
+                  (get-ss lrs auth-ident-3 {:agent agt-4 :attachments true} #{})))))))
+    (testing "statements/read/mine"
+      (let [auth-ident-1 (assoc auth-ident
+                                :scopes #{:scope/statements.read.mine})
+            auth-ident-2 (assoc auth-ident-oauth
+                                :scopes #{:scope/statements.read.mine})
+            auth-ident-3 (assoc auth-ident-oauth*
+                                :scopes #{:scope/statements.read.mine})]
+        (testing "- statement ID query"
+          (is (= {:statement stmt-0}
+                 (get-ss lrs auth-ident-1 {:voidedStatementId id-0} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-2 {:voidedStatementId id-0} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-3 {:voidedStatementId id-0} #{})))
+          (is (= {:statement stmt-1}
+                 (get-ss lrs auth-ident-1 {:statementId id-1} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-2 {:statementId id-1} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-3 {:statementId id-1} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-1 {:statementId id-2} #{})))
+          (is (= {:statement stmt-2}
+                 (get-ss lrs auth-ident-2 {:statementId id-2} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-3 {:statementId id-2} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-1 {:statementId id-4} #{})))
+          (is (= {:statement nil}
+                 (get-ss lrs auth-ident-2 {:statementId id-4} #{})))
+          (is (= {:statement stmt-4}
+                 (get-ss lrs auth-ident-3 {:statementId id-4} #{}))))
+        (testing "- statement property query"
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {} #{})))
+          (is (= {:statement-result {:statements [stmt-3 stmt-2] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {} #{})))
+          (is (= {:statement-result {:statements [stmt-2 stmt-3] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:ascending true} #{})))
+          (is (= {:statement-result {:statements [stmt-3]
+                                     :more "/xapi/statements?limit=1&from="}
+                  :attachments      []}
+                 (-> (get-ss lrs auth-ident-2 {:limit 1} #{})
+                     (update-in [:statement-result :more] cstr/replace #"from=.*" "from="))))
+          (is (= {:statement-result {:statements [stmt-2]
+                                     :more "/xapi/statements?ascending=true&limit=1&from="}
+                  :attachments      []}
+                 (-> (get-ss lrs auth-ident-2 {:ascending true :limit 1} #{})
+                     (update-in [:statement-result :more] cstr/replace #"from=.*" "from="))))
+          (is (= {:statement-result {:statements [stmt-4] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-3 {} #{})))
+          (is (= {:statement-result {:statements [stmt-4] :more ""}
+                  :attachments      [(update stmt-4-attach :content #(String. %))]}
+                 (string-result-attachment-content
+                  (get-ss lrs auth-ident-3 {:attachments true} #{}))))
+          ;; Query on agents
+          ;; stmt-2 not returned since it's outside the scope of auth-ident-1
+          ;; stmt-0 not returned since it was voided
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-0} #{})))
+          ;; stmt-2 not returned since its target statement (stmt-0) is
+          ;; outside the scope of auth-ident-2
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:agent agt-0} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-3 {:agent agt-0} #{})))
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-1} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:agent agt-1} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-3 {:agent agt-1} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-2} #{})))
+          (is (= {:statement-result {:statements [stmt-2] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:agent agt-2} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-3 {:agent agt-2} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-3} #{})))
+          (is (= {:statement-result {:statements [stmt-3] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:agent agt-3} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-3 {:agent agt-3} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:agent agt-4} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:agent agt-4} #{})))
+          (is (= {:statement-result {:statements [stmt-4] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-3 {:agent agt-4} #{})))
+          ;; Querying on verb
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:verb ans-v} #{})))
+          (is (= {:statement-result {:statements [stmt-3] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:verb ans-v} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-3 {:verb ans-v} #{})))
+          (is (= {:statement-result {:statements [stmt-4] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-3 {:verb vrb-4} #{})))
+          ;; Querying on activity
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-1 {:activity mp-obj} #{})
+                 (get-ss lrs auth-ident-1 {:activity mp-obj :agent agt-1} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-2 {:activity mp-obj} #{})))
+          (is (= {:statement-result {:statements [] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-3 {:activity mp-obj} #{})))
+          (is (= {:statement-result {:statements [stmt-4] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident-3 {:activity obj-4} #{}))))))
+    (component/stop sys')))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement DATASIM Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -601,9 +896,9 @@
         sys'    (component/start sys)
         lrs     (:lrs sys')
         get-ss' (fn [params]
-                 (-> (lrsp/-get-statements lrs auth-ident params #{"en-US"})
-                     :statement-result
-                     :statements))]
+                  (-> (lrsp/-get-statements lrs auth-ident params #{"en-US"})
+                      :statement-result
+                      :statements))]
     (lrsp/-store-statements lrs auth-ident test-statements [])
     (testing "descending query"
       (let [query-res (get-ss' {:limit 50})]
@@ -665,7 +960,7 @@
                  (count (get-ss' {:ascending true
                                   :since     snd-stored
                                   :limit     50})))))
-        
+
         (testing "until only"
           (is (= 50
                  (count (get-ss' {:until lst-stored
@@ -681,7 +976,7 @@
                  (count (get-ss' {:ascending true
                                   :until     pen-stored
                                   :limit     50})))))
-        
+
         (testing "both"
           (is (= (count since-fst)
                  (count (get-ss' {:since fst-stored
@@ -701,7 +996,7 @@
                          {:statementId (cstr/upper-case id)}
                          #{})))
         (is (not-empty (get-ss' {:registration (cstr/upper-case reg)})))))
-    
+
     (testing "UUID keys ignore case"
       (let [id "00000000-0000-4000-8000-abcdefabcdef"
             stmt (-> test-statements
@@ -889,7 +1184,7 @@
                :content-type   "application/json"
                :id             "https://example.org/some-profile"}}
              (get-doc lrs auth-ident bad-doc-params-2))))
-  
+
     (testing "document ID query"
       (is (= {:document-ids ["some-id" "some-other-id"]}
              (lrsp/-get-document-ids
@@ -906,7 +1201,7 @@
               lrs
               auth-ident
               (dissoc activity-prof-id-params :profileId)))))
-  
+
     (testing "document deletion"
       (support/seq-is
        {}
@@ -930,5 +1225,5 @@
        (lrsp/-get-document lrs
                            auth-ident
                            activity-prof-id-params)))
-    
+
     (component/stop sys')))
