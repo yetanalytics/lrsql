@@ -15,8 +15,12 @@
             [lrsql.spec.oidc :as oidc]
             [selmer.parser :as selm-parser]
             [selmer.util :as selm-u]
-            xapi-schema.spec)
+            [xapi-schema.spec :as xs])
   (:import [java.io File]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Configuration
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- select-config
   [config]
@@ -69,6 +73,10 @@
                 {:type        ::invalid-config
                  :oidc-config (select-config config)}
                 ex)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interceptors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef resource-interceptors
   :args (s/cat :config (s/merge partial-config-spec
@@ -145,7 +153,9 @@
       (conj admin-oidc/require-oidc-identity))
     []))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Authority
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef resolve-authority-claims
   :args (s/cat :claims ::oidc/claims)
@@ -167,6 +177,28 @@
                aud
                (first aud)))))
 
+(def default-authority-path
+  "lrsql/config/oidc_authority.json.template")
+
+(def sample-authority-fn-input
+  {:scope "openid all"
+   :iss   "http://example.com/realm"
+   :sub   "1234"
+   :lrsql/resolved-client-id "someapp"})
+
+(defn- validate-authority-fn
+  "Similar to `authority/validate-authority-fn`, but for OIDC authorities.
+   Logs a warning if the authority is not an xAPI group for 3-legged OAuth."
+  ([authority-fn]
+   (validate-authority-fn authority-fn default-authority-path))
+  ([authority-fn template-path]
+   (authority/validate-authority-fn*
+    authority-fn
+    template-path
+    ::xs/tlo-group
+    sample-authority-fn-input
+    "Authority template for OIDC Auth does not produce a valid xAPI Group.")))
+
 (s/fdef make-authority-fn
   :args (s/cat :template-path (s/nilable string?)
                :threshold (s/? pos-int?))
@@ -176,27 +208,37 @@
 
 (def default-authority-fn
   "The default precompiled function to render authority"
-  (-> "lrsql/config/oidc_authority.json.template"
+  (-> default-authority-path
       io/resource
       selm-parser/parse*
-      authority/make-authority-fn*))
+      authority/make-authority-fn*
+      ;; Should always be valid but we sanity check anyways (e.g. if we change
+      ;; the template during dev).
+      validate-authority-fn))
 
 (defn make-authority-fn
   "Like authority/make-authority-fn but produces a function expecting OIDC
   claims."
-  [template-path & [threshold]]
-  (let [^File f
-        (io/file template-path)
-        authority-fn
-        (if (and f (.exists f))
-          ;; Override template supplied - use that
-          (let [template (selm-parser/parse* f)]
-            (authority/make-authority-fn* template))
-          ;; Override template not supplied - fall back to default
-          default-authority-fn)]
-    (mem/lru (comp authority-fn
-                   resolve-authority-claims)
-             :lru/threshold (or threshold 512))))
+  ([template-path]
+   (make-authority-fn template-path 512))
+  ([template-path threshold]
+   (let [^File f
+         (io/file template-path)
+         authority-fn
+         (if (and f (.exists f))
+           ;; Override template supplied - use that
+           (-> f
+               selm-parser/parse*
+               authority/make-authority-fn*
+               validate-authority-fn)
+           ;; Override template not supplied - fall back to default
+           default-authority-fn)]
+     (mem/lru (comp authority-fn resolve-authority-claims)
+              :lru/threshold threshold))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Client
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def default-client-template
   (-> "lrsql/config/oidc_client.json.template"
@@ -251,6 +293,8 @@
       (get-client-template oidc-client-template)
       config))))
 
+;; Client-side Interceptors
+
 (s/fdef admin-ui-interceptors
   :args (s/cat :webserver-config ::config/webserver
                :lrs-config       ::config/lrs)
@@ -273,6 +317,10 @@
                                   :lrs       lrs-config})
        :oidc-enable-local-admin oidc-enable-local-admin})]
     []))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Putting it all together
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/def ::resource-interceptors
   (s/every i/interceptor?))

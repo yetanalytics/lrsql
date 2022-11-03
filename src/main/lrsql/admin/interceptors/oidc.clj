@@ -35,14 +35,13 @@
     :enter
     (fn authorize-oidc-request [{admin-identity ::admin-identity
                                  :as            ctx}]
-      (if admin-identity
-        (if (oidc/authorize-admin-action ctx admin-identity)
-          ctx
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 401
-                  :body   {:error "Unauthorized Admin Action!"}}))
-        ctx))}))
+      (if (or (nil? admin-identity)
+              (oidc/authorize-admin-action? ctx admin-identity))
+        ctx
+        (assoc (chain/terminate ctx)
+               :response
+               {:status 401
+                :body   {:error "Unauthorized Admin Action!"}})))}))
 
 (defn- disable-jwt-interceptors
   [{queue ::chain/queue :as ctx}]
