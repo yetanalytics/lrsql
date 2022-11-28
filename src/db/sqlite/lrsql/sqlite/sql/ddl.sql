@@ -276,12 +276,17 @@ PRAGMA schema_version = :sql:schema_version
 -- :command :query
 -- :result :one
 -- :doc Query to see if admin_account passhash is required.
-SELECT "notnull" FROM pragma_table_info('admin_account') where name='passhash'
+SELECT "notnull" FROM pragma_table_info('admin_account') WHERE name = 'passhash'
 
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
 -- :doc Set `admin_account.passhash` to optional.
-UPDATE sqlite_schema SET sql='CREATE TABLE admin_account (id TEXT NOT NULL PRIMARY KEY, username TEXT NOT NULL UNIQUE, passhash TEXT)' WHERE type='table' AND name='admin_account'
+UPDATE sqlite_schema
+SET sql='CREATE TABLE admin_account (
+  id TEXT NOT NULL PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  passhash TEXT)'
+WHERE type = 'table' AND name = 'admin_account'
 
 /* Migration 2022-02-23-00 - Add oidc_issuer to admin_account */
 
@@ -289,9 +294,37 @@ UPDATE sqlite_schema SET sql='CREATE TABLE admin_account (id TEXT NOT NULL PRIMA
 -- :command :query
 -- :result :one
 -- :doc Query to see if `admin_account.oidc_issuer` exists.
-SELECT 1 FROM pragma_table_info('admin_account') where name='oidc_issuer'
+SELECT 1 FROM pragma_table_info('admin_account') WHERE name = 'oidc_issuer'
 
 -- :name alter-admin-account-add-openid-issuer!
 -- :command :execute
 -- :doc Add `admin_account.oidc_issuer` to record OIDC identity source.
 ALTER TABLE admin_account ADD COLUMN oidc_issuer TEXT
+
+/* Migration 2022-08-18-00 - Add statements/read/mine to credential_to_scope.scope enum */
+
+-- :name alter-credential-to-scope-scope-datatype!
+-- :command :execute
+-- :doc Change the enum datatype of the `credential_to_scope.scope` column.
+UPDATE sqlite_schema
+SET sql = 'CREATE TABLE credential_to_scope (
+  id         TEXT NOT NULL PRIMARY KEY,
+  api_key    TEXT NOT NULL,
+  secret_key TEXT NOT NULL,
+  scope      TEXT CHECK (
+               scope IN (''statements/write'',
+                         ''statements/read'',
+                         ''statements/read/mine'',
+                         ''all/read'',
+                         ''all'',
+                         ''define'',
+                         ''profile'',
+                         ''profile/read'',
+                         ''state'',
+                         ''state/read'')
+             ),
+  FOREIGN KEY (api_key, secret_key)
+    REFERENCES lrs_credential(api_key, secret_key)
+    ON DELETE CASCADE
+)'
+WHERE type = 'table' AND name = 'credential_to_scope'

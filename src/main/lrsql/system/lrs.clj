@@ -139,13 +139,17 @@
             stmt-res)))))
 
   (-get-statements
-    [lrs _auth-identity params ltags]
+    [lrs auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
           prefix (:stmt-url-prefix config)
-          inputs (->> params
-                      (stmt-util/ensure-default-max-limit config)
-                      stmt-input/query-statement-input)]
+          auth?  (-> auth-identity
+                     auth-util/most-permissive-statement-read-scope
+                     #{:scope/statements.read.mine})
+          ?auth  (if auth? (:agent auth-identity) nil)
+          inputs (-> params
+                     (stmt-util/ensure-default-max-limit config)
+                     (stmt-input/query-statement-input ?auth))]
       (jdbc/with-transaction [tx conn]
         (stmt-q/query-statements backend tx inputs ltags prefix))))
   (-consistent-through
@@ -229,7 +233,9 @@
          {:result :com.yetanalytics.lrs.auth/unauthorized}))))
   (-authorize
     [_lrs ctx auth-identity]
-    (auth-util/authorize-action ctx auth-identity))
+    ;; We need to wrap the boolean in a map or else the LRS lib will get
+    ;; angry. This isn't documented, but tests will fail w/o the wrapping.
+    {:result (auth-util/authorized-action? ctx auth-identity)})
 
   adp/AdminAccountManager
   (-create-account

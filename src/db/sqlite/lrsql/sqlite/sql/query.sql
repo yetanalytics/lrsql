@@ -1,27 +1,52 @@
+/* Authority subquery fragments */
+-- See: https://stackoverflow.com/a/70099691 and https://stackoverflow.com/a/10410317
+
+-- :frag sqlite-auth-subquery
+(
+  SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
+     AND COUNT(stmt_auth.actor_ifi) = COUNT(IIF(stmt_auth.actor_ifi IN (:v*:authority-ifis), 1, NULL))
+  FROM statement_to_actor stmt_auth
+  WHERE stmt_auth.statement_id = stmt.statement_id
+    AND stmt_auth.usage = 'Authority'
+)
+
+-- :frag sqlite-auth-ref-subquery
+(
+  SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
+     AND COUNT(stmt_auth.actor_ifi) = COUNT(IIF(stmt_auth.actor_ifi IN (:v*:authority-ifis), 1, NULL))
+  FROM statement_to_actor stmt_auth
+  WHERE stmt_auth.statement_id = stmt_d.statement_id -- only difference is stmt_d instead of stmt
+    AND stmt_auth.usage = 'Authority'
+    AND stmt_auth.actor_ifi IN (:v*:authority-ifis)
+)
+
 /* Single-statement query */
 
 -- :name query-statement
 -- :command :query
 -- :result :one
 -- :doc Query for one statement using statement IDs.
-SELECT payload FROM xapi_statement
+SELECT stmt.payload
+FROM xapi_statement stmt
 WHERE statement_id = :statement-id
 --~ (when (some? (:voided? params)) "AND is_voided = :voided?")
+--~ (when (:authority-ifis params)  "AND :frag:sqlite-auth-subquery")
 
 -- :name query-statement-exists
 -- :command :query
 -- :result :one
 -- :doc Check for the existence of a Statement with `:statement-id`. Returns nil iff not found. Includes voided Statements.
-SELECT 1 FROM xapi_statement
+SELECT 1
+FROM xapi_statement
 WHERE statement_id = :statement-id
 
 /* Multi-statement query */
 
--- :frag actors-joins
+-- :frag sqlite-actors-join
 LEFT JOIN statement_to_actor stmt_actor ON stmt.statement_id = stmt_actor.statement_id
 LEFT JOIN statement_to_actor stmt_d_actor ON stmt_d.statement_id = stmt_d_actor.statement_id
 
--- :frag activities-joins
+-- :frag sqlite-activities-join
 LEFT JOIN statement_to_activity stmt_activ ON stmt.statement_id = stmt_activ.statement_id
 LEFT JOIN statement_to_activity stmt_d_activ ON stmt_d.statement_id = stmt_d_activ.statement_id
 
@@ -33,28 +58,35 @@ SELECT DISTINCT stmt.id, stmt.payload
 FROM xapi_statement stmt
 LEFT JOIN statement_to_statement sts on sts.ancestor_id = stmt.statement_id
 LEFT JOIN xapi_statement stmt_d on sts.descendant_id = stmt_d.statement_id
---~ (when (:activity-iri params)    ":frag:activities-joins")
---~ (when (:actor-ifi params)       ":frag:actors-joins")
+--~ (when (:activity-iri params) ":frag:sqlite-activities-join")
+--~ (when (:actor-ifi params)    ":frag:sqlite-actors-join")
 WHERE stmt.is_voided = 0
 /*~ (when (:from params)
      (if (:ascending? params) "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
---~ (when (:since params)        "AND stmt.id > :since")
---~ (when (:until params)        "AND stmt.id <= :until")
+--~ (when (:since params)     "AND stmt.id > :since")
+--~ (when (:until params)     "AND stmt.id <= :until")
 AND ((TRUE
---~ (when (:verb-iri params)     "AND stmt.verb_iri = :verb-iri")
---~ (when (:registration params) "AND stmt.registration = :registration")
---~ (when (:actor-ifi params) "AND stmt_actor.actor_ifi = :actor-ifi")
---~ (when (and (:actor-ifi params) (not (:related-actors? params))) "AND stmt_actor.usage = 'Actor'")
---~ (when (:activity-iri params) "AND stmt_activ.activity_iri = :activity-iri")
---~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_activ.usage = 'Object'")
+--~ (when (:verb-iri params)       "AND stmt.verb_iri = :verb-iri")
+--~ (when (:registration params)   "AND stmt.registration = :registration")
+--~ (when (:actor-ifi params)      "AND stmt_actor.actor_ifi = :actor-ifi")
+/*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
+                                   "AND stmt_actor.usage = 'Actor'") ~*/
+--~ (when (:activity-iri params)   "AND stmt_activ.activity_iri = :activity-iri")
+/*~ (when (and (:activity-iri params) (not (:related-activities? params)))
+                                   "AND stmt_activ.usage = 'Object'") ~*/
+--~ (when (:authority-ifis params) "AND :frag:sqlite-auth-subquery")
 ) OR (
 TRUE
---~ (when (:verb-iri params)     "AND stmt_d.verb_iri = :verb-iri")
---~ (when (:registration params) "AND stmt_d.registration = :registration")
---~ (when (:actor-ifi params) "AND stmt_d_actor.actor_ifi = :actor-ifi")
---~ (when (and (:actor-ifi params) (not (:related-actors? params))) "AND stmt_d_actor.usage = 'Actor'")
---~ (when (:activity-iri params) "AND stmt_d_activ.activity_iri = :activity-iri")
---~ (when (and (:activity-iri params) (not (:related-activities? params))) "AND stmt_d_activ.usage = 'Object'")
+--~ (when (:verb-iri params)       "AND stmt_d.verb_iri = :verb-iri")
+--~ (when (:registration params)   "AND stmt_d.registration = :registration")
+--~ (when (:actor-ifi params)      "AND stmt_d_actor.actor_ifi = :actor-ifi")
+/*~ (when (and (:actor-ifi params) (not (:related-actors? params)))
+                                   "AND stmt_d_actor.usage = 'Actor'") ~*/
+--~ (when (:activity-iri params)   "AND stmt_d_activ.activity_iri = :activity-iri")
+/*~ (when (and (:activity-iri params) (not (:related-activities? params)))
+                                   "AND stmt_d_activ.usage = 'Object'") ~*/
+--~ (when (:authority-ifis params) "AND :frag:sqlite-auth-subquery")
+--~ (when (:authority-ifis params) "AND :frag:sqlite-auth-ref-subquery")
 ))
 --~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 LIMIT :limit

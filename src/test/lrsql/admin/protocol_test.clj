@@ -104,16 +104,20 @@
         (testing "and credential update"
           (is (= {:api-key    api-key
                   :secret-key secret-key
-                  :scopes     #{"all/read" "statements/read"}}
+                  :scopes     #{"all/read"
+                                "statements/read"
+                                "statements/read/mine"}}
                  (adp/-update-api-keys
                   lrs
                   acc-id
                   api-key
                   secret-key
-                  #{"all/read" "statements/read"})))
+                  #{"all/read" "statements/read" "statements/read/mine"})))
           (is (= [{:api-key    api-key
                    :secret-key secret-key
-                   :scopes     #{"all/read" "statements/read"}}]
+                   :scopes     #{"all/read"
+                                 "statements/read"
+                                 "statements/read/mine"}}]
                  (adp/-get-api-keys lrs acc-id))))
         (testing "and credential deletion"
           (adp/-delete-api-keys lrs acc-id api-key secret-key)

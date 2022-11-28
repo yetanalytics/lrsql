@@ -1,4 +1,11 @@
 [
     {},
-    {"verb": "https://w3id.org/xapi/video/verbs/seeked"}
+    {"ascending": "true"},
+    {"agent": "{\"mbox\": \"mailto:bob@example.com\"}"},
+    {"agent": "{\"mbox\": \"mailto:bob@example.com\"}", "related_agents": "true"},
+    {"activity": "https://w3id.org/xapi/video/activity-type/video"},
+    {"activity": "https://w3id.org/xapi/video/activity-type/video", "related_activities": "true"},
+    {"registration": "00000000-4000-8000-0000-000000000000"},
+    {"since": "2020-02-20T01:01:01Z"},
+    {"until": "2020-02-20T01:01:01Z"}
 ]

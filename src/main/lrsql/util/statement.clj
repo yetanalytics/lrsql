@@ -1,7 +1,7 @@
 (ns lrsql.util.statement
   (:require [ring.util.codec :refer [form-encode]]
-            [lrsql.util :as u]
-            [com.yetanalytics.lrs.xapi.statements :as ss]))
+            [com.yetanalytics.lrs.xapi.statements :as ss]
+            [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Preparation
@@ -95,11 +95,11 @@
   "Given `?limit`, apply the maximum possible limit (if it is zero
    or exceeds that limit) or the default limit (if it is `nil`).
    The maximum and default limits are set in as environment vars."
-  [{limit-max     :stmt-get-max
+  [{?limit :limit
+    :as    params}
+   {limit-max     :stmt-get-max
     limit-default :stmt-get-default
-    :as _lrs-config}
-   {?limit :limit
-    :as    params}]
+    :as _lrs-config}]
   (assoc params
          :limit
          (cond
