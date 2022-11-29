@@ -4,9 +4,9 @@ on: push
 
 jobs:
   nvd_scan:
-    uses: yetanalytics/actions/.github/workflows/nvd-scan.yml@v0.0.3
+    uses: yetanalytics/actions/.github/workflows/nvd-scan.yml@v0.0.4
     with:
-      nvd-clojure-version: '2.0.0'
+      nvd-clojure-version: '2.9.0'
       classpath-command: 'clojure -Spath -A:db-h2:db-sqlite:db-postgres'
       nvd-config-filename: '.nvd/config.json'
 
@@ -14,14 +14,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Setup clj-kondo
-      uses: DeLaGuardo/setup-clj-kondo@master
-      with:
-        version: '2022.03.04'
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
     - name: Setup CI Environment
-      uses: yetanalytics/actions/setup-env@v0
-    
+      uses: yetanalytics/actions/setup-env@v0.0.4
+
+    # The setup-clojure action is called a second time in order to install
+    # clj-kondo. Perhaps we can install both in a custom action?
+    - name: Setup clj-kondo
+      uses: DeLaGuardo/setup-clojure@9.5
+      with:
+        clj-kondo: '2022.03.04'
+
     - name: Run clj-kondo linting
       run: clj-kondo --lint src/bench src/build src/db src/main src/test
 
@@ -33,8 +38,11 @@ jobs:
         target: [test-h2, test-sqlite, test-postgres]
 
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
     - name: Setup CI Environment
-      uses: yetanalytics/actions/setup-env@v0
+      uses: yetanalytics/actions/setup-env@v0.0.4
 
     - name: Run Makefile Target ${{ matrix.target }}
       run: make ${{ matrix.target }}

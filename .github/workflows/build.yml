@@ -11,16 +11,19 @@ jobs:
   get_modules:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - id: echo-modules
-        run: echo "::set-output name=modules::$(cat .java_modules)"
+      - name: List Java modules
+        id: echo-modules
+        run: echo "modules=$(cat .java_modules)" >> $GITHUB_OUTPUT
+
     outputs:
       modules: ${{ steps.echo-modules.outputs.modules }}
   
   build_jre:
     needs: get_modules
-    uses: yetanalytics/runtimer/.github/workflows/runtimer.yml@3c6a902caaf0c6db272842055d9f8cca5cb3fcbc
+    uses: yetanalytics/runtimer/.github/workflows/runtimer.yml@0.1.2-java-11-temurin
     with:
       java-version: '11'
       java-distribution: 'temurin'
@@ -30,8 +33,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_jre
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
     - name: Setup CI Environment
-      uses: yetanalytics/actions/setup-env@v0
+      uses: yetanalytics/actions/setup-env@v0.0.4
 
     # BUILD WITHOUT RUNTIME
     - name: Build Bundle
@@ -39,19 +45,19 @@ jobs:
 
     # GET RUNTIMES FROM ARTIFACTS
     - name: Download ubuntu-latest Artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: ubuntu-20.04-jre
 
     - name: Download macOS-latest Artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
-        name: macos-10.15-jre
+        name: macos-11-jre
 
     - name: Download windows-latest Artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
-        name: windows-2019-jre
+        name: windows-2022-jre
 
     # UNZIP RUNTIMES INTO OS-SPECIFIC RUNTIME DIRS
     - name: Unzip the runtimes
@@ -59,10 +65,10 @@ jobs:
         mkdir -p target/bundle/runtimes
         unzip ubuntu-20.04-jre.zip -d target/bundle/runtimes
         mv target/bundle/runtimes/ubuntu-20.04 target/bundle/runtimes/linux
-        unzip macos-10.15-jre.zip -d target/bundle/runtimes
-        mv target/bundle/runtimes/macos-10.15 target/bundle/runtimes/macos
-        unzip windows-2019-jre.zip -d target/bundle/runtimes
-        mv target/bundle/runtimes/windows-2019 target/bundle/runtimes/windows
+        unzip macos-11-jre.zip -d target/bundle/runtimes
+        mv target/bundle/runtimes/macos-11 target/bundle/runtimes/macos
+        unzip windows-2022-jre.zip -d target/bundle/runtimes
+        mv target/bundle/runtimes/windows-2022 target/bundle/runtimes/windows
 
     # ARCHIVE BUNDLE - LABEL WITH COMMIT SHA OR TAG NAME
     - name: Compress Bundle
@@ -72,14 +78,14 @@ jobs:
 
     - name: Archive Bundle (Branch Pushes)
       if: ${{ github.ref_type == 'branch' }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: lrsql-artifact-${{ github.sha }}
         path: lrsql.zip
 
     - name: Archive Bundle (Tag Pushes)
       if: ${{ github.ref_type == 'tag' }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: lrsql-artifact-${{ github.ref_name }}
         path: lrsql.zip
@@ -89,10 +95,11 @@ jobs:
     needs: build
     if: ${{ github.ref_type == 'tag' }}
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
     
     - name: Download Bundle Artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: lrsql-artifact-${{ github.ref_name }}
     
@@ -112,25 +119,25 @@ jobs:
         files: lrsql.zip
 
     - name: Deploy Documentation
-      uses: JamesIves/github-pages-deploy-action@4.1.5
+      uses: JamesIves/github-pages-deploy-action@4.4.1
       with:
         branch: gh-pages
         folder: target/bundle/doc
 
     - name: Log in to Docker Hub
-      uses: docker/login-action@v1
+      uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_TOKEN }}
 
     - name: Extract metadata (tags, labels) for Docker
       id: meta
-      uses: docker/metadata-action@v3
+      uses: docker/metadata-action@v4
       with:
         images: yetanalytics/lrsql
 
     - name: Build and push Docker image
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v3
       with:
         context: .
         push: true
