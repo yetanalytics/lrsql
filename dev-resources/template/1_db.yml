@@ -1,9 +1,9 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Postgres DB for SQL LRS'
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Postgres DB for SQL LRS"
 Parameters:
   # Networking
   VPCId:
-    Description: 'VPC on which to run SQL LRS'
+    Description: "VPC on which to run SQL LRS"
     Type: AWS::EC2::VPC::Id
   DBSubnets:
     Description: Subnets on which to run services
@@ -18,24 +18,24 @@ Parameters:
   DBEngineMode:
     Description: PostgreSQL Engine mode on RDS
     Type: String
-    Default: 'provisioned'
+    Default: "provisioned"
     AllowedValues:
-      - 'provisioned'
-      - 'serverless'
+      - "provisioned"
+      - "serverless"
   DBEngineVersion:
     Description: PostgreSQL engine version on RDS
     Type: String
-    Default: '10.12'
+    Default: "12.9"
     AllowedValues:
-      - '10.12'
+      - "12.9"
   DBInstanceClass:
     Description: For provisioned aurora, the instance class to use
     Type: String
-    Default: 'db.r4.large'
+    Default: "db.r4.large"
   DBName:
     Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
     Type: String
-    Default: 'lrsql_demo'
+    Default: "lrsql_demo"
   DBMasterUserName:
     Description: Name of admin user
     Type: String
@@ -43,7 +43,7 @@ Parameters:
   DBMasterUserPasswordPath:
     Description: SSM Path to the secret password
     Type: String
-    Default: '/lrsql/demo/DB_MASTER_USER_PASSWORD'
+    Default: "/lrsql/demo/DB_MASTER_USER_PASSWORD"
   DBMasterUserPasswordVersion:
     Description: SSM version
     Type: Number
@@ -61,13 +61,10 @@ Parameters:
     Default: true
 
 Conditions:
-  DBProvisioned:
-    !Equals [!Ref DBEngineMode, 'provisioned']
-  DBSnapshotIdentifierProvided:
-    !Not [!Equals [!Ref DBSnapshotIdentifier, '']]
+  DBProvisioned: !Equals [!Ref DBEngineMode, "provisioned"]
+  DBSnapshotIdentifierProvided: !Not [!Equals [!Ref DBSnapshotIdentifier, ""]]
 
 Resources:
-
   # PostgreSQL Database
   DBSubnetGroup:
     Description: Subnet group to allow instance access to db
@@ -101,7 +98,7 @@ Resources:
       MasterUserPassword: !If
         - DBSnapshotIdentifierProvided
         - !Ref AWS::NoValue
-        - !Sub '{{resolve:ssm-secure:${DBMasterUserPasswordPath}:${DBMasterUserPasswordVersion}}}'
+        - !Sub "{{resolve:ssm-secure:${DBMasterUserPasswordPath}:${DBMasterUserPasswordVersion}}}"
       # DBClusterIdentifier: !Sub '${AWS::StackName}-db'
       BackupRetentionPeriod: !If
         - DBSnapshotIdentifierProvided
@@ -111,7 +108,7 @@ Resources:
       VpcSecurityGroupIds:
         - !Ref DBInstanceSG
       DBSubnetGroupName: !Ref DBSubnetGroup
-      DBClusterParameterGroupName: default.aurora-postgresql10
+      DBClusterParameterGroupName: default.aurora-postgresql12
       EnableCloudwatchLogsExports: !If
         - DBProvisioned
         - [postgresql]
@@ -132,19 +129,19 @@ Outputs:
     Description: Postgresql db endpoint
     Value: !GetAtt DBCluster.Endpoint.Address
     Export:
-      Name: !Sub '${AWS::StackName}:DBEndpoint'
+      Name: !Sub "${AWS::StackName}:DBEndpoint"
   DBReadOnlyEndpoint:
     Description: Postgresql db readonly endpoint
     Value: !GetAtt DBCluster.ReadEndpoint.Address
     Export:
-      Name: !Sub '${AWS::StackName}:DBEndpointRO'
+      Name: !Sub "${AWS::StackName}:DBEndpointRO"
   DBPort:
     Description: Postgresql db port
     Value: !GetAtt DBCluster.Endpoint.Port
     Export:
-      Name: !Sub '${AWS::StackName}:DBPort'
+      Name: !Sub "${AWS::StackName}:DBPort"
   DBInstanceSG:
     Description: Postgresql instance security group
     Value: !Ref DBInstanceSG
     Export:
-      Name: !Sub '${AWS::StackName}:DBInstanceSG'
+      Name: !Sub "${AWS::StackName}:DBInstanceSG"
