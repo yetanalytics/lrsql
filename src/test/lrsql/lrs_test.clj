@@ -69,7 +69,9 @@
    "actor"  {"mbox"       "mailto:sample.foo@example.com"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
-             "display" {"en-US" "answered"}}
+             "display" {"en-US" "answered"
+                        ;; Some lang map + Unicode testing
+                        "zh-CN" "回答了"}}
    "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
 
 (def stmt-1
@@ -228,7 +230,7 @@
     (testing "statement ID queries"
       (is (= {:statement stmt-0}
              (get-ss lrs auth-ident {:voidedStatementId id-0} #{})))
-      (is (= {:statement stmt-0}
+      (is (= {:statement (update-in stmt-0 ["verb" "display"] dissoc "zh-CN")}
              (get-ss lrs
                      auth-ident
                      {:voidedStatementId id-0 :format "canonical"}
