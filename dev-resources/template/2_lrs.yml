@@ -1,9 +1,9 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'SQL LRS and DB Init Script'
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "SQL LRS and DB Init Script"
 Parameters:
   # Networking
   VPCId:
-    Description: 'VPC on which to run SQL LRS'
+    Description: "VPC on which to run SQL LRS"
     Type: AWS::EC2::VPC::Id
   DBSubnets:
     Description: Subnets on which the DB is running
@@ -12,7 +12,7 @@ Parameters:
   DBName:
     Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
     Type: String
-    Default: 'lrsql_demo'
+    Default: "lrsql_demo"
   DBHost:
     Description: Write hostname of PG db
     Type: String
@@ -34,7 +34,7 @@ Parameters:
   DBMasterUserPasswordPath:
     Description: SSM Path to the secret password
     Type: String
-    Default: '/lrsql/demo/DB_MASTER_USER_PASSWORD'
+    Default: "/lrsql/demo/DB_MASTER_USER_PASSWORD"
   DBMasterUserPasswordVersion:
     Description: SSM version
     Type: Number
@@ -42,7 +42,7 @@ Parameters:
   DBAppUserPasswordPath:
     Description: SSM Path to the secret password
     Type: String
-    Default: '/lrsql/demo/DB_APP_USER_PASSWORD'
+    Default: "/lrsql/demo/DB_APP_USER_PASSWORD"
   DBAppUserPasswordVersion:
     Description: SSM version
     Type: Number
@@ -68,14 +68,14 @@ Parameters:
   InstanceAmiId:
     Description: AMI (image) to use on EC2 instances.
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
   InstanceKeyName:
     Description: Name of an EC2 key pair that can be used to connect to the server (optional)
     Type: String
   InstanceSSHCidr:
     Description: CIDR Range for SSH Access to instances (Typically VPC CIDR Range)
     Type: String
-    Default: '173.147.0.0/16'
+    Default: "173.147.0.0/16"
   InstanceSubnets:
     Description: Subnet on which to run the lrsql server
     Type: List<AWS::EC2::Subnet::Id>
@@ -93,7 +93,7 @@ Parameters:
   LrsVersion:
     Description: Version of SQL LRS to download and install (public release versions on GitHub)
     Type: String
-    Default: v0.1.4
+    Default: v0.3.8
 
   ASGMinSize:
     Type: Number
@@ -110,11 +110,11 @@ Parameters:
   ASGCPUPolicyTargetValue:
     Type: String # according to docs a Double
     Description: Target CPU utilization of instances. Leave blank to disable CPU autoscaling.
-    Default: '' # '60.0'
+    Default: "" # '60.0'
   ASGALBRequestCountTargetValue:
     Type: String # according to docs a Double
     Description: Target requests per instance. Leave blank to disable request count autoscaling.
-    Default: '' # '10000.0'
+    Default: "" # '10000.0'
 
   # Front-end (ALB) specific settings
   ALBSubnets:
@@ -123,28 +123,24 @@ Parameters:
   ALBHostName:
     Type: String
     Description: The hostname to use for the Elastic Load Balancer.
-    Default: 'sqllrs.yetanalytics.io'
+    Default: "sqllrs.yetanalytics.io"
   ALBCertArn:
     Type: String
     Description: The ARN of an ACM cert to use on the ALB
   ALBHostedZone:
     Type: String
     Description: Route53 Hosted Zone in which to set a DNS record. If unset no record will be updated
-    Default: ''
-
+    Default: ""
 
 Conditions:
-  SetDNS:
-    !Not [!Equals [!Ref ALBHostedZone, '']]
+  SetDNS: !Not [!Equals [!Ref ALBHostedZone, ""]]
   ASGCPUPolicyTargetValueProvided:
-    !Not [!Equals [!Ref ASGCPUPolicyTargetValue, '']]
+    !Not [!Equals [!Ref ASGCPUPolicyTargetValue, ""]]
   ASGALBRequestCountTargetValueProvided:
-    !Not [!Equals [!Ref ASGALBRequestCountTargetValue, '']]
-  InstanceKeyNameProvided:
-    !Not [!Equals [!Ref InstanceKeyName, '']]
+    !Not [!Equals [!Ref ASGALBRequestCountTargetValue, ""]]
+  InstanceKeyNameProvided: !Not [!Equals [!Ref InstanceKeyName, ""]]
 
 Resources:
-
   # DB Initialization Function and custom resource to run it
 
   DBInitFn:
@@ -182,9 +178,9 @@ Resources:
     Type: AWS::IAM::ManagedPolicy
     Description: IAM Policy for db init lambda access.
     Properties:
-      ManagedPolicyName: !Sub '${AWS::StackName}-${AWS::Region}-lambda-dbinit-policy'
+      ManagedPolicyName: !Sub "${AWS::StackName}-${AWS::Region}-lambda-dbinit-policy"
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           # Allow access to SSM and VPC related networking
           - Effect: Allow
@@ -192,8 +188,8 @@ Resources:
               - "ssm:GetParameter"
               - "secretsmanager:GetSecretValue"
             Resource:
-              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}'
-              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBMasterUserPasswordPath}'
+              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}"
+              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBMasterUserPasswordPath}"
           - Effect: Allow
             Action:
               - ec2:DescribeNetworkInterfaces
@@ -201,17 +197,17 @@ Resources:
               - ec2:DeleteNetworkInterface
               - ec2:DescribeInstances
               - ec2:AttachNetworkInterface
-            Resource: '*'
+            Resource: "*"
 
   DBInitFnExecRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        - Effect: Allow
-          Principal:
-            Service: [lambda.amazonaws.com]
-          Action: ['sts:AssumeRole']
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ["sts:AssumeRole"]
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
@@ -225,14 +221,14 @@ Resources:
       ServiceToken: !GetAtt DBInitFn.Arn
       DBMasterUsername: !Ref DBMasterUserName
       DBMasterPasswordPath: !Join
-            - ':'
-            - - !Ref DBMasterUserPasswordPath
-              - !Ref DBMasterUserPasswordVersion
+        - ":"
+        - - !Ref DBMasterUserPasswordPath
+          - !Ref DBMasterUserPasswordVersion
       DBUsername: !Ref DBAppUserName
       DBPasswordPath: !Join
-            - ':'
-            - - !Ref DBAppUserPasswordPath
-              - !Ref DBAppUserPasswordVersion
+        - ":"
+        - - !Ref DBAppUserPasswordPath
+          - !Ref DBAppUserPasswordVersion
       DBHost: !Ref DBHost
       DBPort: !Ref DBPort
       DBName: !Ref DBName
@@ -243,9 +239,9 @@ Resources:
     Type: AWS::IAM::ManagedPolicy
     Description: IAM Policy for a SQL LRS Server.
     Properties:
-      ManagedPolicyName: !Sub '${AWS::StackName}-${AWS::Region}-lrsql-instance-policy'
+      ManagedPolicyName: !Sub "${AWS::StackName}-${AWS::Region}-lrsql-instance-policy"
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           # Allow pulling DB password
           - Effect: Allow
@@ -253,24 +249,24 @@ Resources:
               - "ssm:GetParameter"
               - "secretsmanager:GetSecretValue"
             Resource:
-              - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}'
+              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}"
           # Allegedly needed for securestring...
           - Effect: Allow
             Action:
               - "kms:Decrypt"
             Resource:
-              - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/secretsmanager'
-              - !Sub 'arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm'
+              - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/secretsmanager"
+              - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm"
 
   InstanceRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        - Effect: Allow
-          Principal:
-            Service: [ec2.amazonaws.com]
-          Action: ['sts:AssumeRole']
+          - Effect: Allow
+            Principal:
+              Service: [ec2.amazonaws.com]
+            Action: ["sts:AssumeRole"]
       Path: /
       ManagedPolicyArns:
         - !Ref InstancePolicy
@@ -325,7 +321,7 @@ Resources:
           files:
             "/tmp/lrsql.zip":
               source: !Join
-                - '/'
+                - "/"
                 - - "https://github.com/yetanalytics/lrsql/releases/download"
                   - !Ref LrsVersion
                   - "lrsql.zip"
@@ -341,13 +337,13 @@ Resources:
               command: "sudo unzip /tmp/lrsql.zip -d /opt/lrsql/"
         01_setupCfnHup:
           files:
-            '/etc/cfn/cfn-hup.conf':
+            "/etc/cfn/cfn-hup.conf":
               content: !Sub |
                 [main]
                 stack=${AWS::StackId}
                 region=${AWS::Region}
                 interval=1
-              mode: '000400'
+              mode: "000400"
               owner: root
               group: root
             "/lib/systemd/system/cfn-hup.service":
@@ -360,14 +356,14 @@ Resources:
                 Restart=always
                 [Install]
                 WantedBy=multi-user.target
-            '/etc/cfn/hooks.d/lrsql-auto-reloader.conf':
+            "/etc/cfn/hooks.d/lrsql-auto-reloader.conf":
               content: !Sub |
                 [cfn-auto-reloader-hook]
                 triggers=post.update
                 path=Resources.LrsInstances.Metadata.AWS::CloudFormation::Init.02_configureLrs
                 action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets UpdateEnvironment
                 runas=root
-              mode: '000400'
+              mode: "000400"
               owner: root
               group: root
           commands:
@@ -379,7 +375,7 @@ Resources:
                 systemctl start cfn-hup.service
         02_configureLrs:
           files:
-            '/opt/lrsql/config/lrsql.json':
+            "/opt/lrsql/config/lrsql.json":
               content: !Sub |
                 {
                   "database": {
@@ -399,10 +395,10 @@ Resources:
                     "httpPort": ${InstanceHttpPort}
                   }
                 }
-              mode: '000755'
+              mode: "000755"
               owner: root
               group: root
-            '/lib/systemd/system/lrsql.service':
+            "/lib/systemd/system/lrsql.service":
               content: !Sub |
                 [Unit]
                 Description=SQL LRS Service
@@ -419,7 +415,7 @@ Resources:
                 RestartSec=5
                 [Install]
                 WantedBy=multi-user.target
-              mode: '000755'
+              mode: "000755"
               owner: root
               group: root
         03_enableLrs:
@@ -484,11 +480,10 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: ALBRequestCountPerTarget
           ResourceLabel: !Join
-            - '/'
+            - "/"
             - - !GetAtt LoadBalancer.LoadBalancerFullName
               - !GetAtt TargetGroup.TargetGroupFullName
         TargetValue: !Ref ASGALBRequestCountTargetValue
-
 
   # ASG
   AutoScalingGroup:
@@ -506,23 +501,22 @@ Resources:
       HealthCheckGracePeriod: 120
       # Enable Group Metrics Collection
       MetricsCollection:
-        - Granularity: '1Minute'
+        - Granularity: "1Minute"
     CreationPolicy:
       ResourceSignal:
         Timeout: PT15M
     UpdatePolicy:
       AutoScalingRollingUpdate:
-        MinInstancesInService: '1'
-        MaxBatchSize: '1'
+        MinInstancesInService: "1"
+        MaxBatchSize: "1"
         PauseTime: PT15M
-        WaitOnResourceSignals: 'true'
+        WaitOnResourceSignals: "true"
         SuspendProcesses:
           - HealthCheck
           - ReplaceUnhealthy
           - AZRebalance
           - AlarmNotification
           - ScheduledActions
-
 
   # Load Balancer
 
@@ -549,8 +543,8 @@ Resources:
     Properties:
       Scheme: internet-facing
       LoadBalancerAttributes:
-      - Key: idle_timeout.timeout_seconds
-        Value: '30'
+        - Key: idle_timeout.timeout_seconds
+          Value: "30"
       Subnets: !Ref ALBSubnets
       SecurityGroups:
         - !Ref LoadBalancerSG
@@ -569,7 +563,7 @@ Resources:
             Host: "#{host}"
             Path: "/#{path}"
             Query: "{query}"
-          Type: 'redirect'
+          Type: "redirect"
       LoadBalancerArn: !Ref LoadBalancer
       Port: 80
       Protocol: HTTP
@@ -581,7 +575,7 @@ Resources:
     Properties:
       DefaultActions:
         - TargetGroupArn: !Ref TargetGroup
-          Type: 'forward'
+          Type: "forward"
       LoadBalancerArn: !Ref LoadBalancer
       Port: 443
       Protocol: HTTPS
@@ -630,10 +624,10 @@ Outputs:
     Description: Load Balancer Endpoint
     Value: !GetAtt LoadBalancer.DNSName
     Export:
-      Name: !Sub '${AWS::StackName}:LBEndpoint'
+      Name: !Sub "${AWS::StackName}:LBEndpoint"
   LrsAddress:
     Description: Location of the LRS and Admin application
     Value: !Join
-            - ''
-            - - 'https://'
-              - !Ref ALBHostName
+      - ""
+      - - "https://"
+        - !Ref ALBHostName
