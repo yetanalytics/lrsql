@@ -1,5 +1,5 @@
 (ns lrsql.util.util-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [deftest testing is are]]
             [clj-uuid]
             [xapi-schema.spec.regex :as xsr]
             [lrsql.test-support :refer [check-validate]]
@@ -34,6 +34,19 @@
   (testing "parsing JSON"
     (is (= {"foo" "bar"}
            (util/parse-json "{\"foo\":\"bar\"}")))
+    (are [s jsn] (= (util/parse-json s) jsn)
+      "{\"en-GB\":\"Mary Poppins!\"}" {"en-GB" "Mary Poppins!"}
+      "{\"en-US\":\"X Æ A-12\"}"      {"en-US" "X Æ A-12"}
+      "{\"de-DE\":\"Eren Jäger\"}"    {"de-DE" "Eren Jäger"}
+      "{\"vi-VN\":\"Kevin Nguyễn\"}"  {"vi-VN" "Kevin Nguyễn"}
+      "{\"uk-UA\":\"Слава Україні\"}" {"uk-UA" "Слава Україні"}
+      "{\"he-IL\":\"סודהסטרים\"}"     {"he-IL" "סודהסטרים"}
+      "{\"ar-AE\":\"برج خليفة\"}"     {"ar-AE" "برج خليفة"}
+      "{\"th-TH\":\"เด็กใหม่\"}"        {"th-TH" "เด็กใหม่"}
+      ;; CJK
+      "{\"ja-JP\":\"進撃の巨人\"}" {"ja-JP" "進撃の巨人"}
+      "{\"ko-KR\":\"방탄소년단\"}" {"ko-KR" "방탄소년단"}
+      "{\"zh-CN\":\"少女时代\"}" {"zh-CN" "少女时代"})
     (is (try (util/parse-json "{\"foo\":\"bar\"} {\"baz\":\"qux\"}")
              (catch Exception e (= ::util/extra-json-input
                                    (-> e ex-data :type)))))
@@ -41,5 +54,21 @@
              (catch Exception e (= ::util/not-json-object
                                    (-> e ex-data :type))))))
   (testing "writing JSON"
-    (is (= "{\"foo\":\"bar\"}"
-           (String. ^"[B" (util/write-json {"foo" "bar"}))))))
+    (are [s jsn] (= s (util/write-json-str jsn))
+      "{\"en-GB\":\"Mary Poppins!\"}" {"en-GB" "Mary Poppins!"}
+      "{\"en-US\":\"X Æ A-12\"}"      {"en-US" "X Æ A-12"}
+      "{\"de-DE\":\"Eren Jäger\"}"    {"de-DE" "Eren Jäger"}
+      "{\"vi-VN\":\"Kevin Nguyễn\"}"  {"vi-VN" "Kevin Nguyễn"}
+      "{\"uk-UA\":\"Слава Україні\"}" {"uk-UA" "Слава Україні"}
+      "{\"he-IL\":\"סודהסטרים\"}"     {"he-IL" "סודהסטרים"}
+      "{\"ar-AE\":\"برج خليفة\"}"     {"ar-AE" "برج خليفة"}
+      "{\"th-TH\":\"เด็กใหม่\"}"        {"th-TH" "เด็กใหม่"}
+      ;; CJK glyphs
+      "{\"ja-JP\":\"進撃の巨人\"}" {"ja-JP" "進撃の巨人"}
+      "{\"ko-KR\":\"방탄소년단\"}" {"ko-KR" "방탄소년단"}
+      "{\"zh-CN\":\"少女时代\"}" {"zh-CN" "少女时代"}))
+  (testing "parsing and writing JSON"
+    (is (= "{\"ja-JP\":\"進撃の巨人\"}"
+           (-> "{\"ja-JP\":\"進撃の巨人\"}" util/parse-json util/write-json-str)))
+    (is (= {"ja-JP" "進撃の巨人"}
+           (-> {"ja-JP" "進撃の巨人"} util/write-json-str util/parse-json)))))
