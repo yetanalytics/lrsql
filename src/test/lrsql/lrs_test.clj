@@ -62,6 +62,9 @@
 ;; Statement Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Some Statement language maps include Chinese text, in order to test
+;; language maps with non-Unicode text.
+
 ;; Need to have a non-zero UUID version, or else xapi-schema gets angry
 
 (def stmt-0
@@ -70,7 +73,6 @@
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
              "display" {"en-US" "answered"
-                        ;; Some lang map + Unicode testing
                         "zh-CN" "回答了"}}
    "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
 
@@ -80,11 +82,14 @@
              "name"       "Sample Agent 1"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
-             "display" {"en-US" "answered"}}
+             "display" {"en-US" "answered"
+                        "zh-CN" "回答了"}}
    "object" {"id"         "http://www.example.com/tincan/activities/multipart"
              "objectType" "Activity"
-             "definition" {"name"        {"en-US" "Multi Part Activity"}
-                           "description" {"en-US" "Multi Part Activity Description"}}}})
+             "definition" {"name"        {"en-US" "Multi Part Activity"
+                                          "zh-CN" "多元部分Activity"}
+                           "description" {"en-US" "Multi Part Activity Description"
+                                          "zh-CN" "多元部分Activity的简述"}}}})
 
 (def stmt-2
   {"id"     "00000000-0000-4000-8000-000000000002"
@@ -119,7 +124,8 @@
                                 {"mbox" "mailto:member3@example.com"
                                  "name" "Group Member 4"}]}
    "verb"        {"id"      "http://adlnet.gov/expapi/verbs/attended"
-                  "display" {"en-US" "attended"}}
+                  "display" {"en-US" "attended"
+                             "zh-CN" "参加了"}}
    "object"      {"id"         "http://www.example.com/meetings/occurances/34534"
                   "definition" {"extensions"  {"http://example.com/profiles/meetings/activitydefinitionextensions/room"
                                                {"name" "Kilby"
@@ -401,8 +407,10 @@
       (is (= {:activity
               {"id"         "http://www.example.com/tincan/activities/multipart"
                "objectType" "Activity"
-               "definition" {"name"        {"en-US" "Multi Part Activity"}
-                             "description" {"en-US" "Multi Part Activity Description"}}}}
+               "definition" {"name"        {"en-US" "Multi Part Activity"
+                                            "zh-CN" "多元部分Activity"}
+                             "description" {"en-US" "Multi Part Activity Description"
+                                            "zh-CN" "多元部分Activity的简述"}}}}
              (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
 
     (component/stop sys')
