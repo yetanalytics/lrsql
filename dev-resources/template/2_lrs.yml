@@ -408,6 +408,8 @@ Resources:
                 Description=SQL LRS Service
                 [Service]
                 User=root
+                # Required to prevent arbitrary encoding settings
+                Environment="LC_ALL=en_US.UTF-8"
                 # The configuration file application.properties should be here:
                 WorkingDirectory=/opt/lrsql
                 ExecStart=/opt/lrsql/bin/run_postgres.sh
