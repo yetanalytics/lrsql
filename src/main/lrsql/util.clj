@@ -162,11 +162,33 @@
   (assoc input :primary-key (generate-squuid)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; JSON
+;; Strings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def utf8-charset
   (java.nio.charset.Charset/forName "UTF-8"))
+
+(s/fdef str->bytes
+  :args (s/cat :s string?)
+  :ret bytes?)
+
+(defn str->bytes
+  "Convert `s` into a byte array. Assumes UTF-8 encoding."
+  [^String s]
+  (.getBytes s utf8-charset))
+
+(s/fdef bytes->str
+  :args (s/cat :bytes bytes?)
+  :ret string?)
+
+(defn bytes->str
+  "Converts `bytes` into a string. Assumes UTF-8 encoding."
+  [^"[B" bytes]
+  (String. bytes utf8-charset))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; JSON
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Overall approach is taken from lrs:
 ;; https://github.com/yetanalytics/lrs/blob/master/src/main/com/yetanalytics/lrs/xapi/document.cljc
@@ -177,7 +199,7 @@
   "Read a JSON string or byte array `data`. In the byte array case, it will
    be string-encoded using the UTF-8 charset."
   [data]
-  (let [string (if (bytes? data) (String. ^"[B" data utf8-charset) data)]
+  (let [string (if (bytes? data) (bytes->str data) data)]
     (with-open [rdr (PushbackReader. (StringReader. string) 64)]
       (doall (cjson/parsed-seq rdr)))))
 
@@ -236,7 +258,7 @@
 (defn write-json-str
   "Write `jsn` to a string; the string is always UTF-8 encoded."
   [jsn]
-  (String. ^"[B" (write-json jsn) utf8-charset))
+  (bytes->str (write-json jsn)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Bytes
