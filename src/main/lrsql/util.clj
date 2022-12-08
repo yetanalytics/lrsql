@@ -165,15 +165,19 @@
 ;; JSON
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def utf8-charset
+  (java.nio.charset.Charset/forName "UTF-8"))
+
 ;; Overall approach is taken from lrs:
 ;; https://github.com/yetanalytics/lrs/blob/master/src/main/com/yetanalytics/lrs/xapi/document.cljc
 ;; Reimplemented here as functions instead of dynamic vars in order to avoid
 ;; issues with AOT compliation.
 
 (defn- parse-json*
-  "Read a JSON string or byte array `data`."
+  "Read a JSON string or byte array `data`. In the byte array case, it will
+   be string-encoded using the UTF-8 charset."
   [data]
-  (let [string (if (bytes? data) (String. ^"[B" data) data)]
+  (let [string (if (bytes? data) (String. ^"[B" data utf8-charset) data)]
     (with-open [rdr (PushbackReader. (StringReader. string) 64)]
       (doall (cjson/parsed-seq rdr)))))
 
@@ -189,7 +193,10 @@
 (defn parse-json
   "Read a JSON string or byte array `data`. `data` must only consist of one
    JSON object, array, or scalar; in addition, `data` must be an object by
-   default. To parse JSON arrays or scalars, set `:object?` to false."
+   default. To parse JSON arrays or scalars, set `:object?` to false.
+   
+   In the byte array case, `data` will be string-encoded using the UTF-8
+   charset."
   [data & {:keys [object?] :or {object? true}}]
   (let [[result & ?more] (wrap-parse-fn parse-json* "JSON" data)]
     (cond
@@ -221,6 +228,15 @@
   [jsn]
   (let [out-stream (ByteArrayOutputStream. 4096)]
     (.toByteArray ^ByteArrayOutputStream (write-json* out-stream jsn))))
+
+(s/fdef write-json-str
+  :args (s/cat :jsn ::xs/any-json)
+  :ret string?)
+
+(defn write-json-str
+  "Write `jsn` to a string; the string is always UTF-8 encoded."
+  [jsn]
+  (String. ^"[B" (write-json jsn) utf8-charset))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Bytes
