@@ -66,8 +66,7 @@
                              (map (fn [batch]
                                     {:headers    headers
                                      :basic-auth basic-auth
-                                     :body       (String. (u/write-json
-                                                           (vec batch)))})))
+                                     :body       (u/write-json-str (vec batch))})))
             insert-res  (do-async-op! curl/post
                                       endpoint
                                       insert-reqs

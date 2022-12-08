@@ -1,11 +1,12 @@
 (ns lrsql.lrs-test
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
+  (:require [clojure.test   :refer [deftest testing is use-fixtures]]
             [clojure.string :as cstr]
             [com.stuartsierra.component     :as component]
             [com.yetanalytics.datasim.input :as sim-input]
             [com.yetanalytics.datasim.sim   :as sim]
             [com.yetanalytics.lrs.protocol  :as lrsp]
-            [lrsql.test-support :as support]))
+            [lrsql.test-support :as support]
+            [lrsql.util         :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init Test Config
@@ -48,15 +49,15 @@
         (update-in [:statement-result :statements]
                    (partial map remove-props)))))
 
+(defn- update-attachment-content
+  [att]
+  (update att :content u/bytes->str))
+
 (defn- string-result-attachment-content
   [get-ss-result]
   (update get-ss-result
           :attachments
-          (fn [atts]
-            (mapv
-             (fn [att]
-               (update att :content #(String. %)))
-             atts))))
+          (fn [atts] (mapv update-attachment-content atts))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Tests
@@ -379,7 +380,7 @@
     (testing "querying with attachments"
       (testing "(multiple)"
         (is (= {:statement-result {:statements [stmt-4] :more ""}
-                :attachments      [(update stmt-4-attach :content #(String. %))]}
+                :attachments      [(update-attachment-content stmt-4-attach)]}
                (-> (get-ss lrs
                            auth-ident
                            {:activity act-4 :attachments true}
@@ -388,7 +389,7 @@
 
       (testing "(single)"
         (is (= {:statement    stmt-4
-                :attachments  [(update stmt-4-attach :content #(String. %))]}
+                :attachments  [(update-attachment-content stmt-4-attach)]}
                (-> (get-ss lrs
                            auth-ident
                            {:statementId (get stmt-4 "id") :attachments true}
@@ -438,7 +439,7 @@
       (testing "(multiple)"
         (testing "single attachment"
           (is (= {:statement-result {:statements [stmt-5 stmt-4] :more ""}
-                  :attachments      [(update stmt-4-attach :content #(String. %))]}
+                  :attachments      [(update-attachment-content stmt-4-attach)]}
                  (-> (get-ss lrs
                              auth-ident
                              {:activity act-4
@@ -450,8 +451,8 @@
           (is (= {:statement-result {:statements [stmt-6 stmt-5 stmt-4] :more ""}
                   ;; Compare attachments as a set, their order is different on the
                   ;; postgres backend
-                  :attachments      #{(update stmt-6-attach :content #(String. %))
-                                      (update stmt-4-attach :content #(String. %))}}
+                  :attachments #{(update-attachment-content stmt-6-attach)
+                                 (update-attachment-content stmt-4-attach)}}
                  (-> (get-ss lrs
                              auth-ident
                              {:attachments true}
@@ -461,8 +462,8 @@
 
       (testing "(single)"
         (is (= {:statement   stmt-6
-                :attachments #{(update stmt-6-attach :content #(String. %))
-                               (update stmt-4-attach :content #(String. %))}}
+                :attachments #{(update-attachment-content stmt-6-attach)
+                               (update-attachment-content stmt-4-attach)}}
                (-> (get-ss lrs
                            auth-ident
                            {:statementId id-6 :attachments true}
@@ -743,7 +744,7 @@
                  (get-ss lrs auth-ident-3 {:agent agt-1 :activity mp-obj} #{})))
           ;; Querying with attachments
           (is (= {:statement-result {:statements [stmt-4] :more ""}
-                  :attachments      [(update stmt-4-attach :content #(String. %))]}
+                  :attachments      [(update-attachment-content stmt-4-attach)]}
                  (string-result-attachment-content
                   (get-ss lrs auth-ident-1 {:agent agt-4 :attachments true} #{}))
                  (string-result-attachment-content
@@ -806,7 +807,7 @@
                   :attachments      []}
                  (get-ss lrs auth-ident-3 {} #{})))
           (is (= {:statement-result {:statements [stmt-4] :more ""}
-                  :attachments      [(update stmt-4-attach :content #(String. %))]}
+                  :attachments      [(update-attachment-content stmt-4-attach)]}
                  (string-result-attachment-content
                   (get-ss lrs auth-ident-3 {:attachments true} #{}))))
           ;; Query on agents
@@ -1102,7 +1103,7 @@
   [lrs auth-ident params]
   (-> (lrsp/-get-document lrs auth-ident params)
       (update :document dissoc :updated)
-      (update-in [:document :contents] #(String. %))))
+      (update-in [:document :contents] u/bytes->str)))
 
 (deftest test-document-fns
   (let [sys  (support/test-system)
