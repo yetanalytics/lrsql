@@ -6,7 +6,8 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :as c]
             [lrsql.spec.admin :as ads]
-            [lrsql.spec.authority :as ats])
+            [lrsql.spec.authority :as ats]
+            [lrsql.util :as u])
   (:import [java.util Base64 Base64$Encoder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -21,8 +22,9 @@
     #(sgen/fmap
       (fn [[username password]]
         (let [up   (str username ":" password)
-              byts (.encode ^Base64$Encoder (Base64/getEncoder) (.getBytes up))]
-          (str "Basic " (String. byts))))
+              byts (.encode ^Base64$Encoder (Base64/getEncoder)
+                            (u/str->bytes up))]
+          (str "Basic " (u/bytes->str byts))))
       (sgen/tuple (sgen/fmap xs/into-str
                              (sgen/vector (sgen/char-alpha) 3 16))
                   (sgen/fmap xs/into-str
