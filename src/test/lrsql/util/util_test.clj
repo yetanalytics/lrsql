@@ -1,5 +1,5 @@
 (ns lrsql.util.util-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :refer [deftest testing is]]
             [clj-uuid]
             [xapi-schema.spec.regex :as xsr]
             [lrsql.test-support :refer [check-validate]]
