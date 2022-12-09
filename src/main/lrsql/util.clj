@@ -1,18 +1,20 @@
 (ns lrsql.util
   (:require [clj-uuid]
             [java-time]
-            [java-time.properties :as jt-props]
-            [clojure.spec.alpha :as s]
-            [clojure.java.io    :as io]
-            [cheshire.core      :as cjson]
-            [xapi-schema.spec :as xs]
+            [java-time.properties    :as jt-props]
+            [clojure.spec.alpha      :as s]
+            [clojure.tools.logging   :as log]
+            [clojure.java.io         :as io]
+            [cheshire.core           :as cjson]
+            [xapi-schema.spec        :as xs]
             [com.yetanalytics.squuid :as squuid]
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
             [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
             [lrsql.spec.common :as cs :refer [instant-spec]])
   (:import [java.util UUID]
            [java.time Instant]
-           [java.io StringReader PushbackReader ByteArrayOutputStream]))
+           [java.io StringReader PushbackReader ByteArrayOutputStream]
+           [java.nio.charset Charset]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
@@ -166,7 +168,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def utf8-charset
-  (java.nio.charset.Charset/forName "UTF-8"))
+  (Charset/forName "UTF-8"))
+
+(def default-charset
+  (Charset/defaultCharset))
+
+;; Log on compilation if the default charset is not UTF-8.
+;; That way the user will know if they have funky environment defaults and
+;; can adjust accordingly to avoid errors like Issue #230.
+(when (not= utf8-charset default-charset)
+  (log/warnf (str "The default charset is set to %s instead of %s, "
+                  "which may cause undefined behavior on Unicode characters. "
+                  "You can set your default charset using the LANG or "
+                  "LC_ALL environment variables.")
+             default-charset
+             utf8-charset))
 
 (s/fdef str->bytes
   :args (s/cat :s string?)
