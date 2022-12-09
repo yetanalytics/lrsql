@@ -24,5 +24,6 @@
     <maxVersion></maxVersion>
     <jdkPreference>preferJre</jdkPreference>
     <runtimeBits>64/32</runtimeBits>
+    <opt>-Dfile.encoding=UTF-8</opt>
   </jre>
 </launch4jConfig>

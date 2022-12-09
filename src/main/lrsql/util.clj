@@ -173,14 +173,12 @@
 (def default-charset
   (Charset/defaultCharset))
 
-;; Log on compilation if the default charset is not UTF-8.
-;; That way the user will know if they have funky environment defaults and
-;; can adjust accordingly to avoid errors like Issue #230.
+;; Log on compilation if the default charset is not UTF-8 (which can cause
+;; errors like in Issue #230). Should not happen in production thanks to
+;; setting -J-Dfile.encoding=UTF-8 but it's a fallback, especially for dev.
 (when (not= utf8-charset default-charset)
   (log/warnf (str "The default charset is set to %s instead of %s, "
-                  "which may cause undefined behavior on Unicode characters. "
-                  "You can set your default charset using the LANG or "
-                  "LC_ALL environment variables.")
+                  "which may cause undefined behavior on Unicode characters.")
              default-charset
              utf8-charset))
 
