@@ -5,7 +5,8 @@
             [clojure.tools.logging :as log]
             [buddy.core.codecs :refer [bytes->hex]]
             [buddy.core.nonce  :refer [random-bytes]]
-            [lrsql.spec.auth :as as])
+            [lrsql.spec.auth :as as]
+            [lrsql.util :as u])
   (:import [java.util Base64 Base64$Decoder]))
 
 ;; NOTE: Additional scopes may be implemented in the future.
@@ -49,8 +50,7 @@
   (when auth-header
     (try (let [^String auth-part   (second (re-matches #"Basic\s+(.*)"
                                                        auth-header))
-               ^String decoded     (String. (.decode decoder
-                                                     auth-part))
+               ^String decoded     (u/bytes->str (.decode decoder auth-part))
                [?api-key ?srt-key] (cstr/split decoded #":")]
            {:api-key    (if ?api-key ?api-key "")
             :secret-key (if ?srt-key ?srt-key "")})

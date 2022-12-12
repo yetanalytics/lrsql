@@ -1,11 +1,12 @@
 (ns lrsql.lrs-test
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
+  (:require [clojure.test   :refer [deftest testing is use-fixtures]]
             [clojure.string :as cstr]
             [com.stuartsierra.component     :as component]
             [com.yetanalytics.datasim.input :as sim-input]
             [com.yetanalytics.datasim.sim   :as sim]
             [com.yetanalytics.lrs.protocol  :as lrsp]
-            [lrsql.test-support :as support]))
+            [lrsql.test-support :as support]
+            [lrsql.util         :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init Test Config
@@ -48,19 +49,22 @@
         (update-in [:statement-result :statements]
                    (partial map remove-props)))))
 
+(defn- update-attachment-content
+  [att]
+  (update att :content u/bytes->str))
+
 (defn- string-result-attachment-content
   [get-ss-result]
   (update get-ss-result
           :attachments
-          (fn [atts]
-            (mapv
-             (fn [att]
-               (update att :content #(String. %)))
-             atts))))
+          (fn [atts] (mapv update-attachment-content atts))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Some Statement language maps include Chinese text, in order to test
+;; language maps with non-Unicode text.
 
 ;; Need to have a non-zero UUID version, or else xapi-schema gets angry
 
@@ -69,7 +73,8 @@
    "actor"  {"mbox"       "mailto:sample.foo@example.com"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
-             "display" {"en-US" "answered"}}
+             "display" {"en-US" "answered"
+                        "zh-CN" "回答了"}}
    "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
 
 (def stmt-1
@@ -78,11 +83,14 @@
              "name"       "Sample Agent 1"
              "objectType" "Agent"}
    "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
-             "display" {"en-US" "answered"}}
+             "display" {"en-US" "answered"
+                        "zh-CN" "回答了"}}
    "object" {"id"         "http://www.example.com/tincan/activities/multipart"
              "objectType" "Activity"
-             "definition" {"name"        {"en-US" "Multi Part Activity"}
-                           "description" {"en-US" "Multi Part Activity Description"}}}})
+             "definition" {"name"        {"en-US" "Multi Part Activity"
+                                          "zh-CN" "多元部分Activity"}
+                           "description" {"en-US" "Multi Part Activity Description"
+                                          "zh-CN" "多元部分Activity的简述"}}}})
 
 (def stmt-2
   {"id"     "00000000-0000-4000-8000-000000000002"
@@ -117,7 +125,8 @@
                                 {"mbox" "mailto:member3@example.com"
                                  "name" "Group Member 4"}]}
    "verb"        {"id"      "http://adlnet.gov/expapi/verbs/attended"
-                  "display" {"en-US" "attended"}}
+                  "display" {"en-US" "attended"
+                             "zh-CN" "参加了"}}
    "object"      {"id"         "http://www.example.com/meetings/occurances/34534"
                   "definition" {"extensions"  {"http://example.com/profiles/meetings/activitydefinitionextensions/room"
                                                {"name" "Kilby"
@@ -228,7 +237,7 @@
     (testing "statement ID queries"
       (is (= {:statement stmt-0}
              (get-ss lrs auth-ident {:voidedStatementId id-0} #{})))
-      (is (= {:statement stmt-0}
+      (is (= {:statement (update-in stmt-0 ["verb" "display"] dissoc "zh-CN")}
              (get-ss lrs
                      auth-ident
                      {:voidedStatementId id-0 :format "canonical"}
@@ -371,7 +380,7 @@
     (testing "querying with attachments"
       (testing "(multiple)"
         (is (= {:statement-result {:statements [stmt-4] :more ""}
-                :attachments      [(update stmt-4-attach :content #(String. %))]}
+                :attachments      [(update-attachment-content stmt-4-attach)]}
                (-> (get-ss lrs
                            auth-ident
                            {:activity act-4 :attachments true}
@@ -380,7 +389,7 @@
 
       (testing "(single)"
         (is (= {:statement    stmt-4
-                :attachments  [(update stmt-4-attach :content #(String. %))]}
+                :attachments  [(update-attachment-content stmt-4-attach)]}
                (-> (get-ss lrs
                            auth-ident
                            {:statementId (get stmt-4 "id") :attachments true}
@@ -399,8 +408,10 @@
       (is (= {:activity
               {"id"         "http://www.example.com/tincan/activities/multipart"
                "objectType" "Activity"
-               "definition" {"name"        {"en-US" "Multi Part Activity"}
-                             "description" {"en-US" "Multi Part Activity Description"}}}}
+               "definition" {"name"        {"en-US" "Multi Part Activity"
+                                            "zh-CN" "多元部分Activity"}
+                             "description" {"en-US" "Multi Part Activity Description"
+                                            "zh-CN" "多元部分Activity的简述"}}}}
              (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
 
     (component/stop sys')
@@ -428,7 +439,7 @@
       (testing "(multiple)"
         (testing "single attachment"
           (is (= {:statement-result {:statements [stmt-5 stmt-4] :more ""}
-                  :attachments      [(update stmt-4-attach :content #(String. %))]}
+                  :attachments      [(update-attachment-content stmt-4-attach)]}
                  (-> (get-ss lrs
                              auth-ident
                              {:activity act-4
@@ -440,8 +451,8 @@
           (is (= {:statement-result {:statements [stmt-6 stmt-5 stmt-4] :more ""}
                   ;; Compare attachments as a set, their order is different on the
                   ;; postgres backend
-                  :attachments      #{(update stmt-6-attach :content #(String. %))
-                                      (update stmt-4-attach :content #(String. %))}}
+                  :attachments #{(update-attachment-content stmt-6-attach)
+                                 (update-attachment-content stmt-4-attach)}}
                  (-> (get-ss lrs
                              auth-ident
                              {:attachments true}
@@ -451,8 +462,8 @@
 
       (testing "(single)"
         (is (= {:statement   stmt-6
-                :attachments #{(update stmt-6-attach :content #(String. %))
-                               (update stmt-4-attach :content #(String. %))}}
+                :attachments #{(update-attachment-content stmt-6-attach)
+                               (update-attachment-content stmt-4-attach)}}
                (-> (get-ss lrs
                            auth-ident
                            {:statementId id-6 :attachments true}
@@ -733,7 +744,7 @@
                  (get-ss lrs auth-ident-3 {:agent agt-1 :activity mp-obj} #{})))
           ;; Querying with attachments
           (is (= {:statement-result {:statements [stmt-4] :more ""}
-                  :attachments      [(update stmt-4-attach :content #(String. %))]}
+                  :attachments      [(update-attachment-content stmt-4-attach)]}
                  (string-result-attachment-content
                   (get-ss lrs auth-ident-1 {:agent agt-4 :attachments true} #{}))
                  (string-result-attachment-content
@@ -796,7 +807,7 @@
                   :attachments      []}
                  (get-ss lrs auth-ident-3 {} #{})))
           (is (= {:statement-result {:statements [stmt-4] :more ""}
-                  :attachments      [(update stmt-4-attach :content #(String. %))]}
+                  :attachments      [(update-attachment-content stmt-4-attach)]}
                  (string-result-attachment-content
                   (get-ss lrs auth-ident-3 {:attachments true} #{}))))
           ;; Query on agents
@@ -1092,7 +1103,7 @@
   [lrs auth-ident params]
   (-> (lrsp/-get-document lrs auth-ident params)
       (update :document dissoc :updated)
-      (update-in [:document :contents] #(String. %))))
+      (update-in [:document :contents] u/bytes->str)))
 
 (deftest test-document-fns
   (let [sys  (support/test-system)

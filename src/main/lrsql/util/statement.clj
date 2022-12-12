@@ -126,4 +126,4 @@
          (form-encode
           (cond-> query-params
             true   (assoc :from next-cursor)
-            ?agent (assoc :agent (String. (u/write-json ?agent))))))))
+            ?agent (assoc :agent (u/write-json-str ?agent)))))))
