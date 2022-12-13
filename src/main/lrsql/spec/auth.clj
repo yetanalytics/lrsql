@@ -23,7 +23,7 @@
       (fn [[username password]]
         (let [up   (str username ":" password)
               byts (.encode ^Base64$Encoder (Base64/getEncoder)
-                            (u/str->bytes up))]
+                            ^"[B" (u/str->bytes up))]
           (str "Basic " (u/bytes->str byts))))
       (sgen/tuple (sgen/fmap xs/into-str
                              (sgen/vector (sgen/char-alpha) 3 16))

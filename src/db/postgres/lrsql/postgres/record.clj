@@ -5,7 +5,8 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.postgres.data :as pd]
-            [clojure.string :refer [includes?]]))
+            [clojure.string :refer [includes?]])
+  (:import [org.postgresql.util PSQLException]))
 
 ;; Init HugSql functions
 
@@ -57,8 +58,8 @@
   bp/BackendUtil
   (-txn-retry? [_ ex]
     ;; only retry PGExceptions with a specified phrase
-    (and (instance? org.postgresql.util.PSQLException ex)
-         (let [msg (.getMessage ex)]
+    (and (instance? PSQLException ex)
+         (let [msg (.getMessage ^PSQLException ex)]
            (or (includes? msg "ERROR: deadlock detected")
                (includes? msg "ERROR: could not serialize access due to concurrent update")
                (includes? msg "ERROR: could not serialize access due to read/write dependencies among transactions")))))
