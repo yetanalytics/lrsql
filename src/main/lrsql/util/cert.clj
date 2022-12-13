@@ -40,10 +40,8 @@
         ^KeyPair key-pair             (.generateKeyPair kpg)
         ^PrivateKey private-key       (.getPrivate key-pair)
         ^java.util.Date from          (new java.util.Date)
-        ^java.util.Date to            (new java.util.Date
-                                           (-> from
-                                               .getTime
-                                               (+ (* days 86400000))))
+        ^java.lang.Long to-millis     (-> from .getTime (+ (* days 86400000)))
+        ^java.util.Date to            (new java.util.Date to-millis)
         ^CertificateValidity interval (new CertificateValidity from to)
         ^BigInteger sn                (new BigInteger 64 (new SecureRandom))
         ^X500Name owner               (new X500Name dn)

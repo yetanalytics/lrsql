@@ -96,7 +96,7 @@
               ::s/value {:db-type     "h2-mem"
                          :db-name     "foo"
                          :db-password "[REDACTED]"}}
-           (s/explain-data ::cs/database
+             (s/explain-data ::cs/database
                              (su/redact-config-vars
                               {:db-type     "h2-mem"
                                :db-name     "foo"

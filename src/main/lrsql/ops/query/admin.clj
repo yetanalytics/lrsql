@@ -18,7 +18,7 @@
   [bk tx input]
   (when-some [{account-id :id
                passhash   :passhash}
-            (bp/-query-account bk tx input)]
+              (bp/-query-account bk tx input)]
     {:account-id account-id
      :passhash   passhash}))
 

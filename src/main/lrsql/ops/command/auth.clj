@@ -32,7 +32,7 @@
   "Insert `input`, a seq of maps where each API key pair is associated
    with a different scope."
   [bk tx input]
-  (dorun (map (partial bp/-insert-credential-scope! bk tx) input)))
+  (run! (partial bp/-insert-credential-scope! bk tx) input))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credential Deletion
@@ -50,7 +50,7 @@
   "Delete the scopes associated with the credential in the `input` seq
    Returns `nil`."
   [bk tx input]
-  (dorun (map (partial bp/-delete-credential-scope! bk tx) input)))
+  (run! (partial bp/-delete-credential-scope! bk tx) input))
 
 (s/fdef delete-credential!
   :args (s/cat :bk as/credential-backend?

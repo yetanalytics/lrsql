@@ -1,37 +1,37 @@
 (ns lrsql.system.lrs
-  (:require [clojure.set :as cset]
-            [clojure.tools.logging :as log]
-            [com.stuartsierra.component :as cmp]
-            [next.jdbc :as jdbc]
+  (:require [clojure.set                   :as cset]
+            [clojure.tools.logging         :as log]
+            [com.stuartsierra.component    :as cmp]
+            [next.jdbc                     :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.admin.protocol :as adp]
-            [lrsql.init      :as init]
-            [lrsql.init.oidc :as oidc-init]
-            [lrsql.backend.protocol :as bp]
-            [lrsql.input.actor     :as agent-input]
-            [lrsql.input.activity  :as activity-input]
-            [lrsql.input.admin     :as admin-input]
-            [lrsql.input.auth      :as auth-input]
-            [lrsql.input.statement :as stmt-input]
-            [lrsql.input.document  :as doc-input]
-            [lrsql.ops.command.admin     :as admin-cmd]
-            [lrsql.ops.command.auth      :as auth-cmd]
-            [lrsql.ops.command.document  :as doc-cmd]
-            [lrsql.ops.command.statement :as stmt-cmd]
-            [lrsql.ops.query.actor     :as actor-q]
-            [lrsql.ops.query.activity  :as activ-q]
-            [lrsql.ops.query.admin     :as admin-q]
-            [lrsql.ops.query.auth      :as auth-q]
-            [lrsql.ops.query.document  :as doc-q]
-            [lrsql.ops.query.statement :as stmt-q]
-            [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config]]
-            [lrsql.util.auth      :as auth-util]
-            [lrsql.util.oidc      :as oidc-util]
-            [lrsql.util.statement :as stmt-util]
-            [lrsql.init.authority   :refer [make-authority-fn]]
-            [lrsql.util.concurrency :refer [with-rerunable-txn]])
-  (:import [java.time Instant]))
+            [lrsql.admin.protocol          :as adp]
+            [lrsql.init                    :as init]
+            [lrsql.init.oidc               :as oidc-init]
+            [lrsql.backend.protocol        :as bp]
+            [lrsql.input.actor             :as agent-input]
+            [lrsql.input.activity          :as activity-input]
+            [lrsql.input.admin             :as admin-input]
+            [lrsql.input.auth              :as auth-input]
+            [lrsql.input.statement         :as stmt-input]
+            [lrsql.input.document          :as doc-input]
+            [lrsql.ops.command.admin       :as admin-cmd]
+            [lrsql.ops.command.auth        :as auth-cmd]
+            [lrsql.ops.command.document    :as doc-cmd]
+            [lrsql.ops.command.statement   :as stmt-cmd]
+            [lrsql.ops.query.actor         :as actor-q]
+            [lrsql.ops.query.activity      :as activ-q]
+            [lrsql.ops.query.admin         :as admin-q]
+            [lrsql.ops.query.auth          :as auth-q]
+            [lrsql.ops.query.document      :as doc-q]
+            [lrsql.ops.query.statement     :as stmt-q]
+            [lrsql.spec.config             :as cs]
+            [lrsql.util.auth               :as auth-util]
+            [lrsql.util.oidc               :as oidc-util]
+            [lrsql.util.statement          :as stmt-util]
+            [lrsql.util                    :as util]
+            [lrsql.init.authority          :refer [make-authority-fn]]
+            [lrsql.system.util             :refer [assert-config]]
+            [lrsql.util.concurrency        :refer [with-rerunable-txn]]))
 
 (defn- lrs-conn
   "Get the connection pool from the LRS instance."
@@ -154,9 +154,7 @@
         (stmt-q/query-statements backend tx inputs ltags prefix))))
   (-consistent-through
     [_lrs _ctx _auth-identity]
-    ;; TODO: review, this should be OK because of transactions, but we may want
-    ;; to use the tx-inst pattern and set it to that
-    (.toString (Instant/now)))
+    (str (util/current-time)))
 
   lrsp/DocumentResource
   (-set-document

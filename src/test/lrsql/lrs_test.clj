@@ -233,7 +233,7 @@
                      :error
                      ex-data
                      :type))))))
-    
+
     (testing "statement ID queries"
       (is (= {:statement stmt-0}
              (get-ss lrs auth-ident {:voidedStatementId id-0} #{})))
@@ -598,8 +598,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Read Scope Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; TODO: If more special scopes are added, put the tests here
 
 ;; Make it look like 3-legged OAuth
 ;; See: https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#example-7

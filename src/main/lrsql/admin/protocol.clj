@@ -1,7 +1,5 @@
 (ns lrsql.admin.protocol)
 
-;; TODO: Async versions
-
 (defprotocol AdminAccountManager
   (-create-account [this username password]
     "Create a new account with `username` and `password`.")

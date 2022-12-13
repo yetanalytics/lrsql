@@ -153,25 +153,25 @@
         ;; Actor Inputs
         [actor-inputs stmt-actor-inputs]
         (insert-stmt-actor-inputs stmt-id
-                                       sub-stmt-act
-                                       sub-stmt-obj
-                                       nil ; No Authority for SubStatements
-                                       ?sub-stmt-inst
-                                       ?sub-stmt-team
-                                       {:act-enum  "SubActor"
-                                        :obj-enum  "SubObject"
-                                        :inst-enum "SubInstructor"
-                                        :team-enum "SubTeam"})
+                                  sub-stmt-act
+                                  sub-stmt-obj
+                                  nil ; No Authority for SubStatements
+                                  ?sub-stmt-inst
+                                  ?sub-stmt-team
+                                  {:act-enum  "SubActor"
+                                   :obj-enum  "SubObject"
+                                   :inst-enum "SubInstructor"
+                                   :team-enum "SubTeam"})
         ;; Activity Inputs
         [activity-inputs stmt-activity-inputs]
         (insert-stmt-activity-inputs stmt-id
-                                          sub-stmt-obj
-                                          ?sub-stmt-ctx-acts
-                                          {:obj-enum "SubObject"
-                                           :cat-enum "SubCategory"
-                                           :grp-enum "SubGrouping"
-                                           :prt-enum "SubParent"
-                                           :oth-enum "SubOther"})]
+                                     sub-stmt-obj
+                                     ?sub-stmt-ctx-acts
+                                     {:obj-enum "SubObject"
+                                      :cat-enum "SubCategory"
+                                      :grp-enum "SubGrouping"
+                                      :prt-enum "SubParent"
+                                      :oth-enum "SubOther"})]
     [actor-inputs activity-inputs stmt-actor-inputs stmt-activity-inputs]))
 
 (s/fdef insert-statement-input
@@ -440,7 +440,7 @@
         ?from       (when ?from (u/str->uuid ?from))
         ?since      (when ?since (u/time->uuid (u/str->time ?since)))
         ?until      (when ?until (u/time->uuid (u/str->time ?until)))
-        rel-actors? (boolean ?rel-actors?) 
+        rel-actors? (boolean ?rel-actors?)
         rel-activs? (boolean ?rel-activs?)
         asc?        (boolean ?asc?)
         format      (if ?format (keyword ?format) :exact)

@@ -18,8 +18,8 @@
       ?openid  (str "openid::" ?openid)
       ?account (let [{acc-name "name"
                       acc-page "homePage"}
-                    ?account]
-                (str "account::" acc-name "@" acc-page))
+                     ?account]
+                 (str "account::" acc-name "@" acc-page))
       :else    nil)))
 
 (defn actor->ifi-coll
