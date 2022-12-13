@@ -599,8 +599,6 @@
 ;; Statement Read Scope Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: If more special scopes are added, put the tests here
-
 ;; Make it look like 3-legged OAuth
 ;; See: https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#example-7
 (def auth-ident-oauth

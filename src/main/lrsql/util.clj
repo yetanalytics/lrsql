@@ -279,7 +279,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; IOFactory predicate taken from lrs.xapi.statements.attachment/content
-(s/fdef data->bytes ; TODO: Add more options if need be
+(s/fdef data->bytes
   :args (s/cat :data (s/or :string string?
                            :bytes bytes?
                            :io-factory #(satisfies? clojure.java.io/IOFactory %)))
