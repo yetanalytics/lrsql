@@ -1,7 +1,8 @@
 (ns lrsql.test-support-test
   (:require [clojure.test :refer [deftest testing is]]
             [lrsql.init.config :refer [read-config]]
-            [lrsql.test-support :refer [test-system fresh-h2-fixture]]))
+            [lrsql.test-support :refer [test-system fresh-h2-fixture]]
+            [lrsql.util :as u]))
 
 (defn- get-db-name
   [config]
@@ -11,7 +12,7 @@
   (testing "sets the db name to a random uuid"
     (is
      (uuid?
-      (java.util.UUID/fromString
+      (u/str->uuid
        (get-db-name
         (fresh-h2-fixture
          #(read-config :test-h2-mem)))))))

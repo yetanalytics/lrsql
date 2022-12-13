@@ -102,6 +102,11 @@
 (s/def ::base-uuid uuid?)
 (s/def ::squuid uuid?)
 
+(defn generate-uuid
+  "Generate a completely random v4 UUID."
+  []
+  (UUID/randomUUID))
+
 (s/fdef generate-squuid*
   :args (s/cat)
   :ret (s/keys :req-un [::timestamp ::base-uuid ::squuid]))
