@@ -43,7 +43,7 @@
 
 (defn get-configuration
   "Given webserver config, return an openid configuration if one is specified
-  via :oidc-issuer."
+   via :oidc-issuer."
   [{:keys [oidc-issuer
            oidc-verify-remote-issuer]
     :or {oidc-verify-remote-issuer true}
@@ -163,8 +163,8 @@
 
 (defn resolve-authority-claims
   "Given claims from an Access Token derive and add:
-  * :lrsql/resolved-client-id - a reliable client id to use in the authority
-    template."
+   * :lrsql/resolved-client-id - a reliable client id to use in the authority
+     template."
   [{:keys [aud
            azp
            client_id]
@@ -302,8 +302,8 @@
 
 (defn admin-ui-interceptors
   "Given webserver and LRS configs, return a vector of interceptors to apply to
-  Admin UI routes. If webserver oidc-client-id is not specified, returns an
-  empty vector."
+   Admin UI routes. If webserver oidc-client-id is not specified, returns an
+   empty vector."
   [{:keys [oidc-issuer
            oidc-client-id
            oidc-enable-local-admin]
@@ -341,10 +341,10 @@
 
 (defn interceptors
   "Given webserver and LRS configs, return a map with three (possibly empty)
-  vectors of interceptors:
-    :resource-interceptors - API-side OIDC token support.
-    :admin-interceptors - Validation and authn for admin resources.
-    :admin-ui-interceptors - Inject OIDC client configuration."
+   vectors of interceptors:
+    * `:resource-interceptors` - API-side OIDC token support.
+    * `:admin-interceptors` - Validation and authn for admin resources.
+    * `:admin-ui-interceptors` - Inject OIDC client configuration."
   [webserver-config
    lrs-config]
   (let [resource (resource-interceptors webserver-config)]
@@ -364,7 +364,7 @@
 
 (defn enable-local-admin?
   "Given a webserver configuration, determine if local admin account routes
-  should be enabled."
+   should be enabled."
   [{:keys [oidc-issuer
            oidc-enable-local-admin]}]
   (if (not-empty oidc-issuer)
