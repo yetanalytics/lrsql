@@ -28,6 +28,7 @@
             [lrsql.util.auth               :as auth-util]
             [lrsql.util.oidc               :as oidc-util]
             [lrsql.util.statement          :as stmt-util]
+            [lrsql.util                    :as util]
             [lrsql.init.authority          :refer [make-authority-fn]]
             [lrsql.system.util             :refer [assert-config]]
             [lrsql.util.concurrency        :refer [with-rerunable-txn]])
@@ -154,9 +155,7 @@
         (stmt-q/query-statements backend tx inputs ltags prefix))))
   (-consistent-through
     [_lrs _ctx _auth-identity]
-    ;; TODO: review, this should be OK because of transactions, but we may want
-    ;; to use the tx-inst pattern and set it to that
-    (.toString (Instant/now)))
+    (str (util/current-time)))
 
   lrsp/DocumentResource
   (-set-document
