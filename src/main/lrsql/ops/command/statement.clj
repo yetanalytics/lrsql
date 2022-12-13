@@ -134,12 +134,12 @@
       ;; Statement inserted; insert everything else
       (uuid? stmt-res)
       (do
-        (dorun (map (partial insert-actor! bk tx) actor-inputs))
-        (dorun (map (partial insert-activity! bk tx) activity-inputs))
-        (dorun (map (partial insert-stmt-actor! bk tx) stmt-actor-inputs))
-        (dorun (map (partial insert-stmt-activity! bk tx) stmt-activity-inputs))
-        (dorun (map (partial insert-stmt-stmt! bk tx) stmt-stmt-inputs))
-        (dorun (map (partial insert-attachment! bk tx) attachment-inputs))
+        (run! (partial insert-actor! bk tx) actor-inputs)
+        (run! (partial insert-activity! bk tx) activity-inputs)
+        (run! (partial insert-stmt-actor! bk tx) stmt-actor-inputs)
+        (run! (partial insert-stmt-activity! bk tx) stmt-activity-inputs)
+        (run! (partial insert-stmt-stmt! bk tx) stmt-stmt-inputs)
+        (run! (partial insert-attachment! bk tx) attachment-inputs)
         {:statement-id (u/uuid->str stmt-res)})
 
       ;; Equal statement exists; return nothing
