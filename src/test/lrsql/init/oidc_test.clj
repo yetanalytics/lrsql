@@ -20,15 +20,15 @@
 (deftest resolve-authority-claims-test
   (testing "resolves client id"
     (are [claims resolved-id]
-        (= (:lrsql/resolved-client-id
-            (resolve-authority-claims
-             (merge
+         (= (:lrsql/resolved-client-id
+             (resolve-authority-claims
+              (merge
               ;; other unrelated claims so spec is satisfied
-              {:scope "openid all"
-               :iss   "http://example.com/realm"
-               :sub   "1234"}
-              claims)))
-           resolved-id)
+               {:scope "openid all"
+                :iss   "http://example.com/realm"
+                :sub   "1234"}
+               claims)))
+            resolved-id)
       {:aud "foo"}         "foo"
       {:aud ["foo" "bar"]} "foo"
       {:aud       "foo"

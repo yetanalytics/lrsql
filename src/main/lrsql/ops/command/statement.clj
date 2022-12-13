@@ -74,8 +74,8 @@
 (defn- insert-activity!
   [bk tx input]
   (if-some [old-activ (some->> (select-keys input [:activity-iri])
-                                       (bp/-query-activity bk tx)
-                                       :payload)]
+                               (bp/-query-activity bk tx)
+                               :payload)]
     ;; add objectType for comparison in order to avoid unnecessary writes
     (let [new-activ (assoc (:payload input) "objectType" "Activity")]
       (when-not (= old-activ new-activ)
@@ -108,9 +108,9 @@
 
 (s/fdef insert-statement!
   :args (s/cat :bk (s/and statement-backend?
-                           actor-backend?
-                           activity-backend?
-                           attachment-backend?)
+                          actor-backend?
+                          activity-backend?
+                          attachment-backend?)
                :tx transaction?
                :inputs ss/insert-statement-input-spec)
   :ret (s/or :success             (s/keys :req-un [::statement-id])
@@ -122,13 +122,13 @@
    by `input`. Returns a map with the property `:statement-ids` on success,
    or one with the `:error` property on failure."
   [bk tx {:keys [statement-input
-                  actor-inputs
-                  activity-inputs
-                  attachment-inputs
-                  stmt-actor-inputs
-                  stmt-activity-inputs
-                  stmt-stmt-inputs]
-           :as input}]
+                 actor-inputs
+                 activity-inputs
+                 attachment-inputs
+                 stmt-actor-inputs
+                 stmt-activity-inputs
+                 stmt-stmt-inputs]
+          :as input}]
   (let [stmt-res (insert-statement!* bk tx statement-input)]
     (cond
       ;; Statement inserted; insert everything else

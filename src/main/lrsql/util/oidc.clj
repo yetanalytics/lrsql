@@ -84,8 +84,8 @@
   (when-let [token (:com.yetanalytics.pedestal-oidc/token ctx)]
     (let [{:keys [scope]
            :as   claims} (get-in ctx
-                               [:request
-                                :com.yetanalytics.pedestal-oidc/claims])]
+                                 [:request
+                                  :com.yetanalytics.pedestal-oidc/claims])]
       {:result
        (if-let [scopes (some-> scope
                                (parse-scope-claim

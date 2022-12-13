@@ -233,7 +233,7 @@
                      :error
                      ex-data
                      :type))))))
-    
+
     (testing "statement ID queries"
       (is (= {:statement stmt-0}
              (get-ss lrs auth-ident {:voidedStatementId id-0} #{})))
