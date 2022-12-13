@@ -31,8 +31,7 @@
             [lrsql.util                    :as util]
             [lrsql.init.authority          :refer [make-authority-fn]]
             [lrsql.system.util             :refer [assert-config]]
-            [lrsql.util.concurrency        :refer [with-rerunable-txn]])
-  (:import [java.time Instant]))
+            [lrsql.util.concurrency        :refer [with-rerunable-txn]]))
 
 (defn- lrs-conn
   "Get the connection pool from the LRS instance."
