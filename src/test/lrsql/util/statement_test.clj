@@ -2,6 +2,10 @@
   (:require [clojure.test :refer [deftest testing is]]
             [lrsql.util.statement :as su]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Fixtures
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (def sample-id
   "030e001f-b32a-4361-b701-039a3d9fceb1")
 
@@ -41,6 +45,10 @@
 (def sample-activity-dissoc
   {"id"         "http://www.example.com/tincan/activities/multipart"
    "objectType" "Activity"})
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest prepare-statement-test
   (let [lrs-authority     {"mbox"       "mailto:a@example.com"
