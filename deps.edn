@@ -74,9 +74,9 @@
   {:extra-paths ["src/db/postgres"]
    :extra-deps  {org.postgresql/postgresql {:mvn/version "42.5.1"}
                  com.kohlschutter.junixsocket/junixsocket-common
-                 {:mvn/version "2.5.1"}
+                 {:mvn/version "2.6.1"}
                  com.kohlschutter.junixsocket/junixsocket-native-common
-                 {:mvn/version "2.5.1"}}}
+                 {:mvn/version "2.6.1"}}}
   :bench
   {:extra-paths ["src/bench" "dev-resources"]
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
@@ -100,9 +100,9 @@
                  org.postgresql/postgresql     {:mvn/version "42.5.1"}
                  org.testcontainers/postgresql {:mvn/version "1.17.3"}
                  com.kohlschutter.junixsocket/junixsocket-common
-                 {:mvn/version "2.5.1"}
+                 {:mvn/version "2.6.1"}
                  com.kohlschutter.junixsocket/junixsocket-native-common
-                 {:mvn/version "2.5.1"}
+                 {:mvn/version "2.6.1"}
                  ;; Other test deps
                  org.clojure/test.check        {:mvn/version "1.0.0"}
                  babashka/babashka.curl        {:mvn/version "0.0.3"}
