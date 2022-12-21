@@ -2,4 +2,4 @@
 
 MACHINE=`bin/machine.sh`
 
-runtimes/$MACHINE/bin/java -J-Dfile.encoding=UTF-8 -server -cp lrsql.jar lrsql.postgres.main $@
+runtimes/$MACHINE/bin/java -Dfile.encoding=UTF-8 -server -cp lrsql.jar lrsql.postgres.main $@
