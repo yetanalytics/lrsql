@@ -14,7 +14,7 @@
   [jsn]
   (doto (PGobject.)
     (.setType "json")
-    (.setValue (String. (u/write-json jsn)))))
+    (.setValue (u/write-json-str jsn))))
 
 (defn- pg-object->json
   [^PGobject pg-obj]

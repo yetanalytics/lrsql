@@ -5,7 +5,8 @@
             [clojure.tools.logging :as log]
             [buddy.core.codecs :refer [bytes->hex]]
             [buddy.core.nonce  :refer [random-bytes]]
-            [lrsql.spec.auth :as as])
+            [lrsql.spec.auth :as as]
+            [lrsql.util :as u])
   (:import [java.util Base64 Base64$Decoder]))
 
 ;; NOTE: Additional scopes may be implemented in the future.
@@ -14,7 +15,8 @@
   {"all"                  :scope/all
    "all/read"             :scope/all.read
    "statements/read"      :scope/statements.read
-   "statements/write"     :scope/statements.write})
+   "statements/write"     :scope/statements.write
+   "statements/read/mine" :scope/statements.read.mine})
 
 (def scope-kw-str-map
   (cset/map-invert scope-str-kw-map))
@@ -48,8 +50,7 @@
   (when auth-header
     (try (let [^String auth-part   (second (re-matches #"Basic\s+(.*)"
                                                        auth-header))
-               ^String decoded     (String. (.decode decoder
-                                                     auth-part))
+               ^String decoded     (u/bytes->str (.decode decoder auth-part))
                [?api-key ?srt-key] (cstr/split decoded #":")]
            {:api-key    (if ?api-key ?api-key "")
             :secret-key (if ?srt-key ?srt-key "")})
@@ -74,47 +75,82 @@
 (s/def ::path-info string?)
 (s/def ::request (s/keys :req-un [::request-method ::path-info]))
 
-;; Need separate spec since the one in spec.auth is for the string versions.
-(s/def ::scope #{:scope/all
-                 :scope/all.read
-                 :scope/statements.read
-                 :scope/statements.write})
+(s/def ::scope as/keyword-scopes)
 (s/def ::scopes (s/coll-of ::scope :kind set?))
 
 (s/def ::result boolean?)
 
-(s/fdef authorize-action
+(s/fdef most-permissive-statement-read-scope
+  :args (s/cat :auth-identity (s/keys :req-un [::scopes]))
+  :ret (s/nilable as/keyword-scopes))
+
+(defn most-permissive-statement-read-scope
+  "Given a read action on statements, return the most permissive scope
+   contained in `scopes`. Returns `nil` if no scopes are available."
+  [{:keys [scopes] :as _auth-identity}]
+  (condp #(contains? %2 %1) scopes
+    :scope/all :scope/all
+    :scope/all.read :scope/all.read
+    :scope/statements.read :scope/statements.read
+    :scope/statements.read.mine :scope/statements.read.mine
+    nil))
+
+(s/fdef most-permissive-statement-write-scope
+  :args (s/cat :auth-identity (s/keys :req-un [::scopes]))
+  :ret (s/nilable as/keyword-scopes))
+
+(defn most-permissive-statement-write-scope
+  "Given a write action on statements, return the most permissive scope
+   contained in `scopes`. Returns `nil` if no scopes are available."
+  [{:keys [scopes] :as _auth-identity}]
+  (condp #(contains? %2 %1) scopes
+    :scope/all :scope/all
+    :scope/statements.write :scope/statements.write
+    nil))
+
+(defn- log-scope-error
+  "Log an error if the scope fail happened due to non-existent scopes (as
+   opposed to authorization denial)."
+  [scopes]
+  (when-some [err (s/explain-data ::scopes scopes)]
+    (log/errorf "Scope set included unimplemented or non-existent scopes.\nErrors:\n%s"
+                (with-out-str (s/explain-out err)))))
+
+(s/fdef authorized-action?
   :args (s/cat :ctx           (s/keys :req-un [::request])
                :auth-identity (s/keys :req-un [::scopes]))
-  :ret (s/keys :req-un [::result]))
+  :ret boolean?)
 
-(defn authorize-action
-  "Given a pedestal context and an auth identity, authorize or deny."
+(defn authorized-action?
+  "Given a pedestal context and an auth identity, return `true` and authorize
+   if `scopes` are valid for the request's type (read vs. write) and resource
+   path, return `false` and deny otherwise."
   [{{:keys [request-method path-info]} :request
     :as _ctx}
    {:keys [_prefix ; useless without tenancy
            scopes
            _auth
            _agent]
-    :as _auth-identity}]
-  {:result
-   (boolean
-    (or
-     ;; `all` scope: everything is permitted
-     (contains? scopes :scope/all)
-     ;; `all/read` scope: only GET/HEAD requests permitted
-     (and (contains? scopes :scope/all.read)
-          (#{:get :head} request-method))
-     ;; `statements/read` and `statements/write`: path needs to be for stmts
-     (and (not-empty path-info)
-          (cstr/ends-with? path-info "statements")
-          (or (and (#{:get :head} request-method)
-                   (contains? scopes :scope/statements.read))
-              (and (#{:put :post} request-method)
-                   (contains? scopes :scope/statements.write))))
-     ;; Invalid scopes
-     (do
-       (when-some [err (s/explain-data ::scopes scopes)]
-         (log/errorf "Scope errors (perhaps you had unimplemented scopes):\n%s"
-                     (with-out-str (s/explain-out err))))
-       false)))})
+    :as auth-identity}]
+  (cond
+    ;; /statements path
+    (some-> path-info not-empty (cstr/ends-with? "statements"))
+    (cond
+      (#{:get :head} request-method)
+      (some? (most-permissive-statement-read-scope auth-identity))
+      (#{:put :post} request-method) ; No statement delete implemented
+      (some? (most-permissive-statement-write-scope auth-identity))
+      :else
+      (do (log-scope-error scopes)
+          false))
+    ;; all other paths (e.g. /about, /activities)
+    :else
+    (cond
+      (#{:get :head} request-method)
+      (or (contains? scopes :scope/all)
+          (contains? scopes :scope/all.read))
+      (#{:put :post :delete} request-method)
+      (contains? scopes :scope/all)
+      :else
+      (do (log-scope-error scopes)
+          false))))

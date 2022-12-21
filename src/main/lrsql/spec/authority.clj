@@ -1,7 +1,8 @@
 (ns lrsql.spec.authority
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec :as xs]
-            [lrsql.spec.common :as c]))
+            [lrsql.spec.common :as c]
+            [lrsql.spec.actor :as hs-actor]))
 
 (s/def ::authority-url ::xs/irl)
 (s/def ::cred-id ::c/primary-key)
@@ -16,3 +17,9 @@
   (s/fspec
    :args (s/cat :context-map ::context-map)
    :ret ::xs/agent))
+
+(def query-authority-spec
+  :statement/authority)
+
+(s/def ::authority-ifis
+  (s/coll-of ::hs-actor/actor-ifi :min-count 1))

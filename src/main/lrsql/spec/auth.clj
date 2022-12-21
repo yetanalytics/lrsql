@@ -6,7 +6,8 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :as c]
             [lrsql.spec.admin :as ads]
-            [lrsql.spec.authority :as ats])
+            [lrsql.spec.authority :as ats]
+            [lrsql.util :as u])
   (:import [java.util Base64 Base64$Encoder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -21,8 +22,9 @@
     #(sgen/fmap
       (fn [[username password]]
         (let [up   (str username ":" password)
-              byts (.encode ^Base64$Encoder (Base64/getEncoder) (.getBytes up))]
-          (str "Basic " (String. byts))))
+              byts (.encode ^Base64$Encoder (Base64/getEncoder)
+                            ^"[B" (u/str->bytes up))]
+          (str "Basic " (u/bytes->str byts))))
       (sgen/tuple (sgen/fmap xs/into-str
                              (sgen/vector (sgen/char-alpha) 3 16))
                   (sgen/fmap xs/into-str
@@ -40,16 +42,24 @@
 ;; Axioms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def string-scopes
+  #{"all"
+    "all/read"
+    "statements/read"
+    "statements/read/mine"
+    "statements/write"})
+
+(def keyword-scopes
+  #{:scope/all
+    :scope/all.read
+    :scope/statements.read
+    :scope/statements.read.mine
+    :scope/statements.write})
+
 (s/def ::api-key string?)
 (s/def ::secret-key string?)
 
-(s/def ::account-id ::ats/account-id)
-
-(s/def ::scope
-  #{"statements/write"
-    "statements/read"
-    "all/read"
-    "all"})
+(s/def ::scope string-scopes)
 
 (s/def ::ids
   (s/keys :req-un [::ats/cred-id ::ats/account-id]))

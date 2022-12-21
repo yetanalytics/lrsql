@@ -9,6 +9,7 @@
             [lrsql.spec.activity   :as hs-activ]
             [lrsql.spec.actor      :as hs-actor]
             [lrsql.spec.attachment :as hs-attach]
+            [lrsql.spec.authority  :as hs-auth]
             [lrsql.util.statement :refer [prepare-statement]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -182,7 +183,8 @@
                    ::query-params
                    ::more-url-prefix]
           :opt-un [::hs-actor/actor-ifi
-                   ::hs-actor/activity-iri
+                   ::hs-activ/activity-iri
+                   ::hs-auth/authority-ifis
                    ::verb-iri
                    ::registration
                    ::related-actors?

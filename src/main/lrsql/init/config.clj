@@ -46,16 +46,18 @@
         {:keys [database
                 connection
                 lrs
-                webserver]} (-> (str config-path-prefix "config.edn")
-                                io/resource
-                                (aero/read-config
-                                 {:profile  profile
-                                  :resolver resolver})
-                                merge-user-config)]
+                webserver
+                logger]} (-> (str config-path-prefix "config.edn")
+                             io/resource
+                             (aero/read-config
+                              {:profile  profile
+                               :resolver resolver})
+                             merge-user-config)]
     ;; form the final config the app will use
     {:connection (assoc connection :database database)
      :lrs        (assoc lrs :stmt-url-prefix (:url-prefix webserver))
-     :webserver  webserver}))
+     :webserver  webserver
+     :logger     logger}))
 
 (def read-config
   "Memoized version of `read-config*`."

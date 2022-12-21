@@ -86,48 +86,48 @@
                       config]
   component/Lifecycle
   (start
-   [this]
-   (assert-config ::cs/webserver "webserver" config)
-   (if server
-     (do (log/info "Webserver already started; do nothing.")
-         (log/debugf "Server map: %s" (redact-config-vars server))
-         this)
-     (if lrs
-       (let [service (or service ;; accept passed in
-                         (service-map lrs config))
-             server  (-> service
-                         i/xapi-default-interceptors
-                         http/create-server
-                         http/start)]
-         ;; Logging
-         (let [{{ssl-port :ssl-port} ::http/container-options
-                http-port ::http/port
-                host ::http/host} service]
-           (if http-port
-             (log/infof "Starting new webserver at host %s, HTTP port %s, and SSL port %s"
-                        host
-                        http-port
-                        ssl-port)
-             (log/infof "Starting new webserver at host %s and SSL port %s"
-                        host
-                        ssl-port)))
-         (log/info logo)
-         (log/debugf "Server map: %s" (redact-config-vars server))
-         ;; Return new webserver
-         (assoc this
-                :service service
-                :server server))
-       (throw (ex-info "LRS Required to build service!"
-                       {:type ::start-no-lrs
-                        :webserver this})))))
+    [this]
+    (assert-config ::cs/webserver "webserver" config)
+    (if server
+      (do (log/info "Webserver already started; do nothing.")
+          (log/debugf "Server map: %s" (redact-config-vars server))
+          this)
+      (if lrs
+        (let [service (or service ;; accept passed in
+                          (service-map lrs config))
+              server  (-> service
+                          i/xapi-default-interceptors
+                          http/create-server
+                          http/start)]
+          ;; Logging
+          (let [{{ssl-port :ssl-port} ::http/container-options
+                 http-port ::http/port
+                 host ::http/host} service]
+            (if http-port
+              (log/infof "Starting new webserver at host %s, HTTP port %s, and SSL port %s"
+                         host
+                         http-port
+                         ssl-port)
+              (log/infof "Starting new webserver at host %s and SSL port %s"
+                         host
+                         ssl-port)))
+          (log/info logo)
+          (log/debugf "Server map: %s" (redact-config-vars server))
+          ;; Return new webserver
+          (assoc this
+                 :service service
+                 :server server))
+        (throw (ex-info "LRS Required to build service!"
+                        {:type ::start-no-lrs
+                         :webserver this})))))
   (stop
-   [this]
-   (if server
-     (do (log/info "Stopping webserver...")
-         (http/stop server)
-         (assoc this
-                :service nil
-                :server nil
-                :lrs nil))
-     (do (log/info "Webserver already stopped; do nothing.")
-         this))))
+    [this]
+    (if server
+      (do (log/info "Stopping webserver...")
+          (http/stop server)
+          (assoc this
+                 :service nil
+                 :server nil
+                 :lrs nil))
+      (do (log/info "Webserver already stopped; do nothing.")
+          this))))

@@ -8,13 +8,17 @@
             [lrsql.test-support :as support]
             [lrsql.util :as u]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (support/instrument-lrsql)
 
 (use-fixtures :each support/fresh-db-fixture)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Test content
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def content-type {"Content-Type" "application/json"})
 
@@ -46,7 +50,9 @@
                {:headers headers
                 :body    body}))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro is-err-code
   "Test that `expr` throws an exception with the correct HTTP error `code`."
@@ -62,9 +68,9 @@
         ;; Seed information
         {:keys [api-key-default
                 api-secret-default]} (get-in sys' [:lrs :config])
-        seed-body (String. (u/write-json
-                            {"username" api-key-default
-                             "password" api-secret-default}))
+        seed-body (u/write-json-str
+                   {"username" api-key-default
+                    "password" api-secret-default})
         seed-jwt  (-> (login-account content-type seed-body)
                       :body
                       u/parse-json
@@ -72,8 +78,8 @@
         seed-auth {"Authorization" (str "Bearer " seed-jwt)}
         ;; New data information
         headers  (merge content-type seed-auth)
-        req-body (String. (u/write-json {"username" "myname"
-                                         "password" "swordfish"}))]
+        req-body (u/write-json-str {"username" "myname"
+                                    "password" "swordfish"})]
     (testing "seed jwt retrieved"
       ;; Sanity check that the test credentials are in place
       (is (some? seed-jwt)))
@@ -121,14 +127,12 @@
         (let [bad-body "{\"username\": \"foo\", \"password\": bar\"}"]
           (is-err-code (login-account content-type bad-body) 400)))
       ;; Other errors
-      (let [bad-body (String. (u/write-json
-                               {"username" "foo"
-                                "password" "swordfish"}))]
+      (let [bad-body (u/write-json-str {"username" "foo"
+                                        "password" "swordfish"})]
         ;; Bad User 401
         (is-err-code (login-account content-type bad-body) 401))
-      (let [bad-body (String. (u/write-json
-                               {"username" "myname"
-                                "password" "badpass"}))]
+      (let [bad-body (u/write-json-str {"username" "myname"
+                                        "password" "badpass"})]
         ;; Bad Pass 401
         (is-err-code (login-account content-type bad-body) 401))
       ;; Bad Request
@@ -147,7 +151,7 @@
                          (get "account-id"))
             del-auth {"Authorization" (str "Bearer " del-jwt)}
             del-head (merge content-type del-auth)
-            del-body (String. (u/write-json {"account-id" del-id}))]
+            del-body (u/write-json-str {"account-id" del-id})]
         (let [delete-res (delete-account headers del-body)]
           (is (= 200 (:status delete-res)))
           (is (= del-id (-> delete-res
@@ -167,14 +171,14 @@
             (is-err-code (curl/post
                           "http://0.0.0.0:8080/admin/creds"
                           {:headers del-head
-                           :body    (String. (u/write-json {"scopes" ss}))})
+                           :body    (u/write-json-str {"scopes" ss})})
                          401)
             (is-err-code (curl/put
                           "http://0.0.0.0:8080/admin/creds"
                           {:headers del-head
-                           :body    (String. (u/write-json {"api-key"    pk
-                                                            "secret-key" sk
-                                                            "scopes"     ss}))})
+                           :body    (u/write-json-str {"api-key"    pk
+                                                       "secret-key" sk
+                                                       "scopes"     ss})})
                          401)
             (is-err-code (curl/get
                           "http://0.0.0.0:8080/admin/creds"
@@ -183,8 +187,8 @@
             (is-err-code (curl/delete
                           "http://0.0.0.0:8080/admin/creds"
                           {:headers del-head
-                           :body    (String. (u/write-json {"api-key"    pk
-                                                            "secret-key" sk}))})
+                           :body    (u/write-json-str {"api-key"    pk
+                                                       "secret-key" sk})})
                          401)))))
     (component/stop sys')))
 
@@ -193,9 +197,9 @@
         sys' (component/start sys)
         jwt  (-> (curl/post "http://0.0.0.0:8080/admin/account/login"
                             {:headers content-type
-                             :body    (String. (u/write-json
-                                                {"username" "username"
-                                                 "password" "password"}))})
+                             :body    (u/write-json-str
+                                       {"username" "username"
+                                        "password" "password"})})
                  :body
                  u/parse-json
                  (get "json-web-token"))
@@ -205,8 +209,8 @@
       (let [{:keys [status body]}
             (curl/post "http://0.0.0.0:8080/admin/creds"
                        {:headers hdr
-                        :body (String. (u/write-json
-                                        {"scopes" ["all" "all/read"]}))})
+                        :body (u/write-json-str
+                               {"scopes" ["all" "all/read"]})})
             {:strs [api-key secret-key scopes]}
             (u/parse-json body)]
         (is (= 200 status))
@@ -229,18 +233,19 @@
                        first)))))
         (testing "and updating"
           (let [req-scopes
-                ["all/read" "statements/read"]
+                ["all/read" "statements/read" "statements/read/mine"]
                 {:keys [status body]}
                 (curl/put
                  "http://0.0.0.0:8080/admin/creds"
                  {:headers hdr
-                  :body    (String. (u/write-json {"api-key"    api-key
-                                                   "secret-key" secret-key
-                                                   "scopes"     req-scopes}))})
+                  :body    (u/write-json-str {"api-key"    api-key
+                                              "secret-key" secret-key
+                                              "scopes"     req-scopes})})
                 {:strs [scopes]}
                 (u/parse-json body)]
             (is (= 200 status))
-            (is (= #{"all/read" "statements/read"} (set scopes)))))
+            (is (= #{"all/read" "statements/read" "statements/read/mine"}
+                   (set scopes)))))
         (testing "and reading after updating"
           (let [{:keys [status body]}
                 (curl/get
@@ -256,29 +261,31 @@
             (is (= 200 status))
             (is (= api-key api-key'))
             (is (= secret-key secret-key'))
-            (is (= #{"all/read" "statements/read"} (set scopes')))))
+            (is (= #{"all/read" "statements/read" "statements/read/mine"}
+                   (set scopes')))))
         (testing "and no-op scope update"
           (let [req-scopes
-                ["all/read" "statements/read"]
+                ["all/read" "statements/read" "statements/read/mine"]
                 {:keys [status body]}
                 (curl/put
                  "http://0.0.0.0:8080/admin/creds"
                  {:headers hdr
-                  :body   (String. (u/write-json {"api-key"    api-key
-                                                  "secret-key" secret-key
-                                                  "scopes"     req-scopes}))})
+                  :body   (u/write-json-str {"api-key"    api-key
+                                             "secret-key" secret-key
+                                             "scopes"     req-scopes})})
                 {:strs [scopes]}
                 (u/parse-json body)]
             (is (= 200 status))
-            (is (= #{"all/read" "statements/read"} (set scopes)))))
+            (is (= #{"all/read" "statements/read" "statements/read/mine"}
+                   (set scopes)))))
         (testing "and deleting all scopes"
           (let [{:keys [status body]}
                 (curl/put
                  "http://0.0.0.0:8080/admin/creds"
                  {:headers hdr
-                  :body   (String. (u/write-json {"api-key"    api-key
-                                                  "secret-key" secret-key
-                                                  "scopes"     []}))})
+                  :body   (u/write-json-str {"api-key"    api-key
+                                             "secret-key" secret-key
+                                             "scopes"     []})})
                 {:strs [scopes]}
                 (u/parse-json body)]
             (is (= 200 status))
@@ -288,8 +295,8 @@
                 (curl/delete
                  "http://0.0.0.0:8080/admin/creds"
                  {:headers hdr
-                  :body    (String. (u/write-json {"api-key"    api-key
-                                                   "secret-key" secret-key}))})]
+                  :body    (u/write-json-str {"api-key"    api-key
+                                              "secret-key" secret-key})})]
             (is (= 200 status))))
         (testing "and reading after deletion"
           (let [{:keys [status body]}

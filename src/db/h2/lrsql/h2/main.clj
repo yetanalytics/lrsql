@@ -13,7 +13,7 @@
   [{:keys [persistent?
            override-profile]}]
   (let [profile (or override-profile
-                  (if persistent? :test-h2 :test-h2-mem))]
+                    (if persistent? :test-h2 :test-h2-mem))]
     (component/start (system/system h2-backend profile))))
 
 (defn -main

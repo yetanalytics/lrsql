@@ -7,8 +7,8 @@
             [lrsql.system :as system]
             [lrsql.h2.record :as hr]
             [lrsql.sqlite.record :as sr]
-            [lrsql.postgres.record :as pr])
-  (:import [java.util UUID]))
+            [lrsql.postgres.record :as pr]
+            [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; LRS test helpers
@@ -64,7 +64,7 @@
 
 (defn fresh-h2-fixture
   [f]
-  (let [id-str (str (UUID/randomUUID))
+  (let [id-str (u/uuid->str (u/generate-uuid))
         h2-cfg (-> (read-config :test-h2-mem)
                    (assoc-in [:connection :database :db-name] id-str))]
     (with-redefs
@@ -90,7 +90,7 @@
 
 (defn fresh-postgres-fixture
   [f]
-  (let [id-str (str (UUID/randomUUID))
+  (let [id-str (u/uuid->str (u/generate-uuid))
         pg-cfg (let [{{{:keys [db-type db-host db-port
                                test-db-version]}
                        :database} :connection :as raw-cfg}
