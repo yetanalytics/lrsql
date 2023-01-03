@@ -76,11 +76,10 @@
      {:creds           true
       :allowed-origins (fn [origin]
                          (or allow-all-origins
-                             (let [allowed-list
+                             (some #(= origin %)
                                    (or allowed-origins
                                        [(format "http://%s:%s" http-host http-port)
-                                        (format "https://%s:%s" http-host ssl-port)])]
-                               (some #(= origin %) allowed-list))))}
+                                        (format "https://%s:%s" http-host ssl-port)]))))}
      ::http/container-options
      {:h2c?         (and enable-http enable-http2)
       :h2?          enable-http2
