@@ -38,7 +38,7 @@
   (io/resource (str config-path-prefix include)))
 
 (defmethod aero/reader 'array
-  [{:keys [profile] :as opts} tag value]
+  [_ _ value]
   (if (empty? value)
     nil
     (split value #",")))
