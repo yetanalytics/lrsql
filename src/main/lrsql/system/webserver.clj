@@ -43,7 +43,6 @@
         (oidc/init
          config
          (:config lrs))
-
         ;; Make routes - the lrs error interceptor is appended to the
         ;; start to all lrs routes
         routes
@@ -61,7 +60,16 @@
                :enable-admin-ui       enable-admin-ui
                :enable-account-routes enable-local-admin
                :oidc-interceptors     oidc-admin-interceptors
-               :oidc-ui-interceptors  oidc-admin-ui-interceptors}))]
+               :oidc-ui-interceptors  oidc-admin-ui-interceptors}))
+        ;; Build allowed-origins list
+        allowed-list
+        (or allowed-origins
+            [(if (= http-port 80)
+               (format "http://%s" http-host)
+               (format "http://%s:%s" http-host http-port))
+             (if (= ssl-port 443)
+               (format "https://%s" http-host)
+               (format "https://%s:%s" http-host ssl-port))])]
     {:env                      :prod
      ::http/routes             routes
      ;; only serve assets if the admin ui is enabled
@@ -76,10 +84,7 @@
      {:creds           true
       :allowed-origins (fn [origin]
                          (or allow-all-origins
-                             (some #(= origin %)
-                                   (or allowed-origins
-                                       [(format "http://%s:%s" http-host http-port)
-                                        (format "https://%s:%s" http-host ssl-port)]))))}
+                             (some #(= origin %) allowed-list)))}
      ::http/container-options
      {:h2c?         (and enable-http enable-http2)
       :h2?          enable-http2
