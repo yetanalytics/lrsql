@@ -61,15 +61,14 @@
                :enable-account-routes enable-local-admin
                :oidc-interceptors     oidc-admin-interceptors
                :oidc-ui-interceptors  oidc-admin-ui-interceptors}))
-        ;; Build allowed-origins list
+        ;; Build allowed-origins list. Add without ports as well for
+        ;; default ports
         allowed-list
         (or allowed-origins
-            [(if (= http-port 80)
-               (format "http://%s" http-host)
-               (format "http://%s:%s" http-host http-port))
-             (if (= ssl-port 443)
-               (format "https://%s" http-host)
-               (format "https://%s:%s" http-host ssl-port))])]
+            (cond-> [(format "http://%s:%s" http-host http-port)
+                     (format "https://%s:%s" http-host ssl-port)]
+              (= http-port 80) (conj (format "http://%s" http-host))
+              (= ssl-port 443) (conj (format "https://%s" http-host))))]
     {:env                      :prod
      ::http/routes             routes
      ;; only serve assets if the admin ui is enabled
