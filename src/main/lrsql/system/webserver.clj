@@ -5,6 +5,7 @@
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
+            [clojure.core :refer [format]]
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.init.oidc :as oidc]
             [lrsql.spec.config :as cs]
@@ -24,7 +25,9 @@
                 url-prefix
                 key-password
                 enable-admin-ui
-                enable-stmt-html]
+                enable-stmt-html
+                allow-all-origins
+                allowed-origins]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway}
         config
@@ -71,7 +74,13 @@
      ::i/enable-statement-html enable-stmt-html
      ::http/allowed-origins
      {:creds           true
-      :allowed-origins (constantly true)}
+      :allowed-origins (fn [origin]
+                         (or allow-all-origins
+                             (let [allowed-list
+                                   (or allowed-origins
+                                       [(format "http://%s:%s" http-host http-port)
+                                        (format "https://%s:%s" http-host ssl-port)])]
+                               (some #(= origin %) allowed-list))))}
      ::http/container-options
      {:h2c?         (and enable-http enable-http2)
       :h2?          enable-http2
