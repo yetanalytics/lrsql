@@ -5,6 +5,7 @@
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
+            [clojure.core :refer [format]]
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.init.oidc :as oidc]
             [lrsql.spec.config :as cs]
@@ -24,7 +25,9 @@
                 url-prefix
                 key-password
                 enable-admin-ui
-                enable-stmt-html]
+                enable-stmt-html
+                allow-all-origins
+                allowed-origins]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway}
         config
@@ -40,7 +43,6 @@
         (oidc/init
          config
          (:config lrs))
-
         ;; Make routes - the lrs error interceptor is appended to the
         ;; start to all lrs routes
         routes
@@ -58,7 +60,15 @@
                :enable-admin-ui       enable-admin-ui
                :enable-account-routes enable-local-admin
                :oidc-interceptors     oidc-admin-interceptors
-               :oidc-ui-interceptors  oidc-admin-ui-interceptors}))]
+               :oidc-ui-interceptors  oidc-admin-ui-interceptors}))
+        ;; Build allowed-origins list. Add without ports as well for
+        ;; default ports
+        allowed-list
+        (or allowed-origins
+            (cond-> [(format "http://%s:%s" http-host http-port)
+                     (format "https://%s:%s" http-host ssl-port)]
+              (= http-port 80) (conj (format "http://%s" http-host))
+              (= ssl-port 443) (conj (format "https://%s" http-host))))]
     {:env                      :prod
      ::http/routes             routes
      ;; only serve assets if the admin ui is enabled
@@ -71,7 +81,9 @@
      ::i/enable-statement-html enable-stmt-html
      ::http/allowed-origins
      {:creds           true
-      :allowed-origins (constantly true)}
+      :allowed-origins (fn [origin]
+                         (or allow-all-origins
+                             (some #(= origin %) allowed-list)))}
      ::http/container-options
      {:h2c?         (and enable-http enable-http2)
       :h2?          enable-http2

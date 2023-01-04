@@ -9,6 +9,8 @@
  :ssl-port                  8443
  :http-host                 "0.0.0.0"
  :http-port                 8080
+ :allow-all-origins         false
+ :allowed-origins           nil
  :url-prefix                "/xapi"
  :enable-admin-ui           true
  :enable-stmt-html          true
