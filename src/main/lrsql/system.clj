@@ -8,7 +8,8 @@
 
 (defn system
   "Return a lrsql system with configuration specified by the `profile`
-   keyword."
+   keyword. Optional kwarg ``conf-overrides`` takes a map where the key is a vec
+   of a key location in config map, and the value is an override."
   [backend profile & {:keys [conf-overrides]}]
   (let [profile-config
         (read-config profile)

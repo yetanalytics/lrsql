@@ -58,8 +58,10 @@
 
 ;; Returns `{}` as default - need to be used in a fixture
 (defn test-system
-  "Create a lrsql system specifically for tests"
-  []
+  "Create a lrsql system specifically for tests. Optional kwarg `conf-overrides`
+   takes a map where the key is a vec of a key location in config map, and the
+   value is an override."
+  [& {:keys [_]}]
   {})
 
 (defn fresh-h2-fixture
