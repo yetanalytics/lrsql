@@ -73,7 +73,7 @@
     (testing "create account with default CORS check success"
       (let [good-cors-headers
             (merge headers {"Origin" "http://0.0.0.0:8080"})
-            {:keys [status body] :as response}
+            {:keys [status body]}
             (create-account good-cors-headers req-body)
             edn-body       (u/parse-json body)]
         (is (= 200 status))
@@ -111,7 +111,7 @@
     (testing "create account with custom CORS check success"
       (let [good-cors-headers
             (merge headers {"Origin" "http://www.yetanalytics.com"})
-            {:keys [status body] :as response}
+            {:keys [status body]}
             (create-account good-cors-headers req-body)
             edn-body       (u/parse-json body)]
         (is (= 200 status))
