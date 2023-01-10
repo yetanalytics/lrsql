@@ -17,6 +17,7 @@
   "webserver": {
     "httpHost": "0.0.0.0",
     "httpPort": 8080,
-    "sslPort": 8443
+    "sslPort": 8443,
+    "allowAllOrigins": true
   }
 }

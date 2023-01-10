@@ -32,13 +32,14 @@ The following is an example of a basic (non-Postgres) `config/lrsql.json` config
     "webserver": {
         "httpHost": "0.0.0.0",
         "httpPort": 8080,
-        "sslPort": 8443
+        "sslPort": 8443,
+        "allowAllOrigins": true
     }
 }
 ```
 (Setting the `webserver` vars to these default values isn't necessary, but is shown here for demonstration purposes.)
 
-For a complete list of config variables, see [here](env_vars.md). There is also a sample JSON config file provided for reference at `config/lrsql.json.example` which contains many more variables than the above.
+The `allowAllOrigins` variable allows for a very permissive CORS configuration for testing and working locally in the absence of a permanent domain name/host. For a deployed system you will want to more properly configure CORS settings. For a complete list of config variables, see [here](env_vars.md). There is also a sample JSON config file provided for reference at `config/lrsql.json.example` which contains many more variables than the above.
 
 #### 4. Setup Postgres DB (Optional)
 - If using Postgres, setup instructions can be found [here](postgres.md).
