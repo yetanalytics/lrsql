@@ -23,13 +23,13 @@
 
 (defn- login-account
   [headers body]
-  (curl/post "http://0.0.0.0:8080/admin/account/login"
+  (curl/post "http://localhost:8080/admin/account/login"
              {:headers headers
               :body    body}))
 
 (defn- create-account
   [headers body]
-  (curl/post "http://0.0.0.0:8080/admin/account/create"
+  (curl/post "http://localhost:8080/admin/account/create"
              {:headers headers
               :body    body}))
 
@@ -72,7 +72,7 @@
         (is-err-code (create-account bad-cors-headers req-body) 403)))
     (testing "create account with default CORS check success"
       (let [good-cors-headers
-            (merge headers {"Origin" "http://0.0.0.0:8080"})
+            (merge headers {"Origin" "http://localhost:8080"})
             {:keys [status body]}
             (create-account good-cors-headers req-body)
             edn-body       (u/parse-json body)]
@@ -106,7 +106,7 @@
       (is (some? seed-jwt)))
     (testing "create account with custom CORS check failure"
       (let [bad-cors-headers
-            (merge headers {"Origin" "http://0.0.0.0:8080"})]
+            (merge headers {"Origin" "http://localhost:8080"})]
         (is-err-code (create-account bad-cors-headers req-body) 403)))
     (testing "create account with custom CORS check success"
       (let [good-cors-headers

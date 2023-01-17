@@ -65,7 +65,9 @@
         ;; default ports
         allowed-list
         (or allowed-origins
-            (cond-> [(format "http://%s:%s" http-host http-port)
+            (cond-> [(format "http://localhost:%s" http-port)
+                     (format "https://localhost:%s" ssl-port)
+                     (format "http://%s:%s" http-host http-port)
                      (format "https://%s:%s" http-host ssl-port)]
               (= http-port 80) (conj (format "http://%s" http-host))
               (= ssl-port 443) (conj (format "https://%s" http-host))))]
