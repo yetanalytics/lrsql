@@ -94,7 +94,7 @@ keycloak-demo:
 	cd dev-resources/keycloak_demo; docker compose up
 
 superset-demo:
-	cd dev-resources/superset_demo; docker compose up
+	cd dev-resources/superset_demo; docker compose up -d
 
 # *** Build ***
 
