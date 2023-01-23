@@ -24,3 +24,7 @@
 ### Releases
 
 For releases and release notes see the [Releases](https://github.com/yetanalytics/lrsql/releases) page on the SQL LRS GitHub repository.
+
+### Demos
+
+- [Visualization with Apache Superset](superset.md)
