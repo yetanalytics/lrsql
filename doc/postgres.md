@@ -92,4 +92,10 @@ Here is an example database config map in `config/lrsql.json`. The user is `lrsq
 
 The `connection`, `lrs`, and `webserver` sections of the config can then be set with whatever properties you see fit, like the example on the [Getting Started](startup.md) page.
 
+### Unix Socket Support
+
+SQL LRS includes [junixsocket](https://github.com/kohlschutter/junixsocket) which allows unix socket connections to Postgres.
+
+To connect via a unix socket use a JDBC URL like `jdbc:postgresql://localhost/test-postgres-db?socketFactory=org.newsclub.net.unix.AFUNIXSocketFactory%24FactoryArg&socketFactoryArg=/var/run/postgresql/.s.PGSQL.5432&user=test-postgres-user` where `socketFactoryArg` is the path to your Postgres socket file and `user` is your DB user. See the entry for `LRSQL_DB_JDBC_URL` [here](env_vars.md) for information on setting the JDBC URL.
+
 [<- Back to Index](index.md)

@@ -83,6 +83,7 @@
       (update-schema-simple! tx alter-admin-account-passhash-optional!))
     (when-not (some? (query-admin-account-oidc-issuer-exists tx))
       (alter-admin-account-add-openid-issuer! tx))
+    (update-schema-simple! tx alter-credential-to-scope-scope-datatype!)
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
 

@@ -154,7 +154,7 @@
       (when-some [batch (first batches)]
         (curl/post endpoint
                    {:headers    headers
-                    :body       (String. (u/write-json (vec batch)))
+                    :body       (u/write-json-str (vec batch))
                     :basic-auth [user pass]})
         (recur (rest batches))))))
 
@@ -171,7 +171,7 @@
         stmts    (generate-statements inputs size sref-type)
         requests (mapv (fn [batch]
                          {:headers    headers
-                          :body       (String. (u/write-json (vec batch)))
+                          :body       (u/write-json-str (vec batch))
                           :basic-auth [user pass]})
                        (partition-all batch-size stmts))]
     (perform-async-op! curl/post

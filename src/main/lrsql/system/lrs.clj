@@ -1,37 +1,37 @@
 (ns lrsql.system.lrs
-  (:require [clojure.set :as cset]
-            [clojure.tools.logging :as log]
-            [com.stuartsierra.component :as cmp]
-            [next.jdbc :as jdbc]
+  (:require [clojure.set                   :as cset]
+            [clojure.tools.logging         :as log]
+            [com.stuartsierra.component    :as cmp]
+            [next.jdbc                     :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.admin.protocol :as adp]
-            [lrsql.init      :as init]
-            [lrsql.init.oidc :as oidc-init]
-            [lrsql.backend.protocol :as bp]
-            [lrsql.input.actor     :as agent-input]
-            [lrsql.input.activity  :as activity-input]
-            [lrsql.input.admin     :as admin-input]
-            [lrsql.input.auth      :as auth-input]
-            [lrsql.input.statement :as stmt-input]
-            [lrsql.input.document  :as doc-input]
-            [lrsql.ops.command.admin     :as admin-cmd]
-            [lrsql.ops.command.auth      :as auth-cmd]
-            [lrsql.ops.command.document  :as doc-cmd]
-            [lrsql.ops.command.statement :as stmt-cmd]
-            [lrsql.ops.query.actor     :as actor-q]
-            [lrsql.ops.query.activity  :as activ-q]
-            [lrsql.ops.query.admin     :as admin-q]
-            [lrsql.ops.query.auth      :as auth-q]
-            [lrsql.ops.query.document  :as doc-q]
-            [lrsql.ops.query.statement :as stmt-q]
-            [lrsql.spec.config :as cs]
-            [lrsql.system.util :refer [assert-config]]
-            [lrsql.util.auth      :as auth-util]
-            [lrsql.util.oidc      :as oidc-util]
-            [lrsql.util.statement :as stmt-util]
-            [lrsql.init.authority   :refer [make-authority-fn]]
-            [lrsql.util.concurrency :refer [with-rerunable-txn]])
-  (:import [java.time Instant]))
+            [lrsql.admin.protocol          :as adp]
+            [lrsql.init                    :as init]
+            [lrsql.init.oidc               :as oidc-init]
+            [lrsql.backend.protocol        :as bp]
+            [lrsql.input.actor             :as agent-input]
+            [lrsql.input.activity          :as activity-input]
+            [lrsql.input.admin             :as admin-input]
+            [lrsql.input.auth              :as auth-input]
+            [lrsql.input.statement         :as stmt-input]
+            [lrsql.input.document          :as doc-input]
+            [lrsql.ops.command.admin       :as admin-cmd]
+            [lrsql.ops.command.auth        :as auth-cmd]
+            [lrsql.ops.command.document    :as doc-cmd]
+            [lrsql.ops.command.statement   :as stmt-cmd]
+            [lrsql.ops.query.actor         :as actor-q]
+            [lrsql.ops.query.activity      :as activ-q]
+            [lrsql.ops.query.admin         :as admin-q]
+            [lrsql.ops.query.auth          :as auth-q]
+            [lrsql.ops.query.document      :as doc-q]
+            [lrsql.ops.query.statement     :as stmt-q]
+            [lrsql.spec.config             :as cs]
+            [lrsql.util.auth               :as auth-util]
+            [lrsql.util.oidc               :as oidc-util]
+            [lrsql.util.statement          :as stmt-util]
+            [lrsql.util                    :as util]
+            [lrsql.init.authority          :refer [make-authority-fn]]
+            [lrsql.system.util             :refer [assert-config]]
+            [lrsql.util.concurrency        :refer [with-rerunable-txn]]))
 
 (defn- lrs-conn
   "Get the connection pool from the LRS instance."
@@ -139,20 +139,22 @@
             stmt-res)))))
 
   (-get-statements
-    [lrs _auth-identity params ltags]
+    [lrs auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
           prefix (:stmt-url-prefix config)
-          inputs (->> params
-                      (stmt-util/ensure-default-max-limit config)
-                      stmt-input/query-statement-input)]
+          auth?  (-> auth-identity
+                     auth-util/most-permissive-statement-read-scope
+                     #{:scope/statements.read.mine})
+          ?auth  (if auth? (:agent auth-identity) nil)
+          inputs (-> params
+                     (stmt-util/ensure-default-max-limit config)
+                     (stmt-input/query-statement-input ?auth))]
       (jdbc/with-transaction [tx conn]
         (stmt-q/query-statements backend tx inputs ltags prefix))))
   (-consistent-through
     [_lrs _ctx _auth-identity]
-    ;; TODO: review, this should be OK because of transactions, but we may want
-    ;; to use the tx-inst pattern and set it to that
-    (.toString (Instant/now)))
+    (str (util/current-time)))
 
   lrsp/DocumentResource
   (-set-document
@@ -229,7 +231,9 @@
          {:result :com.yetanalytics.lrs.auth/unauthorized}))))
   (-authorize
     [_lrs ctx auth-identity]
-    (auth-util/authorize-action ctx auth-identity))
+    ;; We need to wrap the boolean in a map or else the LRS lib will get
+    ;; angry. This isn't documented, but tests will fail w/o the wrapping.
+    {:result (auth-util/authorized-action? ctx auth-identity)})
 
   adp/AdminAccountManager
   (-create-account

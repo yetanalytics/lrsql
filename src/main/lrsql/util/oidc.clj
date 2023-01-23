@@ -84,8 +84,8 @@
   (when-let [token (:com.yetanalytics.pedestal-oidc/token ctx)]
     (let [{:keys [scope]
            :as   claims} (get-in ctx
-                               [:request
-                                :com.yetanalytics.pedestal-oidc/claims])]
+                                 [:request
+                                  :com.yetanalytics.pedestal-oidc/claims])]
       {:result
        (if-let [scopes (some-> scope
                                (parse-scope-claim
@@ -135,10 +135,10 @@
 
 (defn token-auth-admin-identity
   "For the given context, return a valid OIDC admin auth identity from token
-  claims.
-  args:
-    ctx - Pedestal context that may contain claims.
-    scope-prefix - Prefix to add to expected scopes."
+   claims.
+   args:
+    * `ctx` - Pedestal context that may contain claims.
+    * `scope-prefix` - Prefix to add to expected scopes."
   [ctx
    scope-prefix]
   (when (:com.yetanalytics.pedestal-oidc/token ctx)
@@ -159,18 +159,18 @@
         ;; no valid scopes, can't do anything
         ::unauthorized))))
 
-(s/fdef authorize-admin-action
+(s/fdef authorize-admin-action?
   :args (s/cat :ctx           (s/keys :req-un [::auth/request])
                :auth-identity (s/keys :req-un [::scopes]))
-  :ret (s/keys :req-un [::auth/result]))
+  :ret boolean?)
 
-(defn authorize-admin-action
-  "Given a pedestal context and an OIDC admin auth identity, authorize or deny."
+(defn authorize-admin-action?
+  "Given a pedestal context and an OIDC admin auth identity, return `true`
+   if the action is authorized (i.e. the auth scopes include `:scope/admin`),
+   `false` if it's denied."
   [{{:keys [path-info]} :request
     :as _ctx}
    {:keys [scopes]
     :as _auth-identity}]
-  {:result
-   (boolean
-    (and (cs/starts-with? path-info "/admin")
-         (contains? scopes :scope/admin)))})
+  (boolean (and (cs/starts-with? path-info "/admin")
+                (contains? scopes :scope/admin))))

@@ -1,18 +1,20 @@
 (ns lrsql.util
   (:require [clj-uuid]
             [java-time]
-            [java-time.properties :as jt-props]
-            [clojure.spec.alpha :as s]
-            [clojure.java.io    :as io]
-            [cheshire.core      :as cjson]
-            [xapi-schema.spec :as xs]
+            [java-time.properties    :as jt-props]
+            [clojure.spec.alpha      :as s]
+            [clojure.tools.logging   :as log]
+            [clojure.java.io         :as io]
+            [cheshire.core           :as cjson]
+            [xapi-schema.spec        :as xs]
             [com.yetanalytics.squuid :as squuid]
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
             [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
             [lrsql.spec.common :as cs :refer [instant-spec]])
   (:import [java.util UUID]
            [java.time Instant]
-           [java.io StringReader PushbackReader ByteArrayOutputStream]))
+           [java.io StringReader PushbackReader ByteArrayOutputStream]
+           [java.nio.charset Charset]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
@@ -100,6 +102,11 @@
 (s/def ::base-uuid uuid?)
 (s/def ::squuid uuid?)
 
+(defn generate-uuid
+  "Generate a completely random v4 UUID."
+  []
+  (UUID/randomUUID))
+
 (s/fdef generate-squuid*
   :args (s/cat)
   :ret (s/keys :req-un [::timestamp ::base-uuid ::squuid]))
@@ -162,6 +169,43 @@
   (assoc input :primary-key (generate-squuid)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Strings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def utf8-charset
+  (Charset/forName "UTF-8"))
+
+(def default-charset
+  (Charset/defaultCharset))
+
+;; Log on compilation if the default charset is not UTF-8 (which can cause
+;; errors like in Issue #230). Should not happen in production thanks to
+;; setting -J-Dfile.encoding=UTF-8 but it's a fallback, especially for dev.
+(when (not= utf8-charset default-charset)
+  (log/warnf (str "The default charset is set to %s instead of %s, "
+                  "which may cause undefined behavior on Unicode characters.")
+             default-charset
+             utf8-charset))
+
+(s/fdef str->bytes
+  :args (s/cat :s string?)
+  :ret bytes?)
+
+(defn str->bytes
+  "Convert `s` into a byte array. Assumes UTF-8 encoding."
+  [^String s]
+  (.getBytes s utf8-charset))
+
+(s/fdef bytes->str
+  :args (s/cat :bytes bytes?)
+  :ret string?)
+
+(defn bytes->str
+  "Converts `bytes` into a string. Assumes UTF-8 encoding."
+  [^"[B" bytes]
+  (String. bytes utf8-charset))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; JSON
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -171,9 +215,10 @@
 ;; issues with AOT compliation.
 
 (defn- parse-json*
-  "Read a JSON string or byte array `data`."
+  "Read a JSON string or byte array `data`. In the byte array case, it will
+   be string-encoded using the UTF-8 charset."
   [data]
-  (let [string (if (bytes? data) (String. ^"[B" data) data)]
+  (let [string (if (bytes? data) (bytes->str data) data)]
     (with-open [rdr (PushbackReader. (StringReader. string) 64)]
       (doall (cjson/parsed-seq rdr)))))
 
@@ -189,7 +234,10 @@
 (defn parse-json
   "Read a JSON string or byte array `data`. `data` must only consist of one
    JSON object, array, or scalar; in addition, `data` must be an object by
-   default. To parse JSON arrays or scalars, set `:object?` to false."
+   default. To parse JSON arrays or scalars, set `:object?` to false.
+   
+   In the byte array case, `data` will be string-encoded using the UTF-8
+   charset."
   [data & {:keys [object?] :or {object? true}}]
   (let [[result & ?more] (wrap-parse-fn parse-json* "JSON" data)]
     (cond
@@ -222,12 +270,21 @@
   (let [out-stream (ByteArrayOutputStream. 4096)]
     (.toByteArray ^ByteArrayOutputStream (write-json* out-stream jsn))))
 
+(s/fdef write-json-str
+  :args (s/cat :jsn ::xs/any-json)
+  :ret string?)
+
+(defn write-json-str
+  "Write `jsn` to a string; the string is always UTF-8 encoded."
+  [jsn]
+  (bytes->str (write-json jsn)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Bytes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; IOFactory predicate taken from lrs.xapi.statements.attachment/content
-(s/fdef data->bytes ; TODO: Add more options if need be
+(s/fdef data->bytes
   :args (s/cat :data (s/or :string string?
                            :bytes bytes?
                            :io-factory #(satisfies? clojure.java.io/IOFactory %)))

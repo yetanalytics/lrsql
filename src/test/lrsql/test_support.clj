@@ -7,8 +7,8 @@
             [lrsql.system :as system]
             [lrsql.h2.record :as hr]
             [lrsql.sqlite.record :as sr]
-            [lrsql.postgres.record :as pr])
-  (:import [java.util UUID]))
+            [lrsql.postgres.record :as pr]
+            [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; LRS test helpers
@@ -58,19 +58,22 @@
 
 ;; Returns `{}` as default - need to be used in a fixture
 (defn test-system
-  "Create a lrsql system specifically for tests"
-  []
+  "Create a lrsql system specifically for tests. Optional kwarg `conf-overrides`
+   takes a map where the key is a vec of a key location in config map, and the
+   value is an override."
+  [& {:keys [_]}]
   {})
 
 (defn fresh-h2-fixture
   [f]
-  (let [id-str (str (UUID/randomUUID))
+  (let [id-str (u/uuid->str (u/generate-uuid))
         h2-cfg (-> (read-config :test-h2-mem)
                    (assoc-in [:connection :database :db-name] id-str))]
     (with-redefs
      [read-config (constantly h2-cfg)
-      test-system (fn []
-                    (system/system (hr/map->H2Backend {}) :test-h2-mem))]
+      test-system (fn [& {:keys [conf-overrides]}]
+                    (system/system (hr/map->H2Backend {}) :test-h2-mem
+                                   :conf-overrides conf-overrides))]
       (f))))
 
 ;; `:memory:` is a special db-name value that creates an in-memory SQLite DB.
@@ -81,8 +84,9 @@
                    (assoc-in [:connection :database :db-name] ":memory:"))]
     (with-redefs
      [read-config (constantly sl-cfg)
-      test-system (fn []
-                    (system/system (sr/map->SQLiteBackend {}) :test-sqlite))]
+      test-system (fn [& {:keys [conf-overrides]}]
+                    (system/system (sr/map->SQLiteBackend {}) :test-sqlite
+                                   :conf-overrides conf-overrides))]
       (f))))
 
 ;; Need to manually override db-type because next.jdbc does not support
@@ -90,7 +94,7 @@
 
 (defn fresh-postgres-fixture
   [f]
-  (let [id-str (str (UUID/randomUUID))
+  (let [id-str (u/uuid->str (u/generate-uuid))
         pg-cfg (let [{{{:keys [db-type db-host db-port
                                test-db-version]}
                        :database} :connection :as raw-cfg}
@@ -108,9 +112,10 @@
                                             test-db-version)))))]
     (with-redefs
      [read-config (constantly pg-cfg)
-      test-system (fn []
+      test-system (fn [& {:keys [conf-overrides]}]
                     (system/system (pr/map->PostgresBackend {})
-                                   :test-postgres))]
+                                   :test-postgres
+                                   :conf-overrides conf-overrides))]
       (f))))
 
 (def fresh-db-fixture fresh-h2-fixture)

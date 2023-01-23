@@ -1,7 +1,7 @@
 (ns lrsql.util.statement
   (:require [ring.util.codec :refer [form-encode]]
-            [lrsql.util :as u]
-            [com.yetanalytics.lrs.xapi.statements :as ss]))
+            [com.yetanalytics.lrs.xapi.statements :as ss]
+            [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Preparation
@@ -11,10 +11,9 @@
 ;; TODO: Change for version 2.0.0
 (def xapi-version "1.0.0")
 
-;; NOTE: It is recommended that we override any pre-existing authorities
-;; in a statement, unless there's a high degree of trust. We assume such
-;; a degree of trust (e.g. if the LRSs are part of the same system), but
-;; we may need to address this in the future (e.g. set using env vars).
+;; NOTE: SQL LRS overwrites any pre-existing authority object in a statement, as
+;; suggested by the spec:
+;; https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#requirements-14
 
 (defn prepare-statement
   "Prepare `statement` for LRS storage by coll-ifying context activities
@@ -23,7 +22,6 @@
   [authority statement]
   (let [{?id        "id"
          ?timestamp "timestamp"
-         ?authority "authority"
          ?version   "version"}
         statement
         {squuid      :squuid
@@ -47,12 +45,12 @@
       (vary-meta assoc :primary-key squuid)
       true
       (assoc-to-stmt "stored" squuid-ts-str)
+      true
+      (assoc-to-stmt "authority" authority)
       (not ?id)
       (assoc-to-stmt "id" (u/uuid->str squuid-base))
       (not ?timestamp)
       (assoc-to-stmt "timestamp" squuid-ts-str)
-      (not ?authority)
-      (assoc-to-stmt "authority" authority)
       (not ?version)
       (assoc-to-stmt "version" xapi-version))))
 
@@ -97,11 +95,11 @@
   "Given `?limit`, apply the maximum possible limit (if it is zero
    or exceeds that limit) or the default limit (if it is `nil`).
    The maximum and default limits are set in as environment vars."
-  [{limit-max     :stmt-get-max
+  [{?limit :limit
+    :as    params}
+   {limit-max     :stmt-get-max
     limit-default :stmt-get-default
-    :as _lrs-config}
-   {?limit :limit
-    :as    params}]
+    :as _lrs-config}]
   (assoc params
          :limit
          (cond
@@ -128,4 +126,4 @@
          (form-encode
           (cond-> query-params
             true   (assoc :from next-cursor)
-            ?agent (assoc :agent (String. (u/write-json ?agent))))))))
+            ?agent (assoc :agent (u/write-json-str ?agent)))))))

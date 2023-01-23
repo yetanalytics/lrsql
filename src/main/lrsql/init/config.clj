@@ -2,6 +2,7 @@
   (:require [cheshire.core :as json]
             [clojure.java.io :as io]
             [aero.core :as aero]
+            [clojure.string :refer [split]]
             [camel-snake-kebab.core :as csk])
   (:import [java.io File]))
 
@@ -36,6 +37,12 @@
   [_ include]
   (io/resource (str config-path-prefix include)))
 
+(defmethod aero/reader 'array
+  [_ _ value]
+  (if (empty? value)
+    nil
+    (split value #",")))
+
 (defn read-config*
   "Read `config.edn` with the given value of `profile`. Valid
    profiles are `:test-[db-type]` and `:prod-[db-type]`.
@@ -46,16 +53,18 @@
         {:keys [database
                 connection
                 lrs
-                webserver]} (-> (str config-path-prefix "config.edn")
-                                io/resource
-                                (aero/read-config
-                                 {:profile  profile
-                                  :resolver resolver})
-                                merge-user-config)]
+                webserver
+                logger]} (-> (str config-path-prefix "config.edn")
+                             io/resource
+                             (aero/read-config
+                              {:profile  profile
+                               :resolver resolver})
+                             merge-user-config)]
     ;; form the final config the app will use
     {:connection (assoc connection :database database)
      :lrs        (assoc lrs :stmt-url-prefix (:url-prefix webserver))
-     :webserver  webserver}))
+     :webserver  webserver
+     :logger     logger}))
 
 (def read-config
   "Memoized version of `read-config*`."

@@ -7,7 +7,7 @@
 
 (def validate-oidc-identity
   "If the context has OIDC token claims, parses out data for OIDC admin identity.
-  If claims are invalid, return a 401. If no clams are present, a no-op."
+   If claims are invalid, return a 401. If no clams are present, a no-op."
   (interceptor
    {:name ::validate-oidc-identity
     :enter
@@ -29,20 +29,19 @@
 ;; Currently only applied when OIDC is used.
 (def authorize-oidc-request
   "If an admin identity is present, check if it has the proper scope(s) for the
-  given action. No-op with no identity."
+   given action. No-op with no identity."
   (interceptor
    {:name ::authorize-oidc-request
     :enter
     (fn authorize-oidc-request [{admin-identity ::admin-identity
                                  :as            ctx}]
-      (if admin-identity
-        (if (oidc/authorize-admin-action ctx admin-identity)
-          ctx
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 401
-                  :body   {:error "Unauthorized Admin Action!"}}))
-        ctx))}))
+      (if (or (nil? admin-identity)
+              (oidc/authorize-admin-action? ctx admin-identity))
+        ctx
+        (assoc (chain/terminate ctx)
+               :response
+               {:status 401
+                :body   {:error "Unauthorized Admin Action!"}})))}))
 
 (defn- disable-jwt-interceptors
   [{queue ::chain/queue :as ctx}]
@@ -58,8 +57,8 @@
 
 (def ensure-oidc-identity
   "If an admin identity is present, create or return the user, validating the
-  issuer. On success, inject the account ID and disable subsequent JWT
-  interceptors. No-op with no identity."
+   issuer. On success, inject the account ID and disable subsequent JWT
+   interceptors. No-op with no identity."
   (interceptor
    {:name ::ensure-oidc-identity
     :enter

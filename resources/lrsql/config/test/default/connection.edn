@@ -11,4 +11,4 @@
  :pool-leak-detection-threshold    0
  :pool-transaction-isolation       nil
  :pool-name               nil
- :pool-enable-jmx         false}
+ :pool-enable-jmx         true}

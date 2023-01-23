@@ -24,8 +24,23 @@
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
   ;; Pedestal and Jetty webserver deps
-  io.pedestal/pedestal.jetty               {:mvn/version "0.5.10"}
-  org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.44.v20210927"}
+  io.pedestal/pedestal.jetty
+  {:mvn/version "0.5.10"
+   :exclusions
+   [org.eclipse.jetty/jetty-server
+    org.eclipse.jetty/jetty-servlet
+    org.eclipse.jetty.alpn/alpn-api
+    org.eclipse.jetty/jetty-alpn-server
+    org.eclipse.jetty.http2/http2-server
+    org.eclipse.jetty.websocket/websocket-api
+    org.eclipse.jetty.websocket/websocket-servlet
+    org.eclipse.jetty.websocket/websocket-server]}
+  org.eclipse.jetty/jetty-server           {:mvn/version "9.4.48.v20220622"}
+  org.eclipse.jetty/jetty-servlet          {:mvn/version "9.4.48.v20220622"}
+  org.eclipse.jetty.alpn/alpn-api          {:mvn/version "1.1.3.v20160715"}
+  org.eclipse.jetty/jetty-alpn-server      {:mvn/version "9.4.48.v20220622"}
+  org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.48.v20220622"}
+  org.eclipse.jetty.http2/http2-server     {:mvn/version "9.4.48.v20220622"}
   ;; Security deps
   buddy/buddy-core                         {:mvn/version "1.10.1"}
   buddy/buddy-sign                         {:mvn/version "3.4.1"}
@@ -33,21 +48,21 @@
   less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
-  {:mvn/version "1.2.12"
-   :exclusions [org.clojure/clojure
-                org.clojure/clojurescript
-                com.yetanalytics/xapi-schema]}
+  {:mvn/version "1.2.14"
+   :exclusions  [org.clojure/clojure
+                 org.clojure/clojurescript
+                 com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
   {:mvn/version "1.2.0"
-   :exclusions [org.clojure/clojure
-                org.clojure/clojurescript]}
+   :exclusions  [org.clojure/clojure
+                 org.clojure/clojurescript]}
   com.yetanalytics/colossal-squuid
   {:mvn/version "0.1.4"
-   :exclusions [org.clojure/clojure
-                org.clojure/clojurescript]}
+   :exclusions  [org.clojure/clojure
+                 org.clojure/clojurescript]}
   com.yetanalytics/pedestal-oidc
   {:mvn/version "0.0.8"
-   :exclusions [org.clojure/clojure]}}
+   :exclusions  [org.clojure/clojure]}}
  :aliases
  {:db-h2
   {:extra-paths ["src/db/h2"]
@@ -57,7 +72,11 @@
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
   :db-postgres
   {:extra-paths ["src/db/postgres"]
-   :extra-deps  {org.postgresql/postgresql {:mvn/version "42.3.3"}}}
+   :extra-deps  {org.postgresql/postgresql {:mvn/version "42.5.1"}
+                 com.kohlschutter.junixsocket/junixsocket-common
+                 {:mvn/version "2.6.1"}
+                 com.kohlschutter.junixsocket/junixsocket-native-common
+                 {:mvn/version "2.6.1"}}}
   :bench
   {:extra-paths ["src/bench" "dev-resources"]
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
@@ -78,12 +97,16 @@
    :extra-deps  {;; DB deps
                  com.h2database/h2             {:mvn/version "2.1.212"}
                  org.xerial/sqlite-jdbc        {:mvn/version "3.36.0"}
-                 org.postgresql/postgresql     {:mvn/version "42.3.3"}
-                 org.testcontainers/postgresql {:mvn/version "1.16.3"}
+                 org.postgresql/postgresql     {:mvn/version "42.5.1"}
+                 org.testcontainers/postgresql {:mvn/version "1.17.3"}
+                 com.kohlschutter.junixsocket/junixsocket-common
+                 {:mvn/version "2.6.1"}
+                 com.kohlschutter.junixsocket/junixsocket-native-common
+                 {:mvn/version "2.6.1"}
                  ;; Other test deps
-                 org.clojure/test.check {:mvn/version "1.0.0"}
-                 babashka/babashka.curl {:mvn/version "0.0.3"}
-                 orchestra/orchestra    {:mvn/version "2021.01.01-1"}
+                 org.clojure/test.check        {:mvn/version "1.0.0"}
+                 babashka/babashka.curl        {:mvn/version "0.0.3"}
+                 orchestra/orchestra           {:mvn/version "2021.01.01-1"}
                  io.github.cognitect-labs/test-runner
                  {:git/url "https://github.com/cognitect-labs/test-runner.git"
                   :git/sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
@@ -112,7 +135,7 @@
    :ns-default   nvd.task}
   :doc
   {:replace-deps {com.yetanalytics/markdoc {:git/url "https://github.com/yetanalytics/markdoc"
-                                            :sha "1a57b934dc92e539e858223ef33eb6a5fcf439a0"}}
+                                            :sha     "1a57b934dc92e539e858223ef33eb6a5fcf439a0"}}
    :exec-fn      com.yetanalytics.markdoc/convert
    :exec-args    {:in-root       "doc/"
                   :out-root      "target/bundle/doc/"
