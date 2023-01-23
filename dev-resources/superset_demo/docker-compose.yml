@@ -59,7 +59,6 @@ services:
       - "8081:8080"
 
   lrs:
-    # build: . # switch to this for active dev
     image: yetanalytics/lrsql:latest
     command:
       - /lrsql/bin/run_postgres.sh
