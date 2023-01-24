@@ -8,7 +8,7 @@
 - [Setting up TLS/HTTPS](https.md)
 - [Authority Configuration](authority.md)
 - [Docker Image](docker.md)
-- [OpenID Connect Support](doc/oidc.md)
+- [OpenID Connect Support](oidc.md)
 
 ### DBMS-specific Sections
 
