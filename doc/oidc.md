@@ -57,6 +57,10 @@ The LRS Admin UI uses [oidc-client-js](https://github.com/IdentityModel/oidc-cli
 
 OIDC support is currently developed and tested against [Keycloak](https://www.keycloak.org/) but may work with other identity providers that implement the specification.
 
+#### Identity Provider Guides
+
+* See [here](oidc/auth0.md) for a step-by-step guide to configuring Auth0 authentication and authorization for SQL LRS.
+
 #### Keycloak Demo
 
 This repository contains a Docker Compose file and configuration for a demo instance of keycloak that you can run locally to try out OIDC support. To run keycloak:

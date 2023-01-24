@@ -9,6 +9,7 @@
 - [Authority Configuration](authority.md)
 - [Docker Image](docker.md)
 - [OpenID Connect Support](oidc.md)
+  - [Auth0 Setup Guide](oidc/auth0.md)
 
 ### DBMS-specific Sections
 
