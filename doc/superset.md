@@ -35,6 +35,7 @@ cd datasim
 
 docker run -v "$(pwd)"/dev-resources:/dev-resources  \
            -it \
+           --rm \
            yetanalytics/datasim:latest \
            -i /dev-resources/input/simple.json \
            -E http://host.docker.internal:8080/xapi \
