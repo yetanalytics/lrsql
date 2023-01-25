@@ -6,7 +6,7 @@ This guide provides basic steps to authenticate and authorize SQL LRS (running l
 
 ### Getting Started
 
-Make an account on [Auth0](https://auth0.com) and log in to the administrative console. Make sure you have tthe [latest release of SQL LRS](https://github.com/yetanalytics/lrsql/releases) downloaded to your machine and unzipped. For this guide you'll need access to a command line and an application for editing JSON files.
+Make an account on [Auth0](https://auth0.com) and log in to the administrative console. Make sure you have the [latest release of SQL LRS](https://github.com/yetanalytics/lrsql/releases) downloaded to your machine and unzipped. For this guide you'll need access to a command line and an application for editing JSON files.
 
 ### Resource Server (API) Setup
 
