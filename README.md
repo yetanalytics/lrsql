@@ -42,6 +42,10 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 - [Developer Documentation](doc/dev.md)
 - [Example AWS Deployment](doc/aws.md)
 
+### Demos
+
+- [Visualization with Apache Superset](superset.md)
+
 ## Contribution
 
 Before contributing to this project, please read the [Contribution Guidelines](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
