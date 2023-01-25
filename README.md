@@ -44,7 +44,7 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 
 ### Demos
 
-- [Visualization with Apache Superset](superset.md)
+- [Visualization with Apache Superset](doc/superset.md)
 
 ## Contribution
 
