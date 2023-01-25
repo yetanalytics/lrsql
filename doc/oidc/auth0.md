@@ -34,9 +34,11 @@ Now you'll need to enable Role-Based Access Control (RBAC). Scroll down to "RBAC
 
 #### Add Permissions (Scopes)
 
-Scroll back up and click the API "Permissions" tab. Add the following permissions as shown:
+Scroll back up and click the API "Permissions" tab. Add the following permissions (corresponding to LRS resource scopes) as shown:
 
 ![API permissions](../images/oidc/auth0/04_api_permissions.png)
+
+(For simplicity we will not be adding more specialized scopes such as `statements/read/mine`.)
 
 ### Role Setup
 

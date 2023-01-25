@@ -24,12 +24,13 @@ OIDC Clients making requests to SQL LRS will need to request the desired scopes,
 
 xAPI resources accept tokens with the following scopes:
 
-| Scope              | Capability                                    |
-| ---                | ---                                           |
-| `all`              | Full read/write access to all xAPI resources. |
-| `all/read`         | Read-only access to all xAPI resources.       |
-| `statements/read`  | Read-only access to xAPI Statements           |
-| `statements/write` | Write-only access to xAPI Statements          |
+| Scope                  | Capability                                    |
+| ---                    | ---                                           |
+| `all`                  | Full read/write access to all xAPI resources. |
+| `all/read`             | Read-only access to all xAPI resources.       |
+| `statements/read`      | Read-only access to all xAPI Statements (but not non-Statement resources). |
+| `statements/read/mine` | Read-only access to xAPI Statements whose `authority` value matches the authority of the current user. |
+| `statements/write`     | Write-only access to xAPI Statements.          |
 
 When SQL LRS accepts xAPI statements via OIDC auth it uses token claims to form the xAPI Authority. See [Authority Configuration](authority.md#oidc-authority) for more information.
 
