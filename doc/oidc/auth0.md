@@ -12,7 +12,7 @@ Make an account on [Auth0](https://auth0.com) and log in to the administrative c
 
 #### Create an API
 
-To enable token authentication to SQL LRS you'll need to configure Auth0 to use it as an OAuth 2.0 Resource Server. To do this, log in to the [Auth0 Dashboard](https://manage.auth0.com/) and navigate to Applications > APIs. Click "+ Create API":
+To enable token authentication to SQL LRS you'll need to configure Auth0 to use the LRS as an OAuth 2.0 Resource Server. To do this, log in to the [Auth0 Dashboard](https://manage.auth0.com/) and navigate to Applications > APIs. Click "+ Create API":
 
 ![Auth0 APIs page](../images/oidc/auth0/00_apis.png)
 
