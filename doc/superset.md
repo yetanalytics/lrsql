@@ -86,4 +86,12 @@ And click "CONNECT". You should see confirmation that the database is connected:
 
 Click "FINISH" and the database is ready to explore with Superset.
 
+Explore SQL LRS in SQL Lab:
+
+![SQL lab](images/superset/6_sql_explorer.png)
+
+Create a chart:
+
+![Create chart](images/superset/7_create_chart.png)
+
 [<- Back to Index](index.md)
