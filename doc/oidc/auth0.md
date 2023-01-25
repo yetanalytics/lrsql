@@ -38,7 +38,7 @@ Scroll back up and click the API "Permissions" tab. Add the following permission
 
 ![API permissions](../images/oidc/auth0/04_api_permissions.png)
 
-(For simplicity we will not be adding more specialized scopes such as `statements/read/mine`.)
+(For simplicity we will not be adding more specialized permissions such as `lrs:statements/read/mine`.)
 
 ### Role Setup
 
