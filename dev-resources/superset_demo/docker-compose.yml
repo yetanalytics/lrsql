@@ -1,0 +1,142 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+x-superset-image: &superset-image apache/superset:latest
+x-superset-depends-on: &superset-depends-on
+  - supersetdb
+  - redis
+x-superset-volumes: &superset-volumes
+  # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
+  - ./superset:/app/docker
+  - superset_home:/app/superset_home
+
+version: "3.9"
+
+configs:
+  test_realm:
+    file: ./keycloak/test-realm.json
+
+volumes:
+  db_data:
+  redis:
+  superset_home:
+  superset_db_data:
+
+services:
+
+  db:
+    image: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: lrsql_user
+      POSTGRES_PASSWORD: lrsql_password
+      POSTGRES_DB: lrsql_db
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:16.1.0
+    environment:
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: changeme123
+      KEYCLOAK_IMPORT: /tmp/test-realm.json
+    configs:
+      - source: test_realm
+        target: /tmp/test-realm.json
+    ports:
+      - "8081:8080"
+
+  lrs:
+    image: yetanalytics/lrsql:latest
+    command:
+      - /lrsql/bin/run_postgres.sh
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - keycloak
+    environment:
+      LRSQL_API_KEY_DEFAULT: my_key
+      LRSQL_API_SECRET_DEFAULT: my_secret
+      LRSQL_ADMIN_USER_DEFAULT: my_username
+      LRSQL_ADMIN_PASS_DEFAULT: my_password
+      LRSQL_DB_HOST: db
+      LRSQL_DB_NAME: lrsql_db
+      LRSQL_DB_USER: lrsql_user
+      LRSQL_DB_PASSWORD: lrsql_password
+      # If Postgres is too slow to start, increase this
+      LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
+      LRSQL_OIDC_ISSUER: http://host.docker.internal:8081/auth/realms/test
+      LRSQL_OIDC_CLIENT_ID: lrs_admin_ui
+      LRSQL_OIDC_SCOPE_PREFIX: "lrs:"
+      LRSQL_OIDC_AUDIENCE: http://localhost:8080
+
+  supersetdb:
+    image: postgres
+    container_name: superset_db
+    volumes:
+      - superset_db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+      POSTGRES_DB: superset
+
+  redis:
+    image: redis:latest
+    container_name: superset_cache
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+
+  superset:
+    env_file: superset/.env
+    image: *superset-image
+    container_name: superset_app
+    command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
+    user: "root"
+    restart: unless-stopped
+    ports:
+      - 8088:8088
+    depends_on: *superset-depends-on
+    volumes: *superset-volumes
+
+  superset-init:
+    image: *superset-image
+    container_name: superset_init
+    command: ["/app/docker/docker-init.sh"]
+    env_file: superset/.env
+    depends_on: *superset-depends-on
+    user: "root"
+    volumes: *superset-volumes
+
+  superset-worker:
+    image: *superset-image
+    container_name: superset_worker
+    command: ["/app/docker/docker-bootstrap.sh", "worker"]
+    env_file: superset/.env
+    restart: unless-stopped
+    depends_on: *superset-depends-on
+    user: "root"
+    volumes: *superset-volumes
+
+  superset-worker-beat:
+    image: *superset-image
+    container_name: superset_worker_beat
+    command: ["/app/docker/docker-bootstrap.sh", "beat"]
+    env_file: superset/.env
+    restart: unless-stopped
+    depends_on: *superset-depends-on
+    user: "root"
+    volumes: *superset-volumes
