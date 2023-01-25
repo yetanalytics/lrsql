@@ -25,7 +25,24 @@ Wait a minute or two for everything to start up.
 
 ### Add xAPI data
 
-You'll need some data to visualize. Hook up the xAPI-conformant Learning Record Provider (LRP) of your choice or use [DATASIM](https://github.com/yetanalytics/datasim) to simulate learning activity.
+You'll need some data to visualize. Hook up the xAPI-conformant Learning Record Provider (LRP) of your choice or use [DATASIM](https://github.com/yetanalytics/datasim) to simulate learning activity:
+
+``` shell
+
+git clone https://github.com/yetanalytics/datasim.git
+
+cd datasim
+
+docker run -v "$(pwd)"/dev-resources:/dev-resources  \
+           -it \
+           yetanalytics/datasim:latest \
+           -i /dev-resources/input/simple.json \
+           -E http://host.docker.internal:8080/xapi \
+           -U my_key \
+           -P my_secret \
+           generate post
+
+```
 
 ### Log In to Superset
 
