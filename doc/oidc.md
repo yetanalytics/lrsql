@@ -24,12 +24,13 @@ OIDC Clients making requests to SQL LRS will need to request the desired scopes,
 
 xAPI resources accept tokens with the following scopes:
 
-| Scope              | Capability                                    |
-| ---                | ---                                           |
-| `all`              | Full read/write access to all xAPI resources. |
-| `all/read`         | Read-only access to all xAPI resources.       |
-| `statements/read`  | Read-only access to xAPI Statements           |
-| `statements/write` | Write-only access to xAPI Statements          |
+| Scope                  | Capability                                    |
+| ---                    | ---                                           |
+| `all`                  | Full read/write access to all xAPI resources. |
+| `all/read`             | Read-only access to all xAPI resources.       |
+| `statements/read`      | Read-only access to all xAPI Statements (but not non-Statement resources). |
+| `statements/read/mine` | Read-only access to xAPI Statements whose `authority` value matches the authority of the current user. |
+| `statements/write`     | Write-only access to xAPI Statements.          |
 
 When SQL LRS accepts xAPI statements via OIDC auth it uses token claims to form the xAPI Authority. See [Authority Configuration](authority.md#oidc-authority) for more information.
 
@@ -45,17 +46,21 @@ By default SQL LRS will disable local administrator account usage and management
 
 ### Admin UI Authentication
 
-The LRS Admin UI supports interactive login via an OIDC identity provider. To enable this functionality you must provide the OIDC issuer and audience (not optional in this case) as above and additionally set the `LRSQL_OIDC_CLIENT_ID` (`webserver.oidcClientId`) to the Client ID representing your Admin UI.
+The LRS Admin UI supports interactive login via an OIDC identity provider. To enable this functionality you must provide the OIDC issuer and audience (not optional in this case) as above and additionally set the `LRSQL_OIDC_CLIENT_ID` (`webserver.oidcClientId`) to the Client ID representing your Admin UI. Note that this utilizes the [OIDC Authorization Code Flow](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) for *public* clients and therefore you should *not* provide a Client Secret.
 
 When enabled the LRS will send configuration to the Admin UI directing it to offer OIDC login. Click the OIDC login link to be redirected to your identity provider for login. Upon a successful login you will be redirected to the Admin UI.
 
 #### Client Template
 
-The LRS Admin UI uses [oidc-client-js](https://github.com/IdentityModel/oidc-client-js) to manage communication with the OIDC identity provider. For some providers it may be necessary to customize client configuration in which case the `LRSQL_OIDC_CLIENT_TEMPLATE` (`webserver.oidcClientTemplate`) variable can be set. Note that the `redirect_uri` and `post_logout_redirect_uri` will be set by the Admin UI client and should not be provided.
+The LRS Admin UI uses [oidc-client-js](https://github.com/IdentityModel/oidc-client-js) to manage communication with the OIDC identity provider. For some providers it may be necessary to customize client configuration in which case the `LRSQL_OIDC_CLIENT_TEMPLATE` (`webserver.oidcClientTemplate`) variable can be set. Note that the `redirect_uri` and `post_logout_redirect_uri` will be set by the Admin UI client and should not be provided. You should never provide confidential information in this template as it is available to the user in the browser.
 
 ### Identity Providers
 
 OIDC support is currently developed and tested against [Keycloak](https://www.keycloak.org/) but may work with other identity providers that implement the specification.
+
+#### Identity Provider Guides
+
+* See [here](oidc/auth0.md) for a step-by-step guide to configuring Auth0 authentication and authorization for SQL LRS.
 
 #### Keycloak Demo
 
