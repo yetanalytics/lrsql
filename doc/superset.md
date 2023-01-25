@@ -8,7 +8,7 @@ SQL LRS's Postgresql support enables BI solutions like [Apache Superset](https:/
 
 The Docker Compose stack includes an LRS, Postgresql, Keycloak, Superset and Redis (used as a cache by Superset). A Keycloak instance controls access to both the LRS and Superset.
 
-Note that for Keycloak to work (at least on Docker for Mac) you'll need to map your loopback IP to `host.docker.internal`. This can be done by adding the following line to your `/etc/hosts` file:
+Note that for Keycloak to work (at least on Docker for Mac) you'll need to map your loopback IP to `host.docker.internal` so that Superset can reach Keycloak at an address that is also available to the host machine. This can be done by adding the following line to your `/etc/hosts` file (note you will need administrative/sudo access):
 
     127.0.0.1 host.docker.internal
 
