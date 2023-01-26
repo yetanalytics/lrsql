@@ -11,7 +11,7 @@ jobs:
       nvd-config-filename: '.nvd/config.json'
 
   lint:
-    uses: yetanalytics/workflow-linter/linter.yml@e083eea025e770ce2f97f8de4194ec953555d007
+    uses: yetanalytics/workflow-linter/.github/workflows/linter.yml@872eb78c06d66eb108d081cd0092d0b64f9761b5
     with: 'src/bench src/build src/db src/main src/test'
 
   test:
