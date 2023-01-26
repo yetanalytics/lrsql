@@ -12,7 +12,8 @@ jobs:
 
   lint:
     uses: yetanalytics/workflow-linter/.github/workflows/linter.yml@872eb78c06d66eb108d081cd0092d0b64f9761b5
-    with: 'src/bench src/build src/db src/main src/test'
+    with:
+      lint-directories: 'src/bench src/build src/db src/main src/test'
 
   test:
     runs-on: ubuntu-latest
