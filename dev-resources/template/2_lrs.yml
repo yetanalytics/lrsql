@@ -2,29 +2,12 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "SQL LRS and DB Init Script"
 Parameters:
   # Networking
-  VPCId:
-    Description: "VPC on which to run SQL LRS"
-    Type: AWS::EC2::VPC::Id
-  DBSubnets:
-    Description: Subnets on which the DB is running
-    Type: List<AWS::EC2::Subnet::Id>
+  VPCStackName:
+    Description: Name of VPC Stack
+    Type: String
   # DB Details
-  DBName:
-    Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
-    Type: String
-    Default: "lrsql_demo"
-  DBHost:
-    Description: Write hostname of PG db
-    Type: String
-  DBPort:
-    Description: Port of PG db
-    Type: String
-    Default: 3306
-  DBInstanceSG:
-    Type: AWS::EC2::SecurityGroup::Id
-    Description: DB instance security group
-  DBMasterUserName:
-    Description: Name of admin user
+  DBStackName:
+    Description: DB Stack Reference
     Type: String
     Default: yetadmin
   DBAppUserName:
@@ -75,10 +58,7 @@ Parameters:
   InstanceSSHCidr:
     Description: CIDR Range for SSH Access to instances (Typically VPC CIDR Range)
     Type: String
-    Default: "173.147.0.0/16"
-  InstanceSubnets:
-    Description: Subnet on which to run the lrsql server
-    Type: List<AWS::EC2::Subnet::Id>
+    Default: "172.147.0.0/16"
   InstanceHttpPort:
     Description: Port on which the server runs HTTP
     Type: String
@@ -110,16 +90,13 @@ Parameters:
   ASGCPUPolicyTargetValue:
     Type: String # according to docs a Double
     Description: Target CPU utilization of instances. Leave blank to disable CPU autoscaling.
-    Default: "" # '60.0'
+    Default: "" # "60.0"
   ASGALBRequestCountTargetValue:
     Type: String # according to docs a Double
     Description: Target requests per instance. Leave blank to disable request count autoscaling.
-    Default: "" # '10000.0'
+    Default: "" # "10000.0"
 
   # Front-end (ALB) specific settings
-  ALBSubnets:
-    Description: Subnets on which to run the ALB.
-    Type: List<AWS::EC2::Subnet::Id>
   ALBHostName:
     Type: String
     Description: The hostname to use for the Elastic Load Balancer.
@@ -131,22 +108,26 @@ Parameters:
     Type: String
     Description: Route53 Hosted Zone in which to set a DNS record. If unset no record will be updated
     Default: ""
-
   # CORS Settings
   CORSAllowedOrigins:
     Type: CommaDelimitedList
     Description: A comma-separated list of origins to allow. If not provided ALBHostName will be used if present, otherwise no origins will be allowed.
 
+
 Conditions:
-  SetDNS: !Not [!Equals [!Ref ALBHostedZone, ""]]
-  SetCORS: !Not [!Equals [!Join ["", !Ref CORSAllowedOrigins], ""]]
+  SetDNS:
+    !Not [!Equals [!Ref ALBHostedZone, ""]]
+  SetCORS:
+    !Not [!Equals [!Join ["", !Ref CORSAllowedOrigins], ""]]
   ASGCPUPolicyTargetValueProvided:
     !Not [!Equals [!Ref ASGCPUPolicyTargetValue, ""]]
   ASGALBRequestCountTargetValueProvided:
     !Not [!Equals [!Ref ASGALBRequestCountTargetValue, ""]]
-  InstanceKeyNameProvided: !Not [!Equals [!Ref InstanceKeyName, ""]]
+  InstanceKeyNameProvided:
+    !Not [!Equals [!Ref InstanceKeyName, ""]]
 
 Resources:
+
   # DB Initialization Function and custom resource to run it
 
   DBInitFn:
@@ -162,22 +143,30 @@ Resources:
       VpcConfig:
         SecurityGroupIds:
           - !Ref DBInitFnSG
-        SubnetIds: !Ref DBSubnets
-
+        SubnetIds:
+          - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
+          - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PrivateSubnetTwo"]]
   DBInitFnSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: SG For Lambda Init Fn
-      VpcId: !Ref VPCId
+      VpcId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "VPCStackName", "VPC"]]
 
   DBInstanceInitIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: Ingress from the init fn to RDS instance
-      GroupId: !Ref DBInstanceSG
+      GroupId:
+        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
       IpProtocol: tcp
-      FromPort: !Ref DBPort
-      ToPort: !Ref DBPort
+      FromPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
       SourceSecurityGroupId: !Ref DBInitFnSG
 
   DBInitPolicy:
@@ -225,7 +214,8 @@ Resources:
     DependsOn: DBInitFn
     Properties:
       ServiceToken: !GetAtt DBInitFn.Arn
-      DBMasterUsername: !Ref DBMasterUserName
+      DBMasterUsername:
+        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBMasterUserName"]]
       DBMasterPasswordPath: !Join
         - ":"
         - - !Ref DBMasterUserPasswordPath
@@ -235,9 +225,15 @@ Resources:
         - ":"
         - - !Ref DBAppUserPasswordPath
           - !Ref DBAppUserPasswordVersion
-      DBHost: !Ref DBHost
-      DBPort: !Ref DBPort
-      DBName: !Ref DBName
+      DBHost:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
+      DBPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      DBName:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBName"]]
 
   # Servers
 
@@ -269,10 +265,10 @@ Resources:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-          - Effect: Allow
-            Principal:
-              Service: [ec2.amazonaws.com]
-            Action: ["sts:AssumeRole"]
+        - Effect: Allow
+          Principal:
+            Service: [ec2.amazonaws.com]
+          Action: ["sts:AssumeRole"]
       Path: /
       ManagedPolicyArns:
         - !Ref InstancePolicy
@@ -287,7 +283,8 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the LRS Instance
-      VpcId: !Ref VPCId
+      VpcId:
+        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -298,10 +295,15 @@ Resources:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: Ingress from the LRS instance to RDS instance
-      GroupId: !Ref DBInstanceSG
+      GroupId:
+        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
       IpProtocol: tcp
-      FromPort: !Ref DBPort
-      ToPort: !Ref DBPort
+      FromPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
       SourceSecurityGroupId: !Ref InstanceSG
 
   LrsInstances:
@@ -383,14 +385,13 @@ Resources:
           files:
             "/opt/lrsql/config/lrsql.json":
               content: !Sub
-                - |
-                  {
-                    "database": {
+                - '{
+                      "database": {
                       "dbHost": "${DBHost}",
                       "dbPort": ${DBPort},
                       "dbName": "${DBName}",
                       "dbUser": "${DBAppUserName}",
-                      "dbPassword": "${InitDBCustomResource.dbAppPass}"
+                      "dbPassword": "${DBPass}"
                     },
                     "lrs" : {
                       "adminUserDefault": "${DefaultAdminUser}",
@@ -399,19 +400,20 @@ Resources:
                     },
                     "webserver": {
                       "httpHost": "0.0.0.0",
-                      "httpPort": ${InstanceHttpPort},
-                      "allowedOrigins": ${AllowedOrigins}
+                      "httpPort": ${InstanceHttpPort}
                     }
-                  }
-                - AllowedOrigins: !If
-                    - SetCORS
-                    - !Sub
-                      - '["${JoinedAllowedOrigins}"]'
-                      - JoinedAllowedOrigins: !Join ['","', !Ref CORSAllowedOrigins]
-                    - !If
-                      - SetDNS
-                      - !Sub '["https://${ALBHostName}"]'
-                      - "[]"
+                  }'
+                - DBName:
+                    Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBName"]]
+                  DBHost:
+                    Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
+                  DBAppUserName: !Ref DBAppUserName
+                  DBPass: !GetAtt InitDBCustomResource.dbAppPass
+                  DefaultAdminUser: !Ref DefaultAdminUser
+                  DefaultAdminPass: !Ref DefaultAdminPass
+                  InstanceHttpPort: !Ref InstanceHttpPort
+                  DBPort:
+                    Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBPort"]]
               mode: "000755"
               owner: root
               group: root
@@ -502,11 +504,16 @@ Resources:
               - !GetAtt TargetGroup.TargetGroupFullName
         TargetValue: !Ref ASGALBRequestCountTargetValue
 
+
   # ASG
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier: !Ref InstanceSubnets
+      VPCZoneIdentifier:
+        - Fn::ImportValue:
+            !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
+        - Fn::ImportValue:
+            !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
       LaunchConfigurationName: !Ref LrsInstances
       MinSize: !Ref ASGMinSize
       MaxSize: !Ref ASGMaxSize
@@ -535,13 +542,15 @@ Resources:
           - AlarmNotification
           - ScheduledActions
 
+
   # Load Balancer
 
   LoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the load balancer
-      VpcId: !Ref VPCId
+      VpcId:
+        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
       SecurityGroupIngress:
         # Allow access to ALB from anywhere on the internet
         # on 80 as redirect-only
@@ -562,7 +571,9 @@ Resources:
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
           Value: "30"
-      Subnets: !Ref ALBSubnets
+      Subnets:
+        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
+        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
       SecurityGroups:
         - !Ref LoadBalancerSG
 
@@ -620,7 +631,8 @@ Resources:
       Port: !Ref InstanceHttpPort
       Protocol: HTTP
       UnhealthyThresholdCount: 2
-      VpcId: !Ref VPCId
+      VpcId:
+        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
 
   #DNS Update for Domain
 
@@ -648,3 +660,5 @@ Outputs:
       - ""
       - - "https://"
         - !Ref ALBHostName
+    Export:
+      Name: !Sub "${AWS::StackName}:LrsAddress"

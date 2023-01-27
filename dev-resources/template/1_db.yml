@@ -1,13 +1,9 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Postgres DB for SQL LRS"
 Parameters:
-  # Networking
-  VPCId:
-    Description: "VPC on which to run SQL LRS"
-    Type: AWS::EC2::VPC::Id
-  DBSubnets:
-    Description: Subnets on which to run services
-    Type: List<AWS::EC2::Subnet::Id>
+  VPCStackName:
+    Description: Name of VPC Stack
+    Type: String
 
   # Postgres
   # PostgreSQL Storage
@@ -25,13 +21,14 @@ Parameters:
   DBEngineVersion:
     Description: PostgreSQL engine version on RDS
     Type: String
-    Default: "12.9"
+    Default: "14.3"
     AllowedValues:
       - "12.9"
+      - "14.3"
   DBInstanceClass:
     Description: For provisioned aurora, the instance class to use
     Type: String
-    Default: "db.r4.large"
+    Default: "db.t4g.medium"
   DBName:
     Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
     Type: String
@@ -58,26 +55,34 @@ Parameters:
     AllowedValues:
       - true
       - false
-    Default: true
+    Default: false
 
 Conditions:
-  DBProvisioned: !Equals [!Ref DBEngineMode, "provisioned"]
-  DBSnapshotIdentifierProvided: !Not [!Equals [!Ref DBSnapshotIdentifier, ""]]
+  DBProvisioned:
+    !Equals [!Ref DBEngineMode, "provisioned"]
+  DBSnapshotIdentifierProvided:
+    !Not [!Equals [!Ref DBSnapshotIdentifier, ""]]
 
 Resources:
+
   # PostgreSQL Database
   DBSubnetGroup:
     Description: Subnet group to allow instance access to db
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: SQL LRS App Instance Subnet Group
-      SubnetIds: !Ref DBSubnets
+      SubnetIds:
+        - Fn::ImportValue:
+            !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
+        - Fn::ImportValue:
+            !Join [":", [!Ref "VPCStackName", "PrivateSubnetTwo"]]
 
   DBInstanceSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to RDS instances
-      VpcId: !Ref VPCId
+      VpcId:
+        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
 
   DBCluster:
     Description: PostgreSQL DB Cluster
@@ -99,7 +104,7 @@ Resources:
         - DBSnapshotIdentifierProvided
         - !Ref AWS::NoValue
         - !Sub "{{resolve:ssm-secure:${DBMasterUserPasswordPath}:${DBMasterUserPasswordVersion}}}"
-      # DBClusterIdentifier: !Sub '${AWS::StackName}-db'
+      # DBClusterIdentifier: !Sub "${AWS::StackName}-db"
       BackupRetentionPeriod: !If
         - DBSnapshotIdentifierProvided
         - !Ref AWS::NoValue
@@ -108,7 +113,7 @@ Resources:
       VpcSecurityGroupIds:
         - !Ref DBInstanceSG
       DBSubnetGroupName: !Ref DBSubnetGroup
-      DBClusterParameterGroupName: default.aurora-postgresql12
+      DBClusterParameterGroupName: default.aurora-postgresql14
       EnableCloudwatchLogsExports: !If
         - DBProvisioned
         - [postgresql]
@@ -145,3 +150,13 @@ Outputs:
     Value: !Ref DBInstanceSG
     Export:
       Name: !Sub "${AWS::StackName}:DBInstanceSG"
+  DBName:
+    Description: Name of the DB
+    Value: !Ref DBName
+    Export:
+      Name: !Sub "${AWS::StackName}:DBName"
+  DBMasterUserName:
+    Description: DB Master username
+    Value: !Ref DBMasterUserName
+    Export:
+      Name: !Sub "${AWS::StackName}:DBMasterUserName"
