@@ -385,7 +385,8 @@ Resources:
           files:
             "/opt/lrsql/config/lrsql.json":
               content: !Sub
-                - '{
+                -  |
+                   {
                       "database": {
                       "dbHost": "${DBHost}",
                       "dbPort": ${DBPort},
@@ -401,8 +402,9 @@ Resources:
                     "webserver": {
                       "httpHost": "0.0.0.0",
                       "httpPort": ${InstanceHttpPort}
+                      "allowedOrigins": ${AllowedOrigins}
                     }
-                  }'
+                  }
                 - DBName:
                     Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBName"]]
                   DBHost:
@@ -414,6 +416,14 @@ Resources:
                   InstanceHttpPort: !Ref InstanceHttpPort
                   DBPort:
                     Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBPort"]]
+                  AllowedOrigins: !If
+                    - SetCORS
+                    - !Sub
+                      - '["${JoinedAllowedOrigins}}"]'
+                    - !If
+                      - SetDNS
+                      - !Sub '["https://${ALBHostName}"]'
+                      - "[]"
               mode: "000755"
               owner: root
               group: root
