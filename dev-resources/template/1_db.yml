@@ -71,7 +71,7 @@ Conditions:
   VPCIdProvided:
     !Not [!Equals [!Ref VPCId, ""]]
   DBSubnetsProvided:
-    !Not [!Equals [!Ref DBSubnets, !Ref "AWS::NoValue"]]
+    !Not [!Equals [!Join ["", !Ref DBSubnets], !Ref "AWS::NoValue"]]
 
 Resources:
 
