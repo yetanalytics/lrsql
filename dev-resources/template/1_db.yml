@@ -71,7 +71,7 @@ Conditions:
   VPCIdProvided:
     !Not [!Equals [!Ref VPCId, ""]]
   DBSubnetsProvided:
-    !Not [!Equals [!Join ["", !Ref DBSubnets], !Ref "AWS::NoValue"]]
+    !Not [!Equals [!Join ["", !Ref DBSubnets], ""]]
 
 Resources:
 
@@ -127,7 +127,7 @@ Resources:
       VpcSecurityGroupIds:
         - !Ref DBInstanceSG
       DBSubnetGroupName: !Ref DBSubnetGroup
-      DBClusterParameterGroupName: default.aurora-postgresql14
+      DBClusterParameterGroupName: default.aurora-postgresql12
       EnableCloudwatchLogsExports: !If
         - DBProvisioned
         - [postgresql]

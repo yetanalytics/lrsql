@@ -134,7 +134,7 @@ Conditions:
   VPCIdProvided:
     !Not [!Equals [!Ref VPCId, ""]]
   DBSubnetsProvided:
-    !Not [!Equals [!Join ["", !Ref DBSubnets], !Ref "AWS::NoValue"]]
+    !Not [!Equals [!Join ["", !Ref DBSubnets], ""]]
 
 Resources:
 
@@ -400,9 +400,9 @@ Resources:
           files:
             "/opt/lrsql/config/lrsql.json":
               content: !Sub
-                -  |
-                   {
-                      "database": {
+                - |
+                  {
+                    "database": {
                       "dbHost": "${DBHost}",
                       "dbPort": ${DBPort},
                       "dbName": "${DBName}",
@@ -435,6 +435,7 @@ Resources:
                     - SetCORS
                     - !Sub
                       - '["${JoinedAllowedOrigins}}"]'
+                      - JoinedAllowedOrigins: !Join ['","', !Ref CORSAllowedOrigins]
                     - !If
                       - SetDNS
                       - !Sub '["https://${ALBHostName}"]'
