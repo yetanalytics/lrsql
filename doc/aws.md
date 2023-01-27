@@ -20,6 +20,8 @@ In this step we will not be deploying any templates but will instead be preparin
 
 Configuring a domain or subdomain will allow you to access the SQL LRS at that URL. If you have (or can acquire) the domain through AWS Route53, these templates provide automated DNS updates that will route the domain to the LRS upon deployment or update. If you already have the domain you will be using through another registrar, you will need to update a DNS record in your own registrar at the end of deployment in order to use the domain.
 
+Note that if you do not use Route53 DNS you MUST provide one or more allowed CORS origins with the CORSAllowedOrigins LRS template parameter (see Step 4 below).
+
 #### TLS Certificate
 
 In these templates the Load Balancer expects to provide access to the LRS via HTTPS/443. You will need to either acquire a free Amazon Certificate Manager cert (highly recommended) or import your own cert from another CA into ACM for use in the deployment.
@@ -88,6 +90,7 @@ This template deploys the application servers, the load balancer, and also a sma
   - ALBHostName: (Optional) Set the desired (sub)domain name from Step 1
   - ALBHostedZone: (Optional) Set the Hosted Zone ID if the domain registrar is Route53 to enable automatic DNS management
   - ALBSubnets: Choose the two Public Subnets from Step 2
+  - CORSAllowedOrigins: If you are using your own DNS and do not provide ALBHostName and ALBHostedZone above, put the HTTPS address of your LRS here, ie. `https://mydomain.com` to allow CORS requests.
   - DBAppUserName: Choose a desired database username for the application
   - DBAppUserPasswordPath: Use the name selected in Systems Manager for the App Password in Step 1
   - DBHost: Copy and paste the DBEndpoint Output from Step 3

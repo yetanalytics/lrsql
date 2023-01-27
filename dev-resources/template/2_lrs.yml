@@ -93,7 +93,7 @@ Parameters:
   LrsVersion:
     Description: Version of SQL LRS to download and install (public release versions on GitHub)
     Type: String
-    Default: v0.3.9
+    Default: v0.5.1
 
   ASGMinSize:
     Type: Number
@@ -132,8 +132,14 @@ Parameters:
     Description: Route53 Hosted Zone in which to set a DNS record. If unset no record will be updated
     Default: ""
 
+  # CORS Settings
+  CORSAllowedOrigins:
+    Type: CommaDelimitedList
+    Description: A comma-separated list of origins to allow. If not provided ALBHostName will be used if present, otherwise no origins will be allowed.
+
 Conditions:
   SetDNS: !Not [!Equals [!Ref ALBHostedZone, ""]]
+  SetCORS: !Not [!Equals [!Join ["", !Ref CORSAllowedOrigins], ""]]
   ASGCPUPolicyTargetValueProvided:
     !Not [!Equals [!Ref ASGCPUPolicyTargetValue, ""]]
   ASGALBRequestCountTargetValueProvided:
@@ -376,25 +382,36 @@ Resources:
         02_configureLrs:
           files:
             "/opt/lrsql/config/lrsql.json":
-              content: !Sub |
-                {
-                  "database": {
-                    "dbHost": "${DBHost}",
-                    "dbPort": ${DBPort},
-                    "dbName": "${DBName}",
-                    "dbUser": "${DBAppUserName}",
-                    "dbPassword": "${InitDBCustomResource.dbAppPass}"
-                  },
-                  "lrs" : {
-                    "adminUserDefault": "${DefaultAdminUser}",
-                    "adminPassDefault": "${DefaultAdminPass}",
-                    "authorityUrl": "http://mydomain.com"
-                  },
-                  "webserver": {
-                    "httpHost": "0.0.0.0",
-                    "httpPort": ${InstanceHttpPort}
+              content: !Sub
+                - |
+                  {
+                    "database": {
+                      "dbHost": "${DBHost}",
+                      "dbPort": ${DBPort},
+                      "dbName": "${DBName}",
+                      "dbUser": "${DBAppUserName}",
+                      "dbPassword": "${InitDBCustomResource.dbAppPass}"
+                    },
+                    "lrs" : {
+                      "adminUserDefault": "${DefaultAdminUser}",
+                      "adminPassDefault": "${DefaultAdminPass}",
+                      "authorityUrl": "http://mydomain.com"
+                    },
+                    "webserver": {
+                      "httpHost": "0.0.0.0",
+                      "httpPort": ${InstanceHttpPort},
+                      "allowedOrigins": ${AllowedOrigins}
+                    }
                   }
-                }
+                - AllowedOrigins: !If
+                    - SetCORS
+                    - !Sub
+                      - '["${JoinedAllowedOrigins}"]'
+                      - JoinedAllowedOrigins: !Join ['","', !Ref CORSAllowedOrigins]
+                    - !If
+                      - SetDNS
+                      - !Sub '["https://${ALBHostName}"]'
+                      - "[]"
               mode: "000755"
               owner: root
               group: root
