@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Postgres DB for SQL LRS"
 Parameters:
   VPCStackName:
-    Description: Name of VPC Stack
+    Description: Name of VPC Stack (Optional, but if not provided must provide VPCId and DBSubnets).
     Type: String
   VPCId:
     Description: "VPC on which to run SQL LRS (if not provided, will attempt to use parameter VPC on VPCStackName)"
