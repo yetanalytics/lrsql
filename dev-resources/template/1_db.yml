@@ -27,10 +27,9 @@ Parameters:
   DBEngineVersion:
     Description: PostgreSQL engine version on RDS
     Type: String
-    Default: "14.3"
+    Default: "12.9"
     AllowedValues:
       - "12.9"
-      - "14.3"
   DBInstanceClass:
     Description: For provisioned aurora, the instance class to use
     Type: String
