@@ -4,6 +4,12 @@ Parameters:
   VPCStackName:
     Description: Name of VPC Stack
     Type: String
+  VPCId:
+    Description: "VPC on which to run SQL LRS (if not provided, will attempt to use parameter VPC on VPCStackName)"
+    Type: AWS::EC2::VPC::Id
+  DBSubnets:
+    Description: Subnets on which the DB is running (if no subnets are provided, will attempt to deploy with PrivateSubnetOne and PrivateSubnetTwo on the VPC provided via VPCStackName)
+    Type: List<AWS::EC2::Subnet::Id>
 
   # Postgres
   # PostgreSQL Storage
@@ -62,6 +68,10 @@ Conditions:
     !Equals [!Ref DBEngineMode, "provisioned"]
   DBSnapshotIdentifierProvided:
     !Not [!Equals [!Ref DBSnapshotIdentifier, ""]]
+  VPCIdProvided:
+    !Not [!Equals [!Ref VPCId, ""]]
+  DBSubnetsProvided:
+    !Not [!Equals [!Ref DBSubnets, !Ref "AWS::NoValue"]]
 
 Resources:
 
@@ -71,18 +81,22 @@ Resources:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: SQL LRS App Instance Subnet Group
-      SubnetIds:
-        - Fn::ImportValue:
-            !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
-        - Fn::ImportValue:
-            !Join [":", [!Ref "VPCStackName", "PrivateSubnetTwo"]]
+      SubnetIds: !If
+        - DBSubnetsProvided
+        - !Ref DBSubnets
+        - - Fn::ImportValue:
+              !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
+          - Fn::ImportValue:
+              !Join [":", [!Ref "VPCStackName", "PrivateSubnetTwo"]]
 
   DBInstanceSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to RDS instances
-      VpcId:
-        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
+      VpcId: !If
+        - VPCIdProvided
+        - !Ref VPCId
+        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
 
   DBCluster:
     Description: PostgreSQL DB Cluster

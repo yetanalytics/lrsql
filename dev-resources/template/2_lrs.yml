@@ -5,6 +5,12 @@ Parameters:
   VPCStackName:
     Description: Name of VPC Stack
     Type: String
+  VPCId:
+    Description: "VPC on which to run SQL LRS (if not provided, will attempt to use parameter VPC on VPCStackName)"
+    Type: AWS::EC2::VPC::Id
+  DBSubnets:
+    Description: Subnets on which the DB is running (if not provided, will use PrivateSubnetOne and PrivateSubnetTwo on VPCStackName)
+    Type: List<AWS::EC2::Subnet::Id>
   # DB Details
   DBStackName:
     Description: DB Stack Reference
@@ -125,6 +131,10 @@ Conditions:
     !Not [!Equals [!Ref ASGALBRequestCountTargetValue, ""]]
   InstanceKeyNameProvided:
     !Not [!Equals [!Ref InstanceKeyName, ""]]
+  VPCIdProvided:
+    !Not [!Equals [!Ref VPCId, ""]]
+  DBSubnetsProvided:
+    !Not [!Equals [!Ref DBSubnets, !Ref "AWS::NoValue"]]
 
 Resources:
 
@@ -143,16 +153,19 @@ Resources:
       VpcConfig:
         SecurityGroupIds:
           - !Ref DBInitFnSG
-        SubnetIds:
-          - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
-          - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PrivateSubnetTwo"]]
+        SubnetIds: !If
+          - DBSubnetsProvided
+          - !Ref DBSubnets
+          - - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
+            - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PrivateSubnetTwo"]]
   DBInitFnSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: SG For Lambda Init Fn
-      VpcId:
-        Fn::ImportValue:
-          !Join [":", [!Ref "VPCStackName", "VPC"]]
+      VpcId: !If
+        - VPCIdProvided
+        - !Ref VPCId
+        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
 
   DBInstanceInitIngress:
     Type: AWS::EC2::SecurityGroupIngress
@@ -283,8 +296,10 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the LRS Instance
-      VpcId:
-        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
+      VpcId: !If
+        - VPCIdProvided
+        - !Ref VPCId
+        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -519,11 +534,11 @@ Resources:
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier:
-        - Fn::ImportValue:
-            !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
-        - Fn::ImportValue:
-            !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
+      VPCZoneIdentifier: !If
+        - DBSubnetsProvided
+        - !Ref DBSubnets
+        - - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
+          - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
       LaunchConfigurationName: !Ref LrsInstances
       MinSize: !Ref ASGMinSize
       MaxSize: !Ref ASGMaxSize
@@ -559,8 +574,10 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the load balancer
-      VpcId:
-        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
+      VpcId: !If
+        - VPCIdProvided
+        - !Ref VPCId
+        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
       SecurityGroupIngress:
         # Allow access to ALB from anywhere on the internet
         # on 80 as redirect-only
@@ -581,9 +598,11 @@ Resources:
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
           Value: "30"
-      Subnets:
-        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
-        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
+      Subnets: !If
+        - DBSubnetsProvided
+        - !Ref DBSubnets
+        - - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
+          - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
       SecurityGroups:
         - !Ref LoadBalancerSG
 
@@ -641,8 +660,10 @@ Resources:
       Port: !Ref InstanceHttpPort
       Protocol: HTTP
       UnhealthyThresholdCount: 2
-      VpcId:
-        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
+      VpcId: !If
+        - VPCIdProvided
+        - !Ref VPCId
+        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
 
   #DNS Update for Domain
 
