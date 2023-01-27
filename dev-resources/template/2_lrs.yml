@@ -416,7 +416,7 @@ Resources:
                     },
                     "webserver": {
                       "httpHost": "0.0.0.0",
-                      "httpPort": ${InstanceHttpPort}
+                      "httpPort": ${InstanceHttpPort},
                       "allowedOrigins": ${AllowedOrigins}
                     }
                   }
