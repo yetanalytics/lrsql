@@ -104,6 +104,8 @@ This template deploys the application servers, the load balancer, and also a sma
   - DefaultAdminUser: Enter initial seed username for LRS Admin Login
   - InstanceKeyName: (Optional) Enter the name of your preferred EC2 Key-Pair from Step 1
   - InstanceSubnets: Choose the two Private Subnets from Step 2
+  - LogGroupPrefix: Leave this at the default: `/yet/lrsql/`
+  - LogGroupRetentionInDays: Leave this at the default of 7 (days)
   - LrsVersion: Select the desired version of SQL LRS from the GitHub Releases page [here](https://github.com/yetanalytics/lrsql/releases)
   - S3Bucket: The bucket created or used in Step 1
   - S3Key: The zip filename from Step 1
