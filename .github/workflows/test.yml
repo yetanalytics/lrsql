@@ -11,24 +11,9 @@ jobs:
       nvd-config-filename: '.nvd/config.json'
 
   lint:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Setup CI Environment
-      uses: yetanalytics/actions/setup-env@v0.0.4
-
-    # The setup-clojure action is called a second time in order to install
-    # clj-kondo. Perhaps we can install both in a custom action?
-    - name: Setup clj-kondo
-      uses: DeLaGuardo/setup-clojure@9.5
-      with:
-        clj-kondo: '2022.03.04'
-
-    - name: Run clj-kondo linting
-      run: clj-kondo --lint src/bench src/build src/db src/main src/test
+    uses: yetanalytics/workflow-linter/.github/workflows/linter.yml@v2023.01.20
+    with:
+      lint-directories: 'src/bench src/build src/db src/main src/test'
 
   test:
     runs-on: ubuntu-latest
