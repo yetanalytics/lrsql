@@ -137,6 +137,16 @@ Parameters:
     Type: CommaDelimitedList
     Description: A comma-separated list of origins to allow. If not provided ALBHostName will be used if present, otherwise no origins will be allowed.
 
+  # Logging Settings
+  LogRetentionInDays:
+    Description: How long to retain CloudWatch Logs from the LRSQL Instance
+    Type: Number
+    Default: 7
+  LogGroupPrefix:
+    Description: Prefix for CloudWatch log group.
+    Type: String
+    Default: "/yet/lrsql/"
+
 Conditions:
   SetDNS: !Not [!Equals [!Ref ALBHostedZone, ""]]
   SetCORS: !Not [!Equals [!Join ["", !Ref CORSAllowedOrigins], ""]]
@@ -240,6 +250,34 @@ Resources:
       DBName: !Ref DBName
 
   # Servers
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '${LogGroupPrefix}${AWS::StackName}'
+      RetentionInDays: !Ref LogRetentionInDays
+
+  LogPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Description: IAM Policy that allows SQL LRS instances to write to the log group.
+    Properties:
+      ManagedPolicyName: !Sub '${AWS::StackName}-${AWS::Region}-lrsql-log-policy'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:DescribeLogGroups'
+            Resource:
+              - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+          - Effect: Allow
+            Action:
+              - 'logs:DescribeLogGroups'
+              - 'logs:CreateLogStream'
+              - 'logs:DescribeLogStreams'
+              - 'logs:PutLogEvents'
+            Resource:
+              - !GetAtt LogGroup.Arn
+
 
   InstancePolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -276,6 +314,7 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - !Ref InstancePolicy
+        - !Ref LogPolicy
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
