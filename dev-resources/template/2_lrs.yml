@@ -315,6 +315,7 @@ Resources:
       ManagedPolicyArns:
         - !Ref InstancePolicy
         - !Ref LogPolicy
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
