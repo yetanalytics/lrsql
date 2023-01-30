@@ -410,7 +410,7 @@ Resources:
               content: !Sub |
                 [cfn-auto-reloader-hook]
                 triggers=post.update
-                path=Resources.LrsInstances.Metadata.AWS::CloudFormation::Init.02_configureLrs
+                path=Resources.LrsInstances.Metadata.AWS::CloudFormation::Init
                 action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets UpdateEnvironment
                 runas=root
               mode: "000400"
