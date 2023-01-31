@@ -74,7 +74,6 @@ Conditions:
     !Not [!Equals [!Ref DBSnapshotIdentifier, ""]]
 
 Resources:
-
   # PostgreSQL Database
   DBSubnetGroup:
     Description: Subnet group to allow instance access to db
@@ -110,7 +109,7 @@ Resources:
         - DBSnapshotIdentifierProvided
         - !Ref AWS::NoValue
         - !Sub "{{resolve:ssm-secure:${DBMasterUserPasswordPath}:${DBMasterUserPasswordVersion}}}"
-      # DBClusterIdentifier: !Sub "${AWS::StackName}-db"
+      # DBClusterIdentifier: !Sub '${AWS::StackName}-db'
       BackupRetentionPeriod: !If
         - DBSnapshotIdentifierProvided
         - !Ref AWS::NoValue
