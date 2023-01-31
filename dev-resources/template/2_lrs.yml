@@ -1,10 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "SQL LRS and DB Init Script"
 Parameters:
-  # Networking
-  VPCStackName:
-    Description: Name of VPC Stack (Optional, but if not provided must provide VPCId and DBSubnets)
-    Type: String
   VPCId:
     Description: "VPC on which to run SQL LRS (if not provided, will attempt to use parameter VPC on VPCStackName)"
     Type: AWS::EC2::VPC::Id
@@ -107,6 +103,9 @@ Parameters:
     Type: String
     Description: The hostname to use for the Elastic Load Balancer.
     Default: "sqllrs.yetanalytics.io"
+  ALBSubnets:
+    Description: Subnets that are used by the Elastic Load Balancer.
+    Type: List<AWS::EC2::Subnet::Id>
   ALBCertArn:
     Type: String
     Description: The ARN of an ACM cert to use on the ALB
@@ -131,10 +130,6 @@ Conditions:
     !Not [!Equals [!Ref ASGALBRequestCountTargetValue, ""]]
   InstanceKeyNameProvided:
     !Not [!Equals [!Ref InstanceKeyName, ""]]
-  VPCIdProvided:
-    !Not [!Equals [!Ref VPCId, ""]]
-  DBSubnetsProvided:
-    !Not [!Equals [!Join ["", !Ref DBSubnets], ""]]
 
 Resources:
 
@@ -153,19 +148,14 @@ Resources:
       VpcConfig:
         SecurityGroupIds:
           - !Ref DBInitFnSG
-        SubnetIds: !If
-          - DBSubnetsProvided
-          - !Ref DBSubnets
-          - - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
-            - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PrivateSubnetTwo"]]
+        SubnetIds: !Ref DBSubnets
+
+
   DBInitFnSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: SG For Lambda Init Fn
-      VpcId: !If
-        - VPCIdProvided
-        - !Ref VPCId
-        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
+      VpcId: !Ref VPCId
 
   DBInstanceInitIngress:
     Type: AWS::EC2::SecurityGroupIngress
@@ -296,10 +286,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the LRS Instance
-      VpcId: !If
-        - VPCIdProvided
-        - !Ref VPCId
-        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
+      VpcId: !Ref VPCId
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -442,7 +429,7 @@ Resources:
                       - "[]"
               mode: "000755"
               owner: root
-              group: root
+
             "/lib/systemd/system/lrsql.service":
               content: !Sub |
                 [Unit]
@@ -492,13 +479,14 @@ Resources:
         - !Ref InstanceSG
       IamInstanceProfile: !Ref InstanceProfile
       UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash -xe
-          echo 'Yet SQL LRS ${LrsVersion}'
-          # run configsets
-          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets default
-          # signal CF
-          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
+        Fn::Base64: !Sub
+          |
+            #!/bin/bash -xe
+            echo 'Yet SQL LRS ${LrsVersion}'
+            # run configsets
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets default
+            # signal CF
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
 
   # Autoscaling Policies
 
@@ -535,11 +523,7 @@ Resources:
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier: !If
-        - DBSubnetsProvided
-        - !Ref DBSubnets
-        - - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
-          - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
+      VPCZoneIdentifier: !Ref DBSubnets
       LaunchConfigurationName: !Ref LrsInstances
       MinSize: !Ref ASGMinSize
       MaxSize: !Ref ASGMaxSize
@@ -568,17 +552,13 @@ Resources:
           - AlarmNotification
           - ScheduledActions
 
-
   # Load Balancer
 
   LoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the load balancer
-      VpcId: !If
-        - VPCIdProvided
-        - !Ref VPCId
-        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
+      VpcId: !Ref VPCId
       SecurityGroupIngress:
         # Allow access to ALB from anywhere on the internet
         # on 80 as redirect-only
@@ -599,11 +579,7 @@ Resources:
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
           Value: "30"
-      Subnets: !If
-        - DBSubnetsProvided
-        - !Ref DBSubnets
-        - - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
-          - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
+      Subnets: !Ref ALBSubnets
       SecurityGroups:
         - !Ref LoadBalancerSG
 
@@ -661,10 +637,7 @@ Resources:
       Port: !Ref InstanceHttpPort
       Protocol: HTTP
       UnhealthyThresholdCount: 2
-      VpcId: !If
-        - VPCIdProvided
-        - !Ref VPCId
-        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
+      VpcId: !Ref VPCId
 
   #DNS Update for Domain
 
