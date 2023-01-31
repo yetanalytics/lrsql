@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Postgres DB for SQL LRS"
 Parameters:
-  VPCStackName:
-    Description: Name of VPC Stack (Optional, but if not provided must provide VPCId and DBSubnets).
-    Type: String
   VPCId:
     Description: "VPC on which to run SQL LRS (if not provided, will attempt to use parameter VPC on VPCStackName)"
     Type: AWS::EC2::VPC::Id
@@ -30,6 +27,7 @@ Parameters:
     Default: "12.9"
     AllowedValues:
       - "12.9"
+      - "14.3"
   DBInstanceClass:
     Description: For provisioned aurora, the instance class to use
     Type: String
@@ -62,15 +60,18 @@ Parameters:
       - false
     Default: false
 
+Mappings:
+  DBClusterParameterGroupMap:
+    "12.9":
+      Name: default.aurora-postgresql12
+    "14.3":
+      Name: default.aurora-postgresql14
+
 Conditions:
   DBProvisioned:
     !Equals [!Ref DBEngineMode, "provisioned"]
   DBSnapshotIdentifierProvided:
     !Not [!Equals [!Ref DBSnapshotIdentifier, ""]]
-  VPCIdProvided:
-    !Not [!Equals [!Ref VPCId, ""]]
-  DBSubnetsProvided:
-    !Not [!Equals [!Join ["", !Ref DBSubnets], ""]]
 
 Resources:
 
@@ -80,22 +81,14 @@ Resources:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: SQL LRS App Instance Subnet Group
-      SubnetIds: !If
-        - DBSubnetsProvided
-        - !Ref DBSubnets
-        - - Fn::ImportValue:
-              !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
-          - Fn::ImportValue:
-              !Join [":", [!Ref "VPCStackName", "PrivateSubnetTwo"]]
+      SubnetIds:
+        !Ref DBSubnets
 
   DBInstanceSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to RDS instances
-      VpcId: !If
-        - VPCIdProvided
-        - !Ref VPCId
-        - Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPC"]]
+      VpcId: !Ref VPCId
 
   DBCluster:
     Description: PostgreSQL DB Cluster
@@ -126,7 +119,7 @@ Resources:
       VpcSecurityGroupIds:
         - !Ref DBInstanceSG
       DBSubnetGroupName: !Ref DBSubnetGroup
-      DBClusterParameterGroupName: default.aurora-postgresql12
+      DBClusterParameterGroupName: !FindInMap [DBClusterParameterGroupMap, !Ref "DBEngineVersion", Name]
       EnableCloudwatchLogsExports: !If
         - DBProvisioned
         - [postgresql]
