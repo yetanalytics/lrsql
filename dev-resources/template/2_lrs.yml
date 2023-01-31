@@ -124,7 +124,6 @@ Conditions:
     !Not [!Equals [!Ref InstanceKeyName, ""]]
 
 Resources:
-
   # DB Initialization Function and custom resource to run it
 
   DBInitFn:
@@ -141,7 +140,6 @@ Resources:
         SecurityGroupIds:
           - !Ref DBInitFnSG
         SubnetIds: !Ref DBSubnets
-
 
   DBInitFnSG:
     Type: AWS::EC2::SecurityGroup
@@ -264,10 +262,10 @@ Resources:
     Properties:
       AssumeRolePolicyDocument:
         Statement:
-        - Effect: Allow
-          Principal:
-            Service: [ec2.amazonaws.com]
-          Action: ["sts:AssumeRole"]
+          - Effect: Allow
+            Principal:
+              Service: [ec2.amazonaws.com]
+            Action: ["sts:AssumeRole"]
       Path: /
       ManagedPolicyArns:
         - !Ref InstancePolicy
@@ -425,7 +423,7 @@ Resources:
                       - "[]"
               mode: "000755"
               owner: root
-
+              group: root
             "/lib/systemd/system/lrsql.service":
               content: !Sub |
                 [Unit]
@@ -475,14 +473,13 @@ Resources:
         - !Ref InstanceSG
       IamInstanceProfile: !Ref InstanceProfile
       UserData:
-        Fn::Base64: !Sub
-          |
-            #!/bin/bash -xe
-            echo 'Yet SQL LRS ${LrsVersion}'
-            # run configsets
-            /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets default
-            # signal CF
-            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          echo 'Yet SQL LRS ${LrsVersion}'
+          # run configsets
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets default
+          # signal CF
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
 
   # Autoscaling Policies
 
