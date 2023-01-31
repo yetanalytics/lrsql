@@ -166,3 +166,13 @@ Outputs:
     Value: !Ref DBMasterUserName
     Export:
       Name: !Sub "${AWS::StackName}:DBMasterUserName"
+  DBMasterUserPasswordPath:
+    Description: Path to the DB Master password
+    Value: !Ref DBMasterUserPasswordPath
+    Export:
+      Name: !Sub "${AWS::StackName}:DBMasterUserPasswordPath"
+  DBMasterUserPasswordVersion:
+    Description: Path to the DB Master password
+    Value: !Ref DBMasterUserPasswordVersion
+    Export:
+      Name: !Sub "${AWS::StackName}:DBMasterUserPasswordVersion"

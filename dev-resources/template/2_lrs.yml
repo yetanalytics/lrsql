@@ -2,10 +2,10 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "SQL LRS and DB Init Script"
 Parameters:
   VPCId:
-    Description: "VPC on which to run SQL LRS (if not provided, will attempt to use parameter VPC on VPCStackName)"
+    Description: VPC on which to run SQL LRS
     Type: AWS::EC2::VPC::Id
   DBSubnets:
-    Description: Subnets on which the DB is running (if not provided, will use PrivateSubnetOne and PrivateSubnetTwo on VPCStackName)
+    Description: Subnets on which the DB is running
     Type: List<AWS::EC2::Subnet::Id>
   # DB Details
   DBStackName:
@@ -16,14 +16,6 @@ Parameters:
     Description: Name of app db user
     Type: String
     Default: lrsqldbuser
-  DBMasterUserPasswordPath:
-    Description: SSM Path to the secret password
-    Type: String
-    Default: "/lrsql/demo/DB_MASTER_USER_PASSWORD"
-  DBMasterUserPasswordVersion:
-    Description: SSM version
-    Type: Number
-    Default: 1
   DBAppUserPasswordPath:
     Description: SSM Path to the secret password
     Type: String
@@ -187,7 +179,11 @@ Resources:
               - "secretsmanager:GetSecretValue"
             Resource:
               - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}"
-              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBMasterUserPasswordPath}"
+              - !Sub
+                  - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBMasterUserPasswordPath}"
+                  - DBMasterUserPasswordPath:
+                      Fn::ImportValue:
+                        !Join [":", [!Ref "DBStackName", "DBMasterUserPasswordPath"]]
           - Effect: Allow
             Action:
               - ec2:DescribeNetworkInterfaces
@@ -221,8 +217,8 @@ Resources:
         Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBMasterUserName"]]
       DBMasterPasswordPath: !Join
         - ":"
-        - - !Ref DBMasterUserPasswordPath
-          - !Ref DBMasterUserPasswordVersion
+        - - Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBMasterUserPasswordPath"]]
+          - Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBMasterUserPasswordVersion"]]
       DBUsername: !Ref DBAppUserName
       DBPasswordPath: !Join
         - ":"
