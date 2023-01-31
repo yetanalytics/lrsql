@@ -2,10 +2,10 @@ AWSTemplateFormatVersion: "2010-09-09"
 Description: "Postgres DB for SQL LRS"
 Parameters:
   VPCId:
-    Description: "VPC on which to run SQL LRS (if not provided, will attempt to use parameter VPC on VPCStackName)"
+    Description: "VPC on which to run SQL LRS"
     Type: AWS::EC2::VPC::Id
   DBSubnets:
-    Description: Subnets on which the DB is running (if no subnets are provided, will attempt to deploy with PrivateSubnetOne and PrivateSubnetTwo on the VPC provided via VPCStackName)
+    Description: Subnets on which the DB is running
     Type: List<AWS::EC2::Subnet::Id>
 
   # Postgres
