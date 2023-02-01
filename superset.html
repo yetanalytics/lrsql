@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Yet SQL LRS Documentation</title>
+        <style type="text/css">
+body{
+    margin: 0 auto;
+    padding: 30px;
+    font: 20px Tahoma, Helvetica, Arial, Sans-Serif;
+    line-height: 1.5;
+}
+h1, h2, h3, h4 {
+	display: block; text-decoration: none;
+	font: Helvetica, Arial, Sans-Serif;
+ }
+h1 {
+  font-size: 35px;
+ }
+h2 {
+  font-size: 30px;
+ }
+h3 {
+  font-size: 25px;
+ }
+h4 {
+  font-size: 20px;
+ }
+textarea {
+	width: 600px; margin: 0 auto; background: #222; padding: 20px;
+	font-size: 22px; color: #555; text-shadow: 0px 2px 3px #171717;
+	-webkit-box-shadow: 0px 2px 3px #555;
+	-moz-box-shadow: 0px 2px 3px #555;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+}
+code {
+  background: #eeeeee;
+}
+pre {
+  margin: 0 auto;
+  background: #eeeeee;
+  padding: 20px;
+	font-size: 15px;
+	margin-bottom: 20px;
+}
+a {
+	text-decoration: none;
+	font: 18px Helvetica, Arial, Sans-Serif;
+ }
+hr {
+  height: 3px;
+  border: 0;
+  background-color: #333;
+}
+img {
+  max-width: 95%;
+  display: block;
+  margin: auto;
+}
+div#container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80%;
+}
+/* a la https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Styling_tables#Spacing_and_layout */
+table {
+  width: 95%;
+  margin-right: auto;
+  margin-left: auto;
+  border-collapse: collapse;
+  border: 1px solid #dee2e5;
+}
+th, td {
+  border: 1px solid #dee2e5;
+  padding: 20px;
+  line-height: 1.25;
+}
+tbody tr:nth-child(even) {
+  background-color: #f6f8fa;
+}
+p {
+  text-align: justify;
+}
+
+div.logo-container {
+  width: 100%;
+}
+
+div.logo {
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+div.footer {
+  font-size: medium;
+  color:white;
+  background-color: rgb(17, 55, 92) !important;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+.footer a, .footer a:visited {
+  color: white !important;
+}
+
+.footer a:hover {
+  color: white !important;
+  text-decoration: underline;
+}
+
+span.build {
+  display: block;
+  font-size: .7em;
+}
+
+</style>
+    </head>
+    <body>
+      <div id="container">
+        <div class="logo-container">
+          <div class="logo">
+            <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
+          </div>
+        </div>
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="apache&#95;superset&#95;demo">Apache Superset Demo</h1><p>SQL LRS's Postgresql support enables BI solutions like <a href='https://superset.apache.org/'>Apache Superset</a> to query the underlying SQL database. The SQL LRS project includes a Docker Compose file that can be used to demo this functionality.</p><h3 id="run&#95;the&#95;docker&#95;stack">Run the Docker Stack</h3><p>The Docker Compose stack includes an LRS, Postgresql, Keycloak, Superset and Redis (used as a cache by Superset). A Keycloak instance controls access to both the LRS and Superset.</p><p>Note that for Keycloak to work (at least on Docker for Mac) you'll need to map your loopback IP to <code>host.docker.internal</code> so that Superset can reach Keycloak at an address that is also available to the host machine. This can be done by adding the following line to your <code>/etc/hosts</code> file (note you will need administrative/sudo access):</p><pre><code>127.0.0.1 host.docker.internal</code></pre><p>To run the demo:</p><pre><code>cd dev-resources/superset&#95;demo
+docker compose up -d</code></pre><p>or</p><pre><code>make superset-demo</code></pre><p>Wait a minute or two for everything to start up.</p><h3 id="add&#95;xapi&#95;data">Add xAPI data</h3><p>You'll need some data to visualize. Hook up the xAPI-conformant Learning Record Provider (LRP) of your choice or use <a href='https://github.com/yetanalytics/datasim'>DATASIM</a> to simulate learning activity:</p><pre><code class="shell">
+git clone https://github.com/yetanalytics/datasim.git
+
+cd datasim
+
+docker run -v &quot;$&#40;pwd&#41;&quot;/dev-resources:/dev-resources  \
+           -it \
+           --rm \
+           yetanalytics/datasim:latest \
+           -i /dev-resources/input/simple.json \
+           -E http://host.docker.internal:8080/xapi \
+           -U my&#95;key \
+           -P my&#95;secret \
+           generate post
+
+</code></pre><h3 id="log&#95;in&#95;to&#95;superset">Log In to Superset</h3><p>Navigate to <a href='http://localhost:8088/'>http://localhost:8088/</a>:</p><p><img src="images/superset/0_landing.png" alt="Superset landing page" /></p><p>Click "Login" and log in with the username <code>dev&#95;user</code> and the password <code>changeme123</code>:</p><p><img src="images/superset/1_login.png" alt="Superset login page" /></p><h3 id="add&#95;the&#95;sql&#95;lrs&#95;postgresql&#95;database">Add the SQL LRS Postgresql Database</h3><p>Select "Database Connections" from the righthand menu:</p><p><img src="images/superset/2_db_select.png" alt="Superset menu select database connections" /></p><p>You'll see an empty list of databases. Click "+ Database" on the right:</p><p><img src="images/superset/3_db_conns.png" alt="Superset database list select + Database" /></p><p>Select "PostgreSQL" in the list and proceed to the next screen:</p><p><img src="images/superset/4_pg_connect.png" alt="Superset add database postgresql" /></p><p>Enter the following configuration:</p><table><thead><tr><th style='text-align:left'>Field</th><th style='text-align:left'>Value</th><th style='text-align:left'>Notes</th></tr></thead><tbody><tr><td style='text-align:left'>HOST</td><td style='text-align:left'>db</td><td style='text-align:left'>The docker-internal address of the Postgresql database</td></tr><tr><td style='text-align:left'>PORT</td><td style='text-align:left'>5432</td><td style='text-align:left'></td></tr><tr><td style='text-align:left'>DATABASE NAME</td><td style='text-align:left'>lrsql_db</td><td style='text-align:left'>Specified in the Docker Compose file</td></tr><tr><td style='text-align:left'>USERNAME</td><td style='text-align:left'>lrsql_user</td><td style='text-align:left'>"</td></tr><tr><td style='text-align:left'>PASSWORD</td><td style='text-align:left'>lrsql_password</td><td style='text-align:left'>"</td></tr><tr><td style='text-align:left'>DISPLAY NAME</td><td style='text-align:left'>SQL LRS</td><td style='text-align:left'>Arbitrary name tag</td></tr></tbody></table><p>And click "CONNECT". You should see confirmation that the database is connected:</p><p><img src="images/superset/5_pg_connected.png" alt="Superset postgresql database connected" /></p><p>Click "FINISH" and the database is ready to explore with Superset.</p><p>Explore SQL LRS in SQL Lab:</p><p><img src="images/superset/6_sql_explorer.png" alt="SQL lab" /></p><p>Create a chart:</p><p><img src="images/superset/7_create_chart.png" alt="Create chart" /></p><p><a href='index.html'><- Back to Index</a></p>
+        <div class="footer">
+         &copy; 2021-2022 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
+         Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+         <span class="build">Build: a60f181ce1ea6f71e9397fe39abca799e326f3e1</span>
+        </div>
+      </div>
+    </body>
+</html>

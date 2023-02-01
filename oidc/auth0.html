@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Yet SQL LRS Documentation</title>
+        <style type="text/css">
+body{
+    margin: 0 auto;
+    padding: 30px;
+    font: 20px Tahoma, Helvetica, Arial, Sans-Serif;
+    line-height: 1.5;
+}
+h1, h2, h3, h4 {
+	display: block; text-decoration: none;
+	font: Helvetica, Arial, Sans-Serif;
+ }
+h1 {
+  font-size: 35px;
+ }
+h2 {
+  font-size: 30px;
+ }
+h3 {
+  font-size: 25px;
+ }
+h4 {
+  font-size: 20px;
+ }
+textarea {
+	width: 600px; margin: 0 auto; background: #222; padding: 20px;
+	font-size: 22px; color: #555; text-shadow: 0px 2px 3px #171717;
+	-webkit-box-shadow: 0px 2px 3px #555;
+	-moz-box-shadow: 0px 2px 3px #555;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+}
+code {
+  background: #eeeeee;
+}
+pre {
+  margin: 0 auto;
+  background: #eeeeee;
+  padding: 20px;
+	font-size: 15px;
+	margin-bottom: 20px;
+}
+a {
+	text-decoration: none;
+	font: 18px Helvetica, Arial, Sans-Serif;
+ }
+hr {
+  height: 3px;
+  border: 0;
+  background-color: #333;
+}
+img {
+  max-width: 95%;
+  display: block;
+  margin: auto;
+}
+div#container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80%;
+}
+/* a la https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Styling_tables#Spacing_and_layout */
+table {
+  width: 95%;
+  margin-right: auto;
+  margin-left: auto;
+  border-collapse: collapse;
+  border: 1px solid #dee2e5;
+}
+th, td {
+  border: 1px solid #dee2e5;
+  padding: 20px;
+  line-height: 1.25;
+}
+tbody tr:nth-child(even) {
+  background-color: #f6f8fa;
+}
+p {
+  text-align: justify;
+}
+
+div.logo-container {
+  width: 100%;
+}
+
+div.logo {
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+div.footer {
+  font-size: medium;
+  color:white;
+  background-color: rgb(17, 55, 92) !important;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+.footer a, .footer a:visited {
+  color: white !important;
+}
+
+.footer a:hover {
+  color: white !important;
+  text-decoration: underline;
+}
+
+span.build {
+  display: block;
+  font-size: .7em;
+}
+
+</style>
+    </head>
+    <body>
+      <div id="container">
+        <div class="logo-container">
+          <div class="logo">
+            <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
+          </div>
+        </div>
+        <p><a href='../index.html'><- Back to Index</a></p><h1 id="auth0&#95;oidc&#95;setup&#95;guide">Auth0 OIDC Setup Guide</h1><p>This guide provides basic steps to authenticate and authorize SQL LRS (running locally on your machine) against the <a href='https://auth0.com/'>Auth0 Cloud Identity Provider</a>. This guide is provided for example purposes only and may not produce an environment suitable for production usage.</p><h3 id="getting&#95;started">Getting Started</h3><p>Make an account on <a href='https://auth0.com'>Auth0</a> and log in to the administrative console. Make sure you have the <a href='https://github.com/yetanalytics/lrsql/releases'>latest release of SQL LRS</a> downloaded to your machine and unzipped. For this guide you'll need access to a command line and an application for editing JSON files.</p><h3 id="resource&#95;server&#95;(api)&#95;setup">Resource Server (API) Setup</h3><h4 id="create&#95;an&#95;api">Create an API</h4><p>To enable token authentication to SQL LRS you'll need to configure Auth0 to use the LRS as an OAuth 2.0 Resource Server. To do this, log in to the <a href='https://manage.auth0.com/'>Auth0 Dashboard</a> and navigate to Applications > APIs. Click "+ Create API":</p><p><img src="../images/oidc/auth0/00_apis.png" alt="Auth0 APIs page" /></p><p>Give your API a descriptive Name like <code>lrsql&#95;api</code> and set the API Identifier to <code>http://localhost:8080</code> (the origin of the SQL LRS instance we will launch) then click "Create":</p><p><img src="../images/oidc/auth0/01_create_api.png" alt="New API page" /></p><p>You will be redirected to the page for the new API. Note that the API Identifier you enter will be used for the Audience parameter later on.</p><h4 id="enable&#95;role-based&#95;access&#95;control">Enable Role-Based Access Control</h4><p>On your new API's page click the "Settings" tab:</p><p><img src="../images/oidc/auth0/02_api_settings.png" alt="API settings page" /></p><p>Now you'll need to enable Role-Based Access Control (RBAC). Scroll down to "RBAC Settings". Toggle on the switches for "Enable RBAC" and "Add Permissions in the Access Token" and click "Save":</p><p><img src="../images/oidc/auth0/03_api_rbac.png" alt="API RBAC settings" /></p><h4 id="add&#95;permissions&#95;(scopes)">Add Permissions (Scopes)</h4><p>Scroll back up and click the API "Permissions" tab. Add the following permissions (corresponding to LRS resource scopes) as shown:</p><p><img src="../images/oidc/auth0/04_api_permissions.png" alt="API permissions" /></p><p>(For simplicity we will not be adding more specialized permissions such as <code>lrs:statements/read/mine</code>.)</p><h3 id="role&#95;setup">Role Setup</h3><h4 id="add&#95;a&#95;role">Add a Role</h4><p>Navigate to User Management > Roles:</p><p><img src="../images/oidc/auth0/05_roles_list.png" alt="Roles list" /></p><p>Click "+ Create Role" and enter a Name and Description, then click "Create":</p><p><img src="../images/oidc/auth0/06_new_role.png" alt="New role" /></p><p>You will be navigated to the new role's page.</p><h4 id="assign&#95;permissions&#95;(scopes)">Assign Permissions (Scopes)</h4><p>Click on the "Permissions" tab:</p><p><img src="../images/oidc/auth0/07_role_permissions.png" alt="Empty role permissions" /></p><p>Click "Add Permissions" and select the API you created:</p><p><img src="../images/oidc/auth0/08_add_permissions_0.png" alt="Add permissions select API" /></p><p>Select the <code>lrs:all</code> and <code>lrs:admin</code> permissions and click "Add Permissions":</p><p><img src="../images/oidc/auth0/09_add_permissions_1.png" alt="Add permissions select permissions" /></p><p>Verify that the role you created now has the proper permissions:</p><p><img src="../images/oidc/auth0/10_permissions_added.png" alt="Verify role permissions" /></p><h4 id="create&#95;a&#95;user&#95;(optional)">Create a User (Optional)</h4><p>In the next section you'll assign the LRS Admin role you created to a user. If you don't already have a user you'd like to use, navigate to User Management > Users and click "+ Create User":</p><p><img src="../images/oidc/auth0/11_create_user_0.png" alt="Empty users list" /></p><p>Enter an email address and password and click "Create":</p><p><img src="../images/oidc/auth0/12_create_user_1.png" alt="New user form" /></p><p>Verify the user via email before proceeding.</p><h4 id="assign&#95;the&#95;role&#95;to&#95;a&#95;user">Assign the Role to a User</h4><p>Navigate to User Management > Users and find the user you want to administer SQL LRS. Click the "..." menu button and select "Assign Roles":</p><p><img src="../images/oidc/auth0/13_assign_role_0.png" alt="Assign roles" /></p><p>Select the LRS Admin role you created and click "Assign":</p><p><img src="../images/oidc/auth0/14_assign_role_1.png" alt="Assign role choose role" /></p><p><img src="../images/oidc/auth0/15_assign_role_2.png" alt="Assign role finish" /></p><p>Your user account is now prepared to administer SQL LRS.</p><h3 id="lrs&#95;admin&#95;application&#95;setup">LRS Admin Application Setup</h3><h4 id="create&#95;an&#95;application">Create an Application</h4><p>Before you can launch and log in to SQL LRS with Auth0 you'll need to create an "Application" to represent the front end admin SPA. Navigate to Applications > Applications (sic) and click "+ Create Application":</p><p><img src="../images/oidc/auth0/16_applications_list.png" alt="Applications list" /></p><p>Give it a name, select the application type "Single Page Web Applications" and click "Create":</p><p><img src="../images/oidc/auth0/17_create_application.png" alt="Create application" /></p><p>You will be navigated to the page for the new application.</p><h4 id="set&#95;a&#95;callback&#95;url">Set a Callback URL</h4><p>Click the "Settings" tab and scroll down to the "Application URIs" section. In the "Allowed Callback URLs" box enter <code>http://localhost:8080/admin/index.html</code>, scroll down and click "Save Changes":</p><p><img src="../images/oidc/auth0/18_callback_url.png" alt="Set callback URL" /></p><h4 id="get&#95;client&#95;id">Get Client ID</h4><p>Scroll up to the top of your Application's page and copy down your "Client ID". You'll need this to configure SQL LRS in the next step:</p><p><img src="../images/oidc/auth0/19_get_client_id.png" alt="Get client id" /></p><h3 id="sql&#95;lrs&#95;setup">SQL LRS Setup</h3><h4 id="configure&#95;sql&#95;lrs">Configure SQL LRS</h4><p>In your SQL LRS directory add a file named <code>lrsql.json</code> in the <code>config</code> subdirectory with the following contents:</p><pre><code class="json">{
+  &quot;lrs&quot;: {
+    &quot;oidcScopePrefix&quot;: &quot;lrs:&quot;
+  },
+  &quot;webserver&quot;: {
+    &quot;oidcIssuer&quot;: &quot;https://&lt;you&gt;.auth0.com/&quot;,
+    &quot;oidcAudience&quot;: &quot;http://localhost:8080&quot;,
+    &quot;oidcClientId&quot;: &quot;&lt;your client id&gt;&quot;
+  }
+}
+
+</code></pre><p>Replace the hostname in <code>oidcIssuer</code> with your auth0 hostname. Replace <code>oidcClientId</code> with the Client ID you recorded in the previous section.</p><h4 id="run&#95;sql&#95;lrs">Run SQL LRS</h4><p>From the root of the SQL LRS directory run:</p><pre><code class="shell">./bin/run&#95;h2.sh
+
+</code></pre><p>This will launch an in-memory instance of SQL LRS that will not persist any data to disk. If SQL LRS starts successfully you should see something like the following:</p><pre><code class="text">09:02:54.527 &#91;main&#93; INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+09:02:54.737 &#91;main&#93; INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:lrsql.h2 user=
+09:02:54.739 &#91;main&#93; INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+09:02:54.740 &#91;main&#93; INFO  lrsql.system.database - Starting new connection for h2:mem database...
+09:02:54.807 &#91;main&#93; INFO  lrsql.system.lrs - Starting new LRS
+09:02:54.829 &#91;main&#93; WARN  lrsql.util.cert - No cert files found. Creating self-signed cert!
+09:02:56.106 &#91;main&#93; INFO  org.eclipse.jetty.util.log - Logging initialized @7146ms to org.eclipse.jetty.util.log.Slf4jLog
+09:02:56.323 &#91;main&#93; INFO  org.eclipse.jetty.server.Server - jetty-9.4.48.v20220622; built: 2022-06-21T20:42:25.880Z; git: 6b67c5719d1f4371b33655ff2d047d24e171e49a; jvm 11.0.17+8-LTS
+09:02:56.353 &#91;main&#93; INFO  o.e.j.server.handler.ContextHandler - Started o.e.j.s.ServletContextHandler@75ad8ca8{/,null,AVAILABLE}
+09:02:56.374 &#91;main&#93; INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@3e9f3d0f{HTTP/1.1, &#40;http/1.1, h2c&#41;}{0.0.0.0:8080}
+09:02:56.378 &#91;main&#93; INFO  o.e.jetty.util.ssl.SslContextFactory - x509=X509@16e693c1&#40;lrsql&#95;keystore,h=&#91;com.yetanalytics.lrsql&#93;,a=&#91;&#93;,w=&#91;&#93;&#41; for Server@5192abb4&#91;provider=null,keyStore=null,trustStore=null&#93;
+09:02:56.412 &#91;main&#93; INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@3387d45e{SSL, &#40;ssl, alpn, h2, http/1.1&#41;}{0.0.0.0:8443}
+09:02:56.413 &#91;main&#93; INFO  org.eclipse.jetty.server.Server - Started @7453ms
+09:02:56.413 &#91;main&#93; INFO  lrsql.system.webserver - Starting new webserver at host 0.0.0.0, HTTP port 8080, and SSL port 8443
+09:02:56.413 &#91;main&#93; INFO  lrsql.system.webserver -
+   &#95;&#95;  &#95;&#95;&#95;&#95;&#95;&#95;     &#95;   &#95;
+|\ \ \ \     |   | | | |     &#95;        &#95;               &#95;       &#95;
+| \ \&#95;\ \    |   | |&#95;| |    | |&#95;    / &#95; \            | |&#95;   &#95;| |&#95; &#95;
+| /   &#95;&#95; \   |    \   / &#95;&#95;&#95;&#95;| &#95;&#95;|  |  &#95;  |  &#95;    &#95;&#95;&#95;&#95;| | |&#95;| |  &#95;|&#95;|  &#95;&#95;&#95;   &#95;&#95;&#95;
+|/ /\ \ \ \  |     | | | / /| |    | | | |/ &#95; \ / /&#95; | |\   /| |  &#95; / &#95;&#95;/  / &#95;&#95;|
+  /  \ \ \ \ |     | | |  /&#95;| |&#95;   | | | | | | | |&#95;| | | | | | |&#95;| | |&#95;&#95;&#95;  &#95;| |
+ /&#95;&#95;&#95;&#95;\ \&#95;\ \|     |&#95;| |&#95;&#95;&#95;&#95;|\&#95;&#95;|  |&#95;| |&#95;|&#95;| |&#95;|\&#95;&#95;|&#95;|&#95;| |&#95;|  \&#95;&#95;|&#95;|\&#95;&#95;&#95;&#95;/&#95;&#95;&#95;/
+        &#95;&#95;&#95;&#95;&#95;&#95;&#95;    &#95;&#95;&#95;&#95;&#95;&#95;&#95;    &#95;            &#95;          &#95;&#95;&#95;&#95;&#95;&#95;&#95;    &#95;&#95;&#95;&#95;&#95;&#95;&#95;
+       |  &#95;&#95;&#95;&#95;&#95;|  |  &#95;&#95;&#95;  |  | |          | |        |  &#95;&#95;&#95;  |  |  &#95;&#95;&#95;&#95;&#95;|
+       | |&#95;&#95;&#95;&#95;&#95;   | |   | |  | |          | |        | |&#95;&#95;&#95;| |  | |&#95;&#95;&#95;&#95;&#95;
+       |&#95;&#95;&#95;&#95;&#95;  |  | |   | |  | |          | |        |   &#95;&#95;&#95;&#95;|  |&#95;&#95;&#95;&#95;&#95;  |
+        &#95;&#95;&#95;&#95;&#95;| |  | |&#95;&#95; | |  | |&#95;&#95;&#95;&#95;&#95;     | |&#95;&#95;&#95;&#95;&#95;   | |\  \     &#95;&#95;&#95;&#95;&#95;| |
+       |&#95;&#95;&#95;&#95;&#95;&#95;&#95;|  |&#95;&#95;&#95;&#95;&#95;\&#95;\  |&#95;&#95;&#95;&#95;&#95;&#95;&#95;|    |&#95;&#95;&#95;&#95;&#95;&#95;&#95;|  |&#95;|  \&#95;&#95;\  |&#95;&#95;&#95;&#95;&#95;&#95;&#95;|
+                        &#40;c&#41; 2021-2022 Yet Analytics Inc.
+
+</code></pre><h4 id="log&#95;in&#95;via&#95;auth0">Log in via Auth0</h4><p>Navigate to <a href='http://localhost:8080'>http://localhost:8080</a> and click "OIDC LOGIN":</p><p><img src="../images/oidc/auth0/20_oidc_login_0.png" alt="OIDC login button" /></p><p>You should see a Login box. Log in with the user to whom you granted the LRS Admin role:</p><p><img src="../images/oidc/auth0/21_oidc_login_1.png" alt="OIDC login box" /></p><p>You will be presented with an "Authorize App" box, click the check mark:</p><p><img src="../images/oidc/auth0/22_oidc_grant.png" alt="OIDC grant box" /></p><p>If you have completed the above steps correctly, you will be redirected to the SQL LRS Admin console:</p><p><img src="../images/oidc/auth0/23_oidc_logged_in.png" alt="OIDC logged in" /></p><p>If you are not able to log in or receive an error, please let us know in a GitHub issue.</p><p><a href='../index.html'><- Back to Index</a></p>
+        <div class="footer">
+         &copy; 2021-2022 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
+         Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+         <span class="build">Build: a60f181ce1ea6f71e9397fe39abca799e326f3e1</span>
+        </div>
+      </div>
+    </body>
+</html>
