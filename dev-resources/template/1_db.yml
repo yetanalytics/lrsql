@@ -31,7 +31,7 @@ Parameters:
   DBInstanceClass:
     Description: For provisioned aurora, the instance class to use
     Type: String
-    Default: "db.t4g.medium"
+    Default: "db.r4.large"
   DBName:
     Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
     Type: String
