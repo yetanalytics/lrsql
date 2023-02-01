@@ -92,6 +92,11 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
+    # These permissions are needed by configure-aws-credentials in order
+    # to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write # required to use OIDC authentication
+      contents: read  # required to checkout the code from the repo
     needs: build
     if: ${{ github.ref_type == 'tag' }}
     steps:
