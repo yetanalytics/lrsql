@@ -113,6 +113,15 @@ Parameters:
     Type: CommaDelimitedList
     Description: A comma-separated list of origins to allow. If not provided ALBHostName will be used if present, otherwise no origins will be allowed.
 
+  # Logging Settings
+  LogRetentionInDays:
+    Description: How long to retain CloudWatch Logs from the LRSQL Instance
+    Type: Number
+    Default: 7
+  LogGroupPrefix:
+    Description: Prefix for CloudWatch log group.
+    Type: String
+    Default: "/yet/lrsql/"
 
 Conditions:
   SetDNS:
@@ -236,6 +245,34 @@ Resources:
           !Join [":", [!Ref "DBStackName", "DBName"]]
 
   # Servers
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '${LogGroupPrefix}${AWS::StackName}'
+      RetentionInDays: !Ref LogRetentionInDays
+
+  LogPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Description: IAM Policy that allows SQL LRS instances to write to the log group.
+    Properties:
+      ManagedPolicyName: !Sub '${AWS::StackName}-${AWS::Region}-lrsql-log-policy'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:DescribeLogGroups'
+            Resource:
+              - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+          - Effect: Allow
+            Action:
+              - 'logs:DescribeLogGroups'
+              - 'logs:CreateLogStream'
+              - 'logs:DescribeLogStreams'
+              - 'logs:PutLogEvents'
+            Resource:
+              - !GetAtt LogGroup.Arn
+
 
   InstancePolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -272,6 +309,8 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - !Ref InstancePolicy
+        - !Ref LogPolicy
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -315,16 +354,20 @@ Resources:
       AWS::CloudFormation::Init:
         configSets:
           default:
-            - 00_installLrs
-            - 01_setupCfnHup
-            - 02_configureLrs
-            - 03_enableLrs
-            - 04_startLrs
+            - installLrs
+            - setupCfnHup
+            - configureCw
+            - restartCw
+            - configureLrs
+            - enableLrs
+            - startLrs
           UpdateEnvironment:
-            - 00_installLrs
-            - 02_configureLrs
-            - 05_restartLrs
-        00_installLrs:
+            - installLrs
+            - configureCw
+            - restartCw
+            - configureLrs
+            - restartLrs
+        installLrs:
           files:
             "/tmp/lrsql.zip":
               source: !Join
@@ -342,7 +385,7 @@ Resources:
             01unzip_lrs:
               cwd: "~"
               command: "sudo unzip /tmp/lrsql.zip -d /opt/lrsql/"
-        01_setupCfnHup:
+        setupCfnHup:
           files:
             "/etc/cfn/cfn-hup.conf":
               content: !Sub |
@@ -367,7 +410,7 @@ Resources:
               content: !Sub |
                 [cfn-auto-reloader-hook]
                 triggers=post.update
-                path=Resources.LrsInstances.Metadata.AWS::CloudFormation::Init.02_configureLrs
+                path=Resources.LrsInstances.Metadata.AWS::CloudFormation::Init
                 action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets UpdateEnvironment
                 runas=root
               mode: "000400"
@@ -380,7 +423,66 @@ Resources:
             02start_cfn_hup:
               command: !Sub |
                 systemctl start cfn-hup.service
-        02_configureLrs:
+        configureCw:
+          packages:
+            rpm:
+              amazon-cloudwatch-agent: https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+          files:
+            '/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json':
+              content: !Sub |
+                {
+                  "metrics": {
+                    "append_dimensions": {
+                      "AutoScalingGroupName": "${!aws:AutoScalingGroupName}",
+                      "ImageId": "${!aws:ImageId}",
+                      "InstanceId": "${!aws:InstanceId}",
+                      "InstanceType": "${!aws:InstanceType}"
+                    },
+                    "metrics_collected": {
+                      "cpu": {
+                        "measurement": [
+                          "usage_active",
+                          "usage_nice",
+                          "usage_system",
+                          "usage_user"
+                        ]
+                      },
+                      "mem": {
+                        "measurement": [
+                          "mem_used_percent"
+                        ]
+                      },
+                      "swap": {
+                        "measurement": [
+                          "swap_used_percent"
+                        ]
+                      }
+                    }
+                  },
+                  "logs":{
+                    "logs_collected": {
+                      "files":{
+                        "collect_list": [
+                          {
+                            "file_path": "/opt/lrsql/logs/*",
+                            "auto_removal": true,
+                            "log_group_name": "${LogGroup}",
+                            "log_stream_name": "lrsql-instance-{instance_id}"
+                          }
+                        ]
+                      }
+                    },
+                    "log_stream_name": "lrsql-instance-{instance_id}"
+                  }
+                }
+        # Invoke amazon-cloudwatch-agent-ctl to restart the AmazonCloudWatchAgent.
+        restartCw:
+          commands:
+            01_stop_service:
+              command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a stop
+            02_start_service:
+              command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+        configureLrs:
           files:
             "/opt/lrsql/config/lrsql.json":
               content: !Sub
@@ -447,17 +549,17 @@ Resources:
               mode: "000755"
               owner: root
               group: root
-        03_enableLrs:
+        enableLrs:
           commands:
             01enable_lrsql:
               command: !Sub |
                 systemctl enable lrsql.service
-        04_startLrs:
+        startLrs:
           commands:
             01start_lrsql:
               command: !Sub |
                 systemctl start lrsql.service
-        05_restartLrs:
+        restartLrs:
           commands:
             01daemon_reload:
               command: |
