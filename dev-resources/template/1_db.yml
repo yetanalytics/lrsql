@@ -5,7 +5,7 @@ Parameters:
     Description: "VPC on which to run SQL LRS"
     Type: AWS::EC2::VPC::Id
   DBSubnets:
-    Description: Subnets on which the DB is running
+    Description: Subnets on which to run the DB initialization Lambda function
     Type: List<AWS::EC2::Subnet::Id>
 
   # Postgres
