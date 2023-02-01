@@ -519,7 +519,7 @@ Resources:
                   AllowedOrigins: !If
                     - SetCORS
                     - !Sub
-                      - '["${JoinedAllowedOrigins}}"]'
+                      - '["${JoinedAllowedOrigins}"]'
                       - JoinedAllowedOrigins: !Join ['","', !Ref CORSAllowedOrigins]
                     - !If
                       - SetDNS
