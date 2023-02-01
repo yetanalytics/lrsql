@@ -58,7 +58,7 @@ Parameters:
     AllowedValues:
       - true
       - false
-    Default: false
+    Default: true
 
 Mappings:
   DBClusterParameterGroupMap:
