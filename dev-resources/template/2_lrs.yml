@@ -11,7 +11,6 @@ Parameters:
   DBStackName:
     Description: DB Stack Reference
     Type: String
-    Default: yetadmin
   DBAppUserName:
     Description: Name of app db user
     Type: String
