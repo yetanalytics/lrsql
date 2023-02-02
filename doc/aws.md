@@ -81,14 +81,9 @@ This template deploys the application servers, the load balancer, and also a sma
   - ALBHostedZone: (Optional) Set the Hosted Zone ID if the domain registrar is Route53 to enable automatic DNS management
   - ALBSubnets: Choose the two Public Subnets from Step 2
   - CORSAllowedOrigins: If you are using your own DNS and do not provide ALBHostName and ALBHostedZone above, put the HTTPS address of your LRS here, ie. `https://mydomain.com` to allow CORS requests.
+  - DBStackName: Choose the name of the stack deployed in Step 3
   - DBAppUserName: Choose a desired database username for the application
   - DBAppUserPasswordPath: Use the name selected in Systems Manager for the App Password in Step 1
-  - DBHost: Copy and paste the DBEndpoint Output from Step 3
-  - DBInstanceSG: Select the DBInstanceSG Output from Step 3
-  - DBMasterUserName: Must be the same value as in Step 3
-  - DBMasterUserPasswordPath: Must be the same value as in Step 3
-  - DBName: Must be the same value as in Step 3
-  - DBPort: 3306
   - DBSubnets: Select the two Private Subnets from Step 2
   - DefaultAdminPass: Enter a temporary seed password for the LRS Admin login (for first login).
   - DefaultAdminUser: Enter initial seed username for LRS Admin Login
