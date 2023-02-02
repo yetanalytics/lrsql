@@ -1,12 +1,11 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Postgres DB for SQL LRS"
 Parameters:
-  # Networking
   VPCId:
     Description: "VPC on which to run SQL LRS"
     Type: AWS::EC2::VPC::Id
   DBSubnets:
-    Description: Subnets on which to run services
+    Description: Subnets on which to run the DB initialization Lambda function
     Type: List<AWS::EC2::Subnet::Id>
 
   # Postgres
@@ -28,6 +27,7 @@ Parameters:
     Default: "12.9"
     AllowedValues:
       - "12.9"
+      - "14.3"
   DBInstanceClass:
     Description: For provisioned aurora, the instance class to use
     Type: String
@@ -60,9 +60,18 @@ Parameters:
       - false
     Default: true
 
+Mappings:
+  DBClusterParameterGroupMap:
+    "12.9":
+      Name: default.aurora-postgresql12
+    "14.3":
+      Name: default.aurora-postgresql14
+
 Conditions:
-  DBProvisioned: !Equals [!Ref DBEngineMode, "provisioned"]
-  DBSnapshotIdentifierProvided: !Not [!Equals [!Ref DBSnapshotIdentifier, ""]]
+  DBProvisioned:
+    !Equals [!Ref DBEngineMode, "provisioned"]
+  DBSnapshotIdentifierProvided:
+    !Not [!Equals [!Ref DBSnapshotIdentifier, ""]]
 
 Resources:
   # PostgreSQL Database
@@ -71,7 +80,8 @@ Resources:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: SQL LRS App Instance Subnet Group
-      SubnetIds: !Ref DBSubnets
+      SubnetIds:
+        !Ref DBSubnets
 
   DBInstanceSG:
     Type: AWS::EC2::SecurityGroup
@@ -108,7 +118,7 @@ Resources:
       VpcSecurityGroupIds:
         - !Ref DBInstanceSG
       DBSubnetGroupName: !Ref DBSubnetGroup
-      DBClusterParameterGroupName: default.aurora-postgresql12
+      DBClusterParameterGroupName: !FindInMap [DBClusterParameterGroupMap, !Ref "DBEngineVersion", Name]
       EnableCloudwatchLogsExports: !If
         - DBProvisioned
         - [postgresql]
@@ -145,3 +155,23 @@ Outputs:
     Value: !Ref DBInstanceSG
     Export:
       Name: !Sub "${AWS::StackName}:DBInstanceSG"
+  DBName:
+    Description: Name of the DB
+    Value: !Ref DBName
+    Export:
+      Name: !Sub "${AWS::StackName}:DBName"
+  DBMasterUserName:
+    Description: DB Master username
+    Value: !Ref DBMasterUserName
+    Export:
+      Name: !Sub "${AWS::StackName}:DBMasterUserName"
+  DBMasterUserPasswordPath:
+    Description: Path to the DB Master password
+    Value: !Ref DBMasterUserPasswordPath
+    Export:
+      Name: !Sub "${AWS::StackName}:DBMasterUserPasswordPath"
+  DBMasterUserPasswordVersion:
+    Description: Path to the DB Master password
+    Value: !Ref DBMasterUserPasswordVersion
+    Export:
+      Name: !Sub "${AWS::StackName}:DBMasterUserPasswordVersion"

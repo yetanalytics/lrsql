@@ -1,44 +1,20 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "SQL LRS and DB Init Script"
 Parameters:
-  # Networking
   VPCId:
-    Description: "VPC on which to run SQL LRS"
+    Description: VPC on which to run SQL LRS
     Type: AWS::EC2::VPC::Id
   DBSubnets:
     Description: Subnets on which the DB is running
     Type: List<AWS::EC2::Subnet::Id>
   # DB Details
-  DBName:
-    Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
+  DBStackName:
+    Description: DB Stack Reference
     Type: String
-    Default: "lrsql_demo"
-  DBHost:
-    Description: Write hostname of PG db
-    Type: String
-  DBPort:
-    Description: Port of PG db
-    Type: String
-    Default: 3306
-  DBInstanceSG:
-    Type: AWS::EC2::SecurityGroup::Id
-    Description: DB instance security group
-  DBMasterUserName:
-    Description: Name of admin user
-    Type: String
-    Default: yetadmin
   DBAppUserName:
     Description: Name of app db user
     Type: String
     Default: lrsqldbuser
-  DBMasterUserPasswordPath:
-    Description: SSM Path to the secret password
-    Type: String
-    Default: "/lrsql/demo/DB_MASTER_USER_PASSWORD"
-  DBMasterUserPasswordVersion:
-    Description: SSM version
-    Type: Number
-    Default: 1
   DBAppUserPasswordPath:
     Description: SSM Path to the secret password
     Type: String
@@ -77,7 +53,7 @@ Parameters:
   InstanceSSHCidr:
     Description: CIDR Range for SSH Access to instances (Typically VPC CIDR Range)
     Type: String
-    Default: "173.147.0.0/16"
+    Default: "172.147.0.0/16"
   InstanceSubnets:
     Description: Subnet on which to run the lrsql server
     Type: List<AWS::EC2::Subnet::Id>
@@ -112,20 +88,20 @@ Parameters:
   ASGCPUPolicyTargetValue:
     Type: String # according to docs a Double
     Description: Target CPU utilization of instances. Leave blank to disable CPU autoscaling.
-    Default: "" # '60.0'
+    Default: "" # "60.0"
   ASGALBRequestCountTargetValue:
     Type: String # according to docs a Double
     Description: Target requests per instance. Leave blank to disable request count autoscaling.
-    Default: "" # '10000.0'
+    Default: "" # "10000.0"
 
   # Front-end (ALB) specific settings
-  ALBSubnets:
-    Description: Subnets on which to run the ALB.
-    Type: List<AWS::EC2::Subnet::Id>
   ALBHostName:
     Type: String
     Description: The hostname to use for the Elastic Load Balancer.
     Default: "sqllrs.yetanalytics.io"
+  ALBSubnets:
+    Description: Subnets that are used by the Elastic Load Balancer.
+    Type: List<AWS::EC2::Subnet::Id>
   ALBCertArn:
     Type: String
     Description: The ARN of an ACM cert to use on the ALB
@@ -133,7 +109,6 @@ Parameters:
     Type: String
     Description: Route53 Hosted Zone in which to set a DNS record. If unset no record will be updated
     Default: ""
-
   # CORS Settings
   CORSAllowedOrigins:
     Type: CommaDelimitedList
@@ -157,7 +132,8 @@ Conditions:
     !Not [!Equals [!Ref ASGCPUPolicyTargetValue, ""]]
   ASGALBRequestCountTargetValueProvided:
     !Not [!Equals [!Ref ASGALBRequestCountTargetValue, ""]]
-  InstanceKeyNameProvided: !Not [!Equals [!Ref InstanceKeyName, ""]]
+  InstanceKeyNameProvided:
+    !Not [!Equals [!Ref InstanceKeyName, ""]]
 
 Resources:
   # DB Initialization Function and custom resource to run it
@@ -190,10 +166,15 @@ Resources:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: Ingress from the init fn to RDS instance
-      GroupId: !Ref DBInstanceSG
+      GroupId:
+        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
       IpProtocol: tcp
-      FromPort: !Ref DBPort
-      ToPort: !Ref DBPort
+      FromPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
       SourceSecurityGroupId: !Ref DBInitFnSG
 
   DBInitPolicy:
@@ -211,7 +192,11 @@ Resources:
               - "secretsmanager:GetSecretValue"
             Resource:
               - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}"
-              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBMasterUserPasswordPath}"
+              - !Sub
+                  - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBMasterUserPasswordPath}"
+                  - DBMasterUserPasswordPath:
+                      Fn::ImportValue:
+                        !Join [":", [!Ref "DBStackName", "DBMasterUserPasswordPath"]]
           - Effect: Allow
             Action:
               - ec2:DescribeNetworkInterfaces
@@ -241,19 +226,26 @@ Resources:
     DependsOn: DBInitFn
     Properties:
       ServiceToken: !GetAtt DBInitFn.Arn
-      DBMasterUsername: !Ref DBMasterUserName
+      DBMasterUsername:
+        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBMasterUserName"]]
       DBMasterPasswordPath: !Join
         - ":"
-        - - !Ref DBMasterUserPasswordPath
-          - !Ref DBMasterUserPasswordVersion
+        - - Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBMasterUserPasswordPath"]]
+          - Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBMasterUserPasswordVersion"]]
       DBUsername: !Ref DBAppUserName
       DBPasswordPath: !Join
         - ":"
         - - !Ref DBAppUserPasswordPath
           - !Ref DBAppUserPasswordVersion
-      DBHost: !Ref DBHost
-      DBPort: !Ref DBPort
-      DBName: !Ref DBName
+      DBHost:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
+      DBPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      DBName:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBName"]]
 
   # Servers
   LogGroup:
@@ -344,10 +336,15 @@ Resources:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       Description: Ingress from the LRS instance to RDS instance
-      GroupId: !Ref DBInstanceSG
+      GroupId:
+        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
       IpProtocol: tcp
-      FromPort: !Ref DBPort
-      ToPort: !Ref DBPort
+      FromPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
       SourceSecurityGroupId: !Ref InstanceSG
 
   LrsInstances:
@@ -499,7 +496,7 @@ Resources:
                       "dbPort": ${DBPort},
                       "dbName": "${DBName}",
                       "dbUser": "${DBAppUserName}",
-                      "dbPassword": "${InitDBCustomResource.dbAppPass}"
+                      "dbPassword": "${DBPass}"
                     },
                     "lrs" : {
                       "adminUserDefault": "${DefaultAdminUser}",
@@ -512,7 +509,18 @@ Resources:
                       "allowedOrigins": ${AllowedOrigins}
                     }
                   }
-                - AllowedOrigins: !If
+                - DBName:
+                    Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBName"]]
+                  DBHost:
+                    Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
+                  DBAppUserName: !Ref DBAppUserName
+                  DBPass: !GetAtt InitDBCustomResource.dbAppPass
+                  DefaultAdminUser: !Ref DefaultAdminUser
+                  DefaultAdminPass: !Ref DefaultAdminPass
+                  InstanceHttpPort: !Ref InstanceHttpPort
+                  DBPort:
+                    Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBPort"]]
+                  AllowedOrigins: !If
                     - SetCORS
                     - !Sub
                       - '["${JoinedAllowedOrigins}"]'
@@ -610,6 +618,7 @@ Resources:
             - - !GetAtt LoadBalancer.LoadBalancerFullName
               - !GetAtt TargetGroup.TargetGroupFullName
         TargetValue: !Ref ASGALBRequestCountTargetValue
+
 
   # ASG
   AutoScalingGroup:
@@ -757,3 +766,5 @@ Outputs:
       - ""
       - - "https://"
         - !Ref ALBHostName
+    Export:
+      Name: !Sub "${AWS::StackName}:LrsAddress"
