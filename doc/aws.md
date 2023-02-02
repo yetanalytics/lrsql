@@ -26,16 +26,6 @@ Note that if you do not use Route53 DNS you MUST provide one or more allowed COR
 
 In these templates the Load Balancer expects to provide access to the LRS via HTTPS/443. You will need to either acquire a free Amazon Certificate Manager cert (highly recommended) or import your own cert from another CA into ACM for use in the deployment.
 
-#### S3 Bucket
-
-A script is needed during the deployment and the S3 Bucket is the location where the template accesses the script. This step assumes you have a current nodeJS 12+ and npm installed.
-
-- In your SQL LRS codebase navigate to `dev-resources/template/db-init-script/`
-- Build the script and dependencies by typing `npm install`
-- Zip the `db-init-script` directory. In Linux/MacOS this would be `zip -r db-init.zip .`
-- In Amazon S3 create a new Bucket, you will need the bucket's name later
-- Upload the zip to the bucket, you will need the filename later as well
-
 #### Database Passwords in Systems Manager
 
 The deployment requires two passwords for the Postgres database. One 'Master' password provided to the database as it is created, and one 'App' password provided to SQL LRS to access the database. These passwords are managed in Systems Manager (SSM).
@@ -107,8 +97,8 @@ This template deploys the application servers, the load balancer, and also a sma
   - LogGroupPrefix: Leave this at the default: `/yet/lrsql/`
   - LogGroupRetentionInDays: Leave this at the default of 7 (days)
   - LrsVersion: Select the desired version of SQL LRS from the GitHub Releases page [here](https://github.com/yetanalytics/lrsql/releases)
-  - S3Bucket: The bucket created or used in Step 1
-  - S3Key: The zip filename from Step 1
+  - S3Bucket: Leave this at the default: `lrsql-dbfn`
+  - S3KeyOverride: Leave this at the default: (blank)
   - VPCId: VPC Created in Step 1
 - Deploy the Stack
 
