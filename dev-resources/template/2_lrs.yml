@@ -26,10 +26,12 @@ Parameters:
   # Lambda Script
   S3Bucket:
     Type: String
-    Default: lrsql-demo
-  S3Key:
+    Description: S3 Bucket used to source the DB Init function. The default is hosted publicly so you probably don't need to change this.
+    Default: lrsql-dbfn
+  S3KeyOverride:
     Type: String
-    Default: db-init.zip
+    Description: Override for S3 key to source the DB Init function. Drawn from LrsVersion by default. You probably don't want to change this.
+    Default: ""
 
   # Server(s)
   InstanceType:
@@ -123,10 +125,9 @@ Parameters:
     Default: "/yet/lrsql/"
 
 Conditions:
-  SetDNS:
-    !Not [!Equals [!Ref ALBHostedZone, ""]]
-  SetCORS:
-    !Not [!Equals [!Join ["", !Ref CORSAllowedOrigins], ""]]
+  SetDNS: !Not [!Equals [!Ref ALBHostedZone, ""]]
+  SetCORS: !Not [!Equals [!Join ["", !Ref CORSAllowedOrigins], ""]]
+  SetS3Key: !Not [!Equals [!Ref S3KeyOverride, ""]]
   ASGCPUPolicyTargetValueProvided:
     !Not [!Equals [!Ref ASGCPUPolicyTargetValue, ""]]
   ASGALBRequestCountTargetValueProvided:
@@ -142,7 +143,10 @@ Resources:
     Properties:
       Code:
         S3Bucket: !Ref S3Bucket
-        S3Key: !Ref S3Key
+        S3Key: !If
+          - SetS3Key
+          - !Ref S3KeyOverride
+          - !Sub "db-init-${LrsVersion}.zip"
       Handler: index.handler
       Runtime: nodejs14.x
       Timeout: 15
