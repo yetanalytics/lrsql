@@ -167,7 +167,8 @@ Resources:
     Properties:
       Code:
         S3Bucket: !Ref S3Bucket
-        S3Key: !If SetS3Key
+        S3Key: !If
+          - SetS3Key
           - !Ref S3Key
           - !Sub "db-init-${LrsVersion}.zip"
       Handler: index.handler
