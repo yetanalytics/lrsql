@@ -28,6 +28,7 @@ xAPI resources accept tokens with the following scopes:
 | ---                    | ---                                           |
 | `all`                  | Full read/write access to all xAPI resources. |
 | `all/read`             | Read-only access to all xAPI resources.       |
+| `state`                | Read/Write access to the xAPI State Resource  |
 | `statements/read`      | Read-only access to all xAPI Statements (but not non-Statement resources). |
 | `statements/read/mine` | Read-only access to xAPI Statements whose `authority` value matches the authority of the current user. |
 | `statements/write`     | Write-only access to xAPI Statements.          |
