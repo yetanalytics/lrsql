@@ -98,7 +98,7 @@ This template deploys the application servers, the load balancer, and also a sma
   - LogGroupRetentionInDays: Leave this at the default of 7 (days)
   - LrsVersion: Select the desired version of SQL LRS from the GitHub Releases page [here](https://github.com/yetanalytics/lrsql/releases)
   - S3Bucket: Leave this at the default: `lrsql-dbfn`
-  - S3Key: Leave this at the default: (blank)
+  - S3KeyOverride: Leave this at the default: (blank)
   - VPCId: VPC Created in Step 1
 - Deploy the Stack
 
