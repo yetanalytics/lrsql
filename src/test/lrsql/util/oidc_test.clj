@@ -21,19 +21,21 @@
   (testing "Gets valid scopes, skips others"
     (is (= #{:scope/all
              :scope/all.read
+             :scope/state
              :scope/statements.read
              :scope/statements.write}
            (into #{}
                  (parse-scope-claim
-                  "openid profile all all/read statements/read statements/write")))))
+                  "openid profile all all/read statements/read statements/write state")))))
   (testing "Configurable scope-prefix"
     (is (= #{:scope/all
              :scope/all.read
+             :scope/state
              :scope/statements.read
              :scope/statements.write}
            (into #{}
                  (parse-scope-claim
-                  "openid profile lrsql:all lrsql:all/read lrsql:statements/read lrsql:statements/write"
+                  "openid profile lrsql:all lrsql:all/read lrsql:statements/read lrsql:statements/write lrsql:state"
                   :scope-prefix "lrsql:"))))))
 
 (deftest token-auth-identity-test

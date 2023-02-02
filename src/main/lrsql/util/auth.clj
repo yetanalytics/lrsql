@@ -14,6 +14,7 @@
 (def scope-str-kw-map
   {"all"                  :scope/all
    "all/read"             :scope/all.read
+   "state"                :scope/state
    "statements/read"      :scope/statements.read
    "statements/write"     :scope/statements.write
    "statements/read/mine" :scope/statements.read.mine})
@@ -132,25 +133,33 @@
            _auth
            _agent]
     :as auth-identity}]
-  (cond
-    ;; /statements path
-    (some-> path-info not-empty (cstr/ends-with? "statements"))
+  (let [path (or path-info "")]
     (cond
-      (#{:get :head} request-method)
-      (some? (most-permissive-statement-read-scope auth-identity))
-      (#{:put :post} request-method) ; No statement delete implemented
-      (some? (most-permissive-statement-write-scope auth-identity))
+      ;; /statements path
+      (cstr/ends-with? path "statements")
+      (cond
+        (#{:get :head} request-method)
+        (some? (most-permissive-statement-read-scope auth-identity))
+        (#{:put :post} request-method) ; No statement delete implemented
+        (some? (most-permissive-statement-write-scope auth-identity))
+        :else
+        (do (log-scope-error scopes)
+            false))
+
+      ;; activities/state
+      (and
+       (cstr/ends-with? path "activities/state")
+       (contains? scopes :scope/state))
+      true
+
+      ;; all other paths (e.g. /about, /activities)
       :else
-      (do (log-scope-error scopes)
-          false))
-    ;; all other paths (e.g. /about, /activities)
-    :else
-    (cond
-      (#{:get :head} request-method)
-      (or (contains? scopes :scope/all)
-          (contains? scopes :scope/all.read))
-      (#{:put :post :delete} request-method)
-      (contains? scopes :scope/all)
-      :else
-      (do (log-scope-error scopes)
-          false))))
+      (cond
+        (#{:get :head} request-method)
+        (or (contains? scopes :scope/all)
+            (contains? scopes :scope/all.read))
+        (#{:put :post :delete} request-method)
+        (contains? scopes :scope/all)
+        :else
+        (do (log-scope-error scopes)
+            false)))))
