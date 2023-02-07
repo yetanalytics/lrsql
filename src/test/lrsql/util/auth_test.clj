@@ -63,6 +63,28 @@
       false {:request-method :delete
              :path-info      "xapi/activities/state"
              :scopes         #{:scope/all.read}}
+      true  {:request-method :get
+             :path-info      "xapi/activities/state"
+             :scopes         #{:scope/all.read}}
+      ;; state scope
+      true  {:request-method :get
+             :path-info      "xapi/activities/state"
+             :scopes         #{:scope/state}}
+      true  {:request-method :head
+             :path-info      "xapi/activities/state"
+             :scopes         #{:scope/state}}
+      true  {:request-method :post
+             :path-info      "xapi/activities/state"
+             :scopes         #{:scope/state}}
+      true  {:request-method :put
+             :path-info      "xapi/activities/state"
+             :scopes         #{:scope/state}}
+      true  {:request-method :delete
+             :path-info      "xapi/activities/state"
+             :scopes         #{:scope/state}}
+      false {:request-method :get
+             :path-info      "xapi/activities/profile"
+             :scopes         #{:scope/state}}
       ;; statements/read scope
       true {:request-method :get
             :path-info      "xapi/statements"

@@ -45,6 +45,7 @@
 (def string-scopes
   #{"all"
     "all/read"
+    "state"
     "statements/read"
     "statements/read/mine"
     "statements/write"})
@@ -52,6 +53,7 @@
 (def keyword-scopes
   #{:scope/all
     :scope/all.read
+    :scope/state
     :scope/statements.read
     :scope/statements.read.mine
     :scope/statements.write})
