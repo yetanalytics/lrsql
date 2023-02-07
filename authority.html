@@ -164,10 +164,10 @@ span.build {
 }
 </code></pre><p>Possible claims vary by identity provider, see the <a href='https://www.iana.org/assignments/jwt/jwt.xhtml'>comprehensive list here</a>. SQL LRS provides one additional value, <code>lrsql/resolved-client-id</code> that resolves to the following claims in order of precedence:</p><ol><li><code>client&#95;id</code></li><li><code>azp</code></li><li><code>aud</code> (if <code>aud</code> is a string)</li><li><code>aud&#91;0&#93;</code> (if <code>aud</code> is an array)</li></ol><p>Note that the request will fail if expected claims are not present on the token.</p><p>As with the normal authority template, you can provide a custom version by setting the <code>LRSQL&#95;OIDC&#95;AUTHORITY&#95;TEMPLATE</code> (<code>lrs.oidcAuthorityTemplate</code>) config variable.</p><p><a href='index.html'><- Back to Index</a></p>
         <div class="footer">
-         &copy; 2021-2022 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         &copy; 2021-2023 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
-         <span class="build">Build: 482cd9bb0bd410591fdd7bc8a2da6a6736b45fcf</span>
+         <span class="build">Build: 26f29b3984fa26faf97ebb1f274b3557fea15c35</span>
         </div>
       </div>
     </body>
