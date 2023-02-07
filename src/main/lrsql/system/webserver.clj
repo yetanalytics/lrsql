@@ -25,6 +25,7 @@
                 url-prefix
                 key-password
                 enable-admin-ui
+                enable-admin-status
                 enable-stmt-html
                 allow-all-origins
                 allowed-origins]
@@ -58,6 +59,7 @@
                :leeway                jwt-lwy
                :secret                private-key
                :enable-admin-ui       enable-admin-ui
+               :enable-admin-status   enable-admin-status
                :enable-account-routes enable-local-admin
                :oidc-interceptors     oidc-admin-interceptors
                :oidc-ui-interceptors  oidc-admin-ui-interceptors}))
