@@ -50,6 +50,11 @@
                {:headers headers
                 :body    body}))
 
+(defn- get-status
+  [headers]
+  (curl/get "http://localhost:8080/admin/status"
+            {:headers headers}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -190,6 +195,14 @@
                            :body    (u/write-json-str {"api-key"    pk
                                                        "secret-key" sk})})
                          401)))))
+    (testing "get status information"
+      (let [{:keys [status
+                    body]} (get-status headers)
+            edn-body       (u/parse-json body)]
+        ;; success
+        (is (= 200 status))
+        ;; TODO: Replace with assertions based on shape
+        (is (= {} edn-body))))
     (component/stop sys')))
 
 (deftest auth-routes-test

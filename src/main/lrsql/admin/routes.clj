@@ -7,6 +7,7 @@
             [lrsql.admin.interceptors.credentials :as ci]
             [lrsql.admin.interceptors.ui :as ui]
             [lrsql.admin.interceptors.jwt :as ji]
+            [lrsql.admin.interceptors.status :as si]
             [lrsql.util.interceptor :as util-i]))
 
 (defn- make-common-interceptors
@@ -78,6 +79,17 @@
                                   ci/delete-api-keys)
      :route-name :lrsql.admin.creds/delete]})
 
+(defn admin-status-routes
+  [common-interceptors jwt-secret jwt-exp jwt-leeway]
+  #{;; Return LRS Status information
+    ["/admin/status" :get (conj common-interceptors
+                                ;; TODO: param validation
+                                (ji/validate-jwt jwt-secret jwt-leeway)
+                                ji/validate-jwt-account
+                                si/get-status)
+     :route-name :lrsql.admin.creds/status]})
+
+
 (defn admin-ui-routes
   [common-interceptors]
   #{;; Redirect root to admin UI
@@ -102,6 +114,7 @@
            leeway
            secret
            enable-admin-ui
+           enable-admin-status
            enable-account-routes
            oidc-interceptors
            oidc-ui-interceptors]
@@ -119,4 +132,7 @@
                 (when enable-admin-ui
                   (admin-ui-routes
                    (into common-interceptors
-                         oidc-ui-interceptors))))))
+                         oidc-ui-interceptors)))
+                (when enable-admin-status
+                  (admin-status-routes
+                   common-interceptors-oidc secret exp leeway)))))
