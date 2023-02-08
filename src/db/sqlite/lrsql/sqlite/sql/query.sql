@@ -264,3 +264,12 @@ AND secret_key = :secret-key
 SELECT scope FROM credential_to_scope
 WHERE api_key = :api-key
 AND secret_key = :secret-key
+
+/* LRS Status */
+
+-- :name query-statement-count
+-- :command :query
+-- :result :one
+-- :doc Return the number of statements in the LRS
+SELECT COUNT(id) scount
+FROM xapi_statement

@@ -178,4 +178,8 @@
     (bd/set-read-time->instant!)
     (bd/set-read-bytes->json! #{"payload"}))
   (-set-write! [_]
-    (bd/set-write-json->bytes!)))
+    (bd/set-write-json->bytes!))
+
+  bp/AdminStatusBackend
+  (-query-statement-count [this tx]
+    (query-statement-count tx)))

@@ -188,4 +188,8 @@
     (pd/set-read-pgobject->json!))
   (-set-write! [_]
     ;; next.jdbc automatically sets the reading of Instants as java.sql.Dates
-    (pd/set-write-json->pgobject!)))
+    (pd/set-write-json->pgobject!))
+
+  bp/AdminStatusBackend
+  (-query-statement-count [this tx]
+    (query-statement-count tx)))

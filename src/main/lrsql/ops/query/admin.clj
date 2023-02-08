@@ -64,16 +64,13 @@
         (bp/-query-all-admin-accounts bk tx)))
 
 (s/fdef query-status
-  :args (s/cat :bk any? ;; ss/admin-status-backend?
+  :args (s/cat :bk ss/admin-status-backend?
                :tx transaction?
                :input any?) ;; TODO: spec input when there is some
-  ;; :ret ss/query-status-ret-spec
-  )
+  :ret ss/query-status-ret-spec)
 
 (defn query-status
   "Get status information about the LRS including statement counts and other
   metric information."
   [bk tx _input]
-  {
-   ;; :statement-count (bp/-query-statement-count bk tx)
-   })
+  {:statement-count (:scount (bp/-query-statement-count bk tx))})

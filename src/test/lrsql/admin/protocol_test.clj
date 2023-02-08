@@ -1,5 +1,5 @@
 (ns lrsql.admin.protocol-test
-  "Test the protocol fns of `AdminAccountManager` and `APIKeyManager` directly."
+  "Test the protocol fns of `AdminAccountManager`, `APIKeyManager`, `AdminStatusProvider` directly."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
@@ -129,4 +129,13 @@
           (adp/-delete-api-keys lrs acc-id api-key secret-key)
           (is (= []
                  (adp/-get-api-keys lrs acc-id))))))
+    (component/stop sys')))
+
+(deftest status-test
+  (let [sys  (support/test-system)
+        sys' (component/start sys)
+        lrs  (:lrs sys')]
+    (testing "Get LRS status"
+      (is (= {:statement-count 0}
+             (adp/-get-status lrs {}))))
     (component/stop sys')))

@@ -201,8 +201,8 @@
             edn-body       (u/parse-json body)]
         ;; success
         (is (= 200 status))
-        ;; TODO: Replace with assertions based on shape
-        (is (= {} edn-body))))
+        ;; Has data
+        (is (= {"statement-count" 0} edn-body))))
     (component/stop sys')))
 
 (deftest auth-routes-test
