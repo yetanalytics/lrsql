@@ -80,7 +80,7 @@
      :route-name :lrsql.admin.creds/delete]})
 
 (defn admin-status-routes
-  [common-interceptors jwt-secret jwt-exp jwt-leeway]
+  [common-interceptors jwt-secret jwt-leeway]
   #{;; Return LRS Status information
     ["/admin/status" :get (conj common-interceptors
                                 ;; TODO: param validation
@@ -135,4 +135,4 @@
                          oidc-ui-interceptors)))
                 (when enable-admin-status
                   (admin-status-routes
-                   common-interceptors-oidc secret exp leeway)))))
+                   common-interceptors-oidc secret leeway)))))
