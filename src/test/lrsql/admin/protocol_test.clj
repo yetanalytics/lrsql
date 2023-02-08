@@ -2,6 +2,7 @@
   "Test the protocol fns of `AdminAccountManager`, `APIKeyManager`, `AdminStatusProvider` directly."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [com.stuartsierra.component :as component]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
             [lrsql.test-support   :as support]))
@@ -21,6 +22,22 @@
 (def test-username "DonaldChamberlin123") ; co-inventor of SQL
 
 (def test-password "iLoveSql")
+
+;; Some statement data for status test
+(def auth-ident
+  {:agent  {"objectType" "Agent"
+            "account"    {"homePage" "http://example.org"
+                          "name"     "12341234-0000-4000-1234-123412341234"}}
+   :scopes #{:scope/all}})
+
+(def stmt-0
+  {"id"     "00000000-0000-4000-8000-000000000000"
+   "actor"  {"mbox"       "mailto:sample.foo@example.com"
+             "objectType" "Agent"}
+   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
+             "display" {"en-US" "answered"
+                        "zh-CN" "回答了"}}
+   "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -137,5 +154,9 @@
         lrs  (:lrs sys')]
     (testing "Get LRS status"
       (is (= {:statement-count 0}
+             (adp/-get-status lrs {})))
+      ;; add a statement
+      (lrsp/-store-statements lrs auth-ident [stmt-0] [])
+      (is (= {:statement-count 1}
              (adp/-get-status lrs {}))))
     (component/stop sys')))
