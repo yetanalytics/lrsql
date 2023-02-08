@@ -191,5 +191,5 @@
     (pd/set-write-json->pgobject!))
 
   bp/AdminStatusBackend
-  (-query-statement-count [this tx]
+  (-query-statement-count [_ tx]
     (query-statement-count tx)))

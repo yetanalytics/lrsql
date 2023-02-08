@@ -231,5 +231,5 @@
     (sd/set-write-bool->int!))
 
   bp/AdminStatusBackend
-  (-query-statement-count [this tx]
+  (-query-statement-count [_ tx]
     (query-statement-count tx)))
