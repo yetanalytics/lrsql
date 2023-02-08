@@ -3,6 +3,7 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.admin :as ads]
+            [lrsql.spec.admin.status :as ss]
             [lrsql.util.admin :as au]))
 
 (s/fdef query-validate-admin
@@ -61,3 +62,18 @@
           {:account-id account-id
            :username username})
         (bp/-query-all-admin-accounts bk tx)))
+
+(s/fdef query-status
+  :args (s/cat :bk any? ;; ss/admin-status-backend?
+               :tx transaction?
+               :input any?) ;; TODO: spec input when there is some
+  ;; :ret ss/query-status-ret-spec
+  )
+
+(defn query-status
+  "Get status information about the LRS including statement counts and other
+  metric information."
+  [bk tx _input]
+  {
+   ;; :statement-count (bp/-query-statement-count bk tx)
+   })
