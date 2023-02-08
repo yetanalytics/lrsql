@@ -329,6 +329,7 @@
         (auth-cmd/delete-credential! backend tx cred-in)
         {:api-key    api-key
          :secret-key secret-key})))
+
   adp/AdminStatusProvider
   (-get-status
     [this params]
