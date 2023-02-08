@@ -8,9 +8,7 @@
    {:name ::get-status
     :enter
     (fn get-status [ctx]
-      (let [{lrs :com.yetanalytics/lrs
-             {:keys [username password]} ::data}
-            ctx]
+      (let [{lrs :com.yetanalytics/lrs} ctx]
         (assoc ctx
                :response
                {:status 200
