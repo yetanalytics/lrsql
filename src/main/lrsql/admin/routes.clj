@@ -87,7 +87,7 @@
                                 (ji/validate-jwt jwt-secret jwt-leeway)
                                 ji/validate-jwt-account
                                 si/get-status)
-     :route-name :lrsql.admin.creds/status]})
+     :route-name :lrsql.admin.status/get]})
 
 
 (defn admin-ui-routes
