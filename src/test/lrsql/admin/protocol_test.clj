@@ -153,10 +153,12 @@
         sys' (component/start sys)
         lrs  (:lrs sys')]
     (testing "Get LRS status"
-      (is (= {:statement-count 0}
+      (is (= {:statement-count 0
+              :actor-count     0}
              (adp/-get-status lrs {})))
       ;; add a statement
       (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-      (is (= {:statement-count 1}
+      (is (= {:statement-count 1
+              :actor-count     1}
              (adp/-get-status lrs {}))))
     (component/stop sys')))

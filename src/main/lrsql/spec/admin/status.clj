@@ -25,6 +25,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/def ::statement-count ::count)
+(s/def ::actor-count ::count)
 
 (def query-status-ret-spec
-  (s/keys :req-un [::statement-count]))
+  (s/keys :req-un [::statement-count
+                   ::actor-count]))

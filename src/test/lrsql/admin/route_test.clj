@@ -202,7 +202,9 @@
         ;; success
         (is (= 200 status))
         ;; Has data
-        (is (= {"statement-count" 0} edn-body))))
+        (is (= {"statement-count" 0
+                "actor-count"     0}
+               edn-body))))
     (component/stop sys')))
 
 (deftest auth-routes-test

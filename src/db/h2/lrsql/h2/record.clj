@@ -182,4 +182,6 @@
 
   bp/AdminStatusBackend
   (-query-statement-count [_ tx]
-    (query-statement-count tx)))
+    (query-statement-count tx))
+  (-query-actor-count [_ tx]
+    (query-actor-count tx)))

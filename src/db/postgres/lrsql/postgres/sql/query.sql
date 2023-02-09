@@ -296,3 +296,11 @@ AND secret_key = :secret-key;
 -- :doc Return the number of statements in the LRS
 SELECT COUNT(id) scount
 FROM xapi_statement;
+
+-- :name query-actor-count
+-- :command :query
+-- :result :one
+-- :doc Return the number of distinct statement actors
+SELECT COUNT(DISTINCT actor_ifi) acount
+FROM statement_to_actor
+WHERE usage = 'Actor';
