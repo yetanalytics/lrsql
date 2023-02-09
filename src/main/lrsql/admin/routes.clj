@@ -91,7 +91,7 @@
 
 
 (defn admin-ui-routes
-  [common-interceptors]
+  [common-interceptors inject-config]
   #{;; Redirect root to admin UI
     ["/" :get `ui/admin-ui-redirect
      :route-name :lrsql.admin.ui/root-redirect]
@@ -102,7 +102,7 @@
     ["/admin/" :get `ui/admin-ui-redirect
      :route-name :lrsql.admin.ui/slash-redirect]
     ["/admin/env" :get (conj common-interceptors
-                             ui/get-env)
+                             (ui/get-env inject-config))
      :route-name :lrsql.admin.ui/get-env]})
 
 (defn add-admin-routes
@@ -132,7 +132,8 @@
                 (when enable-admin-ui
                   (admin-ui-routes
                    (into common-interceptors
-                         oidc-ui-interceptors)))
+                         oidc-ui-interceptors)
+                   {:enable-admin-status enable-admin-status}))
                 (when enable-admin-status
                   (admin-status-routes
                    common-interceptors-oidc secret leeway)))))
