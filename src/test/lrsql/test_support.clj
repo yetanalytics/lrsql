@@ -120,6 +120,17 @@
 
 (def fresh-db-fixture fresh-h2-fixture)
 
+(def current-db nil)
+
+(defmacro by-db
+  "Accepts an expression for each keyword given that will only be run if the
+  current-db matches that keyword. Use this to conditionally test different
+  things on different database backends.
+  Takes an optional :default expression that will run if no others are matched."
+  [& {:keys [default]
+      :as exp-map}]
+  (get exp-map current-db default))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Conformance test helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

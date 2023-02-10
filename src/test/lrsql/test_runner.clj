@@ -5,7 +5,8 @@
 (defn -main
   [& args]
   (let [{db "--database" :or {db "h2"}} args]
-    (with-redefs [support/fresh-db-fixture
+    (with-redefs [support/current-db (keyword db)
+                  support/fresh-db-fixture
                   (case db
                     "h2"       support/fresh-h2-fixture
                     "sqlite"   support/fresh-sqlite-fixture
