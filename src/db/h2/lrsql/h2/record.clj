@@ -1,11 +1,10 @@
 (ns lrsql.h2.record
   (:require [com.stuartsierra.component :as cmp]
-            [com.yetanalytics.squuid :as squuid]
             [hugsql.core :as hug]
             [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
-            [lrsql.init :refer [init-hugsql-adapter!]]
-            [lrsql.util :as u]))
+            [lrsql.h2.result :as res]
+            [lrsql.init :refer [init-hugsql-adapter!]]))
 
 ;; Init HugSql functions
 
@@ -188,5 +187,5 @@
   (-query-actor-count [_ tx]
     (query-actor-count tx))
   (-query-last-statement-stored [_ tx]
-    (when-let [{:keys [id]} (query-last-statement-stored tx)]
-      {:lstored (-> id squuid/uuid->time u/time->str)})))
+    (res/query-last-statement-stored-result
+     (query-last-statement-stored tx))))
