@@ -202,8 +202,9 @@
         ;; success
         (is (= 200 status))
         ;; Has data
-        (is (= {"statement-count" 0
-                "actor-count"     0}
+        (is (= {"statement-count"       0
+                "actor-count"           0
+                "last-statement-stored" nil}
                edn-body))))
     (component/stop sys')))
 

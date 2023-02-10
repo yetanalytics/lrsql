@@ -304,3 +304,12 @@ FROM xapi_statement;
 SELECT COUNT(DISTINCT actor_ifi) acount
 FROM statement_to_actor
 WHERE usage = 'Actor';
+
+-- :name query-last-statement-stored
+-- :command :query
+-- :result :one
+-- :doc Return the stored timestamp of the most recent statement
+SELECT payload->>'stored' lstored
+FROM xapi_statement
+ORDER BY id DESC
+LIMIT 1;

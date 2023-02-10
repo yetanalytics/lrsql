@@ -194,4 +194,6 @@
   (-query-statement-count [_ tx]
     (query-statement-count tx))
   (-query-actor-count [_ tx]
-    (query-actor-count tx)))
+    (query-actor-count tx))
+  (-query-last-statement-stored [_ tx]
+    (query-last-statement-stored tx)))

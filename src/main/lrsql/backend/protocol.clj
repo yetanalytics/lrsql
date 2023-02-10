@@ -111,4 +111,5 @@
 (defprotocol AdminStatusBackend
   ;; Queries
   (-query-statement-count [this tx])
-  (-query-actor-count [this tx]))
+  (-query-actor-count [this tx])
+  (-query-last-statement-stored [this tx]))

@@ -74,4 +74,5 @@
   metric information."
   [bk tx _input]
   {:statement-count (:scount (bp/-query-statement-count bk tx))
-   :actor-count     (:acount (bp/-query-actor-count bk tx))})
+   :actor-count     (:acount (bp/-query-actor-count bk tx))
+   :last-statement-stored (:lstored (bp/-query-last-statement-stored bk tx))})
