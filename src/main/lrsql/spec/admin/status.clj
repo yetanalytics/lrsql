@@ -28,8 +28,12 @@
 (s/def ::statement-count ::count)
 (s/def ::actor-count ::count)
 (s/def ::last-statement-stored (s/nilable ::xs/timestamp))
+(s/def ::platform-frequency
+  (s/map-of string?
+            ::count))
 
 (def query-status-ret-spec
   (s/keys :req-un [::statement-count
                    ::actor-count
-                   ::last-statement-stored]))
+                   ::last-statement-stored
+                   ::platform-frequency]))

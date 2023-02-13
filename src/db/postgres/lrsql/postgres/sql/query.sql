@@ -313,3 +313,13 @@ SELECT payload->>'stored' lstored
 FROM xapi_statement
 ORDER BY id DESC
 LIMIT 1;
+
+-- :name query-platform-frequency
+-- :command :query
+-- :result :many
+-- :doc Return counts of platforms used in statements.
+
+SELECT COALESCE(payload#>>'{context,platform}', 'unknown') platform,
+COUNT(id) scount
+FROM xapi_statement
+GROUP BY platform;

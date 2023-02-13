@@ -112,4 +112,5 @@
   ;; Queries
   (-query-statement-count [this tx])
   (-query-actor-count [this tx])
-  (-query-last-statement-stored [this tx]))
+  (-query-last-statement-stored [this tx])
+  (-query-platform-frequency [this tx]))

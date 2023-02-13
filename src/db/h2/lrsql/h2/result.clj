@@ -9,3 +9,14 @@
   [query-result]
   (when-let [{:keys [id]} query-result]
     {:lstored (-> id squuid/uuid->time u/time->str)}))
+
+(defn query-platform-frequency-result
+  "Given a result of all statement payloads, return the frequencies of each"
+  [query-result]
+  (map
+   (fn [[platform scount]]
+     {:platform platform
+      :scount   scount})
+   (frequencies
+    (map #(get-in % [:payload "context" "platform"] "unknown")
+         query-result))))

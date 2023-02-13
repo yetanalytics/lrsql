@@ -204,7 +204,8 @@
         ;; Has data
         (is (= {"statement-count"       0
                 "actor-count"           0
-                "last-statement-stored" nil}
+                "last-statement-stored" nil
+                "platform-frequency"    {}}
                edn-body))))
     (component/stop sys')))
 

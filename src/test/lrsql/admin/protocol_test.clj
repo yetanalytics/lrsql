@@ -31,13 +31,14 @@
    :scopes #{:scope/all}})
 
 (def stmt-0
-  {"id"     "00000000-0000-4000-8000-000000000000"
-   "actor"  {"mbox"       "mailto:sample.foo@example.com"
-             "objectType" "Agent"}
-   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
-             "display" {"en-US" "answered"
-                        "zh-CN" "回答了"}}
-   "object" {"id" "http://www.example.com/tincan/activities/multipart"}})
+  {"id"      "00000000-0000-4000-8000-000000000000"
+   "actor"   {"mbox"       "mailto:sample.foo@example.com"
+              "objectType" "Agent"}
+   "verb"    {"id"      "http://adlnet.gov/expapi/verbs/answered"
+              "display" {"en-US" "answered"
+                         "zh-CN" "回答了"}}
+   "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
+   "context" {"platform" "example"}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -155,18 +156,19 @@
     (testing "Get LRS status"
       (is (= {:statement-count       0
               :actor-count           0
-              :last-statement-stored nil}
+              :last-statement-stored nil
+              :platform-frequency    {}}
              (adp/-get-status lrs {})))
       ;; add a statement
       (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-      (is (= {:statement-count 1
-              :actor-count     1
-              :last-statement-stored
-              (get-in
-               (lrsp/-get-statements lrs auth-ident {} [])
-               [:statement-result
-                :statements
-                0
-                "stored"])}
+      (is (= {:statement-count       1
+              :actor-count           1
+              :last-statement-stored (get-in
+                                      (lrsp/-get-statements lrs auth-ident {} [])
+                                      [:statement-result
+                                       :statements
+                                       0
+                                       "stored"])
+              :platform-frequency    {"example" 1}}
              (adp/-get-status lrs {}))))
     (component/stop sys')))

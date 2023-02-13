@@ -236,4 +236,6 @@
   (-query-actor-count [_ tx]
     (query-actor-count tx))
   (-query-last-statement-stored [_ tx]
-    (query-last-statement-stored tx)))
+    (query-last-statement-stored tx))
+  (-query-platform-frequency [_ tx]
+    (query-platform-frequency tx)))

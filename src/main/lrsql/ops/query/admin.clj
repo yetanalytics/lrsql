@@ -73,6 +73,11 @@
   "Get status information about the LRS including statement counts and other
   metric information."
   [bk tx _input]
-  {:statement-count (:scount (bp/-query-statement-count bk tx))
-   :actor-count     (:acount (bp/-query-actor-count bk tx))
-   :last-statement-stored (:lstored (bp/-query-last-statement-stored bk tx))})
+  {:statement-count       (:scount (bp/-query-statement-count bk tx))
+   :actor-count           (:acount (bp/-query-actor-count bk tx))
+   :last-statement-stored (:lstored (bp/-query-last-statement-stored bk tx))
+   :platform-frequency    (reduce
+                           (fn [m {:keys [platform scount]}]
+                             (assoc m platform scount))
+                           {}
+                           (bp/-query-platform-frequency bk tx))})

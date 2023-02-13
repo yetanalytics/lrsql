@@ -318,3 +318,10 @@ SELECT id
 FROM xapi_statement
 ORDER BY id DESC
 LIMIT 1
+
+-- :name query-platform-frequency
+-- :command :query
+-- :result :many
+-- :doc Return counts of platforms used in statements. On H2 all statements must be pulled to derive this
+
+SELECT payload FROM xapi_statement

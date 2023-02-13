@@ -188,4 +188,7 @@
     (query-actor-count tx))
   (-query-last-statement-stored [_ tx]
     (res/query-last-statement-stored-result
-     (query-last-statement-stored tx))))
+     (query-last-statement-stored tx)))
+  (-query-platform-frequency [_ tx]
+    (res/query-platform-frequency-result
+     (query-platform-frequency tx))))
