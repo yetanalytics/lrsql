@@ -323,5 +323,13 @@ LIMIT 1
 -- :command :query
 -- :result :many
 -- :doc Return counts of platforms used in statements. On H2 all statements must be pulled to derive this
-
 SELECT payload FROM xapi_statement
+
+-- :name query-timeline
+-- :command :query
+-- :result :many
+-- :doc Return counts of statements by time unit for a given range. In H2 all statement IDs from a given range must be pulled to derive this
+SELECT id
+FROM xapi_statement
+WHERE id > :since-id
+  AND id <= :until-id

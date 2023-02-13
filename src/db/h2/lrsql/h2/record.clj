@@ -191,4 +191,8 @@
      (query-last-statement-stored tx)))
   (-query-platform-frequency [_ tx]
     (res/query-platform-frequency-result
-     (query-platform-frequency tx))))
+     (query-platform-frequency tx)))
+  (-query-timeline [_ tx input]
+    (res/query-timeline-result
+     input
+     (query-timeline tx input))))

@@ -83,7 +83,7 @@
   [common-interceptors jwt-secret jwt-leeway]
   #{;; Return LRS Status information
     ["/admin/status" :get (conj common-interceptors
-                                ;; TODO: param validation
+                                si/validate-params
                                 (ji/validate-jwt jwt-secret jwt-leeway)
                                 ji/validate-jwt-account
                                 si/get-status)

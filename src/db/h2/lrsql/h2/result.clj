@@ -20,3 +20,22 @@
    (frequencies
     (map #(get-in % [:payload "context" "platform"] "unknown")
          query-result))))
+
+(defn query-timeline-result
+  "Given an input and range of statement IDs, return a bucketed timeline of
+  counts."
+  [{:keys [unit-for]} query-result]
+  (->> query-result
+       (map (comp
+             u/time->str
+             squuid/uuid->time
+             :id))
+       (reduce
+        (fn [m stamp]
+          (update m
+                  (subs stamp 0 unit-for)
+                  (fnil inc 0)))
+        {})
+       (map (fn [[stored cnt]]
+              {:stored stored
+               :scount cnt}))))

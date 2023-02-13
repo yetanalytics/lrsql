@@ -113,4 +113,5 @@
   (-query-statement-count [this tx])
   (-query-actor-count [this tx])
   (-query-last-statement-stored [this tx])
-  (-query-platform-frequency [this tx]))
+  (-query-platform-frequency [this tx])
+  (-query-timeline [this tx input]))

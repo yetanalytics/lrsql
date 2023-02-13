@@ -205,8 +205,16 @@
         (is (= {"statement-count"       0
                 "actor-count"           0
                 "last-statement-stored" nil
-                "platform-frequency"    {}}
-               edn-body))))
+                "platform-frequency"    {}
+                "timeline"              []}
+               edn-body)))
+      (testing "validates params"
+        (let [{:keys [status]} (curl/get
+                                "http://localhost:8080/admin/status?timeline=foo"
+                                {:headers headers
+                                 :throw   false})]
+          ;; failure
+          (is (= 400 status)))))
     (component/stop sys')))
 
 (deftest auth-routes-test

@@ -11,6 +11,7 @@
             [lrsql.input.actor             :as agent-input]
             [lrsql.input.activity          :as activity-input]
             [lrsql.input.admin             :as admin-input]
+            [lrsql.input.admin.status      :as admin-stat-input]
             [lrsql.input.auth              :as auth-input]
             [lrsql.input.statement         :as stmt-input]
             [lrsql.input.document          :as doc-input]
@@ -335,4 +336,5 @@
     [this params]
     (let [conn (lrs-conn this)]
       (jdbc/with-transaction [tx conn]
-        (admin-q/query-status backend tx params)))))
+        (admin-q/query-status
+         backend tx {:timeline (admin-stat-input/query-timeline-input params)})))))

@@ -4,6 +4,7 @@
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.admin :as ads]
             [lrsql.spec.admin.status :as ss]
+            [lrsql.util :as u]
             [lrsql.util.admin :as au]))
 
 (s/fdef query-validate-admin
@@ -66,13 +67,13 @@
 (s/fdef query-status
   :args (s/cat :bk ss/admin-status-backend?
                :tx transaction?
-               :input any?) ;; TODO: spec input when there is some
+               :input ss/query-status-input-spec)
   :ret ss/query-status-ret-spec)
 
 (defn query-status
   "Get status information about the LRS including statement counts and other
   metric information."
-  [bk tx _input]
+  [bk tx {:keys [timeline]}]
   {:statement-count       (:scount (bp/-query-statement-count bk tx))
    :actor-count           (:acount (bp/-query-actor-count bk tx))
    :last-statement-stored (:lstored (bp/-query-last-statement-stored bk tx))
@@ -80,4 +81,9 @@
                            (fn [m {:keys [platform scount]}]
                              (assoc m platform scount))
                            {}
-                           (bp/-query-platform-frequency bk tx))})
+                           (bp/-query-platform-frequency bk tx))
+   :timeline               (mapv
+                            (fn [{:keys [stored scount]}]
+                              {:stored (u/pad-time-str stored)
+                               :count scount})
+                            (bp/-query-timeline bk tx timeline))})

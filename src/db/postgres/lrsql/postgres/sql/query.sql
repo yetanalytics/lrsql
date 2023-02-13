@@ -318,8 +318,19 @@ LIMIT 1;
 -- :command :query
 -- :result :many
 -- :doc Return counts of platforms used in statements.
-
 SELECT COALESCE(payload#>>'{context,platform}', 'unknown') platform,
 COUNT(id) scount
 FROM xapi_statement
 GROUP BY platform;
+
+-- :name query-timeline
+-- :command :query
+-- :result :many
+-- :doc Return counts of statements by time unit for a given range.
+SELECT SUBSTRING(payload->>'stored' FOR :unit-for) stored,
+COUNT(id) scount
+FROM xapi_statement
+WHERE id > :since-id
+  AND id <= :until-id
+GROUP BY stored
+ORDER BY stored ASC;

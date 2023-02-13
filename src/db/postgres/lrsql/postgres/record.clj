@@ -198,4 +198,6 @@
   (-query-last-statement-stored [_ tx]
     (query-last-statement-stored tx))
   (-query-platform-frequency [_ tx]
-    (query-platform-frequency tx)))
+    (query-platform-frequency tx))
+  (-query-timeline [_ tx input]
+    (query-timeline tx input)))

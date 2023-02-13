@@ -5,7 +5,8 @@
             [com.yetanalytics.lrs.protocol :as lrsp]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
-            [lrsql.test-support   :as support]))
+            [lrsql.test-support   :as support]
+            [lrsql.util           :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -157,18 +158,24 @@
       (is (= {:statement-count       0
               :actor-count           0
               :last-statement-stored nil
-              :platform-frequency    {}}
+              :platform-frequency    {}
+              :timeline              []}
              (adp/-get-status lrs {})))
       ;; add a statement
       (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-      (is (= {:statement-count       1
-              :actor-count           1
-              :last-statement-stored (get-in
-                                      (lrsp/-get-statements lrs auth-ident {} [])
-                                      [:statement-result
-                                       :statements
-                                       0
-                                       "stored"])
-              :platform-frequency    {"example" 1}}
-             (adp/-get-status lrs {}))))
+      (let [last-stored (get-in
+                         (lrsp/-get-statements lrs auth-ident {} [])
+                         [:statement-result
+                          :statements
+                          0
+                          "stored"])]
+        (is (= {:statement-count       1
+                :actor-count           1
+                :last-statement-stored last-stored
+                :platform-frequency    {"example" 1}
+                :timeline              [{:stored (-> last-stored
+                                                     (subs 0 13)
+                                                     u/pad-time-str)
+                                         :count  1}]}
+               (adp/-get-status lrs {})))))
     (component/stop sys')))
