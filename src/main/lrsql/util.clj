@@ -53,7 +53,7 @@
 
 (s/fdef offset-time
   :args (s/cat :ts instant-spec
-               :offset-amt nat-int?
+               :offset-amt int?
                :offset-unit valid-units)
   :ret instant-spec)
 
