@@ -22,25 +22,22 @@
 ;; Inputs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/def :lrsql.spec.admin.status.params.timeline/unit
+(s/def :lrsql.spec.admin.status.params/timeline-unit
   #{"year"
     "month"
     "day"
     "hour"
     "minute"
     "second"})
-(s/def :lrsql.spec.admin.status.params.timeline/since
+(s/def :lrsql.spec.admin.status.params/timeline-since
   ::xs/timestamp)
-(s/def :lrsql.spec.admin.status.params.timeline/until
+(s/def :lrsql.spec.admin.status.params/timeline-until
   ::xs/timestamp)
-
-(s/def :lrsql.spec.admin.status.params/timeline
-  (s/keys :opt-un [:lrsql.spec.admin.status.params.timeline/unit
-                   :lrsql.spec.admin.status.params.timeline/since
-                   :lrsql.spec.admin.status.params.timeline/until]))
 
 (def get-status-params-spec
-  (s/keys :opt-un [:lrsql.spec.admin.status.params/timeline]))
+  (s/keys :opt-un [:lrsql.spec.admin.status.params/timeline-unit
+                   :lrsql.spec.admin.status.params/timeline-since
+                   :lrsql.spec.admin.status.params/timeline-until]))
 
 ;; Conversion of the above unit to be the "FOR" argument in a substring call
 (s/def :lrsql.spec.admin.status.query.timeline/unit-for

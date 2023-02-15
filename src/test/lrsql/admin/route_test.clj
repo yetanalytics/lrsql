@@ -210,7 +210,7 @@
                edn-body)))
       (testing "validates params"
         (let [{:keys [status]} (curl/get
-                                "http://localhost:8080/admin/status?timeline=foo"
+                                "http://localhost:8080/admin/status?timeline-unit=foo"
                                 {:headers headers
                                  :throw   false})]
           ;; failure

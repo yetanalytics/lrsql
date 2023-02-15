@@ -19,14 +19,14 @@
 
 (defn query-timeline-input
   "Transform parameters for timeline into values suitable for query."
-  [{{:keys [unit
-            since
-            until]
-     :or   {unit "hour"}} :timeline}]
-  (let [since' (or (some-> since u/str->time)
+  [{:keys [timeline-unit
+           timeline-since
+           timeline-until]
+    :or   {timeline-unit "hour"}}]
+  (let [since' (or (some-> timeline-since u/str->time)
                    (u/offset-time (u/current-time) -24 :hours))
-        until' (or (some-> until u/str->time)
+        until' (or (some-> timeline-until u/str->time)
                    (u/current-time))]
-    {:unit-for (get unit-for unit)
+    {:unit-for (get unit-for timeline-unit)
      :since-id (squuid/time->uuid since')
      :until-id (squuid/time->uuid until')}))
