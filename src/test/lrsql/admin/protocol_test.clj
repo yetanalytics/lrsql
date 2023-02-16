@@ -174,7 +174,7 @@
                 :last-statement-stored last-stored
                 :platform-frequency    {"example" 1}
                 :timeline              [{:stored (-> last-stored
-                                                     (subs 0 13)
+                                                     (subs 0 10)
                                                      u/pad-time-str)
                                          :count  1}]}
                (adp/-get-status lrs {})))))

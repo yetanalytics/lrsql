@@ -22,9 +22,9 @@
   [{:keys [timeline-unit
            timeline-since
            timeline-until]
-    :or   {timeline-unit "hour"}}]
+    :or   {timeline-unit "day"}}]
   (let [since' (or (some-> timeline-since u/str->time)
-                   (u/offset-time (u/current-time) -24 :hours))
+                   (u/offset-time (u/current-time) -14 :days))
         until' (or (some-> timeline-until u/str->time)
                    (u/current-time))]
     {:unit-for (get unit-for timeline-unit)
