@@ -59,4 +59,5 @@
 
 (deftest test-admin-status
   (testing "admin status inputs"
-    (is (nil? (check-validate `i-adm-stat/query-timeline-input)))))
+    (is (nil? (check-validate `i-adm-stat/query-timeline-input)))
+    (is (nil? (check-validate `i-adm-stat/query-status-input)))))

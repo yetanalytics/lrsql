@@ -73,17 +73,32 @@
 (defn query-status
   "Get status information about the LRS including statement counts and other
   metric information."
-  [bk tx {:keys [timeline]}]
-  {:statement-count       (:scount (bp/-query-statement-count bk tx))
-   :actor-count           (:acount (bp/-query-actor-count bk tx))
-   :last-statement-stored (:lstored (bp/-query-last-statement-stored bk tx))
-   :platform-frequency    (reduce
-                           (fn [m {:keys [platform scount]}]
-                             (assoc m platform scount))
-                           {}
-                           (bp/-query-platform-frequency bk tx))
-   :timeline               (mapv
-                            (fn [{:keys [stored scount]}]
-                              {:stored (u/pad-time-str stored)
-                               :count scount})
-                            (bp/-query-timeline bk tx timeline))})
+  [bk tx {:keys [include] :as params}]
+  (cond-> {}
+    (include "statement-count")
+    (assoc :statement-count
+           (:scount (bp/-query-statement-count bk tx)))
+
+    (include "actor-count")
+    (assoc :actor-count
+           (:acount (bp/-query-actor-count bk tx)))
+
+    (include "last-statement-stored")
+    (assoc :last-statement-stored
+           (:lstored (bp/-query-last-statement-stored bk tx)))
+
+    (include "platform-frequency")
+    (assoc :platform-frequency
+           (reduce
+            (fn [m {:keys [platform scount]}]
+              (assoc m platform scount))
+            {}
+            (bp/-query-platform-frequency bk tx)))
+
+    (include "timeline")
+    (assoc :timeline
+           (mapv
+            (fn [{:keys [stored scount]}]
+              {:stored (u/pad-time-str stored)
+               :count scount})
+            (bp/-query-timeline bk tx (:timeline params))))))

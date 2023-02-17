@@ -22,6 +22,17 @@
 ;; Inputs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(s/def ::status-query-name
+  #{"statement-count"
+    "actor-count"
+    "platform-frequency"
+    "last-statement-stored"
+    "timeline"})
+
+(s/def :lrsql.spec.admin.status.params/include
+  (s/nonconforming
+   (s/or :single   ::status-query-name
+         :multiple (s/every ::status-query-name))))
 (s/def :lrsql.spec.admin.status.params/timeline-unit
   #{"year"
     "month"
@@ -34,8 +45,10 @@
 (s/def :lrsql.spec.admin.status.params/timeline-until
   ::xs/timestamp)
 
+
 (def get-status-params-spec
-  (s/keys :opt-un [:lrsql.spec.admin.status.params/timeline-unit
+  (s/keys :opt-un [:lrsql.spec.admin.status.params/include
+                   :lrsql.spec.admin.status.params/timeline-unit
                    :lrsql.spec.admin.status.params/timeline-since
                    :lrsql.spec.admin.status.params/timeline-until]))
 
@@ -57,11 +70,16 @@
                    :lrsql.spec.admin.status.query.timeline/since-id
                    :lrsql.spec.admin.status.query.timeline/until-id]))
 
+(s/def :lrsql.spec.admin.status.query/include
+  (s/every ::status-query-name
+           :kind set?
+           :into #{}))
 (s/def :lrsql.spec.admin.status.query/timeline
   query-timeline-input-spec)
 
 (def query-status-input-spec
-  (s/keys :req-un [:lrsql.spec.admin.status.query/timeline]))
+  (s/keys :req-un [:lrsql.spec.admin.status.query/include]
+          :opt-un [:lrsql.spec.admin.status.query/timeline]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Results

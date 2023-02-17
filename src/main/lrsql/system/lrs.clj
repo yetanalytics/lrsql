@@ -337,4 +337,4 @@
     (let [conn (lrs-conn this)]
       (jdbc/with-transaction [tx conn]
         (admin-q/query-status
-         backend tx {:timeline (admin-stat-input/query-timeline-input params)})))))
+         backend tx (admin-stat-input/query-status-input params))))))

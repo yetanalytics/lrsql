@@ -30,3 +30,22 @@
     {:unit-for (get unit-for timeline-unit)
      :since-id (squuid/time->uuid since')
      :until-id (squuid/time->uuid until')}))
+
+(s/fdef query-status-input
+  :args (s/cat :params stat/get-status-params-spec)
+  :ret stat/query-status-input-spec)
+
+(defn query-status-input
+  "Transform status query params into input suitable for query"
+  [{:keys [include]
+    :or   {include ["statement-count"
+                    "actor-count"
+                    "platform-frequency"
+                    "last-statement-stored"
+                    "timeline"]}
+    :as   params}]
+  (let [include' (if (coll? include)
+                   (set include)
+                   #{include})]
+    (cond-> {:include include'}
+      (include' "timeline") (assoc :timeline (query-timeline-input params)))))
