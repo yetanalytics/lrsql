@@ -2,6 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :as common]
+            [lrsql.util :as u]
             [xapi-schema.spec :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -40,10 +41,20 @@
     "hour"
     "minute"
     "second"})
+
+(defn- after-epoch?
+  [timestamp]
+  (-> timestamp
+      u/str->time
+      u/time->millis
+      nat-int?))
+
 (s/def :lrsql.spec.admin.status.params/timeline-since
-  ::xs/timestamp)
+  (s/and ::xs/timestamp
+         after-epoch?))
 (s/def :lrsql.spec.admin.status.params/timeline-until
-  ::xs/timestamp)
+  (s/and ::xs/timestamp
+         after-epoch?))
 
 
 (def get-status-params-spec
