@@ -124,3 +124,25 @@
 
   (component/stop sys')
   )
+
+;; SQLite
+(comment
+  (require
+   '[lrsql.sqlite.record :as r]
+   '[lrsql.lrs-test :refer [stmt-1 stmt-2 auth-ident auth-ident-oauth]])
+
+  (def sys (system/system (r/map->SQLiteBackend {}) :test-sqlite))
+  (def sys' (component/start sys))
+
+  (def lrs (:lrs sys'))
+  (def ds (-> sys' :lrs :connection :conn-pool))
+
+  (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+  (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
+
+  (println
+   (jdbc/execute! ds
+                  ["EXPLAIN QUERY PLAN
+                    SELECT count(*)
+                    FROM xapi_statement"]))
+  )
