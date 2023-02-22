@@ -48,7 +48,7 @@
   less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
-  {:mvn/version "1.2.14"
+  {:mvn/version "1.2.15"
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript
                  com.yetanalytics/xapi-schema]}
