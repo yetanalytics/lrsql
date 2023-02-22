@@ -41,6 +41,17 @@
    "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
    "context" {"platform" "example"}})
 
+;; A second statement with the same actor but a different example.
+(def stmt-1
+  {"id"      "00000000-0000-4000-8000-000000000001"
+   "actor"   {"mbox"       "mailto:sample.foo@example.com"
+              "objectType" "Agent"}
+   "verb"    {"id"      "http://adlnet.gov/expapi/verbs/answered"
+              "display" {"en-US" "answered"
+                         "zh-CN" "回答了"}}
+   "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
+   "context" {"platform" "another_example"}})
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -150,6 +161,21 @@
                  (adp/-get-api-keys lrs acc-id))))))
     (component/stop sys')))
 
+(defn- get-last-stored
+  [lrs auth-ident]
+  (get-in
+   (lrsp/-get-statements lrs auth-ident {} [])
+   [:statement-result
+    :statements
+    0
+    "stored"]))
+
+(defn- snap-day
+  [timestamp]
+  (-> timestamp
+      (subs 0 10)
+      u/pad-time-str))
+
 (deftest status-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
@@ -163,19 +189,32 @@
              (adp/-get-status lrs {})))
       ;; add a statement
       (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-      (let [last-stored (get-in
-                         (lrsp/-get-statements lrs auth-ident {} [])
-                         [:statement-result
-                          :statements
-                          0
-                          "stored"])]
+      (let [last-stored-0 (get-last-stored lrs auth-ident)
+            day-0         (snap-day last-stored-0)]
         (is (= {:statement-count       1
                 :actor-count           1
-                :last-statement-stored last-stored
+                :last-statement-stored last-stored-0
                 :platform-frequency    {"example" 1}
-                :timeline              [{:stored (-> last-stored
-                                                     (subs 0 10)
-                                                     u/pad-time-str)
+                :timeline              [{:stored day-0
                                          :count  1}]}
-               (adp/-get-status lrs {})))))
+               (adp/-get-status lrs {})))
+        ;; add another
+        (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+        (let [last-stored-1 (get-last-stored lrs auth-ident)
+              day-1         (snap-day last-stored-1)]
+          (is (= {:statement-count       2 ;; increments
+                  :actor-count           1 ;; same
+                  :last-statement-stored last-stored-1 ;; increments
+                  :platform-frequency    {"example"         1
+                                          ;; new platform
+                                          "another_example" 1}
+                  :timeline              (if (= day-0 day-1)
+                                           [{:stored day-0
+                                             :count  2}]
+                                           ;; unlikely, but hey
+                                           [{:stored day-0
+                                             :count  1}
+                                            {:stored day-1
+                                             :count  1}])}
+                 (adp/-get-status lrs {}))))))
     (component/stop sys')))
