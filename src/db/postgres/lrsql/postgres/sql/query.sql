@@ -318,7 +318,7 @@ LIMIT 1;
 -- :command :query
 -- :result :many
 -- :doc Return counts of platforms used in statements.
-SELECT COALESCE(payload#>>'{context,platform}', 'unknown') platform,
+SELECT COALESCE(payload#>>'{context,platform}', 'none') platform,
 COUNT(id) scount
 FROM xapi_statement
 GROUP BY platform;

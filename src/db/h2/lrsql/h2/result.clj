@@ -18,7 +18,7 @@
      {:platform platform
       :scount   scount})
    (frequencies
-    (map #(get-in % [:payload "context" "platform"] "unknown")
+    (map #(get-in % [:payload "context" "platform"] "none")
          query-result))))
 
 (defn query-timeline-result
