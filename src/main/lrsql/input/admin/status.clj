@@ -23,8 +23,11 @@
            timeline-since
            timeline-until]
     :or   {timeline-unit "day"}}]
-  (let [since' (or (some-> timeline-since u/str->time)
-                   (u/offset-time (u/current-time) -14 :days))
+  (let [since' (-> (or (some-> timeline-since u/str->time)
+                       (u/offset-time (u/current-time) -14 :days))
+                   ;; acount for random bits that push the edge of the range
+                   ;; TODO: update if arg is added to squuid/time->uuid
+                   (u/offset-time -1 :millis))
         until' (or (some-> timeline-until u/str->time)
                    (u/current-time))]
     {:unit-for (get unit-for timeline-unit)
