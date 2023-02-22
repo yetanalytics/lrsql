@@ -334,7 +334,7 @@
   adp/AdminStatusProvider
   (-get-status
     [this params]
-    (let [conn (lrs-conn this)]
+    (let [conn  (lrs-conn this)
+          input (admin-stat-input/query-status-input params)]
       (jdbc/with-transaction [tx conn]
-        (admin-q/query-status
-         backend tx (admin-stat-input/query-status-input params))))))
+        (admin-q/query-status backend tx input)))))
