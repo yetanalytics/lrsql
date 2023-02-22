@@ -102,5 +102,5 @@
               ;; stored here is a partial timestamp so we pad it to a valid,
               ;; normalized timestamp.
               {:stored (u/pad-time-str stored)
-               :count scount})
+               :count  scount})
             (bp/-query-timeline bk tx (:timeline params))))))
