@@ -56,7 +56,6 @@
   (s/and ::xs/timestamp
          after-epoch?))
 
-
 (def get-status-params-spec
   (s/keys :opt-un [:lrsql.spec.admin.status.params/include
                    :lrsql.spec.admin.status.params/timeline-unit
