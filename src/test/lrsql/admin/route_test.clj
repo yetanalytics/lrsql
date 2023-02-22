@@ -209,12 +209,22 @@
                 "timeline"              []}
                edn-body)))
       (testing "validates params"
-        (let [{:keys [status]} (curl/get
-                                "http://localhost:8080/admin/status?timeline-unit=foo"
-                                {:headers headers
-                                 :throw   false})]
-          ;; failure
-          (is (= 400 status)))))
+        (testing "valid param"
+          (let [{:keys [status]}
+                (curl/get
+                 "http://localhost:8080/admin/status?timeline-unit=minute"
+                 {:headers headers
+                  :throw   false})]
+            ;; success
+            (is (= 200 status))))
+        (testing "invalid param"
+          (let [{:keys [status]}
+                (curl/get
+                 "http://localhost:8080/admin/status?timeline-unit=foo"
+                 {:headers headers
+                  :throw   false})]
+            ;; failure
+            (is (= 400 status))))))
     (component/stop sys')))
 
 (deftest auth-routes-test
