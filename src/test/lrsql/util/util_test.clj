@@ -72,3 +72,10 @@
            (-> "{\"zh-CN\":\"你好世界\"}" util/parse-json util/write-json-str)))
     (is (= {"zh-CN" "你好世界"}
            (-> {"zh-CN" "你好世界"} util/write-json-str util/parse-json)))))
+
+(deftest pad-time-str-test
+  (testing "pads partial datetime string"
+    (is (= "2023-02-13T16:00:00.000000000Z"
+           (util/pad-time-str "2023-02-13T16"))
+        (= "2023-02-13T16:43:22.684982000Z"
+           (util/pad-time-str "2023-02-13T16:43:22.684982000Z")))))

@@ -158,6 +158,7 @@
 (s/def ::key-enable-selfie boolean?)
 
 (s/def ::enable-admin-ui boolean?)
+(s/def ::enable-admin-status boolean?)
 (s/def ::enable-stmt-html boolean?)
 
 (s/def ::oidc-issuer (s/nilable string?))
@@ -182,6 +183,7 @@
                    ::jwt-exp-time
                    ::jwt-exp-leeway
                    ::enable-admin-ui
+                   ::enable-admin-status
                    ::enable-stmt-html
                    ::oidc-verify-remote-issuer
                    ::oidc-client-template

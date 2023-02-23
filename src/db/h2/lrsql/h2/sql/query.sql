@@ -292,3 +292,44 @@ AND secret_key = :secret-key
 SELECT scope FROM credential_to_scope
 WHERE api_key = :api-key
 AND secret_key = :secret-key
+
+/* LRS Status */
+
+-- :name query-statement-count
+-- :command :query
+-- :result :one
+-- :doc Return the number of statements in the LRS
+SELECT COUNT(id) scount
+FROM xapi_statement
+
+-- :name query-actor-count
+-- :command :query
+-- :result :one
+-- :doc Return the number of distinct statement actors
+SELECT COUNT(DISTINCT actor_ifi) acount
+FROM statement_to_actor
+WHERE usage = 'Actor'
+
+-- :name query-last-statement-stored
+-- :command :query
+-- :result :one
+-- :doc Return the stored timestamp of the most recent statement. In h2 extraction is not possible so we return the ID and extract in application code
+SELECT id
+FROM xapi_statement
+ORDER BY id DESC
+LIMIT 1
+
+-- :name query-platform-frequency
+-- :command :query
+-- :result :many
+-- :doc Return counts of platforms used in statements. On H2 all statements must be pulled to derive this
+SELECT payload FROM xapi_statement
+
+-- :name query-timeline
+-- :command :query
+-- :result :many
+-- :doc Return counts of statements by time unit for a given range. In H2 all statement IDs from a given range must be pulled to derive this
+SELECT id
+FROM xapi_statement
+WHERE id > :since-id
+  AND id <= :until-id

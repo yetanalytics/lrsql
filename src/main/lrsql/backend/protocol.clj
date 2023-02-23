@@ -107,3 +107,11 @@
   (-query-credentials [this tx input])
   (-query-credential-ids [this tx input])
   (-query-credential-scopes [this tx input]))
+
+(defprotocol AdminStatusBackend
+  ;; Queries
+  (-query-statement-count [this tx])
+  (-query-actor-count [this tx])
+  (-query-last-statement-stored [this tx])
+  (-query-platform-frequency [this tx])
+  (-query-timeline [this tx input]))

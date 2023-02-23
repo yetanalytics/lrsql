@@ -50,6 +50,11 @@
                {:headers headers
                 :body    body}))
 
+(defn- get-status
+  [headers]
+  (curl/get "http://localhost:8080/admin/status"
+            {:headers headers}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -190,6 +195,36 @@
                            :body    (u/write-json-str {"api-key"    pk
                                                        "secret-key" sk})})
                          401)))))
+    (testing "get status information"
+      (let [{:keys [status
+                    body]} (get-status headers)
+            edn-body       (u/parse-json body)]
+        ;; success
+        (is (= 200 status))
+        ;; Has data
+        (is (= {"statement-count"       0
+                "actor-count"           0
+                "last-statement-stored" nil
+                "platform-frequency"    {}
+                "timeline"              []}
+               edn-body)))
+      (testing "validates params"
+        (testing "valid param"
+          (let [{:keys [status]}
+                (curl/get
+                 "http://localhost:8080/admin/status?timeline-unit=minute"
+                 {:headers headers
+                  :throw   false})]
+            ;; success
+            (is (= 200 status))))
+        (testing "invalid param"
+          (let [{:keys [status]}
+                (curl/get
+                 "http://localhost:8080/admin/status?timeline-unit=foo"
+                 {:headers headers
+                  :throw   false})]
+            ;; failure
+            (is (= 400 status))))))
     (component/stop sys')))
 
 (deftest auth-routes-test
