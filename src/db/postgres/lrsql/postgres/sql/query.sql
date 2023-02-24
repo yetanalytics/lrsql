@@ -327,7 +327,7 @@ GROUP BY platform;
 -- :command :query
 -- :result :many
 -- :doc Return counts of statements by time unit for a given range.
-SELECT SUBSTRING(payload->>'stored' FOR :unit-for) stored,
+SELECT SUBSTRING(payload->>'stored' FOR :unit-for) AS stored,
 COUNT(id) scount
 FROM xapi_statement
 WHERE id > :since-id
