@@ -24,7 +24,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, persistent, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, persistent, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo, test-h2, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp target/nvd
@@ -37,8 +37,24 @@ test-h2:
 test-sqlite:
 	clojure -M:test -m lrsql.test-runner --database sqlite
 
-test-postgres:
-	clojure -M:test -m lrsql.test-runner --database postgres
+TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres
+
+test-postgres: test-postgres-11
+
+test-postgres-11:
+	LRSQL_TEST_DB_VERSION=11 $(TEST_PG_COMMAND)
+
+test-postgres-12:
+	LRSQL_TEST_DB_VERSION=12 $(TEST_PG_COMMAND)
+
+test-postgres-13:
+	LRSQL_TEST_DB_VERSION=13 $(TEST_PG_COMMAND)
+
+test-postgres-14:
+	LRSQL_TEST_DB_VERSION=14 $(TEST_PG_COMMAND)
+
+test-postgres-15:
+	LRSQL_TEST_DB_VERSION=15 $(TEST_PG_COMMAND)
 
 ci: test-h2 test-sqlite test-postgres
 
