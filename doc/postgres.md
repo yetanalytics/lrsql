@@ -92,6 +92,10 @@ Here is an example database config map in `config/lrsql.json`. The user is `lrsq
 
 The `connection`, `lrs`, and `webserver` sections of the config can then be set with whatever properties you see fit, like the example on the [Getting Started](startup.md) page.
 
+### Supported Versions
+
+SQL LRS supports PostgreSQL versions 11 through 15. It is tested against the [current minor point release](https://www.postgresql.org/support/versioning/) of each version.
+
 ### Unix Socket Support
 
 SQL LRS includes [junixsocket](https://github.com/kohlschutter/junixsocket) which allows unix socket connections to Postgres.
