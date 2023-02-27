@@ -39,7 +39,9 @@ test-sqlite:
 
 TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres
 
-test-postgres: test-postgres-11
+# Without LRSQL_TEST_DB_VERSION, defaults to version 11
+test-postgres:
+	$(TEST_PG_COMMAND)
 
 test-postgres-11:
 	LRSQL_TEST_DB_VERSION=11 $(TEST_PG_COMMAND)
