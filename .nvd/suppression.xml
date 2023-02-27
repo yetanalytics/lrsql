@@ -45,4 +45,33 @@
         <packageUrl regex="true">^(?!pkg:maven/commons-net/commons-net).*$</packageUrl>
         <cpe>cpe:/a:apache:commons_net</cpe>
     </suppress>
+    <!-- The following are FPs since the CVE affects java-json which is not a dep -->
+    <suppress>
+        <notes><![CDATA[
+        file name: jackson-core-2.14.0-rc1.jar
+        ]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-core@.*$</packageUrl>
+    <cve>CVE-2022-45688</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: jakarta.json-2.0.1.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.glassfish/jakarta\.json@.*$</packageUrl>
+        <cve>CVE-2022-45688</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: javax.json-1.0.4.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.glassfish/javax\.json@.*$</packageUrl>
+        <cve>CVE-2022-45688</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: jsonld-java-0.13.4.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.github\.jsonld\-java/jsonld\-java@.*$</packageUrl>
+        <cve>CVE-2022-45688</cve>
+    </suppress>
 </suppressions>
