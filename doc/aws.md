@@ -26,6 +26,23 @@ Note that if you do not use Route53 DNS you MUST provide one or more allowed COR
 
 In these templates the Load Balancer expects to provide access to the LRS via HTTPS/443. You will need to either acquire a free Amazon Certificate Manager cert (highly recommended) or import your own cert from another CA into ACM for use in the deployment.
 
+#### S3 Bucket (Non-US Regions Only)
+
+SQL LRS requires a Lambda function to create the application-level database user. For the following regions the code for this function is hosted by Yet Analytics and provided to the template automatically:
+
+- us-east-1
+- us-east-2
+- us-west-1
+- us-west-2
+
+For other regions you will need to host your own bucket and provide this code manually:
+
+- Create a new Amazon S3 bucket in the region in which you will deploy the template. Copy down the bucket name for use in the template parameters (see below).
+- In the [LRS CloudFormation Template](https://github.com/yetanalytics/lrsql/blob/main/dev-resources/template/2_lrs.yml), look for the default value of the `DBInitFnVersion` parameter, it should be something like `0.0.2`.
+- Download the function code with the corresponding version from Yet's public bucket at `s3://yet-rds-db-init-deploy-us-east-1`. The file name will be in the format: `rds-db-init-v<VERSION>.zip`. For example, for version `0.0.2` the download location would be: [https://yet-rds-db-init-deploy-us-east-1.s3.amazonaws.com/rds-db-init-v0.0.2.zip](https://yet-rds-db-init-deploy-us-east-1.s3.amazonaws.com/rds-db-init-v0.0.2.zip).
+- Place the zip file in the root of the bucket you just created. Copy down the name of the zip file.
+- When you launch the template (see below) provide your bucket name for the `DBInitFnBucketOverride` parameter. Provide the zip file name for the `DBInitFnKeyOverride` parameter.
+
 #### Database Passwords in Systems Manager
 
 The deployment requires two passwords for the Postgres database. One 'Master' password provided to the database as it is created, and one 'App' password provided to SQL LRS to access the database. These passwords are managed in Systems Manager (SSM).
@@ -92,8 +109,9 @@ This template deploys the application servers, the load balancer, and also a sma
   - LogGroupPrefix: Leave this at the default: `/yet/lrsql/`
   - LogGroupRetentionInDays: Leave this at the default of 7 (days)
   - LrsVersion: Select the desired version of SQL LRS from the GitHub Releases page [here](https://github.com/yetanalytics/lrsql/releases)
-  - S3Bucket: Leave this at the default: `lrsql-dbfn`
-  - S3KeyOverride: Leave this at the default: (blank)
+  - DBInitFnVersion: Leave this at the default value
+  - DBInitFnBucketOverride: Leave this blank unless you are deploying to a region outside of the US, in which case see the instructions in the S3 Bucket section of Step 1
+  - DBInitFnKeyOverride: Leave this blank unless you are deploying to a region outside of the US, in which case see the instructions in the S3 Bucket section of Step 1
   - VPCId: VPC Created in Step 1
 - Deploy the Stack
 
