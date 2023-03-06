@@ -45,4 +45,15 @@
         <packageUrl regex="true">^(?!pkg:maven/commons-net/commons-net).*$</packageUrl>
         <cpe>cpe:/a:apache:commons_net</cpe>
     </suppress>
+    <!-- The following CVE is not a vulnerability according to the devs:
+         https://github.com/h2database/h2database/issues/3686
+         It is unlikely to be addressed due to the subsequent drama it caused.
+    -->
+    <suppress>
+        <notes><![CDATA[
+        file name: h2-2.1.212.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
+        <vulnerabilityName>CVE-2022-45868</vulnerabilityName>
+    </suppress>
 </suppressions>
