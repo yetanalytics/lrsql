@@ -17,10 +17,17 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-  
+
     strategy:
       matrix:
-        target: [test-h2, test-sqlite, test-postgres]
+        target:
+          - test-h2
+          - test-sqlite
+          - test-postgres-11
+          - test-postgres-12
+          - test-postgres-13
+          - test-postgres-14
+          - test-postgres-15
 
     steps:
     - name: Checkout repository

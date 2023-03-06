@@ -11,6 +11,7 @@
             [lrsql.input.actor             :as agent-input]
             [lrsql.input.activity          :as activity-input]
             [lrsql.input.admin             :as admin-input]
+            [lrsql.input.admin.status      :as admin-stat-input]
             [lrsql.input.auth              :as auth-input]
             [lrsql.input.statement         :as stmt-input]
             [lrsql.input.document          :as doc-input]
@@ -328,4 +329,12 @@
       (jdbc/with-transaction [tx conn]
         (auth-cmd/delete-credential! backend tx cred-in)
         {:api-key    api-key
-         :secret-key secret-key}))))
+         :secret-key secret-key})))
+
+  adp/AdminStatusProvider
+  (-get-status
+    [this params]
+    (let [conn  (lrs-conn this)
+          input (admin-stat-input/query-status-input params)]
+      (jdbc/with-transaction [tx conn]
+        (admin-q/query-status backend tx input)))))

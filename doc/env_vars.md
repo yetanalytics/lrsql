@@ -119,6 +119,7 @@ You may have noted that some options are not available:
 | `LRSQL_ALLOWED_ORIGINS` | `allowedOrigins` | This is a list of allowed origins which overrides the defaults. As an ENV it should be written as a comma separated list with no spaces. In JSON config it can be written directly as an array, e.g. `["http://myhost:myport", "https://anotherhost"]` | Not Set |
 | `LRSQL_URL_PREFIX` | `urlPrefix` | The prefix of the webserver URL path, e.g. the prefix in `http://0.0.0.0:8080/xapi` is `/xapi`. Used when constructing the `more` value for multi-statement queries. | `/xapi` |
 | `LRSQL_ENABLE_ADMIN_UI` | `enableAdminUi` | Whether or not to serve the administrative UI at `/admin` | `true` |
+| `LRSQL_ENABLE_ADMIN_STATUS` | `enableAdminStatus` | Whether or not to serve admin system status data that queries the database. | `true` |
 | `LRSQL_ENABLE_STMT_HTML` | `enableStmtHtml` | Whether or not HTML data is returned in the LRS HTTP response. If `false` disables HTML rendering even if `LRSQL_ENABLE_ADMIN_UI` is `true`. In that case the UI will not display the Statement Browser feature. | `true` |
 | `LRSQL_OIDC_ISSUER` | `oidcIssuer` | OIDC Issuer address used for [discovery](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig). Will enable OIDC if present. | Not set |
 | `LRSQL_OIDC_AUDIENCE` | `oidcAudience` | Optional OIDC audience for token claim verification. No effect if `LRSQL_OIDC_ISSUER` is not set. | Not set |

@@ -1,10 +1,12 @@
 (ns lrsql.admin.protocol-test
-  "Test the protocol fns of `AdminAccountManager` and `APIKeyManager` directly."
+  "Test the protocol fns of `AdminAccountManager`, `APIKeyManager`, `AdminStatusProvider` directly."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [com.stuartsierra.component :as component]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
-            [lrsql.test-support   :as support]))
+            [lrsql.test-support   :as support]
+            [lrsql.util           :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -21,6 +23,34 @@
 (def test-username "DonaldChamberlin123") ; co-inventor of SQL
 
 (def test-password "iLoveSql")
+
+;; Some statement data for status test
+(def auth-ident
+  {:agent  {"objectType" "Agent"
+            "account"    {"homePage" "http://example.org"
+                          "name"     "12341234-0000-4000-1234-123412341234"}}
+   :scopes #{:scope/all}})
+
+(def stmt-0
+  {"id"      "00000000-0000-4000-8000-000000000000"
+   "actor"   {"mbox"       "mailto:sample.foo@example.com"
+              "objectType" "Agent"}
+   "verb"    {"id"      "http://adlnet.gov/expapi/verbs/answered"
+              "display" {"en-US" "answered"
+                         "zh-CN" "回答了"}}
+   "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
+   "context" {"platform" "example"}})
+
+;; A second statement with the same actor but a different example.
+(def stmt-1
+  {"id"      "00000000-0000-4000-8000-000000000001"
+   "actor"   {"mbox"       "mailto:sample.foo@example.com"
+              "objectType" "Agent"}
+   "verb"    {"id"      "http://adlnet.gov/expapi/verbs/answered"
+              "display" {"en-US" "answered"
+                         "zh-CN" "回答了"}}
+   "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
+   "context" {"platform" "another_example"}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -129,4 +159,62 @@
           (adp/-delete-api-keys lrs acc-id api-key secret-key)
           (is (= []
                  (adp/-get-api-keys lrs acc-id))))))
+    (component/stop sys')))
+
+(defn- get-last-stored
+  [lrs auth-ident]
+  (get-in
+   (lrsp/-get-statements lrs auth-ident {} [])
+   [:statement-result
+    :statements
+    0
+    "stored"]))
+
+(defn- snap-day
+  [timestamp]
+  (-> timestamp
+      (subs 0 10)
+      u/pad-time-str))
+
+(deftest status-test
+  (let [sys  (support/test-system)
+        sys' (component/start sys)
+        lrs  (:lrs sys')]
+    (testing "Get LRS status"
+      (is (= {:statement-count       0
+              :actor-count           0
+              :last-statement-stored nil
+              :platform-frequency    {}
+              :timeline              []}
+             (adp/-get-status lrs {})))
+      ;; add a statement
+      (lrsp/-store-statements lrs auth-ident [stmt-0] [])
+      (let [last-stored-0 (get-last-stored lrs auth-ident)
+            day-0         (snap-day last-stored-0)]
+        (is (= {:statement-count       1
+                :actor-count           1
+                :last-statement-stored last-stored-0
+                :platform-frequency    {"example" 1}
+                :timeline              [{:stored day-0
+                                         :count  1}]}
+               (adp/-get-status lrs {})))
+        ;; add another
+        (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+        (let [last-stored-1 (get-last-stored lrs auth-ident)
+              day-1         (snap-day last-stored-1)]
+          (is (= {:statement-count       2 ;; increments
+                  :actor-count           1 ;; same
+                  :last-statement-stored last-stored-1 ;; increments
+                  :platform-frequency    {"example"         1
+                                          ;; new platform
+                                          "another_example" 1}
+                  :timeline              (if (= day-0 day-1)
+                                           [{:stored day-0
+                                             :count  2}]
+                                           ;; unlikely, but hey
+                                           [{:stored day-0
+                                             :count  1}
+                                            {:stored day-1
+                                             :count  1}])}
+                 (adp/-get-status lrs {}))))))
     (component/stop sys')))

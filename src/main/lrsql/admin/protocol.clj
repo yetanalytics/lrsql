@@ -23,3 +23,7 @@
     "Update the key pair associated with the account with new scopes.")
   (-delete-api-keys [this account-id api-key secret-key]
     "Delete the key pair associated with the account."))
+
+(defprotocol AdminStatusProvider
+  (-get-status [this params]
+    "Get various LRS metrics."))

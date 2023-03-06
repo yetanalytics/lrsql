@@ -53,7 +53,7 @@
 
 (s/fdef offset-time
   :args (s/cat :ts instant-spec
-               :offset-amt nat-int?
+               :offset-amt int?
                :offset-unit valid-units)
   :ret instant-spec)
 
@@ -93,6 +93,22 @@
    number of milliseconds since January 1, 1970."
   [^Instant ts]
   (.toEpochMilli ts))
+
+(s/fdef pad-time-str
+  :args (s/cat :time-str string?)
+  :ret ::xs/timestamp)
+
+(defn pad-time-str
+  "Given a (possibly partial) timestamp, pad out the rest of the stamp so it
+   matches a normalized timestamp."
+  [time-str]
+  (let [str-length (count time-str)]
+    (apply str
+           (concat
+            time-str
+            (drop
+             str-length
+             "0000-01-01T00:00:00.000000000Z")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UUIDs

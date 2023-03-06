@@ -3,6 +3,8 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.admin :as ads]
+            [lrsql.spec.admin.status :as ss]
+            [lrsql.util :as u]
             [lrsql.util.admin :as au]))
 
 (s/fdef query-validate-admin
@@ -61,3 +63,44 @@
           {:account-id account-id
            :username username})
         (bp/-query-all-admin-accounts bk tx)))
+
+(s/fdef query-status
+  :args (s/cat :bk ss/admin-status-backend?
+               :tx transaction?
+               :input ss/query-status-input-spec)
+  :ret ss/query-status-ret-spec)
+
+(defn query-status
+  "Get status information about the LRS including statement counts and other
+  metric information."
+  [bk tx {:keys [include] :as params}]
+  (cond-> {}
+    (include "statement-count")
+    (assoc :statement-count
+           (:scount (bp/-query-statement-count bk tx)))
+
+    (include "actor-count")
+    (assoc :actor-count
+           (:acount (bp/-query-actor-count bk tx)))
+
+    (include "last-statement-stored")
+    (assoc :last-statement-stored
+           (:lstored (bp/-query-last-statement-stored bk tx)))
+
+    (include "platform-frequency")
+    (assoc :platform-frequency
+           (reduce
+            (fn [m {:keys [platform scount]}]
+              (assoc m platform scount))
+            {}
+            (bp/-query-platform-frequency bk tx)))
+
+    (include "timeline")
+    (assoc :timeline
+           (mapv
+            (fn [{:keys [stored scount]}]
+              ;; stored here is a partial timestamp so we pad it to a valid,
+              ;; normalized timestamp.
+              {:stored (u/pad-time-str stored)
+               :count  scount})
+            (bp/-query-timeline bk tx (:timeline params))))))

@@ -3,6 +3,7 @@
             [hugsql.core :as hug]
             [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
+            [lrsql.h2.result :as res]
             [lrsql.init :refer [init-hugsql-adapter!]]))
 
 ;; Init HugSql functions
@@ -178,4 +179,20 @@
     (bd/set-read-time->instant!)
     (bd/set-read-bytes->json! #{"payload"}))
   (-set-write! [_]
-    (bd/set-write-json->bytes!)))
+    (bd/set-write-json->bytes!))
+
+  bp/AdminStatusBackend
+  (-query-statement-count [_ tx]
+    (query-statement-count tx))
+  (-query-actor-count [_ tx]
+    (query-actor-count tx))
+  (-query-last-statement-stored [_ tx]
+    (res/query-last-statement-stored-result
+     (query-last-statement-stored tx)))
+  (-query-platform-frequency [_ tx]
+    (res/query-platform-frequency-result
+     (query-platform-frequency tx)))
+  (-query-timeline [_ tx input]
+    (res/query-timeline-result
+     input
+     (query-timeline tx input))))

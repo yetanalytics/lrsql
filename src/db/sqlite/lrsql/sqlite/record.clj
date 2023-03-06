@@ -228,4 +228,16 @@
     (bd/set-write-json->bytes!)
     (sd/set-write-uuid->str!)
     (sd/set-write-inst->str!)
-    (sd/set-write-bool->int!)))
+    (sd/set-write-bool->int!))
+
+  bp/AdminStatusBackend
+  (-query-statement-count [_ tx]
+    (query-statement-count tx))
+  (-query-actor-count [_ tx]
+    (query-actor-count tx))
+  (-query-last-statement-stored [_ tx]
+    (query-last-statement-stored tx))
+  (-query-platform-frequency [_ tx]
+    (query-platform-frequency tx))
+  (-query-timeline [_ tx input]
+    (query-timeline tx input)))

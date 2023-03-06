@@ -7,6 +7,7 @@
             [lrsql.admin.interceptors.credentials :as ci]
             [lrsql.admin.interceptors.ui :as ui]
             [lrsql.admin.interceptors.jwt :as ji]
+            [lrsql.admin.interceptors.status :as si]
             [lrsql.util.interceptor :as util-i]))
 
 (defn- make-common-interceptors
@@ -78,8 +79,19 @@
                                   ci/delete-api-keys)
      :route-name :lrsql.admin.creds/delete]})
 
+(defn admin-status-routes
+  [common-interceptors jwt-secret jwt-leeway]
+  #{;; Return LRS Status information
+    ["/admin/status" :get (conj common-interceptors
+                                si/validate-params
+                                (ji/validate-jwt jwt-secret jwt-leeway)
+                                ji/validate-jwt-account
+                                si/get-status)
+     :route-name :lrsql.admin.status/get]})
+
+
 (defn admin-ui-routes
-  [common-interceptors]
+  [common-interceptors inject-config]
   #{;; Redirect root to admin UI
     ["/" :get `ui/admin-ui-redirect
      :route-name :lrsql.admin.ui/root-redirect]
@@ -90,7 +102,7 @@
     ["/admin/" :get `ui/admin-ui-redirect
      :route-name :lrsql.admin.ui/slash-redirect]
     ["/admin/env" :get (conj common-interceptors
-                             ui/get-env)
+                             (ui/get-env inject-config))
      :route-name :lrsql.admin.ui/get-env]})
 
 (defn add-admin-routes
@@ -102,6 +114,7 @@
            leeway
            secret
            enable-admin-ui
+           enable-admin-status
            enable-account-routes
            oidc-interceptors
            oidc-ui-interceptors]
@@ -119,4 +132,8 @@
                 (when enable-admin-ui
                   (admin-ui-routes
                    (into common-interceptors
-                         oidc-ui-interceptors))))))
+                         oidc-ui-interceptors)
+                   {:enable-admin-status enable-admin-status}))
+                (when enable-admin-status
+                  (admin-status-routes
+                   common-interceptors-oidc secret leeway)))))

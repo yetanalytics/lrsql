@@ -9,20 +9,26 @@
   [_]
   (resp/redirect "/admin/index.html"))
 
-(def get-env
-  "Provide select config data to client upon request"
+(defn get-env
+  "Provide select config data to client upon request. Takes a map with static
+  config to inject:
+    :enable-admin-status - boolean, determines if the admin status endpoint is
+      enabled."
+  [{:keys [enable-admin-status]
+    :or   {enable-admin-status false}}]
   (interceptor
    {:name ::get-env
     :enter
     (fn get-env [ctx]
-      (let [{url-prefix          ::i/path-prefix
-             enable-stmt-html    ::i/statement-html?
-             oidc-env            ::oidc-i/admin-env} ctx]
+      (let [{url-prefix       ::i/path-prefix
+             enable-stmt-html ::i/statement-html?
+             oidc-env         ::oidc-i/admin-env} ctx]
         (assoc ctx
                :response
                {:status 200
                 :body
                 (merge
-                 {:url-prefix       url-prefix
-                  :enable-stmt-html (some? enable-stmt-html)}
+                 {:url-prefix          url-prefix
+                  :enable-stmt-html    (some? enable-stmt-html)
+                  :enable-admin-status enable-admin-status}
                  oidc-env)})))}))

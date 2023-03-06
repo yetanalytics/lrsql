@@ -10,9 +10,12 @@
  :http-host                 "0.0.0.0"
  :http-port                 8080
  :allow-all-origins         false
- :allowed-origins           nil
+ :allowed-origins           ["http://localhost:8080"
+                             ;; Allow access from admin-ui dev
+                             "http://localhost:9500"]
  :url-prefix                "/xapi"
  :enable-admin-ui           true
+ :enable-admin-status       true
  :enable-stmt-html          true
  :oidc-verify-remote-issuer true
  :oidc-client-template      "config/oidc_client.json.template"

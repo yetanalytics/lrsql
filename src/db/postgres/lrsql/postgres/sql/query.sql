@@ -287,3 +287,50 @@ AND secret_key = :secret-key;
 SELECT scope FROM credential_to_scope
 WHERE api_key = :api-key
 AND secret_key = :secret-key;
+
+/* LRS Status */
+
+-- :name query-statement-count
+-- :command :query
+-- :result :one
+-- :doc Return the number of statements in the LRS
+SELECT COUNT(id) scount
+FROM xapi_statement;
+
+-- :name query-actor-count
+-- :command :query
+-- :result :one
+-- :doc Return the number of distinct statement actors
+SELECT COUNT(DISTINCT actor_ifi) acount
+FROM statement_to_actor
+WHERE usage = 'Actor';
+
+-- :name query-last-statement-stored
+-- :command :query
+-- :result :one
+-- :doc Return the stored timestamp of the most recent statement
+SELECT payload->>'stored' lstored
+FROM xapi_statement
+ORDER BY id DESC
+LIMIT 1;
+
+-- :name query-platform-frequency
+-- :command :query
+-- :result :many
+-- :doc Return counts of platforms used in statements.
+SELECT COALESCE(payload#>>'{context,platform}', 'none') platform,
+COUNT(id) scount
+FROM xapi_statement
+GROUP BY platform;
+
+-- :name query-timeline
+-- :command :query
+-- :result :many
+-- :doc Return counts of statements by time unit for a given range.
+SELECT SUBSTRING(payload->>'stored' FOR :unit-for) AS stored,
+COUNT(id) scount
+FROM xapi_statement
+WHERE id > :since-id
+  AND id <= :until-id
+GROUP BY stored
+ORDER BY stored ASC;

@@ -15,7 +15,12 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 | `ci` | Called when running continuous integration; runs all test cases in all SQL flavors. |
 | `test-h2` | Run all tests with H2 database. |
 | `test-sqlite` | Run all tests with SQLite database. |
-| `test-postgres` | Run all tests with Postgres database. |
+| `test-postgres` | Run all tests with Postgres database version 11. Set the `LRSQL_TEST_DB_VERSION` env var to a valid Postgres docker tag to use another version. |
+| `test-postgres-11` | Run all tests with Postgres database version 11. |
+| `test-postgres-12` | Run all tests with Postgres database version 12. |
+| `test-postgres-13` | Run all tests with Postgres database version 13. |
+| `test-postgres-14` | Run all tests with Postgres database version 14. |
+| `test-postgres-15` | Run all tests with Postgres database version 15. |
 | `bundle` | Build a complete distribution of the SQL LRS including the user interface and native runtimes for multiple operating systems. |
 | `bench` | Run a load test and benchmark performance, returning performance metrics on predefined test data. Requires a running SQL LRS instance to test against. This test sends requests synchronously on one thread. |
 | `bench-async` | Same as `bench` but it runs with concurrent requests on multiple threads. |
