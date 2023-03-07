@@ -23,14 +23,18 @@ Parameters:
     Description: SSM version
     Type: Number
     Default: 1
-  # Lambda Script
-  S3Bucket:
+  # Lambda DB Init Script
+  DBInitFnVersion:
     Type: String
-    Description: S3 Bucket used to source the DB Init function. The default is hosted publicly so you probably don't need to change this.
-    Default: lrsql-dbfn
-  S3KeyOverride:
+    Description: Version of rds-db-init function code to use to initialize the DB application user.
+    Default: "0.0.2"
+  DBInitFnBucketOverride:
     Type: String
-    Description: Override for S3 key to source the DB Init function. Drawn from LrsVersion by default. You probably don't want to change this.
+    Description: Override for the S3 bucket to source the DB Init function. Use this if you are hosting your own DB init function code.
+    Default: ""
+  DBInitFnKeyOverride:
+    Type: String
+    Description: Override for the S3 key to source the DB Init function. Use this if you are hosting your own DB init function code.
     Default: ""
 
   # Server(s)
@@ -71,7 +75,7 @@ Parameters:
   LrsVersion:
     Description: Version of SQL LRS to download and install (public release versions on GitHub)
     Type: String
-    Default: v0.5.1
+    Default: v0.5.5
 
   ASGMinSize:
     Type: Number
@@ -127,7 +131,8 @@ Parameters:
 Conditions:
   SetDNS: !Not [!Equals [!Ref ALBHostedZone, ""]]
   SetCORS: !Not [!Equals [!Join ["", !Ref CORSAllowedOrigins], ""]]
-  SetS3Key: !Not [!Equals [!Ref S3KeyOverride, ""]]
+  SetDBInitFnBucket: !Not [!Equals [!Ref DBInitFnBucketOverride, ""]]
+  SetDBInitFnKey: !Not [!Equals [!Ref DBInitFnKeyOverride, ""]]
   ASGCPUPolicyTargetValueProvided:
     !Not [!Equals [!Ref ASGCPUPolicyTargetValue, ""]]
   ASGALBRequestCountTargetValueProvided:
@@ -142,11 +147,14 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: !Ref S3Bucket
+        S3Bucket: !If
+          - SetDBInitFnBucket
+          - !Ref DBInitFnBucketOverride
+          - !Sub "yet-rds-db-init-deploy-${AWS::Region}"
         S3Key: !If
-          - SetS3Key
-          - !Ref S3KeyOverride
-          - !Sub "db-init-${LrsVersion}.zip"
+          - SetDBInitFnKey
+          - !Ref DBInitFnKeyOverride
+          - !Sub "rds-db-init-v${DBInitFnVersion}.zip"
       Handler: index.handler
       Runtime: nodejs14.x
       Timeout: 15

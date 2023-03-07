@@ -142,31 +142,3 @@ jobs:
         context: .
         push: true
         tags: ${{ steps.meta.outputs.tags }}
-  upload_dbfn:
-    runs-on: ubuntu-latest
-    needs: release
-    # These permissions are needed by configure-aws-credentials in order
-    # to interact with GitHub's OIDC Token endpoint.
-    permissions:
-      id-token: write # required to use OIDC authentication
-      contents: read  # required to checkout the code from the repo
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Build AWS DB Init Function
-        run: make target/db-init.zip
-
-      - name: Extract version
-        id: version
-        run: echo version=${GITHUB_REF#refs\/tags\/} >> $GITHUB_OUTPUT
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.AWS_DBFN_BUCKET_WRITE_ROLE }}
-          role-duration-seconds: 900 # 15 min; minimal duration possible
-          aws-region: us-east-1
-
-      - name: Upload DB Init Fn to AWS S3
-        run: aws s3 cp target/db-init.zip s3://lrsql-dbfn/db-init-${{ steps.version.outputs.version }}.zip

@@ -288,13 +288,3 @@ run-jar-postgres: target/bundle
 	LRSQL_API_KEY_DEFAULT=username \
 	LRSQL_API_SECRET_DEFAULT=password \
 	bin/run_postgres.sh
-
-# *** Build AWS DB Init Function ***
-
-# This target compiles and zips the DB Init Lambda function used during AWS deployment
-
-target/db-init.zip:
-	mkdir -p target
-	rm -rf dev-resources/template/db-init-script/node_modules
-	cd dev-resources/template/db-init-script; npm install; zip -r db-init.zip .
-	mv dev-resources/template/db-init-script/db-init.zip target/db-init.zip
