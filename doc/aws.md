@@ -102,7 +102,7 @@ This template deploys the application servers, the load balancer, and also a sma
   - DBAppUserName: Choose a desired database username for the application
   - DBAppUserPasswordPath: Use the name selected in Systems Manager for the App Password in Step 1
   - DBSubnets: Select the two Private Subnets from Step 2
-  - DefaultAdminPass: Enter a temporary seed password for the LRS Admin login (for first login).
+  - DefaultAdminPass: Enter a temporary seed password for the LRS Admin login (for first login). **NOTE: You will NOT be able to see this password after you set it, so please write it down!**
   - DefaultAdminUser: Enter initial seed username for LRS Admin Login
   - InstanceKeyName: (Optional) Enter the name of your preferred EC2 Key-Pair from Step 1
   - InstanceSubnets: Choose the two Private Subnets from Step 2
