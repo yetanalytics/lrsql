@@ -71,6 +71,7 @@ Parameters:
     Default: lrsqladmin
   DefaultAdminPass:
     Description: Initial seed password for lrs admin
+    NoEcho: true
     Type: String
   LrsVersion:
     Description: Version of SQL LRS to download and install (public release versions on GitHub)
