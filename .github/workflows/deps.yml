@@ -1,0 +1,32 @@
+name: Deps
+
+on:
+  push:
+    branches:
+      - '*'
+jobs:
+  deps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v3
+
+      - name: Setup CI Environment
+        uses: yetanalytics/action-setup-env@v1
+
+      - name: Cache Deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2
+            ~/.gitlibs
+          key: ${{ runner.os }}-deps-${{ hashFiles('deps.edn') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
+
+      - name: Make a POM
+        run: make clean pom.xml
+
+      - name: Submit Dependency Snapshot
+        uses: advanced-security/maven-dependency-submission-action@v3

@@ -126,7 +126,7 @@ superset-demo:
 .phony: clean, clean-non-dl, bundle
 
 clean:
-	rm -rf target resources/public
+	rm -rf target resources/public pom.xml
 
 # Combo of https://superuser.com/a/1592467
 # and https://unix.stackexchange.com/a/15309
@@ -288,3 +288,11 @@ run-jar-postgres: target/bundle
 	LRSQL_API_KEY_DEFAULT=username \
 	LRSQL_API_SECRET_DEFAULT=password \
 	bin/run_postgres.sh
+
+# *** Report Dependency Graph to GitHub ***
+
+## This pom.xml file is generated solely in an action to populate the GitHub
+## Dependency Graph. This allows generation of an accurate SBOM.
+
+pom.xml:
+	clojure -Adb-h2:db-sqlite:db-postgres -Spom
