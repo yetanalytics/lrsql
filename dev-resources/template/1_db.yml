@@ -24,14 +24,28 @@ Parameters:
   DBEngineVersion:
     Description: PostgreSQL engine version on RDS
     Type: String
-    Default: "12.9"
+    Default: "14.3"
     AllowedValues:
       - "12.9"
       - "14.3"
   DBInstanceClass:
     Description: For provisioned aurora, the instance class to use
     Type: String
-    Default: "db.r4.large"
+    Default: "db.r5.large"
+  DBInstanceReplica:
+    Description: Whether or not to create a second DB instance for use as a read-replica
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: false
+  DBInstancePublic:
+    Description: Whether or not to allow public access to DB instances
+    Type: String
+    AllowedValues:
+      - true
+      - false
+    Default: false
   DBName:
     Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
     Type: String
@@ -70,6 +84,8 @@ Mappings:
 Conditions:
   DBProvisioned:
     !Equals [!Ref DBEngineMode, "provisioned"]
+  DBCreateReadReplica:
+    !And [Condition: DBProvisioned, !Equals [!Ref DBInstanceReplica, "true"]]
   DBSnapshotIdentifierProvided:
     !Not [!Equals [!Ref DBSnapshotIdentifier, ""]]
 
@@ -131,7 +147,17 @@ Resources:
       Engine: aurora-postgresql
       EngineVersion: !Ref DBEngineVersion
       DBClusterIdentifier: !Ref DBCluster
-      PubliclyAccessible: false
+      PubliclyAccessible: !Ref DBInstancePublic
+      DBInstanceClass: !Ref DBInstanceClass
+
+  DBInstance1:
+    Condition: DBCreateReadReplica
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: aurora-postgresql
+      EngineVersion: !Ref DBEngineVersion
+      DBClusterIdentifier: !Ref DBCluster
+      PubliclyAccessible: !Ref DBInstancePublic
       DBInstanceClass: !Ref DBInstanceClass
 
 Outputs:
