@@ -240,6 +240,14 @@ SELECT 1 FROM admin_account
 --~ (when (:username params)   "WHERE username = :username")
 --~ (when (:account-id params) "WHERE id = :account-id")
 
+-- :name query-account-count-local
+-- :command :query
+-- :result :one
+-- :doc Count the local admin accounts present.
+SELECT COUNT(id) local_account_count
+FROM admin_account
+WHERE oidc_issuer IS NULL
+
 /* Credentials */
 
 -- :name query-credentials

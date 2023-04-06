@@ -193,6 +193,8 @@
     (query-account-oidc tx input))
   (-query-account-exists [_ tx input]
     (query-account-exists tx input))
+  (-query-account-count-local [_ tx]
+    (query-account-count-local tx))
 
   bp/CredentialBackend
   (-insert-credential! [_ tx input]
