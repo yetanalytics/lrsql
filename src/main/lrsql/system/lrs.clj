@@ -261,9 +261,9 @@
       (jdbc/with-transaction [tx conn]
         (admin-q/query-admin-exists backend tx input))))
   (-delete-account
-    [this account-id]
+    [this account-id oidc-enabled?]
     (let [conn  (lrs-conn this)
-          input (admin-input/delete-admin-input account-id)]
+          input (admin-input/delete-admin-input account-id oidc-enabled?)]
       (jdbc/with-transaction [tx conn]
         (admin-cmd/delete-admin! backend tx input))))
   (-ensure-account-oidc

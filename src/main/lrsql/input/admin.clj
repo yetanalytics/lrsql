@@ -39,13 +39,15 @@
   (u/add-primary-key ensure-input))
 
 (s/fdef delete-admin-input
-  :args (s/cat :account-id ::ads/account-id)
+  :args (s/cat :account-id ::ads/account-id
+               :oidc-enabled? :lrsql.spec.admin.input/oidc-enabled?)
   :ret ads/admin-id-input-spec)
 
 (defn delete-admin-input
   "Given `account-id`, construct the input param map for `delete-admin!`."
-  [account-id]
-  {:account-id account-id})
+  [account-id oidc-enabled?]
+  {:account-id    account-id
+   :oidc-enabled? oidc-enabled?})
 
 (s/fdef query-admin-exists-input
   :args (s/cat :account-id ::ads/account-id)
