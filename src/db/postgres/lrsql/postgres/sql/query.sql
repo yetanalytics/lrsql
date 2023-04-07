@@ -248,6 +248,13 @@ WHERE username = :username;
 SELECT id, oidc_issuer FROM admin_account
 WHERE username = :username;
 
+-- :name query-account-by-id
+-- :command :query
+-- :result :one
+-- :doc Given an account `account-id`, return the ID and OIDC issuer, if any.
+SELECT id, oidc_issuer FROM admin_account
+WHERE id = :account-id;
+
 -- :name query-all-accounts
 -- :command :query
 -- :result :many

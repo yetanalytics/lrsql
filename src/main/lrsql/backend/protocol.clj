@@ -94,6 +94,7 @@
   ;; Queries
   (-query-account [this tx input])
   (-query-account-oidc [this tx input])
+  (-query-account-by-id [this tx input])
   (-query-account-exists [this tx input])
   (-query-all-admin-accounts [this tx])
   (-query-account-count-local [this tx]))
