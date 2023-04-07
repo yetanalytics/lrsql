@@ -60,6 +60,25 @@
      :lrsql.admin/missing-account-error)})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Admin Account Update Password
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef update-admin-password!
+  :args (s/cat :bk ads/admin-backend?
+               :tx transaction?
+               :input ads/update-admin-password-input-spec)
+  :ret ads/update-admin-password-ret-spec)
+
+(defn update-admin-password!
+  "Update the password of an admin account. Returns a map where `:result` is the
+   account ID."
+  [bk tx input]
+  {:result
+   (let [{:keys [id]} (bp/-query-account bk tx input)]
+     (do (bp/-update-admin-password! bk tx input)
+         id))})
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Ensure Admin Account from OIDC
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -68,3 +68,14 @@
   [username password]
   {:username username
    :password password})
+
+(s/fdef update-admin-password-input
+  :args (s/cat :username ::ads/username :new-password ::ads/new-password)
+  :ret ads/update-admin-password-input-spec)
+
+(defn update-admin-password-input
+  "Given `username` and `new-password`, construct the input
+   param map for `update-admin-password`."
+  [username new-password]
+  {:username     username
+   :new-passhash (adu/hash-password new-password)})

@@ -272,6 +272,19 @@
           input (admin-input/ensure-admin-oidc-input username oidc-issuer)]
       (jdbc/with-transaction [tx conn]
         (admin-cmd/ensure-admin-oidc! backend tx input))))
+  (-update-admin-password
+    [this username old-password new-password]
+    (let [conn       (lrs-conn this)
+          auth-input (admin-input/query-validate-admin-input
+                      username old-password)]
+      (jdbc/with-transaction [tx conn]
+        (let [{:keys [result]} (admin-q/query-validate-admin
+                                backend tx auth-input)]
+          (if (uuid? result)
+            (let [input (admin-input/update-admin-password-input
+                         username new-password)]
+              (admin-cmd/update-admin-password! backend tx input))
+            {:result result})))))
 
   adp/APIKeyManager
   (-create-api-keys

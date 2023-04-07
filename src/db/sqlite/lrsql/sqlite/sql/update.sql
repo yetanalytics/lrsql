@@ -62,3 +62,12 @@ SET
   last_modified = :last-modified
 WHERE profile_id = :profile-id
 AND activity_iri = :activity-iri
+
+-- :name update-admin-password!
+-- :command :execute
+-- :result :affected
+-- :doc Update the `passhash` of an admin account.
+UPDATE admin_account
+SET
+  passhash = :new-passhash
+WHERE username = :username

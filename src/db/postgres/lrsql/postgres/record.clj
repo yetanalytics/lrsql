@@ -159,6 +159,8 @@
     (query-all-accounts tx))
   (-delete-admin-account! [_ tx input]
     (delete-admin-account! tx input))
+  (-update-admin-password! [_ tx input]
+    (update-admin-password! tx input))
   (-query-account [_ tx input]
     (query-account tx input))
   (-query-account-oidc [_ tx input]
