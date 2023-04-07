@@ -75,8 +75,8 @@
   [bk tx input]
   {:result
    (let [{:keys [id]} (bp/-query-account bk tx input)]
-     (do (bp/-update-admin-password! bk tx input)
-         id))})
+     (bp/-update-admin-password! bk tx input)
+     id)})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Ensure Admin Account from OIDC
