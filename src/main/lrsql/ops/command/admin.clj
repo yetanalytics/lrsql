@@ -47,11 +47,12 @@
           :as   input}]
   {:result
    (if-let [{:keys [oidc_issuer]} (bp/-query-account-by-id bk tx input)]
-     (if (or oidc_issuer ;; OIDC accounts can always be deleted
-             (< 1
-                (:local_account_count
-                 (bp/-query-account-count-local bk tx))) ;; more than one
-             oidc-enabled?) ;; Allow if OIDC is turned on
+     (if (or
+          oidc-enabled? ;; Allow if OIDC is turned on
+          oidc_issuer ;; OIDC accounts can always be deleted
+          (< 1
+             (:local_account_count
+              (bp/-query-account-count-local bk tx)))) ;; more than one
        (do
          (bp/-delete-admin-account! bk tx input)
          account-id)
