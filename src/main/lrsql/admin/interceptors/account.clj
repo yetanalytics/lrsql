@@ -131,7 +131,9 @@
              {:keys [account-id]} ::data}
             ctx
             {:keys [result]}
-            (adp/-delete-account lrs account-id)]
+            (adp/-delete-account
+             lrs account-id
+             (some? (:lrsql.admin.interceptors.oidc/admin-env ctx)))]
         (cond
           ;; The result is the account ID - success!
           (uuid? result)
@@ -145,6 +147,13 @@
                  :response
                  {:status 404
                   :body   {:error (format "The account \"%s\" does not exist!"
+                                          (u/uuid->str account-id))}})
+          ;; The account is the last local admin account and OIDC is off
+          (= :lrsql.admin/sole-admin-delete-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400
+                  :body   {:error (format "The account \"%s\" is the only local admin account and cannot be deleted!"
                                           (u/uuid->str account-id))}}))))}))
 
 (def get-accounts

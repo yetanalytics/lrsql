@@ -33,18 +33,30 @@
 (s/fdef delete-admin!
   :args (s/cat :bk ads/admin-backend?
                :tx transaction?
-               :input ads/admin-id-input-spec)
+               :input ads/delete-admin-input-spec)
   :ret ads/delete-admin-ret-spec)
 
 (defn delete-admin!
   "Delete the admin account and any associated credentials. Returns a map
-   where `:result` is the account ID."
-  [bk tx input]
-  (if (bp/-query-account-exists bk tx input)
-    (do
-      (bp/-delete-admin-account! bk tx input)
-      {:result (:account-id input)})
-    {:result :lrsql.admin/missing-account-error}))
+   where `:result` is the account ID.
+   Will fail if the admin account does not exist.
+   Will fail if the admin account is local and the only one and OIDC is not
+   enabled."
+  [bk tx {:keys [account-id
+                 oidc-enabled?]
+          :as   input}]
+  {:result
+   (if-let [{:keys [oidc_issuer]} (bp/-query-account-by-id bk tx input)]
+     (if (or oidc_issuer ;; OIDC accounts can always be deleted
+             (< 1
+                (:local_account_count
+                 (bp/-query-account-count-local bk tx))) ;; more than one
+             oidc-enabled?) ;; Allow if OIDC is turned on
+       (do
+         (bp/-delete-admin-account! bk tx input)
+         account-id)
+       :lrsql.admin/sole-admin-delete-error)
+     :lrsql.admin/missing-account-error)})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Ensure Admin Account from OIDC

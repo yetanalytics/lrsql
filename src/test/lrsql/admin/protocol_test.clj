@@ -94,10 +94,31 @@
                                                       test-username
                                                       test-password)
                            :result)]
-        (adp/-delete-account lrs account-id)
-        (is (-> (adp/-authenticate-account lrs test-username test-password)
-                :result
-                (= :lrsql.admin/missing-account-error)))))
+        (testing "When OIDC is off"
+          (let [oidc-enabled? false]
+            (testing "Succeeds if there is more than one account"
+              (adp/-delete-account lrs account-id oidc-enabled?)
+              (is (-> (adp/-authenticate-account lrs test-username test-password)
+                      :result
+                      (= :lrsql.admin/missing-account-error))))
+            (testing "Fails if there is only one account"
+              (let [default-account-id (:result
+                                        (adp/-authenticate-account
+                                         lrs "username" "password"))]
+                (is (-> (adp/-delete-account
+                         lrs default-account-id oidc-enabled?)
+                        :result
+                        (= :lrsql.admin/sole-admin-delete-error)))))))
+        (testing "When OIDC is on"
+          (let [oidc-enabled? true]
+            (testing "Succeeds if there is only one account"
+              (let [default-account-id (:result
+                                        (adp/-authenticate-account
+                                         lrs "username" "password"))]
+                (is (-> (adp/-delete-account
+                         lrs default-account-id oidc-enabled?)
+                        :result
+                        (= default-account-id)))))))))
     (testing "Admin account OIDC bootstrap"
       (let [username    "oidcsub"
             oidc-issuer "https://example.com/realm"
