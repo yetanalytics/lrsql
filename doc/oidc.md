@@ -43,7 +43,7 @@ Administrative functions like credential provisioning require a local admin acco
 
 ##### Local Admins
 
-By default SQL LRS will disable local administrator account usage and management when `LRSQL_OIDC_ISSUER` is provided. To enable local admin accounts when using OIDC, set the `LRSQL_OIDC_ENABLE_LOCAL_ADMIN` (`lrs.oidcEnableLocalAdmin`) variable to `true`.
+By default SQL LRS will disable local administrator account usage and management when `LRSQL_OIDC_ISSUER` is provided. To enable local admin accounts when using OIDC, set the `LRSQL_OIDC_ENABLE_LOCAL_ADMIN` (`lrs.oidcEnableLocalAdmin`) variable to `true`. Note that when OIDC and local accounts are enabled SQL LRS will allow the deletion of all local accounts from the aministrative interface and API.
 
 ### Admin UI Authentication
 
