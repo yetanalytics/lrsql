@@ -130,10 +130,10 @@
       (let [{lrs :com.yetanalytics/lrs
              {:keys [account-id]} ::data}
             ctx
+            oidc-enabled?
+            (some? (:lrsql.admin.interceptors.oidc/admin-env ctx))
             {:keys [result]}
-            (adp/-delete-account
-             lrs account-id
-             (some? (:lrsql.admin.interceptors.oidc/admin-env ctx)))]
+            (adp/-delete-account lrs account-id oidc-enabled?)]
         (cond
           ;; The result is the account ID - success!
           (uuid? result)
