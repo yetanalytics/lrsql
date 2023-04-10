@@ -8,18 +8,20 @@
             [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Validation Interceptors
+;; Validation Helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def validate-params
-  "Validate that the JSON params contain the params `username` and `password`
-   for login and create."
+(defn- validation-interceptor
+  "Shared helper for simple validation interceptors."
+  [interceptor-name
+   validate-spec
+   param-keys]
   (interceptor
-   {:name ::validate-params
+   {:name interceptor-name
     :enter
     (fn validate-params [ctx]
       (let [params (get-in ctx [:request :json-params])]
-        (if-some [err (s/explain-data ads/admin-params-spec params)]
+        (if-some [err (s/explain-data validate-spec params)]
           ;; Invalid parameters - Bad Request
           (assoc (chain/terminate ctx)
                  :response
@@ -27,10 +29,31 @@
                   :body   {:error (format "Invalid parameters:\n%s"
                                           (-> err s/explain-out with-out-str))}})
           ;; Valid params - continue
-          (let [acc-info (select-keys params [:username :password])]
+          (let [acc-info (select-keys params param-keys)]
             (-> ctx
                 (assoc ::data acc-info)
                 (assoc-in [:request :session ::data] acc-info))))))}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Validation Interceptors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def validate-params
+  "Validate that the JSON params contain the params `username` and `password`
+   for login and create."
+  (validation-interceptor
+   ::validate-params
+   ads/admin-params-spec
+   [:username :password]))
+
+(def validate-update-password-params
+  "Validate that the JSON params contain the params `username`, `old-password`
+   and `new-password` for password update. Also validates that `old-password`
+   `new-password` do not match."
+  (validation-interceptor
+   ::validate-update-password-params
+   ads/update-admin-password-params-spec
+   [:username :old-password :new-password]))
 
 (def validate-delete-params
   "Validate that the JSON params contain `account-id` for delete."
