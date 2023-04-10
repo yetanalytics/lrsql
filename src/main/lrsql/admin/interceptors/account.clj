@@ -144,6 +144,39 @@
                   :body   {:error (format "An account \"%s\" already exists!"
                                           username)}}))))}))
 
+(def update-admin-password
+  "Set a new password for an admin account."
+  (interceptor
+   {:name ::update-admin-password
+    :enter
+    (fn update-admin-password [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [username old-password new-password]} ::data}
+            ctx
+            {:keys [result]}
+            (adp/-update-admin-password lrs username old-password new-password)]
+        (cond
+          ;; The result is the account ID - success!
+          (uuid? result)
+          (assoc ctx
+                 :response
+                 {:status 200 :body {:account-id result}})
+
+          ;; The given username does not belong to a known account
+          (= :lrsql.admin/missing-account-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 404
+                  :body   {:error (format "The account username \"%s\" does not exist!"
+                                          username)}})
+
+          ;; The old password is not correct.
+          (= :lrsql.admin/invalid-password-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 401
+                  :body   {:error "Invalid Account Credentials"}}))))}))
+
 (def delete-admin
   "Delete the selected admin account. This is a hard delete."
   (interceptor

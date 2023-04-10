@@ -44,6 +44,14 @@
   (curl/get "http://0.0.0.0:8080/admin/account"
             {:headers headers}))
 
+(defn- update-account-password
+  [headers
+   body]
+  (curl/put "http://0.0.0.0:8080/admin/account/password"
+            {:headers headers
+             :body    body
+             :throw   false}))
+
 (defn- delete-account
   [headers body]
   (curl/delete "http://0.0.0.0:8080/admin/account"
@@ -143,6 +151,53 @@
       ;; Bad Request
       (let [bad-body ""]
         (is-err-code (login-account content-type bad-body) 400)))
+    (testing "change the password of the `myname` account"
+      (let [update-jwt   (-> (login-account content-type req-body)
+                             :body
+                             u/parse-json
+                             (get "json-web-token"))
+            update-auth  {"Authorization" (str "Bearer " update-jwt)}
+            update-head  (merge content-type update-auth)
+            new-pass     "fnordfish"
+            update-pass! (fn [payload]
+                           (update-account-password
+                            update-head
+                            (u/write-json-str payload)))]
+        (is (-> (update-pass! {"username"     "myname"
+                               "old-password" "swordfish"
+                               "new-password" new-pass})
+                :status
+                (= 200)))
+        (is (-> (login-account
+                 content-type
+                 (u/write-json-str {"username" "myname"
+                                    "password" new-pass}))
+                :status
+                (= 200)))
+        (testing "with the wrong password"
+          (is (-> (update-pass! {"username"     "myname"
+                                 "old-password" "verywrongpass"
+                                 "new-password" "whocares"})
+                  :status
+                  (= 401))))
+        (testing "with a nonexistent account"
+          (is (-> (update-pass! {"username"     "jrbobdobbs"
+                                 "old-password" new-pass
+                                 "new-password" "swordfish"})
+                  :status
+                  (= 404))))
+        (testing "without a change"
+          (is (-> (update-pass! {"username"     "myname"
+                                 "old-password" new-pass
+                                 "new-password" new-pass})
+                  :status
+                  (= 400))))
+        (testing "change it back"
+          (is (-> (update-pass! {"username"     "myname"
+                                 "old-password" new-pass
+                                 "new-password" "swordfish"})
+                  :status
+                  (= 200))))))
     (testing "delete the `myname` account using the seed account"
       (let [del-jwt  (-> (login-account content-type req-body)
                          :body
