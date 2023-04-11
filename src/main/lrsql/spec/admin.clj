@@ -48,6 +48,15 @@
 (def admin-delete-params-spec
   (s/keys :req-un [::account-id]))
 
+(def update-admin-password-params-spec
+  (s/and
+   (s/keys :req-un [::old-password
+                    ::new-password])
+   (fn new-pass-noteq-old-pass
+     [{:keys [old-password
+              new-password]}]
+     (not= old-password new-password))))
+
 (def insert-admin-input-spec
   (s/keys :req-un [::c/primary-key
                    ::username
@@ -84,15 +93,6 @@
 (def delete-admin-input-spec
   (s/merge admin-id-input-spec
            (s/keys :req-un [:lrsql.spec.admin.input/oidc-enabled?])))
-
-(def update-admin-password-params-spec
-  (s/and
-   (s/keys :req-un [::old-password
-                    ::new-password])
-   (fn new-pass-noteq-old-pass
-     [{:keys [old-password
-              new-password]}]
-     (not= old-password new-password))))
 
 (def update-admin-password-input-spec
   (s/keys :req-un [::account-id
