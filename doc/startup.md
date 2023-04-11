@@ -111,6 +111,8 @@ For security purposes, it is important to delete the seed account (as the userna
 
 Additionally you should remove the `adminUserDefault` and `adminPassDefault` lines from `config/lrsql.json`. This will prevent the system from re-creating the seed accounts on future restarts.
 
+Note that SQL LRS will not delete an admin account if it is the only one present.
+
 ### Your first Statement
 
 xAPI Statements can be inserted into and queried from the SQL LRS using HTTP commands. Let us insert the following Statement:

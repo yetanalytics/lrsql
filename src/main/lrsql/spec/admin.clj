@@ -29,6 +29,8 @@
 (s/def :lrsql.spec.admin.input/oidc-issuer string?)
 ;; But is for ret
 (s/def :lrsql.spec.admin.ret/oidc-issuer (s/nilable string?))
+;; boolean to indicate whether OIDC is enabled
+(s/def :lrsql.spec.admin.input/oidc-enabled? boolean?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inputs
@@ -62,6 +64,10 @@
 (def admin-id-input-spec
   (s/keys :req-un [::account-id]))
 
+(def delete-admin-input-spec
+  (s/merge admin-id-input-spec
+           (s/keys :req-un [:lrsql.spec.admin.input/oidc-enabled?])))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Results
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -85,7 +91,8 @@
 (s/def :lrsql.spec.admin.delete/result
   (s/nonconforming
    (s/or :success uuid?
-         :failure #{:lrsql.admin/missing-account-error})))
+         :failure #{:lrsql.admin/missing-account-error
+                    :lrsql.admin/sole-admin-delete-error})))
 
 (def delete-admin-ret-spec
   (s/keys :req-un [:lrsql.spec.admin.delete/result]))
