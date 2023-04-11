@@ -62,8 +62,20 @@
                    ::username
                    :lrsql.spec.admin.input/oidc-issuer]))
 
+(def query-admin-input-spec
+  (s/keys :req-un [::username
+                   ::password]))
+
+(def query-admin-by-id-input-spec
+  (s/keys :req-un [::account-id
+                   ::password]))
+
 (def query-validate-admin-input-spec
   (s/keys :req-un [::username
+                   ::password]))
+
+(def query-validate-admin-by-id-input-spec
+  (s/keys :req-un [::account-id
                    ::password]))
 
 (def admin-id-input-spec
@@ -75,8 +87,7 @@
 
 (def update-admin-password-params-spec
   (s/and
-   (s/keys :req-un [::username
-                    ::old-password
+   (s/keys :req-un [::old-password
                     ::new-password])
    (fn new-pass-noteq-old-pass
      [{:keys [old-password
@@ -84,7 +95,7 @@
      (not= old-password new-password))))
 
 (def update-admin-password-input-spec
-  (s/keys :req-un [::username
+  (s/keys :req-un [::account-id
                    :lrsql.spec.admin.input/new-passhash]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -96,7 +96,7 @@
                              :result)
             new-password "iLoveNoSql"]
         (testing "Valid update"
-          (adp/-update-admin-password lrs test-username test-password new-password)
+          (adp/-update-admin-password lrs account-id test-password new-password)
           (is (-> (adp/-authenticate-account lrs
                                              test-username
                                              new-password)
@@ -104,12 +104,12 @@
                   (= account-id))))
         (testing "Invalid update"
           (is (-> (adp/-update-admin-password
-                   lrs test-username "iLoveMongoDB" test-password)
+                   lrs account-id "iLoveMongoDB" test-password)
                   :result
                   (= :lrsql.admin/invalid-password-error))))
         ;; Change it back for subsequent tests
         (adp/-update-admin-password
-         lrs test-username new-password test-password)))
+         lrs account-id new-password test-password)))
     (testing "Admin account deletion"
       (let [account-id (-> (adp/-authenticate-account lrs
                                                       test-username

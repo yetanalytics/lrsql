@@ -8,20 +8,18 @@
             [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Validation Helpers
+;; Validation Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- validation-interceptor
-  "Shared helper for simple validation interceptors."
-  [interceptor-name
-   validate-spec
-   param-keys]
+(def validate-params
+  "Validate that the JSON params contain the params `username` and `password`
+   for login and create."
   (interceptor
-   {:name interceptor-name
+   {:name ::validate-params
     :enter
     (fn validate-params [ctx]
       (let [params (get-in ctx [:request :json-params])]
-        (if-some [err (s/explain-data validate-spec params)]
+        (if-some [err (s/explain-data ads/admin-params-spec params)]
           ;; Invalid parameters - Bad Request
           (assoc (chain/terminate ctx)
                  :response
@@ -29,31 +27,35 @@
                   :body   {:error (format "Invalid parameters:\n%s"
                                           (-> err s/explain-out with-out-str))}})
           ;; Valid params - continue
-          (let [acc-info (select-keys params param-keys)]
+          (let [acc-info (select-keys params [:username :password])]
             (-> ctx
                 (assoc ::data acc-info)
                 (assoc-in [:request :session ::data] acc-info))))))}))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Validation Interceptors
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def validate-params
-  "Validate that the JSON params contain the params `username` and `password`
-   for login and create."
-  (validation-interceptor
-   ::validate-params
-   ads/admin-params-spec
-   [:username :password]))
 
 (def validate-update-password-params
-  "Validate that the JSON params contain the params `username`, `old-password`
+  "Validate that the JSON params contain the params `old-password`
    and `new-password` for password update. Also validates that `old-password`
    `new-password` do not match."
-  (validation-interceptor
-   ::validate-update-password-params
-   ads/update-admin-password-params-spec
-   [:username :old-password :new-password]))
+  (interceptor
+   {:name ::validate-update-password-params
+    :enter
+    (fn validate-params [ctx]
+      (let [params (get-in ctx [:request :json-params])]
+        (if-some [err (s/explain-data
+                       ads/update-admin-password-params-spec params)]
+          ;; Invalid parameters - Bad Request
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400
+                  :body   {:error (format "Invalid parameters:\n%s"
+                                          (-> err s/explain-out with-out-str))}})
+          ;; Valid params - continue
+          (let [update-info (select-keys params
+                                         [:old-password :new-password])]
+            (-> ctx
+                (assoc ::data update-info)
+                (assoc-in [:request :session ::data] update-info))))))}))
 
 (def validate-delete-params
   "Validate that the JSON params contain `account-id` for delete."
@@ -150,11 +152,15 @@
    {:name ::update-admin-password
     :enter
     (fn update-admin-password [ctx]
-      (let [{lrs :com.yetanalytics/lrs
-             {:keys [username old-password new-password]} ::data}
+      (let [{lrs
+             :com.yetanalytics/lrs
+             {:keys [old-password new-password]}
+             ::data
+             {:keys [account-id]}
+             :lrsql.admin.interceptors.jwt/data}
             ctx
             {:keys [result]}
-            (adp/-update-admin-password lrs username old-password new-password)]
+            (adp/-update-admin-password lrs account-id old-password new-password)]
         (cond
           ;; The result is the account ID - success!
           (uuid? result)
@@ -162,13 +168,13 @@
                  :response
                  {:status 200 :body {:account-id result}})
 
-          ;; The given username does not belong to a known account
+          ;; The given account-id does not belong to a known account
           (= :lrsql.admin/missing-account-error result)
           (assoc (chain/terminate ctx)
                  :response
                  {:status 404
-                  :body   {:error (format "The account username \"%s\" does not exist!"
-                                          username)}})
+                  :body   {:error (format "The account \"%s\" does not exist!"
+                                          (u/uuid->str account-id))}})
 
           ;; The old password is not correct.
           (= :lrsql.admin/invalid-password-error result)

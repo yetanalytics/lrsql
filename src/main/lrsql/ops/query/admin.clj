@@ -10,12 +10,14 @@
 (s/fdef query-validate-admin
   :args (s/cat :bk ads/admin-backend?
                :tx transaction?
-               :input ads/query-validate-admin-input-spec)
+               :input (s/or
+                       :by-username ads/query-admin-input-spec
+                       :by-id ads/query-admin-by-id-input-spec))
   :ret ads/query-admin-ret-spec)
 
 (defn query-admin
-  "Query an admin account with the given username and password. Returns
-   a map containing `:account-id` and `:passhash` on success, or nil on
+  "Query an admin account with the given username (or account-id) and password.
+   Returns a map containing `:account-id` and `:passhash` on success, or nil on
    failure."
   [bk tx input]
   (when-some [{account-id :id
@@ -33,7 +35,9 @@
 (s/fdef query-validate-admin
   :args (s/cat :bk ads/admin-backend?
                :tx transaction?
-               :input ads/query-validate-admin-input-spec)
+               :input (s/or
+                       :by-username ads/query-validate-admin-input-spec
+                       :by-id ads/query-validate-admin-by-id-input-spec))
   :ret ads/query-validate-admin-ret-spec)
 
 (defn query-validate-admin

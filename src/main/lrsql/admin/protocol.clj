@@ -13,7 +13,7 @@
     "Delete the account and all associated creds. Assumes the account has already been authenticated. Requires OIDC status to prevent sole account deletion.")
   (-ensure-account-oidc [this username oidc-issuer]
     "Create or verify an existing admin account with the given username and oidc-issuer.")
-  (-update-admin-password [this username old-password new-password]
+  (-update-admin-password [this account-id old-password new-password]
     "Update the password for an admin account given old and new passwords."))
 
 (defprotocol APIKeyManager

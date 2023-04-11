@@ -163,8 +163,7 @@
                            (update-account-password
                             update-head
                             (u/write-json-str payload)))]
-        (is (-> (update-pass! {"username"     "myname"
-                               "old-password" "swordfish"
+        (is (-> (update-pass! {"old-password" "swordfish"
                                "new-password" new-pass})
                 :status
                 (= 200)))
@@ -175,26 +174,17 @@
                 :status
                 (= 200)))
         (testing "with the wrong password"
-          (is (-> (update-pass! {"username"     "myname"
-                                 "old-password" "verywrongpass"
+          (is (-> (update-pass! {"old-password" "verywrongpass"
                                  "new-password" "whocares"})
                   :status
                   (= 401))))
-        (testing "with a nonexistent account"
-          (is (-> (update-pass! {"username"     "jrbobdobbs"
-                                 "old-password" new-pass
-                                 "new-password" "swordfish"})
-                  :status
-                  (= 404))))
         (testing "without a change"
-          (is (-> (update-pass! {"username"     "myname"
-                                 "old-password" new-pass
+          (is (-> (update-pass! {"old-password" new-pass
                                  "new-password" new-pass})
                   :status
                   (= 400))))
         (testing "change it back"
-          (is (-> (update-pass! {"username"     "myname"
-                                 "old-password" new-pass
+          (is (-> (update-pass! {"old-password" new-pass
                                  "new-password" "swordfish"})
                   :status
                   (= 200))))))

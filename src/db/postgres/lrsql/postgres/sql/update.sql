@@ -75,4 +75,4 @@ AND activity_iri = :activity-iri;
 UPDATE admin_account
 SET
   passhash = :new-passhash
-WHERE username = :username;
+WHERE id = :account-id;
