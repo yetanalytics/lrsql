@@ -237,9 +237,11 @@ WHERE activity_iri = :activity-iri
 -- :name query-account
 -- :command :query
 -- :result :one
--- :doc Given an account `username`, return the ID and the hashed password, which can be used to verify the account.
+-- :doc Given an account `username` or `account-id`, return the ID and the hashed password, which can be used to verify the account.
 SELECT id, passhash FROM admin_account
-WHERE username = :username;
+--~ (when (:username params)   "WHERE username = :username")
+--~ (when (:account-id params) "WHERE id = :account-id")
+;
 
 -- :name query-account-oidc
 -- :command :query
