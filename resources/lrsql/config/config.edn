@@ -1,75 +1,84 @@
 {:database
  #profile
   {;; Test/Dev
-   :test-h2-mem   {:db-type "h2:mem"
-                   :db-name "ephemeral"}
-   :test-h2       {:db-type "h2"
-                   :db-name "persistent"
-                   :db-host "0.0.0.0"
-                   :db-port 9001}
-   :test-sqlite   {:db-type "sqlite"
-                   :db-name "example.sqlite.db"}
-   :test-postgres {:db-type         "postgres"
-                   :db-name         "lrsql_pg"
-                   :db-host         "0.0.0.0"
-                   :db-port         5432
-                   :db-user         "lrsql_user"
-                   :db-password     "swordfish"
-                   ;; Schemas are commented out for testing (since all tests
-                   ;; happen in the default `public` schema). We can uncomment
-                   ;; these properties for manual schema testing.
-                   ;; :db-schema     "lrsql"
-                   ;; :db-properties "currentSchema=lrsql"
+   :test-h2-mem     {:db-type "h2:mem"
+                     :db-name "ephemeral"}
+   :test-h2         {:db-type "h2"
+                     :db-name "persistent"
+                     :db-host "0.0.0.0"
+                     :db-port 9001}
+   :test-sqlite     {:db-type "sqlite"
+                     :db-name "example.sqlite.db"}
+   :test-sqlite-mem {:db-type "sqlite"
+                     :db-name ":memory:"}
+   :test-postgres   {:db-type         "postgres"
+                     :db-name         "lrsql_pg"
+                     :db-host         "0.0.0.0"
+                     :db-port         5432
+                     :db-user         "lrsql_user"
+                     :db-password     "swordfish"
+                     ;; Schemas are commented out for testing (since all tests
+                     ;; happen in the default `public` schema). We can uncomment
+                     ;; these properties for manual schema testing.
+                     ;; :db-schema     "lrsql"
+                     ;; :db-properties "currentSchema=lrsql"
 
-                   ;; Testing Only! Specify the version used with testcontainers
-                   :test-db-version #or [#env LRSQL_TEST_DB_VERSION "11"]}
-   :test-oidc     {:db-type "h2:mem"
-                   :db-name "ephemeral"}
+                     ;; Testing Only! Specify the version used with testcontainers
+                     :test-db-version #or [#env LRSQL_TEST_DB_VERSION "11"]}
+   :test-oidc       {:db-type "h2:mem"
+                     :db-name "ephemeral"}
 
    ;; Production
-   :prod-h2-mem   #include "prod/h2_mem/database.edn"
-   :prod-h2       #include "prod/h2/database.edn"
-   :prod-sqlite   #include "prod/sqlite/database.edn"
-   :prod-postgres #include "prod/postgres/database.edn"}
+   :prod-h2-mem     #include "prod/h2_mem/database.edn"
+   :prod-h2         #include "prod/h2/database.edn"
+   :prod-sqlite-mem #include "prod/sqlite_mem/database.edn"
+   :prod-sqlite     #include "prod/sqlite/database.edn"
+   :prod-postgres   #include "prod/postgres/database.edn"}
  :connection
  #profile
   {;; Test/Dev
-   :test-h2-mem   #include "test/default/connection.edn"
-   :test-h2       #include "test/default/connection.edn"
-   :test-sqlite   #include "test/default/connection.edn"
-   :test-postgres #include "test/postgres/connection.edn"
-   :test-oidc     #include "test/default/connection.edn"
+   :test-h2-mem     #include "test/default/connection.edn"
+   :test-h2         #include "test/default/connection.edn"
+   :test-sqlite     #include "test/default/connection.edn"
+   :test-sqlite-mem #include "test/default/connection.edn"
+   :test-postgres   #include "test/postgres/connection.edn"
+   :test-oidc       #include "test/default/connection.edn"
    ;; Production
-   :prod-h2-mem   #include "prod/default/connection.edn"
-   :prod-h2       #include "prod/default/connection.edn"
-   :prod-sqlite   #include "prod/default/connection.edn"
-   :prod-postgres #include "prod/postgres/connection.edn"}
+   :prod-h2-mem     #include "prod/default/connection.edn"
+   :prod-h2         #include "prod/default/connection.edn"
+   :prod-sqlite     #include "prod/default/connection.edn"
+   :prod-sqlite-mem #include "prod/default/connection.edn"
+   :prod-postgres   #include "prod/postgres/connection.edn"}
  :lrs
  #profile
   {;; Test/Dev
-   :test-h2-mem   #include "test/default/lrs.edn"
-   :test-h2       #include "test/default/lrs.edn"
-   :test-sqlite   #include "test/default/lrs.edn"
-   :test-postgres #include "test/default/lrs.edn"
-   :test-oidc     #include "test/oidc/lrs.edn"
+   :test-h2-mem     #include "test/default/lrs.edn"
+   :test-h2         #include "test/default/lrs.edn"
+   :test-sqlite     #include "test/default/lrs.edn"
+   :test-sqlite-mem #include "test/default/lrs.edn"
+   :test-postgres   #include "test/default/lrs.edn"
+   :test-oidc       #include "test/oidc/lrs.edn"
    ;; Production
-   :prod-h2-mem   #include "prod/default/lrs.edn"
-   :prod-h2       #include "prod/default/lrs.edn"
-   :prod-sqlite   #include "prod/default/lrs.edn"
-   :prod-postgres #include "prod/default/lrs.edn"}
+   :prod-h2-mem     #include "prod/default/lrs.edn"
+   :prod-h2         #include "prod/default/lrs.edn"
+   :prod-sqlite     #include "prod/default/lrs.edn"
+   :prod-sqlite-mem #include "prod/default/lrs.edn"
+   :prod-postgres   #include "prod/default/lrs.edn"}
  :webserver
  #profile
  {;; Test/Dev
-  :test-h2-mem   #include "test/default/webserver.edn"
-  :test-h2       #include "test/default/webserver.edn"
-  :test-sqlite   #include "test/default/webserver.edn"
-  :test-postgres #include "test/default/webserver.edn"
-  :test-oidc     #include "test/oidc/webserver.edn"
+  :test-h2-mem      #include "test/default/webserver.edn"
+  :test-h2          #include "test/default/webserver.edn"
+  :test-sqlite      #include "test/default/webserver.edn"
+  :test-sqlite-mem  #include "test/default/webserver.edn"
+  :test-postgres    #include "test/default/webserver.edn"
+  :test-oidc        #include "test/oidc/webserver.edn"
   ;; Production
-  :prod-h2-mem   #include "prod/default/webserver.edn"
-  :prod-h2       #include "prod/default/webserver.edn"
-  :prod-sqlite   #include "prod/default/webserver.edn"
-  :prod-postgres #include "prod/default/webserver.edn"}
+  :prod-h2-mem      #include "prod/default/webserver.edn"
+  :prod-h2          #include "prod/default/webserver.edn"
+  :prod-sqlite      #include "prod/default/webserver.edn"
+  :prod-sqlite-mem  #include "prod/default/webserver.edn"
+  :prod-postgres    #include "prod/default/webserver.edn"}
  ;; A user-provided JSON file for merge-with merge into this map
  :user-config-json #or [#env LRSQL_USER_CONFIG_JSON "config/lrsql.json"]
  ;; Set logging params on system start

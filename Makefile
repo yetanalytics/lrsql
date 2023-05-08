@@ -31,9 +31,6 @@ clean-dev:
 
 # Tests
 
-test-h2:
-	clojure -M:test -m lrsql.test-runner --database h2
-
 test-sqlite:
 	clojure -M:test -m lrsql.test-runner --database sqlite
 
@@ -58,23 +55,20 @@ test-postgres-14:
 test-postgres-15:
 	LRSQL_TEST_DB_VERSION=15 $(TEST_PG_COMMAND)
 
-ci: test-h2 test-sqlite test-postgres
+ci: test-sqlite test-postgres
 
 # Dev
 
 ephemeral: resources/public/admin
-	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? false
+	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite :ephemeral? true
 
 # like ephemeral, but takes env vars
 ephemeral-prod: resources/public/admin
-	clojure -M:db-h2 -m lrsql.h2.main --persistent false
+	clojure -M:db-sqlite -m lrsql.sqlite.main --ephemeral true
 
 # like ephemeral, but includes OIDC config for use with `keycloak-demo`
 ephemeral-oidc: resources/public/admin
-	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? false :override-profile :test-oidc
-
-persistent: resources/public/admin
-	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? true
+	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite :ephemeral? true :override-profile :test-oidc
 
 sqlite: resources/public/admin
 	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite
@@ -102,7 +96,7 @@ bench-async:
 # Vulnerability check
 
 target/nvd:
-	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-h2:db-sqlite:db-postgres)"'"' :config-filename '".nvd/config.json"'
+	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-sqlite:db-postgres)"'"' :config-filename '".nvd/config.json"'
 
 check-vuln: target/nvd
 
@@ -256,21 +250,13 @@ exe: exe/lrsql.exe exe/lrsql_pg.exe
 
 .phony: run-jar-h2, run-jar-sqlite, run-jar-h2-persistent, run-jar-postgres
 
-run-jar-h2: target/bundle
+run-jar-sqlite-ephemeral: target/bundle
 	cd target/bundle; \
 	LRSQL_ADMIN_USER_DEFAULT=username \
 	LRSQL_ADMIN_PASS_DEFAULT=password \
 	LRSQL_API_KEY_DEFAULT=username \
 	LRSQL_API_SECRET_DEFAULT=password \
-	bin/run_h2.sh
-
-run-jar-h2-persistent: target/bundle
-	cd target/bundle; \
-	LRSQL_ADMIN_USER_DEFAULT=username \
-	LRSQL_ADMIN_PASS_DEFAULT=password \
-	LRSQL_API_KEY_DEFAULT=username \
-	LRSQL_API_SECRET_DEFAULT=password \
-	bin/run_h2_persistent.sh
+	bin/run_sqlite_ephemeral.sh
 
 run-jar-sqlite: target/bundle
 	cd target/bundle; \
@@ -295,4 +281,4 @@ run-jar-postgres: target/bundle
 ## Dependency Graph. This allows generation of an accurate SBOM.
 
 pom.xml:
-	clojure -Adb-h2:db-sqlite:db-postgres -Spom
+	clojure -Adb-sqlite:db-postgres -Spom
