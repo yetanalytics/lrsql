@@ -1,8 +1,7 @@
 (ns lrsql.test-support-test
   (:require [clojure.test :refer [deftest testing is]]
             [lrsql.init.config :refer [read-config]]
-            [lrsql.test-support :refer [test-system fresh-sqlite-fixture]]
-            [lrsql.util :as u]))
+            [lrsql.test-support :refer [fresh-sqlite-fixture]]))
 
 (defn- get-db-name
   [config]
