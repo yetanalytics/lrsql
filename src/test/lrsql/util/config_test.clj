@@ -6,23 +6,23 @@
 
 (deftest config-var-redact-test
   (testing "Config var redaction"
-    (is (= {:db-type     "h2:mem"
-            :db-name     "foo"
+    (is (= {:db-type     "sqlite"
+            :db-name     ":memory:"
             :db-password "[REDACTED]"}
            (su/redact-config-vars
-            {:db-type     "h2:mem"
-             :db-name     "foo"
+            {:db-type     "sqlite"
+             :db-name     ":memory:"
              :db-password "swordfish"})))
-    (is (= {:database {:db-type     "h2:mem"
-                       :db-name     "foo"
+    (is (= {:database {:db-type     "sqlite"
+                       :db-name     ":memory:"
                        :db-password "[REDACTED]"}
             :admin-user-default "user-default"
             :admin-pass-default "[REDACTED]"
             :api-key-default    "api-key-default"
             :api-secret-default "[REDACTED]"}
            (su/redact-config-vars
-            {:database {:db-type     "h2:mem"
-                        :db-name     "foo"
+            {:database {:db-type     "sqlite"
+                        :db-name     ":memory:"
                         :db-password "swordfish"}
              :admin-user-default "user-default"
              :admin-pass-default "pass-default"
@@ -51,34 +51,32 @@
                 :keystore {}
                 :key-password "this-is-my-oh-so-secure-password"}}))))
     (testing "on keywords"
-      (is (= {:db-type     "h2:mem"
-              :db-name     "foo"
+      (is (= {:db-type     "sqlite"
+              :db-name     ":memory:"
               :db-password :redacted}
              (su/redact-config-vars
-              {:db-type     "h2:mem"
-               :db-name     "foo"
+              {:db-type     "sqlite"
+               :db-name     ":memory:"
                :db-password :swordfish}))))
     (testing "on symbols"
-      (is (= {:db-type     "h2:mem"
-              :db-name     "foo"
+      (is (= {:db-type     "sqlite"
+              :db-name     ":memory:"
               :db-password 'redacted}
              (su/redact-config-vars
-              {:db-type     "h2:mem"
-               :db-name     "foo"
+              {:db-type     "sqlite"
+               :db-name     ":memory:"
                :db-password 'swordfish}))))
     (testing "not on ints"
-      (is (= {:db-type     "h2:mem"
-              :db-name     "foo"
+      (is (= {:db-type     "sqlite"
+              :db-name     ":memory:"
               :db-password 100}
              (su/redact-config-vars
-              {:db-type     "h2:mem"
-               :db-name     "foo"
+              {:db-type     "sqlite"
+               :db-name     ":memory:"
                :db-password 100}))))
     (testing "propgates through spec errors"
       (is (= {::s/problems '({:path [:no-jdbc-url :db-type]
-                              :pred #{"h2"
-                                      "h2:mem"
-                                      "sqlite"
+                              :pred #{"sqlite"
                                       "postgres"
                                       "postgresql"}
                               :val  "h2-mem"
@@ -88,16 +86,16 @@
                               :pred (clojure.core/fn [%]
                                       (clojure.core/contains? % :db-jdbc-url))
                               :val {:db-type     "h2-mem"
-                                    :db-name     "foo"
+                                    :db-name     ":memory:"
                                     :db-password "[REDACTED]"}
                               :via [::cs/database]
                               :in []})
               ::s/spec ::cs/database
               ::s/value {:db-type     "h2-mem"
-                         :db-name     "foo"
+                         :db-name     ":memory:"
                          :db-password "[REDACTED]"}}
              (s/explain-data ::cs/database
                              (su/redact-config-vars
                               {:db-type     "h2-mem"
-                               :db-name     "foo"
+                               :db-name     ":memory:"
                                :db-password "swordfish"})))))))

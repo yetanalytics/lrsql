@@ -3,7 +3,7 @@
             [xapi-schema.spec :as xs]
             [lrsql.spec.util :as u]))
 
-(s/def ::db-type #{"h2" "h2:mem" "sqlite" "postgres" "postgresql"})
+(s/def ::db-type #{"sqlite" "postgres" "postgresql"})
 (s/def ::db-name string?)
 (s/def ::db-host string?)
 (s/def ::db-port nat-int?)

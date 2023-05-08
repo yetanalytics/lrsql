@@ -18,7 +18,7 @@
     (are [m s] (= m (parse-db-props s))
       {:foo "bar"} "foo=bar"
       {:foo "bar" :baz "qux"} "foo=bar&baz=qux"
-      {:FOO "bar%3BBAZ%3Dqux"} "FOO=bar;BAZ=qux" ; Sorry H2
+      {:FOO "bar%3BBAZ%3Dqux"} "FOO=bar;BAZ=qux"
       {:currentSchema "lrsql%2Cpublic"} "currentSchema=lrsql,public"
       {:currentSchema "lrsql%2Cpublic"} "currentSchema=lrsql%2Cpublic"
       ;; Taken from:

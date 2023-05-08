@@ -17,14 +17,14 @@ resources/public/admin:
 # *** Development ***
 
 # `clean-dev` removes all development files.
-# `test-h2`, `test-sqlite`, `test-postgres` run tests on in-mem DB instances.
+# `test-sqlite`, `test-postgres` run tests on in-mem DB instances.
 # `ci` runs all tests and is called with every push to GitHub.
 # `bench` runs a query benchmarking session on a lrsql instance.
 
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, persistent, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo, test-h2, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp target/nvd
@@ -248,7 +248,7 @@ exe: exe/lrsql.exe exe/lrsql_pg.exe
 # These targets create a bundle containing a lrsql JAR and then runs
 # the JAR to create the specific lrsql instance.
 
-.phony: run-jar-h2, run-jar-sqlite, run-jar-h2-persistent, run-jar-postgres
+.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres
 
 run-jar-sqlite-ephemeral: target/bundle
 	cd target/bundle; \

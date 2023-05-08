@@ -10,44 +10,41 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 
 #### Build and Test Targets
 
-| Target | Description |
-| --- | --- |
-| `ci` | Called when running continuous integration; runs all test cases in all SQL flavors. |
-| `test-h2` | Run all tests with H2 database. |
-| `test-sqlite` | Run all tests with SQLite database. |
-| `test-postgres` | Run all tests with Postgres database version 11. Set the `LRSQL_TEST_DB_VERSION` env var to a valid Postgres docker tag to use another version. |
-| `test-postgres-11` | Run all tests with Postgres database version 11. |
-| `test-postgres-12` | Run all tests with Postgres database version 12. |
-| `test-postgres-13` | Run all tests with Postgres database version 13. |
-| `test-postgres-14` | Run all tests with Postgres database version 14. |
-| `test-postgres-15` | Run all tests with Postgres database version 15. |
-| `bundle` | Build a complete distribution of the SQL LRS including the user interface and native runtimes for multiple operating systems. |
-| `bench` | Run a load test and benchmark performance, returning performance metrics on predefined test data. Requires a running SQL LRS instance to test against. This test sends requests synchronously on one thread. |
-| `bench-async` | Same as `bench` but it runs with concurrent requests on multiple threads. |
-| `check-vuln` | Run the [nvd-clojure](https://github.com/rm-hull/nvd-clojure) tool, which checks for vulnerabilities against the [National Vulnerability Database](https://nvd.nist.gov/).
+| Target             | Description                                                                                                                                                                                                  |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ci`               | Called when running continuous integration; runs all test cases in all SQL flavors.                                                                                                                          |
+| `test-sqlite`      | Run all tests with SQLite database.                                                                                                                                                                          |
+| `test-postgres`    | Run all tests with Postgres database version 11. Set the `LRSQL_TEST_DB_VERSION` env var to a valid Postgres docker tag to use another version.                                                              |
+| `test-postgres-11` | Run all tests with Postgres database version 11.                                                                                                                                                             |
+| `test-postgres-12` | Run all tests with Postgres database version 12.                                                                                                                                                             |
+| `test-postgres-13` | Run all tests with Postgres database version 13.                                                                                                                                                             |
+| `test-postgres-14` | Run all tests with Postgres database version 14.                                                                                                                                                             |
+| `test-postgres-15` | Run all tests with Postgres database version 15.                                                                                                                                                             |
+| `bundle`           | Build a complete distribution of the SQL LRS including the user interface and native runtimes for multiple operating systems.                                                                                |
+| `bench`            | Run a load test and benchmark performance, returning performance metrics on predefined test data. Requires a running SQL LRS instance to test against. This test sends requests synchronously on one thread. |
+| `bench-async`      | Same as `bench` but it runs with concurrent requests on multiple threads.                                                                                                                                    |
+| `check-vuln`       | Run the [nvd-clojure](https://github.com/rm-hull/nvd-clojure) tool, which checks for vulnerabilities against the [National Vulnerability Database](https://nvd.nist.gov/).                                   |
 
 #### Run Targets
 
-| Target | Description |
-| --- | --- |
-| `ephemeral` | Start an in-memory SQL LRS based on H2 DB. |
-| `ephemeral-prod` | Similar to `ephemeral`, except that the `:prod` profile is used, enabling the use of environment variables without full compilation. |
-| `persistent` | Similar to `ephemeral`, except that the H2 DB is stored on-disk, not in-memory. |
-| `sqlite` | Start a SQLite-based SQL LRS. |
-| `postgres` | Start a Postgres SQL LRS. Requires a running Postgres instance. |
-| `run-jar-h2` | Similar to `ephemeral` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables. |
-| `run-jar-sqlite` | Similar to `sqlite` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables. |
-| `run-jar-h2-persistent` | Similar to `persistent` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables. |
-| `run-jar-postgres` | Similar to `postgres` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables. |
+| Target                     | Description                                                                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ephemeral`                | Start an in-memory SQL LRS based on SQLite DB.                                                                                             |
+| `ephemeral-prod`           | Similar to `ephemeral`, except that the `:prod` profile is used, enabling the use of environment variables without full compilation.       |
+| `sqlite`                   | Start a SQLite-based SQL LRS.                                                                                                              |
+| `postgres`                 | Start a Postgres SQL LRS. Requires a running Postgres instance.                                                                            |
+| `run-jar-sqlite`           | Similar to `sqlite` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables.    |
+| `run-jar-sqlite-ephemeral` | Similar to `ephemeral` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables. |
+| `run-jar-postgres`         | Similar to `postgres` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables.  |
 
 #### Cleanup Targets
 
-| Target | Description |
-| --- | --- |
-| `clean` | Removes all build artifacts. |
+| Target         | Description                                                        |
+| -------------- | ------------------------------------------------------------------ |
+| `clean`        | Removes all build artifacts.                                       |
 | `clean-non-dl` | Same as `clean` except that it does not delete downloaded folders. |
-| `clean-dev` | Removes development files. |
-| `clean-exe` | Removes the finished Windows executables, allowing recreation. |
+| `clean-dev`    | Removes development files.                                         |
+| `clean-exe`    | Removes the finished Windows executables, allowing recreation.     |
 
 ### Benchmarking
 
@@ -62,11 +59,9 @@ The insertion input file is a JSON file that follows the [DATASIM](https://githu
 #### 2. Set up query inputs
 
 The query input file is a JSON file containing an array of Statement query parameter objects. The following is an example query input:
+
 ```json
-[
-    {},
-    {"verb": "https://w3id.org/xapi/video/verbs/seeked"}
-]
+[{}, { "verb": "https://w3id.org/xapi/video/verbs/seeked" }]
 ```
 
 See the [Statement resource documentation](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#213-get-statements) for a full list of query parameters.
@@ -78,6 +73,7 @@ Start an instance of the SQL LRS (or any conformant LRS). The above Makefile tar
 #### 4. Run the benchmarks
 
 In another terminal, run the benchmarking framework by calling:
+
 ```
 clojure -M:bench -m lrsql.bench [arguments]
 ```
@@ -101,6 +97,7 @@ The following is the full list of arguments (which can also be accessed by passi
 #### 5. Wait for results
 
 After the bench has run, you should see results that look something like this:
+
 ```
 ********** Query benchmark results for n = 30 (in ms) **********
 

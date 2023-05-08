@@ -130,7 +130,7 @@ Scroll up to the top of your Application's page and copy down your "Client ID". 
 
 In your SQL LRS directory add a file named `lrsql.json` in the `config` subdirectory with the following contents:
 
-``` json
+```json
 {
   "lrs": {
     "oidcScopePrefix": "lrs:"
@@ -141,7 +141,6 @@ In your SQL LRS directory add a file named `lrsql.json` in the `config` subdirec
     "oidcClientId": "<your client id>"
   }
 }
-
 ```
 
 Replace the hostname in `oidcIssuer` with your auth0 hostname. Replace `oidcClientId` with the Client ID you recorded in the previous section.
@@ -150,29 +149,30 @@ Replace the hostname in `oidcIssuer` with your auth0 hostname. Replace `oidcClie
 
 From the root of the SQL LRS directory run:
 
-``` shell
-./bin/run_h2.sh
+```shell
+./bin/run_sqlite_ephemeral.sh
 
 ```
 
 This will launch an in-memory instance of SQL LRS that will not persist any data to disk. If SQL LRS starts successfully you should see something like the following:
 
-``` text
-09:02:54.527 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
-09:02:54.737 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:lrsql.h2 user=
-09:02:54.739 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
-09:02:54.740 [main] INFO  lrsql.system.database - Starting new connection for h2:mem database...
-09:02:54.807 [main] INFO  lrsql.system.lrs - Starting new LRS
-09:02:54.829 [main] WARN  lrsql.util.cert - No cert files found. Creating self-signed cert!
-09:02:56.106 [main] INFO  org.eclipse.jetty.util.log - Logging initialized @7146ms to org.eclipse.jetty.util.log.Slf4jLog
-09:02:56.323 [main] INFO  org.eclipse.jetty.server.Server - jetty-9.4.48.v20220622; built: 2022-06-21T20:42:25.880Z; git: 6b67c5719d1f4371b33655ff2d047d24e171e49a; jvm 11.0.17+8-LTS
-09:02:56.353 [main] INFO  o.e.j.server.handler.ContextHandler - Started o.e.j.s.ServletContextHandler@75ad8ca8{/,null,AVAILABLE}
-09:02:56.374 [main] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@3e9f3d0f{HTTP/1.1, (http/1.1, h2c)}{0.0.0.0:8080}
-09:02:56.378 [main] INFO  o.e.jetty.util.ssl.SslContextFactory - x509=X509@16e693c1(lrsql_keystore,h=[com.yetanalytics.lrsql],a=[],w=[]) for Server@5192abb4[provider=null,keyStore=null,trustStore=null]
-09:02:56.412 [main] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@3387d45e{SSL, (ssl, alpn, h2, http/1.1)}{0.0.0.0:8443}
-09:02:56.413 [main] INFO  org.eclipse.jetty.server.Server - Started @7453ms
-09:02:56.413 [main] INFO  lrsql.system.webserver - Starting new webserver at host 0.0.0.0, HTTP port 8080, and SSL port 8443
-09:02:56.413 [main] INFO  lrsql.system.webserver -
+```text
+10:01:51.885 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+10:01:51.963 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@36aeef57
+10:01:51.977 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+10:01:51.978 [main] INFO  lrsql.system.database - Starting new connection for sqlite database...
+10:01:52.001 [main] INFO  lrsql.sqlite.record - sqlite schema_version: 26
+10:01:52.270 [main] INFO  lrsql.system.lrs - Starting new LRS
+10:01:52.278 [main] WARN  lrsql.util.cert - No cert files found. Creating self-signed cert!
+10:01:52.505 [main] INFO  org.eclipse.jetty.util.log - Logging initialized @15405ms to org.eclipse.jetty.util.log.Slf4jLog
+10:01:52.665 [main] INFO  org.eclipse.jetty.server.Server - jetty-9.4.51.v20230217; built: 2023-02-17T08:19:37.309Z; git: b45c405e4544384de066f814ed42ae3dceacdd49; jvm 11.0.12+0
+10:01:52.695 [main] INFO  o.e.j.server.handler.ContextHandler - Started o.e.j.s.ServletContextHandler@462ffc16{/,null,AVAILABLE}
+10:01:52.750 [main] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@4bbb35b5{HTTP/1.1, (http/1.1, h2c)}{0.0.0.0:8080}
+10:01:52.754 [main] INFO  o.e.jetty.util.ssl.SslContextFactory - x509=X509@5d1c9c94(lrsql_keystore,h=[com.yetanalytics.lrsql],a=[],w=[]) for Server@23a258e7[provider=null,keyStore=null,trustStore=null]
+10:01:52.847 [main] INFO  o.e.jetty.server.AbstractConnector - Started ServerConnector@3abf8109{SSL, (ssl, alpn, h2, http/1.1)}{0.0.0.0:8443}
+10:01:52.847 [main] INFO  org.eclipse.jetty.server.Server - Started @15747ms
+10:01:52.847 [main] INFO  lrsql.system.webserver - Starting new webserver at host 0.0.0.0, HTTP port 8080, and SSL port 8443
+10:01:52.847 [main] INFO  lrsql.system.webserver -
    __  ______     _   _
 |\ \ \ \     |   | | | |     _        _               _       _
 | \ \_\ \    |   | |_| |    | |_    / _ \            | |_   _| |_ _
@@ -186,7 +186,7 @@ This will launch an in-memory instance of SQL LRS that will not persist any data
        |_____  |  | |   | |  | |          | |        |   ____|  |_____  |
         _____| |  | |__ | |  | |_____     | |_____   | |\  \     _____| |
        |_______|  |_____\_\  |_______|    |_______|  |_|  \__\  |_______|
-                        (c) 2021-2022 Yet Analytics Inc.
+                        (c) 2021-2023 Yet Analytics Inc.
 
 ```
 

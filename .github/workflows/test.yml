@@ -6,14 +6,14 @@ jobs:
   nvd_scan:
     uses: yetanalytics/actions/.github/workflows/nvd-scan.yml@v0.0.4
     with:
-      nvd-clojure-version: '2.9.0'
-      classpath-command: 'clojure -Spath -A:db-h2:db-sqlite:db-postgres'
-      nvd-config-filename: '.nvd/config.json'
+      nvd-clojure-version: "2.9.0"
+      classpath-command: "clojure -Spath -Adb-sqlite:db-postgres"
+      nvd-config-filename: ".nvd/config.json"
 
   lint:
     uses: yetanalytics/workflow-linter/.github/workflows/linter.yml@v2023.01.20
     with:
-      lint-directories: 'src/bench src/build src/db src/main src/test'
+      lint-directories: "src/bench src/build src/db src/main src/test"
 
   test:
     runs-on: ubuntu-latest
@@ -21,7 +21,6 @@ jobs:
     strategy:
       matrix:
         target:
-          - test-h2
           - test-sqlite
           - test-postgres-11
           - test-postgres-12
@@ -30,11 +29,11 @@ jobs:
           - test-postgres-15
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Setup CI Environment
-      uses: yetanalytics/actions/setup-env@v0.0.4
+      - name: Setup CI Environment
+        uses: yetanalytics/actions/setup-env@v0.0.4
 
-    - name: Run Makefile Target ${{ matrix.target }}
-      run: make ${{ matrix.target }}
+      - name: Run Makefile Target ${{ matrix.target }}
+        run: make ${{ matrix.target }}
