@@ -328,3 +328,40 @@ SET sql = 'CREATE TABLE credential_to_scope (
     ON DELETE CASCADE
 )'
 WHERE type = 'table' AND name = 'credential_to_scope'
+
+/* Migration 2022-05-08-00 - Add timestamp to xapi_statement */
+
+-- :name query-xapi-statement-timestamp-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `xapi_statement.timestamp` exists.
+SELECT 1 FROM pragma_table_info('xapi_statement') WHERE name = 'timestamp'
+
+-- :name alter-xapi-statement-add-timestamp!
+-- :command :execute
+-- :doc Add `xapi_statement.timestamp` to allow easier timestamp access.
+ALTER TABLE xapi_statement ADD COLUMN timestamp TIMESTAMP
+
+-- :name migrate-xapi-statement-timestamps!
+-- :command :execute
+-- :doc Backfill `xapi_statement.timestamp` with the values from the payload
+UPDATE xapi_statement SET timestamp = strftime('%Y-%m-%d %H:%M:%fZ', json_extract(payload, '$.timestamp'))
+WHERE timestamp IS NULL;
+
+
+-- :name query-xapi-statement-stored-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `xapi_statement.stored` exists.
+SELECT 1 FROM pragma_table_info('xapi_statement') WHERE name = 'stored'
+
+-- :name alter-xapi-statement-add-stored!
+-- :command :execute
+-- :doc Add `xapi_statement.stored` to allow easier stored time access.
+ALTER TABLE xapi_statement ADD COLUMN stored TIMESTAMP
+
+-- :name migrate-xapi-statement-stored-times!
+-- :command :execute
+-- :doc Backfill `xapi_statement.stored` with the values from the payload
+UPDATE xapi_statement SET stored = strftime('%Y-%m-%d %H:%M:%fZ', json_extract(payload, '$.stored'))
+WHERE stored IS NULL;

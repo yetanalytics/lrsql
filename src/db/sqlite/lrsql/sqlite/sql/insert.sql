@@ -5,9 +5,9 @@
 -- :result :affected
 -- :doc Insert a new statement with statement resource params.
 INSERT INTO xapi_statement (
-  id, statement_id, registration, verb_iri, is_voided, payload
+  id, statement_id, registration, verb_iri, is_voided, payload, timestamp, stored
 ) VALUES (
-  :primary-key, :statement-id, :registration, :verb-iri, :voided?, :payload
+  :primary-key, :statement-id, :registration, :verb-iri, :voided?, :payload, :timestamp, :stored
 );
 
 -- :name insert-actor!
