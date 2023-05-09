@@ -345,7 +345,7 @@ ALTER TABLE xapi_statement ADD COLUMN timestamp TIMESTAMP
 -- :name migrate-xapi-statement-timestamps!
 -- :command :execute
 -- :doc Backfill `xapi_statement.timestamp` with the values from the payload
-UPDATE xapi_statement SET timestamp = strftime('%Y-%m-%d %H:%M:%fZ', json_extract(payload, '$.timestamp'))
+UPDATE xapi_statement SET timestamp = strftime('%Y-%m-%d %H:%M:%f000000Z', json_extract(payload, '$.timestamp'))
 WHERE timestamp IS NULL;
 
 
@@ -363,5 +363,5 @@ ALTER TABLE xapi_statement ADD COLUMN stored TIMESTAMP
 -- :name migrate-xapi-statement-stored-times!
 -- :command :execute
 -- :doc Backfill `xapi_statement.stored` with the values from the payload
-UPDATE xapi_statement SET stored = strftime('%Y-%m-%d %H:%M:%fZ', json_extract(payload, '$.stored'))
+UPDATE xapi_statement SET stored = strftime('%Y-%m-%d %H:%M:%f000000Z', json_extract(payload, '$.stored'))
 WHERE stored IS NULL;
