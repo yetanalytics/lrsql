@@ -326,4 +326,4 @@ FROM xapi_statement
 WHERE id > :since-id
   AND id <= :until-id
 GROUP BY stored_time
-ORDER BY sstored_time ASC;
+ORDER BY stored_time ASC;
