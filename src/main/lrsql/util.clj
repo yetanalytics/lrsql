@@ -31,13 +31,13 @@
   [parse-fn data-type data & {:keys [retry-parse-fn]}]
   `(try (~parse-fn ~data)
         (catch Exception e#
-          (if (some? retry-parse-fn)
-            (wrap-parse-fn retry-parse-fn data-type data)
-            (throw (ex-info (format "Cannot parse nil or invalid %s"
-                                    ~data-type)
-                            {:type      ::parse-failure
-                             :data      ~data
-                             :data-type ~data-type}))))))
+          ~(if (some? retry-parse-fn)
+             `(wrap-parse-fn ~retry-parse-fn ~data-type ~data)
+             `(throw (ex-info (format "Cannot parse nil or invalid %s"
+                                      ~data-type)
+                              {:type      ::parse-failure
+                               :data      ~data
+                               :data-type ~data-type}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Timestamps
