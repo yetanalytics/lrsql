@@ -81,6 +81,9 @@
    "2023-05-10T10:45:23.123456789Z"
    "2023-05-10T10:45:23.123456789-03:21"])
 
+(def example-bad-ts-str
+  "Some time on Tuesday. It was hot out I think.")
+
 (def example-norm-ts-strs
   ["2023-05-10T10:45:23.000000000Z"
    "2023-05-10T10:45:23.123000000Z"
@@ -94,7 +97,15 @@
     (let [ts-insts    (mapv util/str->time example-ts-strs)
           ts-str-norm (mapv util/time->str ts-insts)]
       (is (every? inst? ts-insts))
-      (is (= ts-str-norm example-norm-ts-strs)))))
+      (is (= ts-str-norm example-norm-ts-strs))))
+  (testing "throws proper error on bad string"
+    (try
+      (util/str->time example-bad-ts-str)
+      (catch Exception e
+        (is (= (ex-message e) "Cannot parse nil or invalid timestamp"))
+        (is (= (ex-data e) {:data-type "timestamp",
+                            :type :lrsql.util/parse-failure,
+                            :data example-bad-ts-str}))))))
 
 (deftest pad-time-str-test
   (testing "pads partial datetime string"
