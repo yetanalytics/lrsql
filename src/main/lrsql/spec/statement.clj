@@ -80,7 +80,7 @@
 ;; - is_voided:        BOOLEAN NOT NULL DEFAULT FALSE
 ;; - payload:          JSON NOT NULL
 ;; - timestamp:        TIMESTAMP NOT NULL
-;; - stored:           STORED NOT NULL
+;; - stored:           TIMESTAMP NOT NULL
 
 (s/def ::statement-input
   (s/keys :req-un [::c/primary-key
