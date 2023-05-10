@@ -64,10 +64,7 @@
   {:mvn/version "0.0.8"
    :exclusions  [org.clojure/clojure]}}
  :aliases
- {:db-h2
-  {:extra-paths ["src/db/h2"]
-   :extra-deps  {com.h2database/h2 {:mvn/version "2.1.212"}}}
-  :db-sqlite
+ {:db-sqlite
   {:extra-paths ["src/db/sqlite"]
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.36.0"}}}
   :db-postgres
@@ -89,13 +86,11 @@
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema]}}}
   :test
-  {:extra-paths ["src/db/h2"
-                 "src/db/sqlite"
+  {:extra-paths ["src/db/sqlite"
                  "src/db/postgres"
                  "src/test"
                  "dev-resources"]
    :extra-deps  {;; DB deps
-                 com.h2database/h2             {:mvn/version "2.1.212"}
                  org.xerial/sqlite-jdbc        {:mvn/version "3.36.0"}
                  org.postgresql/postgresql     {:mvn/version "42.5.1"}
                  org.testcontainers/postgresql {:mvn/version "1.17.3"}

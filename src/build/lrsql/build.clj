@@ -5,7 +5,7 @@
 (def uber-params
   {:jar        "target/bundle/lrsql.jar"
    :aot        true
-   :aliases    [:db-h2 :db-sqlite :db-postgres]
+   :aliases    [:db-sqlite :db-postgres]
    :compile-ns :all
    :no-pom     true
    ;; Don't ship crypto - shouldn't be included in the build path anyways,

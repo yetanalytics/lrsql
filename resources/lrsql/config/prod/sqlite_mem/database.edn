@@ -1,5 +1,5 @@
-{:db-type       #or [#env LRSQL_DB_TYPE "h2:mem"]
- :db-name       #or [#env LRSQL_DB_NAME "lrsql.h2"]
+{:db-type       #or [#env LRSQL_DB_TYPE "sqlite"]
+ :db-name       #or [#env LRSQL_DB_NAME ":memory:"]
  :db-host       #or [#env LRSQL_DB_HOST nil]
  :db-port       #long #or [#env LRSQL_DB_PORT -1] ; Placeholder to prevent error
  :db-properties #or [#env LRSQL_DB_PROPERTIES nil]

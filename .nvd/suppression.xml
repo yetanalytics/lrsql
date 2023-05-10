@@ -7,14 +7,6 @@
         <packageUrl regex="true">^pkg:maven/org\.clojure/core\.async@.*$</packageUrl>
         <cpe>cpe:/a:async_project:async</cpe>
     </suppress>
-    <suppress base="true">
-        <notes><![CDATA[
-        FP per issue #4555
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
-        <cpe>cpe:/a:h2database:h2</cpe>
-        <vulnerabilityName>CVE-2018-14335</vulnerabilityName>
-    </suppress>
     <suppress>
         <notes><![CDATA[
         file name: jetty-io-9.4.48.v20220622.jar
@@ -44,17 +36,6 @@
         ]]></notes>
         <packageUrl regex="true">^(?!pkg:maven/commons-net/commons-net).*$</packageUrl>
         <cpe>cpe:/a:apache:commons_net</cpe>
-    </suppress>
-    <!-- The following CVE is not a vulnerability according to the devs:
-         https://github.com/h2database/h2database/issues/3686
-         It is unlikely to be addressed due to the subsequent drama it caused.
-    -->
-    <suppress>
-        <notes><![CDATA[
-        file name: h2-2.1.212.jar
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
-        <vulnerabilityName>CVE-2022-45868</vulnerabilityName>
     </suppress>
     <!-- The following are FPs since the CVE affects java-json which is not a dep -->
     <suppress>

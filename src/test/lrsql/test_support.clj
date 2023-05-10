@@ -5,7 +5,6 @@
             [next.jdbc.connection :refer [jdbc-url]]
             [lrsql.init.config :refer [read-config]]
             [lrsql.system :as system]
-            [lrsql.h2.record :as hr]
             [lrsql.sqlite.record :as sr]
             [lrsql.postgres.record :as pr]
             [lrsql.util :as u]))
@@ -64,18 +63,6 @@
   [& {:keys [_]}]
   {})
 
-(defn fresh-h2-fixture
-  [f]
-  (let [id-str (u/uuid->str (u/generate-uuid))
-        h2-cfg (-> (read-config :test-h2-mem)
-                   (assoc-in [:connection :database :db-name] id-str))]
-    (with-redefs
-     [read-config (constantly h2-cfg)
-      test-system (fn [& {:keys [conf-overrides]}]
-                    (system/system (hr/map->H2Backend {}) :test-h2-mem
-                                   :conf-overrides conf-overrides))]
-      (f))))
-
 ;; `:memory:` is a special db-name value that creates an in-memory SQLite DB.
 
 (defn fresh-sqlite-fixture
@@ -118,7 +105,7 @@
                                    :conf-overrides conf-overrides))]
       (f))))
 
-(def fresh-db-fixture fresh-h2-fixture)
+(def fresh-db-fixture fresh-sqlite-fixture)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Conformance test helpers
