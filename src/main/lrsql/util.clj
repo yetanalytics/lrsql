@@ -79,6 +79,8 @@
   [ts-str]
   (wrap-parse-fn java-time/instant "timestamp" ts-str
                  :retry-parse-fn #(-> %
+                                      ;; This step only needed for < JVM 11.
+                                      ;; Newer will parse offset right away.
                                       java-time/offset-date-time
                                       java-time/instant)))
 
