@@ -79,23 +79,23 @@
                               :pred #{"sqlite"
                                       "postgres"
                                       "postgresql"}
-                              :val  "h2-mem"
+                              :val  "AS400"
                               :via  [::cs/database ::cs/db-type]
                               :in   [:db-type]}
                              {:path [:jdbc-url]
                               :pred (clojure.core/fn [%]
                                       (clojure.core/contains? % :db-jdbc-url))
-                              :val {:db-type     "h2-mem"
+                              :val {:db-type     "AS400"
                                     :db-name     ":memory:"
                                     :db-password "[REDACTED]"}
                               :via [::cs/database]
                               :in []})
               ::s/spec ::cs/database
-              ::s/value {:db-type     "h2-mem"
+              ::s/value {:db-type     "AS400"
                          :db-name     ":memory:"
                          :db-password "[REDACTED]"}}
              (s/explain-data ::cs/database
                              (su/redact-config-vars
-                              {:db-type     "h2-mem"
+                              {:db-type     "AS400"
                                :db-name     ":memory:"
                                :db-password "swordfish"})))))))
