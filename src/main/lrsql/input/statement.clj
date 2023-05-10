@@ -206,8 +206,8 @@
         ?stmt-ctx
         ;; Revised Statement Properties
         stmt-pk      (-> statement meta :primary-key)
-        timestamp    (u/normalize-time-str stmt-ts)
-        stored       (u/normalize-time-str stmt-strd)
+        timestamp    (u/str->time stmt-ts)
+        stored       (u/str->time stmt-strd)
         stmt-id      (u/str->uuid stmt-id)
         ?stmt-reg    (when ?stmt-reg
                        (u/str->uuid ?stmt-reg))

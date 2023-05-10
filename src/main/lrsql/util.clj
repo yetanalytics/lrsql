@@ -78,7 +78,9 @@
   two parse fns are to support the Z and the +00:00 offset timestamp formats"
   [ts-str]
   (wrap-parse-fn java-time/instant "timestamp" ts-str
-                 :retry-parse-fn java-time/offset-date-time))
+                 :retry-parse-fn #(-> %
+                                      java-time/offset-date-time
+                                      java-time/instant)))
 
 (s/fdef time->str
   :args (s/cat :ts instant-spec)
@@ -89,10 +91,6 @@
    normalized according to the requirements of the lrs library."
   [ts]
   (normalize (java-time/format ts)))
-
-(defn normalize-time-str
-  [ts-str]
-  (time->str (str->time ts-str)))
 
 (s/fdef time->millis
   :args (s/cat :ts instant-spec)

@@ -348,6 +348,7 @@ ALTER TABLE xapi_statement ADD COLUMN timestamp TIMESTAMP
 UPDATE xapi_statement SET timestamp = strftime('%Y-%m-%d %H:%M:%f000000Z', json_extract(payload, '$.timestamp'))
 WHERE timestamp IS NULL;
 
+/* Migration 2022-05-08-01 - Add stored to xapi_statement */
 
 -- :name query-xapi-statement-stored-exists
 -- :command :query
