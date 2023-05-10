@@ -35,6 +35,7 @@
 
 ;; Timestamp
 (s/def ::stored c/instant-spec)
+(s/def ::timestamp c/instant-spec)
 
 ;; Registration
 (s/def ::registration (s/nilable uuid?))
@@ -89,7 +90,9 @@
                    ::voided?
                    ::voiding?                  ; not in table
                    ::hs-attach/attachment-shas ; not in table
-                   ::payload]))
+                   ::payload
+                   ::timestamp
+                   ::stored]))
 
 ;; Statement-to-Statement
 ;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
