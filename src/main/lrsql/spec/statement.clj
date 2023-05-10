@@ -78,6 +78,7 @@
 ;; - verb_iri:         STRING NOT NULL
 ;; - is_voided:        BOOLEAN NOT NULL DEFAULT FALSE
 ;; - payload:          JSON NOT NULL
+;; TODO: timestamp and stored insts
 
 (s/def ::statement-input
   (s/keys :req-un [::c/primary-key

@@ -293,7 +293,7 @@ SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND
 -- :name alter-xapi-statement-add-timestamp!
 -- :command :execute
 -- :doc Add `xapi_statement.timestamp` to allow easier timestamp access.
-ALTER TABLE xapi_statement ADD COLUMN timestamp TIMESTAMP
+ALTER TABLE xapi_statement ADD COLUMN timestamp TIMESTAMPTZ
 
 -- :name migrate-xapi-statement-timestamps!
 -- :command :execute
@@ -311,7 +311,7 @@ SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND
 -- :name alter-xapi-statement-add-stored!
 -- :command :execute
 -- :doc Add `xapi_statement.stored` to allow easier stored time access.
-ALTER TABLE xapi_statement ADD COLUMN stored TIMESTAMP
+ALTER TABLE xapi_statement ADD COLUMN stored TIMESTAMPTZ
 
 -- :name migrate-xapi-statement-stored-times!
 -- :command :execute
