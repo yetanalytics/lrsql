@@ -91,6 +91,7 @@
   (-insert-admin-account! [this tx input])
   (-insert-admin-account-oidc! [this tx input])
   (-delete-admin-account! [this tx input])
+  (-update-admin-password! [this tx input])
   ;; Queries
   (-query-account [this tx input])
   (-query-account-oidc [this tx input])

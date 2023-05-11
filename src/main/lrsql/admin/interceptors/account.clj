@@ -32,6 +32,31 @@
                 (assoc ::data acc-info)
                 (assoc-in [:request :session ::data] acc-info))))))}))
 
+
+(def validate-update-password-params
+  "Validate that the JSON params contain the params `old-password`
+   and `new-password` for password update. Also validates that `old-password`
+   `new-password` do not match."
+  (interceptor
+   {:name ::validate-update-password-params
+    :enter
+    (fn validate-params [ctx]
+      (let [params (get-in ctx [:request :json-params])]
+        (if-some [err (s/explain-data
+                       ads/update-admin-password-params-spec params)]
+          ;; Invalid parameters - Bad Request
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400
+                  :body   {:error (format "Invalid parameters:\n%s"
+                                          (-> err s/explain-out with-out-str))}})
+          ;; Valid params - continue
+          (let [update-info (select-keys params
+                                         [:old-password :new-password])]
+            (-> ctx
+                (assoc ::data update-info)
+                (assoc-in [:request :session ::data] update-info))))))}))
+
 (def validate-delete-params
   "Validate that the JSON params contain `account-id` for delete."
   (interceptor
@@ -120,6 +145,43 @@
                  {:status 409
                   :body   {:error (format "An account \"%s\" already exists!"
                                           username)}}))))}))
+
+(def update-admin-password
+  "Set a new password for an admin account."
+  (interceptor
+   {:name ::update-admin-password
+    :enter
+    (fn update-admin-password [ctx]
+      (let [{lrs
+             :com.yetanalytics/lrs
+             {:keys [old-password new-password]}
+             ::data
+             {:keys [account-id]}
+             :lrsql.admin.interceptors.jwt/data}
+            ctx
+            {:keys [result]}
+            (adp/-update-admin-password lrs account-id old-password new-password)]
+        (cond
+          ;; The result is the account ID - success!
+          (uuid? result)
+          (assoc ctx
+                 :response
+                 {:status 200 :body {:account-id result}})
+
+          ;; The given account-id does not belong to a known account
+          (= :lrsql.admin/missing-account-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 404
+                  :body   {:error (format "The account \"%s\" does not exist!"
+                                          (u/uuid->str account-id))}})
+
+          ;; The old password is not correct.
+          (= :lrsql.admin/invalid-password-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 401
+                  :body   {:error "Invalid Account Credentials"}}))))}))
 
 (def delete-admin
   "Delete the selected admin account. This is a hard delete."

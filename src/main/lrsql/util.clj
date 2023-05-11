@@ -25,15 +25,19 @@
    folloiwing error data is thrown:
      :type       ::parse-failure
      :data       `data`
-     :data-type  `data-type`"
-  [parse-fn data-type data]
+     :data-type  `data-type`
+   You may add a keyword arg :retry-parse-fn if you would like a backup function
+   to be attempted instead on parse failure."
+  [parse-fn data-type data & {:keys [retry-parse-fn]}]
   `(try (~parse-fn ~data)
         (catch Exception e#
-          (throw (ex-info (format "Cannot parse nil or invalid %s"
-                                  ~data-type)
-                          {:type      ::parse-failure
-                           :data      ~data
-                           :data-type ~data-type})))))
+          ~(if (some? retry-parse-fn)
+             `(wrap-parse-fn ~retry-parse-fn ~data-type ~data)
+             `(throw (ex-info (format "Cannot parse nil or invalid %s"
+                                      ~data-type)
+                              {:type      ::parse-failure
+                               :data      ~data
+                               :data-type ~data-type}))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Timestamps
@@ -70,9 +74,15 @@
   :ret instant-spec)
 
 (defn str->time
-  "Parse a string into a java.util.Instant timestamp."
+  "Parse an ISO 8601 timestamp string into a java.util.Instant timestamp. The
+  two parse fns are to support the Z and the +00:00 offset timestamp formats"
   [ts-str]
-  (wrap-parse-fn java-time/instant "timestamp" ts-str))
+  (wrap-parse-fn java-time/instant "timestamp" ts-str
+                 :retry-parse-fn #(-> %
+                                      ;; This step only needed for < JVM 11.
+                                      ;; Newer will parse offset right away.
+                                      java-time/offset-date-time
+                                      java-time/instant)))
 
 (s/fdef time->str
   :args (s/cat :ts instant-spec)
@@ -251,7 +261,7 @@
   "Read a JSON string or byte array `data`. `data` must only consist of one
    JSON object, array, or scalar; in addition, `data` must be an object by
    default. To parse JSON arrays or scalars, set `:object?` to false.
-   
+
    In the byte array case, `data` will be string-encoded using the UTF-8
    charset."
   [data & {:keys [object?] :or {object? true}}]

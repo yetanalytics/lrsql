@@ -4,7 +4,7 @@
 
 ### What is SQL LRS?
 
-A Learning Record Store (LRS) is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in Part 3 of the [xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md). SQL LRS is distinct from other LRSs developed at Yet Analytics for being SQL-based and supporting multiple SQL database management systems (DBMSs) like H2, SQLite, and Postgres.
+A Learning Record Store (LRS) is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in Part 3 of the [xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md). SQL LRS is distinct from other LRSs developed at Yet Analytics for being SQL-based and supporting multiple SQL database management systems (DBMSs) like SQLite, and Postgres.
 
 ### How to use SQL LRS?
 
@@ -13,6 +13,7 @@ SQL LRS Accounts can be created using the user interface (see [Getting Started](
 ### Differences from Cloud LRS
 
 If you previously used Yet's Cloud LRS products, it is important to be aware of certain differences:
+
 - Tenancy is not supported in SQL LRS; the entire database can be considered to be a single default tenant.
 - All operations in SQL LRS are synchronous; async operations are not supported.
 - `stored` timestamps are not strictly monotonic in SQL LRS; two or more Statements may be assigned the same timestamp if stored in quick succession.

@@ -83,6 +83,12 @@
       (update-schema-simple! tx alter-admin-account-passhash-optional!))
     (when-not (some? (query-admin-account-oidc-issuer-exists tx))
       (alter-admin-account-add-openid-issuer! tx))
+    (when-not (some? (query-xapi-statement-timestamp-exists tx))
+      (alter-xapi-statement-add-timestamp! tx)
+      (migrate-xapi-statement-timestamps! tx))
+    (when-not (some? (query-xapi-statement-stored-exists tx))
+      (alter-xapi-statement-add-stored! tx)
+      (migrate-xapi-statement-stored-times! tx))
     (update-schema-simple! tx alter-credential-to-scope-scope-datatype!)
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
@@ -187,6 +193,8 @@
     (query-all-accounts tx))
   (-delete-admin-account! [_ tx input]
     (delete-admin-account! tx input))
+  (-update-admin-password! [_ tx input]
+    (update-admin-password! tx input))
   (-query-account [_ tx input]
     (query-account tx input))
   (-query-account-oidc [_ tx input]

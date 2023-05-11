@@ -2,7 +2,7 @@
 
 # Version of LRS Admin UI to use
 
-LRS_ADMIN_UI_VERSION ?= v0.1.8
+LRS_ADMIN_UI_VERSION ?= v0.1.9
 LRS_ADMIN_UI_LOCATION ?= https://github.com/yetanalytics/lrs-admin-ui/releases/download/${LRS_ADMIN_UI_VERSION}/lrs-admin-ui.zip
 LRS_ADMIN_ZIPFILE ?= lrs-admin-ui-${LRS_ADMIN_UI_VERSION}.zip
 
@@ -17,22 +17,19 @@ resources/public/admin:
 # *** Development ***
 
 # `clean-dev` removes all development files.
-# `test-h2`, `test-sqlite`, `test-postgres` run tests on in-mem DB instances.
+# `test-sqlite`, `test-postgres` run tests on in-mem DB instances.
 # `ci` runs all tests and is called with every push to GitHub.
 # `bench` runs a query benchmarking session on a lrsql instance.
 
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, persistent, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo, test-h2, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp target/nvd
 
 # Tests
-
-test-h2:
-	clojure -M:test -m lrsql.test-runner --database h2
 
 test-sqlite:
 	clojure -M:test -m lrsql.test-runner --database sqlite
@@ -58,23 +55,20 @@ test-postgres-14:
 test-postgres-15:
 	LRSQL_TEST_DB_VERSION=15 $(TEST_PG_COMMAND)
 
-ci: test-h2 test-sqlite test-postgres
+ci: test-sqlite test-postgres
 
 # Dev
 
 ephemeral: resources/public/admin
-	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? false
+	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite :ephemeral? true
 
 # like ephemeral, but takes env vars
 ephemeral-prod: resources/public/admin
-	clojure -M:db-h2 -m lrsql.h2.main --persistent false
+	clojure -M:db-sqlite -m lrsql.sqlite.main --ephemeral true
 
 # like ephemeral, but includes OIDC config for use with `keycloak-demo`
 ephemeral-oidc: resources/public/admin
-	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? false :override-profile :test-oidc
-
-persistent: resources/public/admin
-	clojure -X:db-h2 lrsql.h2.main/run-test-h2 :persistent? true
+	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite :ephemeral? true :override-profile :test-oidc
 
 sqlite: resources/public/admin
 	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite
@@ -102,7 +96,7 @@ bench-async:
 # Vulnerability check
 
 target/nvd:
-	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-h2:db-sqlite:db-postgres)"'"' :config-filename '".nvd/config.json"'
+	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-sqlite:db-postgres)"'"' :config-filename '".nvd/config.json"'
 
 check-vuln: target/nvd
 
@@ -254,23 +248,15 @@ exe: exe/lrsql.exe exe/lrsql_pg.exe
 # These targets create a bundle containing a lrsql JAR and then runs
 # the JAR to create the specific lrsql instance.
 
-.phony: run-jar-h2, run-jar-sqlite, run-jar-h2-persistent, run-jar-postgres
+.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres
 
-run-jar-h2: target/bundle
+run-jar-sqlite-ephemeral: target/bundle
 	cd target/bundle; \
 	LRSQL_ADMIN_USER_DEFAULT=username \
 	LRSQL_ADMIN_PASS_DEFAULT=password \
 	LRSQL_API_KEY_DEFAULT=username \
 	LRSQL_API_SECRET_DEFAULT=password \
-	bin/run_h2.sh
-
-run-jar-h2-persistent: target/bundle
-	cd target/bundle; \
-	LRSQL_ADMIN_USER_DEFAULT=username \
-	LRSQL_ADMIN_PASS_DEFAULT=password \
-	LRSQL_API_KEY_DEFAULT=username \
-	LRSQL_API_SECRET_DEFAULT=password \
-	bin/run_h2_persistent.sh
+	bin/run_sqlite_ephemeral.sh
 
 run-jar-sqlite: target/bundle
 	cd target/bundle; \
@@ -295,4 +281,4 @@ run-jar-postgres: target/bundle
 ## Dependency Graph. This allows generation of an accurate SBOM.
 
 pom.xml:
-	clojure -Adb-h2:db-sqlite:db-postgres -Spom
+	clojure -Adb-sqlite:db-postgres -Spom

@@ -34,6 +34,13 @@
                                          ji/validate-jwt-account
                                          ai/create-admin)
      :route-name :lrsql.admin.account/create]
+    ;; Update account password
+    ["/admin/account/password"
+     :put (conj common-interceptors
+                ai/validate-update-password-params
+                (ji/validate-jwt jwt-secret jwt-leeway)
+                ji/validate-jwt-account
+                ai/update-admin-password)]
     ;; Get all accounts
     ["/admin/account" :get (conj common-interceptors
                                  (ji/validate-jwt jwt-secret jwt-leeway)

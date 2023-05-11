@@ -15,7 +15,7 @@ If you have created a keystore containing a certificate you wish to use with the
 
 Your `config/lrsql.json` should resemble the following:
 
-``` JSON
+```JSON
 {
   ...
   "webserver" : {
@@ -26,6 +26,7 @@ Your `config/lrsql.json` should resemble the following:
   }
 }
 ```
+
 #### 2. Custom PEM Files
 
 If you did not set the keystore variables in the previous section, the SQL LRS will then look for pem files set with the following variables:
@@ -39,7 +40,7 @@ If you did not set the keystore variables in the previous section, the SQL LRS w
   "webserver" : {
     ...
     "keyPkeyFile" : "config/my_private.key.pem",
-    "keyCertChain" : "config/my_certificate.crt.pem,config/my_cert_chain.pem"    
+    "keyCertChain" : "config/my_certificate.crt.pem,config/my_cert_chain.pem"
   }
 }
 ```
@@ -64,13 +65,13 @@ For more information on these and other options see [Configuration Variables](en
 
 If you install [mkcert](https://github.com/FiloSottile/mkcert) you can generate stable "valid" certs to use while developing the app. These should only be used locally for development purposes:
 
-``` shell
+```shell
 
 $ cp "$(mkcert -CAROOT)"/rootCA.pem config/cacert.pem
 $ mkcert -key-file config/server.key.pem \
          -cert-file config/server.crt.pem \
          example.com "*.example.com" example.test localhost 127.0.0.1 ::1
-$ clojure -Mdb-h2 -m lrsql.h2.main
+$ clojure -Mdb-sqlite -m lrsql.sqlite.main --ephemeral true
 ...
 11:25:54.085 [main] INFO  lrsql.util.cert - Generated keystore from key and cert(s)...
 

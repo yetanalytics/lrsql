@@ -73,6 +73,40 @@
     (is (= {"zh-CN" "你好世界"}
            (-> {"zh-CN" "你好世界"} util/write-json-str util/parse-json)))))
 
+(def example-ts-strs
+  ["2023-05-10T10:45:23Z"
+   "2023-05-10T10:45:23.123Z"
+   "2023-05-10T10:45:23.123+01:00"
+   "2023-05-10T10:45:23.123-05:30"
+   "2023-05-10T10:45:23.123456789Z"
+   "2023-05-10T10:45:23.123456789-03:21"])
+
+(def example-bad-ts-str
+  "Some time on Tuesday. It was hot out I think.")
+
+(def example-norm-ts-strs
+  ["2023-05-10T10:45:23.000000000Z"
+   "2023-05-10T10:45:23.123000000Z"
+   "2023-05-10T09:45:23.123000000Z"
+   "2023-05-10T16:15:23.123000000Z"
+   "2023-05-10T10:45:23.123456789Z"
+   "2023-05-10T14:06:23.123456789Z"])
+
+(deftest timstamp-test
+  (testing "parsing and rendering timestamps"
+    (let [ts-insts    (mapv util/str->time example-ts-strs)
+          ts-str-norm (mapv util/time->str ts-insts)]
+      (is (every? inst? ts-insts))
+      (is (= ts-str-norm example-norm-ts-strs))))
+  (testing "throws proper error on bad string"
+    (try
+      (util/str->time example-bad-ts-str)
+      (catch Exception e
+        (is (= (ex-message e) "Cannot parse nil or invalid timestamp"))
+        (is (= (ex-data e) {:data-type "timestamp",
+                            :type :lrsql.util/parse-failure,
+                            :data example-bad-ts-str}))))))
+
 (deftest pad-time-str-test
   (testing "pads partial datetime string"
     (is (= "2023-02-13T16:00:00.000000000Z"

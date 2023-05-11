@@ -2,27 +2,27 @@ name: Periodic NVD Scan
 
 on:
   schedule:
-    - cron: '0 8 * * 1-5' # Every weekday at 8:00 AM
+    - cron: "0 8 * * 1-5" # Every weekday at 8:00 AM
 
 jobs:
   nvd_scan:
     uses: yetanalytics/actions/.github/workflows/nvd-scan.yml@v0.0.4
     with:
-      nvd-clojure-version: '2.9.0'
-      classpath-command: 'clojure -Spath -A:db-h2:db-sqlite:db-postgres'
-      nvd-config-filename: '.nvd/config.json'
-  
+      nvd-clojure-version: "2.9.0"
+      classpath-command: "clojure -Spath -Adb-sqlite:db-postgres"
+      nvd-config-filename: ".nvd/config.json"
+
   notify_slack:
     runs-on: ubuntu-latest
     needs: nvd_scan
     if: ${{ always() && (needs.nvd_scan.result == 'failure') }}
     steps:
-    - name: Notify Slack SQL LRS NVD Scan Reporter 
-      uses: slackapi/slack-github-action@v1.23.0
-      with:
-        payload: |
-          {
-            "run_link": "https://github.com/yetanalytics/lrsql/actions/runs/${{ github.run_id }}"
-          }
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Notify Slack SQL LRS NVD Scan Reporter
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: |
+            {
+              "run_link": "https://github.com/yetanalytics/lrsql/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

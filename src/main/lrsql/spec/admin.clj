@@ -31,6 +31,11 @@
 (s/def :lrsql.spec.admin.ret/oidc-issuer (s/nilable string?))
 ;; boolean to indicate whether OIDC is enabled
 (s/def :lrsql.spec.admin.input/oidc-enabled? boolean?)
+;; Update password params
+(s/def ::old-password ::password)
+(s/def ::new-password ::password)
+;; Update password input
+(s/def :lrsql.spec.admin.input/new-passhash :lrsql.spec.admin.input/passhash)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inputs
@@ -42,6 +47,15 @@
 
 (def admin-delete-params-spec
   (s/keys :req-un [::account-id]))
+
+(def update-admin-password-params-spec
+  (s/and
+   (s/keys :req-un [::old-password
+                    ::new-password])
+   (fn new-pass-noteq-old-pass
+     [{:keys [old-password
+              new-password]}]
+     (not= old-password new-password))))
 
 (def insert-admin-input-spec
   (s/keys :req-un [::c/primary-key
@@ -57,8 +71,20 @@
                    ::username
                    :lrsql.spec.admin.input/oidc-issuer]))
 
+(def query-admin-input-spec
+  (s/keys :req-un [::username
+                   ::password]))
+
+(def query-admin-by-id-input-spec
+  (s/keys :req-un [::account-id
+                   ::password]))
+
 (def query-validate-admin-input-spec
   (s/keys :req-un [::username
+                   ::password]))
+
+(def query-validate-admin-by-id-input-spec
+  (s/keys :req-un [::account-id
                    ::password]))
 
 (def admin-id-input-spec
@@ -67,6 +93,10 @@
 (def delete-admin-input-spec
   (s/merge admin-id-input-spec
            (s/keys :req-un [:lrsql.spec.admin.input/oidc-enabled?])))
+
+(def update-admin-password-input-spec
+  (s/keys :req-un [::account-id
+                   :lrsql.spec.admin.input/new-passhash]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Results
@@ -113,3 +143,8 @@
 
 (def query-validate-admin-ret-spec
   (s/keys :req-un [:lrsql.spec.admin.query/result]))
+
+(s/def :lrsql.spec.admin.update-password/result uuid?)
+
+(def update-admin-password-ret-spec
+  (s/keys :req-un [:lrsql.spec.admin.update-password/result]))

@@ -68,3 +68,25 @@
   [username password]
   {:username username
    :password password})
+
+(s/fdef query-validate-admin-by-id-input
+  :args (s/cat :account-id ::ads/account-id :password ::ads/password)
+  :ret ads/query-validate-admin-by-id-input-spec)
+
+(defn query-validate-admin-by-id-input
+  "Given `account-id` and `password`, construct the input param map for
+   `query-validate-admin-by-id`."
+  [account-id password]
+  {:account-id account-id
+   :password   password})
+
+(s/fdef update-admin-password-input
+  :args (s/cat :account-id ::ads/account-id :new-password ::ads/new-password)
+  :ret ads/update-admin-password-input-spec)
+
+(defn update-admin-password-input
+  "Given `account-id` and `new-password`, construct the input
+   param map for `update-admin-password`."
+  [account-id new-password]
+  {:account-id   account-id
+   :new-passhash (adu/hash-password new-password)})

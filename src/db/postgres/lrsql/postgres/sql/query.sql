@@ -237,9 +237,11 @@ WHERE activity_iri = :activity-iri
 -- :name query-account
 -- :command :query
 -- :result :one
--- :doc Given an account `username`, return the ID and the hashed password, which can be used to verify the account.
+-- :doc Given an account `username` or `account-id`, return the ID and the hashed password, which can be used to verify the account.
 SELECT id, passhash FROM admin_account
-WHERE username = :username;
+--~ (when (:username params)   "WHERE username = :username")
+--~ (when (:account-id params) "WHERE id = :account-id")
+;
 
 -- :name query-account-oidc
 -- :command :query
@@ -342,10 +344,10 @@ GROUP BY platform;
 -- :command :query
 -- :result :many
 -- :doc Return counts of statements by time unit for a given range.
-SELECT SUBSTRING(payload->>'stored' FOR :unit-for) AS stored,
+SELECT SUBSTRING(payload->>'stored' FOR :unit-for) AS stored_time,
 COUNT(id) scount
 FROM xapi_statement
 WHERE id > :since-id
   AND id <= :until-id
-GROUP BY stored
-ORDER BY stored ASC;
+GROUP BY stored_time
+ORDER BY stored_time ASC;
