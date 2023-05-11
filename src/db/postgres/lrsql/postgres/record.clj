@@ -53,7 +53,13 @@
   (-update-all! [_ tx]
     (alter-admin-account-passhash-optional! tx)
     (alter-admin-account-add-openid-issuer! tx)
-    (alter-scope-enum-type! tx))
+    (alter-scope-enum-type! tx)
+    (when-not (some? (query-xapi-statement-timestamp-exists tx))
+      (alter-xapi-statement-add-timestamp! tx)
+      (migrate-xapi-statement-timestamps! tx))
+    (when-not (some? (query-xapi-statement-stored-exists tx))
+      (alter-xapi-statement-add-stored! tx)
+      (migrate-xapi-statement-stored-times! tx)))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]

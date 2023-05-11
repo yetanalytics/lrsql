@@ -35,6 +35,7 @@
 
 ;; Timestamp
 (s/def ::stored c/instant-spec)
+(s/def ::timestamp c/instant-spec)
 
 ;; Registration
 (s/def ::registration (s/nilable uuid?))
@@ -78,6 +79,8 @@
 ;; - verb_iri:         STRING NOT NULL
 ;; - is_voided:        BOOLEAN NOT NULL DEFAULT FALSE
 ;; - payload:          JSON NOT NULL
+;; - timestamp:        TIMESTAMP NOT NULL
+;; - stored:           TIMESTAMP NOT NULL
 
 (s/def ::statement-input
   (s/keys :req-un [::c/primary-key
@@ -88,7 +91,9 @@
                    ::voided?
                    ::voiding?                  ; not in table
                    ::hs-attach/attachment-shas ; not in table
-                   ::payload]))
+                   ::payload
+                   ::timestamp
+                   ::stored]))
 
 ;; Statement-to-Statement
 ;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY

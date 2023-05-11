@@ -280,3 +280,40 @@ CREATE TYPE scope_enum AS ENUM (
   'profile',
   'profile/read');
 ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USING (scope::scope_enum);
+
+
+/* Migration 2022-05-08-00 - Add timestamp to xapi_statement */
+
+-- :name query-xapi-statement-timestamp-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `xapi_statement.timestamp` exists.
+SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'timestamp';
+
+-- :name alter-xapi-statement-add-timestamp!
+-- :command :execute
+-- :doc Add `xapi_statement.timestamp` to allow easier timestamp access.
+ALTER TABLE xapi_statement ADD COLUMN timestamp TIMESTAMPTZ
+
+-- :name migrate-xapi-statement-timestamps!
+-- :command :execute
+-- :doc Backfill `xapi_statement.timestamp` with the values from the payload
+UPDATE xapi_statement SET timestamp = (payload->>'timestamp')::timestamptz WHERE timestamp IS NULL;
+
+/* Migration 2022-05-08-01 - Add stored to xapi_statement */
+
+-- :name query-xapi-statement-stored-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `xapi_statement.stored` exists.
+SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'stored';
+
+-- :name alter-xapi-statement-add-stored!
+-- :command :execute
+-- :doc Add `xapi_statement.stored` to allow easier stored time access.
+ALTER TABLE xapi_statement ADD COLUMN stored TIMESTAMPTZ
+
+-- :name migrate-xapi-statement-stored-times!
+-- :command :execute
+-- :doc Backfill `xapi_statement.stored` with the values from the payload
+UPDATE xapi_statement SET stored = (payload->>'stored')::timestamptz WHERE stored IS NULL;

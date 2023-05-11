@@ -16,7 +16,7 @@
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Statement Insertion 
+;; Statement Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; TODO: Deal with contextAgents, contextGroups, and any other properties
@@ -189,6 +189,8 @@
          stmt-act   "actor"
          stmt-vrb   "verb"
          stmt-obj   "object"
+         stmt-strd  "stored"
+         stmt-ts    "timestamp"
          ?stmt-ctx  "context"
          ?stmt-auth "authority"
          ?stmt-atts "attachments"}
@@ -204,6 +206,8 @@
         ?stmt-ctx
         ;; Revised Statement Properties
         stmt-pk      (-> statement meta :primary-key)
+        timestamp    (u/str->time stmt-ts)
+        stored       (u/str->time stmt-strd)
         stmt-id      (u/str->uuid stmt-id)
         ?stmt-reg    (when ?stmt-reg
                        (u/str->uuid ?stmt-reg))
@@ -228,7 +232,9 @@
                     :verb-iri          stmt-vrb-id
                     :voided?           false
                     :voiding?          voiding?
-                    :payload           statement}
+                    :payload           statement
+                    :timestamp         timestamp
+                    :stored            stored}
         ;; Actor HugSql Inputs
         [actor-inputs stmt-actor-inputs]
         (insert-stmt-actor-inputs stmt-id
