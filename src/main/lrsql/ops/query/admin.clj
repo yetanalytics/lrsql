@@ -102,9 +102,9 @@
     (include "timeline")
     (assoc :timeline
            (mapv
-            (fn [{:keys [stored scount]}]
+            (fn [{:keys [stored_time scount]}]
               ;; stored here is a partial timestamp so we pad it to a valid,
               ;; normalized timestamp.
-              {:stored (u/pad-time-str stored)
+              {:stored (u/pad-time-str stored_time)
                :count  scount})
             (bp/-query-timeline bk tx (:timeline params))))))
