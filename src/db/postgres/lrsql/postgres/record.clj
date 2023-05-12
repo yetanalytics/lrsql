@@ -6,7 +6,8 @@
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.postgres.data :as pd]
             [clojure.string :refer [includes?]])
-  (:import [org.postgresql.util PSQLException]))
+  (:import [org.postgresql.util PSQLException]
+           [java.util Calendar]))
 
 ;; Init HugSql functions
 
@@ -59,7 +60,13 @@
       (migrate-xapi-statement-timestamps! tx))
     (when-not (some? (query-xapi-statement-stored-exists tx))
       (alter-xapi-statement-add-stored! tx)
-      (migrate-xapi-statement-stored-times! tx)))
+      (migrate-xapi-statement-stored-times! tx))
+    (when-not (some? (query-state-document-last-modified-is-timestamptz tx))
+      (let [tz-input
+            {:tz-id (str "'" (.getID (.getTimeZone (Calendar/getInstance))) "'")}]
+        (migrate-state-document-last-modified! tx tz-input)
+        (migrate-activity-profile-document-last-modified! tx tz-input)
+        (migrate-agent-profile-document-last-modified! tx tz-input))))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
