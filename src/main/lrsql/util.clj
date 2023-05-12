@@ -11,11 +11,10 @@
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
             [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
             [lrsql.spec.common :as cs :refer [instant-spec]])
-  (:import [java.util UUID]
+  (:import [java.util UUID Calendar]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]
-           [java.nio.charset Charset]
-           [java.util Calendar]))
+           [java.nio.charset Charset]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
