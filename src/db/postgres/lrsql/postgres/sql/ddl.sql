@@ -324,7 +324,8 @@ UPDATE xapi_statement SET stored = (payload->>'stored')::timestamptz WHERE store
 -- :command :query
 -- :result :one
 -- :doc Query to see if `state_document.last_modified` is a timestamp.
-SELECT * FROM information_schema.columns WHERE table_name = 'state_document' AND column_name = 'last_modified' and data_type = 'timestamp with time zone';
+SELECT * FROM information_schema.columns
+WHERE table_name = 'state_document' AND column_name = 'last_modified' AND data_type = 'timestamp with time zone';
 
 -- :name migrate-state-document-last-modified!
 -- :command :execute
