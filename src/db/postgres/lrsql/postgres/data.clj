@@ -50,3 +50,12 @@
     IPersistentMap
     (set-parameter [^IPersistentMap m ^PreparedStatement stmt ^long i]
       (.setObject stmt i (json->pg-object m)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Timezone Input
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def local-tz-input
+  "Returns a properly formatted hug input map to inject a timezone id into a
+  query needing a timezone id"
+  {:tz-id (str "'" u/local-zone-id "'")})

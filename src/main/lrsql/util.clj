@@ -14,7 +14,8 @@
   (:import [java.util UUID]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]
-           [java.nio.charset Charset]))
+           [java.nio.charset Charset]
+           [java.util Calendar]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
@@ -119,6 +120,11 @@
             (drop
              str-length
              "0000-01-01T00:00:00.000000000Z")))))
+
+(def local-zone-id
+  "Returns the string zoneId for the local calendar's timezone. For use with
+  migrations from zoneless local time."
+  (.getID (.getTimeZone (Calendar/getInstance))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UUIDs
