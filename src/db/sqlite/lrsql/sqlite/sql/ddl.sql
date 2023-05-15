@@ -329,7 +329,7 @@ SET sql = 'CREATE TABLE credential_to_scope (
 )'
 WHERE type = 'table' AND name = 'credential_to_scope'
 
-/* Migration 2022-05-08-00 - Add timestamp to xapi_statement */
+/* Migration 2023-05-08-00 - Add timestamp to xapi_statement */
 
 -- :name query-xapi-statement-timestamp-exists
 -- :command :query
@@ -348,7 +348,7 @@ ALTER TABLE xapi_statement ADD COLUMN timestamp TIMESTAMP
 UPDATE xapi_statement SET timestamp = strftime('%Y-%m-%dT%H:%M:%f000000Z', json_extract(payload, '$.timestamp'))
 WHERE timestamp IS NULL;
 
-/* Migration 2022-05-08-01 - Add stored to xapi_statement */
+/* Migration 2023-05-08-01 - Add stored to xapi_statement */
 
 -- :name query-xapi-statement-stored-exists
 -- :command :query
@@ -366,3 +366,63 @@ ALTER TABLE xapi_statement ADD COLUMN stored TIMESTAMP
 -- :doc Backfill `xapi_statement.stored` with the values from the payload
 UPDATE xapi_statement SET stored = strftime('%Y-%m-%dT%H:%M:%f000000Z', json_extract(payload, '$.stored'))
 WHERE stored IS NULL;
+
+
+/* Migration 2023-05-11-00 - Convert timestamps for consistency */
+
+-- :name query-state-document-last-modified-is-timestamp
+-- :command :query
+-- :result :one
+-- :doc Query to see if `state_document.last_modified` is a timestamp.
+SELECT 1 FROM pragma_table_info('state_document') WHERE name = 'last_modified' AND type = 'TIMESTAMP';
+
+-- :name migrate-timestamps-state-01!
+-- :command :execute
+-- :doc Convert `state_document.last_modified` to timestamp - 01
+ALTER TABLE state_document ADD COLUMN last_modified_tmp TIMESTAMP;
+-- :name migrate-timestamps-state-02!
+-- :command :execute
+-- :doc Convert `state_document.last_modified` to timestamp - 02
+UPDATE state_document SET last_modified_tmp = last_modified WHERE last_modified_tmp IS NULL;
+-- :name migrate-timestamps-state-03!
+-- :command :execute
+-- :doc Convert `state_document.last_modified` to timestamp - 03
+ALTER TABLE state_document DROP COLUMN last_modified;
+-- :name migrate-timestamps-state-04!
+-- :command :execute
+-- :doc Convert `state_document.last_modified` to timestamp - 04
+ALTER TABLE state_document RENAME COLUMN last_modified_tmp TO last_modified;
+
+-- :name migrate-timestamps-agent-profile-01!
+-- :command :execute
+-- :doc Convert `agent_profile_document.last_modified` to timestamp - 01
+ALTER TABLE agent_profile_document ADD COLUMN last_modified_tmp TIMESTAMP;
+-- :name migrate-timestamps-agent-profile-02!
+-- :command :execute
+-- :doc Convert `agent_profile_document.last_modified` to timestamp - 02
+UPDATE agent_profile_document SET last_modified_tmp = last_modified WHERE last_modified_tmp IS NULL;
+-- :name migrate-timestamps-agent-profile-03!
+-- :command :execute
+-- :doc Convert `agent_profile_document.last_modified` to timestamp - 03
+ALTER TABLE agent_profile_document DROP COLUMN last_modified;
+-- :name migrate-timestamps-agent-profile-04!
+-- :command :execute
+-- :doc Convert `agent_profile_document.last_modified` to timestamp - 04
+ALTER TABLE agent_profile_document RENAME COLUMN last_modified_tmp TO last_modified;
+
+-- :name migrate-timestamps-activity-profile-01!
+-- :command :execute
+-- :doc Convert `activity_profile_document.last_modified` to timestamp - 01
+ALTER TABLE activity_profile_document ADD COLUMN last_modified_tmp TIMESTAMP;
+-- :name migrate-timestamps-activity-profile-02!
+-- :command :execute
+-- :doc Convert `activity_profile_document.last_modified` to timestamp - 02
+UPDATE activity_profile_document SET last_modified_tmp = last_modified WHERE last_modified_tmp IS NULL;
+-- :name migrate-timestamps-activity-profile-03!
+-- :command :execute
+-- :doc Convert `activity_profile_document.last_modified` to timestamp - 03
+ALTER TABLE activity_profile_document DROP COLUMN last_modified;
+-- :name migrate-timestamps-activity-profile-04!
+-- :command :execute
+-- :doc Convert `activity_profile_document.last_modified` to timestamp - 04
+ALTER TABLE activity_profile_document RENAME COLUMN last_modified_tmp TO last_modified;
