@@ -59,7 +59,11 @@
       (migrate-xapi-statement-timestamps! tx))
     (when-not (some? (query-xapi-statement-stored-exists tx))
       (alter-xapi-statement-add-stored! tx)
-      (migrate-xapi-statement-stored-times! tx)))
+      (migrate-xapi-statement-stored-times! tx))
+    (when-not (some? (query-state-document-last-modified-is-timestamptz tx))
+      (migrate-state-document-last-modified! tx pd/local-tz-input)
+      (migrate-activity-profile-document-last-modified! tx pd/local-tz-input)
+      (migrate-agent-profile-document-last-modified! tx pd/local-tz-input)))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]

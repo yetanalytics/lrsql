@@ -282,7 +282,7 @@ CREATE TYPE scope_enum AS ENUM (
 ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USING (scope::scope_enum);
 
 
-/* Migration 2022-05-08-00 - Add timestamp to xapi_statement */
+/* Migration 2023-05-08-00 - Add timestamp to xapi_statement */
 
 -- :name query-xapi-statement-timestamp-exists
 -- :command :query
@@ -300,7 +300,7 @@ ALTER TABLE xapi_statement ADD COLUMN timestamp TIMESTAMPTZ
 -- :doc Backfill `xapi_statement.timestamp` with the values from the payload
 UPDATE xapi_statement SET timestamp = (payload->>'timestamp')::timestamptz WHERE timestamp IS NULL;
 
-/* Migration 2022-05-08-01 - Add stored to xapi_statement */
+/* Migration 2023-05-08-01 - Add stored to xapi_statement */
 
 -- :name query-xapi-statement-stored-exists
 -- :command :query
@@ -317,3 +317,30 @@ ALTER TABLE xapi_statement ADD COLUMN stored TIMESTAMPTZ
 -- :command :execute
 -- :doc Backfill `xapi_statement.stored` with the values from the payload
 UPDATE xapi_statement SET stored = (payload->>'stored')::timestamptz WHERE stored IS NULL;
+
+/* Migration 2023-05-11-00 - Convert timestamps for consistency */
+
+-- :name query-state-document-last-modified-is-timestamptz
+-- :command :query
+-- :result :one
+-- :doc Query to see if `state_document.last_modified` is a timestamp.
+SELECT * FROM information_schema.columns
+WHERE table_name = 'state_document' AND column_name = 'last_modified' AND data_type = 'timestamp with time zone';
+
+-- :name migrate-state-document-last-modified!
+-- :command :execute
+-- :doc Migrate the `state_document.last_modified` to have a timezone, and use the provided timezone to work backwards to Zulu
+ALTER TABLE state_document ALTER COLUMN last_modified TYPE TIMESTAMP WITH TIME ZONE
+USING last_modified AT TIME ZONE :sql:tz-id;
+
+-- :name migrate-activity-profile-document-last-modified!
+-- :command :execute
+-- :doc Migrate the `activity_profile_document.last_modified` to have a timezone, and use the provided timezone to work backwards to Zulu
+ALTER TABLE activity_profile_document ALTER COLUMN last_modified TYPE TIMESTAMP WITH TIME ZONE
+USING last_modified AT TIME ZONE :sql:tz-id;
+
+-- :name migrate-agent-profile-document-last-modified!
+-- :command :execute
+-- :doc Migrate the `agent_profile_document.last_modified` to have a timezone, and use the provided timezone to work backwards to Zulu
+ALTER TABLE agent_profile_document ALTER COLUMN last_modified TYPE TIMESTAMP WITH TIME ZONE
+USING last_modified AT TIME ZONE :sql:tz-id;

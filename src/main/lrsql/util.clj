@@ -11,7 +11,7 @@
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
             [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
             [lrsql.spec.common :as cs :refer [instant-spec]])
-  (:import [java.util UUID]
+  (:import [java.util UUID Calendar]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]
            [java.nio.charset Charset]))
@@ -119,6 +119,11 @@
             (drop
              str-length
              "0000-01-01T00:00:00.000000000Z")))))
+
+(def local-zone-id
+  "Returns the string zoneId for the local calendar's timezone. For use with
+  migrations from zoneless local time."
+  (.getID (.getTimeZone (Calendar/getInstance))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; UUIDs
