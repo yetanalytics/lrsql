@@ -138,7 +138,7 @@ span.build {
   &quot;webserver&quot; : {
     ...
     &quot;keyPkeyFile&quot; : &quot;config/my&#95;private.key.pem&quot;,
-    &quot;keyCertChain&quot; : &quot;config/my&#95;certificate.crt.pem,config/my&#95;cert&#95;chain.pem&quot;    
+    &quot;keyCertChain&quot; : &quot;config/my&#95;certificate.crt.pem,config/my&#95;cert&#95;chain.pem&quot;
   }
 }
 </code></pre></li></ul><h4 id="3.&#95;self-signed&#95;temporary&#95;tls&#95;certificate">3. Self-Signed Temporary TLS Certificate</h4><p>If no keystore or cert files are found, the SQL LRS will create a self-signed cert by default and log a warning. This is not intended to be used in a production setting, but can be used for testing and development. See below for how to disable certificate generation.</p><h3 id="https&#95;configuration">HTTPS Configuration</h3><p>Additional variables can be set in <code>config/lrsql.json</code> that configure SSL behavior in the SQL LRS.</p><ul><li>If you would like to change the HTTPS port (default <code>8443</code>) you can use <code>LRSQL&#95;SSL&#95;PORT</code> (<code>sslPort</code> in the config file).</li><li>If you would like to disable HTTP so that only HTTPS is served by the SQL LRS, you can do so by setting <code>LRSQL&#95;ENABLE&#95;HTTP</code> (<code>enableHttp</code> in config) to <code>false</code>.</li><li>If you would like to disable the generation of self-signed certificates entirely you can set <code>LRSQL&#95;KEY&#95;ENABLE&#95;SELFIE</code> (<code>keyEnableSelfie</code> in config) to <code>false</code>.</li></ul><p>For more information on these and other options see <a href='env_vars.html'>Configuration Variables</a>.</p><h3 id="generating&#95;dev&#95;certs&#95;with&#95;<code>mkcert</code>">Generating Dev Certs with <code>mkcert</code></h3><p>If you install <a href='https://github.com/FiloSottile/mkcert'>mkcert</a> you can generate stable "valid" certs to use while developing the app. These should only be used locally for development purposes:</p><pre><code class="shell">
@@ -146,7 +146,7 @@ $ cp &quot;$&#40;mkcert -CAROOT&#41;&quot;/rootCA.pem config/cacert.pem
 $ mkcert -key-file config/server.key.pem \
          -cert-file config/server.crt.pem \
          example.com &quot;&#42;.example.com&quot; example.test localhost 127.0.0.1 ::1
-$ clojure -Mdb-h2 -m lrsql.h2.main
+$ clojure -Mdb-sqlite -m lrsql.sqlite.main --ephemeral true
 ...
 11:25:54.085 &#91;main&#93; INFO  lrsql.util.cert - Generated keystore from key and cert&#40;s&#41;...
 
@@ -155,7 +155,7 @@ $ clojure -Mdb-h2 -m lrsql.h2.main
          &copy; 2021-2023 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
-         <span class="build">Build: dc58a6870b5602e95bc959a3d0a57e005d3a5896</span>
+         <span class="build">Build: 0eb27675ef7388fae592a0eba59f261c03c514ec</span>
         </div>
       </div>
     </body>
