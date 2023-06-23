@@ -24,8 +24,7 @@
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
   ;; Pedestal and Jetty webserver deps
-  io.pedestal/pedestal.jetty               {:mvn/version "0.6.0"
-                                            :exclusions [org.msgpack/msgpack]}
+  io.pedestal/pedestal.jetty               {:mvn/version "0.6.0"}
   org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.51.v20230217"}
   org.msgpack/msgpack-core                 {:mvn/version "0.9.3"}
   ;; Security deps

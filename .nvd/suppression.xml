@@ -66,4 +66,12 @@
         <packageUrl regex="true">^pkg:maven/com\.github\.jsonld\-java/jsonld\-java@.*$</packageUrl>
         <cve>CVE-2022-45688</cve>
     </suppress>
+    <!-- The FP affects the Golang, not Java, version of msgpack -->
+    <suppress>
+        <notes><![CDATA[
+        file name: msgpack-0.6.12.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.msgpack/msgpack@.*$</packageUrl>
+        <cve>CVE-2022-41719</cve>
+    </suppress>
 </suppressions>
