@@ -19,30 +19,25 @@
   (s/keys :req-un [:ref/condition
                    ::path]))
 
-(s/def ::operand
-  (s/or :val (s/keys :req-un [::val])
-        :ref (s/keys :req-un [::ref])))
-
-(s/def ::gt ::operand)
-(s/def ::lt ::operand)
-(s/def ::gte ::operand)
-(s/def ::lte ::operand)
-(s/def ::noteq ::operand)
-(s/def ::eq ::operand)
-(s/def ::contains ::operand)
-(s/def ::contains-str ::operand)
+(s/def ::op
+  #{:gt
+    :lt
+    :gte
+    :lte
+    :eq
+    :noteq
+    :contains
+    :contains-str})
 
 (s/def ::clause
-  (s/merge
-   (s/keys :req-un [::path])
-   (s/or :gt (s/keys :req-un [::gt])
-         :lt (s/keys :req-un [::lt])
-         :gte (s/keys :req-un [::gte])
-         :lte (s/keys :req-un [::lte])
-         :noteq (s/keys :req-un [::noteq])
-         :eq (s/keys :req-un [::eq])
-         :contains (s/keys :req-un [::contains])
-         :contains-str (s/keys :req-un [::contains-str]))))
+  (s/or :clause-val
+        (s/keys :req-un [::path
+                         ::op
+                         ::val])
+        :clause-ref
+        (s/keys :req-un [::path
+                         ::op
+                         ::ref])))
 
 (declare condition-spec)
 
@@ -82,24 +77,32 @@
 
   (sgen/generate (s/gen ::input))
 
-
   (s/valid? ::input
             {:conditions
              {:a
               {:and
-               [{:path [:object :id],
-                 :eq   {:val "https://example.com/activities/a"}}
-                {:path [:verb :id],
-                 :eq   {:val "https://example.com/verbs/completed"}}
-                {:path [:result :success], :eq {:val true}}]},
+               [{:path [:object :id]
+                 :op   :eq
+                 :val  "https://example.com/activities/a"}
+                {:path [:verb :id]
+                 :op   :eq
+                 :val  "https://example.com/verbs/completed"}
+                {:path [:result :success]
+                 :op   :eq
+                 :val  true}]}
               :b
               {:and
-               [{:path [:object :id],
-                 :eq   {:val "https://example.com/activities/b"}}
-                {:path [:verb :id],
-                 :eq   {:val "https://example.com/verbs/completed"}}
-                {:path [:result :success], :eq {:val true}}
-                {:path [:timestamp],
-                 :gt   {:ref {:condition :a, :path [:timestamp]}}}]}}})
+               [{:path [:object :id]
+                 :op   :eq
+                 :val  "https://example.com/activities/b"}
+                {:path [:verb :id]
+                 :op   :eq
+                 :val  "https://example.com/verbs/completed"}
+                {:path [:result :success]
+                 :op   :eq
+                 :val  true}
+                {:path [:timestamp]
+                 :op   :gt
+                 :ref  {:condition :a, :path [:timestamp]}}]}}})
 
   )
