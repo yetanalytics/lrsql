@@ -29,13 +29,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- remove-props
-  "Remove properties added by `prepare-statement`."
+  "Remove properties added by `lrsql.util.statement/prepare-statement`."
   [statement]
-  (-> statement
-      (dissoc "timestamp")
-      (dissoc "stored")
-      (dissoc "authority")
-      (dissoc "version")))
+  (dissoc statement "timestamp" "stored" "authority" "version"))
 
 (defn get-ss
   "Same as `lrsp/-get-statements` except that `remove-props` is applied
