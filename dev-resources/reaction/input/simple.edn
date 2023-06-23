@@ -1,0 +1,17 @@
+{:conditions
+ {:a
+  {:and
+   [{:path [:object :id],
+     :eq   {:val "https://example.com/activities/a"}}
+    {:path [:verb :id],
+     :eq   {:val "https://example.com/verbs/completed"}}
+    {:path [:result :success], :eq {:val true}}]},
+  :b
+  {:and
+   [{:path [:object :id],
+     :eq   {:val "https://example.com/activities/b"}}
+    {:path [:verb :id],
+     :eq   {:val "https://example.com/verbs/completed"}}
+    {:path [:result :success], :eq {:val true}}
+    {:path [:timestamp],
+     :gt   {:ref {:condition :a, :path [:timestamp]}}}]}}}
