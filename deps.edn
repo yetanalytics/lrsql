@@ -24,7 +24,9 @@
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
   ;; Pedestal and Jetty webserver deps
-  io.pedestal/pedestal.jetty               {:mvn/version "0.6.0"}
+  io.pedestal/pedestal.jetty {:mvn/version "0.6.0"
+                              :exclusions [org.msgpack/msgpack]}
+  org.msgpack/msgpack-core   {:mvn/version "0.9.3"}
   ;; Security deps
   buddy/buddy-core    {:mvn/version "1.11.418"
                        :exclusions [org.bouncycastle/bcprov-jdk18on]}
