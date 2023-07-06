@@ -1,0 +1,32 @@
+[
+  {
+    "actor": {
+      "mbox": "mailto:bob@example.com"
+    },
+    "verb": {
+      "id": "https://example.com/verbs/completed"
+    },
+    "object": {
+      "id": "https://example.com/activities/a",
+      "objectType": "Activity"
+    },
+    "result": {
+      "success": true
+    }
+  },
+  {
+    "actor": {
+      "mbox": "mailto:bob@example.com"
+    },
+    "verb": {
+      "id": "https://example.com/verbs/completed"
+    },
+    "object": {
+      "id": "https://example.com/activities/b",
+      "objectType": "Activity"
+    },
+    "result": {
+      "success": true
+    }
+  }
+]
