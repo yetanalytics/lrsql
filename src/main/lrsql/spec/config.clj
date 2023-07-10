@@ -195,7 +195,11 @@
                    ::oidc-audience
                    ::oidc-client-id]))
 
+(s/def ::tuning
+  (s/keys :opt-un [::enable-jsonb]))
+
 (def config-spec
   (s/keys :req-un [::connection
                    ::lrs
-                   ::webserver]))
+                   ::webserver
+                   ::tuning]))

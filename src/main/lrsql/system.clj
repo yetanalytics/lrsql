@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [lrsql.system.database :as db]
             [lrsql.system.logger :as logger]
+            [lrsql.system.tuning :as tuning]
             [lrsql.system.lrs :as lrs]
             [lrsql.system.webserver :as webserver]
             [lrsql.init.config :refer [read-config]]))
@@ -21,9 +22,10 @@
         (component/system-map
          ;; Logger is required by backend so it happens first
          :logger     (logger/map->Logger {})
+         :tuning     (tuning/map->Tuning {})
          :backend    (component/using
                       backend
-                      [:logger])
+                      [:logger :tuning])
          :connection (component/using
                       (db/map->Connection {})
                       [:backend])

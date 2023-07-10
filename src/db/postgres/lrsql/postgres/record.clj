@@ -50,7 +50,7 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
-  (-update-all! [_ tx]
+  (-update-all! [{{{jsonb? :enable-jsonb} :config} :tuning} tx]
     (alter-admin-account-passhash-optional! tx)
     (alter-admin-account-add-openid-issuer! tx)
     (alter-scope-enum-type! tx)
@@ -63,7 +63,10 @@
     (when-not (some? (query-state-document-last-modified-is-timestamptz tx))
       (migrate-state-document-last-modified! tx pd/local-tz-input)
       (migrate-activity-profile-document-last-modified! tx pd/local-tz-input)
-      (migrate-agent-profile-document-last-modified! tx pd/local-tz-input)))
+      (migrate-agent-profile-document-last-modified! tx pd/local-tz-input))
+    (if jsonb?
+      (migrate-to-jsonb! tx)
+      (migrate-to-json! tx)))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
@@ -202,9 +205,9 @@
   (-set-read! [_]
     (bd/set-read-time->instant!)
     (pd/set-read-pgobject->json!))
-  (-set-write! [_]
+  (-set-write! [{{{jsonb? :enable-jsonb} :config} :tuning}]
     ;; next.jdbc automatically sets the reading of Instants as java.sql.Dates
-    (pd/set-write-json->pgobject!))
+    (pd/set-write-json->pgobject! (if jsonb? "jsonb" "json")))
 
   bp/AdminStatusBackend
   (-query-statement-count [_ tx]
