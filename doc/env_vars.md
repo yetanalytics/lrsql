@@ -82,7 +82,7 @@ You may have noted that some options are not available:
 
 ### Tuning
 
-The following options are used for advanced database tuning and may affect DB schema and performance. Use with caution.
+The following options are used for advanced database performance tuning and may affect DB schema and performance. Use with caution.
 
 | Env Var              | Config        | Description                         | Default |
 | -------------------  | ------------- | ----------------------------------- | ------- |
