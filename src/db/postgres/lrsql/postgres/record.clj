@@ -20,7 +20,7 @@
 
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
-(defrecord PostgresBackend []
+(defrecord PostgresBackend [tuning]
   cmp/Lifecycle
   (start [this] this)
   (stop [this] this)
@@ -50,7 +50,7 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
-  (-update-all! [{{{jsonb? :enable-jsonb} :config} :tuning} tx]
+  (-update-all! [_ tx]
     (alter-admin-account-passhash-optional! tx)
     (alter-admin-account-add-openid-issuer! tx)
     (alter-scope-enum-type! tx)
@@ -64,7 +64,7 @@
       (migrate-state-document-last-modified! tx pd/local-tz-input)
       (migrate-activity-profile-document-last-modified! tx pd/local-tz-input)
       (migrate-agent-profile-document-last-modified! tx pd/local-tz-input))
-    (if jsonb?
+    (if (-> tuning :config :enable-jsonb)
       (migrate-to-jsonb! tx)
       (migrate-to-json! tx)))
 
@@ -205,9 +205,10 @@
   (-set-read! [_]
     (bd/set-read-time->instant!)
     (pd/set-read-pgobject->json!))
-  (-set-write! [{{{jsonb? :enable-jsonb} :config} :tuning}]
+  (-set-write! [_]
     ;; next.jdbc automatically sets the reading of Instants as java.sql.Dates
-    (pd/set-write-json->pgobject! (if jsonb? "jsonb" "json")))
+    (pd/set-write-json->pgobject! (if (-> tuning :config :enable-jsonb)
+                                    "jsonb" "json")))
 
   bp/AdminStatusBackend
   (-query-statement-count [_ tx]

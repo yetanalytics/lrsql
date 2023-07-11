@@ -37,5 +37,8 @@
                       [:lrs]))
         assoc-config
         (fn [m config-m] (assoc m :config config-m))]
+    ;; This code can be confusing. What is happening is that the above creates 
+    ;; a system map with empty maps and then based on the key of the system, 
+    ;; populates the corresponding config (by key) from the overall aero config
     (-> (merge-with assoc-config initial-sys config)
         (component/system-using {}))))
