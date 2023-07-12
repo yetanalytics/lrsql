@@ -52,6 +52,7 @@
   (let [;; Read in and process aero config
         {:keys [database
                 connection
+                tuning
                 lrs
                 webserver
                 logger]} (-> (str config-path-prefix "config.edn")
@@ -64,7 +65,8 @@
     {:connection (assoc connection :database database)
      :lrs        (assoc lrs :stmt-url-prefix (:url-prefix webserver))
      :webserver  webserver
-     :logger     logger}))
+     :logger     logger
+     :tuning     tuning}))
 
 (def read-config
   "Memoized version of `read-config*`."

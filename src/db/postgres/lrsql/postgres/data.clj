@@ -11,16 +11,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- json->pg-object
-  [jsn]
+  [type jsn]
   (doto (PGobject.)
-    (.setType "json")
+    (.setType type)
     (.setValue (u/write-json-str jsn))))
 
 (defn- pg-object->json
   [^PGobject pg-obj]
   (let [type  (.getType pg-obj)
         value (.getValue pg-obj)]
-    (if (#{"json"} type)
+    (if (#{"jsonb" "json"} type)
       (u/parse-json value)
       (throw (ex-info "Invalid PostgreSQL JSON type"
                       {:type       ::invalid-postgres-json
@@ -45,11 +45,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn set-write-json->pgobject!
-  []
+  [type]
   (extend-protocol SettableParameter
     IPersistentMap
     (set-parameter [^IPersistentMap m ^PreparedStatement stmt ^long i]
-      (.setObject stmt i (json->pg-object m)))))
+      (.setObject stmt i (json->pg-object type m)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Timezone Input

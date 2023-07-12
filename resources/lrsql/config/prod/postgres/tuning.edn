@@ -1,0 +1,1 @@
+{:enable-jsonb #boolean #or [#env LRSQL_ENABLE_JSONB false]}
