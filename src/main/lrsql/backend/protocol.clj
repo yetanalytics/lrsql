@@ -118,3 +118,15 @@
   (-query-last-statement-stored [this tx])
   (-query-platform-frequency [this tx])
   (-query-timeline [this tx input]))
+
+(defprotocol ReactionQueryBackend
+  ;; Query Snippets
+  (-snip-json-extract [this params])
+  (-snip-val [this params])
+  (-snip-col [this params])
+  (-snip-clause [this params])
+  (-snip-and [this params])
+  (-snip-or [this params])
+  (-snip-not [this params])
+  ;; Query
+  (-query-reaction [this tx params]))

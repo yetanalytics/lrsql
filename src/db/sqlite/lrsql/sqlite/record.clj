@@ -5,7 +5,8 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.data :as bd]
             [lrsql.init :refer [init-hugsql-adapter!]]
-            [lrsql.sqlite.data :as sd]))
+            [lrsql.sqlite.data :as sd]
+            [lrsql.util.reaction :as ru]))
 
 ;; Init HugSql functions
 
@@ -265,4 +266,105 @@
   (-query-platform-frequency [_ tx]
     (query-platform-frequency tx))
   (-query-timeline [_ tx input]
-    (query-timeline tx input)))
+    (query-timeline tx input))
+
+  bp/ReactionQueryBackend
+  (-snip-json-extract [_ params]
+    (snip-json-extract (update params :path ru/path->string)))
+  (-snip-val [_ params]
+    (snip-val params))
+  (-snip-col [_ params]
+    (snip-col params))
+  (-snip-clause [_ params]
+    (snip-clause params))
+  (-snip-and [_ params]
+    (snip-and params))
+  (-snip-or [_ params]
+    (snip-or params))
+  (-snip-not [_ params]
+    (snip-not params))
+  (-query-reaction [_ tx params]
+    (query-reaction tx params)))
+
+(comment
+  (hug/def-sqlvec-fns "lrsql/sqlite/sql/query.sql")
+
+  (query-reaction-sqlvec
+   {:select [["a.payload" "a"] ["b.payload" "b"]]
+    :from [["xapi_statement" "a"] ["xapi_statement" "b"]]
+    :where
+    (snip-and
+     {:clauses
+      [(snip-clause
+        {:left (snip-col {:col "a.id"})
+         :op "!="
+         :right (snip-col {:col "b.id"})})
+       (snip-clause
+        {:left (snip-json-extract
+                {:col "a.payload"
+                 :path "$.actor"})
+         :op "="
+         :right (snip-json-extract
+                 {:col "b.payload"
+                  :path "$.actor"})})
+       (snip-clause
+        {:left (snip-col
+                {:col "b.id"})
+         :op "="
+         :right (snip-val
+                 {:val "01892bbf-5fec-8189-9586-8c3c54ad46cb"})})
+       (snip-clause
+        {:left (snip-col
+                {:col "a.timestamp"})
+         :op "<"
+         :right (snip-col
+                 {:col "b.timestamp"})})
+       (snip-clause
+        {:left (snip-json-extract
+                {:col "a.payload"
+                 :path "$.object.id"})
+         :op "="
+         :right (snip-val
+                 {:val "https://example.com/activities/a"})})
+       (snip-clause
+        {:left (snip-json-extract
+                {:col "a.payload"
+                 :path "$.verb.id"})
+         :op "="
+         :right (snip-val
+                 {:val "https://example.com/verbs/completed"})})
+       (snip-clause
+        {:left (snip-json-extract
+                {:col "a.payload"
+                 :path "$.result.success"})
+         :op "="
+         :right (snip-val
+                 {:val true})})
+       (snip-clause
+        {:left (snip-json-extract
+                {:col "b.payload"
+                 :path "$.object.id"})
+         :op "="
+         :right (snip-val
+                 {:val "https://example.com/activities/b"})})
+       (snip-clause
+        {:left (snip-json-extract
+                {:col "b.payload"
+                 :path "$.verb.id"})
+         :op "="
+         :right (snip-val
+                 {:val "https://example.com/verbs/completed"})})
+       (snip-clause
+        {:left (snip-json-extract
+                {:col "b.payload"
+                 :path "$.result.success"})
+         :op "="
+         :right (snip-val
+                 {:val true})})]})})
+  ["SELECT a.payload as a, b.payload as b\nFROM xapi_statement as a, xapi_statement as b\nWHERE (a.id != b.id AND json_extract(a.payload, ?) = json_extract(b.payload, ?) AND b.id = ? AND a.timestamp < b.timestamp AND json_extract(a.payload, ?) = ? AND json_extract(a.payload, ?) = ? AND json_extract(a.payload, ?) = ? AND json_extract(b.payload, ?) = ? AND json_extract(b.payload, ?) = ? AND json_extract(b.payload, ?) = ?);" "$.actor" "$.actor" "01892bbf-5fec-8189-9586-8c3c54ad46cb" "$.object.id" "https://example.com/activities/a" "$.verb.id" "https://example.com/verbs/completed" "$.result.success" true "$.object.id" "https://example.com/activities/a" "$.verb.id" "https://example.com/verbs/completed" "$.result.success" true]
+
+
+
+
+
+  )

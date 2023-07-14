@@ -327,3 +327,31 @@ WHERE id > :since-id
   AND id <= :until-id
 GROUP BY stored_time
 ORDER BY stored_time ASC;
+
+/* Statement Reactions */
+
+-- :snip snip-json-extract
+json_extract(:i:col, :v:path)
+
+-- :snip snip-val
+:v:val
+
+-- :snip snip-col
+:i:col
+
+-- :snip snip-clause
+:snip:left :sql:op :snip:right
+
+-- :snip snip-and
+--~ (str "(" (apply str (interpose " AND " (map-indexed (fn [idx _] (str ":snip:clauses." idx)) (:clauses params)))) ")")
+
+-- :snip snip-or
+--~ (str "(" (apply str (interpose " OR " (map-indexed (fn [idx _] (str ":snip:clauses." idx)) (:clauses params)))) ")")
+
+-- :snip snip-not
+(NOT :snip:clause)
+
+-- :name query-reaction
+SELECT :i*:select
+FROM :i*:from
+WHERE :snip:where;

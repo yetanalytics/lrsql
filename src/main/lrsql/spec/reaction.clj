@@ -1,6 +1,11 @@
 (ns lrsql.spec.reaction
   (:require [clojure.spec.alpha :as s]
-            [xapi-schema.spec :as xs]))
+            [xapi-schema.spec :as xs]
+            [lrsql.backend.protocol :as bp]))
+
+(defn reaction-backend?
+  [bk]
+  (satisfies? bp/ReactionQueryBackend bk))
 
 (s/def ::condition-name
   simple-keyword?)
@@ -8,6 +13,7 @@
 (s/def ::path
   (s/every
    (s/or :key simple-keyword?
+         :string string?
          :index nat-int?)
    :gen-max 4))
 
