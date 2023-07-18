@@ -74,8 +74,12 @@
             :min-count 1
             :gen-max 3))
 
+(s/def ::identity-paths
+  (s/every ::path))
+
 (s/def ::input
-  (s/keys :req-un [::conditions]))
+  (s/keys :req-un [::identity-paths
+                   ::conditions]))
 
 (s/def ::sqlvec
   (s/cat :ddl string?

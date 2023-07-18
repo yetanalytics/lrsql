@@ -52,11 +52,11 @@
              "objectType" "Activity"}
    "result" {"success" true}})
 
-;; Different actor, same action as b
+;; Different actor, same action as a
 (def stmt-d
   {"actor"  {"mbox" "mailto:alice@example.com"}
    "verb"   {"id" "https://example.com/verbs/completed"}
-   "object" {"id"         "https://example.com/activities/b"
+   "object" {"id"         "https://example.com/activities/a"
              "objectType" "Activity"}
    "result" {"success" true}})
 
@@ -72,15 +72,16 @@
         lrs   (-> sys' :lrs)
         bk    (:backend lrs)
         ds    (-> sys' :lrs :connection :conn-pool)]
-    (lrsp/-store-statements lrs auth-ident [stmt-a] [])
-    (lrsp/-store-statements lrs auth-ident [stmt-b] [])
-    (lrsp/-store-statements lrs auth-ident [stmt-c] [])
-    (lrsp/-store-statements lrs auth-ident [stmt-d] [])
+
+    (doseq [s [stmt-d stmt-a stmt-b stmt-c]]
+      (lrsp/-store-statements lrs auth-ident [s] []))
+
     (try
       (testing "Returns relevant statements"
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:conditions
+                            {:identity-paths [[:actor :mbox]]
+                             :conditions
                              {:a
                               {:and
                                [{:path [:object :id]
@@ -109,6 +110,6 @@
                             stmt-b)]
           (is (= 1 (count query-result)))
           (let [[{:keys [a b]}] query-result]
-            (is (= (remove-props a) stmt-a))
-            (is (= (remove-props b) stmt-b)))))
+            (is (= stmt-a (remove-props a)))
+            (is (= stmt-b (remove-props b))))))
       (finally (component/stop sys')))))

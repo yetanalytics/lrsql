@@ -3,6 +3,7 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.reaction :as rs]
+            [lrsql.util.reaction :as ru]
             [cheshire.core :as json]
             [xapi-schema.spec :as xs]
             [clojure.java.io :as io]))
@@ -75,16 +76,58 @@
                           {:type      ::invalid-condition
                            :condition condition}))))
 
+(s/fdef render-identity
+  :args (s/cat :bk rs/reaction-backend?
+               :condition-keys (s/every ::rs/condition-name)
+               :statement-identity (s/map-of ::rs/path string?))
+  :ret ::rs/sqlvec)
+
+(defn- render-identity
+  [bk condition-keys statement-identity]
+  (bp/-snip-and
+   bk
+   {:clauses (into []
+                   (for [condition-name condition-keys
+                         [path ident-val] statement-identity]
+                     (bp/-snip-clause
+                      bk
+                      {:left (render-ref bk condition-name path)
+                       :op "="
+                       :right (bp/-snip-val bk {:val ident-val})})))}))
+
+(s/fdef render-ground
+  :args (s/cat :bk rs/reaction-backend?
+               :condition-keys (s/every ::rs/condition-name)
+               :trigger-id :statement/id)
+  :ret ::rs/sqlvec)
+
+(defn- render-ground
+  [bk condition-keys trigger-id]
+  (bp/-snip-or
+   bk
+   {:clauses (mapv
+              (fn [k]
+                (bp/-snip-clause
+                 bk
+                 {:left  (bp/-snip-col
+                          bk {:col (format "%s.statement_id" (name k))})
+                  :op    "="
+                  :right (bp/-snip-val bk {:val trigger-id})}))
+              condition-keys)}))
+
 (s/fdef query-reaction-sqlvec
   :args (s/cat :bk rs/reaction-backend?
                :input ::rs/input
-               :statement ::xs/statement)
+               :statement ::xs/statement
+               :statement-identity (s/map-of ::rs/path string?))
   :ret ::rs/sqlvec)
 
 (defn- query-reaction-sqlvec
   [bk
    {:keys [conditions]}
-   {trigger-id "id"}]
+   {trigger-id "id"
+    :as trigger-statement}
+   statement-identity]
   (let [condition-keys (keys conditions)]
     (bp/-snip-query-reaction
      bk
@@ -100,17 +143,8 @@
       (bp/-snip-and
        bk
        {:clauses
-        (into [(bp/-snip-or
-                bk
-                {:clauses (mapv
-                           (fn [k]
-                             (bp/-snip-clause
-                              bk
-                              {:left  (bp/-snip-col
-                                       bk {:col (format "%s.statement_id" (name k))})
-                               :op    "="
-                               :right (bp/-snip-val bk {:val trigger-id})}))
-                           condition-keys)})]
+        (into [(render-identity bk condition-keys statement-identity)
+               (render-ground bk condition-keys trigger-id)]
               (map
                (fn [[condition-name condition]]
                  (render-condition
@@ -129,12 +163,16 @@
 (defn query-reaction
   "For the given reaction input, return matching statements named for conditions."
   [bk tx input statement]
-  (mapv
-   (fn [row]
-     (into {}
-           (for [[condition-name statement-bs] row]
-             [condition-name
-              (with-open [r (io/reader statement-bs)]
-                (json/parse-stream r))])))
-   (bp/-query-reaction bk tx
-                       {:sql (query-reaction-sqlvec bk input statement)})))
+  (if-let [statement-identity (ru/statement-identity
+                               (:identity-paths input) statement)]
+    (mapv
+     (fn [row]
+       (into {}
+             (for [[condition-name statement-bs] row]
+               [condition-name
+                (with-open [r (io/reader statement-bs)]
+                  (json/parse-stream r))])))
+     (bp/-query-reaction bk tx
+                         {:sql (query-reaction-sqlvec
+                                bk input statement statement-identity)}))
+    []))

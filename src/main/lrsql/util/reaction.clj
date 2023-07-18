@@ -1,7 +1,8 @@
 (ns lrsql.util.reaction
   "Utilities to support reactions."
   (:require [clojure.spec.alpha :as s]
-            [lrsql.spec.reaction :as rs]))
+            [lrsql.spec.reaction :as rs]
+            [xapi-schema.spec :as xs]))
 
 (s/fdef path->string
   :args (s/cat :path ::rs/path
@@ -30,3 +31,30 @@
                               {:type ::invalid-path-segment
                                :segment seg}))))
      s)))
+
+(s/fdef statement-identity
+  :args (s/cat :identity-paths ::rs/identity-paths
+               :statement ::xs/statement)
+  :ret (s/nilable
+        (s/map-of ::rs/path string?)))
+
+(defn statement-identity
+  "Given a vector of identity paths and a statement, return a map of paths to
+  values. Return nil if any are missing or a collection is found."
+  [identity-paths
+   statement]
+  (reduce
+   (fn [m path]
+     (if-some [found-val (get-in statement
+                                 (mapv
+                                  (fn [seg]
+                                    (if (keyword? seg)
+                                      (name seg)
+                                      seg))
+                                  path))]
+       (if (coll? found-val)
+         (reduced nil)
+         (assoc m path found-val))
+       (reduced nil)))
+   {}
+   identity-paths))
