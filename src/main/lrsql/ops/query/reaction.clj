@@ -80,7 +80,8 @@
   :ret ::rs/sqlvec)
 
 (defn query-reaction-sqlvec
-  [bk {:keys [conditions]}]
+  [bk {:keys [conditions
+              trigger-id]}]
   (let [condition-keys (keys conditions)]
     (bp/-snip-query-reaction
      bk
@@ -93,14 +94,27 @@
                  ["xapi_statement" (name k)])
                condition-keys)
       :where
-      (bp/-snip-and bk
-                    {:clauses (mapv
-                               (fn [[condition-name condition]]
-                                 (render-condition
-                                  bk
-                                  condition-name
-                                  condition))
-                               conditions)})})))
+      (bp/-snip-and
+       bk
+       {:clauses
+        (into [(bp/-snip-or
+                bk
+                {:clauses (mapv
+                           (fn [k]
+                             (bp/-snip-clause
+                              bk
+                              {:left  (bp/-snip-col
+                                       bk {:col (format "%s.statement_id" (name k))})
+                               :op    "="
+                               :right (bp/-snip-val bk {:val trigger-id})}))
+                           condition-keys)})]
+              (map
+               (fn [[condition-name condition]]
+                 (render-condition
+                  bk
+                  condition-name
+                  condition))
+               conditions))})})))
 
 (s/fdef query-reaction
   :args (s/cat :bk rs/reaction-backend?

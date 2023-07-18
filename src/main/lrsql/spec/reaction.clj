@@ -74,8 +74,12 @@
             :min-count 1
             :gen-max 3))
 
+(s/def ::trigger-id
+  :statement/id)
+
 (s/def ::input
-  (s/keys :req-un [::conditions]))
+  (s/keys :req-un [::conditions
+                   ::trigger-id]))
 
 (s/def ::sqlvec
   (s/cat :ddl string?
