@@ -125,8 +125,7 @@
 (defn- query-reaction-sqlvec
   [bk
    {:keys [conditions]}
-   {trigger-id "id"
-    :as trigger-statement}
+   {trigger-id "id"}
    statement-identity]
   (let [condition-keys (keys conditions)]
     (bp/-snip-query-reaction

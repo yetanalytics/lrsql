@@ -1,5 +1,5 @@
 (ns lrsql.util.reaction-test
-  (:require [clojure.test :refer [deftest is testing are]]
+  (:require [clojure.test :refer [deftest are]]
             [lrsql.util.reaction :as r]))
 
 (deftest path->string-test
