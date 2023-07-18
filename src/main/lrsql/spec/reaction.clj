@@ -74,49 +74,9 @@
             :min-count 1
             :gen-max 3))
 
-(s/def ::trigger-id
-  :statement/id)
-
 (s/def ::input
-  (s/keys :req-un [::conditions
-                   ::trigger-id]))
+  (s/keys :req-un [::conditions]))
 
 (s/def ::sqlvec
   (s/cat :ddl string?
          :params (s/* any?)))
-
-(comment
-
-  (require '[clojure.spec.gen.alpha :as sgen])
-
-  (sgen/generate (s/gen ::input))
-
-  (s/valid? ::input
-            {:conditions
-             {:a
-              {:and
-               [{:path [:object :id]
-                 :op   :eq
-                 :val  "https://example.com/activities/a"}
-                {:path [:verb :id]
-                 :op   :eq
-                 :val  "https://example.com/verbs/completed"}
-                {:path [:result :success]
-                 :op   :eq
-                 :val  true}]}
-              :b
-              {:and
-               [{:path [:object :id]
-                 :op   :eq
-                 :val  "https://example.com/activities/b"}
-                {:path [:verb :id]
-                 :op   :eq
-                 :val  "https://example.com/verbs/completed"}
-                {:path [:result :success]
-                 :op   :eq
-                 :val  true}
-                {:path [:timestamp]
-                 :op   :gt
-                 :ref  {:condition :a, :path [:timestamp]}}]}}})
-
-  )

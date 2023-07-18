@@ -77,12 +77,14 @@
 
 (s/fdef query-reaction-sqlvec
   :args (s/cat :bk rs/reaction-backend?
-               :input ::rs/input)
+               :input ::rs/input
+               :statement ::xs/statement)
   :ret ::rs/sqlvec)
 
 (defn- query-reaction-sqlvec
-  [bk {:keys [conditions
-              trigger-id]}]
+  [bk
+   {:keys [conditions]}
+   {trigger-id "id"}]
   (let [condition-keys (keys conditions)]
     (bp/-snip-query-reaction
      bk
@@ -120,12 +122,13 @@
 (s/fdef query-reaction
   :args (s/cat :bk rs/reaction-backend?
                :tx transaction?
-               :input ::rs/input)
+               :input ::rs/input
+               :statement ::xs/statement)
   :ret (s/every (s/map-of ::rs/condition-name ::xs/statement)))
 
 (defn query-reaction
   "For the given reaction input, return matching statements named for conditions."
-  [bk tx input]
+  [bk tx input statement]
   (mapv
    (fn [row]
      (into {}
@@ -134,4 +137,4 @@
               (with-open [r (io/reader statement-bs)]
                 (json/parse-stream r))])))
    (bp/-query-reaction bk tx
-                       {:sql (query-reaction-sqlvec bk input)})))
+                       {:sql (query-reaction-sqlvec bk input statement)})))

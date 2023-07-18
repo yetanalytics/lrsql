@@ -80,8 +80,7 @@
       (testing "Returns relevant statements"
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:trigger-id (get stmt-b "id")
-                             :conditions
+                            {:conditions
                              {:a
                               {:and
                                [{:path [:object :id]
@@ -106,7 +105,8 @@
                                  :val  true}
                                 {:path [:timestamp]
                                  :op   :gt
-                                 :ref  {:condition :a, :path [:timestamp]}}]}}})]
+                                 :ref  {:condition :a, :path [:timestamp]}}]}}}
+                            stmt-b)]
           (is (= 1 (count query-result)))
           (let [[{:keys [a b]}] query-result]
             (is (= (remove-props a) stmt-a))
