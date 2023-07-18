@@ -23,7 +23,7 @@
                :path ::rs/path)
   :ret ::rs/sqlvec)
 
-(defn render-ref
+(defn- render-ref
   "Render json references with optimizations for denorm fields"
   [bk col path]
   (case path
@@ -40,7 +40,7 @@
                :condition ::rs/condition)
   :ret ::rs/sqlvec)
 
-(defn render-condition
+(defn- render-condition
   [bk
    condition-name
    {and-conds :and
@@ -80,7 +80,7 @@
                :input ::rs/input)
   :ret ::rs/sqlvec)
 
-(defn query-reaction-sqlvec
+(defn- query-reaction-sqlvec
   [bk {:keys [conditions
               trigger-id]}]
   (let [condition-keys (keys conditions)]
