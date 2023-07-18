@@ -20,7 +20,8 @@
 (s/fdef render-ref
   :args (s/cat :bk rs/reaction-backend?
                :col ::rs/condition-name
-               :path ::rs/path))
+               :path ::rs/path)
+  :ret ::rs/sqlvec)
 
 (defn render-ref
   "Render json references with optimizations for denorm fields"
