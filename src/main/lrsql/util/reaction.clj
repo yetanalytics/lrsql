@@ -4,7 +4,8 @@
             [lrsql.spec.reaction :as rs]))
 
 (s/fdef path->string
-  :args (s/cat :path ::rs/path)
+  :args (s/cat :path ::rs/path
+               :qstring (s/? string?))
   :ret string?)
 
 (defn path->string

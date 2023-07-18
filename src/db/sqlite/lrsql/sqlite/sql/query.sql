@@ -351,7 +351,10 @@ json_extract(:i:col, :v:path)
 -- :snip snip-not
 (NOT :snip:clause)
 
--- :name query-reaction
+-- :snip snip-query-reaction
 SELECT :i*:select
 FROM :i*:from
 WHERE :snip:where;
+
+-- :name query-reaction
+:snip:sql

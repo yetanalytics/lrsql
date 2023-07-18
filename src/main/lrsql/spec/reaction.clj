@@ -77,6 +77,10 @@
 (s/def ::input
   (s/keys :req-un [::conditions]))
 
+(s/def ::sqlvec
+  (s/cat :ddl string?
+         :params (s/* any?)))
+
 (comment
 
   (require '[clojure.spec.gen.alpha :as sgen])

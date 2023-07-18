@@ -128,5 +128,7 @@
   (-snip-and [this params])
   (-snip-or [this params])
   (-snip-not [this params])
+  ;; Summative snip for runtime debugging
+  (-snip-query-reaction [this params])
   ;; Query
   (-query-reaction [this tx params]))
