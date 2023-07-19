@@ -15,8 +15,8 @@
    :lte   "<="
    :eq    "="
    :noteq "!="
-   #_#_:contains
-   :contains-str})
+   :like  "LIKE"
+   #_:contains})
 
 (s/fdef render-ref
   :args (s/cat :bk rs/reaction-backend?

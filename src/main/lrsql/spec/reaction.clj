@@ -32,8 +32,8 @@
     :lte
     :eq
     :noteq
-    :contains
-    :contains-str})
+    :like
+    :contains})
 
 (s/def ::clause
   (s/or :clause-val

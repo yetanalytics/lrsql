@@ -94,11 +94,11 @@
       :ref  {:condition :a, :path [:timestamp]}}]}})
 
 (deftest query-reaction-test
-  (let [sys   (support/test-system)
-        sys'  (component/start sys)
-        lrs   (-> sys' :lrs)
-        bk    (:backend lrs)
-        ds    (-> sys' :lrs :connection :conn-pool)]
+  (let [sys  (support/test-system)
+        sys' (component/start sys)
+        lrs  (-> sys' :lrs)
+        bk   (:backend lrs)
+        ds   (-> sys' :lrs :connection :conn-pool)]
 
     (doseq [s [stmt-d stmt-a stmt-b stmt-c]]
       (lrsp/-store-statements lrs auth-ident [s] []))
@@ -108,7 +108,7 @@
         (let [query-result (qr/query-reaction
                             bk ds
                             {:identity-paths [[:actor :mbox]]
-                             :conditions simple-conditions}
+                             :conditions     simple-conditions}
                             stmt-b)]
           ;; unambiguous, finds only a single row with a and b
           (is (= 1 (count query-result)))
@@ -119,7 +119,7 @@
         (let [query-result (qr/query-reaction
                             bk ds
                             {:identity-paths []
-                             :conditions simple-conditions}
+                             :conditions     simple-conditions}
                             stmt-b)]
           ;; ambiguous, finds a and b but ALSO d and b
           (is (= 2 (count query-result)))))
