@@ -40,6 +40,12 @@
   (case path
     [:timestamp]
     (render-col bk condition-name "timestamp")
+    [:stored]
+    (render-col bk condition-name "stored")
+    [:verb :id]
+    (render-col bk condition-name "verb_iri")
+    [:context :registration]
+    (render-col bk condition-name "registration")
     (bp/-snip-json-extract
      bk
      {:col  (format "%s.payload" (name condition-name))
