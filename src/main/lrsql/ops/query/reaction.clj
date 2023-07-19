@@ -142,15 +142,18 @@
       (bp/-snip-and
        bk
        {:clauses
-        (into [(render-identity bk condition-keys statement-identity)
-               (render-ground bk condition-keys trigger-id)]
-              (map
-               (fn [[condition-name condition]]
-                 (render-condition
-                  bk
-                  condition-name
-                  condition))
-               conditions))})})))
+        (into []
+              (concat
+               (when (seq statement-identity)
+                 [(render-identity bk condition-keys statement-identity)])
+               [(render-ground bk condition-keys trigger-id)]
+               (map
+                (fn [[condition-name condition]]
+                  (render-condition
+                   bk
+                   condition-name
+                   condition))
+                conditions)))})})))
 
 (s/fdef query-reaction
   :args (s/cat :bk rs/reaction-backend?

@@ -66,6 +66,33 @@
                           "name"     "12341234-0000-4000-1234-123412341234"}}
    :scopes #{:scope/all}})
 
+(def simple-conditions
+  {:a
+   {:and
+    [{:path [:object :id]
+      :op   :eq
+      :val  "https://example.com/activities/a"}
+     {:path [:verb :id]
+      :op   :eq
+      :val  "https://example.com/verbs/completed"}
+     {:path [:result :success]
+      :op   :eq
+      :val  true}]}
+   :b
+   {:and
+    [{:path [:object :id]
+      :op   :eq
+      :val  "https://example.com/activities/b"}
+     {:path [:verb :id]
+      :op   :eq
+      :val  "https://example.com/verbs/completed"}
+     {:path [:result :success]
+      :op   :eq
+      :val  true}
+     {:path [:timestamp]
+      :op   :gt
+      :ref  {:condition :a, :path [:timestamp]}}]}})
+
 (deftest query-reaction-test
   (let [sys   (support/test-system)
         sys'  (component/start sys)
@@ -81,35 +108,17 @@
         (let [query-result (qr/query-reaction
                             bk ds
                             {:identity-paths [[:actor :mbox]]
-                             :conditions
-                             {:a
-                              {:and
-                               [{:path [:object :id]
-                                 :op   :eq
-                                 :val  "https://example.com/activities/a"}
-                                {:path [:verb :id]
-                                 :op   :eq
-                                 :val  "https://example.com/verbs/completed"}
-                                {:path [:result :success]
-                                 :op   :eq
-                                 :val  true}]}
-                              :b
-                              {:and
-                               [{:path [:object :id]
-                                 :op   :eq
-                                 :val  "https://example.com/activities/b"}
-                                {:path [:verb :id]
-                                 :op   :eq
-                                 :val  "https://example.com/verbs/completed"}
-                                {:path [:result :success]
-                                 :op   :eq
-                                 :val  true}
-                                {:path [:timestamp]
-                                 :op   :gt
-                                 :ref  {:condition :a, :path [:timestamp]}}]}}}
+                             :conditions simple-conditions}
                             stmt-b)]
           (is (= 1 (count query-result)))
           (let [[{:keys [a b]}] query-result]
             (is (= stmt-a (remove-props a)))
             (is (= stmt-b (remove-props b))))))
+      (testing "Works w/o identity"
+        (let [query-result (qr/query-reaction
+                            bk ds
+                            {:identity-paths []
+                             :conditions simple-conditions}
+                            stmt-b)]
+          (is (= 2 (count query-result)))))
       (finally (component/stop sys')))))
