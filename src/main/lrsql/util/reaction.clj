@@ -18,10 +18,11 @@
    (if seg
      (recur rpath
             (cond
-              ;; TODO: might need some escapes
-              (or (keyword? seg)
-                  (string? seg))
+              (keyword? seg)
               (format "%s.%s" s (name seg))
+
+              (string? seg)
+              (format "%s.\"%s\"" s seg)
 
               (nat-int? seg)
               (format "%s[%d]" s seg)

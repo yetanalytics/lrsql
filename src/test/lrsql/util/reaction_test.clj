@@ -4,8 +4,8 @@
 
 (deftest path->string-test
   (are [input output]
-      (= (r/path->string input)
-         output)
+      (= output
+         (r/path->string input))
     []
     "$"
 
@@ -13,7 +13,10 @@
     "$.object.id"
 
     [:context :contextActivities :parent 0 :id]
-    "$.context.contextActivities.parent[0].id"))
+    "$.context.contextActivities.parent[0].id"
+
+    [:context :extensions "https://www.google.com/array"]
+    "$.context.extensions.\"https://www.google.com/array\""))
 
 (def stmt-a
   {"actor"  {"mbox" "mailto:bob@example.com"}
@@ -24,10 +27,10 @@
 
 (deftest statement-identity-test
   (are [identity-paths output]
-      (= (r/statement-identity
+      (= output
+         (r/statement-identity
           identity-paths
-          stmt-a)
-         output)
+          stmt-a))
     [[:actor :mbox]]
     {[:actor :mbox] "mailto:bob@example.com"}
 
