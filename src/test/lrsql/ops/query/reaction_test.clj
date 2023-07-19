@@ -110,6 +110,7 @@
                             {:identity-paths [[:actor :mbox]]
                              :conditions simple-conditions}
                             stmt-b)]
+          ;; unambiguous, finds only a single row with a and b
           (is (= 1 (count query-result)))
           (let [[{:keys [a b]}] query-result]
             (is (= stmt-a (remove-props a)))
@@ -120,5 +121,6 @@
                             {:identity-paths []
                              :conditions simple-conditions}
                             stmt-b)]
+          ;; ambiguous, finds a and b but ALSO d and b
           (is (= 2 (count query-result)))))
       (finally (component/stop sys')))))
