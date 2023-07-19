@@ -18,21 +18,31 @@
    :like  "LIKE"
    #_:contains})
 
+(s/fdef render-col
+  :args (s/cat :bk rs/reaction-backend?
+               :condition-name ::rs/condition-name
+               :col string?)
+  :ret ::rs/sqlvec)
+
+(defn- render-col
+  [bk condition-name col]
+  (bp/-snip-col bk {:col (format "%s.%s" (name condition-name) col)}))
+
 (s/fdef render-ref
   :args (s/cat :bk rs/reaction-backend?
-               :col ::rs/condition-name
+               :condition-name ::rs/condition-name
                :path ::rs/path)
   :ret ::rs/sqlvec)
 
 (defn- render-ref
   "Render json references with optimizations for denorm fields"
-  [bk col path]
+  [bk condition-name path]
   (case path
     [:timestamp]
-    (bp/-snip-col bk {:col (format "%s.timestamp" (name col))})
+    (render-col bk condition-name "timestamp")
     (bp/-snip-json-extract
      bk
-     {:col  (format "%s.payload" (name col))
+     {:col  (format "%s.payload" (name condition-name))
       :path path})))
 
 (s/fdef render-condition
@@ -109,8 +119,7 @@
               (fn [k]
                 (bp/-snip-clause
                  bk
-                 {:left  (bp/-snip-col
-                          bk {:col (format "%s.statement_id" (name k))})
+                 {:left  (render-col bk (name k) "statement_id")
                   :op    "="
                   :right (bp/-snip-val bk {:val trigger-id})}))
               condition-keys)}))
