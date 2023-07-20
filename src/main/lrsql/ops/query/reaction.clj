@@ -15,8 +15,7 @@
    :lte   "<="
    :eq    "="
    :noteq "!="
-   :like  "LIKE"
-   #_:contains})
+   :like  "LIKE"})
 
 (s/fdef render-col
   :args (s/cat :bk rs/reaction-backend?
@@ -74,20 +73,29 @@
                                     or-conds)})
     not-cond
     (bp/-snip-not bk {:clause (render-condition bk condition-name not-cond)})
+
     (and op path (or val ref))
-    (let [op-sql (get ops op)]
-      (when (nil? op-sql)
-        (throw (ex-info "Invalid Operation"
-                        {:type      ::invalid-operation
-                         :operation op})))
-      (bp/-snip-clause bk
-                       {:left  (render-ref bk condition-name path)
-                        :op    op-sql
-                        :right (if val
-                                 (bp/-snip-val bk {:val val})
-                                 (let [{ref-condition :condition
-                                        ref-path      :path} ref]
-                                   (render-ref bk ref-condition ref-path)))}))
+    (let [right-snip (if val
+                       (bp/-snip-val bk {:val val})
+                       (let [{ref-condition :condition
+                              ref-path      :path} ref]
+                         (render-ref bk ref-condition ref-path)))]
+      (case op
+        ;; Clause special cases
+        :contains
+        (bp/-snip-contains bk
+                           {:col   (format "%s.payload" (name condition-name))
+                            :path  path
+                            :right right-snip})
+        (let [op-sql (get ops op)]
+          (when (nil? op-sql)
+            (throw (ex-info "Invalid Operation"
+                            {:type      ::invalid-operation
+                             :operation op})))
+          (bp/-snip-clause bk
+                           {:left  (render-ref bk condition-name path)
+                            :op    op-sql
+                            :right right-snip}))))
     :else (throw (ex-info "Invalid Condition"
                           {:type      ::invalid-condition
                            :condition condition}))))
@@ -103,12 +111,12 @@
   (bp/-snip-and
    bk
    {:clauses (into []
-                   (for [condition-name condition-keys
+                   (for [condition-name   condition-keys
                          [path ident-val] statement-identity]
                      (bp/-snip-clause
                       bk
-                      {:left (render-ref bk condition-name path)
-                       :op "="
+                      {:left  (render-ref bk condition-name path)
+                       :op    "="
                        :right (bp/-snip-val bk {:val ident-val})})))}))
 
 (s/fdef render-ground

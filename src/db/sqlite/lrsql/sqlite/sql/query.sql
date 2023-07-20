@@ -351,6 +351,10 @@ json_extract(:i:col, :v:path)
 -- :snip snip-not
 (NOT :snip:clause)
 
+-- :snip snip-contains
+-- :doc Does the json at col and path contain the given value? A special case with differing structure across backends
+(SELECT 1 FROM json_each(:i:col, :v:path) WHERE value = :snip:right)
+
 -- :snip snip-query-reaction
 SELECT :i*:select
 FROM :i*:from

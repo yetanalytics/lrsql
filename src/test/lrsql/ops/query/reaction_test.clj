@@ -46,7 +46,8 @@
 
 ;; Same actor, wrong activity
 (def stmt-c
-  {"actor"  {"mbox" "mailto:bob@example.com"}
+  {"id"     "5716d2c3-1ed3-4646-9475-a6b3f3dc5d66"
+   "actor"  {"mbox" "mailto:bob@example.com"}
    "verb"   {"id" "https://example.com/verbs/completed"}
    "object" {"id"         "https://example.com/activities/c"
              "objectType" "Activity"}
@@ -54,11 +55,13 @@
 
 ;; Different actor, same action as a
 (def stmt-d
-  {"actor"  {"mbox" "mailto:alice@example.com"}
-   "verb"   {"id" "https://example.com/verbs/completed"}
-   "object" {"id"         "https://example.com/activities/a"
-             "objectType" "Activity"}
-   "result" {"success" true}})
+  {"id"      "da38014b-371d-4549-8f9f-e05193b89998"
+   "actor"   {"mbox" "mailto:alice@example.com"}
+   "verb"    {"id" "https://example.com/verbs/completed"}
+   "object"  {"id"         "https://example.com/activities/a"
+              "objectType" "Activity"}
+   "result"  {"success" true}
+   "context" {"extensions" {"https://example.com/array" ["foo" "bar" "baz"]}}})
 
 (def auth-ident
   {:agent  {"objectType" "Agent"
@@ -124,4 +127,20 @@
                             stmt-b)]
           ;; ambiguous, finds a and b but ALSO d and b
           (is (= 2 (count query-result)))))
+      (testing "JSON containment"
+        (let [query-result (qr/query-reaction
+                            bk ds
+                            {:identity-paths [[:actor :mbox]]
+                             :conditions
+                             {:a
+                              {:and
+                               [{:path [:context
+                                        :extensions
+                                        "https://example.com/array"]
+                                 :op   :contains
+                                 :val  "bar"}]}}}
+                            stmt-d)]
+          (is (= 1 (count query-result)))
+          (let [[{:keys [a]}] query-result]
+            (is (= stmt-d (remove-props a))))))
       (finally (component/stop sys')))))
