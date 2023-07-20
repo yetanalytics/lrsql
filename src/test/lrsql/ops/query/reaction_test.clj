@@ -61,7 +61,9 @@
    "object"  {"id"         "https://example.com/activities/a"
               "objectType" "Activity"}
    "result"  {"success" true}
-   "context" {"extensions" {"https://example.com/array" ["foo" "bar" "baz"]}}})
+   "context" {"extensions"
+              {"https://example.com/array"  ["foo" "bar" "baz"]
+               "https://example.com/number" 200}}})
 
 (def auth-ident
   {:agent  {"objectType" "Agent"
@@ -139,6 +141,24 @@
                                         "https://example.com/array"]
                                  :op   :contains
                                  :val  "bar"}]}}}
+                            stmt-d)]
+          (is (= 1 (count query-result)))
+          (let [[{:keys [a]}] query-result]
+            (is (= stmt-d (remove-props a))))))
+      (testing "Numeric types"
+        ;; If it is just using lex, "200" > "1000"
+        ;; Therefore we make sure it can compare numbers correctly
+        (let [query-result (qr/query-reaction
+                            bk ds
+                            {:identity-paths [[:actor :mbox]]
+                             :conditions
+                             {:a
+                              {:and
+                               [{:path [:context
+                                        :extensions
+                                        "https://example.com/number"]
+                                 :op   :lt
+                                 :val  1000}]}}}
                             stmt-d)]
           (is (= 1 (count query-result)))
           (let [[{:keys [a]}] query-result]
