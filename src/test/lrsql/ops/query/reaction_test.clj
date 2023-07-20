@@ -101,6 +101,7 @@
         ds   (-> sys' :lrs :connection :conn-pool)]
 
     (doseq [s [stmt-d stmt-a stmt-b stmt-c]]
+      (Thread/sleep 100)
       (lrsp/-store-statements lrs auth-ident [s] []))
 
     (try
