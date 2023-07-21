@@ -426,3 +426,16 @@ ALTER TABLE activity_profile_document DROP COLUMN last_modified;
 -- :command :execute
 -- :doc Convert `activity_profile_document.last_modified` to timestamp - 04
 ALTER TABLE activity_profile_document RENAME COLUMN last_modified_tmp TO last_modified;
+
+
+/* Migration 2023-07-21-00 - Add Reaction Table */
+
+-- :name create-reaction-table!
+-- :command :execute
+-- :doc Create the `reaction` table if it does not yet exist.
+CREATE TABLE IF NOT EXISTS reaction (
+  id         TEXT NOT NULL PRIMARY KEY, -- uuid
+  ruleset    BLOB NOT NULL,             -- serialized reaction spec
+  created    TEXT NOT NULL,
+  modified   TEXT NOT NULL
+)

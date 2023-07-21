@@ -104,6 +104,7 @@
       (migrate-timestamps-activity-profile-03! tx)
       (migrate-timestamps-activity-profile-04! tx))
     (update-schema-simple! tx alter-credential-to-scope-scope-datatype!)
+    (create-reaction-table! tx)
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
 
