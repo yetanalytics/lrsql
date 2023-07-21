@@ -439,3 +439,52 @@ CREATE TABLE IF NOT EXISTS reaction (
   created    TEXT NOT NULL,
   modified   TEXT NOT NULL
 )
+
+-- :name query-xapi-statement-reaction-id-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `xapi_statement.reaction_id` exists.
+SELECT 1 FROM pragma_table_info('xapi_statement') WHERE name = 'reaction_id'
+
+-- :name foreign-keys-on!
+-- :command :execute
+PRAGMA foreign_keys = ON;
+
+-- :name foreign-keys-off!
+-- :command :execute
+PRAGMA foreign_keys = OFF;
+
+-- :name migrate-xapi-statement-add-reaction-cols-01!
+-- :command :execute
+-- :doc Rename `xapi_statement` to `_xapi_statement_old`.
+ALTER TABLE xapi_statement RENAME TO _xapi_statement_old;
+
+-- :name migrate-xapi-statement-add-reaction-cols-02!
+-- :command :execute
+-- :doc Add `reaction_id` and `reaction_trigger_id` to `xapi_statement`
+CREATE TABLE xapi_statement (
+  id           TEXT NOT NULL PRIMARY KEY ASC,  -- uuid
+  statement_id TEXT NOT NULL UNIQUE,           -- uuid
+  registration TEXT,                           -- uuid
+  verb_iri     TEXT NOT NULL,                  -- iri string
+  is_voided    INTEGER DEFAULT FALSE NOT NULL, -- boolean
+  payload      BLOB NOT NULL,                  -- json
+  stored       TIMESTAMP NOT NULL,             -- timestamp
+  timestamp    TIMESTAMP NOT NULL,             -- timestamp
+  reaction_id  TEXT,                           -- uuid
+  trigger_id   TEXT,                           -- uuid
+  FOREIGN KEY (reaction_id) REFERENCES reaction(id),
+  FOREIGN KEY (trigger_id) REFERENCES xapi_statement(statement_id)
+);
+
+-- :name migrate-xapi-statement-add-reaction-cols-03!
+-- :command :execute
+-- :doc Copy statements from the old table to the new.
+INSERT INTO xapi_statement
+SELECT *, null, null
+FROM _xapi_statement_old;
+
+-- :name migrate-xapi-statement-add-reaction-cols-04!
+-- :command :execute
+-- :doc Delete the old statements table.
+DROP TABLE _xapi_statement_old;

@@ -35,6 +35,16 @@
   (disable-writable-schema! tx)
   (run-integrity-check tx))
 
+(defn- fk-migration!
+  "Given a tx and one or more db-fns, disable foreign keys, run the db functions
+  and then reenable foreign keys."
+  [tx & db-fns]
+  (foreign-keys-off! tx)
+  (doseq [db-fn db-fns]
+    (db-fn tx))
+  (foreign-keys-on! tx)
+  (run-integrity-check tx))
+
 ;; Define record
 
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
@@ -105,6 +115,12 @@
       (migrate-timestamps-activity-profile-04! tx))
     (update-schema-simple! tx alter-credential-to-scope-scope-datatype!)
     (create-reaction-table! tx)
+    (when-not (some? (query-xapi-statement-reaction-id-exists tx))
+      (fk-migration! tx
+                     migrate-xapi-statement-add-reaction-cols-01!
+                     migrate-xapi-statement-add-reaction-cols-02!
+                     migrate-xapi-statement-add-reaction-cols-03!
+                     migrate-xapi-statement-add-reaction-cols-04!))
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
 
