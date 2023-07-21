@@ -37,7 +37,7 @@
   :args (s/cat :identity-paths ::rs/identity-paths
                :statement ::xs/statement)
   :ret (s/nilable
-        (s/map-of ::rs/path string?)))
+        ::rs/statement-identity))
 
 (defn statement-identity
   "Given a vector of identity paths and a statement, return a map of paths to

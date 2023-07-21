@@ -115,7 +115,8 @@
                             bk ds
                             {:identity-paths [[:actor :mbox]]
                              :conditions     simple-conditions}
-                            stmt-b)]
+                            (get stmt-b "id")
+                            {[:actor :mbox] "mailto:bob@example.com"})]
           ;; unambiguous, finds only a single row with a and b
           (is (= 1 (count query-result)))
           (let [[{:keys [a b]}] query-result]
@@ -126,7 +127,8 @@
                             bk ds
                             {:identity-paths []
                              :conditions     simple-conditions}
-                            stmt-b)]
+                            (get stmt-b "id")
+                            {})]
           ;; ambiguous, finds a and b but ALSO d and b
           (is (= 2 (count query-result)))))
       (testing "JSON containment"
@@ -141,7 +143,8 @@
                                         "https://example.com/array"]
                                  :op   :contains
                                  :val  "bar"}]}}}
-                            stmt-d)]
+                            (get stmt-d "id")
+                            {[:actor :mbox] "mailto:alice@example.com"})]
           (is (= 1 (count query-result)))
           (let [[{:keys [a]}] query-result]
             (is (= stmt-d (remove-props a))))))
@@ -159,7 +162,8 @@
                                         "https://example.com/number"]
                                  :op   :lt
                                  :val  1000}]}}}
-                            stmt-d)]
+                            (get stmt-d "id")
+                            {[:actor :mbox] "mailto:alice@example.com"})]
           (is (= 1 (count query-result)))
           (let [[{:keys [a]}] query-result]
             (is (= stmt-d (remove-props a))))))

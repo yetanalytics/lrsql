@@ -84,3 +84,6 @@
 (s/def ::sqlvec
   (s/cat :ddl string?
          :params (s/* any?)))
+
+(s/def ::statement-identity
+  (s/map-of ::path (s/or :string string? :number number? :boolean boolean?)))
