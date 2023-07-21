@@ -113,7 +113,7 @@
       (testing "Returns relevant statements"
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:input      {:identity-paths [[:actor :mbox]]
+                            {:ruleset     {:identity-paths [[:actor :mbox]]
                                           :conditions     simple-conditions}
                              :trigger-id (get stmt-b "id")
                              :statement-identity
@@ -126,7 +126,7 @@
       (testing "Works w/o identity"
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:input
+                            {:ruleset
                              {:identity-paths []
                               :conditions     simple-conditions}
                              :trigger-id         (get stmt-b "id")
@@ -136,7 +136,7 @@
       (testing "JSON containment"
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:input
+                            {:ruleset
                              {:identity-paths [[:actor :mbox]]
                               :conditions
                               {:a
@@ -157,7 +157,7 @@
         ;; Therefore we make sure it can compare numbers correctly
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:input
+                            {:ruleset
                              {:identity-paths [[:actor :mbox]]
                               :conditions
                               {:a

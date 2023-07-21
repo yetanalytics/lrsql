@@ -147,7 +147,7 @@
 
 (defn- query-reaction-sqlvec
   [bk
-   {{:keys [conditions]} :input
+   {{:keys [conditions]} :ruleset
     :keys                [trigger-id
                           statement-identity]}]
   (let [condition-keys (keys conditions)]

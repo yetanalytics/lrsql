@@ -77,7 +77,7 @@
 (s/def ::identity-paths
   (s/every ::path))
 
-(s/def ::input
+(s/def ::ruleset
   (s/keys :req-un [::identity-paths
                    ::conditions]))
 
@@ -91,6 +91,6 @@
 (s/def ::trigger-id :statement/id)
 
 (s/def ::query-reaction-input
-  (s/keys :req-un [::input
+  (s/keys :req-un [::ruleset
                    ::trigger-id
                    ::statement-identity]))
