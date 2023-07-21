@@ -87,3 +87,10 @@
 
 (s/def ::statement-identity
   (s/map-of ::path (s/or :string string? :number number? :boolean boolean?)))
+
+(s/def ::trigger-id :statement/id)
+
+(s/def ::query-reaction-input
+  (s/keys :req-un [::input
+                   ::trigger-id
+                   ::statement-identity]))

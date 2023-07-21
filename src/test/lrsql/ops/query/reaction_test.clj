@@ -113,10 +113,11 @@
       (testing "Returns relevant statements"
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:identity-paths [[:actor :mbox]]
-                             :conditions     simple-conditions}
-                            (get stmt-b "id")
-                            {[:actor :mbox] "mailto:bob@example.com"})]
+                            {:input      {:identity-paths [[:actor :mbox]]
+                                          :conditions     simple-conditions}
+                             :trigger-id (get stmt-b "id")
+                             :statement-identity
+                             {[:actor :mbox] "mailto:bob@example.com"}})]
           ;; unambiguous, finds only a single row with a and b
           (is (= 1 (count query-result)))
           (let [[{:keys [a b]}] query-result]
@@ -125,26 +126,29 @@
       (testing "Works w/o identity"
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:identity-paths []
-                             :conditions     simple-conditions}
-                            (get stmt-b "id")
-                            {})]
+                            {:input
+                             {:identity-paths []
+                              :conditions     simple-conditions}
+                             :trigger-id         (get stmt-b "id")
+                             :statement-identity {}})]
           ;; ambiguous, finds a and b but ALSO d and b
           (is (= 2 (count query-result)))))
       (testing "JSON containment"
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:identity-paths [[:actor :mbox]]
-                             :conditions
-                             {:a
-                              {:and
-                               [{:path [:context
-                                        :extensions
-                                        "https://example.com/array"]
-                                 :op   :contains
-                                 :val  "bar"}]}}}
-                            (get stmt-d "id")
-                            {[:actor :mbox] "mailto:alice@example.com"})]
+                            {:input
+                             {:identity-paths [[:actor :mbox]]
+                              :conditions
+                              {:a
+                               {:and
+                                [{:path [:context
+                                         :extensions
+                                         "https://example.com/array"]
+                                  :op   :contains
+                                  :val  "bar"}]}}}
+                             :trigger-id (get stmt-d "id")
+                             :statement-identity
+                             {[:actor :mbox] "mailto:alice@example.com"}})]
           (is (= 1 (count query-result)))
           (let [[{:keys [a]}] query-result]
             (is (= stmt-d (remove-props a))))))
@@ -153,17 +157,19 @@
         ;; Therefore we make sure it can compare numbers correctly
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:identity-paths [[:actor :mbox]]
-                             :conditions
-                             {:a
-                              {:and
-                               [{:path [:context
-                                        :extensions
-                                        "https://example.com/number"]
-                                 :op   :lt
-                                 :val  1000}]}}}
-                            (get stmt-d "id")
-                            {[:actor :mbox] "mailto:alice@example.com"})]
+                            {:input
+                             {:identity-paths [[:actor :mbox]]
+                              :conditions
+                              {:a
+                               {:and
+                                [{:path [:context
+                                         :extensions
+                                         "https://example.com/number"]
+                                  :op   :lt
+                                  :val  1000}]}}}
+                             :trigger-id (get stmt-d "id")
+                             :statement-identity
+                             {[:actor :mbox] "mailto:alice@example.com"}})]
           (is (= 1 (count query-result)))
           (let [[{:keys [a]}] query-result]
             (is (= stmt-d (remove-props a))))))
