@@ -1,7 +1,8 @@
 (ns lrsql.spec.reaction
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec :as xs]
-            [lrsql.backend.protocol :as bp]))
+            [lrsql.backend.protocol :as bp]
+            [lrsql.spec.common :as c]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interface
@@ -98,6 +99,12 @@
 
 (s/def ::trigger-id :statement/id)
 
+(s/def ::active boolean?)
+
+(s/def ::primary-key uuid?)
+
+(s/def ::reaction-id uuid?)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inputs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -106,6 +113,22 @@
   (s/keys :req-un [::ruleset
                    ::trigger-id
                    ::statement-identity]))
+
+(def insert-reaction-input-spec
+  (s/keys :req-un [::primary-key
+                   ::ruleset
+                   ::active
+                   ::created
+                   ::modified]))
+
+(def update-reaction-input-spec
+  (s/keys :req-un [::reaction-id
+                   ::modified]
+          :opt-un [::ruleset
+                   ::active]))
+
+(def delete-reaction-input-spec
+  (s/keys :req-un [::reaction-id]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Results
