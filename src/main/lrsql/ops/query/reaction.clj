@@ -181,7 +181,7 @@
 (s/fdef query-reaction
   :args (s/cat :bk rs/reaction-backend?
                :tx transaction?
-               :input ::query-reaction-input)
+               :input rs/query-reaction-input-spec)
   :ret (s/every (s/map-of ::rs/condition-name ::xs/statement)))
 
 (defn query-reaction
