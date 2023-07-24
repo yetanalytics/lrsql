@@ -5,7 +5,7 @@
 
 (defn reaction-backend?
   [bk]
-  (satisfies? bp/ReactionQueryBackend bk))
+  (satisfies? bp/ReactionBackend bk))
 
 (s/def ::condition-name
   simple-keyword?)

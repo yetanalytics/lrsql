@@ -119,7 +119,7 @@
   (-query-platform-frequency [this tx])
   (-query-timeline [this tx input]))
 
-(defprotocol ReactionQueryBackend
+(defprotocol ReactionBackend
   ;; Query Snippets
   (-snip-json-extract [this params])
   (-snip-val [this params])

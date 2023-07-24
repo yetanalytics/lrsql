@@ -272,7 +272,7 @@
   (-query-timeline [_ tx input]
     (query-timeline tx input))
 
-  bp/ReactionQueryBackend
+  bp/ReactionBackend
   (-snip-json-extract [_ params]
     (snip-json-extract (update params :path ru/path->string)))
   (-snip-val [_ params]
