@@ -237,7 +237,6 @@
                     :payload           statement
                     :timestamp         timestamp
                     :stored            stored
-                    ;; TODO: Provide reaction info
                     :reaction-id
                     (get ?stmt-ctx-exts ru/reaction-id-extension-iri)
                     :trigger-id
