@@ -59,3 +59,21 @@
        (reduced nil)))
    {}
    identity-paths))
+
+(def reaction-id-extension-iri
+  "https://xapinet.org/lrsql/reaction-id")
+
+(def trigger-id-extension-iri
+  "https://xapinet.org/lrsql/trigger-id")
+
+(s/fdef add-reaction-extensions
+  :args (s/cat :statement ::xs/statement
+               :reaction-id uuid?
+               :statement-id :statement/id)
+  :ret ::xs/statement)
+
+(defn add-reaction-extensions
+  [statement reaction-id trigger-id]
+  (-> statement
+      (assoc-in ["context" "extensions" reaction-id-extension-iri] reaction-id)
+      (assoc-in ["context" "extensions" trigger-id-extension-iri] trigger-id)))

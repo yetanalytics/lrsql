@@ -10,8 +10,9 @@
             [lrsql.input.activity   :as i-av]
             [lrsql.input.attachment :as i-at]
             ;; Utils
-            [lrsql.util :as u]
-            [lrsql.util.actor :as au]))
+            [lrsql.util          :as u]
+            [lrsql.util.actor    :as au]
+            [lrsql.util.reaction :as ru]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -202,7 +203,8 @@
         {?stmt-ctx-acts "contextActivities"
          ?stmt-inst     "instructor"
          ?stmt-team     "team"
-         ?stmt-reg      "registration"}
+         ?stmt-reg      "registration"
+         ?stmt-ctx-exts "extensions"}
         ?stmt-ctx
         ;; Revised Statement Properties
         stmt-pk      (-> statement meta :primary-key)
@@ -236,8 +238,10 @@
                     :timestamp         timestamp
                     :stored            stored
                     ;; TODO: Provide reaction info
-                    :reaction-id       nil
-                    :trigger-id        nil}
+                    :reaction-id
+                    (get ?stmt-ctx-exts ru/reaction-id-extension-iri)
+                    :trigger-id
+                    (get ?stmt-ctx-exts ru/trigger-id-extension-iri)}
         ;; Actor HugSql Inputs
         [actor-inputs stmt-actor-inputs]
         (insert-stmt-actor-inputs stmt-id
