@@ -436,8 +436,9 @@ ALTER TABLE activity_profile_document RENAME COLUMN last_modified_tmp TO last_mo
 CREATE TABLE IF NOT EXISTS reaction (
   id         TEXT NOT NULL PRIMARY KEY, -- uuid
   ruleset    BLOB NOT NULL,             -- serialized reaction spec
-  created    TEXT NOT NULL,
-  modified   TEXT NOT NULL
+  created    TIMESTAMP NOT NULL,        -- timestamp
+  modified   TIMESTAMP NOT NULL,        -- timestamp
+  active     INTEGER                    -- true/false/null - active/inactive/soft delete
 )
 
 -- :name query-xapi-statement-reaction-id-exists
