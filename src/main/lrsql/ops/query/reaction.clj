@@ -182,7 +182,7 @@
   :args (s/cat :bk rs/reaction-backend?
                :tx transaction?
                :input rs/query-reaction-input-spec)
-  :ret (s/every (s/map-of ::rs/condition-name ::xs/statement)))
+  :ret rs/query-reaction-ret-spec)
 
 (defn query-reaction
   "For the given reaction input, return matching statements named for conditions."
