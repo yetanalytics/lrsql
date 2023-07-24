@@ -149,3 +149,13 @@ INSERT INTO credential_to_scope (
 ) VALUES (
   :primary-key, :api-key, :secret-key, :scope
 )
+
+-- :name insert-reaction!
+-- :command :insert
+-- :result :affected
+-- :doc Given a primary key, serialized ruleset and status, insert a new reaction into the `reaction` table.
+INSERT INTO reaction (
+  id, ruleset, active, created, modified
+) VALUES (
+  :primary-key, :ruleset, :active, :created, :modified
+);

@@ -362,3 +362,11 @@ WHERE :snip:where;
 
 -- :name query-reaction
 :snip:sql
+
+-- :name query-active-reactions
+-- :command :query
+-- :result :many
+-- :doc Return all active `reaction` ids and rulesets
+SELECT id, ruleset
+FROM reaction
+WHERE active IS TRUE;
