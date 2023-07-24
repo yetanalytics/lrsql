@@ -2,6 +2,7 @@
   "Utilities to support reactions."
   (:require [clojure.spec.alpha :as s]
             [lrsql.spec.reaction :as rs]
+            [lrsql.spec.statement :as ss]
             [xapi-schema.spec :as xs]))
 
 (s/fdef path->string
@@ -60,20 +61,13 @@
    {}
    identity-paths))
 
-(def reaction-id-extension-iri
-  "https://xapinet.org/lrsql/reaction-id")
-
-(def trigger-id-extension-iri
-  "https://xapinet.org/lrsql/trigger-id")
-
-(s/fdef add-reaction-extensions
+(s/fdef add-reaction-metadata
   :args (s/cat :statement ::xs/statement
                :reaction-id uuid?
                :statement-id :statement/id)
   :ret ::xs/statement)
 
-(defn add-reaction-extensions
+(defn add-reaction-metadata
   [statement reaction-id trigger-id]
-  (-> statement
-      (assoc-in ["context" "extensions" reaction-id-extension-iri] reaction-id)
-      (assoc-in ["context" "extensions" trigger-id-extension-iri] trigger-id)))
+  (vary-meta statement merge {::ss/reaction-id reaction-id
+                              ::ss/trigger-id  trigger-id}))

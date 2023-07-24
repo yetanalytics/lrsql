@@ -203,8 +203,7 @@
         {?stmt-ctx-acts "contextActivities"
          ?stmt-inst     "instructor"
          ?stmt-team     "team"
-         ?stmt-reg      "registration"
-         ?stmt-ctx-exts "extensions"}
+         ?stmt-reg      "registration"}
         ?stmt-ctx
         ;; Revised Statement Properties
         stmt-pk      (-> statement meta :primary-key)
@@ -238,9 +237,9 @@
                     :timestamp         timestamp
                     :stored            stored
                     :reaction-id
-                    (get ?stmt-ctx-exts ru/reaction-id-extension-iri)
+                    (some-> statement meta ::ss/reaction-id)
                     :trigger-id
-                    (get ?stmt-ctx-exts ru/trigger-id-extension-iri)}
+                    (some-> statement meta ::ss/trigger-id)}
         ;; Actor HugSql Inputs
         [actor-inputs stmt-actor-inputs]
         (insert-stmt-actor-inputs stmt-id
