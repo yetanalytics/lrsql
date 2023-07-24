@@ -234,7 +234,10 @@
                     :voiding?          voiding?
                     :payload           statement
                     :timestamp         timestamp
-                    :stored            stored}
+                    :stored            stored
+                    ;; TODO: Provide reaction info
+                    :reaction-id       nil
+                    :trigger-id        nil}
         ;; Actor HugSql Inputs
         [actor-inputs stmt-actor-inputs]
         (insert-stmt-actor-inputs stmt-id
