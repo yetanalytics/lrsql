@@ -1,6 +1,8 @@
 (ns lrsql.util.reaction-test
-  (:require [clojure.test :refer [deftest are]]
-            [lrsql.util.reaction :as r]))
+  (:require [clojure.test :refer [deftest is are]]
+            [lrsql.util :as u]
+            [lrsql.util.reaction :as r]
+            [lrsql.spec.statement :as ss]))
 
 (deftest path->string-test
   (are [input output]
@@ -45,3 +47,10 @@
 
     [[:actor]]
     nil))
+
+(deftest add-reaction-metadata-test
+  (let [reaction-id (u/generate-squuid)
+        trigger-id  (u/generate-squuid)]
+    (is (= {::ss/reaction-id reaction-id
+            ::ss/trigger-id  trigger-id}
+           (meta (r/add-reaction-metadata stmt-a reaction-id trigger-id))))))
