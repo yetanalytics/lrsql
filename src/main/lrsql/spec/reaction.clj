@@ -136,3 +136,24 @@
 
 (def query-reaction-ret-spec
   (s/every (s/map-of ::condition-name ::xs/statement)))
+
+(s/def :lrsql.spec.reaction.insert/result uuid?)
+
+(def insert-reaction-ret-spec
+  (s/keys :req-un [:lrsql.spec.reaction.insert/result]))
+
+(s/def :lrsql.spec.reaction.update/result
+  (s/nonconforming
+   (s/or :success uuid?
+         :failure #{:lrsql.reaction/reaction-not-found-error})))
+
+(def update-reaction-ret-spec
+  (s/keys :req-un [:lrsql.spec.reaction.update/result]))
+
+(s/def :lrsql.spec.reaction.delete/result
+  (s/nonconforming
+   (s/or :success uuid?
+         :failure #{:lrsql.reaction/reaction-not-found-error})))
+
+(def delete-reaction-ret-spec
+  (s/keys :req-un [:lrsql.spec.reaction.delete/result]))
