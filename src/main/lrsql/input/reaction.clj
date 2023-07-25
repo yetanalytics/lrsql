@@ -1,7 +1,8 @@
 (ns lrsql.input.reaction
   (:require [clojure.spec.alpha :as s]
             [lrsql.spec.reaction :as rs]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [lrsql.util.reaction :as ru]))
 
 (s/fdef insert-reaction-input
   :args (s/cat :ruleset ::rs/ruleset :active ::rs/active)
@@ -13,7 +14,7 @@
   (let [{squuid    :squuid
          squuid-ts :timestamp} (u/generate-squuid*)]
     {:primary-key squuid
-     :ruleset     ruleset
+     :ruleset     (ru/serialize-ruleset ruleset)
      :active      active
      :created     squuid-ts
      :modified    squuid-ts}))
@@ -32,7 +33,7 @@
    {:reaction-id reaction-id
     :modified    (u/current-time)}
    (when ruleset
-     {:ruleset ruleset})
+     {:ruleset (ru/serialize-ruleset ruleset)})
    (when (some? active)
      {:active active})))
 

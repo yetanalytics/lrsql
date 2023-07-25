@@ -104,6 +104,10 @@
 
 (s/def ::reaction-id uuid?)
 
+(s/def ::created c/instant-spec)
+
+(s/def ::modified c/instant-spec)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inputs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -113,9 +117,11 @@
                    ::trigger-id
                    ::statement-identity]))
 
+(s/def :lrsql.spec.reaction.serialized/ruleset bytes?)
+
 (def insert-reaction-input-spec
   (s/keys :req-un [::primary-key
-                   ::ruleset
+                   :lrsql.spec.reaction.serialized/ruleset
                    ::active
                    ::created
                    ::modified]))
@@ -123,7 +129,7 @@
 (def update-reaction-input-spec
   (s/keys :req-un [::reaction-id
                    ::modified]
-          :opt-un [::ruleset
+          :opt-un [:lrsql.spec.reaction.serialized/ruleset
                    ::active]))
 
 (def delete-reaction-input-spec
