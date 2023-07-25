@@ -15,15 +15,18 @@
             [lrsql.input.auth              :as auth-input]
             [lrsql.input.statement         :as stmt-input]
             [lrsql.input.document          :as doc-input]
+            [lrsql.input.reaction          :as react-input]
             [lrsql.ops.command.admin       :as admin-cmd]
             [lrsql.ops.command.auth        :as auth-cmd]
             [lrsql.ops.command.document    :as doc-cmd]
             [lrsql.ops.command.statement   :as stmt-cmd]
+            [lrsql.ops.command.reaction    :as react-cmd]
             [lrsql.ops.query.actor         :as actor-q]
             [lrsql.ops.query.activity      :as activ-q]
             [lrsql.ops.query.admin         :as admin-q]
             [lrsql.ops.query.auth          :as auth-q]
             [lrsql.ops.query.document      :as doc-q]
+            [lrsql.ops.query.reaction      :as react-q]
             [lrsql.ops.query.statement     :as stmt-q]
             [lrsql.spec.config             :as cs]
             [lrsql.util.auth               :as auth-util]
@@ -350,4 +353,26 @@
     (let [conn  (lrs-conn this)
           input (admin-stat-input/query-status-input params)]
       (jdbc/with-transaction [tx conn]
-        (admin-q/query-status backend tx input)))))
+        (admin-q/query-status backend tx input))))
+
+  adp/AdminReactionManager
+  (-create-reaction [this ruleset active]
+    (let [conn  (lrs-conn this)
+          input (react-input/insert-reaction-input ruleset active)]
+      (jdbc/with-transaction [tx conn]
+        (react-cmd/insert-reaction! backend tx input))))
+  (-get-active-reactions [this]
+    (let [conn (lrs-conn this)]
+      (jdbc/with-transaction [tx conn]
+        (react-q/query-active-reactions backend tx))))
+  (-update-reaction [this reaction-id ruleset active]
+    (let [conn  (lrs-conn this)
+          input (react-input/update-reaction-input
+                 reaction-id ruleset active)]
+      (jdbc/with-transaction [tx conn]
+        (react-cmd/update-reaction! backend tx input))))
+  (-delete-reaction [this reaction-id]
+    (let [conn  (lrs-conn this)
+          input (react-input/delete-reaction-input reaction-id)]
+      (jdbc/with-transaction [tx conn]
+        (react-cmd/delete-reaction! backend tx input)))))
