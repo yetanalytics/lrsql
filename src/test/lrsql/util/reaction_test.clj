@@ -1,5 +1,5 @@
 (ns lrsql.util.reaction-test
-  (:require [clojure.test :refer [deftest is are]]
+  (:require [clojure.test :refer [deftest testing is are]]
             [lrsql.util :as u]
             [lrsql.util.reaction :as r]
             [lrsql.spec.statement :as ss]))
@@ -54,3 +54,39 @@
     (is (= {::ss/reaction-id reaction-id
             ::ss/trigger-id  trigger-id}
            (meta (r/add-reaction-metadata stmt-a reaction-id trigger-id))))))
+
+(def simple-reaction-ruleset
+  {:identity-paths [["actor" "mbox"]]
+   :conditions
+   {:a
+    {:and
+     [{:path ["object" "id"]
+       :op   "eq"
+       :val  "https://example.com/activities/a"}
+      {:path ["verb" "id"]
+       :op   "eq"
+       :val  "https://example.com/verbs/completed"}
+      {:path ["result" "success"]
+       :op   "eq"
+       :val  true}]}
+    :b
+    {:and
+     [{:path ["object" "id"]
+       :op   "eq"
+       :val  "https://example.com/activities/b"}
+      {:path ["verb" "id"]
+       :op   "eq"
+       :val  "https://example.com/verbs/completed"}
+      {:path ["result" "success"]
+       :op   "eq"
+       :val  true}
+      {:path ["timestamp"]
+       :op   "gt"
+       :ref  {:condition "a", :path ["timestamp"]}}]}}})
+
+(deftest reaction-ruleset-serde-test
+  (testing "Serde round-trip"
+    (is (= simple-reaction-ruleset
+           (-> simple-reaction-ruleset
+               r/serialize-ruleset
+               r/deserialize-ruleset)))))

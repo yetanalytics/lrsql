@@ -41,6 +41,6 @@
   :ret rs/delete-reaction-input-spec)
 
 (defn delete-reaction-input
-  "Given `reaction-id`, construct the input map for `delete-reaction!`"
+  "Given `reaction-id`, construct the input map for `delete-reaction!`."
   [reaction-id]
   {:reaction-id reaction-id})
