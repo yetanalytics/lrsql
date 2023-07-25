@@ -43,38 +43,29 @@
     "like"
     "contains"})
 
-(s/def ::clause
-  (s/or :clause-val
-        (s/keys :req-un [::path
-                         ::op
-                         ::val])
-        :clause-ref
-        (s/keys :req-un [::path
-                         ::op
-                         ::ref])))
+(s/def ::condition
+  (s/or
+   :clause
+   (s/or :clause-val
+         (s/keys :req-un [::path
+                          ::op
+                          ::val])
+         :clause-ref
+         (s/keys :req-un [::path
+                          ::op
+                          ::ref]))
+   :boolean
+   (s/or :and (s/keys :req-un [::and])
+         :or (s/keys :req-un [::or])
+         :not (s/keys :req-un [::not]))))
 
-(declare condition-spec)
-
-(s/def ::and (s/every condition-spec
+(s/def ::and (s/every ::condition
                       :min-count 1
                       :gen-max 3))
-(s/def ::or (s/every condition-spec
+(s/def ::or (s/every ::condition
                      :min-count 1
                      :gen-max 3))
-(s/def ::not condition-spec)
-
-(s/def ::boolean
-  (s/or :and (s/keys :req-un [::and])
-        :or (s/keys :req-un [::or])
-        :not (s/keys :req-un [::not])))
-
-(def condition-spec
-  (s/or
-   :clause ::clause
-   :boolean ::boolean))
-
-(s/def ::condition
-  condition-spec)
+(s/def ::not ::condition)
 
 (s/def ::conditions
   (s/map-of simple-keyword?
