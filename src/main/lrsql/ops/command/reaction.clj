@@ -13,8 +13,8 @@
 (defn insert-reaction!
   "Insert a new reaction."
   [bk tx {:keys [primary-key] :as input}]
-  (do (bp/-insert-reaction! bk tx input)
-      {:result primary-key}))
+  (bp/-insert-reaction! bk tx input)
+  {:result primary-key})
 
 (s/fdef update-reaction!
   :args (s/cat :bk rs/reaction-backend?

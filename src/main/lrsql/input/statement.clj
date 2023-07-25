@@ -11,8 +11,7 @@
             [lrsql.input.attachment :as i-at]
             ;; Utils
             [lrsql.util          :as u]
-            [lrsql.util.actor    :as au]
-            [lrsql.util.reaction :as ru]))
+            [lrsql.util.actor    :as au]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 

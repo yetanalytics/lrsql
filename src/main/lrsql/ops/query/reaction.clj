@@ -1,3 +1,4 @@
+#_{:clj-kondo/ignore [:unused-namespace]}
 (ns lrsql.ops.query.reaction
   (:require [clojure.spec.alpha :as s]
             [lrsql.backend.protocol :as bp]
