@@ -197,3 +197,17 @@
    (bp/-query-reaction bk tx
                        {:sql (query-reaction-sqlvec
                               bk input)})))
+
+(s/fdef query-active-reactions
+  :args (s/cat :bx rs/reaction-backend?
+               :tx transaction?)
+  :ret rs/query-active-reactions-ret-spec)
+
+(defn query-active-reactions
+  "Return all currently active reactions."
+  [bk tx]
+  (mapv
+   (fn [{:keys [id ruleset]}]
+     {:id      id
+      :ruleset (ru/deserialize-ruleset ruleset)})
+   (bp/-query-active-reactions bk tx)))

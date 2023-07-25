@@ -142,6 +142,12 @@
 (def query-reaction-ret-spec
   (s/every (s/map-of ::condition-name ::xs/statement)))
 
+(s/def ::id ::reaction-id)
+
+(def query-active-reactions-ret-spec
+  (s/every (s/keys :req-un [::id
+                            ::ruleset])))
+
 (s/def :lrsql.spec.reaction.insert/result uuid?)
 
 (def insert-reaction-ret-spec
