@@ -74,29 +74,29 @@
 (def simple-conditions
   {:a
    {:and
-    [{:path [:object :id]
-      :op   :eq
+    [{:path ["object" "id"]
+      :op   "eq"
       :val  "https://example.com/activities/a"}
-     {:path [:verb :id]
-      :op   :eq
+     {:path ["verb" "id"]
+      :op   "eq"
       :val  "https://example.com/verbs/completed"}
-     {:path [:result :success]
-      :op   :eq
+     {:path ["result" "success"]
+      :op   "eq"
       :val  true}]}
    :b
    {:and
-    [{:path [:object :id]
-      :op   :eq
+    [{:path ["object" "id"]
+      :op   "eq"
       :val  "https://example.com/activities/b"}
-     {:path [:verb :id]
-      :op   :eq
+     {:path ["verb" "id"]
+      :op   "eq"
       :val  "https://example.com/verbs/completed"}
-     {:path [:result :success]
-      :op   :eq
+     {:path ["result" "success"]
+      :op   "eq"
       :val  true}
-     {:path [:timestamp]
-      :op   :gt
-      :ref  {:condition :a, :path [:timestamp]}}]}})
+     {:path ["timestamp"]
+      :op   "gt"
+      :ref  {:condition "a", :path ["timestamp"]}}]}})
 
 (deftest query-reaction-test
   (let [sys  (support/test-system)
@@ -113,11 +113,11 @@
       (testing "Returns relevant statements"
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:ruleset     {:identity-paths [[:actor :mbox]]
+                            {:ruleset     {:identity-paths [["actor" "mbox"]]
                                           :conditions     simple-conditions}
                              :trigger-id (get stmt-b "id")
                              :statement-identity
-                             {[:actor :mbox] "mailto:bob@example.com"}})]
+                             {["actor" "mbox"] "mailto:bob@example.com"}})]
           ;; unambiguous, finds only a single row with a and b
           (is (= 1 (count query-result)))
           (let [[{:keys [a b]}] query-result]
@@ -137,18 +137,18 @@
         (let [query-result (qr/query-reaction
                             bk ds
                             {:ruleset
-                             {:identity-paths [[:actor :mbox]]
+                             {:identity-paths [["actor" "mbox"]]
                               :conditions
                               {:a
                                {:and
-                                [{:path [:context
-                                         :extensions
+                                [{:path ["context"
+                                         "extensions"
                                          "https://example.com/array"]
-                                  :op   :contains
+                                  :op   "contains"
                                   :val  "bar"}]}}}
                              :trigger-id (get stmt-d "id")
                              :statement-identity
-                             {[:actor :mbox] "mailto:alice@example.com"}})]
+                             {["actor" "mbox"] "mailto:alice@example.com"}})]
           (is (= 1 (count query-result)))
           (let [[{:keys [a]}] query-result]
             (is (= stmt-d (remove-props a))))))
@@ -158,18 +158,18 @@
         (let [query-result (qr/query-reaction
                             bk ds
                             {:ruleset
-                             {:identity-paths [[:actor :mbox]]
+                             {:identity-paths [["actor" "mbox"]]
                               :conditions
                               {:a
                                {:and
-                                [{:path [:context
-                                         :extensions
+                                [{:path ["context"
+                                         "extensions"
                                          "https://example.com/number"]
-                                  :op   :lt
+                                  :op   "lt"
                                   :val  1000}]}}}
                              :trigger-id (get stmt-d "id")
                              :statement-identity
-                             {[:actor :mbox] "mailto:alice@example.com"}})]
+                             {["actor" "mbox"] "mailto:alice@example.com"}})]
           (is (= 1 (count query-result)))
           (let [[{:keys [a]}] query-result]
             (is (= stmt-d (remove-props a))))))

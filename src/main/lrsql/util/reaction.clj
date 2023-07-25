@@ -19,9 +19,6 @@
    (if seg
      (recur rpath
             (cond
-              (keyword? seg)
-              (format "%s.%s" s (name seg))
-
               (string? seg)
               (format "%s.\"%s\"" s seg)
 
@@ -48,12 +45,7 @@
   (reduce
    (fn [m path]
      (if-some [found-val (get-in statement
-                                 (mapv
-                                  (fn [seg]
-                                    (if (keyword? seg)
-                                      (name seg)
-                                      seg))
-                                  path))]
+                                 path)]
        (if (coll? found-val)
          (reduced nil)
          (assoc m path found-val))

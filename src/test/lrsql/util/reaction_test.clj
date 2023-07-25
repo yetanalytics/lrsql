@@ -11,14 +11,14 @@
     []
     "$"
 
-    [:object :id]
-    "$.object.id"
+    ["object" "id"]
+    "$.\"object\".\"id\""
 
-    [:context :contextActivities :parent 0 :id]
-    "$.context.contextActivities.parent[0].id"
+    ["context" "contextActivities" "parent" 0 "id"]
+    "$.\"context\".\"contextActivities\".\"parent\"[0].\"id\""
 
-    [:context :extensions "https://www.google.com/array"]
-    "$.context.extensions.\"https://www.google.com/array\""))
+    ["context" "extensions" "https://www.google.com/array"]
+    "$.\"context\".\"extensions\".\"https://www.google.com/array\""))
 
 (def stmt-a
   {"actor"  {"mbox" "mailto:bob@example.com"}
@@ -33,19 +33,19 @@
          (r/statement-identity
           identity-paths
           stmt-a))
-    [[:actor :mbox]]
-    {[:actor :mbox] "mailto:bob@example.com"}
+    [["actor" "mbox"]]
+    {["actor" "mbox"] "mailto:bob@example.com"}
 
-    [[:actor :mbox]
-     [:context :registration]]
-    {[:actor :mbox] "mailto:bob@example.com"
-     [:context :registration] "6fbd600f-d17c-4c74-801a-2ec2e53231f7"}
+    [["actor" "mbox"]
+     ["context" "registration"]]
+    {["actor" "mbox"] "mailto:bob@example.com"
+     ["context" "registration"] "6fbd600f-d17c-4c74-801a-2ec2e53231f7"}
 
-    [[:actor :openid]
-     [:context :registration]]
+    [["actor" "openid"]
+     ["context" "registration"]]
     nil
 
-    [[:actor]]
+    [["actor"]]
     nil))
 
 (deftest add-reaction-metadata-test

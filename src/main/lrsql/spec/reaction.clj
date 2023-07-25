@@ -17,12 +17,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/def ::condition-name
-  simple-keyword?)
+  string?)
 
 (s/def ::path
   (s/every
-   (s/or :key simple-keyword?
-         :string string?
+   (s/or :string string?
          :index nat-int?)
    :gen-max 4))
 
@@ -35,14 +34,14 @@
                    ::path]))
 
 (s/def ::op
-  #{:gt
-    :lt
-    :gte
-    :lte
-    :eq
-    :noteq
-    :like
-    :contains})
+  #{"gt"
+    "lt"
+    "gte"
+    "lte"
+    "eq"
+    "noteq"
+    "like"
+    "contains"})
 
 (s/def ::clause
   (s/or :clause-val
@@ -78,7 +77,7 @@
   condition-spec)
 
 (s/def ::conditions
-  (s/map-of ::condition-name
+  (s/map-of simple-keyword?
             ::condition
             :min-count 1
             :gen-max 3))
