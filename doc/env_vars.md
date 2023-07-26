@@ -80,6 +80,14 @@ You may have noted that some options are not available:
 - `healthCheckRegistry` cannot easily report via JMX, and most of its information should be covered by `metricRegistry` anyways.
 - `threadFactory` and `scheduledExecutor` are Java instances that should only be used in specific execution environments.
 
+### Tuning
+
+The following options are used for advanced database performance tuning and may affect DB schema and performance. Use with caution.
+
+| Env Var              | Config        | Description                         | Default |
+| -------------------  | ------------- | ----------------------------------- | ------- |
+| `LRSQL_ENABLE_JSONB` | `enableJsonb` | (Postgres Only) This option switches the `JSON` fields (including `xapi_statment.payload`) to `JSONB` datatype. Enabling this option increases the speed of some external JSON-based queries such as from a BI or reporting platform, but decreases statement write throughput. Be advised that changing this setting on a large existing database may result in a very long next startup time (possibly minutes) as all previous data gets converted. | `false` |
+
 ### LRS
 
 | Env Var                         | Config                  | Description                                                                                                                                                                                                       | Default                                                                               |

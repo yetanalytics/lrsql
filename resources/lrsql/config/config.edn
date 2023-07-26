@@ -37,6 +37,17 @@
    :prod-sqlite     #include "prod/default/connection.edn"
    :prod-sqlite-mem #include "prod/default/connection.edn"
    :prod-postgres   #include "prod/postgres/connection.edn"}
+ :tuning
+ #profile
+  {; Test/Dev
+   :test-sqlite     #include "test/default/tuning.edn"
+   :test-sqlite-mem #include "test/default/tuning.edn"
+   :test-postgres   #include "test/postgres/tuning.edn"
+   :test-oidc       #include "test/default/tuning.edn"
+   ;; Production
+   :prod-sqlite     #include "prod/default/tuning.edn"
+   :prod-sqlite-mem #include "prod/default/tuning.edn"
+   :prod-postgres   #include "prod/postgres/tuning.edn"}
  :lrs
  #profile
   {;; Test/Dev
@@ -50,15 +61,15 @@
    :prod-postgres   #include "prod/default/lrs.edn"}
  :webserver
  #profile
- {;; Test/Dev
-  :test-sqlite      #include "test/default/webserver.edn"
-  :test-sqlite-mem  #include "test/default/webserver.edn"
-  :test-postgres    #include "test/default/webserver.edn"
-  :test-oidc        #include "test/oidc/webserver.edn"
+  {;; Test/Dev
+   :test-sqlite      #include "test/default/webserver.edn"
+   :test-sqlite-mem  #include "test/default/webserver.edn"
+   :test-postgres    #include "test/default/webserver.edn"
+   :test-oidc        #include "test/oidc/webserver.edn"
   ;; Production
-  :prod-sqlite      #include "prod/default/webserver.edn"
-  :prod-sqlite-mem  #include "prod/default/webserver.edn"
-  :prod-postgres    #include "prod/default/webserver.edn"}
+   :prod-sqlite      #include "prod/default/webserver.edn"
+   :prod-sqlite-mem  #include "prod/default/webserver.edn"
+   :prod-postgres    #include "prod/default/webserver.edn"}
  ;; A user-provided JSON file for merge-with merge into this map
  :user-config-json #or [#env LRSQL_USER_CONFIG_JSON "config/lrsql.json"]
  ;; Set logging params on system start
