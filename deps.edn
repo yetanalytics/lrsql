@@ -68,12 +68,7 @@
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
                  org.clojure/math.numeric-tower {:mvn/version "0.0.4"}
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
-                 com.yetanalytics/datasim
-                 {:git/url    "https://github.com/yetanalytics/datasim.git"
-                  :git/sha    "684fdefed81972093b56556d7f60a637457a6a06"
-                  :git/tag    "v0.1.2"
-                  :exclusions [org.clojure/clojure
-                               com.yetanalytics/xapi-schema]}}}
+                 com.yetanalytics/datasim       {:mvn/version "0.3.1"}}}
   :test
   {:extra-paths ["src/db/sqlite"
                  "src/db/postgres"
