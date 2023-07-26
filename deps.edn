@@ -1,7 +1,7 @@
 {:paths ["src/main" "resources"]
  :deps
  {;; Clojure core deps
-  org.clojure/clojure                      {:mvn/version "1.10.3"}
+  org.clojure/clojure                      {:mvn/version "1.11.1"}
   org.clojure/tools.logging                {:mvn/version "1.1.0"}
   org.clojure/core.memoize                 {:mvn/version "1.0.250"}
   clojure-interop/java.security            {:mvn/version "1.0.5"}
@@ -9,10 +9,10 @@
   ;; - java-time: Updating to 0.3.3 causes dep clash with DATASIM
   camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
   cheshire/cheshire                        {:mvn/version "5.11.0"}
-  clojure.java-time/clojure.java-time      {:mvn/version "0.3.2"}
+  clojure.java-time/clojure.java-time      {:mvn/version "1.2.0"}
   danlentz/clj-uuid                        {:mvn/version "0.1.9"}
   aero/aero                                {:mvn/version "1.1.6"}
-  selmer/selmer                            {:mvn/version "1.12.44"}
+  selmer/selmer                            {:mvn/version "1.12.59"}
   ch.qos.logback/logback-classic           {:mvn/version "1.2.10"}
   ;; DB/JDBC deps
   ;; - HikariCP: Need to exclude slf4j to make logback work properly
@@ -67,12 +67,10 @@
   :bench
   {:extra-paths ["src/bench" "dev-resources"]
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
-                 org.clojure/math.numeric-tower {:mvn/version "0.0.4"}
+                 org.clojure/math.numeric-tower {:mvn/version "0.0.5"}
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
                  com.yetanalytics/datasim
-                 {:git/url    "https://github.com/yetanalytics/datasim.git"
-                  :git/sha    "684fdefed81972093b56556d7f60a637457a6a06"
-                  :git/tag    "v0.1.2"
+                 {:mvn/version "0.3.1"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema]}}}
   :test
@@ -89,7 +87,7 @@
                  com.kohlschutter.junixsocket/junixsocket-native-common
                  {:mvn/version "2.6.1"}
                  ;; Other test deps
-                 org.clojure/test.check        {:mvn/version "1.0.0"}
+                 org.clojure/test.check        {:mvn/version "1.1.1"}
                  babashka/babashka.curl        {:mvn/version "0.0.3"}
                  orchestra/orchestra           {:mvn/version "2021.01.01-1"}
                  io.github.cognitect-labs/test-runner
@@ -100,9 +98,7 @@
                   :git/sha    "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
                   :exclusions [org.clojure/data.json]}
                  com.yetanalytics/datasim
-                 {:git/url    "https://github.com/yetanalytics/datasim.git"
-                  :git/sha    "684fdefed81972093b56556d7f60a637457a6a06"
-                  :git/tag    "v0.1.2"
+                 {:mvn/version "0.3.0"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema]}}}
   ;; Build alias invoked like clojure -Xbuild uber
