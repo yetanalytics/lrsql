@@ -11,7 +11,7 @@
   clojure.java-time/clojure.java-time      {:mvn/version "1.2.0"}
   danlentz/clj-uuid                        {:mvn/version "0.1.9"}
   aero/aero                                {:mvn/version "1.1.6"}
-  selmer/selmer                            {:mvn/version "1.12.44"}
+  selmer/selmer                            {:mvn/version "1.12.59"}
   ch.qos.logback/logback-classic           {:mvn/version "1.2.10"}
   ;; DB/JDBC deps
   ;; - HikariCP: Need to exclude slf4j to make logback work properly
