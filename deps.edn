@@ -1,18 +1,18 @@
 {:paths ["src/main" "resources"]
  :deps
  {;; Clojure core deps
-  org.clojure/clojure                      {:mvn/version "1.10.3"}
+  org.clojure/clojure                      {:mvn/version "1.11.1"}
   org.clojure/tools.logging                {:mvn/version "1.1.0"}
   org.clojure/core.memoize                 {:mvn/version "1.0.250"}
   clojure-interop/java.security            {:mvn/version "1.0.5"}
   ;; Util deps
-  ;; - java-time: Updating to 0.3.3 causes dep clash with DATASIM
+
   camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
   cheshire/cheshire                        {:mvn/version "5.11.0"}
-  clojure.java-time/clojure.java-time      {:mvn/version "0.3.2"}
+  clojure.java-time/clojure.java-time      {:mvn/version "1.2.0"}
   danlentz/clj-uuid                        {:mvn/version "0.1.9"}
   aero/aero                                {:mvn/version "1.1.6"}
-  selmer/selmer                            {:mvn/version "1.12.44"}
+  selmer/selmer                            {:mvn/version "1.12.59"}
   ch.qos.logback/logback-classic           {:mvn/version "1.2.10"}
   ;; DB/JDBC deps
   ;; - HikariCP: Need to exclude slf4j to make logback work properly
@@ -24,28 +24,17 @@
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
   ;; Pedestal and Jetty webserver deps
-  io.pedestal/pedestal.jetty
-  {:mvn/version "0.5.10"
-   :exclusions
-   [org.eclipse.jetty/jetty-server
-    org.eclipse.jetty/jetty-servlet
-    org.eclipse.jetty.alpn/alpn-api
-    org.eclipse.jetty/jetty-alpn-server
-    org.eclipse.jetty.http2/http2-server
-    org.eclipse.jetty.websocket/websocket-api
-    org.eclipse.jetty.websocket/websocket-servlet
-    org.eclipse.jetty.websocket/websocket-server]}
-  org.eclipse.jetty/jetty-server           {:mvn/version "9.4.51.v20230217"}
-  org.eclipse.jetty/jetty-servlet          {:mvn/version "9.4.51.v20230217"}
-  org.eclipse.jetty.alpn/alpn-api          {:mvn/version "1.1.3.v20160715"}
-  org.eclipse.jetty/jetty-alpn-server      {:mvn/version "9.4.51.v20230217"}
+  io.pedestal/pedestal.jetty               {:mvn/version "0.6.0"}
   org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.51.v20230217"}
-  org.eclipse.jetty.http2/http2-server     {:mvn/version "9.4.51.v20230217"}
   ;; Security deps
-  buddy/buddy-core                         {:mvn/version "1.10.1"}
-  buddy/buddy-sign                         {:mvn/version "3.4.1"}
-  buddy/buddy-hashers                      {:mvn/version "1.8.1"}
-  less-awful-ssl/less-awful-ssl            {:mvn/version "1.0.6"}
+  buddy/buddy-core    {:mvn/version "1.11.418"
+                       :exclusions [org.bouncycastle/bcprov-jdk18on]}
+  buddy/buddy-sign    {:mvn/version "3.4.1"
+                       :exclusions [buddy/buddy-core]}
+  buddy/buddy-hashers {:mvn/version "2.0.162"
+                       :exclusions [buddy/buddy-core]}
+  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.75"}
+  less-awful-ssl/less-awful-ssl   {:mvn/version "1.0.6"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
   {:mvn/version "1.2.15"
@@ -62,7 +51,8 @@
                  org.clojure/clojurescript]}
   com.yetanalytics/pedestal-oidc
   {:mvn/version "0.0.8"
-   :exclusions  [org.clojure/clojure]}}
+   :exclusions  [org.clojure/clojure
+                 buddy/buddy-sign]}}
  :aliases
  {:db-sqlite
   {:extra-paths ["src/db/sqlite"]
@@ -77,12 +67,10 @@
   :bench
   {:extra-paths ["src/bench" "dev-resources"]
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
-                 org.clojure/math.numeric-tower {:mvn/version "0.0.4"}
+                 org.clojure/math.numeric-tower {:mvn/version "0.0.5"}
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
                  com.yetanalytics/datasim
-                 {:git/url    "https://github.com/yetanalytics/datasim.git"
-                  :git/sha    "684fdefed81972093b56556d7f60a637457a6a06"
-                  :git/tag    "v0.1.2"
+                 {:mvn/version "0.3.1"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema]}}}
   :test
@@ -99,7 +87,7 @@
                  com.kohlschutter.junixsocket/junixsocket-native-common
                  {:mvn/version "2.6.1"}
                  ;; Other test deps
-                 org.clojure/test.check        {:mvn/version "1.0.0"}
+                 org.clojure/test.check        {:mvn/version "1.1.1"}
                  babashka/babashka.curl        {:mvn/version "0.0.3"}
                  orchestra/orchestra           {:mvn/version "2021.01.01-1"}
                  io.github.cognitect-labs/test-runner
@@ -110,27 +98,30 @@
                   :git/sha    "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
                   :exclusions [org.clojure/data.json]}
                  com.yetanalytics/datasim
-                 {:git/url    "https://github.com/yetanalytics/datasim.git"
-                  :git/sha    "684fdefed81972093b56556d7f60a637457a6a06"
-                  :git/tag    "v0.1.2"
+                 {:mvn/version "0.3.0"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema]}}}
   ;; Build alias invoked like clojure -Xbuild uber
   :build
-  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
+  {:replace-deps {org.clojure/core.async          {:mvn/version "1.6.673"}
+                  com.github.seancorfield/depstar {:mvn/version "2.1.267"
+                                                   :exclusions [org.clojure/core.async]}}
    :extra-paths  ["src/build"]
    :ns-default   lrsql.build}
   ;; Alias for dev so you can use from repl w/o breakage
   ;; Note the :extra-deps instead of :replace-deps
   :build-dev
-  {:extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
+  {:extra-deps  {org.clojure/core.async          {:mvn/version "1.6.673"}
+                 com.github.seancorfield/depstar {:mvn/version "2.1.267"
+                                                  :exclusions [org.clojure/core.async]}}
    :extra-paths ["src/build"]}
   :nvd
   {:replace-deps {nvd-clojure/nvd-clojure {:mvn/version "2.6.0"}}
    :ns-default   nvd.task}
   :doc
   {:replace-deps {com.yetanalytics/markdoc {:git/url "https://github.com/yetanalytics/markdoc"
-                                            :sha     "1a57b934dc92e539e858223ef33eb6a5fcf439a0"}}
+                                            :git/tag "v0.0.1"
+                                            :git/sha "b42ae3e"}}
    :exec-fn      com.yetanalytics.markdoc/convert
    :exec-args    {:in-root       "doc/"
                   :out-root      "target/bundle/doc/"

@@ -344,3 +344,17 @@ USING last_modified AT TIME ZONE :sql:tz-id;
 -- :doc Migrate the `agent_profile_document.last_modified` to have a timezone, and use the provided timezone to work backwards to Zulu
 ALTER TABLE agent_profile_document ALTER COLUMN last_modified TYPE TIMESTAMP WITH TIME ZONE
 USING last_modified AT TIME ZONE :sql:tz-id;
+
+-- :name migrate-to-jsonb!
+-- :command :execute
+-- :doc Convert all JSON payloads to JSONB to allow for faster reads and advanced indexing
+ALTER TABLE xapi_statement ALTER COLUMN payload SET DATA TYPE JSONB;
+ALTER TABLE actor ALTER COLUMN payload SET DATA TYPE JSONB;
+ALTER TABLE activity ALTER COLUMN payload SET DATA TYPE JSONB;
+
+-- :name migrate-to-json!
+-- :command :execute
+-- :doc Convert all JSONB payloads to JSON (or no-op) for faster writes
+ALTER TABLE xapi_statement ALTER COLUMN payload SET DATA TYPE JSON;
+ALTER TABLE actor ALTER COLUMN payload SET DATA TYPE JSON;
+ALTER TABLE activity ALTER COLUMN payload SET DATA TYPE JSON;

@@ -20,7 +20,7 @@
 
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
-(defrecord PostgresBackend []
+(defrecord PostgresBackend [tuning]
   cmp/Lifecycle
   (start [this] this)
   (stop [this] this)
@@ -63,7 +63,10 @@
     (when-not (some? (query-state-document-last-modified-is-timestamptz tx))
       (migrate-state-document-last-modified! tx pd/local-tz-input)
       (migrate-activity-profile-document-last-modified! tx pd/local-tz-input)
-      (migrate-agent-profile-document-last-modified! tx pd/local-tz-input)))
+      (migrate-agent-profile-document-last-modified! tx pd/local-tz-input))
+    (if (-> tuning :config :enable-jsonb)
+      (migrate-to-jsonb! tx)
+      (migrate-to-json! tx)))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
@@ -204,7 +207,8 @@
     (pd/set-read-pgobject->json!))
   (-set-write! [_]
     ;; next.jdbc automatically sets the reading of Instants as java.sql.Dates
-    (pd/set-write-json->pgobject!))
+    (pd/set-write-json->pgobject! (if (-> tuning :config :enable-jsonb)
+                                    "jsonb" "json")))
 
   bp/AdminStatusBackend
   (-query-statement-count [_ tx]
