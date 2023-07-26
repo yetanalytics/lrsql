@@ -111,7 +111,9 @@
   ;; Alias for dev so you can use from repl w/o breakage
   ;; Note the :extra-deps instead of :replace-deps
   :build-dev
-  {:extra-deps  {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
+  {:extra-deps  {org.clojure/core.async          {:mvn/version "1.6.673"}
+                 com.github.seancorfield/depstar {:mvn/version "2.1.267"
+                                                  :exclusions [org.clojure/core.async]}}
    :extra-paths ["src/build"]}
   :nvd
   {:replace-deps {nvd-clojure/nvd-clojure {:mvn/version "2.6.0"}}
