@@ -1,4 +1,3 @@
-#_{:clj-kondo/ignore [:unused-namespace]}
 (ns lrsql.ops.query.reaction
   (:require [clojure.spec.alpha :as s]
             [lrsql.backend.protocol :as bp]
@@ -6,7 +5,7 @@
             [lrsql.spec.reaction :as rs]
             [lrsql.util.reaction :as ru]
             [cheshire.core :as json]
-            [xapi-schema.spec :as xs]
+            [xapi-schema.spec :as-alias xs]
             [clojure.java.io :as io]))
 
 (def ops
