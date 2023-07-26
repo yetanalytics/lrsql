@@ -6,6 +6,7 @@
   org.clojure/core.memoize                 {:mvn/version "1.0.250"}
   clojure-interop/java.security            {:mvn/version "1.0.5"}
   ;; Util deps
+
   camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
   cheshire/cheshire                        {:mvn/version "5.11.0"}
   clojure.java-time/clojure.java-time      {:mvn/version "1.2.0"}
@@ -102,7 +103,9 @@
                                com.yetanalytics/xapi-schema]}}}
   ;; Build alias invoked like clojure -Xbuild uber
   :build
-  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
+  {:replace-deps {org.clojure/core.async          {:mvn/version "1.6.673"}
+                  com.github.seancorfield/depstar {:mvn/version "2.1.267"
+                                                   :exclusions [org.clojure/core.async]}}
    :extra-paths  ["src/build"]
    :ns-default   lrsql.build}
   ;; Alias for dev so you can use from repl w/o breakage
