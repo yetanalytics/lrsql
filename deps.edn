@@ -6,7 +6,6 @@
   org.clojure/core.memoize                 {:mvn/version "1.0.250"}
   clojure-interop/java.security            {:mvn/version "1.0.5"}
   ;; Util deps
-  ;; - java-time: Updating to 0.3.3 causes dep clash with DATASIM
   camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
   cheshire/cheshire                        {:mvn/version "5.11.0"}
   clojure.java-time/clojure.java-time      {:mvn/version "1.2.0"}
@@ -116,7 +115,8 @@
    :ns-default   nvd.task}
   :doc
   {:replace-deps {com.yetanalytics/markdoc {:git/url "https://github.com/yetanalytics/markdoc"
-                                            :sha     "1a57b934dc92e539e858223ef33eb6a5fcf439a0"}}
+                                            :git/tag "v0.0.1"
+                                            :git/sha "b42ae3e"}}
    :exec-fn      com.yetanalytics.markdoc/convert
    :exec-args    {:in-root       "doc/"
                   :out-root      "target/bundle/doc/"
