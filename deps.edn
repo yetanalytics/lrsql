@@ -83,7 +83,7 @@
                  com.kohlschutter.junixsocket/junixsocket-native-common
                  {:mvn/version "2.6.1"}
                  ;; Other test deps
-                 org.clojure/test.check        {:mvn/version "1.0.0"}
+                 org.clojure/test.check        {:mvn/version "1.1.1"}
                  babashka/babashka.curl        {:mvn/version "0.0.3"}
                  orchestra/orchestra           {:mvn/version "2021.01.01-1"}
                  io.github.cognitect-labs/test-runner
