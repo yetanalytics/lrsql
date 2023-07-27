@@ -290,6 +290,13 @@
                  (adp/-get-status lrs {}))))))
     (component/stop sys')))
 
+(defn- strip-reaction-results
+  [reaction-rows]
+  (mapv
+   (fn [row]
+     (select-keys row [:id :ruleset :active]))
+   reaction-rows))
+
 (deftest reaction-manager-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
@@ -299,10 +306,12 @@
                                      lrs simple-reaction-ruleset true)]
         (testing "Create reaction"
           (is (uuid? create-result)))
-        (testing "Get active reactions"
+        (testing "Get all reactions"
           (is (= [{:id      create-result
-                   :ruleset simple-reaction-ruleset}]
-                 (adp/-get-active-reactions lrs))))
+                   :ruleset simple-reaction-ruleset
+                   :active  true}]
+                 (strip-reaction-results
+                  (adp/-get-all-reactions lrs)))))
         (testing "Update reaction"
           (is (= {:result :lrsql.reaction/reaction-not-found-error}
                  (adp/-update-reaction
@@ -311,21 +320,26 @@
           (is (= {:result create-result}
                  (adp/-update-reaction
                   lrs create-result nil false)))
-          (is (= []
-                 (adp/-get-active-reactions lrs)))
+          (is (= [{:id      create-result
+                   :ruleset simple-reaction-ruleset
+                   :active  false}]
+                 (strip-reaction-results
+                  (adp/-get-all-reactions lrs))))
           ;; Make active again
           (is (= {:result create-result}
                  (adp/-update-reaction
                   lrs create-result nil true)))
           (is (= [{:id      create-result
-                   :ruleset simple-reaction-ruleset}]
-                 (adp/-get-active-reactions lrs))))
+                   :ruleset simple-reaction-ruleset
+                   :active  true}]
+                 (strip-reaction-results
+                  (adp/-get-all-reactions lrs)))))
         (testing "Delete reaction"
           (is (= {:result :lrsql.reaction/reaction-not-found-error}
                  (adp/-delete-reaction lrs (u/generate-squuid))))
           (is (= {:result create-result}
                  (adp/-delete-reaction lrs create-result)))
           (is (= []
-                 (adp/-get-active-reactions lrs)))))
+                 (adp/-get-all-reactions lrs)))))
       (finally
         (component/stop sys')))))

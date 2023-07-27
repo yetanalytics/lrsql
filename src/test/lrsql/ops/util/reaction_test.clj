@@ -1,6 +1,6 @@
-(ns lrsql.ops.query.reaction-test
+(ns lrsql.ops.util.reaction-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [lrsql.ops.query.reaction :as qr]
+            [lrsql.ops.util.reaction :as qr]
             [lrsql.test-support :as support]
             [com.stuartsierra.component :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]))

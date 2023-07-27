@@ -139,6 +139,13 @@
   (s/every (s/keys :req-un [::id
                             ::ruleset])))
 
+(def query-all-reactions-ret-spec
+  (s/every (s/keys :req-un [::id
+                            ::ruleset
+                            ::active
+                            ::created
+                            ::modified])))
+
 (s/def :lrsql.spec.reaction.insert/result uuid?)
 
 (def insert-reaction-ret-spec
