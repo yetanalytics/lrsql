@@ -110,6 +110,9 @@
 
 (s/def :lrsql.spec.reaction.serialized/ruleset bytes?)
 
+(def query-statement-reactions-input-spec
+  (s/keys :req-un [::trigger-id]))
+
 (def insert-reaction-input-spec
   (s/keys :req-un [::primary-key
                    :lrsql.spec.reaction.serialized/ruleset
@@ -138,6 +141,19 @@
 (def query-active-reactions-ret-spec
   (s/every (s/keys :req-un [::id
                             ::ruleset])))
+
+(def query-all-reactions-ret-spec
+  (s/every (s/keys :req-un [::id
+                            ::ruleset
+                            ::active
+                            ::created
+                            ::modified])))
+
+(s/def :lrsql.spec.reaction.query-statement-reactions/result
+  (s/every ::xs/statement))
+
+(def query-statement-reactions-ret-spec
+  (s/keys :req-un [:lrsql.spec.reaction.query-statement-reactions/result]))
 
 (s/def :lrsql.spec.reaction.insert/result uuid?)
 

@@ -370,3 +370,11 @@ WHERE :snip:where;
 SELECT id, ruleset
 FROM reaction
 WHERE active IS TRUE;
+
+-- :name query-all-reactions
+-- :command :query
+-- :result :many
+-- :doc Query all active and inactive reactions
+SELECT id, ruleset, active, created, modified
+FROM reaction
+WHERE active IS NOT NULL;
