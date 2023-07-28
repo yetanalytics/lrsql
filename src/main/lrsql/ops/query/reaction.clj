@@ -33,7 +33,7 @@
   :args (s/cat :bk rs/reaction-backend?
                :tx transaction?
                :input rs/query-statement-reactions-input-spec)
-  :ret rs/react-to-statement-ret-spec)
+  :ret rs/query-statement-reactions-ret-spec)
 
 (defn query-statement-reactions
   "Given a statement ID, produce any reactions to that statement."
