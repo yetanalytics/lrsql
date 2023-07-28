@@ -1,9 +1,12 @@
 (ns lrsql.util.reaction-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :refer [deftest testing is are use-fixtures]]
             [lrsql.util :as u]
             [lrsql.util.reaction :as r]
             [lrsql.spec.statement :as ss]
-            [lrsql.test-constants :as tc]))
+            [lrsql.test-constants :as tc]
+            [lrsql.test-support :as support]))
+
+(use-fixtures :once support/instrumentation-fixture)
 
 (deftest path->string-test
   (are [input output]
