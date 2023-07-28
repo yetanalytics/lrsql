@@ -2,7 +2,11 @@
   "Utilities to support reactions."
   (:require [clojure.spec.alpha :as s]
             [lrsql.spec.reaction :as rs]
-            [xapi-schema.spec :as xs]))
+            [lrsql.spec.statement :as ss]
+            [xapi-schema.spec :as xs]
+            [cheshire.core :as cjson]
+            [clojure.java.io :as io])
+  (:import [java.io ByteArrayOutputStream]))
 
 (s/fdef path->string
   :args (s/cat :path ::rs/path
@@ -18,9 +22,6 @@
    (if seg
      (recur rpath
             (cond
-              (keyword? seg)
-              (format "%s.%s" s (name seg))
-
               (string? seg)
               (format "%s.\"%s\"" s seg)
 
@@ -47,15 +48,56 @@
   (reduce
    (fn [m path]
      (if-some [found-val (get-in statement
-                                 (mapv
-                                  (fn [seg]
-                                    (if (keyword? seg)
-                                      (name seg)
-                                      seg))
-                                  path))]
+                                 path)]
        (if (coll? found-val)
          (reduced nil)
          (assoc m path found-val))
        (reduced nil)))
    {}
    identity-paths))
+
+(s/fdef add-reaction-metadata
+  :args (s/cat :statement ::xs/statement
+               :reaction-id uuid?
+               :statement-id :statement/id)
+  :ret ::xs/statement)
+
+(defn add-reaction-metadata
+  [statement reaction-id trigger-id]
+  (vary-meta statement merge {::ss/reaction-id reaction-id
+                              ::ss/trigger-id  trigger-id}))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Ruleset JSON
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Like JSON processing here:
+;; https://github.com/yetanalytics/lrsql/blob/master/src/main/lrsql/util.clj
+;; But allows serialization of data with keyword keys, deserialization to same
+
+(defn- write-json*
+  "Write `jsn` to an output stream."
+  [out-stream jsn]
+  (with-open [wtr (io/writer out-stream)]
+    (cjson/generate-stream jsn wtr)
+    out-stream))
+
+(s/fdef serialize-ruleset
+  :args (s/cat :ruleset ::rs/ruleset)
+  :ret bytes?)
+
+(defn serialize-ruleset
+  "Serialize reaction ruleset to a byte array for storage."
+  [ruleset]
+  (let [out-stream (ByteArrayOutputStream. 4096)]
+    (.toByteArray ^ByteArrayOutputStream (write-json* out-stream ruleset))))
+
+(s/fdef deserialize-ruleset
+  :args (s/cat :ruleset-bytes bytes?)
+  :ret ::rs/ruleset)
+
+(defn deserialize-ruleset
+  "Deserialize ruleset from a byte array and conform it."
+  [ruleset-bytes]
+  (with-open [r (io/reader ruleset-bytes)]
+    (cjson/parse-stream r (partial keyword nil))))

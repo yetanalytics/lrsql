@@ -104,6 +104,10 @@
       (migrate-timestamps-activity-profile-03! tx)
       (migrate-timestamps-activity-profile-04! tx))
     (update-schema-simple! tx alter-credential-to-scope-scope-datatype!)
+    (create-reaction-table! tx)
+    (when-not (some? (query-xapi-statement-reaction-id-exists tx))
+      (xapi-statement-add-reaction-id! tx)
+      (xapi-statement-add-trigger-id! tx))
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
 
@@ -268,7 +272,13 @@
   (-query-timeline [_ tx input]
     (query-timeline tx input))
 
-  bp/ReactionQueryBackend
+  bp/ReactionBackend
+  (-insert-reaction! [_ tx params]
+    (insert-reaction! tx params))
+  (-update-reaction! [_ tx params]
+    (update-reaction! tx params))
+  (-delete-reaction! [_ tx params]
+    (delete-reaction! tx params))
   (-snip-json-extract [_ params]
     (snip-json-extract (update params :path ru/path->string)))
   (-snip-val [_ params]
@@ -288,4 +298,6 @@
   (-snip-query-reaction [_ params]
     (snip-query-reaction params))
   (-query-reaction [_ tx params]
-    (query-reaction tx params)))
+    (query-reaction tx params))
+  (-query-active-reactions [_ tx]
+    (query-active-reactions tx)))

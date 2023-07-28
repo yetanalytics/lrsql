@@ -5,17 +5,17 @@
             [lrsql.spec.reaction :as rs]
             [lrsql.util.reaction :as ru]
             [cheshire.core :as json]
-            [xapi-schema.spec :as xs]
+            [xapi-schema.spec :as-alias xs]
             [clojure.java.io :as io]))
 
 (def ops
-  {:gt    ">"
-   :lt    "<"
-   :gte   ">="
-   :lte   "<="
-   :eq    "="
-   :noteq "!="
-   :like  "LIKE"})
+  {"gt"    ">"
+   "lt"    "<"
+   "gte"   ">="
+   "lte"   "<="
+   "eq"    "="
+   "noteq" "!="
+   "like"  "LIKE"})
 
 (s/fdef render-col
   :args (s/cat :bk rs/reaction-backend?
@@ -25,7 +25,7 @@
 
 (defn- render-col
   [bk condition-name col]
-  (bp/-snip-col bk {:col (format "%s.%s" (name condition-name) col)}))
+  (bp/-snip-col bk {:col (format "%s.%s" condition-name col)}))
 
 (s/fdef render-ref
   :args (s/cat :bk rs/reaction-backend?
@@ -37,17 +37,17 @@
   "Render json references with optimizations for denorm fields"
   [bk condition-name path]
   (case path
-    [:timestamp]
+    ["timestamp"]
     (render-col bk condition-name "timestamp")
-    [:stored]
+    ["stored"]
     (render-col bk condition-name "stored")
-    [:verb :id]
+    ["verb" "id"]
     (render-col bk condition-name "verb_iri")
-    [:context :registration]
+    ["context" "registration"]
     (render-col bk condition-name "registration")
     (bp/-snip-json-extract
      bk
-     {:col  (format "%s.payload" (name condition-name))
+     {:col  (format "%s.payload" condition-name)
       :path path})))
 
 (s/fdef render-condition
@@ -82,9 +82,9 @@
                          (render-ref bk ref-condition ref-path)))]
       (case op
         ;; Clause special cases
-        :contains
+        "contains"
         (bp/-snip-contains bk
-                           {:col   (format "%s.payload" (name condition-name))
+                           {:col   (format "%s.payload" condition-name)
                             :path  path
                             :right right-snip})
         (let [op-sql (get ops op)]
@@ -121,22 +121,22 @@
 
 (s/fdef render-ground
   :args (s/cat :bk rs/reaction-backend?
-               :condition-keys (s/every ::rs/condition-name)
+               :condition-names (s/every ::rs/condition-name)
                :trigger-id :statement/id)
   :ret ::rs/sqlvec)
 
 (defn- render-ground
-  [bk condition-keys trigger-id]
+  [bk condition-names trigger-id]
   (bp/-snip-or
    bk
    {:clauses (mapv
               (fn [k]
                 (bp/-snip-clause
                  bk
-                 {:left  (render-col bk (name k) "statement_id")
+                 {:left  (render-col bk k "statement_id")
                   :op    "="
                   :right (bp/-snip-val bk {:val trigger-id})}))
-              condition-keys)}))
+              condition-names)}))
 
 (s/fdef query-reaction-sqlvec
   :args (s/cat :bk rs/reaction-backend?
@@ -147,20 +147,20 @@
 
 (defn- query-reaction-sqlvec
   [bk
-   {{:keys [conditions]} :input
+   {{:keys [conditions]} :ruleset
     :keys                [trigger-id
                           statement-identity]}]
-  (let [condition-keys (keys conditions)]
+  (let [condition-names (map name (keys conditions))]
     (bp/-snip-query-reaction
      bk
      {:select (mapv
-               (fn [k]
-                 [(format "%s.payload" (name k)) (name k)])
-               condition-keys)
+               (fn [cn]
+                 [(format "%s.payload" cn) cn])
+               condition-names)
       :from   (mapv
-               (fn [k]
-                 ["xapi_statement" (name k)])
-               condition-keys)
+               (fn [cn]
+                 ["xapi_statement" cn])
+               condition-names)
       :where
       (bp/-snip-and
        bk
@@ -168,21 +168,21 @@
         (into []
               (concat
                (when (seq statement-identity)
-                 [(render-identity bk condition-keys statement-identity)])
-               [(render-ground bk condition-keys trigger-id)]
+                 [(render-identity bk condition-names statement-identity)])
+               [(render-ground bk condition-names trigger-id)]
                (map
-                (fn [[condition-name condition]]
+                (fn [[condition-key condition]]
                   (render-condition
                    bk
-                   condition-name
+                   (name condition-key)
                    condition))
                 conditions)))})})))
 
 (s/fdef query-reaction
   :args (s/cat :bk rs/reaction-backend?
                :tx transaction?
-               :input ::query-reaction-input)
-  :ret (s/every (s/map-of ::rs/condition-name ::xs/statement)))
+               :input rs/query-reaction-input-spec)
+  :ret rs/query-reaction-ret-spec)
 
 (defn query-reaction
   "For the given reaction input, return matching statements named for conditions."
@@ -197,3 +197,17 @@
    (bp/-query-reaction bk tx
                        {:sql (query-reaction-sqlvec
                               bk input)})))
+
+(s/fdef query-active-reactions
+  :args (s/cat :bx rs/reaction-backend?
+               :tx transaction?)
+  :ret rs/query-active-reactions-ret-spec)
+
+(defn query-active-reactions
+  "Return all currently active reactions."
+  [bk tx]
+  (mapv
+   (fn [{:keys [id ruleset]}]
+     {:id      id
+      :ruleset (ru/deserialize-ruleset ruleset)})
+   (bp/-query-active-reactions bk tx)))

@@ -29,3 +29,13 @@
 (defprotocol AdminStatusProvider
   (-get-status [this params]
     "Get various LRS metrics."))
+
+(defprotocol AdminReactionManager
+  (-create-reaction [this ruleset active]
+    "Create a new reaction with the given ruleset and status.")
+  (-get-active-reactions [this]
+    "Return all currently active reaction ids and rulesets.")
+  (-update-reaction [this reaction-id ruleset active]
+    "Update a reaction with a new ruleset and/or active status")
+  (-delete-reaction [this reaction-id]
+    "Soft-delete a reaction."))

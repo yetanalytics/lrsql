@@ -119,7 +119,11 @@
   (-query-platform-frequency [this tx])
   (-query-timeline [this tx input]))
 
-(defprotocol ReactionQueryBackend
+(defprotocol ReactionBackend
+  ;; Commands
+  (-insert-reaction! [this tx input])
+  (-update-reaction! [this tx input])
+  (-delete-reaction! [this tx input])
   ;; Query Snippets
   (-snip-json-extract [this params])
   (-snip-val [this params])
@@ -132,4 +136,5 @@
   ;; Summative snip for runtime debugging
   (-snip-query-reaction [this params])
   ;; Query
-  (-query-reaction [this tx params]))
+  (-query-reaction [this tx params])
+  (-query-active-reactions [this tx]))

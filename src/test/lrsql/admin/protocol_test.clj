@@ -52,6 +52,35 @@
    "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
    "context" {"platform" "another_example"}})
 
+(def simple-reaction-ruleset
+  {:identity-paths [["actor" "mbox"]]
+   :conditions
+   {:a
+    {:and
+     [{:path ["object" "id"]
+       :op   "eq"
+       :val  "https://example.com/activities/a"}
+      {:path ["verb" "id"]
+       :op   "eq"
+       :val  "https://example.com/verbs/completed"}
+      {:path ["result" "success"]
+       :op   "eq"
+       :val  true}]}
+    :b
+    {:and
+     [{:path ["object" "id"]
+       :op   "eq"
+       :val  "https://example.com/activities/b"}
+      {:path ["verb" "id"]
+       :op   "eq"
+       :val  "https://example.com/verbs/completed"}
+      {:path ["result" "success"]
+       :op   "eq"
+       :val  true}
+      {:path ["timestamp"]
+       :op   "gt"
+       :ref  {:condition "a", :path ["timestamp"]}}]}}})
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -260,3 +289,43 @@
                                              :count  1}])}
                  (adp/-get-status lrs {}))))))
     (component/stop sys')))
+
+(deftest reaction-manager-test
+  (let [sys  (support/test-system)
+        sys' (component/start sys)
+        lrs  (:lrs sys')]
+    (try
+      (let [{create-result :result} (adp/-create-reaction
+                                     lrs simple-reaction-ruleset true)]
+        (testing "Create reaction"
+          (is (uuid? create-result)))
+        (testing "Get active reactions"
+          (is (= [{:id      create-result
+                   :ruleset simple-reaction-ruleset}]
+                 (adp/-get-active-reactions lrs))))
+        (testing "Update reaction"
+          (is (= {:result :lrsql.reaction/reaction-not-found-error}
+                 (adp/-update-reaction
+                  lrs (u/generate-squuid) simple-reaction-ruleset false)))
+          ;; Make inactive
+          (is (= {:result create-result}
+                 (adp/-update-reaction
+                  lrs create-result nil false)))
+          (is (= []
+                 (adp/-get-active-reactions lrs)))
+          ;; Make active again
+          (is (= {:result create-result}
+                 (adp/-update-reaction
+                  lrs create-result nil true)))
+          (is (= [{:id      create-result
+                   :ruleset simple-reaction-ruleset}]
+                 (adp/-get-active-reactions lrs))))
+        (testing "Delete reaction"
+          (is (= {:result :lrsql.reaction/reaction-not-found-error}
+                 (adp/-delete-reaction lrs (u/generate-squuid))))
+          (is (= {:result create-result}
+                 (adp/-delete-reaction lrs create-result)))
+          (is (= []
+                 (adp/-get-active-reactions lrs)))))
+      (finally
+        (component/stop sys')))))

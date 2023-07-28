@@ -49,6 +49,9 @@
 ;; JSON string version: (make-str-spec ::xs/statement u/parse-json u/write-json)
 (s/def ::payload ::xs/statement)
 
+(s/def ::reaction-id (s/nilable uuid?))
+(s/def ::trigger-id (s/nilable ::c/statement-id))
+
 ;; Query-specific Params
 (s/def ::related-actors? boolean?)
 (s/def ::related-activities? boolean?)
@@ -93,7 +96,9 @@
                    ::hs-attach/attachment-shas ; not in table
                    ::payload
                    ::timestamp
-                   ::stored]))
+                   ::stored
+                   ::reaction-id
+                   ::trigger-id]))
 
 ;; Statement-to-Statement
 ;; - id:            SEQUENTIAL UUID NOT NULL PRIMARY KEY
