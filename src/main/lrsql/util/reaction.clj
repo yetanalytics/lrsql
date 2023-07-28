@@ -1,6 +1,7 @@
 (ns lrsql.util.reaction
   "Utilities to support reactions."
   (:require [clojure.spec.alpha :as s]
+            [clojure.walk :as walk]
             [lrsql.spec.reaction :as rs]
             [lrsql.spec.statement :as ss]
             [xapi-schema.spec :as xs]
@@ -101,3 +102,23 @@
   [ruleset-bytes]
   (with-open [r (io/reader ruleset-bytes)]
     (cjson/parse-stream r (partial keyword nil))))
+
+(s/fdef generate-statement
+  :args (s/cat :cond-map (s/map-of ::rs/condition-name
+                         ::xs/statement)
+               :template ::xs/any-json)
+  :ret ::xs/statement)
+
+(defn generate-statement [cond->statement template]
+  (walk/postwalk #(if (and (map? %)
+                           (= (key (first %)) "$templatePath"))
+                    (let [input-path (val (first %))
+                          path (update input-path 0 keyword)
+                          result (get-in cond->statement path :not-found)]
+                      (case result
+                        :not-found (throw (ex-info (str "No value found at " input-path)
+                                                   {:path input-path
+                                                    :type ::invalid-path}))
+                        result))
+                    %)
+                 template))
