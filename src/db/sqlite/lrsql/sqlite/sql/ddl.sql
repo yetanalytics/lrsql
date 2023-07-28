@@ -450,9 +450,9 @@ SELECT 1 FROM pragma_table_info('xapi_statement') WHERE name = 'reaction_id'
 -- :name xapi-statement-add-reaction-id!
 -- :command :execute
 -- :doc Adds `xapi_statement.reaction_id`
-ALTER TABLE xapi_statement ADD COLUMN reaction_id REFERENCES reaction(id);
+ALTER TABLE xapi_statement ADD COLUMN reaction_id TEXT REFERENCES reaction(id);
 
 -- :name xapi-statement-add-trigger-id!
 -- :command :execute
 -- :doc Adds `xapi_statement.trigger_id`
-ALTER TABLE xapi_statement ADD COLUMN trigger_id REFERENCES xapi_statement(statement_id);
+ALTER TABLE xapi_statement ADD COLUMN trigger_id TEXT REFERENCES xapi_statement(statement_id);
