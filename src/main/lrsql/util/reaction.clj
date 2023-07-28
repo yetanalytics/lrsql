@@ -60,7 +60,7 @@
 (s/fdef add-reaction-metadata
   :args (s/cat :statement ::xs/statement
                :reaction-id uuid?
-               :statement-id :statement/id)
+               :trigger-id uuid?)
   :ret ::xs/statement)
 
 (defn add-reaction-metadata
@@ -107,8 +107,8 @@
    walk/stringify-keys))
 
 (s/fdef generate-statement
-  :args (s/cat :cond-map (s/map-of ::rs/condition-name
-                         ::xs/statement)
+  :args (s/cat :cond-map (s/map-of simple-keyword?
+                                   ::xs/statement)
                :template ::xs/any-json)
   :ret ::xs/statement)
 
