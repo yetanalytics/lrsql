@@ -2,6 +2,11 @@
 
 (def simple-reaction-ruleset
   {:identity-paths [["actor" "mbox"]]
+   :template
+   {"actor"  {"mbox" {"$templatePath" ["a" "actor" "mbox"]}}
+    "verb"   {"id" "https://example.com/verbs/completed"}
+    "object" {"id"         "https://example.com/activities/a-and-b"
+              "objectType" "Activity"}}
    :conditions
    {:a
     {:and

@@ -76,9 +76,13 @@
 (s/def ::identity-paths
   (s/every ::path))
 
+;; A JSON structure resembling a statement, but with path refs to cond results
+(s/def ::template ::xs/any-json)
+
 (s/def ::ruleset
   (s/keys :req-un [::identity-paths
-                   ::conditions]))
+                   ::conditions
+                   ::template]))
 
 (s/def ::sqlvec
   (s/cat :ddl string?

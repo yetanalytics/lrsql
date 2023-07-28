@@ -100,8 +100,11 @@
 (defn deserialize-ruleset
   "Deserialize ruleset from a byte array and conform it."
   [ruleset-bytes]
-  (with-open [r (io/reader ruleset-bytes)]
-    (cjson/parse-stream r (partial keyword nil))))
+  (update
+   (with-open [r (io/reader ruleset-bytes)]
+     (cjson/parse-stream r (partial keyword nil)))
+   :template
+   walk/stringify-keys))
 
 (s/fdef generate-statement
   :args (s/cat :cond-map (s/map-of ::rs/condition-name

@@ -100,9 +100,8 @@
         (let [query-result (qr/query-reaction
                             bk ds
                             {:ruleset
-                             {:identity-paths []
-                              :conditions
-                              (:conditions tc/simple-reaction-ruleset)}
+                             (merge tc/simple-reaction-ruleset
+                                    {:identity-paths []})
                              :trigger-id         (get stmt-b "id")
                              :statement-identity {}})]
           ;; ambiguous, finds a and b but ALSO d and b
@@ -111,15 +110,15 @@
         (let [query-result (qr/query-reaction
                             bk ds
                             {:ruleset
-                             {:identity-paths [["actor" "mbox"]]
-                              :conditions
-                              {:a
-                               {:and
-                                [{:path ["context"
-                                         "extensions"
-                                         "https://example.com/array"]
-                                  :op   "contains"
-                                  :val  "bar"}]}}}
+                             (merge tc/simple-reaction-ruleset
+                                    {:conditions
+                                     {:a
+                                      {:and
+                                       [{:path ["context"
+                                                "extensions"
+                                                "https://example.com/array"]
+                                         :op   "contains"
+                                         :val  "bar"}]}}})
                              :trigger-id (get stmt-d "id")
                              :statement-identity
                              {["actor" "mbox"] "mailto:alice@example.com"}})]
@@ -132,15 +131,15 @@
         (let [query-result (qr/query-reaction
                             bk ds
                             {:ruleset
-                             {:identity-paths [["actor" "mbox"]]
-                              :conditions
-                              {:a
-                               {:and
-                                [{:path ["context"
-                                         "extensions"
-                                         "https://example.com/number"]
-                                  :op   "lt"
-                                  :val  1000}]}}}
+                             (merge tc/simple-reaction-ruleset
+                                    {:conditions
+                                     {:a
+                                      {:and
+                                       [{:path ["context"
+                                                "extensions"
+                                                "https://example.com/number"]
+                                         :op   "lt"
+                                         :val  1000}]}}})
                              :trigger-id (get stmt-d "id")
                              :statement-identity
                              {["actor" "mbox"] "mailto:alice@example.com"}})]

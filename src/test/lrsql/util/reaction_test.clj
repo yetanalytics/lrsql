@@ -59,10 +59,9 @@
 (deftest reaction-ruleset-serde-test
   (testing "Serde round-trip"
     (is (= tc/simple-reaction-ruleset
-           (-> simple-reaction-ruleset
+           (-> tc/simple-reaction-ruleset
                r/serialize-ruleset
                r/deserialize-ruleset)))))
-
 
 (def fake-cond-map
   {:completed_a {"id"     "6fbd600f-d17c-4c74-801a-2ec2e53231f7"
