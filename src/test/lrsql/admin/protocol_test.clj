@@ -6,7 +6,8 @@
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
             [lrsql.test-support   :as support]
-            [lrsql.util           :as u]))
+            [lrsql.util           :as u]
+            [lrsql.test-constants :as tc]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -51,35 +52,6 @@
                          "zh-CN" "回答了"}}
    "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
    "context" {"platform" "another_example"}})
-
-(def simple-reaction-ruleset
-  {:identity-paths [["actor" "mbox"]]
-   :conditions
-   {:a
-    {:and
-     [{:path ["object" "id"]
-       :op   "eq"
-       :val  "https://example.com/activities/a"}
-      {:path ["verb" "id"]
-       :op   "eq"
-       :val  "https://example.com/verbs/completed"}
-      {:path ["result" "success"]
-       :op   "eq"
-       :val  true}]}
-    :b
-    {:and
-     [{:path ["object" "id"]
-       :op   "eq"
-       :val  "https://example.com/activities/b"}
-      {:path ["verb" "id"]
-       :op   "eq"
-       :val  "https://example.com/verbs/completed"}
-      {:path ["result" "success"]
-       :op   "eq"
-       :val  true}
-      {:path ["timestamp"]
-       :op   "gt"
-       :ref  {:condition "a", :path ["timestamp"]}}]}}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -303,25 +275,25 @@
         lrs  (:lrs sys')]
     (try
       (let [{create-result :result} (adp/-create-reaction
-                                     lrs simple-reaction-ruleset true)]
+                                     lrs tc/simple-reaction-ruleset true)]
         (testing "Create reaction"
           (is (uuid? create-result)))
         (testing "Get all reactions"
           (is (= [{:id      create-result
-                   :ruleset simple-reaction-ruleset
+                   :ruleset tc/simple-reaction-ruleset
                    :active  true}]
                  (strip-reaction-results
                   (adp/-get-all-reactions lrs)))))
         (testing "Update reaction"
           (is (= {:result :lrsql.reaction/reaction-not-found-error}
                  (adp/-update-reaction
-                  lrs (u/generate-squuid) simple-reaction-ruleset false)))
+                  lrs (u/generate-squuid) tc/simple-reaction-ruleset false)))
           ;; Make inactive
           (is (= {:result create-result}
                  (adp/-update-reaction
                   lrs create-result nil false)))
           (is (= [{:id      create-result
-                   :ruleset simple-reaction-ruleset
+                   :ruleset tc/simple-reaction-ruleset
                    :active  false}]
                  (strip-reaction-results
                   (adp/-get-all-reactions lrs))))
@@ -330,7 +302,7 @@
                  (adp/-update-reaction
                   lrs create-result nil true)))
           (is (= [{:id      create-result
-                   :ruleset simple-reaction-ruleset
+                   :ruleset tc/simple-reaction-ruleset
                    :active  true}]
                  (strip-reaction-results
                   (adp/-get-all-reactions lrs)))))

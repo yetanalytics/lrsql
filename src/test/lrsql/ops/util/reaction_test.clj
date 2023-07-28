@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [lrsql.ops.util.reaction :as qr]
             [lrsql.test-support :as support]
+            [lrsql.test-constants :as tc]
             [com.stuartsierra.component :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]))
 
@@ -71,33 +72,6 @@
                           "name"     "12341234-0000-4000-1234-123412341234"}}
    :scopes #{:scope/all}})
 
-(def simple-conditions
-  {:a
-   {:and
-    [{:path ["object" "id"]
-      :op   "eq"
-      :val  "https://example.com/activities/a"}
-     {:path ["verb" "id"]
-      :op   "eq"
-      :val  "https://example.com/verbs/completed"}
-     {:path ["result" "success"]
-      :op   "eq"
-      :val  true}]}
-   :b
-   {:and
-    [{:path ["object" "id"]
-      :op   "eq"
-      :val  "https://example.com/activities/b"}
-     {:path ["verb" "id"]
-      :op   "eq"
-      :val  "https://example.com/verbs/completed"}
-     {:path ["result" "success"]
-      :op   "eq"
-      :val  true}
-     {:path ["timestamp"]
-      :op   "gt"
-      :ref  {:condition "a", :path ["timestamp"]}}]}})
-
 (deftest query-reaction-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
@@ -113,8 +87,7 @@
       (testing "Returns relevant statements"
         (let [query-result (qr/query-reaction
                             bk ds
-                            {:ruleset     {:identity-paths [["actor" "mbox"]]
-                                          :conditions     simple-conditions}
+                            {:ruleset    tc/simple-reaction-ruleset
                              :trigger-id (get stmt-b "id")
                              :statement-identity
                              {["actor" "mbox"] "mailto:bob@example.com"}})]
@@ -128,7 +101,8 @@
                             bk ds
                             {:ruleset
                              {:identity-paths []
-                              :conditions     simple-conditions}
+                              :conditions
+                              (:conditions tc/simple-reaction-ruleset)}
                              :trigger-id         (get stmt-b "id")
                              :statement-identity {}})]
           ;; ambiguous, finds a and b but ALSO d and b
