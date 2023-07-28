@@ -140,9 +140,7 @@
 
 (s/fdef query-reaction-sqlvec
   :args (s/cat :bk rs/reaction-backend?
-               :input ::rs/input
-               :trigger-id :statement/id
-               :statement-identity ::rs/statement-identity)
+               :input rs/query-reaction-input-spec)
   :ret ::rs/sqlvec)
 
 (defn- query-reaction-sqlvec

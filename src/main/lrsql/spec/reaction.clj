@@ -138,7 +138,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def query-reaction-ret-spec
-  (s/every (s/map-of ::condition-name ::xs/statement)))
+  (s/every (s/map-of simple-keyword? ::xs/statement)))
 
 (s/def ::id ::reaction-id)
 
