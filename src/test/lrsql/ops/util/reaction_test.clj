@@ -4,7 +4,8 @@
             [lrsql.test-support :as support]
             [lrsql.test-constants :as tc]
             [com.stuartsierra.component :as component]
-            [com.yetanalytics.lrs.protocol :as lrsp]))
+            [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.admin.protocol :as adp]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helper Functions
@@ -147,4 +148,23 @@
           (is (= 1 (count query-result)))
           (let [[{:keys [a]}] query-result]
             (is (= stmt-d (remove-props a))))))
+      (finally (component/stop sys')))))
+
+(deftest query-active-reactions-test
+  (let [sys  (support/test-system)
+        sys' (component/start sys)
+        lrs  (-> sys' :lrs)
+        bk   (:backend lrs)
+        ds   (-> sys' :lrs :connection :conn-pool)]
+
+    ;; Create an active reaction
+    (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
+    ;; Create an inactive reaciton
+    (adp/-create-reaction lrs tc/simple-reaction-ruleset false)
+
+    (try
+      (testing "Finds only active reactions"
+          (is (= [{:ruleset tc/simple-reaction-ruleset}]
+                 (->> (qr/query-active-reactions bk ds)
+                      (map #(select-keys % [:ruleset]))))))
       (finally (component/stop sys')))))
