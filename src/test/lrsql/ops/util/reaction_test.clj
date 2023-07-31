@@ -131,11 +131,11 @@
       (finally (component/stop sys')))))
 
 (deftest query-reaction-history-test
-  (let [sys        (support/test-system)
-        sys'       (component/start sys)
-        lrs        (-> sys' :lrs)
-        bk         (:backend lrs)
-        ds         (-> sys' :lrs :connection :conn-pool)
+  (let [sys    (support/test-system)
+        sys'   (component/start sys)
+        lrs    (-> sys' :lrs)
+        bk     (:backend lrs)
+        ds     (-> sys' :lrs :connection :conn-pool)
         [reaction-0-id
          reaction-1-id
          reaction-2-id]
@@ -146,10 +146,10 @@
         [a-id
          b-id
          c-id
-         d-id]     (for [stmt [tc/reaction-stmt-a
-                               tc/reaction-stmt-b
-                               tc/reaction-stmt-c
-                               tc/reaction-stmt-d]]
+         d-id] (for [stmt [tc/reaction-stmt-a
+                           tc/reaction-stmt-b
+                           tc/reaction-stmt-c
+                           tc/reaction-stmt-d]]
                      (u/str->uuid (get stmt "id")))]
 
     ;; store a statements with chained reaciton data
