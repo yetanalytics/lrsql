@@ -1,6 +1,6 @@
 (ns lrsql.ops.util.reaction-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [lrsql.ops.util.reaction :as qr]
+            [lrsql.ops.util.reaction :as ur]
             [lrsql.test-support :as support]
             [lrsql.test-constants :as tc]
             [com.stuartsierra.component :as component]
@@ -87,7 +87,7 @@
 
     (try
       (testing "Returns relevant statements"
-        (let [query-result (qr/query-reaction
+        (let [query-result (ur/query-reaction
                             bk ds
                             {:ruleset    tc/simple-reaction-ruleset
                              :trigger-id (get stmt-b "id")
@@ -99,7 +99,7 @@
             (is (= stmt-a (remove-props a)))
             (is (= stmt-b (remove-props b))))))
       (testing "Works w/o identity"
-        (let [query-result (qr/query-reaction
+        (let [query-result (ur/query-reaction
                             bk ds
                             {:ruleset
                              (merge tc/simple-reaction-ruleset
@@ -109,7 +109,7 @@
           ;; ambiguous, finds a and b but ALSO d and b
           (is (= 2 (count query-result)))))
       (testing "JSON containment"
-        (let [query-result (qr/query-reaction
+        (let [query-result (ur/query-reaction
                             bk ds
                             {:ruleset
                              (merge tc/simple-reaction-ruleset
@@ -130,7 +130,7 @@
       (testing "Numeric types"
         ;; If it is just using lex, "200" > "1000"
         ;; Therefore we make sure it can compare numbers correctly
-        (let [query-result (qr/query-reaction
+        (let [query-result (ur/query-reaction
                             bk ds
                             {:ruleset
                              (merge tc/simple-reaction-ruleset
@@ -165,6 +165,6 @@
     (try
       (testing "Finds only active reactions"
           (is (= [{:ruleset tc/simple-reaction-ruleset}]
-                 (->> (qr/query-active-reactions bk ds)
+                 (->> (ur/query-active-reactions bk ds)
                       (map #(select-keys % [:ruleset]))))))
       (finally (component/stop sys')))))
