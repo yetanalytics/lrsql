@@ -211,23 +211,6 @@
       :ruleset (ru/deserialize-ruleset ruleset)})
    (bp/-query-active-reactions bk tx)))
 
-(s/fdef query-statement-for-reaction
-  :args (s/cat :bx rs/reaction-backend?
-               :tx transaction?
-               :input rs/query-statement-for-reaction-input-spec)
-  :ret rs/query-statement-for-reaction-ret-spec)
-
-(defn query-statement-for-reaction
-  "Given a statement ID, query for a statement with that ID, returning
-  reaction and trigger ID if applicable."
-  [bk tx input]
-  (let [{:keys [payload reaction_id trigger_id]}
-        (bp/-query-statement-for-reaction bk tx input)]
-    {:result
-     {:statement   payload
-      :reaction-id (u/str->uuid reaction_id)
-      :trigger-id  (u/str->uuid trigger_id)}}))
-
 (s/fdef query-reaction-history
   :args (s/cat :bx rs/reaction-backend?
                :tx transaction?

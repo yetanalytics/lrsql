@@ -117,13 +117,6 @@
 (def query-statement-reactions-input-spec
   (s/keys :req-un [::trigger-id]))
 
-(s/def :lrsql.spec.reaction.query-statement-for-reaction/statement-id
-  uuid?)
-
-(def query-statement-for-reaction-input-spec
-  (s/keys
-   :req-un [:lrsql.spec.reaction.query-statement-for-reaction/statement-id]))
-
 (s/def :lrsql.spec.reaction.query-reaction-history/statement-id
   uuid?)
 
@@ -172,20 +165,6 @@
 
 (def query-statement-reactions-ret-spec
   (s/keys :req-un [:lrsql.spec.reaction.query-statement-reactions/result]))
-
-(s/def :lrsql.spec.reaction.query-statement-for-reaction.result/reaction-id
-  (s/nilable ::reaction-id))
-(s/def :lrsql.spec.reaction.query-statement-for-reaction.result/trigger-id
-  (s/nilable ::trigger-id))
-
-(s/def :lrsql.spec.reaction.query-statement-for-reaction/result
-  (s/keys :req-un
-          [::xs/statement
-           :lrsql.spec.reaction.query-statement-for-reaction.result/reaction-id
-           :lrsql.spec.reaction.query-statement-for-reaction.result/trigger-id]))
-
-(def query-statement-for-reaction-ret-spec
-  (s/keys :req-un [:lrsql.spec.reaction.query-statement-for-reaction/result]))
 
 (s/def :lrsql.spec.reaction.query-reaction-history/result
   (s/every uuid? :kind set? :into #{}))

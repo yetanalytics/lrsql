@@ -171,36 +171,6 @@
                       (map #(select-keys % [:ruleset]))))))
       (finally (component/stop sys')))))
 
-(deftest query-statement-for-reaction-test
-  (let [sys        (support/test-system)
-        sys'       (component/start sys)
-        lrs        (-> sys' :lrs)
-        bk         (:backend lrs)
-        ds         (-> sys' :lrs :connection :conn-pool)
-        {reaction-id :result}
-        (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
-        trigger-id (u/str->uuid (get stmt-a "id"))
-        b-id       (u/str->uuid (get stmt-b "id"))]
-
-    ;; store a statement with reaction data
-    (lrsp/-store-statements lrs
-                            auth-ident
-                            [stmt-a
-                             (ru/add-reaction-metadata
-                              stmt-b
-                              reaction-id
-                              trigger-id)]
-                            [])
-    (try
-      (testing "Finds the statement and reaction info"
-        (is (= {:result {:statement   stmt-b
-                         :reaction-id reaction-id
-                         :trigger-id  trigger-id}}
-               (-> (ur/query-statement-for-reaction
-                    bk ds {:statement-id b-id})
-                   (update-in [:result :statement] remove-props)))))
-      (finally (component/stop sys')))))
-
 (deftest query-reaction-history-test
   (let [sys        (support/test-system)
         sys'       (component/start sys)
