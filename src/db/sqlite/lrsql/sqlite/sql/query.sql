@@ -386,3 +386,20 @@ WHERE active IS NOT NULL;
 SELECT stmt.payload, stmt.reaction_id, stmt.trigger_id
 FROM xapi_statement stmt
 WHERE statement_id = :statement-id;
+
+-- :name query-reaction-history
+-- :command :query
+-- :result :many
+-- :doc For a given statement id, return all reactions (if any) leading to the issuance of that statement.
+WITH RECURSIVE trigger_history (statement_id, reaction_id, trigger_id) AS (
+  SELECT s.statement_id, s.reaction_id, s.trigger_id
+  FROM xapi_statement s
+  WHERE s.statement_id = :statement-id
+  UNION ALL
+  SELECT s.statement_id, s.reaction_id, s.trigger_id
+  FROM xapi_statement s
+  JOIN trigger_history th ON th.trigger_id = s.statement_id
+)
+SELECT reaction_id
+FROM trigger_history
+WHERE reaction_id IS NOT NULL;

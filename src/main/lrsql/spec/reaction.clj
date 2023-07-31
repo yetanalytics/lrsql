@@ -124,6 +124,13 @@
   (s/keys
    :req-un [:lrsql.spec.reaction.query-statement-for-reaction/statement-id]))
 
+(s/def :lrsql.spec.reaction.query-reaction-history/statement-id
+  uuid?)
+
+(def query-reaction-history-input-spec
+  (s/keys
+   :req-un [:lrsql.spec.reaction.query-reaction-history/statement-id]))
+
 (def insert-reaction-input-spec
   (s/keys :req-un [::primary-key
                    :lrsql.spec.reaction.serialized/ruleset
@@ -179,6 +186,12 @@
 
 (def query-statement-for-reaction-ret-spec
   (s/keys :req-un [:lrsql.spec.reaction.query-statement-for-reaction/result]))
+
+(s/def :lrsql.spec.reaction.query-reaction-history/result
+  (s/every uuid? :kind set? :into #{}))
+
+(def query-reaction-history-ret-spec
+  (s/keys :req-un [:lrsql.spec.reaction.query-reaction-history/result]))
 
 (s/def :lrsql.spec.reaction.insert/result uuid?)
 

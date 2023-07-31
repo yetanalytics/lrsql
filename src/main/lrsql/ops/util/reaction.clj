@@ -227,3 +227,18 @@
      {:statement   payload
       :reaction-id (u/str->uuid reaction_id)
       :trigger-id  (u/str->uuid trigger_id)}}))
+
+(s/fdef query-reaction-history
+  :args (s/cat :bx rs/reaction-backend?
+               :tx transaction?
+               :input rs/query-reaction-history-input-spec)
+  :ret rs/query-reaction-history-ret-spec)
+
+(defn query-reaction-history
+  "Given a statement ID, return any reactions leading up to the issuance of that
+  statement."
+  [bk tx input]
+  {:result (into #{}
+                 (map
+                  (comp u/str->uuid :reaction_id)
+                  (bp/-query-reaction-history bk tx input)))})

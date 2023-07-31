@@ -1,5 +1,5 @@
 (ns lrsql.ops.util.reaction-test
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures are]]
             [lrsql.ops.util.reaction :as ur]
             [lrsql.test-support :as support]
             [lrsql.test-constants :as tc]
@@ -199,4 +199,52 @@
                (-> (ur/query-statement-for-reaction
                     bk ds {:statement-id b-id})
                    (update-in [:result :statement] remove-props)))))
+      (finally (component/stop sys')))))
+
+(deftest query-reaction-history-test
+  (let [sys        (support/test-system)
+        sys'       (component/start sys)
+        lrs        (-> sys' :lrs)
+        bk         (:backend lrs)
+        ds         (-> sys' :lrs :connection :conn-pool)
+        [reaction-0-id
+         reaction-1-id
+         reaction-2-id]
+        (map
+         :result
+         (repeatedly 3
+                     #(adp/-create-reaction lrs tc/simple-reaction-ruleset true)))
+        [a-id
+         b-id
+         c-id
+         d-id]     (for [stmt [stmt-a stmt-b stmt-c stmt-d]]
+                     (u/str->uuid (get stmt "id")))]
+
+    ;; store a statements with chained reaciton data
+    (lrsp/-store-statements lrs
+                            auth-ident
+                            [stmt-a
+                             (ru/add-reaction-metadata
+                              stmt-b
+                              reaction-0-id
+                              a-id)
+                             (ru/add-reaction-metadata
+                              stmt-c
+                              reaction-1-id
+                              b-id)
+                             (ru/add-reaction-metadata
+                              stmt-d
+                              reaction-2-id
+                              c-id)]
+                            [])
+    (try
+      (testing "Finds the reaction-history of each statement"
+        (are [stmt-id reactions]
+            (= {:result reactions}
+               (ur/query-reaction-history
+                bk ds {:statement-id stmt-id}))
+          a-id #{}
+          b-id #{reaction-0-id}
+          c-id #{reaction-0-id reaction-1-id}
+          d-id #{reaction-0-id reaction-1-id reaction-2-id}))
       (finally (component/stop sys')))))

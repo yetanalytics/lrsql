@@ -139,4 +139,5 @@
   (-query-reaction [this tx params])
   (-query-active-reactions [this tx])
   (-query-all-reactions [this tx])
-  (-query-statement-for-reaction [this tx input]))
+  (-query-statement-for-reaction [this tx input])
+  (-query-reaction-history [this tx input]))
