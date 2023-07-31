@@ -5,8 +5,8 @@
             [lrsql.spec.reaction :as rs]
             [lrsql.util :as u]
             [lrsql.util.reaction :as ru]
-
-            [lrsql.ops.util.reaction :as ur]))
+            [lrsql.ops.util.reaction :as ur]
+            [clojure.tools.logging :as log]))
 
 (s/fdef query-all-reactions
   :args (s/cat :bx rs/reaction-backend?
@@ -38,26 +38,41 @@
 (defn query-statement-reactions
   "Given a statement ID, produce any reactions to that statement."
   [bk tx {:keys [trigger-id]}]
-  (let [statement (-> (bp/-query-statement bk tx {:statement-id trigger-id})
-                      :payload
-                      u/parse-json)]
+  (let [{statement :payload}  (bp/-query-statement
+                               bk tx {:statement-id trigger-id})
+        {s-reactions :result} (ur/query-reaction-history
+                               bk tx {:statement-id trigger-id})
+        active-reactions      (ur/query-active-reactions bk tx)]
     {:result
      (into []
-           ;; Cycle check could happen in the active reactions query
-           (for [{:keys [ruleset]} (ur/query-active-reactions bk tx)
+           (for [{:keys       [ruleset]
+                  reaction-id :id} active-reactions
+                 ;; Prevent cycling
                  :let
-                 [{:keys [identity-paths]} ruleset
+                 [cycle-found? (contains? s-reactions reaction-id)
+                  _
+                  (when cycle-found?
+                    (log/warnf
+                     "Reaction %s found in statement %s history, ignoring!"
+                     reaction-id trigger-id))]
+                 :when             (not cycle-found?)
+                 ;; Extract statement identity
+                 :let
+                 [{:keys [identity-paths
+                          template]} ruleset
                   statement-identity (ru/statement-identity
                                       identity-paths statement)]
                  :when             statement-identity
-                 ;; And/or here
+                 ;; Look for condition matches
                  ruleset-match     (ur/query-reaction
                                     bk
                                     tx
                                     {:ruleset            ruleset
                                      :trigger-id         trigger-id
                                      :statement-identity statement-identity})]
-             (comment
-               ;; yields a statement
-               (process-template template ruleset-match)
-               )))}))
+             (ru/add-reaction-metadata
+              (ru/generate-statement
+               ruleset-match
+               template)
+              reaction-id
+              trigger-id)))}))
