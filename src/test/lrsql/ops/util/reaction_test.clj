@@ -5,7 +5,9 @@
             [lrsql.test-constants :as tc]
             [com.stuartsierra.component :as component]
             [com.yetanalytics.lrs.protocol :as lrsp]
-            [lrsql.admin.protocol :as adp]))
+            [lrsql.admin.protocol :as adp]
+            [lrsql.util :as u]
+            [lrsql.util.reaction :as ru]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helper Functions
@@ -90,7 +92,7 @@
         (let [query-result (ur/query-reaction
                             bk ds
                             {:ruleset    tc/simple-reaction-ruleset
-                             :trigger-id (get stmt-b "id")
+                             :trigger-id (u/str->uuid (get stmt-b "id"))
                              :statement-identity
                              {["actor" "mbox"] "mailto:bob@example.com"}})]
           ;; unambiguous, finds only a single row with a and b
@@ -104,7 +106,7 @@
                             {:ruleset
                              (merge tc/simple-reaction-ruleset
                                     {:identity-paths []})
-                             :trigger-id         (get stmt-b "id")
+                             :trigger-id         (u/str->uuid (get stmt-b "id"))
                              :statement-identity {}})]
           ;; ambiguous, finds a and b but ALSO d and b
           (is (= 2 (count query-result)))))
@@ -121,7 +123,7 @@
                                                 "https://example.com/array"]
                                          :op   "contains"
                                          :val  "bar"}]}}})
-                             :trigger-id (get stmt-d "id")
+                             :trigger-id (u/str->uuid (get stmt-d "id"))
                              :statement-identity
                              {["actor" "mbox"] "mailto:alice@example.com"}})]
           (is (= 1 (count query-result)))
@@ -142,7 +144,7 @@
                                                 "https://example.com/number"]
                                          :op   "lt"
                                          :val  1000}]}}})
-                             :trigger-id (get stmt-d "id")
+                             :trigger-id (u/str->uuid (get stmt-d "id"))
                              :statement-identity
                              {["actor" "mbox"] "mailto:alice@example.com"}})]
           (is (= 1 (count query-result)))
@@ -164,7 +166,37 @@
 
     (try
       (testing "Finds only active reactions"
-          (is (= [{:ruleset tc/simple-reaction-ruleset}]
+        (is (= [{:ruleset tc/simple-reaction-ruleset}]
                  (->> (ur/query-active-reactions bk ds)
                       (map #(select-keys % [:ruleset]))))))
+      (finally (component/stop sys')))))
+
+(deftest query-statement-for-reaction-test
+  (let [sys        (support/test-system)
+        sys'       (component/start sys)
+        lrs        (-> sys' :lrs)
+        bk         (:backend lrs)
+        ds         (-> sys' :lrs :connection :conn-pool)
+        {reaction-id :result}
+        (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
+        trigger-id (u/str->uuid (get stmt-a "id"))
+        b-id       (u/str->uuid (get stmt-b "id"))]
+
+    ;; store a statement with reaction data
+    (lrsp/-store-statements lrs
+                            auth-ident
+                            [stmt-a
+                             (ru/add-reaction-metadata
+                              stmt-b
+                              reaction-id
+                              trigger-id)]
+                            [])
+    (try
+      (testing "Finds the statement and reaction info"
+        (is (= {:result {:statement   stmt-b
+                         :reaction-id reaction-id
+                         :trigger-id  trigger-id}}
+               (-> (ur/query-statement-for-reaction
+                    bk ds {:statement-id b-id})
+                   (update-in [:result :statement] remove-props)))))
       (finally (component/stop sys')))))

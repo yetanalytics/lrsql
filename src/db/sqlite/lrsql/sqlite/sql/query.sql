@@ -378,3 +378,11 @@ WHERE active IS TRUE;
 SELECT id, ruleset, active, created, modified
 FROM reaction
 WHERE active IS NOT NULL;
+
+-- :name query-statement-for-reaction
+-- :command :query
+-- :result :one
+-- :doc Query for one statement using statement IDs, returning reaction properties
+SELECT stmt.payload, stmt.reaction_id, stmt.trigger_id
+FROM xapi_statement stmt
+WHERE statement_id = :statement-id;

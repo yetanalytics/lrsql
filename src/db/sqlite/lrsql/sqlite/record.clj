@@ -302,4 +302,6 @@
   (-query-active-reactions [_ tx]
     (query-active-reactions tx))
   (-query-all-reactions [_ tx]
-    (query-all-reactions tx)))
+    (query-all-reactions tx))
+  (-query-statement-for-reaction [_ tx params]
+    (query-statement-for-reaction tx params)))

@@ -3,6 +3,7 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.reaction :as rs]
+            [lrsql.util :as u]
             [lrsql.util.reaction :as ru]
             [cheshire.core :as json]
             [xapi-schema.spec :as-alias xs]
@@ -122,7 +123,7 @@
 (s/fdef render-ground
   :args (s/cat :bk rs/reaction-backend?
                :condition-names (s/every ::rs/condition-name)
-               :trigger-id :statement/id)
+               :trigger-id ::rs/trigger-id)
   :ret ::rs/sqlvec)
 
 (defn- render-ground
@@ -209,3 +210,20 @@
      {:id      id
       :ruleset (ru/deserialize-ruleset ruleset)})
    (bp/-query-active-reactions bk tx)))
+
+(s/fdef query-statement-for-reaction
+  :args (s/cat :bx rs/reaction-backend?
+               :tx transaction?
+               :input rs/query-statement-for-reaction-input-spec)
+  :ret rs/query-statement-for-reaction-ret-spec)
+
+(defn query-statement-for-reaction
+  "Given a statement ID, query for a statement with that ID, returning
+  reaction and trigger ID if applicable."
+  [bk tx input]
+  (let [{:keys [payload reaction_id trigger_id]}
+        (bp/-query-statement-for-reaction bk tx input)]
+    {:result
+     {:statement   payload
+      :reaction-id (u/str->uuid reaction_id)
+      :trigger-id  (u/str->uuid trigger_id)}}))
