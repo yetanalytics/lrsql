@@ -160,8 +160,20 @@
                             ::created
                             ::modified])))
 
+(s/def :lrsql.reaction/error
+  #{:lrsql.reaction.error/query
+    :lrsql.reaction.error/template
+    :lrsql.reaction.error/invalid-statement})
+
+(def query-statement-reactions-ret-element-spec
+  (s/merge
+   (s/keys :req-un [::trigger-id
+                    ::reaction-id])
+   (s/or :success (s/keys :req-un [::xs/statement])
+         :failure (s/keys :req-un [:lrsql.reaction/error]))))
+
 (s/def :lrsql.spec.reaction.query-statement-reactions/result
-  (s/every ::xs/statement))
+  (s/every query-statement-reactions-ret-element-spec))
 
 (def query-statement-reactions-ret-spec
   (s/keys :req-un [:lrsql.spec.reaction.query-statement-reactions/result]))
