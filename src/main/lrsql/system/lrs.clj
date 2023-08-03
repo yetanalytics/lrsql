@@ -361,10 +361,10 @@
           input (react-input/insert-reaction-input ruleset active)]
       (jdbc/with-transaction [tx conn]
         (react-cmd/insert-reaction! backend tx input))))
-  (-get-active-reactions [this]
+  (-get-all-reactions [this]
     (let [conn (lrs-conn this)]
       (jdbc/with-transaction [tx conn]
-        (react-q/query-active-reactions backend tx))))
+        (react-q/query-all-reactions backend tx))))
   (-update-reaction [this reaction-id ruleset active]
     (let [conn  (lrs-conn this)
           input (react-input/update-reaction-input

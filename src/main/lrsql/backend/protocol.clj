@@ -137,4 +137,6 @@
   (-snip-query-reaction [this params])
   ;; Query
   (-query-reaction [this tx params])
-  (-query-active-reactions [this tx]))
+  (-query-active-reactions [this tx])
+  (-query-all-reactions [this tx])
+  (-query-reaction-history [this tx input]))

@@ -300,4 +300,8 @@
   (-query-reaction [_ tx params]
     (query-reaction tx params))
   (-query-active-reactions [_ tx]
-    (query-active-reactions tx)))
+    (query-active-reactions tx))
+  (-query-all-reactions [_ tx]
+    (query-all-reactions tx))
+  (-query-reaction-history [_ tx params]
+    (query-reaction-history tx params)))

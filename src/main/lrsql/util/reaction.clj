@@ -60,7 +60,7 @@
 (s/fdef add-reaction-metadata
   :args (s/cat :statement ::xs/statement
                :reaction-id uuid?
-               :statement-id :statement/id)
+               :trigger-id uuid?)
   :ret ::xs/statement)
 
 (defn add-reaction-metadata
@@ -100,12 +100,15 @@
 (defn deserialize-ruleset
   "Deserialize ruleset from a byte array and conform it."
   [ruleset-bytes]
-  (with-open [r (io/reader ruleset-bytes)]
-    (cjson/parse-stream r (partial keyword nil))))
+  (update
+   (with-open [r (io/reader ruleset-bytes)]
+     (cjson/parse-stream r (partial keyword nil)))
+   :template
+   walk/stringify-keys))
 
 (s/fdef generate-statement
-  :args (s/cat :cond-map (s/map-of ::rs/condition-name
-                         ::xs/statement)
+  :args (s/cat :cond-map (s/map-of simple-keyword?
+                                   ::xs/statement)
                :template ::xs/any-json)
   :ret ::xs/statement)
 
