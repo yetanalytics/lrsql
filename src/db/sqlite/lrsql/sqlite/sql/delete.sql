@@ -66,6 +66,7 @@ AND scope = :scope
 -- :doc (Soft) delete a reaction.
 UPDATE reaction
 SET
-  active = NULL
+  active = NULL,
+  modified = :modified
 WHERE
   id = :reaction-id

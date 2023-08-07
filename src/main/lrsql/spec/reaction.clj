@@ -138,7 +138,8 @@
                    ::active]))
 
 (def delete-reaction-input-spec
-  (s/keys :req-un [::reaction-id]))
+  (s/keys :req-un [::reaction-id
+                   ::modified]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Results
