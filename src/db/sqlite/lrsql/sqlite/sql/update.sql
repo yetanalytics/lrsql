@@ -82,3 +82,14 @@ SET
 --~ (when (or (true? (:active params)) (false? (:active params))) "active = :active,")
   modified = :modified
 WHERE id = :reaction-id
+
+-- :name error-reaction!
+-- :command :execute
+-- :result :affected
+-- :doc Set the `error` column on a reaction and make it inactive.
+UPDATE reaction
+SET
+  error = :error,
+  active = 0,
+  modified = :modified
+WHERE id = :reaction-id

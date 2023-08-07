@@ -93,6 +93,16 @@
   (let [out-stream (ByteArrayOutputStream. 4096)]
     (.toByteArray ^ByteArrayOutputStream (write-json* out-stream ruleset))))
 
+(s/fdef serialize-error
+  :args (s/cat :error ::rs/error)
+  :ret bytes?)
+
+(defn serialize-error
+  "Serialize reaction error to a byte array for storage."
+  [error]
+  (let [out-stream (ByteArrayOutputStream. 4096)]
+    (.toByteArray ^ByteArrayOutputStream (write-json* out-stream error))))
+
 (s/fdef deserialize-ruleset
   :args (s/cat :ruleset-bytes bytes?)
   :ret ::rs/ruleset)
@@ -105,6 +115,16 @@
      (cjson/parse-stream r (partial keyword nil)))
    :template
    walk/stringify-keys))
+
+(s/fdef deserialize-error
+  :args (s/cat :error-bytes bytes?)
+  :ret ::rs/error)
+
+(defn deserialize-error
+  "Deserialize error from a byte array."
+  [error-bytes]
+  (with-open [r (io/reader error-bytes)]
+    (cjson/parse-stream r (partial keyword nil))))
 
 (s/fdef generate-statement
   :args (s/cat :cond-map (s/map-of simple-keyword?

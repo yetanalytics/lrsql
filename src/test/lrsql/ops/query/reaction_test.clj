@@ -6,7 +6,9 @@
             [com.stuartsierra.component :as component]
             [lrsql.admin.protocol :as adp]
             [lrsql.util :as u]
-            [com.yetanalytics.lrs.protocol :as lrsp]))
+            [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.ops.command.reaction :as cr]
+            [lrsql.input.reaction :as ir]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -22,19 +24,32 @@
         bk   (:backend lrs)
         ds   (-> sys' :lrs :connection :conn-pool)]
 
-    ;; Create an active reaction
-    (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
-    ;; Create an inactive reaciton
-    (adp/-create-reaction lrs tc/simple-reaction-ruleset false)
-
     (try
+      ;; Create an active reaction
+      (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
+      ;; Create an inactive reaction
+      (adp/-create-reaction lrs tc/simple-reaction-ruleset false)
+      ;; Create a reaction and error it
+      (let [{reaction-id :result} (adp/-create-reaction
+                                   lrs tc/simple-reaction-ruleset true)]
+        (cr/error-reaction! bk ds (ir/error-reaction-input
+                                   reaction-id
+                                   {:type "ReactionQueryError"
+                                    :message "Unknown Query Error!"})))
+
       (testing "Finds all reactions"
         (is (= [{:ruleset tc/simple-reaction-ruleset
-                 :active  true}
+                 :active  true
+                 :error   nil}
                 {:ruleset tc/simple-reaction-ruleset
-                 :active  false}]
+                 :active  false
+                 :error   nil}
+                {:ruleset tc/simple-reaction-ruleset
+                 :active  false
+                 :error   {:type "ReactionQueryError"
+                           :message "Unknown Query Error!"}}]
                (->> (qr/query-all-reactions bk ds)
-                    (map #(select-keys % [:ruleset :active]))))))
+                    (map #(select-keys % [:ruleset :active :error]))))))
       (finally (component/stop sys')))))
 
 (deftest query-statement-reactions-valid-test

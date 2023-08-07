@@ -7,7 +7,9 @@
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.admin.protocol :as adp]
             [lrsql.util :as u]
-            [lrsql.util.reaction :as ru]))
+            [lrsql.util.reaction :as ru]
+            [lrsql.ops.command.reaction :as cr]
+            [lrsql.input.reaction :as ir]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helper Functions
@@ -118,12 +120,18 @@
         lrs  (-> sys' :lrs)
         bk   (:backend lrs)
         ds   (-> sys' :lrs :connection :conn-pool)]
-
-    ;; Create an active reaction
-    (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
-    ;; Create an inactive reaciton
-    (adp/-create-reaction lrs tc/simple-reaction-ruleset false)
     (try
+      ;; Create an active reaction
+      (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
+      ;; Create an inactive reaction
+      (adp/-create-reaction lrs tc/simple-reaction-ruleset false)
+      ;; Create a reaction and error it
+      (let [{reaction-id :result} (adp/-create-reaction
+                                   lrs tc/simple-reaction-ruleset true)]
+        (cr/error-reaction! bk ds (ir/error-reaction-input
+                                   reaction-id
+                                   {:type "ReactionQueryError"
+                                    :message "Unknown Query Error!"})))
       (testing "Finds only active reactions"
         (is (= [{:ruleset tc/simple-reaction-ruleset}]
                  (->> (ur/query-active-reactions bk ds)

@@ -43,3 +43,17 @@
     {:result (if (= 1 result)
                reaction-id
                :lrsql.reaction/reaction-not-found-error)}))
+
+(s/fdef error-reaction!
+  :args (s/cat :bk rs/reaction-backend?
+               :tx transaction?
+               :input rs/error-reaction-input-spec)
+  :ret rs/error-reaction-ret-spec)
+
+(defn error-reaction!
+  "Set error on and deactivate a reaction."
+  [bk tx {:keys [reaction-id] :as input}]
+  (let [result (bp/-error-reaction! bk tx input)]
+    {:result (if (= 1 result)
+               reaction-id
+               :lrsql.reaction/reaction-not-found-error)}))

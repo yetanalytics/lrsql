@@ -22,12 +22,15 @@
                 ruleset
                 active
                 created
-                modified]}]
+                modified
+                error]}]
      {:id       id
       :ruleset  (ru/deserialize-ruleset ruleset)
       :active   (= 1 active)
       :created  (u/str->time created)
-      :modified (u/str->time modified)})
+      :modified (u/str->time modified)
+      :error    (when error
+                  (ru/deserialize-error error))})
    (bp/-query-all-reactions bk tx)))
 
 (s/fdef query-statement-reactions

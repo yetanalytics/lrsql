@@ -279,6 +279,8 @@
     (update-reaction! tx params))
   (-delete-reaction! [_ tx params]
     (delete-reaction! tx params))
+  (-error-reaction! [_ tx params]
+    (error-reaction! tx params))
   (-snip-json-extract [_ params]
     (snip-json-extract (update params :path ru/path->string)))
   (-snip-val [_ params]
