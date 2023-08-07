@@ -80,6 +80,7 @@ UPDATE reaction
 SET
 --~ (when (:ruleset params) "ruleset = :ruleset,")
 --~ (when (or (true? (:active params)) (false? (:active params))) "active = :active,")
+--~ (when (:ruleset params) "error = null,")
   modified = :modified
 WHERE id = :reaction-id
 
