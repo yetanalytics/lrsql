@@ -36,6 +36,14 @@
                :input rs/query-statement-reactions-input-spec)
   :ret rs/query-statement-reactions-ret-spec)
 
+(defn- reaction-error-response
+  "Return a properly formatted reaction error response"
+  [reaction-id trigger-id error-type error-message]
+  {:reaction-id reaction-id
+   :trigger-id  trigger-id
+   :error       {:type    error-type
+                 :message error-message}})
+
 (defn query-statement-reactions
   "Given a statement ID, produce any reactions to that statement."
   [bk tx {:keys [trigger-id]}]
@@ -45,76 +53,84 @@
                                bk tx {:statement-id trigger-id})
         active-reactions      (ur/query-active-reactions bk tx)]
     {:result
-     (into []
-           (mapcat
-            (fn [{:keys       [ruleset]
-                  reaction-id :id}]
-              ;; Cycle Check
-              (if (contains? s-reactions reaction-id)
-                (do
-                  (log/warnf
-                   "Reaction %s found in statement %s history, ignoring!"
-                   reaction-id trigger-id)
-                  []) ;; ignore
-                (let [{:keys [identity-paths
-                              template]} ruleset
-                      statement-identity (ru/statement-identity
-                                          identity-paths statement)]
-                  (if-not statement-identity
-                    [] ;; ignore
-                    (let [[q-success ?q-result]
+     (into
+      []
+      (mapcat
+       (fn [{:keys       [ruleset]
+             reaction-id :id}]
+         ;; Cycle Check
+         (if (contains? s-reactions reaction-id)
+           (do
+             (log/warnf
+              "Reaction %s found in statement %s history, ignoring!"
+              reaction-id trigger-id)
+             []) ;; ignore
+           (let [{:keys [identity-paths
+                         template]} ruleset
+                 statement-identity (ru/statement-identity
+                                     identity-paths statement)]
+             (if-not statement-identity
+               [] ;; ignore
+               (let [[q-success ?q-result-or-error]
+                     (try
+                       [true (ur/query-reaction
+                              bk
+                              tx
+                              {:ruleset            ruleset
+                               :trigger-id         trigger-id
+                               :statement-identity statement-identity})]
+                       (catch Exception ex
+                         (log/errorf
+                          ex
+                          "Reaction Query Error - Reaction ID: %s"
+                          reaction-id)
+                         [false (reaction-error-response
+                                 reaction-id
+                                 trigger-id
+                                 "ReactionQueryError"
+                                 (ex-message ex))]))]
+                 (if (false? q-success)
+                   ;; Query Error
+                   [?q-result-or-error]
+                   (for [ruleset-match ?q-result-or-error
+                         :let
+                         [[t-success ?t-result-or-error]
                           (try
-                            [true (ur/query-reaction
-                                   bk
-                                   tx
-                                   {:ruleset            ruleset
-                                    :trigger-id         trigger-id
-                                    :statement-identity statement-identity})]
+                            [true (ru/generate-statement
+                                   ruleset-match
+                                   template)]
                             (catch Exception ex
                               (log/errorf
                                ex
-                               "Reaction Query Error - Reaction ID: %s"
+                               "Reaction Template Error - Reaction ID: %s"
                                reaction-id)
-                              [false]))]
-                      (if (false? q-success)
-                        ;; Query Error
-                        [{:reaction-id reaction-id
-                          :trigger-id  trigger-id
-                          :error       :lrsql.reaction.error/query}]
-                        (for [ruleset-match ?q-result
-                              :let
-                              [[t-success ?t-result]
-                               (try
-                                 [true (ru/generate-statement
-                                        ruleset-match
-                                        template)]
-                                 (catch Exception ex
-                                   (log/errorf
-                                    ex
-                                    "Reaction Template Error - Reaction ID: %s"
-                                    reaction-id)
-                                   [false]))]]
-                          (if (false? t-success)
-                            ;; Template Error
-                            {:reaction-id reaction-id
-                             :trigger-id  trigger-id
-                             :error
-                             :lrsql.reaction.error/template}
-                            (let [statement   ?t-result
-                                  valid?      (s/valid? ::xs/statement
-                                                        statement)]
-                              (if-not valid?
-                                ;; Invalid Statement Error
-                                (do
-                                  (log/errorf
-                                   "Reaction Query Error - Reaction ID: %s Spec Error: %s"
-                                   reaction-id
-                                   (s/explain-str ::xs/statement statement))
-                                  {:reaction-id reaction-id
-                                   :trigger-id  trigger-id
-                                   :error
-                                   :lrsql.reaction.error/invalid-statement})
-                                {:reaction-id reaction-id
-                                 :trigger-id  trigger-id
-                                 :statement   statement}))))))))))
-            active-reactions))}))
+                              [false (reaction-error-response
+                                      reaction-id
+                                      trigger-id
+                                      "ReactionTemplateError"
+                                      (ex-message ex))]))]]
+                     (if (false? t-success)
+                       ;; Template Error
+                       ?t-result-or-error
+                       (let [statement ?t-result-or-error
+                             valid?    (s/valid? ::xs/statement
+                                                   statement)]
+                         (if-not valid?
+                           ;; Invalid Statement Error
+                           (let [explanation
+                                 (s/explain-str ::xs/statement statement)]
+                             (log/errorf
+                              "Reaction Invalid Statement Error - Reaction ID: %s Spec Error: %s"
+                              reaction-id
+                              explanation)
+                             (reaction-error-response
+                              reaction-id
+                              trigger-id
+                              "ReactionInvalidStatementError"
+                              (format "Reaction Invalid Statement Error - Spec Error: %s"
+                                      explanation)))
+                           ;; Success Response
+                           {:reaction-id reaction-id
+                            :trigger-id  trigger-id
+                            :statement   statement}))))))))))
+       active-reactions))}))

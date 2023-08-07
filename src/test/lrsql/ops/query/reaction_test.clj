@@ -97,7 +97,9 @@
         (is (= {:result
                 [{:reaction-id reaction-id
                   :trigger-id  trigger-id
-                  :error       :lrsql.reaction.error/template}]}
+                  :error       {:type "ReactionTemplateError",
+                                :message
+                                "No value found at [\"x\" \"actor\" \"mbox\"]"}}]}
                (qr/query-statement-reactions
                 bk ds {:trigger-id trigger-id})))
         (finally (component/stop sys'))))))
@@ -132,7 +134,13 @@
         (is (= {:result
                 [{:reaction-id reaction-id
                   :trigger-id  trigger-id
-                  :error       :lrsql.reaction.error/invalid-statement}]}
+                  :error
+                  {:type "ReactionInvalidStatementError",
+                   :message
+                   "Reaction Invalid Statement Error - Spec Error: #:statement{:foo \"mailto:bob@example.com\"} - failed: (contains? % :statement/actor) spec: :xapi-schema.spec/statement
+#:statement{:foo \"mailto:bob@example.com\"} - failed: (contains? % :statement/verb) spec: :xapi-schema.spec/statement
+#:statement{:foo \"mailto:bob@example.com\"} - failed: (contains? % :statement/object) spec: :xapi-schema.spec/statement
+"}}]}
                (qr/query-statement-reactions
                 bk ds {:trigger-id trigger-id})))
         (finally (component/stop sys'))))))

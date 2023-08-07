@@ -160,10 +160,16 @@
                             ::created
                             ::modified])))
 
+(s/def :lrsql.reaction.error/type
+  #{"ReactionQueryError"
+    "ReactionTemplateError"
+    "ReactionInvalidStatementError"})
+
+(s/def :lrsql.reaction.error/message string?)
+
 (s/def :lrsql.reaction/error
-  #{:lrsql.reaction.error/query
-    :lrsql.reaction.error/template
-    :lrsql.reaction.error/invalid-statement})
+  (s/keys :req-un [:lrsql.reaction.error/type
+                   :lrsql.reaction.error/message]))
 
 (def query-statement-reactions-ret-element-spec
   (s/merge
