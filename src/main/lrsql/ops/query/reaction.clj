@@ -135,5 +135,8 @@
                            ;; Success Response
                            {:reaction-id reaction-id
                             :trigger-id  trigger-id
-                            :statement   statement}))))))))))
+                            :statement   (ru/add-reaction-metadata
+                                          statement
+                                          reaction-id
+                                          trigger-id)}))))))))))
        active-reactions))}))

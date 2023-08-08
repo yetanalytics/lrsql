@@ -28,6 +28,7 @@
             [lrsql.ops.query.document      :as doc-q]
             [lrsql.ops.query.reaction      :as react-q]
             [lrsql.ops.query.statement     :as stmt-q]
+            [lrsql.reaction.protocol       :as rp]
             [lrsql.spec.config             :as cs]
             [lrsql.util.auth               :as auth-util]
             [lrsql.util.oidc               :as oidc-util]
@@ -375,4 +376,32 @@
     (let [conn  (lrs-conn this)
           input (react-input/delete-reaction-input reaction-id)]
       (jdbc/with-transaction [tx conn]
-        (react-cmd/delete-reaction! backend tx input)))))
+        (react-cmd/delete-reaction! backend tx input))))
+  rp/StatementReactor
+  (-react-to-statement [this statement-id]
+    (let [conn (lrs-conn this)
+          statements
+          (jdbc/with-transaction [tx conn]
+            (reduce
+             (fn [acc {:keys [reaction-id
+                              statement
+                              error]}]
+               (if error
+                 (let [input (react-input/error-reaction-input
+                              reaction-id error)]
+                   (react-cmd/error-reaction! backend tx input)
+                   acc)
+                 (conj acc statement)))
+             []
+             (:result
+              (react-q/query-statement-reactions
+               backend tx {:trigger-id statement-id}))))]
+      (lrsp/-store-statements
+       this
+       ;; TODO: Figure out what authority should be assigned!
+       {:agent  {"objectType" "Agent"
+                 "account"    {"homePage" "http://example.org"
+                               "name"     "12341234-0000-4000-1234-123412341234"}}
+        :scopes #{:scope/all}}
+       statements
+       []))))
