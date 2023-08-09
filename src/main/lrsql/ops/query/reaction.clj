@@ -115,13 +115,13 @@
                      (if (false? t-success)
                        ;; Template Error
                        ?t-result-or-error
-                       (let [statement ?t-result-or-error
-                             valid?    (s/valid? ::xs/statement
-                                                   statement)]
+                       (let [new-statement ?t-result-or-error
+                             valid?        (s/valid? ::xs/statement
+                                                     new-statement)]
                          (if-not valid?
                            ;; Invalid Statement Error
                            (let [explanation
-                                 (s/explain-str ::xs/statement statement)]
+                                 (s/explain-str ::xs/statement new-statement)]
                              (log/errorf
                               "Reaction Invalid Statement Error - Reaction ID: %s Spec Error: %s"
                               reaction-id
@@ -136,7 +136,11 @@
                            {:reaction-id reaction-id
                             :trigger-id  trigger-id
                             :statement   (ru/add-reaction-metadata
-                                          statement
+                                          new-statement
                                           reaction-id
-                                          trigger-id)}))))))))))
+                                          trigger-id)
+                            ;; Use a custom authority from the ruleset or use
+                            ;; the trigger statement's authority
+                            :authority   (get ruleset :authority
+                                              (get statement "authority"))}))))))))))
        active-reactions))}))

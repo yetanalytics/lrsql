@@ -82,7 +82,8 @@
 (s/def ::ruleset
   (s/keys :req-un [::identity-paths
                    ::conditions
-                   ::template]))
+                   ::template]
+          :opt-un [:statement/authority]))
 
 (s/def ::sqlvec
   (s/cat :ddl string?
@@ -187,7 +188,8 @@
   (s/merge
    (s/keys :req-un [::trigger-id
                     ::reaction-id])
-   (s/or :success (s/keys :req-un [::xs/statement])
+   (s/or :success (s/keys :req-un [::xs/statement
+                                   :statement/authority])
          :failure (s/keys :req-un [::error]))))
 
 (s/def :lrsql.spec.reaction.query-statement-reactions/result

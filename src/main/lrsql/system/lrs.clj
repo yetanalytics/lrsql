@@ -380,28 +380,33 @@
   rp/StatementReactor
   (-react-to-statement [this statement-id]
     (let [conn (lrs-conn this)
-          statements
+          statement-results
           (jdbc/with-transaction [tx conn]
             (reduce
              (fn [acc {:keys [reaction-id
-                              statement
-                              error]}]
+                              error]
+                       :as   result}]
                (if error
                  (let [input (react-input/error-reaction-input
                               reaction-id error)]
                    (react-cmd/error-reaction! backend tx input)
                    acc)
-                 (conj acc statement)))
+                 (conj acc (select-keys result [:statement :authority]))))
              []
              (:result
               (react-q/query-statement-reactions
                backend tx {:trigger-id statement-id}))))]
-      (lrsp/-store-statements
-       this
-       ;; TODO: Figure out what authority should be assigned!
-       {:agent  {"objectType" "Agent"
-                 "account"    {"homePage" "http://example.org"
-                               "name"     "12341234-0000-4000-1234-123412341234"}}
-        :scopes #{:scope/all}}
-       statements
-       []))))
+      ;; Submit statements one at a time with varying authority
+      {:statement-ids
+       (reduce
+        (fn [acc {:keys [statement authority]}]
+          (into acc
+                (:statement-ids
+                 (lrsp/-store-statements
+                  this
+                  {:agent  authority
+                   :scopes #{:scope/statements.write}}
+                  [statement]
+                  []))))
+        []
+        statement-results)})))

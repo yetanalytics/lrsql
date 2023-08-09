@@ -77,7 +77,8 @@
                    "verb"  {"id" "https://example.com/verbs/completed"},
                    "object"
                    {"id"         "https://example.com/activities/a-and-b",
-                    "objectType" "Activity"}}}]}
+                    "objectType" "Activity"}}
+                  :authority   (:agent tc/auth-ident)}]}
                (qr/query-statement-reactions
                 bk ds {:trigger-id trigger-id})))
         (finally (component/stop sys'))))))
