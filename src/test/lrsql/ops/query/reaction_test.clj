@@ -124,7 +124,7 @@
   ;; Turn off instrumentation for this one
   ;; This will keep the instrumentation error from clobbering
   (support/unstrument-lrsql)
-  (testing "Invalid template"
+  (testing "Invalid statement output"
     (let [sys        (support/test-system)
           sys'       (component/start sys)
           lrs        (-> sys' :lrs)
