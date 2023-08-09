@@ -78,7 +78,46 @@
                    "object"
                    {"id"         "https://example.com/activities/a-and-b",
                     "objectType" "Activity"}}
+                  ;; Authority derived from the trigger statement
                   :authority   (:agent tc/auth-ident)}]}
+               (qr/query-statement-reactions
+                bk ds {:trigger-id trigger-id})))
+        (finally (component/stop sys'))))))
+
+(deftest query-statement-reactions-custom-authority-test
+  (testing "Valid reaction with custom authority"
+    (let [sys        (support/test-system)
+          sys'       (component/start sys)
+          lrs        (-> sys' :lrs)
+          bk         (:backend lrs)
+          ds         (-> sys' :lrs :connection :conn-pool)
+          trigger-id (u/str->uuid (get tc/reaction-stmt-b "id"))
+          {reaction-id
+           :result}  (adp/-create-reaction
+                      lrs
+                      (assoc-in
+                       tc/simple-reaction-ruleset
+                       [:template "authority"]
+                       {"$templatePath" ["a" "actor"]})
+                      true)]
+      ;; Add statements
+      (doseq [s [tc/reaction-stmt-a
+                 tc/reaction-stmt-b]]
+        (Thread/sleep 100)
+        (lrsp/-store-statements lrs tc/auth-ident [s] []))
+      (try
+        (is (= {:result
+                [{:reaction-id reaction-id
+                  :trigger-id  trigger-id
+                  :statement
+                  {"actor" {"mbox" "mailto:bob@example.com"},
+                   "verb"  {"id" "https://example.com/verbs/completed"},
+                   "object"
+                   {"id"         "https://example.com/activities/a-and-b",
+                    "objectType" "Activity"}
+                   "authority" {"mbox" "mailto:bob@example.com"}}
+                  ;; Authority derived from the template
+                  :authority   {"mbox" "mailto:bob@example.com"}}]}
                (qr/query-statement-reactions
                 bk ds {:trigger-id trigger-id})))
         (finally (component/stop sys'))))))

@@ -82,8 +82,7 @@
 (s/def ::ruleset
   (s/keys :req-un [::identity-paths
                    ::conditions
-                   ::template]
-          :opt-un [:statement/authority]))
+                   ::template]))
 
 (s/def ::sqlvec
   (s/cat :ddl string?

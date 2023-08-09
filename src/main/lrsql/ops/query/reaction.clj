@@ -139,8 +139,8 @@
                                           new-statement
                                           reaction-id
                                           trigger-id)
-                            ;; Use a custom authority from the ruleset or use
+                            ;; Use a custom authority from the template or use
                             ;; the trigger statement's authority
-                            :authority   (get ruleset :authority
-                                              (get statement "authority"))}))))))))))
+                            :authority   (or (get new-statement "authority")
+                                             (get statement "authority"))}))))))))))
        active-reactions))}))
