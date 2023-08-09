@@ -33,7 +33,6 @@
   (let [sys  (support/test-system)
         sys' (component/start sys)
         lrs  (-> sys' :lrs)
-        bk   (:backend lrs)
         ds   (-> sys' :lrs :connection :conn-pool)]
     (try
       (testing "Processes simple reaction"
