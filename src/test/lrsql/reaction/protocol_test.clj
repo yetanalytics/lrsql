@@ -87,8 +87,7 @@
 (deftest react-to-statement-error-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
-        lrs  (-> sys' :lrs)
-        ds   (-> sys' :lrs :connection :conn-pool)]
+        lrs  (-> sys' :lrs)]
     (try
       (testing "Stores reaction errors"
         ;; Add a reaction with a bad template
