@@ -11,4 +11,5 @@
  :oidc-scope-prefix       #or [#env LRSQL_OIDC_SCOPE_PREFIX ""]
  :stmt-retry-limit        #or [#env LRSQL_STMT_RETRY_LIMIT 10]
  :stmt-retry-budget       #or [#env LRSQL_STMT_RETRY_BUDGET 1000]
- :enable-reactions        #boolean #or [#env LRSQL_ENABLE_REACTIONS false]}
+ :enable-reactions        #boolean #or [#env LRSQL_ENABLE_REACTIONS false]
+ :reaction-buffer-size    #long #or [#env LRSQL_REACTION_BUFFER_SIZE 10000]}
