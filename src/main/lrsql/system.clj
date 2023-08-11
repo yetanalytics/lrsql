@@ -5,6 +5,7 @@
             [lrsql.system.tuning :as tuning]
             [lrsql.system.lrs :as lrs]
             [lrsql.system.webserver :as webserver]
+            [lrsql.system.reactor :as reactor]
             [lrsql.init.config :refer [read-config]]))
 
 (defn system
@@ -34,11 +35,14 @@
                       [:connection :backend])
          :webserver  (component/using
                       (webserver/map->Webserver {})
-                      [:lrs]))
+                      [:lrs])
+         :reactor    (component/using
+                      (reactor/map->Reactor {})
+                      [:backend :lrs]))
         assoc-config
         (fn [m config-m] (assoc m :config config-m))]
-    ;; This code can be confusing. What is happening is that the above creates 
-    ;; a system map with empty maps and then based on the key of the system, 
+    ;; This code can be confusing. What is happening is that the above creates
+    ;; a system map with empty maps and then based on the key of the system,
     ;; populates the corresponding config (by key) from the overall aero config
     (-> (merge-with assoc-config initial-sys config)
         (component/system-using {}))))

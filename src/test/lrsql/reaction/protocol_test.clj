@@ -30,10 +30,10 @@
 (use-fixtures :each support/fresh-db-fixture)
 
 (deftest react-to-statement-test
-  (let [sys  (support/test-system)
-        sys' (component/start sys)
-        lrs  (-> sys' :lrs)
-        ds   (-> sys' :lrs :connection :conn-pool)]
+  (let [sys                   (support/test-system)
+        sys'                  (component/start sys)
+        {:keys [lrs reactor]} sys'
+        ds                    (-> sys' :lrs :connection :conn-pool)]
     (try
       (testing "Processes simple reaction"
         ;; Add a reaction
@@ -49,7 +49,7 @@
                            (lrsp/-store-statements lrs tc/auth-ident [s] []))
               ;; React to last statement
               {[reaction-s-id] :statement-ids}
-              (rp/-react-to-statement lrs trigger-id)]
+              (rp/-react-to-statement reactor trigger-id)]
           (testing "New statement added"
             (is (= {:statement-result
                     {:statements
@@ -85,9 +85,9 @@
         (component/stop sys')))))
 
 (deftest react-to-statement-error-test
-  (let [sys  (support/test-system)
-        sys' (component/start sys)
-        lrs  (-> sys' :lrs)]
+  (let [sys                   (support/test-system)
+        sys'                  (component/start sys)
+        {:keys [lrs reactor]} sys']
     (try
       (testing "Stores reaction errors"
         ;; Add a reaction with a bad template
@@ -115,7 +115,7 @@
                            (lrsp/-store-statements lrs tc/auth-ident [s] []))]
           (testing "No statement id results"
             (is (= {:statement-ids []}
-                   (rp/-react-to-statement lrs trigger-id))))
+                   (rp/-react-to-statement reactor trigger-id))))
           (testing "No statement added"
             (is (= {:statement-result
                     {:statements
