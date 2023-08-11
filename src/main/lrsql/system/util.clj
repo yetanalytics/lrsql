@@ -1,5 +1,6 @@
 (ns lrsql.system.util
-  (:require [clojure.spec.alpha :as s]
+  (:require [com.stuartsierra.component :as component]
+            [clojure.spec.alpha :as s]
             [clojure.walk :as w]
             [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
@@ -81,3 +82,16 @@
               :port   db-port}
        db-properties
        (merge (parse-db-props db-properties))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Graceful Shutdown
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn add-shutdown-hook!
+  "Given a running system, add a shutdown hook to gracefully stop it."
+  [system]
+  (.addShutdownHook (Runtime/getRuntime)
+                    (Thread. ^Runnable
+                             (fn []
+                               (component/stop system))))
+  system)

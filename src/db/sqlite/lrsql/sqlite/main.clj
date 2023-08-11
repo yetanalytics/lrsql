@@ -1,6 +1,7 @@
 (ns lrsql.sqlite.main
   (:require [com.stuartsierra.component :as component]
             [lrsql.system :as system]
+            [lrsql.system.util :as su]
             [lrsql.sqlite.record :as sr])
   (:gen-class))
 
@@ -14,7 +15,9 @@
            override-profile]}]
   (let [profile (or override-profile
                     (if ephemeral? :test-sqlite-mem :test-sqlite))]
-    (component/start (system/system sqlite-backend profile))))
+    (-> (system/system sqlite-backend profile)
+        component/start
+        su/add-shutdown-hook!)))
 
 (defn -main
   "Main entrypoint for SQLite-backed LRSQL instances. Passing `--ephemeral true`
@@ -25,4 +28,5 @@
         ephemeral?  (Boolean/parseBoolean ?per-str)
         profile     (if ephemeral? :prod-sqlite-mem :prod-sqlite)]
     (-> (system/system sqlite-backend profile)
-        component/start)))
+        component/start
+        su/add-shutdown-hook!)))
