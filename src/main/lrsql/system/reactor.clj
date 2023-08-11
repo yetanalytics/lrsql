@@ -3,16 +3,29 @@
             [next.jdbc                     :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.reaction.protocol       :as rp]
+            [lrsql.init.reaction           :as react-init]
             [lrsql.input.reaction          :as react-input]
             [lrsql.ops.command.reaction    :as react-cmd]
             [lrsql.ops.query.reaction      :as react-q]))
 
 (defrecord Reactor [backend
-                    lrs]
+                    lrs
+                    reaction-executor]
   component/Lifecycle
   (start [this]
-    this)
-  (stop [this] this)
+    (assoc this
+           :reaction-executor
+           (react-init/reaction-executor
+            (:reaction-channel lrs)
+            this)))
+  (stop [this]
+    (react-init/shutdown-reactions!
+     (:reaction-channel lrs)
+     reaction-executor)
+    (assoc this
+           :backend nil
+           :lrs nil
+           :reaction-executor nil))
   rp/StatementReactor
   (-react-to-statement [_ statement-id]
     (let [conn (-> lrs

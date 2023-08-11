@@ -30,7 +30,9 @@
 (use-fixtures :each support/fresh-db-fixture)
 
 (deftest react-to-statement-test
-  (let [sys                   (support/test-system)
+  (let [sys                   (support/test-system
+                               :conf-overrides
+                               {[:lrs :enable-reactions] false})
         sys'                  (component/start sys)
         {:keys [lrs reactor]} sys'
         ds                    (-> sys' :lrs :connection :conn-pool)]
@@ -85,7 +87,9 @@
         (component/stop sys')))))
 
 (deftest react-to-statement-error-test
-  (let [sys                   (support/test-system)
+  (let [sys                   (support/test-system
+                               :conf-overrides
+                               {[:lrs :enable-reactions] false})
         sys'                  (component/start sys)
         {:keys [lrs reactor]} sys']
     (try

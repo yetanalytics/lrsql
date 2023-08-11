@@ -33,12 +33,12 @@
          :lrs        (component/using
                       (lrs/map->LearningRecordStore {})
                       [:connection :backend])
-         :webserver  (component/using
-                      (webserver/map->Webserver {})
-                      [:lrs])
          :reactor    (component/using
                       (reactor/map->Reactor {})
-                      [:backend :lrs]))
+                      [:backend :lrs])
+         :webserver  (component/using
+                      (webserver/map->Webserver {})
+                      [:lrs :reactor]))
         assoc-config
         (fn [m config-m] (assoc m :config config-m))]
     ;; This code can be confusing. What is happening is that the above creates

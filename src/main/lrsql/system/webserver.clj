@@ -99,6 +99,7 @@
 (defrecord Webserver [service
                       server
                       lrs
+                      reactor
                       config]
   component/Lifecycle
   (start
@@ -144,6 +145,7 @@
           (assoc this
                  :service nil
                  :server nil
-                 :lrs nil))
+                 :lrs nil
+                 :reactor nil))
       (do (log/info "Webserver already stopped; do nothing.")
           this))))
