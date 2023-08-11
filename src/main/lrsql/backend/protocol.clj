@@ -124,6 +124,7 @@
   (-insert-reaction! [this tx input])
   (-update-reaction! [this tx input])
   (-delete-reaction! [this tx input])
+  (-error-reaction! [this tx input])
   ;; Query Snippets
   (-snip-json-extract [this params])
   (-snip-val [this params])

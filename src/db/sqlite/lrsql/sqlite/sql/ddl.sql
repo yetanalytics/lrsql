@@ -438,7 +438,8 @@ CREATE TABLE IF NOT EXISTS reaction (
   ruleset    BLOB NOT NULL,             -- serialized reaction spec
   created    TIMESTAMP NOT NULL,        -- timestamp
   modified   TIMESTAMP NOT NULL,        -- timestamp
-  active     INTEGER                    -- true/false/null - active/inactive/soft delete
+  active     INTEGER,                   -- true/false/null - active/inactive/soft delete
+  error      BLOB                       -- serialized error
 )
 
 -- :name query-xapi-statement-reaction-id-exists

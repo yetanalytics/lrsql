@@ -103,6 +103,17 @@
 
 (s/def ::modified c/instant-spec)
 
+(s/def :lrsql.spec.reaction.error/type
+  #{"ReactionQueryError"
+    "ReactionTemplateError"
+    "ReactionInvalidStatementError"})
+
+(s/def :lrsql.spec.reaction.error/message string?)
+
+(s/def ::error
+  (s/keys :req-un [:lrsql.spec.reaction.error/type
+                   :lrsql.spec.reaction.error/message]))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inputs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -138,7 +149,15 @@
                    ::active]))
 
 (def delete-reaction-input-spec
-  (s/keys :req-un [::reaction-id]))
+  (s/keys :req-un [::reaction-id
+                   ::modified]))
+
+(s/def :lrsql.spec.reaction.serialized/error bytes?)
+
+(def error-reaction-input-spec
+  (s/keys :req-un [::reaction-id
+                   ::modified
+                   :lrsql.spec.reaction.serialized/error]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Results
@@ -153,24 +172,24 @@
   (s/every (s/keys :req-un [::id
                             ::ruleset])))
 
+(s/def :lrsql.spec.reaction.query-all-reactions/error
+  (s/nilable ::error))
+
 (def query-all-reactions-ret-spec
   (s/every (s/keys :req-un [::id
                             ::ruleset
                             ::active
                             ::created
-                            ::modified])))
-
-(s/def :lrsql.reaction/error
-  #{:lrsql.reaction.error/query
-    :lrsql.reaction.error/template
-    :lrsql.reaction.error/invalid-statement})
+                            ::modified
+                            :lrsql.spec.reaction.query-all-reactions/error])))
 
 (def query-statement-reactions-ret-element-spec
   (s/merge
    (s/keys :req-un [::trigger-id
                     ::reaction-id])
-   (s/or :success (s/keys :req-un [::xs/statement])
-         :failure (s/keys :req-un [:lrsql.reaction/error]))))
+   (s/or :success (s/keys :req-un [::xs/statement
+                                   :statement/authority])
+         :failure (s/keys :req-un [::error]))))
 
 (s/def :lrsql.spec.reaction.query-statement-reactions/result
   (s/every query-statement-reactions-ret-element-spec))
@@ -204,3 +223,11 @@
 
 (def delete-reaction-ret-spec
   (s/keys :req-un [:lrsql.spec.reaction.delete/result]))
+
+(s/def :lrsql.spec.reaction.error-reaction/result
+  (s/nonconforming
+   (s/or :success uuid?
+         :failure #{:lrsql.reaction/reaction-not-found-error})))
+
+(def error-reaction-ret-spec
+  (s/keys :req-un [:lrsql.spec.reaction.error-reaction/result]))

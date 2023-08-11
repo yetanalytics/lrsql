@@ -375,7 +375,7 @@ WHERE active IS TRUE;
 -- :command :query
 -- :result :many
 -- :doc Query all active and inactive reactions
-SELECT id, ruleset, active, created, modified
+SELECT id, ruleset, active, created, modified, error
 FROM reaction
 WHERE active IS NOT NULL;
 

@@ -19,7 +19,7 @@
      :created     squuid-ts
      :modified    squuid-ts}))
 
-(s/fdef update-reaction-input-spec
+(s/fdef update-reaction-input
   :args (s/cat :reaction-id ::rs/reaction-id
                :ruleset (s/nilable ::rs/ruleset)
                :active (s/nilable ::rs/active))
@@ -37,11 +37,24 @@
    (when (some? active)
      {:active active})))
 
-(s/fdef delete-reaction-input-spec
+(s/fdef delete-reaction-input
   :args (s/cat :reaction-id ::rs/reaction-id)
   :ret rs/delete-reaction-input-spec)
 
 (defn delete-reaction-input
   "Given `reaction-id`, construct the input map for `delete-reaction!`."
   [reaction-id]
-  {:reaction-id reaction-id})
+  {:reaction-id reaction-id
+   :modified    (u/current-time)})
+
+(s/fdef error-reaction-input
+  :args (s/cat :reaction-id ::rs/reaction-id
+               :error       ::rs/error)
+  :ret rs/error-reaction-input-spec)
+
+(defn error-reaction-input
+  "Given `reaction-id` and `error`, construct the input map for `error-reaction!`"
+  [reaction-id error]
+  {:reaction-id reaction-id
+   :modified    (u/current-time)
+   :error       (ru/serialize-error error)})
