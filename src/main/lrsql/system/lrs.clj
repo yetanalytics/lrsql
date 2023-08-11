@@ -7,6 +7,7 @@
             [lrsql.admin.protocol          :as adp]
             [lrsql.init                    :as init]
             [lrsql.init.oidc               :as oidc-init]
+            [lrsql.init.reaction           :as react-init]
             [lrsql.backend.protocol        :as bp]
             [lrsql.input.actor             :as agent-input]
             [lrsql.input.activity          :as activity-input]
@@ -48,7 +49,8 @@
                                 backend
                                 config
                                 authority-fn
-                                oidc-authority-fn]
+                                oidc-authority-fn
+                                reaction-channel]
   cmp/Lifecycle
   (start
     [lrs]
@@ -77,11 +79,16 @@
         (assoc lrs
                :connection connection
                :authority-fn auth-fn
-               :oidc-authority-fn oidc-auth-fn))))
+               :oidc-authority-fn oidc-auth-fn
+               :reaction-channel (react-init/reaction-channel config)))))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
-    (assoc lrs :connection nil :authority-fn nil))
+    (assoc lrs
+           :connection nil
+           :authority-fn nil
+           :oidc-authority-fn nil
+           :reaction-channel nil))
 
   lrsp/AboutResource
   (-get-about
@@ -135,8 +142,11 @@
                     stmt-result)
                 ;; Non-error result - continue
                 (if-some [stmt-id (:statement-id stmt-result)]
-                  (recur (rest stmt-ins)
-                         (update stmt-res :statement-ids conj stmt-id))
+                  (do
+                    ;; Submit statement for reaction if enabled
+                    (react-init/offer-trigger! reaction-channel stmt-id)
+                    (recur (rest stmt-ins)
+                           (update stmt-res :statement-ids conj stmt-id)))
                   (recur (rest stmt-ins)
                          stmt-res))))
             ;; No more statement inputs - return
