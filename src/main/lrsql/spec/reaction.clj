@@ -2,6 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [xapi-schema.spec :as xs]
             [lrsql.backend.protocol :as bp]
+            [lrsql.reaction.protocol :as rp]
             [lrsql.spec.common :as c]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11,6 +12,10 @@
 (defn reaction-backend?
   [bk]
   (satisfies? bp/ReactionBackend bk))
+
+(defn reactor?
+  [x]
+  (satisfies? rp/StatementReactor x))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Axioms

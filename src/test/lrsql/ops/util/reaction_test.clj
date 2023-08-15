@@ -32,7 +32,9 @@
 (use-fixtures :each support/fresh-db-fixture)
 
 (deftest query-reaction-test
-  (let [sys  (support/test-system)
+  (let [sys  (support/test-system
+              :conf-overrides
+              {[:lrs :enable-reactions] false})
         sys' (component/start sys)
         lrs  (-> sys' :lrs)
         bk   (:backend lrs)
@@ -115,7 +117,9 @@
       (finally (component/stop sys')))))
 
 (deftest query-active-reactions-test
-  (let [sys  (support/test-system)
+  (let [sys  (support/test-system
+              :conf-overrides
+              {[:lrs :enable-reactions] false})
         sys' (component/start sys)
         lrs  (-> sys' :lrs)
         bk   (:backend lrs)
@@ -139,7 +143,9 @@
       (finally (component/stop sys')))))
 
 (deftest query-reaction-history-test
-  (let [sys    (support/test-system)
+  (let [sys    (support/test-system
+                :conf-overrides
+                {[:lrs :enable-reactions] false})
         sys'   (component/start sys)
         lrs    (-> sys' :lrs)
         bk     (:backend lrs)

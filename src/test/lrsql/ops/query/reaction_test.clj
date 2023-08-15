@@ -54,7 +54,9 @@
 
 (deftest query-statement-reactions-valid-test
   (testing "valid reaction"
-    (let [sys        (support/test-system)
+    (let [sys        (support/test-system
+                      :conf-overrides
+                      {[:lrs :enable-reactions] false})
           sys'       (component/start sys)
           lrs        (-> sys' :lrs)
           bk         (:backend lrs)
@@ -86,7 +88,9 @@
 
 (deftest query-statement-reactions-custom-authority-test
   (testing "Valid reaction with custom authority"
-    (let [sys        (support/test-system)
+    (let [sys        (support/test-system
+                      :conf-overrides
+                      {[:lrs :enable-reactions] false})
           sys'       (component/start sys)
           lrs        (-> sys' :lrs)
           bk         (:backend lrs)
@@ -124,7 +128,9 @@
 
 (deftest query-statement-reactions-template-error-test
   (testing "Invalid template"
-    (let [sys        (support/test-system)
+    (let [sys        (support/test-system
+                      :conf-overrides
+                      {[:lrs :enable-reactions] false})
           sys'       (component/start sys)
           lrs        (-> sys' :lrs)
           bk         (:backend lrs)
@@ -164,7 +170,9 @@
   ;; This will keep the instrumentation error from clobbering
   (support/unstrument-lrsql)
   (testing "Invalid statement output"
-    (let [sys        (support/test-system)
+    (let [sys        (support/test-system
+                      :conf-overrides
+                      {[:lrs :enable-reactions] false})
           sys'       (component/start sys)
           lrs        (-> sys' :lrs)
           bk         (:backend lrs)

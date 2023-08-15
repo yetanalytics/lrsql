@@ -10,4 +10,6 @@
  :oidc-authority-template "config/oidc_authority.json.template"
  :oidc-scope-prefix       ""
  :stmt-retry-limit        20
- :stmt-retry-budget       10000}
+ :stmt-retry-budget       10000
+ :enable-reactions        true
+ :reaction-buffer-size    10000}

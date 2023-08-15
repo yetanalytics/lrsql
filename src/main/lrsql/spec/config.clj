@@ -121,6 +121,9 @@
 (s/def ::oidc-authority-template string?)
 (s/def ::oidc-scope-prefix string?)
 
+(s/def ::enable-reactions boolean?)
+(s/def ::reaction-buffer-size pos-int?)
+
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
          (s/conformer u/remove-neg-vals)
@@ -130,7 +133,9 @@
                           ::authority-template
                           ::authority-url
                           ::oidc-authority-template
-                          ::oidc-scope-prefix]
+                          ::oidc-scope-prefix
+                          ::enable-reactions
+                          ::reaction-buffer-size]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default

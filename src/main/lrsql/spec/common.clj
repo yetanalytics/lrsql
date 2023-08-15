@@ -1,7 +1,8 @@
 (ns lrsql.spec.common
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
-            [next.jdbc.protocols :as jp])
+            [next.jdbc.protocols :as jp]
+            [clojure.core.async.impl.protocols :as ap])
   (:import [java.time Instant]))
 
 ;; UUIDs
@@ -35,3 +36,6 @@
       (sgen/fmap
        #(Instant/ofEpochSecond %)
        (sgen/large-integer* {:min 0})))))
+
+;; Core.async channels
+(s/def ::channel #(satisfies? ap/Channel %))
