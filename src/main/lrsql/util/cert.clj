@@ -23,7 +23,7 @@
    [org.bouncycastle.asn1.x509
     X509Name]))
 
-(defn bc-selfie
+(defn selfie
   [& {:keys [^String dn
              ^Long days
              ^String alg]
@@ -33,7 +33,7 @@
   (let [^KeyPairGenerator kpg         (KeyPairGenerator/getInstance "RSA")
         ^KeyPair key-pair             (.generateKeyPair kpg)
         ^PrivateKey private-key       (.getPrivate key-pair)
-        ^PublicKey public-key       (.getPublic key-pair)
+        ^PublicKey public-key         (.getPublic key-pair)
         ^java.util.Date from          (new java.util.Date)
         ^java.lang.Long to-millis     (-> from .getTime (+ (* days 86400000)))
         ^java.util.Date to            (new java.util.Date to-millis)
@@ -59,7 +59,7 @@
    & selfie-args]
   (let [{:keys
          [^X509CertImpl cert
-          ^KeyPair key-pair]} (apply bc-selfie selfie-args)]
+          ^KeyPair key-pair]} (apply selfie selfie-args)]
     {:keystore (doto (KeyStore/getInstance
                       (KeyStore/getDefaultType))
                  (.load nil nil)
