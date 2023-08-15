@@ -24,6 +24,8 @@
     X509Name]))
 
 (defn selfie
+  "Given a string dn, expiry length in days and algorithm type string, return 
+   a self-signed cert & KeyPair"
   [& {:keys [^String dn
              ^Long days
              ^String alg]
