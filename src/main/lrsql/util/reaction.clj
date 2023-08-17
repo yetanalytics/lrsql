@@ -2,12 +2,10 @@
   "Utilities to support reactions."
   (:require [clojure.spec.alpha :as s]
             [clojure.walk :as walk]
+            [lrsql.spec.common :as cs]
             [lrsql.spec.reaction :as rs]
             [lrsql.spec.statement :as ss]
-            [xapi-schema.spec :as xs]
-            [cheshire.core :as cjson]
-            [clojure.java.io :as io])
-  (:import [java.io ByteArrayOutputStream]))
+            [xapi-schema.spec :as xs]))
 
 (s/fdef path->string
   :args (s/cat :path ::rs/path
@@ -68,64 +66,6 @@
   (vary-meta statement merge {::ss/reaction-id reaction-id
                               ::ss/trigger-id  trigger-id}))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Ruleset JSON
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Like JSON processing here:
-;; https://github.com/yetanalytics/lrsql/blob/master/src/main/lrsql/util.clj
-;; But allows serialization of data with keyword keys, deserialization to same
-
-(defn- write-json*
-  "Write `jsn` to an output stream."
-  [out-stream jsn]
-  (with-open [wtr (io/writer out-stream)]
-    (cjson/generate-stream jsn wtr)
-    out-stream))
-
-(s/fdef serialize-ruleset
-  :args (s/cat :ruleset ::rs/ruleset)
-  :ret bytes?)
-
-(defn serialize-ruleset
-  "Serialize reaction ruleset to a byte array for storage."
-  [ruleset]
-  (let [out-stream (ByteArrayOutputStream. 4096)]
-    (.toByteArray ^ByteArrayOutputStream (write-json* out-stream ruleset))))
-
-(s/fdef serialize-error
-  :args (s/cat :error ::rs/error)
-  :ret bytes?)
-
-(defn serialize-error
-  "Serialize reaction error to a byte array for storage."
-  [error]
-  (let [out-stream (ByteArrayOutputStream. 4096)]
-    (.toByteArray ^ByteArrayOutputStream (write-json* out-stream error))))
-
-(s/fdef deserialize-ruleset
-  :args (s/cat :ruleset-bytes bytes?)
-  :ret ::rs/ruleset)
-
-(defn deserialize-ruleset
-  "Deserialize ruleset from a byte array and conform it."
-  [ruleset-bytes]
-  (update
-   (with-open [r (io/reader ruleset-bytes)]
-     (cjson/parse-stream r (partial keyword nil)))
-   :template
-   walk/stringify-keys))
-
-(s/fdef deserialize-error
-  :args (s/cat :error-bytes bytes?)
-  :ret ::rs/error)
-
-(defn deserialize-error
-  "Deserialize error from a byte array."
-  [error-bytes]
-  (with-open [r (io/reader error-bytes)]
-    (cjson/parse-stream r (partial keyword nil))))
-
 (s/fdef generate-statement
   :args (s/cat :cond-map (s/map-of simple-keyword?
                                    ::xs/statement)
@@ -145,3 +85,12 @@
                         result))
                     %)
                  template))
+
+(s/fdef stringify-template
+  :args (s/cat :raw-ruleset ::cs/any-json)
+  :ret ::rs/ruleset)
+
+(defn stringify-template
+  "On read, the reaction template has keyword keys. Stringify them!"
+  [raw-ruleset]
+  (update raw-ruleset :template walk/stringify-keys))

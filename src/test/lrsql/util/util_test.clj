@@ -47,6 +47,8 @@
   (testing "parsing JSON"
     (is (= {"foo" "bar"}
            (util/parse-json "{\"foo\":\"bar\"}")))
+    (is (= {:foo "bar"}
+           (util/parse-json "{\"foo\":\"bar\"}" :keyword-keys? true)))
     (is (every? (fn [[s jsn]] (= (util/parse-json s) jsn))
                 unicode-fixtures))
     (is (try (util/parse-json "{\"foo\":\"bar\"} {\"baz\":\"qux\"}")

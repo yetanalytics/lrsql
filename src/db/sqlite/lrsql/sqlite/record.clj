@@ -244,7 +244,9 @@
   (-set-read! [_]
     (bd/set-read-time->instant!)
     (bd/set-read-bytes->json! ; SQLite returns JSON data as byte arrays even
-     #{"payload"})            ; though the data type is "BLOB"
+     #{"payload"}             ; though the data type is "BLOB"
+     #{"ruleset"
+       "error"})
     (sd/set-read-str->uuid-or-inst!
      #{"id"
        "statement_id"
@@ -252,8 +254,12 @@
        "ancestor_id"
        "descendant_id"
        "cred_id"
-       "account_id"}
-     #{"last_modified"}))
+       "account_id"
+       "reaction_id"
+       "trigger_id"}
+     #{"last_modified"
+       "created"
+       "modified"}))
   (-set-write! [_]
     (bd/set-write-json->bytes!)
     (sd/set-write-uuid->str!)

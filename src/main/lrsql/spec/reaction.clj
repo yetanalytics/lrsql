@@ -128,8 +128,6 @@
                    ::trigger-id
                    ::statement-identity]))
 
-(s/def :lrsql.spec.reaction.serialized/ruleset bytes?)
-
 (def query-statement-reactions-input-spec
   (s/keys :req-un [::trigger-id]))
 
@@ -142,7 +140,7 @@
 
 (def insert-reaction-input-spec
   (s/keys :req-un [::primary-key
-                   :lrsql.spec.reaction.serialized/ruleset
+                   ::ruleset
                    ::active
                    ::created
                    ::modified]))
@@ -150,19 +148,17 @@
 (def update-reaction-input-spec
   (s/keys :req-un [::reaction-id
                    ::modified]
-          :opt-un [:lrsql.spec.reaction.serialized/ruleset
+          :opt-un [::ruleset
                    ::active]))
 
 (def delete-reaction-input-spec
   (s/keys :req-un [::reaction-id
                    ::modified]))
 
-(s/def :lrsql.spec.reaction.serialized/error bytes?)
-
 (def error-reaction-input-spec
   (s/keys :req-un [::reaction-id
                    ::modified
-                   :lrsql.spec.reaction.serialized/error]))
+                   ::error]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Results

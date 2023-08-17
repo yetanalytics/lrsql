@@ -3,7 +3,6 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.reaction :as rs]
-            [lrsql.util :as u]
             [lrsql.util.reaction :as ru]
             [cheshire.core :as json]
             [xapi-schema.spec :as-alias xs]
@@ -208,7 +207,7 @@
   (mapv
    (fn [{:keys [id ruleset]}]
      {:id      id
-      :ruleset (ru/deserialize-ruleset ruleset)})
+      :ruleset (ru/stringify-template ruleset)})
    (bp/-query-active-reactions bk tx)))
 
 (s/fdef query-reaction-history
@@ -223,5 +222,5 @@
   [bk tx input]
   {:result (into #{}
                  (map
-                  (comp u/str->uuid :reaction_id)
+                  :reaction_id
                   (bp/-query-reaction-history bk tx input)))})
