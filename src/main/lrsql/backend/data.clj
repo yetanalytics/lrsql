@@ -42,21 +42,6 @@
     (read-column-by-index [^"[B" b ^ResultSetMetaData rsmeta ^long i]
       (parse-json-payload json-labels (.getColumnLabel rsmeta i) b))))
 
-(defn set-read-blob->json!
-  "Set reading java.sql.Blob instances as JSON data if the column label is a
-   member of the set `json-labels`."
-  [json-labels]
-  (extend-protocol ReadableColumn
-    Blob ; SQL Blobs - convert to bytes
-    (read-column-by-label [^Blob b ^String label]
-      (parse-json-payload json-labels
-                          label
-                          (.getBytes b 1 (.length b))))
-    (read-column-by-index [^Blob b ^ResultSetMetaData rsmeta ^long i]
-      (parse-json-payload json-labels
-                          (.getColumnLabel rsmeta i)
-                          (.getBytes b 1 (.length b))))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Write
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
