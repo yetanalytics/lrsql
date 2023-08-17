@@ -341,15 +341,15 @@
       (let [store-statements! (if async?
                                 store-statements-async!
                                 store-statements-sync!)
-            results           (store-statements! opts)]
+            results           (store-statements! opts)
+            _                 (log/info "Statement insertion finished.")]
         (printf "\n%s Insert benchmark results for n = %d (in ms) %s\n"
                 "**********"
                 (quot insert-size batch-size)
                 "**********")
         (pprint/print-table [(merge {:n-statements insert-size
                                      :batch-size   batch-size}
-                                    results)]))
-      (log/info "Statement insertion finished."))
+                                    results)])))
     ;; Query statements
     (log/info "Starting statement query benching...")
     (let [query-statements (if async?
