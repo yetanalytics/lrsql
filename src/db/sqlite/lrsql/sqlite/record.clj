@@ -254,8 +254,12 @@
        "ancestor_id"
        "descendant_id"
        "cred_id"
-       "account_id"}
-     #{"last_modified"}))
+       "account_id"
+       "reaction_id"
+       "trigger_id"}
+     #{"last_modified"
+       "created"
+       "modified"}))
   (-set-write! [_]
     (bd/set-write-json->bytes!)
     (sd/set-write-uuid->str!)

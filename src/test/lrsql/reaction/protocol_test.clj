@@ -75,8 +75,8 @@
                         [:statement-result :statements]
                         #(mapv remove-props %))))))
           (testing "New statement reaction metadata"
-            (is (= [#:xapi_statement{:reaction_id (u/uuid->str reaction-id)
-                                     :trigger_id  (u/uuid->str trigger-id)}]
+            (is (= [#:xapi_statement{:reaction_id reaction-id
+                                     :trigger_id  trigger-id}]
                    (jdbc/execute!
                     ds
                     ["SELECT reaction_id, trigger_id
