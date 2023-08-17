@@ -105,6 +105,26 @@
     (a/<!! (a/into [] res-chan))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Stats
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- calc-statistics
+  [x-vec n]
+  (binding [*unchecked-math* true] ; Micro-optimize
+    (let [x-max  (apply max x-vec)
+          x-min  (apply min x-vec)
+          x-sum  (reduce + x-vec)
+          x-mean (quot x-sum n)
+          ;; Calculate sample (not population) standard deviation
+          x-sdel (map #(math/expt (- % x-mean) 2) x-vec)
+          x-sd   (math/round (math/sqrt (quot (reduce + x-sdel) n)))]
+      {:mean  x-mean
+       :sd    x-sd
+       :max   x-max
+       :min   x-min
+       :total x-sum})))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -140,6 +160,14 @@
         refs' (assoc-stmt-refs tgts refs)]
     (cons (first tgts) refs')))
 
+(defn perform-insert
+  [endpoint curl-input]
+  (let [start (jt/instant)
+        _     (curl/post endpoint curl-input)
+        end   (jt/instant)
+        dur   (jt/duration start end)]
+    (jt/as dur :millis)))
+
 (defn store-statements-sync!
   [{endpoint   :lrs-endpoint
     input-uri  :insert-input
@@ -150,13 +178,18 @@
     sref-type  :statement-ref-type}]
   (let [inputs  (read-insert-input input-uri)
         stmts   (generate-statements inputs size sref-type)]
-    (loop [batches (partition-all batch-size stmts)]
-      (when-some [batch (first batches)]
-        (curl/post endpoint
-                   {:headers    headers
-                    :body       (u/write-json-str (vec batch))
-                    :basic-auth [user pass]})
-        (recur (rest batches))))))
+    (loop [batches (partition-all batch-size stmts)
+           timings (transient [])]
+      (if-some [batch (first batches)]
+        (recur (rest batches)
+               (conj! timings
+                      (perform-insert
+                       endpoint
+                       {:headers    headers
+                        :body       (u/write-json-str (vec batch))
+                        :basic-auth [user pass]})))
+        (let [timings-ret (persistent! timings)]
+          (calc-statistics timings-ret (count timings-ret)))))))
 
 (defn store-statements-async!
   [{endpoint    :lrs-endpoint
@@ -173,12 +206,12 @@
                          {:headers    headers
                           :body       (u/write-json-str (vec batch))
                           :basic-auth [user pass]})
-                       (partition-all batch-size stmts))]
-    (perform-async-op! curl/post
-                       endpoint
-                       requests
-                       concurrency)
-    nil))
+                       (partition-all batch-size stmts))
+        timings  (perform-async-op! perform-insert
+                                    endpoint
+                                    requests
+                                    concurrency)]
+    (calc-statistics timings (count timings))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Query
@@ -191,22 +224,6 @@
         end   (jt/instant)
         dur   (jt/duration start end)]
     (jt/as dur :millis)))
-
-(defn- calc-statistics
-  [x-vec n]
-  (binding [*unchecked-math* true] ; Micro-optimize
-    (let [x-max  (apply max x-vec)
-          x-min  (apply min x-vec)
-          x-sum  (reduce + x-vec)
-          x-mean (quot x-sum n)
-          ;; Calculate sample (not population) standard deviation
-          x-sdel (map #(math/expt (- % x-mean) 2) x-vec)
-          x-sd   (math/round (math/sqrt (quot (reduce + x-sdel) n)))]
-      {:mean  x-mean
-       :sd    x-sd
-       :max   x-max
-       :min   x-min
-       :total x-sum})))
 
 ;; Sync
 
@@ -288,7 +305,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Putting it all together
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
+
 (defn -main
   [& args]
   (let [{:keys [summary errors]
@@ -297,12 +314,12 @@
                  async?
                  query-number
                  help
+                 insert-size
+                 batch-size
                  ;; Options that aren't used in `-main` but are later on
                  _lrs-endpoint
                  _query-input
-                 _insert-size
                  _statement-ref-type
-                 _batch-size
                  _concurrency
                  _user
                  _pass]
@@ -323,8 +340,15 @@
       (log/info "Starting statement insertion...")
       (let [store-statements! (if async?
                                 store-statements-async!
-                                store-statements-sync!)]
-        (store-statements! opts))
+                                store-statements-sync!)
+            results           (store-statements! opts)]
+        (printf "\n%s Insert benchmark results for n = %d (in ms) %s\n"
+                "**********"
+                (quot insert-size batch-size)
+                "**********")
+        (pprint/print-table [(merge {:n-statements insert-size
+                                     :batch-size   batch-size}
+                                    results)]))
       (log/info "Statement insertion finished."))
     ;; Query statements
     (log/info "Starting statement query benching...")
