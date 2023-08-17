@@ -248,18 +248,20 @@
 (defn- parse-json*
   "Read a JSON string or byte array `data`. In the byte array case, it will
    be string-encoded using the UTF-8 charset."
-  [data]
+  [data & json-args]
   (let [string (if (bytes? data) (bytes->str data) data)]
     (with-open [rdr (PushbackReader. (StringReader. string) 64)]
-      (doall (cjson/parsed-seq rdr)))))
+      (doall (apply cjson/parsed-seq rdr json-args)))))
 
 (s/def ::object? boolean?)
+(s/def ::keyword-keys? boolean?)
 
 (s/fdef parse-json
   :args (s/cat :data (s/with-gen
                        (s/or :string string? :bytes bytes?)
                        json-bytes-gen-fn)
-               :kwargs (s/keys* :opt-un [::object?]))
+               :kwargs (s/keys* :opt-un [::object?
+                                         ::keyword-keys?]))
   :ret ::cs/any-json)
 
 (defn parse-json
@@ -269,8 +271,13 @@
 
    In the byte array case, `data` will be string-encoded using the UTF-8
    charset."
-  [data & {:keys [object?] :or {object? true}}]
-  (let [[result & ?more] (wrap-parse-fn parse-json* "JSON" data)]
+  [data & {:keys [object? keyword-keys?]
+           :or   {object?       true
+                  keyword-keys? false}}]
+  (let [parse-fn         (if keyword-keys?
+                           #(parse-json* % (partial keyword nil))
+                           parse-json*)
+        [result & ?more] (wrap-parse-fn parse-fn "JSON" data)]
     (cond
       ?more
       (throw (ex-info "More input after first JSON data!"
