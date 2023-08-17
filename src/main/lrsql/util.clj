@@ -260,7 +260,7 @@
                        (s/or :string string? :bytes bytes?)
                        json-bytes-gen-fn)
                :kwargs (s/keys* :opt-un [::object?]))
-  :ret ::xs/any-json)
+  :ret ::cs/any-json)
 
 (defn parse-json
   "Read a JSON string or byte array `data`. `data` must only consist of one
@@ -292,7 +292,7 @@
     out-stream))
 
 (s/fdef write-json
-  :args (s/cat :jsn ::xs/any-json)
+  :args (s/cat :jsn ::cs/any-json)
   :ret bytes?)
 
 (defn write-json
@@ -302,7 +302,7 @@
     (.toByteArray ^ByteArrayOutputStream (write-json* out-stream jsn))))
 
 (s/fdef write-json-str
-  :args (s/cat :jsn ::xs/any-json)
+  :args (s/cat :jsn ::cs/any-json)
   :ret string?)
 
 (defn write-json-str

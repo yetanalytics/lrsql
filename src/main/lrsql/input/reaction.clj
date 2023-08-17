@@ -14,7 +14,7 @@
   (let [{squuid    :squuid
          squuid-ts :timestamp} (u/generate-squuid*)]
     {:primary-key squuid
-     :ruleset     (ru/serialize-ruleset ruleset)
+     :ruleset     ruleset
      :active      active
      :created     squuid-ts
      :modified    squuid-ts}))
@@ -33,7 +33,7 @@
    {:reaction-id reaction-id
     :modified    (u/current-time)}
    (when ruleset
-     {:ruleset (ru/serialize-ruleset ruleset)})
+     {:ruleset ruleset})
    (when (some? active)
      {:active active})))
 
@@ -57,4 +57,4 @@
   [reaction-id error]
   {:reaction-id reaction-id
    :modified    (u/current-time)
-   :error       (ru/serialize-error error)})
+   :error       error})
