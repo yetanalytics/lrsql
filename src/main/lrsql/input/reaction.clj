@@ -1,8 +1,7 @@
 (ns lrsql.input.reaction
   (:require [clojure.spec.alpha :as s]
             [lrsql.spec.reaction :as rs]
-            [lrsql.util :as u]
-            [lrsql.util.reaction :as ru]))
+            [lrsql.util :as u]))
 
 (s/fdef insert-reaction-input
   :args (s/cat :ruleset ::rs/ruleset :active ::rs/active)
