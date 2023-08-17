@@ -208,7 +208,7 @@
   (mapv
    (fn [{:keys [id ruleset]}]
      {:id      id
-      :ruleset (ru/deserialize-ruleset ruleset)})
+      :ruleset (ru/stringify-template ruleset)})
    (bp/-query-active-reactions bk tx)))
 
 (s/fdef query-reaction-history
