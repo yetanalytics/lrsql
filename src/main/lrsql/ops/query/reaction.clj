@@ -3,7 +3,6 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.reaction :as rs]
-            [lrsql.util :as u]
             [lrsql.util.reaction :as ru]
             [lrsql.ops.util.reaction :as ur]
             [xapi-schema.spec :as xs]
@@ -25,12 +24,11 @@
                 modified
                 error]}]
      {:id       id
-      :ruleset  (ru/deserialize-ruleset ruleset)
+      :ruleset  (ru/stringify-template ruleset)
       :active   (= 1 active)
-      :created  (u/str->time created)
-      :modified (u/str->time modified)
-      :error    (when error
-                  (ru/deserialize-error error))})
+      :created  created
+      :modified modified
+      :error    error})
    (bp/-query-all-reactions bk tx)))
 
 (s/fdef query-statement-reactions

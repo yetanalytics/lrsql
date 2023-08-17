@@ -3,7 +3,6 @@
             [lrsql.util :as u]
             [lrsql.util.reaction :as r]
             [lrsql.spec.statement :as ss]
-            [lrsql.test-constants :as tc]
             [lrsql.test-support :as support]))
 
 (use-fixtures :once support/instrumentation-fixture)
@@ -58,13 +57,6 @@
     (is (= {::ss/reaction-id reaction-id
             ::ss/trigger-id  trigger-id}
            (meta (r/add-reaction-metadata stmt-a reaction-id trigger-id))))))
-
-(deftest reaction-ruleset-serde-test
-  (testing "Serde round-trip"
-    (is (= tc/simple-reaction-ruleset
-           (-> tc/simple-reaction-ruleset
-               r/serialize-ruleset
-               r/deserialize-ruleset)))))
 
 (def fake-cond-map
   {:completed_a {"id"      "6fbd600f-d17c-4c74-801a-2ec2e53231f7"

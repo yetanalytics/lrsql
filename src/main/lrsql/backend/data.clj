@@ -9,7 +9,7 @@
             [next.jdbc.result-set :refer [ReadableColumn]]
             [lrsql.util :as u])
   (:import [clojure.lang IPersistentMap]
-           [java.sql Blob PreparedStatement ResultSetMetaData]))
+           [java.sql PreparedStatement ResultSetMetaData]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Read
@@ -25,37 +25,25 @@
 ;; JSON
 
 (defn- parse-json-payload
-  [json-labels label ^"[B" b]
+  [json-labels json-kw-labels label ^"[B" b]
   (let [label (cstr/lower-case label)]
-    (if (json-labels label) (u/parse-json b) b)))
+    (cond
+      (json-labels label) (u/parse-json b)
+      (json-kw-labels label) (u/parse-json b :keyword-keys? true)
+      :else b)))
 
 (defn set-read-bytes->json!
   "Set reading byte arrays as JSON data if the column label is a member of the
    set `json-labels`."
-  [json-labels]
+  [json-labels json-kw-labels]
   ;; Note: due to a long-standing bug, the byte array extension needs to come
   ;; first: https://clojure.atlassian.net/browse/CLJ-1381#icft=CLJ-1381
   (extend-protocol ReadableColumn
     (Class/forName "[B")
     (read-column-by-label [^"[B" b ^String label]
-      (parse-json-payload json-labels label b))
+      (parse-json-payload json-labels json-kw-labels label b))
     (read-column-by-index [^"[B" b ^ResultSetMetaData rsmeta ^long i]
-      (parse-json-payload json-labels (.getColumnLabel rsmeta i) b))))
-
-(defn set-read-blob->json!
-  "Set reading java.sql.Blob instances as JSON data if the column label is a
-   member of the set `json-labels`."
-  [json-labels]
-  (extend-protocol ReadableColumn
-    Blob ; SQL Blobs - convert to bytes
-    (read-column-by-label [^Blob b ^String label]
-      (parse-json-payload json-labels
-                          label
-                          (.getBytes b 1 (.length b))))
-    (read-column-by-index [^Blob b ^ResultSetMetaData rsmeta ^long i]
-      (parse-json-payload json-labels
-                          (.getColumnLabel rsmeta i)
-                          (.getBytes b 1 (.length b))))))
+      (parse-json-payload json-labels json-kw-labels (.getColumnLabel rsmeta i) b))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Write
