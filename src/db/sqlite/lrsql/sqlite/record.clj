@@ -259,7 +259,9 @@
        "trigger_id"}
      #{"last_modified"
        "created"
-       "modified"}))
+       "modified"})
+    (sd/set-read-int->bool!
+     #{"active"}))
   (-set-write! [_]
     (bd/set-write-json->bytes!)
     (sd/set-write-uuid->str!)
