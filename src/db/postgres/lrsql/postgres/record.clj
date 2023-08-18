@@ -5,7 +5,8 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.postgres.data :as pd]
-            [clojure.string :refer [includes?]])
+            [clojure.string :refer [includes?]]
+            [lrsql.util.reaction :as ru])
   (:import [org.postgresql.util PSQLException]))
 
 ;; Init HugSql functions
@@ -64,6 +65,11 @@
       (migrate-state-document-last-modified! tx pd/local-tz-input)
       (migrate-activity-profile-document-last-modified! tx pd/local-tz-input)
       (migrate-agent-profile-document-last-modified! tx pd/local-tz-input))
+    (create-reaction-table! tx)
+    (when-not (some? (query-xapi-statement-reaction-id-exists tx))
+      (xapi-statement-add-reaction-id! tx))
+    (when-not (some? (query-xapi-statement-trigger-id-exists tx))
+      (xapi-statement-add-trigger-id! tx))
     (if (-> tuning :config :enable-jsonb)
       (migrate-to-jsonb! tx)
       (migrate-to-json! tx)))
@@ -204,7 +210,9 @@
   bp/BackendIOSetter
   (-set-read! [_]
     (bd/set-read-time->instant!)
-    (pd/set-read-pgobject->json!))
+    (pd/set-read-pgobject->json!
+     #{"ruleset"
+       "error"}))
   (-set-write! [_]
     ;; next.jdbc automatically sets the reading of Instants as java.sql.Dates
     (pd/set-write-json->pgobject! (if (-> tuning :config :enable-jsonb)
@@ -220,4 +228,41 @@
   (-query-platform-frequency [_ tx]
     (query-platform-frequency tx))
   (-query-timeline [_ tx input]
-    (query-timeline tx input)))
+    (query-timeline tx input))
+
+  bp/ReactionBackend
+  (-insert-reaction! [_ tx params]
+    (insert-reaction! tx params))
+  (-update-reaction! [_ tx params]
+    (update-reaction! tx params))
+  (-delete-reaction! [_ tx params]
+    (delete-reaction! tx params))
+  (-error-reaction! [_ tx params]
+    (error-reaction! tx params))
+  (-snip-json-extract [_ params]
+    (snip-json-extract (update params :path ru/path->string)))
+  (-snip-val [_ params]
+    (snip-val params))
+  (-snip-col [_ params]
+    (snip-col params))
+  (-snip-clause [_ params]
+    (snip-clause params))
+  (-snip-and [_ params]
+    (snip-and params))
+  (-snip-or [_ params]
+    (snip-or params))
+  (-snip-not [_ params]
+    (snip-not params))
+  (-snip-contains [_ params]
+    (snip-contains (update params :path ru/path->string)))
+  (-snip-query-reaction [_ params]
+    (snip-query-reaction params))
+  (-query-reaction [_ tx params]
+    (query-reaction tx params))
+  (-query-active-reactions [_ tx]
+    (query-active-reactions tx))
+  (-query-all-reactions [_ tx]
+    (query-all-reactions tx))
+  (-query-reaction-history [_ tx params]
+    (query-reaction-history tx params)))
+

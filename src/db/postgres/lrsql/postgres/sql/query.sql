@@ -351,3 +351,71 @@ WHERE id > :since-id
   AND id <= :until-id
 GROUP BY stored_time
 ORDER BY stored_time ASC;
+
+/* Statement Reactions */
+
+-- :snip snip-json-extract
+json_extract(:i:col, :v:path)
+
+-- :snip snip-val
+:v:val
+
+-- :snip snip-col
+:i:col
+
+-- :snip snip-clause
+:snip:left :sql:op :snip:right
+
+-- :snip snip-and
+--~ (str "(" (apply str (interpose " AND " (map-indexed (fn [idx _] (str ":snip:clauses." idx)) (:clauses params)))) ")")
+
+-- :snip snip-or
+--~ (str "(" (apply str (interpose " OR " (map-indexed (fn [idx _] (str ":snip:clauses." idx)) (:clauses params)))) ")")
+
+-- :snip snip-not
+(NOT :snip:clause)
+
+-- :snip snip-contains
+-- :doc Does the json at col and path contain the given value? A special case with differing structure across backends
+(SELECT 1 FROM json_each(:i:col, :v:path) WHERE value = :snip:right)
+
+-- :snip snip-query-reaction
+SELECT :i*:select
+FROM :i*:from
+WHERE :snip:where;
+
+-- :name query-reaction
+:snip:sql
+
+-- :name query-active-reactions
+-- :command :query
+-- :result :many
+-- :doc Return all active `reaction` ids and rulesets
+SELECT id, ruleset
+FROM reaction
+WHERE active = true;
+
+-- :name query-all-reactions
+-- :command :query
+-- :result :many
+-- :doc Query all active and inactive reactions
+SELECT id, ruleset, active, created, modified, error
+FROM reaction
+WHERE active IS NOT NULL;
+
+-- :name query-reaction-history
+-- :command :query
+-- :result :many
+-- :doc For a given statement id, return all reactions (if any) leading to the issuance of that statement.
+WITH RECURSIVE trigger_history (statement_id, reaction_id, trigger_id) AS (
+  SELECT s.statement_id, s.reaction_id, s.trigger_id
+  FROM xapi_statement s
+  WHERE s.statement_id = :statement-id
+  UNION ALL
+  SELECT s.statement_id, s.reaction_id, s.trigger_id
+  FROM xapi_statement s
+  JOIN trigger_history th ON th.trigger_id = s.statement_id
+)
+SELECT reaction_id
+FROM trigger_history
+WHERE reaction_id IS NOT NULL;
