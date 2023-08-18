@@ -25,7 +25,7 @@
                 error]}]
      {:id       id
       :ruleset  (ru/stringify-template ruleset)
-      :active   (= 1 active)
+      :active   active
       :created  created
       :modified modified
       :error    error})
