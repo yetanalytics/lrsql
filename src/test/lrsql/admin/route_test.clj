@@ -6,7 +6,9 @@
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.test-support :as support]
-            [lrsql.util :as u]))
+            [lrsql.test-constants :as tc]
+            [lrsql.util :as u]
+            [lrsql.util.reaction :as ru]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -270,6 +272,74 @@
                   :throw   false})]
             ;; failure
             (is (= 400 status))))))
+    (testing "manage reactions"
+      (let [{:keys [status
+                    body]}
+            (curl/post "http://localhost:8080/admin/reaction"
+                       {:headers headers
+                        :body
+                        (u/write-json-str
+                         {:ruleset tc/simple-reaction-ruleset
+                          :active true})})
+            reaction-id (-> (u/parse-json body :keyword-keys? true)
+                            :reaction-id
+                            u/str->uuid)]
+        (testing "create"
+          (is (= 200 status))
+          (is (uuid? reaction-id)))
+        (testing "read"
+          (let [{:keys [status body]} (curl/get "http://localhost:8080/admin/reaction"
+                                                {:headers headers})]
+            (is (= 200 status))
+            (is (= [{:id      (u/uuid->str reaction-id)
+                     :ruleset tc/simple-reaction-ruleset
+                     :active  true}]
+                   (-> body
+                       (u/parse-json :keyword-keys? true :object? false)
+                       :reactions
+                       (->> (map (fn [reaction-record]
+                                   (-> reaction-record
+                                       (select-keys [:id :ruleset :active])
+                                       (update :ruleset ru/stringify-template))))))))))
+
+        (testing "update"
+          (let [{:keys [status body]}
+                (curl/put "http://localhost:8080/admin/reaction"
+                          {:headers headers
+                           :body
+                           (u/write-json-str
+                            {:reaction-id (u/uuid->str reaction-id)
+                             :active      false})})]
+            (is (= 200 status))
+            (is (= {:reaction-id (u/uuid->str reaction-id)}
+                   (u/parse-json body :keyword-keys? true))))
+          (is (= [{:id      (u/uuid->str reaction-id)
+                   :ruleset tc/simple-reaction-ruleset
+                   :active  false}]
+                 (-> (curl/get "http://localhost:8080/admin/reaction"
+                               {:headers headers})
+                     :body
+                     (u/parse-json :keyword-keys? true :object? false)
+                     :reactions
+                     (->> (map (fn [reaction-record]
+                                 (-> reaction-record
+                                     (select-keys [:id :ruleset :active])
+                                     (update :ruleset ru/stringify-template)))))))))
+        (testing "delete"
+          (let [{:keys [status body]}
+                (curl/delete "http://localhost:8080/admin/reaction"
+                             {:headers headers
+                              :body
+                              (u/write-json-str
+                               {:reaction-id (u/uuid->str reaction-id)})})]
+            (is (= 200 status))
+            (is (= {:reaction-id (u/uuid->str reaction-id)}
+                   (u/parse-json body :keyword-keys? true))))
+          (is (= {:reactions []}
+                 (-> (curl/get "http://localhost:8080/admin/reaction"
+                               {:headers headers})
+                     :body
+                     (u/parse-json :keyword-keys? true :object? false)))))))
     (component/stop sys')))
 
 (deftest auth-routes-test

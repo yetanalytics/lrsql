@@ -17,7 +17,7 @@
   "Create a new service map for the webserver."
   [lrs config]
   (let [;; Destructure webserver config
-        {:keys [enable-http
+        {:keys   [enable-http
                 enable-http2
                 http-host
                 http-port
@@ -44,6 +44,9 @@
         (oidc/init
          config
          (:config lrs))
+        ;; LRS reaction toggle
+        {:keys [enable-reactions]}
+        (:config lrs)
         ;; Make routes - the lrs error interceptor is appended to the
         ;; start to all lrs routes
         routes
@@ -54,15 +57,16 @@
                                           (handle-json-parse-exn)]
                                          oidc-resource-interceptors)})
              (add-admin-routes
-              {:lrs                   lrs
-               :exp                   jwt-exp
-               :leeway                jwt-lwy
-               :secret                private-key
-               :enable-admin-ui       enable-admin-ui
-               :enable-admin-status   enable-admin-status
-               :enable-account-routes enable-local-admin
-               :oidc-interceptors     oidc-admin-interceptors
-               :oidc-ui-interceptors  oidc-admin-ui-interceptors}))
+              {:lrs                    lrs
+               :exp                    jwt-exp
+               :leeway                 jwt-lwy
+               :secret                 private-key
+               :enable-admin-ui        enable-admin-ui
+               :enable-admin-status    enable-admin-status
+               :enable-account-routes  enable-local-admin
+               :enable-reaction-routes enable-reactions
+               :oidc-interceptors      oidc-admin-interceptors
+               :oidc-ui-interceptors   oidc-admin-ui-interceptors}))
         ;; Build allowed-origins list. Add without ports as well for
         ;; default ports
         allowed-list
@@ -118,8 +122,8 @@
                           http/start)]
           ;; Logging
           (let [{{ssl-port :ssl-port} ::http/container-options
-                 http-port ::http/port
-                 host ::http/host} service]
+                 http-port            ::http/port
+                 host                 ::http/host} service]
             (if http-port
               (log/infof "Starting new webserver at host %s, HTTP port %s, and SSL port %s"
                          host
@@ -135,7 +139,7 @@
                  :service service
                  :server server))
         (throw (ex-info "LRS Required to build service!"
-                        {:type ::start-no-lrs
+                        {:type      ::start-no-lrs
                          :webserver this})))))
   (stop
     [this]
