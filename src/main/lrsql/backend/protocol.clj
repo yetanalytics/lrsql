@@ -84,7 +84,7 @@
   ;; Queries
   (-query-activity-profile-document [this tx input])
   (-query-activity-profile-document-ids [this tx input])
-  (-query-activity-profile-document-exists [this tx inpu]))
+  (-query-activity-profile-document-exists [this tx input]))
 
 (defprotocol AdminAccountBackend
   ;; Commands
