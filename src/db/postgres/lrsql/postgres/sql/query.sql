@@ -355,7 +355,7 @@ ORDER BY stored_time ASC;
 /* Statement Reactions */
 
 -- :snip snip-json-extract
-json_extract(:i:col, :v:path)
+(:i:col#>>'{:v:path}'):::sql:type
 
 -- :snip snip-val
 :v:val

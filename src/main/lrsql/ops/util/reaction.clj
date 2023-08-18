@@ -35,7 +35,7 @@
 
 (defn- render-ref
   "Render json references with optimizations for denorm fields"
-  [bk condition-name path]
+  [bk condition-name path & {:keys [type]}]
   (case path
     ["timestamp"]
     (render-col bk condition-name "timestamp")
@@ -48,7 +48,39 @@
     (bp/-snip-json-extract
      bk
      {:col  (format "%s.payload" condition-name)
-      :path path})))
+      :path path
+      :type type})))
+
+(def basic-stmt-types
+  {"result" {"success"    :bool
+             "completion" :bool
+             "score" {"scaled" :dec
+                      "raw"    :dec
+                      "min"    :dec
+                      "max"    :dec}}})
+
+(def xapi-type-map
+  (assoc basic-stmt-types "object" basic-stmt-types))
+
+(defn- json-type
+  [val]
+  (cond
+    (boolean? val) :bool
+    (integer? val) :int
+    (number? val)  :dec
+    :else          :string))
+
+(defn- infer-type
+  [path val]
+  ;;covers result, context, substmt result, substmt context
+  (if (some #(= % "extensions") [(get path 1) (get path 2)])
+    ;; custom value type, or string if value null
+    (json-type val)
+    ;;xapi-spec type
+    (or (get-in xapi-type-map path)
+        :string)))
+
+
 
 (s/fdef render-condition
   :args (s/cat :bk rs/reaction-backend?
@@ -79,7 +111,8 @@
                        (bp/-snip-val bk {:val val})
                        (let [{ref-condition :condition
                               ref-path      :path} ref]
-                         (render-ref bk ref-condition ref-path)))]
+                         (render-ref bk ref-condition ref-path
+                                     :type (infer-type ref-path nil))))]
       (case op
         ;; Clause special cases
         "contains"
@@ -93,7 +126,8 @@
                             {:type      ::invalid-operation
                              :operation op})))
           (bp/-snip-clause bk
-                           {:left  (render-ref bk condition-name path)
+                           {:left  (render-ref bk condition-name path
+                                               :type (infer-type path val))
                             :op    op-sql
                             :right right-snip}))))
     :else (throw (ex-info "Invalid Condition"
@@ -115,7 +149,8 @@
                          [path ident-val] statement-identity]
                      (bp/-snip-clause
                       bk
-                      {:left  (render-ref bk condition-name path)
+                      {:left  (render-ref bk condition-name path
+                                          :type (infer-type path ident-val))
                        :op    "="
                        :right (bp/-snip-val bk {:val ident-val})})))}))
 

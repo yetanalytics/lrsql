@@ -59,3 +59,13 @@
   "Returns a properly formatted hug input map to inject a timezone id into a
   query needing a timezone id"
   {:tz-id (str "'" u/local-zone-id "'")})
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; JSON Field Coercion
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def type->pg-type
+  {:bool "BOOLEAN"
+   :int "INTEGER"
+   :dec "DECIMAL"
+   :string "TEXT"})
