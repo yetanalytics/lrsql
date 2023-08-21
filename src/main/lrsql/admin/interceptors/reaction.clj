@@ -41,6 +41,7 @@
       (let [{:keys [ruleset] :as raw-params}
             (get-in ctx [:request :json-params])
             params (-> raw-params
+                       ru/json->input
                        (update :reaction-id u/str->uuid)
                        (cond->
                          (:template ruleset)
@@ -62,6 +63,7 @@
     :enter
     (fn validate-params [ctx]
       (let [params (-> (get-in ctx [:request :json-params])
+                       ru/json->input
                        (update :reaction-id u/str->uuid))]
         (if-some [err (s/explain-data rs/delete-reaction-params-spec params)]
           ;; Invalid parameters - Bad Request
@@ -90,7 +92,7 @@
             (adp/-create-reaction lrs ruleset active)]
         (assoc ctx
                :response
-               {:status 200 :body {:reaction-id result}})))}))
+               {:status 200 :body {:reactionId result}})))}))
 
 (def get-all-reactions
   "List all reactions."
@@ -126,7 +128,7 @@
           (uuid? result)
           (assoc ctx
                  :response
-                 {:status 200 :body {:reaction-id result}})
+                 {:status 200 :body {:reactionId result}})
           (= :lrsql.reaction/reaction-not-found-error result)
           (assoc (chain/terminate ctx)
                  :response
@@ -149,7 +151,7 @@
           (uuid? result)
           (assoc ctx
                  :response
-                 {:status 200 :body {:reaction-id result}})
+                 {:status 200 :body {:reactionId result}})
           (= :lrsql.reaction/reaction-not-found-error result)
           (assoc (chain/terminate ctx)
                  :response

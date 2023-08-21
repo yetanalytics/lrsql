@@ -283,7 +283,7 @@
                          {:ruleset tc/simple-reaction-ruleset
                           :active  true})})
             reaction-id  (-> (u/parse-json body :keyword-keys? true)
-                             :reaction-id
+                             :reactionId
                              u/str->uuid)
             results->edn (fn [reaction-record]
                            (-> reaction-record
@@ -318,10 +318,10 @@
                           {:headers headers
                            :body
                            (u/write-json-str
-                            {:reaction-id (u/uuid->str reaction-id)
+                            {:reactionId (u/uuid->str reaction-id)
                              :active      false})})]
             (is (= 200 status))
-            (is (= {:reaction-id (u/uuid->str reaction-id)}
+            (is (= {:reactionId (u/uuid->str reaction-id)}
                    (u/parse-json body :keyword-keys? true))))
           (is (= [{:id      (u/uuid->str reaction-id)
                    :ruleset tc/simple-reaction-ruleset
@@ -338,7 +338,7 @@
                      {:headers headers
                       :body
                       (u/write-json-str
-                       {:reaction-id (u/uuid->str reaction-id)
+                       {:reactionId (u/uuid->str reaction-id)
                         :ruleset     {}})})
            400))
         (testing "delete"
@@ -347,9 +347,9 @@
                              {:headers headers
                               :body
                               (u/write-json-str
-                               {:reaction-id (u/uuid->str reaction-id)})})]
+                               {:reactionId (u/uuid->str reaction-id)})})]
             (is (= 200 status))
-            (is (= {:reaction-id (u/uuid->str reaction-id)}
+            (is (= {:reactionId (u/uuid->str reaction-id)}
                    (u/parse-json body :keyword-keys? true))))
           (is (= {:reactions []}
                  (-> (curl/get endpoint

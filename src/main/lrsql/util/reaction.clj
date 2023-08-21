@@ -119,6 +119,13 @@
   untouched."
   [{:keys [template] :as ruleset}]
   (assoc (cske/transform-keys
-          csk/->camelCaseString
+          csk/->camelCaseKeyword
           ruleset)
          :template template))
+
+(defn json->input
+  "Where an input contains a camel id, kebab it"
+  [{:keys [reactionId] :as input}]
+  (-> input
+      (dissoc :reactionId)
+      (assoc :reaction-id reactionId)))
