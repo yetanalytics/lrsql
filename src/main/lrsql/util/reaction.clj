@@ -108,7 +108,7 @@
   (cond-> (cske/transform-keys
            csk/->kebab-case-keyword
            (dissoc raw-ruleset :template))
-    template stringify-template))
+    template (assoc :template (walk/stringify-keys template))))
 
 (s/fdef ruleset->json
   :args (s/cat :edn ::rs/ruleset)

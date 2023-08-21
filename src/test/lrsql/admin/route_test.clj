@@ -280,7 +280,7 @@
                        {:headers headers
                         :body
                         (u/write-json-str
-                         {:ruleset tc/simple-reaction-ruleset
+                         {:ruleset (ru/ruleset->json tc/simple-reaction-ruleset)
                           :active  true})})
             reaction-id  (-> (u/parse-json body :keyword-keys? true)
                              :reactionId
@@ -288,7 +288,7 @@
             results->edn (fn [reaction-record]
                            (-> reaction-record
                                (select-keys [:id :ruleset :active])
-                               (update :ruleset ru/stringify-template)))]
+                               (update :ruleset ru/json->ruleset)))]
         (testing "create"
           (is (= 200 status))
           (is (uuid? reaction-id)))

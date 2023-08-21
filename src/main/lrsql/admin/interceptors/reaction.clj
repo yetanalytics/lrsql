@@ -20,8 +20,8 @@
       (let [{:keys [ruleset] :as raw-params}
             (get-in ctx [:request :json-params])
             params (cond-> raw-params
-                     (:template ruleset)
-                     (update :ruleset ru/stringify-template))]
+                     ruleset
+                     (update :ruleset ru/json->ruleset))]
         (if-some [err (s/explain-data rs/create-reaction-params-spec params)]
           ;; Invalid parameters - Bad Request
           (assoc (chain/terminate ctx)
@@ -44,8 +44,8 @@
                        ru/json->input
                        (update :reaction-id u/str->uuid)
                        (cond->
-                         (:template ruleset)
-                         (update :ruleset ru/stringify-template)))]
+                         ruleset
+                         (update :ruleset ru/json->ruleset)))]
         (if-some [err (s/explain-data rs/update-reaction-params-spec params)]
           ;; Invalid parameters - Bad Request
           (assoc (chain/terminate ctx)
@@ -110,7 +110,8 @@
                                     (fn [reaction-record]
                                       (-> reaction-record
                                           (update :created u/time->str)
-                                          (update :modified u/time->str)))
+                                          (update :modified u/time->str)
+                                          (update :ruleset ru/ruleset->json)))
                                     result)}})))}))
 
 (def update-reaction
