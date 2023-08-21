@@ -17,8 +17,11 @@
    {:name ::validate-create-reaction-params
     :enter
     (fn validate-params [ctx]
-      (let [params (-> (get-in ctx [:request :json-params])
-                       (update :ruleset ru/stringify-template))]
+      (let [{:keys [ruleset] :as raw-params}
+            (get-in ctx [:request :json-params])
+            params (cond-> raw-params
+                     (:template ruleset)
+                     (update :ruleset ru/stringify-template))]
         (if-some [err (s/explain-data rs/create-reaction-params-spec params)]
           ;; Invalid parameters - Bad Request
           (assoc (chain/terminate ctx)
@@ -40,7 +43,7 @@
             params (-> raw-params
                        (update :reaction-id u/str->uuid)
                        (cond->
-                         ruleset
+                         (:template ruleset)
                          (update :ruleset ru/stringify-template)))]
         (if-some [err (s/explain-data rs/update-reaction-params-spec params)]
           ;; Invalid parameters - Bad Request

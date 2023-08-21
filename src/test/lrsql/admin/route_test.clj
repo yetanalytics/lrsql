@@ -292,6 +292,14 @@
         (testing "create"
           (is (= 200 status))
           (is (uuid? reaction-id)))
+        (testing "create invalid params"
+          (is-err-code
+           (curl/post endpoint
+                      {:headers headers
+                       :body
+                       (u/write-json-str
+                        {})})
+           400))
         (testing "read"
           (let [{:keys [status body]} (curl/get endpoint
                                                 {:headers headers})]
@@ -324,6 +332,15 @@
                      (u/parse-json :keyword-keys? true :object? false)
                      :reactions
                      (->> (map results->edn))))))
+        (testing "update invalid params"
+          (is-err-code
+           (curl/put endpoint
+                     {:headers headers
+                      :body
+                      (u/write-json-str
+                       {:reaction-id (u/uuid->str reaction-id)
+                        :ruleset     {}})})
+           400))
         (testing "delete"
           (let [{:keys [status body]}
                 (curl/delete endpoint
