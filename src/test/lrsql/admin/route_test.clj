@@ -273,22 +273,27 @@
             ;; failure
             (is (= 400 status))))))
     (testing "manage reactions"
-      (let [{:keys [status
+      (let [endpoint     "http://localhost:8080/admin/reaction"
+            {:keys [status
                     body]}
-            (curl/post "http://localhost:8080/admin/reaction"
+            (curl/post endpoint
                        {:headers headers
                         :body
                         (u/write-json-str
                          {:ruleset tc/simple-reaction-ruleset
-                          :active true})})
-            reaction-id (-> (u/parse-json body :keyword-keys? true)
-                            :reaction-id
-                            u/str->uuid)]
+                          :active  true})})
+            reaction-id  (-> (u/parse-json body :keyword-keys? true)
+                             :reaction-id
+                             u/str->uuid)
+            results->edn (fn [reaction-record]
+                           (-> reaction-record
+                               (select-keys [:id :ruleset :active])
+                               (update :ruleset ru/stringify-template)))]
         (testing "create"
           (is (= 200 status))
           (is (uuid? reaction-id)))
         (testing "read"
-          (let [{:keys [status body]} (curl/get "http://localhost:8080/admin/reaction"
+          (let [{:keys [status body]} (curl/get endpoint
                                                 {:headers headers})]
             (is (= 200 status))
             (is (= [{:id      (u/uuid->str reaction-id)
@@ -297,14 +302,11 @@
                    (-> body
                        (u/parse-json :keyword-keys? true :object? false)
                        :reactions
-                       (->> (map (fn [reaction-record]
-                                   (-> reaction-record
-                                       (select-keys [:id :ruleset :active])
-                                       (update :ruleset ru/stringify-template))))))))))
+                       (->> (map results->edn)))))))
 
         (testing "update"
           (let [{:keys [status body]}
-                (curl/put "http://localhost:8080/admin/reaction"
+                (curl/put endpoint
                           {:headers headers
                            :body
                            (u/write-json-str
@@ -316,18 +318,15 @@
           (is (= [{:id      (u/uuid->str reaction-id)
                    :ruleset tc/simple-reaction-ruleset
                    :active  false}]
-                 (-> (curl/get "http://localhost:8080/admin/reaction"
+                 (-> (curl/get endpoint
                                {:headers headers})
                      :body
                      (u/parse-json :keyword-keys? true :object? false)
                      :reactions
-                     (->> (map (fn [reaction-record]
-                                 (-> reaction-record
-                                     (select-keys [:id :ruleset :active])
-                                     (update :ruleset ru/stringify-template)))))))))
+                     (->> (map results->edn))))))
         (testing "delete"
           (let [{:keys [status body]}
-                (curl/delete "http://localhost:8080/admin/reaction"
+                (curl/delete endpoint
                              {:headers headers
                               :body
                               (u/write-json-str
@@ -336,7 +335,7 @@
             (is (= {:reaction-id (u/uuid->str reaction-id)}
                    (u/parse-json body :keyword-keys? true))))
           (is (= {:reactions []}
-                 (-> (curl/get "http://localhost:8080/admin/reaction"
+                 (-> (curl/get endpoint
                                {:headers headers})
                      :body
                      (u/parse-json :keyword-keys? true :object? false)))))))
