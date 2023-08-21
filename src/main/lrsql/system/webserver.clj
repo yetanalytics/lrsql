@@ -17,7 +17,7 @@
   "Create a new service map for the webserver."
   [lrs config]
   (let [;; Destructure webserver config
-        {:keys   [enable-http
+        {:keys [enable-http
                 enable-http2
                 http-host
                 http-port
