@@ -3,8 +3,7 @@
             [lrsql.util :as u]
             [lrsql.util.reaction :as r]
             [lrsql.spec.statement :as ss]
-            [lrsql.test-support :as support]
-            [lrsql.test-constants :as tc]))
+            [lrsql.test-support :as support]))
 
 (use-fixtures :once support/instrumentation-fixture)
 
@@ -128,10 +127,3 @@
            {:data  {:type :lrsql.util.reaction/invalid-path
                     :path ["completed_a" "actor" "birthday"]}
             :cause "No value found at [\"completed_a\" \"actor\" \"birthday\"]"}))))
-
-(deftest ruleset->json-test
-  (is
-   (= tc/simple-reaction-ruleset
-      (-> tc/simple-reaction-ruleset
-          r/ruleset->json
-          r/json->ruleset))))

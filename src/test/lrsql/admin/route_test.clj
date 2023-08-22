@@ -280,7 +280,7 @@
                        {:headers headers
                         :body
                         (u/write-json-str
-                         {:ruleset (ru/ruleset->json tc/simple-reaction-ruleset)
+                         {:ruleset tc/simple-reaction-ruleset
                           :active  true})})
             reaction-id  (-> (u/parse-json body :keyword-keys? true)
                              :reactionId

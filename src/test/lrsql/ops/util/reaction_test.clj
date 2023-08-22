@@ -66,7 +66,7 @@
                             bk ds
                             {:ruleset
                              (merge tc/simple-reaction-ruleset
-                                    {:identity-paths []})
+                                    {:identityPaths []})
                              :trigger-id         (u/str->uuid
                                                   (get tc/reaction-stmt-b "id"))
                              :statement-identity {}})]

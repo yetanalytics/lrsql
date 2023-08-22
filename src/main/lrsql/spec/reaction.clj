@@ -78,14 +78,14 @@
             :min-count 1
             :gen-max 3))
 
-(s/def ::identity-paths
+(s/def ::identityPaths
   (s/every ::path))
 
 ;; A JSON structure resembling a statement, but with path refs to cond results
 (s/def ::template ::xs/any-json)
 
 (s/def ::ruleset
-  (s/keys :req-un [::identity-paths
+  (s/keys :req-un [::identityPaths
                    ::conditions
                    ::template]))
 
