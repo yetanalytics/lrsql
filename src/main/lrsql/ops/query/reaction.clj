@@ -66,10 +66,10 @@
               "Reaction %s found in statement %s history, ignoring!"
               reaction-id trigger-id)
              []) ;; ignore
-           (let [{:keys [identity-paths
+           (let [{:keys [identityPaths
                          template]} ruleset
                  statement-identity (ru/statement-identity
-                                     identity-paths statement)]
+                                     identityPaths statement)]
              (if-not statement-identity
                [] ;; ignore
                (let [[q-success ?q-result-or-error]
