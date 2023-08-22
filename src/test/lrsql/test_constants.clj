@@ -15,7 +15,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def simple-reaction-ruleset
-  {:identity-paths [["actor" "mbox"]]
+  {:identityPaths [["actor" "mbox"]]
    :template
    {"actor"  {"mbox" {"$templatePath" ["a" "actor" "mbox"]}}
     "verb"   {"id" "https://example.com/verbs/completed"}

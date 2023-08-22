@@ -5,9 +5,7 @@
             [lrsql.spec.common :as cs]
             [lrsql.spec.reaction :as rs]
             [lrsql.spec.statement :as ss]
-            [xapi-schema.spec :as xs]
-            [camel-snake-kebab.core :as csk]
-            [camel-snake-kebab.extras :as cske]))
+            [xapi-schema.spec :as xs]))
 
 (s/fdef path->string
   :args (s/cat :path ::rs/path
@@ -36,7 +34,7 @@
      s)))
 
 (s/fdef statement-identity
-  :args (s/cat :identity-paths ::rs/identity-paths
+  :args (s/cat :identityPaths ::rs/identityPaths
                :statement ::xs/statement)
   :ret (s/nilable
         ::rs/statement-identity))
@@ -102,26 +100,11 @@
   :ret ::cs/any-json)
 
 (defn json->ruleset
-  "Pre-validation, read in the ruleset from JSON, coercing keys from camel to
-  kebab and ensuring string keys in the template."
+  "Pre-validation, read in the ruleset from JSON, ensuring string keys in the
+  template."
   [{:keys [template] :as raw-ruleset}]
-  (cond-> (cske/transform-keys
-           csk/->kebab-case-keyword
-           (dissoc raw-ruleset :template))
+  (cond-> raw-ruleset
     template (assoc :template (walk/stringify-keys template))))
-
-(s/fdef ruleset->json
-  :args (s/cat :edn ::rs/ruleset)
-  :ret ::cs/any-json)
-
-(defn ruleset->json
-  "Prepare ruleset for JSON response by camelizing keys but leaving template
-  untouched."
-  [{:keys [template] :as ruleset}]
-  (assoc (cske/transform-keys
-          csk/->camelCaseKeyword
-          ruleset)
-         :template template))
 
 (defn json->input
   "Where an input contains a camel id, kebab it"

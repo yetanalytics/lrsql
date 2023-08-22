@@ -110,8 +110,7 @@
                                     (fn [reaction-record]
                                       (-> reaction-record
                                           (update :created u/time->str)
-                                          (update :modified u/time->str)
-                                          (update :ruleset ru/ruleset->json)))
+                                          (update :modified u/time->str)))
                                     result)}})))}))
 
 (def update-reaction
