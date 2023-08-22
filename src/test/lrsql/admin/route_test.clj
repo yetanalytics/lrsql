@@ -6,7 +6,9 @@
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.test-support :as support]
-            [lrsql.util :as u]))
+            [lrsql.test-constants :as tc]
+            [lrsql.util :as u]
+            [lrsql.util.reaction :as ru]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -270,6 +272,90 @@
                   :throw   false})]
             ;; failure
             (is (= 400 status))))))
+    (testing "manage reactions"
+      (let [endpoint     "http://localhost:8080/admin/reaction"
+            {:keys [status
+                    body]}
+            (curl/post endpoint
+                       {:headers headers
+                        :body
+                        (u/write-json-str
+                         {:ruleset (ru/ruleset->json tc/simple-reaction-ruleset)
+                          :active  true})})
+            reaction-id  (-> (u/parse-json body :keyword-keys? true)
+                             :reactionId
+                             u/str->uuid)
+            results->edn (fn [reaction-record]
+                           (-> reaction-record
+                               (select-keys [:id :ruleset :active])
+                               (update :ruleset ru/json->ruleset)))]
+        (testing "create"
+          (is (= 200 status))
+          (is (uuid? reaction-id)))
+        (testing "create invalid params"
+          (is-err-code
+           (curl/post endpoint
+                      {:headers headers
+                       :body
+                       (u/write-json-str
+                        {})})
+           400))
+        (testing "read"
+          (let [{:keys [status body]} (curl/get endpoint
+                                                {:headers headers})]
+            (is (= 200 status))
+            (is (= [{:id      (u/uuid->str reaction-id)
+                     :ruleset tc/simple-reaction-ruleset
+                     :active  true}]
+                   (-> body
+                       (u/parse-json :keyword-keys? true :object? false)
+                       :reactions
+                       (->> (map results->edn)))))))
+
+        (testing "update"
+          (let [{:keys [status body]}
+                (curl/put endpoint
+                          {:headers headers
+                           :body
+                           (u/write-json-str
+                            {:reactionId (u/uuid->str reaction-id)
+                             :active      false})})]
+            (is (= 200 status))
+            (is (= {:reactionId (u/uuid->str reaction-id)}
+                   (u/parse-json body :keyword-keys? true))))
+          (is (= [{:id      (u/uuid->str reaction-id)
+                   :ruleset tc/simple-reaction-ruleset
+                   :active  false}]
+                 (-> (curl/get endpoint
+                               {:headers headers})
+                     :body
+                     (u/parse-json :keyword-keys? true :object? false)
+                     :reactions
+                     (->> (map results->edn))))))
+        (testing "update invalid params"
+          (is-err-code
+           (curl/put endpoint
+                     {:headers headers
+                      :body
+                      (u/write-json-str
+                       {:reactionId (u/uuid->str reaction-id)
+                        :ruleset     {}})})
+           400))
+        (testing "delete"
+          (let [{:keys [status body]}
+                (curl/delete endpoint
+                             {:headers headers
+                              :body
+                              (u/write-json-str
+                               {:reactionId (u/uuid->str reaction-id)})})]
+            (is (= 200 status))
+            (is (= {:reactionId (u/uuid->str reaction-id)}
+                   (u/parse-json body :keyword-keys? true))))
+          (is (= {:reactions []}
+                 (-> (curl/get endpoint
+                               {:headers headers})
+                     :body
+                     (u/parse-json :keyword-keys? true :object? false)))))))
     (component/stop sys')))
 
 (deftest auth-routes-test

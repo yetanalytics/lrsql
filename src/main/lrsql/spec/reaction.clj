@@ -232,3 +232,19 @@
 
 (def error-reaction-ret-spec
   (s/keys :req-un [:lrsql.spec.reaction.error-reaction/result]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Params
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def create-reaction-params-spec
+  (s/keys :req-un [::ruleset
+                   ::active]))
+
+(def update-reaction-params-spec
+  (s/keys :req-un [::reaction-id
+                   (or ::ruleset
+                       ::active)]))
+
+(def delete-reaction-params-spec
+  (s/keys :req-un [::reaction-id]))
