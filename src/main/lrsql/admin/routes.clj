@@ -8,6 +8,7 @@
             [lrsql.admin.interceptors.ui :as ui]
             [lrsql.admin.interceptors.jwt :as ji]
             [lrsql.admin.interceptors.status :as si]
+            [lrsql.admin.interceptors.reaction :as ri]
             [lrsql.util.interceptor :as util-i]))
 
 (defn- make-common-interceptors
@@ -112,6 +113,36 @@
                              (ui/get-env inject-config))
      :route-name :lrsql.admin.ui/get-env]})
 
+(defn admin-reaction-routes
+  [common-interceptors jwt-secret jwt-leeway]
+  #{;; Create a reaction
+    ["/admin/reaction" :post (conj common-interceptors
+                                   ri/validate-create-reaction-params
+                                   (ji/validate-jwt jwt-secret jwt-leeway)
+                                   ji/validate-jwt-account
+                                   ri/create-reaction)
+     :route-name :lrsql.admin.reaction/post]
+    ;; Get all reactions
+    ["/admin/reaction" :get (conj common-interceptors
+                                  (ji/validate-jwt jwt-secret jwt-leeway)
+                                  ji/validate-jwt-account
+                                  ri/get-all-reactions)
+     :route-name :lrsql.admin.reaction/get]
+    ;; Update a reaction
+    ["/admin/reaction" :put (conj common-interceptors
+                                  ri/validate-update-reaction-params
+                                  (ji/validate-jwt jwt-secret jwt-leeway)
+                                  ji/validate-jwt-account
+                                  ri/update-reaction)
+     :route-name :lrsql.admin.reaction/put]
+    ;; Delete a reaction
+    ["/admin/reaction" :delete (conj common-interceptors
+                                     ri/validate-delete-reaction-params
+                                     (ji/validate-jwt jwt-secret jwt-leeway)
+                                     ji/validate-jwt-account
+                                     ri/delete-reaction)
+     :route-name :lrsql.admin.reaction/delete]})
+
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
    add additional routes specific to creating and updating admin
@@ -123,6 +154,7 @@
            enable-admin-ui
            enable-admin-status
            enable-account-routes
+           enable-reaction-routes
            oidc-interceptors
            oidc-ui-interceptors]
     :or   {oidc-interceptors     []
@@ -143,4 +175,7 @@
                    {:enable-admin-status enable-admin-status}))
                 (when enable-admin-status
                   (admin-status-routes
-                   common-interceptors-oidc secret leeway)))))
+                   common-interceptors-oidc secret leeway))
+                (when enable-reaction-routes
+                  (admin-reaction-routes
+                   common-interceptors secret leeway)))))
