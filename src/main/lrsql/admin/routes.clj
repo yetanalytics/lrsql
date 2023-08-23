@@ -21,7 +21,7 @@
 
 (defn admin-account-routes
   [common-interceptors jwt-secret jwt-exp jwt-leeway
-   no-val? no-val-uname no-val-issuer]
+   no-val? no-val-uname no-val-issuer no-val-role-key no-val-role]
   #{;; Log into an existing account
     ["/admin/account/login" :post (conj common-interceptors
                                         ai/validate-params
@@ -35,7 +35,9 @@
                                           jwt-secret jwt-leeway
                                           :no-val? no-val?
                                           :no-val-uname no-val-uname
-                                          :no-val-issuer no-val-issuer)
+                                          :no-val-issuer no-val-issuer
+                                          :no-val-role-key no-val-role-key
+                                          :no-val-role no-val-role)
                                          ji/validate-jwt-account
                                          ai/create-admin)
      :route-name :lrsql.admin.account/create]
@@ -44,7 +46,11 @@
      :put (conj common-interceptors
                 ai/validate-update-password-params
                 (ji/validate-jwt jwt-secret jwt-leeway
-                                 :no-val? true)
+                                 :no-val? no-val?
+                                 :no-val-uname no-val-uname
+                                 :no-val-issuer no-val-issuer
+                                 :no-val-role-key no-val-role-key
+                                 :no-val-role no-val-role)
                 ji/validate-jwt-account
                 ai/update-admin-password)]
     ;; Get all accounts
@@ -53,7 +59,9 @@
                                   jwt-secret jwt-leeway
                                   :no-val? no-val?
                                   :no-val-uname no-val-uname
-                                  :no-val-issuer no-val-issuer)
+                                  :no-val-issuer no-val-issuer
+                                  :no-val-role-key no-val-role-key
+                                  :no-val-role no-val-role)
                                  ji/validate-jwt-account
                                  ai/get-accounts)
      :route-name :lrsql.admin.account/get]
@@ -64,14 +72,16 @@
                                      jwt-secret jwt-leeway
                                      :no-val? no-val?
                                      :no-val-uname no-val-uname
-                                     :no-val-issuer no-val-issuer)
+                                     :no-val-issuer no-val-issuer
+                                     :no-val-role-key no-val-role-key
+                                     :no-val-role no-val-role)
                                     ji/validate-jwt-account
                                     ai/delete-admin)
      :route-name :lrsql.admin.account/delete]})
 
 (defn admin-cred-routes
   [common-interceptors jwt-secret jwt-leeway
-   no-val? no-val-uname no-val-issuer]
+   no-val? no-val-uname no-val-issuer no-val-role-key no-val-role]
   #{;; Create new API key pair w/ scope set
     ["/admin/creds" :post (conj common-interceptors
                                 (ci/validate-params {:scopes? true})
@@ -79,7 +89,9 @@
                                  jwt-secret jwt-leeway
                                  :no-val? no-val?
                                  :no-val-uname no-val-uname
-                                 :no-val-issuer no-val-issuer)
+                                 :no-val-issuer no-val-issuer
+                                 :no-val-role-key no-val-role-key
+                                 :no-val-role no-val-role)
                                 ji/validate-jwt-account
                                 ci/create-api-keys)
      :route-name :lrsql.admin.creds/put]
@@ -91,7 +103,9 @@
                                 jwt-secret jwt-leeway
                                 :no-val? no-val?
                                 :no-val-uname no-val-uname
-                                :no-val-issuer no-val-issuer)
+                                :no-val-issuer no-val-issuer
+                                :no-val-role-key no-val-role-key
+                                :no-val-role no-val-role)
                                ji/validate-jwt-account
                                ci/update-api-keys)
      :route-name :lrsql.admin.creds/post]
@@ -101,7 +115,9 @@
                                 jwt-secret jwt-leeway
                                 :no-val? no-val?
                                 :no-val-uname no-val-uname
-                                :no-val-issuer no-val-issuer)
+                                :no-val-issuer no-val-issuer
+                                :no-val-role-key no-val-role-key
+                                :no-val-role no-val-role)
                                ji/validate-jwt-account
                                ci/read-api-keys)
      :route-name :lrsql.admin.creds/get]
@@ -112,14 +128,16 @@
                                    jwt-secret jwt-leeway
                                    :no-val? no-val?
                                    :no-val-uname no-val-uname
-                                   :no-val-issuer no-val-issuer)
+                                   :no-val-issuer no-val-issuer
+                                   :no-val-role-key no-val-role-key
+                                   :no-val-role no-val-role)
                                   ji/validate-jwt-account
                                   ci/delete-api-keys)
      :route-name :lrsql.admin.creds/delete]})
 
 (defn admin-status-routes
   [common-interceptors jwt-secret jwt-leeway
-   no-val? no-val-uname no-val-issuer]
+   no-val? no-val-uname no-val-issuer no-val-role-key no-val-role]
   #{;; Return LRS Status information
     ["/admin/status" :get (conj common-interceptors
                                 si/validate-params
@@ -127,7 +145,9 @@
                                  jwt-secret jwt-leeway
                                  :no-val? no-val?
                                  :no-val-uname no-val-uname
-                                 :no-val-issuer no-val-issuer)
+                                 :no-val-issuer no-val-issuer
+                                 :no-val-role-key no-val-role-key
+                                 :no-val-role no-val-role)
                                 ji/validate-jwt-account
                                 si/get-status)
      :route-name :lrsql.admin.status/get]})
@@ -159,6 +179,8 @@
            no-val?
            no-val-issuer
            no-val-uname
+           no-val-role-key
+           no-val-role
            enable-admin-ui
            enable-admin-status
            enable-account-routes
@@ -174,9 +196,10 @@
                 (when enable-account-routes
                   (admin-account-routes
                    common-interceptors-oidc secret exp leeway no-val?
-                   no-val-uname no-val-issuer))
-                (admin-cred-routes common-interceptors-oidc secret leeway
-                                   no-val? no-val-uname no-val-issuer)
+                   no-val-uname no-val-issuer no-val-role-key no-val-role))
+                (admin-cred-routes
+                 common-interceptors-oidc secret leeway no-val? no-val-uname
+                 no-val-issuer no-val-role-key no-val-role)
                 (when enable-admin-ui
                   (admin-ui-routes
                    (into common-interceptors
@@ -185,4 +208,4 @@
                 (when enable-admin-status
                   (admin-status-routes
                    common-interceptors-oidc secret leeway no-val? no-val-uname
-                   no-val-issuer)))))
+                   no-val-issuer no-val-role-key no-val-role)))))

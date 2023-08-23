@@ -67,8 +67,8 @@
 
 (defn proxy-jwt->username-and-issuer
   "get 'sub' from a proxied JWT token for use as account id."
-  [tok uname-key issuer-key]
-  (if tok ; Avoid encountering a null pointer exception
+  [tok uname-key issuer-key role-key role]
+  (if tok
     (try
       (let [body
             (-> tok
@@ -76,9 +76,15 @@
                 second
                 base64decode
                 u/bytes->str
-                u/parse-json)]
-        {:username (get body uname-key)
-         :issuer   (get body issuer-key)})
+                u/parse-json)
+            roles     (get body role-key)
+            has-role? (if (coll? roles)
+                        (some? ((set roles) role))
+                        (= roles role))]
+        (if has-role?
+          {:username (get body uname-key)
+           :issuer   (get body issuer-key)}
+          :lrsql.admin/unauthorized-token-error))
       (catch clojure.lang.ExceptionInfo _
         :lrsql.admin/unauthorized-token-error))
     :lrsql.admin/unauthorized-token-error))

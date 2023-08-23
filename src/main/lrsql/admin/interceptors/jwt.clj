@@ -9,7 +9,8 @@
 
 (defn validate-jwt
   "Validate that the header JWT is valid (e.g. not expired)."
-  [secret leeway & {:keys [no-val? no-val-uname no-val-issuer]
+  [secret leeway & {:keys [no-val? no-val-uname no-val-issuer
+                           no-val-role-key no-val-role]
                     :or   {no-val? false}}]
   (interceptor
    {:name ::validate-jwt
@@ -20,10 +21,13 @@
                        (get-in [:request :headers "authorization"])
                        admin-u/header->jwt)
             result (if no-val?
-                     (let [{:keys [issuer username]}
+                     (let [{:keys [issuer username] :as result}
                            (admin-u/proxy-jwt->username-and-issuer
-                            token no-val-uname no-val-issuer)]
-                       (adp/-ensure-account-oidc lrs username issuer))
+                            token no-val-uname no-val-issuer no-val-role-key
+                            no-val-role)]
+                       (if (some? username)
+                         (adp/-ensure-account-oidc lrs username issuer)
+                         result))
                      (admin-u/jwt->account-id token secret leeway))]
         (cond
           ;; Success - assoc the account ID as an intermediate value

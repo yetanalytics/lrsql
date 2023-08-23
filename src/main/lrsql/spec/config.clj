@@ -148,6 +148,11 @@
 
 (s/def ::jwt-exp-time pos-int?)
 (s/def ::jwt-exp-leeway nat-int?)
+(s/def ::jwt-no-val boolean?)
+(s/def ::jwt-no-val-uname (s/nilable string?))
+(s/def ::jwt-no-val-issuer (s/nilable string?))
+(s/def ::jwt-no-val-role-key (s/nilable string?))
+(s/def ::jwt-no-val-role (s/nilable string?))
 
 (s/def ::key-file string?) ; TODO: correct file extension/path?
 (s/def ::key-alias string?)
@@ -182,6 +187,7 @@
                    ::key-enable-selfie
                    ::jwt-exp-time
                    ::jwt-exp-leeway
+                   ::jwt-no-val
                    ::enable-admin-ui
                    ::enable-admin-status
                    ::enable-stmt-html
@@ -191,6 +197,10 @@
           :opt-un [::key-file
                    ::key-pkey-file
                    ::key-cert-chain
+                   ::jwt-no-val-uname
+                   ::jwt-no-val-issuer
+                   ::jwt-no-val-role
+                   ::jwt-no-val-role-key
                    ::oidc-issuer
                    ::oidc-audience
                    ::oidc-client-id]))

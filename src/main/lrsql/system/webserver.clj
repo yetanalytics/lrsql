@@ -31,7 +31,9 @@
                 allowed-origins
                 jwt-no-val
                 jwt-no-val-uname
-                jwt-no-val-issuer]
+                jwt-no-val-issuer
+                jwt-no-val-role-key
+                jwt-no-val-role]
          jwt-exp           :jwt-exp-time
          jwt-lwy           :jwt-exp-leeway}
         config
@@ -63,6 +65,8 @@
                :no-val?               jwt-no-val
                :no-val-issuer         jwt-no-val-issuer
                :no-val-uname          jwt-no-val-uname
+               :no-val-role-key       jwt-no-val-role-key
+               :no-val-role           jwt-no-val-role
                :secret                private-key
                :enable-admin-ui       enable-admin-ui
                :enable-admin-status   enable-admin-status
