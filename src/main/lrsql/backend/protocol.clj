@@ -38,6 +38,7 @@
   (-insert-actor! [this tx input])
   (-insert-statement-to-actor! [this tx input])
   (-update-actor! [this tx input])
+  (-delete-actor! [this tx input])
   ;; Queries
   (-query-actor [this tx input]))
 

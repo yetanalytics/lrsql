@@ -134,6 +134,17 @@
     (insert-statement-to-actor! tx input))
   (-update-actor! [_ tx input]
     (update-actor! tx input))
+  (-delete-actor! [_ tx input]
+    (let [input (assoc input :del-statement-ids (query-statement-ids-by-actor tx input))]
+      (delete-actor-st2actor! tx input)
+      (delete-actor-st2st! tx input)
+      (delete-actor-st-parent-rels! tx input)
+      (delete-actor-st-desc-rels! tx input)
+      (delete-actor-st2activ! tx input)
+      (delete-actor-delete-reactions! tx input)
+      (delete-actor-apd! tx input)
+      (delete-actor-sd! tx input)
+      (delete-actor-delete-actor! tx input)))
   (-query-actor [_ tx input]
     (query-actor tx input))
 
