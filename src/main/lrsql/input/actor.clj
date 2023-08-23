@@ -61,6 +61,18 @@
    :actor-ifi    actor-ifi
    :actor-type   actor-type})
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Actor Delete
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(s/fdef delete-actor-input
+  :args (s/cat :actor-ifi (s/keys :req-un [:lrsql.spec.actor/actor-ifi]))
+  :ret  (s/keys :req-un [:lrsql.spec.actor/actor-ifi]))
+
+(defn delete-actor-input [actor-ifi-obj]
+  actor-ifi-obj)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Actor Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -356,4 +356,11 @@
     (let [conn  (lrs-conn this)
           input (admin-stat-input/query-status-input params)]
       (jdbc/with-transaction [tx conn]
-        (admin-q/query-status backend tx input)))))
+        (admin-q/query-status backend tx input))))
+
+  adp/AdminLRSManager
+  (-delete-actor [this params]
+    (let [conn (lrs-conn this)
+          input (agent-input/delete-actor-input params)]
+      (jdbc/with-transaction [tx conn]
+        (stmt-cmd/delete-actor! backend tx input)))))
