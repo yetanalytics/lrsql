@@ -240,8 +240,10 @@
   (-error-reaction! [_ tx params]
     (error-reaction! tx params))
   (-snip-json-extract [_ {:keys [path type] :as params}]
-    (clojure.pprint/pprint ["record params for extract" params])
-    (snip-json-extract (assoc params :type (type pd/type->pg-type))))
+    (clojure.pprint/pprint ["record params for extract" params
+                            "morphed" (pd/path->string path)])
+    (snip-json-extract (assoc params
+                              :type (type pd/type->pg-type))))
   (-snip-val [_ params]
     (snip-val params))
   (-snip-col [_ params]

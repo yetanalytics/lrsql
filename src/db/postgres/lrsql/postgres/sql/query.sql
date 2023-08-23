@@ -355,7 +355,7 @@ ORDER BY stored_time ASC;
 /* Statement Reactions */
 
 -- :snip snip-json-extract
-(:i:col#>>'{:v:path}'):::sql:type
+json_extract_path_text(:i:col, :v*:path):::sql:type
 
 -- :snip snip-val
 :v:val
@@ -377,7 +377,7 @@ ORDER BY stored_time ASC;
 
 -- :snip snip-contains
 -- :doc Does the json at col and path contain the given value? A special case with differing structure across backends
-(SELECT 1 FROM json_each(:i:col, :v:path) WHERE value = :snip:right)
+(SELECT 1 WHERE (:i:col#>>'{:v:path}')::jsonb @> (:snip:right)::jsonb)
 
 -- :snip snip-query-reaction
 SELECT :i*:select
