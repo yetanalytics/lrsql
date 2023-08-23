@@ -9,22 +9,34 @@
 
 (defn validate-jwt
   "Validate that the header JWT is valid (e.g. not expired)."
-  [secret leeway]
+  [secret leeway & {:keys [no-val? no-val-uname no-val-issuer]
+                    :or   {no-val? false}}]
   (interceptor
    {:name ::validate-jwt
     :enter
     (fn validate-jwt [ctx]
-      (let [token  (-> ctx
+      (let [{lrs :com.yetanalytics/lrs} ctx
+            token  (-> ctx
                        (get-in [:request :headers "authorization"])
                        admin-u/header->jwt)
-            result (admin-u/jwt->account-id token secret leeway)]
+            result (if no-val?
+                     (let [{:keys [issuer username]}
+                           (admin-u/proxy-jwt->username-and-issuer
+                            token no-val-uname no-val-issuer)]
+                       (adp/-ensure-account-oidc lrs username issuer))
+                     (admin-u/jwt->account-id token secret leeway))]
         (cond
           ;; Success - assoc the account ID as an intermediate value
           (uuid? result)
           (-> ctx
               (assoc-in [::data :account-id] result)
               (assoc-in [:request :session ::data :account-id] result))
-
+          ;; Problem with the non-validated account ensure
+          (= :lrsql.admin/oidc-issuer-mismatch-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 401
+                  :body   {:error "OIDC Issuer Mismatch!"}})
           ;; The token is bad (expired, malformed, etc.) - Unauthorized
           (= :lrsql.admin/unauthorized-token-error result)
           (assoc (chain/terminate ctx)

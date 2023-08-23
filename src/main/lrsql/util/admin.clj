@@ -1,7 +1,9 @@
 (ns lrsql.util.admin
   (:require [buddy.hashers  :as bh]
             [buddy.sign.jwt :as bj]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [clojure.string :refer [split]])
+  (:import  [java.util Base64 Base64$Decoder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Passwords
@@ -54,6 +56,29 @@
   (if tok ; Avoid encountering a null pointer exception
     (try
       (-> tok (bj/unsign secret {:leeway leeway}) :acc u/str->uuid)
+      (catch clojure.lang.ExceptionInfo _
+        :lrsql.admin/unauthorized-token-error))
+    :lrsql.admin/unauthorized-token-error))
+
+(defn base64decode
+  "The default Base64 decoder."
+  [b64]
+  (.decode (Base64/getDecoder) b64))
+
+(defn proxy-jwt->username-and-issuer
+  "get 'sub' from a proxied JWT token for use as account id."
+  [tok uname-key issuer-key]
+  (if tok ; Avoid encountering a null pointer exception
+    (try
+      (let [body
+            (-> tok
+                (clojure.string/split #"\.")
+                second
+                base64decode
+                u/bytes->str
+                u/parse-json)]
+        {:username (get body uname-key)
+         :issuer   (get body issuer-key)})
       (catch clojure.lang.ExceptionInfo _
         :lrsql.admin/unauthorized-token-error))
     :lrsql.admin/unauthorized-token-error))

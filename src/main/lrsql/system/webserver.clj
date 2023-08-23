@@ -28,9 +28,12 @@
                 enable-admin-status
                 enable-stmt-html
                 allow-all-origins
-                allowed-origins]
-         jwt-exp :jwt-exp-time
-         jwt-lwy :jwt-exp-leeway}
+                allowed-origins
+                jwt-no-val
+                jwt-no-val-uname
+                jwt-no-val-issuer]
+         jwt-exp           :jwt-exp-time
+         jwt-lwy           :jwt-exp-leeway}
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
@@ -57,6 +60,9 @@
               {:lrs                   lrs
                :exp                   jwt-exp
                :leeway                jwt-lwy
+               :no-val?               jwt-no-val
+               :no-val-issuer         jwt-no-val-issuer
+               :no-val-uname          jwt-no-val-uname
                :secret                private-key
                :enable-admin-ui       enable-admin-ui
                :enable-admin-status   enable-admin-status

@@ -4,6 +4,9 @@
  :key-enable-selfie         true
  :jwt-exp-time              3600
  :jwt-exp-leeway            1
+ :jwt-no-val                true
+ :jwt-no-val-uname          "preferred_username"
+ :jwt-no-val-issuer         "iss"
  :enable-http               true
  :enable-http2              true
  :ssl-port                  8443
