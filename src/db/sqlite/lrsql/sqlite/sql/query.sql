@@ -328,58 +328,9 @@ WHERE id > :since-id
 GROUP BY stored_time
 ORDER BY stored_time ASC;
 
--- :name delete-actor-st2actor!
--- :command :execute
--- :result :affected
-DELETE FROM statement_to_actor where actor_ifi = :actor-ifi
-
--- :name delete-actor-st2st!
--- :command :execute
--- :result :affected
-DELETE FROM statement_to_statement WHERE descendant_id in (:del-statement-ids)
-
--- :name delete-actor-st-parent-rels!
--- :command :execute
--- :result :affected   
-DELETE FROM statement_to_statement WHERE descendant_id in (:del-statement-ids)
-
--- :name delete-actor-st-desc-rels!
--- :command :execute
--- :result :affected   
-DELETE FROM statement_to_statement WHERE ancestor_id in (:del-statement-ids)
-
--- :name delete-actor-st2activ!
--- :command :execute
--- :result :affected   
-DELETE FROM statment_to_activity sta 
-LEFT JOIN xapi_statement ON sta.statement_id=xapi_statement.statement_id 
-WHERE statement_to_activity.statement_id IN (:del-statement-ids)
-
--- :name delete-actor-delete-reactions!
--- :command :execute
--- :result :affected   
-DELETE FROM reactions 
-LEFT JOIN xapi_statement ON reactions.id = xapi_statement.reaction_id 
-WHERE xapi_statement.statement_id IN (:del-statement-ids)
-
--- :name delete-actor-apd!
--- :command :execute
--- :result :affected
-DELETE FROM agent_profile_document WHERE agent_ifi = :actor-ifi
-
--- :name delete-actor-sd!
--- :command :execute
--- :result :affected
-DELETE FROM state_document WHERE agent_ifi= :actor-ifi
-
--- :name delete-actor-delete-actor!
--- :command :execute
--- :result :affected
-DELETE FROM actor
-WHERE actor_ifi = :actor-ifi
 -- :name query-statement-ids-by-actor
--- :command :execute
--- :result :affected
+-- :command :query
+-- :result :many
 SELECT x.id FROM xapi_statement x
 LEFT JOIN statement_to_actor sta ON x.statement_id=sta.statement_id
 WHERE sta.actor_ifi = :actor-ifi
