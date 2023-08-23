@@ -26,7 +26,7 @@
                             token no-val-uname no-val-issuer no-val-role-key
                             no-val-role)]
                        (if (some? username)
-                         (adp/-ensure-account-oidc lrs username issuer)
+                         (:result (adp/-ensure-account-oidc lrs username issuer))
                          result))
                      (admin-u/jwt->account-id token secret leeway))]
         (cond
@@ -40,7 +40,7 @@
           (assoc (chain/terminate ctx)
                  :response
                  {:status 401
-                  :body   {:error "OIDC Issuer Mismatch!"}})
+                  :body   {:error "Token Issuer Mismatch!"}})
           ;; The token is bad (expired, malformed, etc.) - Unauthorized
           (= :lrsql.admin/unauthorized-token-error result)
           (assoc (chain/terminate ctx)
