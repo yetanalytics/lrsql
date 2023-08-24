@@ -166,7 +166,8 @@
                   (admin-ui-routes
                    (into common-interceptors
                          oidc-ui-interceptors)
-                   {:enable-admin-status enable-admin-status}))
+                   {:enable-admin-status enable-admin-status
+                    :no-val? no-val?}))
                 (when enable-admin-status
                   (admin-status-routes
                    common-interceptors-oidc secret leeway no-val-opts)))))
