@@ -24,7 +24,6 @@
 (s/def :lrsql.spec.admin.input/passhash string?)
 ;; Ret passhash (from SQL) is nilable
 (s/def :lrsql.spec.admin.ret/passhash (s/nilable string?))
-(s/def :lrsql.spec.admin.ret/username string?)
 (s/def ::uuid ::xs/uuid)
 ;; Likewise, OIDC issuer is not nilable for inputs
 (s/def :lrsql.spec.admin.input/oidc-issuer string?)
