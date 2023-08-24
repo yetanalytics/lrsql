@@ -1,7 +1,8 @@
 (ns lrsql.util.admin
   (:require [buddy.hashers  :as bh]
             [buddy.sign.jwt :as bj]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [clojure.string :refer [split]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Passwords
@@ -66,7 +67,7 @@
     (try
       (let [body
             (-> tok
-                (clojure.string/split #"\.")
+                (split #"\.")
                 second
                 u/base64encoded-str->str
                 u/parse-json)
