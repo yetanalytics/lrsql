@@ -24,6 +24,7 @@
 (s/def :lrsql.spec.admin.input/passhash string?)
 ;; Ret passhash (from SQL) is nilable
 (s/def :lrsql.spec.admin.ret/passhash (s/nilable string?))
+(s/def :lrsql.spec.admin.ret/username string?)
 (s/def ::uuid ::xs/uuid)
 ;; Likewise, OIDC issuer is not nilable for inputs
 (s/def :lrsql.spec.admin.input/oidc-issuer string?)
@@ -135,11 +136,16 @@
 
 (def query-admin-ret-spec
   (s/keys :req-un [::account-id
-                   :lrsql.spec.admin.ret/passhash]))
+                   :lrsql.spec.admin.ret/passhash
+                   ::username]))
 
 (def query-all-admin-accounts-ret-spec
   (s/every (s/keys :req-un [::account-id
                             ::username])))
+
+(def query-account-ret-spec
+  (s/keys :req-un [::account-id
+                   ::username]))
 
 (def query-validate-admin-ret-spec
   (s/keys :req-un [:lrsql.spec.admin.query/result]))

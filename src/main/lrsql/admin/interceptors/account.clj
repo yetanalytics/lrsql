@@ -5,6 +5,7 @@
             [lrsql.admin.protocol :as adp]
             [lrsql.spec.admin :as ads]
             [lrsql.util.admin :as admin-u]
+            [lrsql.admin.interceptors.jwt :as jwt]
             [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -226,6 +227,19 @@
     (fn get-accounts [ctx]
       (let [{lrs :com.yetanalytics/lrs} ctx
             result (adp/-get-accounts lrs)]
+        (assoc ctx
+               :response
+               {:status 200 :body result})))}))
+
+(def me
+  "Get the currently authenticated account."
+  (interceptor
+   {:name ::get-accounts
+    :enter
+    (fn get-accounts [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [account-id]} ::jwt/data} ctx
+            result (adp/-get-account lrs account-id)]
         (assoc ctx
                :response
                {:status 200 :body result})))}))

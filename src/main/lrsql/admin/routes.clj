@@ -65,6 +65,18 @@
                                  ji/validate-jwt-account
                                  ai/get-accounts)
      :route-name :lrsql.admin.account/get]
+    ;; Get my accounts
+    ["/admin/me" :get (conj common-interceptors
+                            (ji/validate-jwt
+                             jwt-secret jwt-leeway
+                             :no-val? no-val?
+                             :no-val-uname no-val-uname
+                             :no-val-issuer no-val-issuer
+                             :no-val-role-key no-val-role-key
+                             :no-val-role no-val-role)
+                            ji/validate-jwt-account
+                            ai/me)
+     :route-name :lrsql.admin.me/get]
     ;; Delete account (and associated credentials)
     ["/admin/account" :delete (conj common-interceptors
                                     ai/validate-delete-params

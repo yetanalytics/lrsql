@@ -44,6 +44,11 @@
   (curl/get "http://0.0.0.0:8080/admin/account"
             {:headers headers}))
 
+(defn- get-me
+  [headers]
+  (curl/get "http://0.0.0.0:8080/admin/me"
+            {:headers headers}))
+
 (defn- update-account-password
   [headers
    body]
@@ -122,6 +127,14 @@
         (is (vector? edn-body))
         ;; has the created user
         (is (some #(= (get % "username") "myname") edn-body))))
+    (testing "get my admin account"
+      (let [{:keys [status
+                    body]} (get-me headers)
+            edn-body       (u/parse-json body)]
+            ;; success
+        (is (= 200 status))
+            ;; is the created user
+        (is (= (get edn-body "username") api-key-default))))
     (testing "log into the `myname` account"
       (let [{:keys [status body]}
             (login-account content-type req-body)

@@ -38,6 +38,15 @@
   [ensure-input]
   (u/add-primary-key ensure-input))
 
+(s/fdef get-account-input
+  :args (s/cat :account-id ::ads/account-id)
+  :ret ads/admin-id-input-spec)
+
+(defn query-account-input
+  "Given `account-id`, construct the input param map for `get-account`."
+  [account-id]
+  {:account-id account-id})
+
 (s/fdef delete-admin-input
   :args (s/cat :account-id ::ads/account-id
                :oidc-enabled? :lrsql.spec.admin.input/oidc-enabled?)
