@@ -116,6 +116,8 @@
     (insert-statement! tx input))
   (-insert-statement-to-statement! [_ tx input]
     (insert-statement-to-statement! tx input))
+  (-delete-statement-to-statement! [_ tx input]
+    (delete-statement-to-statement! tx input))
   (-void-statement! [_ tx input]
     (void-statement! tx input))
   (-query-statement [_ tx input]
@@ -126,25 +128,20 @@
     (query-statement-exists tx input))
   (-query-statement-descendants [_ tx input]
     (query-statement-descendants tx input))
+  (-query-statement-ids-by-actor [_ tx input]
+  (query-statement-ids-by-actor tx input))
 
   bp/ActorBackend
   (-insert-actor! [_ tx input]
     (insert-actor! tx input))
   (-insert-statement-to-actor! [_ tx input]
     (insert-statement-to-actor! tx input))
+  (-delete-statement-to-actor! [_tx input]
+    (delete-statement-to-actor! tx input))
   (-update-actor! [_ tx input]
     (update-actor! tx input))
   (-delete-actor! [_ tx input]
-    (let [input (assoc input :del-statement-ids (query-statement-ids-by-actor tx input))]
-      (delete-actor-st2actor! tx input)
-      (delete-actor-st2st! tx input)
-      (delete-actor-st-parent-rels! tx input)
-      (delete-actor-st-desc-rels! tx input)
-      (delete-actor-st2activ! tx input)
-      (delete-actor-delete-reactions! tx input)
-      (delete-actor-apd! tx input)
-      (delete-actor-sd! tx input)
-      (delete-actor-delete-actor! tx input)))
+    (delete-actor! tx input))
   (-query-actor [_ tx input]
     (query-actor tx input))
 
@@ -153,6 +150,8 @@
     (insert-activity! tx input))
   (-insert-statement-to-activity! [_ tx input]
     (insert-statement-to-activity! tx input))
+  (-delete-statement-to-activity! [_ tx input]
+    (delete-statement-to-activity! tx input))
   (-update-activity! [_ tx input]
     (update-activity! tx input))
   (-query-activity [_ tx input]

@@ -26,17 +26,20 @@
   ;; Commands
   (-insert-statement! [this tx input])
   (-insert-statement-to-statement! [this tx input])
+  (-delete-statement-to-statement! [this tx input])
   (-void-statement! [this tx input])
   ;; Queries
   (-query-statement [this tx input])
   (-query-statements [this tx input])
   (-query-statement-exists [this tx input])
-  (-query-statement-descendants [this tx input]))
+  (-query-statement-descendants [this tx input])
+  (-query-statement-ids-by-actor [this tx input]))
 
 (defprotocol ActorBackend
   ;; Commands
   (-insert-actor! [this tx input])
   (-insert-statement-to-actor! [this tx input])
+  (-delete-statement-to-actor! [this tx input])
   (-update-actor! [this tx input])
   (-delete-actor! [this tx input])
   ;; Queries
@@ -46,6 +49,7 @@
   ;; Commands
   (-insert-activity! [this tx input])
   (-insert-statement-to-activity! [this tx input])
+  (-delete-statement-to-activity! [this tx input])
   (-update-activity! [this tx input])
   ;; Queries
   (-query-activity [this tx input]))

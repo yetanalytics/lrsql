@@ -61,6 +61,22 @@
    :actor-ifi    actor-ifi
    :actor-type   actor-type})
 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Actor Delete
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#_(s/fdef delete-actor-input
+  :args (s/cat :actor (s/alt :agent ::xs/agent
+                             :group ::xs/group))
+  :ret (s/nilable ::as/actor-input))
+;args/spec: who knows
+(defn delete-actor-input [actor-ifi]
+;needs changing, should probably be just ifi?
+  {:actor-ifi actor-ifi
+   :del-statement-ids (query-statement-ids-by-actor tx input)})
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Actor Query
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

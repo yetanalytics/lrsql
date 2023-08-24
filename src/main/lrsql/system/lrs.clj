@@ -199,6 +199,14 @@
       (jdbc/with-transaction [tx conn]
         (actor-q/query-agent backend tx input))))
 
+  lrsp/AgentDelete
+  (-delete-person
+    [lrs _auth-identity params]
+    (let [conn (lrs-conn lrs)
+          input (agent-input/delete-actor-input params)]
+      (jdbc/with-transaction! [tx conn]
+        (stmt-cmd/delete-actor! backend tx input))))
+  
   lrsp/ActivityInfoResource
   (-get-activity
     [lrs _auth-identity params]
