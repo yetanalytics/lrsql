@@ -6,8 +6,7 @@
             [buddy.core.codecs :refer [bytes->hex]]
             [buddy.core.nonce  :refer [random-bytes]]
             [lrsql.spec.auth :as as]
-            [lrsql.util :as u])
-  (:import [java.util Base64 Base64$Decoder]))
+            [lrsql.util :as u]))
 
 ;; NOTE: Additional scopes may be implemented in the future.
 
