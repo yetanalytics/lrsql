@@ -11,9 +11,8 @@
   "Validate that the header JWT is valid (e.g. not expired and signed properly). 
    If no-val? is true run an entirely separate decoding that gets the username 
    and issuer claims, verifies a role and ensures the account if necessary."
-  [secret leeway & {:keys [no-val? no-val-uname no-val-issuer
-                           no-val-role-key no-val-role]
-                    :or   {no-val? false}}]
+  [secret leeway {:keys [no-val? no-val-uname no-val-issuer no-val-role-key
+                         no-val-role]}]
   (interceptor
    {:name ::validate-jwt
     :enter
