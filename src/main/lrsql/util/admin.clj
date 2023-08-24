@@ -60,13 +60,9 @@
         :lrsql.admin/unauthorized-token-error))
     :lrsql.admin/unauthorized-token-error))
 
-(defn base64decode
-  "The default Base64 decoder."
-  [b64]
-  (.decode (Base64/getDecoder) b64))
-
 (defn proxy-jwt->username-and-issuer
-  "get 'sub' from a proxied JWT token for use as account id."
+  "Decode (without validating!) a JWT claim and get the username, issuer, 
+   and verify that the role-key on the claim contains the expected role."
   [tok uname-key issuer-key role-key role]
   (if tok
     (try
@@ -74,8 +70,7 @@
             (-> tok
                 (clojure.string/split #"\.")
                 second
-                base64decode
-                u/bytes->str
+                u/base64encoded-str->str
                 u/parse-json)
             roles     (get body role-key)
             has-role? (if (coll? roles)
