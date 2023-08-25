@@ -234,7 +234,7 @@
 (def me
   "Get the currently authenticated account."
   (interceptor
-   {:name ::get-accounts
+   {:name ::get-me
     :enter
     (fn get-accounts [ctx]
       (let [{lrs :com.yetanalytics/lrs
