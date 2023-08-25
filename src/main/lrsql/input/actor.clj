@@ -73,8 +73,7 @@
 ;args/spec: who knows
 (defn delete-actor-input [actor-ifi]
 ;needs changing, should probably be just ifi?
-  {:actor-ifi actor-ifi
-   :del-statement-ids (query-statement-ids-by-actor tx input)})
+  {:actor-ifi actor-ifi})
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

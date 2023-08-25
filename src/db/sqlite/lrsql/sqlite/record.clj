@@ -136,7 +136,7 @@
     (insert-actor! tx input))
   (-insert-statement-to-actor! [_ tx input]
     (insert-statement-to-actor! tx input))
-  (-delete-statement-to-actor! [_tx input]
+  (-delete-statement-to-actor! [_ tx input]
     (delete-statement-to-actor! tx input))
   (-update-actor! [_ tx input]
     (update-actor! tx input))

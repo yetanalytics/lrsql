@@ -73,16 +73,19 @@
 
 (defn delete-actor!
   [bk tx input];should just be {:actor-ifi actor-ifi}
-  (let [ids (bp/query-statement-ids-by-actor)]
-    (bp/delete-statement-to-actor! input) ;actor-ifi
-    (bp/delete-statement-to-statement! input) ;descendant-ids
-    (bp/delete-statement-to-statement! input) ;ancestor-ids
-    (bp/delete-statement-to-activity! input) ;statement-ids
-    ;will need to query for these two, am I adding new queries here, or...
-    (bp/delete-agent-profile-document! input) ;:profile-id and :agent-ifi
-    (bp/delete-state-document! input) ;:activity-iri :state-id :agent-ifi
+  (println input)
+  input
+  #_(let [ids (bp/query-statement-ids-by-actor)]
+      (do
+        (bp/delete-statement-to-actor! input)     ;actor-ifi
+        (bp/delete-statement-to-statement! input) ;descendant-ids
+        (bp/delete-statement-to-statement! input) ;ancestor-ids
+        (bp/delete-statement-to-activity! input)  ;statement-ids
+                                        ;will need to query for these two, am I adding new queries here, or...
+        (bp/delete-agent-profile-document! input) ;:profile-id and :agent-ifi
+        (bp/delete-state-document! input) ;:activity-iri :state-id :agent-ifi
 
-    (bp/delete-actor! tx input)) ;:actor-ifi
+        (bp/delete-actor! tx input))) ;:actor-ifi
 )
 
 (defn- insert-activity!

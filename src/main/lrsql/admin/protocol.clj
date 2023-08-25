@@ -29,3 +29,6 @@
 (defprotocol AdminStatusProvider
   (-get-status [this params]
     "Get various LRS metrics."))
+
+(defprotocol ActorDeleter
+  (-delete-actor [this params]))
