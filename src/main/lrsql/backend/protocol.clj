@@ -62,6 +62,7 @@
   (-insert-state-document! [this tx input])
   (-update-state-document! [this tx input])
   (-delete-state-document! [this tx input])
+  (-delete-state-documents! [this tx input])
   ;; Queries
   (-query-state-document [this tx input])
   (-query-state-document-ids [this tx input])

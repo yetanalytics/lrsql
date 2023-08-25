@@ -73,9 +73,7 @@
 
 (defn delete-actor!
   [bk tx input];should just be {:actor-ifi actor-ifi}
-  (println input)
-  input
-  #_(bp/wipe-actor! bk tx input))
+  (bp/wipe-actor! bk tx input))
 
 (defn- insert-activity!
   [bk tx input]

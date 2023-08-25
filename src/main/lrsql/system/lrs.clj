@@ -198,7 +198,7 @@
           input (agent-input/query-agent-input params)]
       (jdbc/with-transaction [tx conn]
         (actor-q/query-agent backend tx input))))
-  
+
   lrsp/ActivityInfoResource
   (-get-activity
     [lrs _auth-identity params]

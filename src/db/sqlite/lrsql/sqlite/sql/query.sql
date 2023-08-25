@@ -327,10 +327,3 @@ WHERE id > :since-id
   AND id <= :until-id
 GROUP BY stored_time
 ORDER BY stored_time ASC;
-
--- :name query-statement-ids-by-actor
--- :command :query
--- :result :many
-SELECT x.statement_id FROM xapi_statement x
-LEFT JOIN statement_to_actor sta ON x.statement_id=sta.statement_id
-WHERE sta.actor_ifi = :actor-ifi

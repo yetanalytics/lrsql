@@ -125,9 +125,7 @@
   (-query-statement-exists [_ tx input]
     (query-statement-exists tx input))
   (-query-statement-descendants [_ tx input]
-    (query-statement-descendants tx input))
-  (-query-statement-ids-by-actor [_ tx input]
-  (query-statement-ids-by-actor tx input))
+    (query-statement-descendants tx input)))
 
   bp/ActorBackend
   (-insert-actor! [_ tx input]
@@ -171,6 +169,8 @@
     (update-state-document! tx input))
   (-delete-state-document! [_ tx input]
     (delete-state-document! tx input))
+  (-delete-state-documents! [_ tx input]
+    (delete-state-documents! tx input))
   (-query-state-document [_ tx input]
     (query-state-document tx input))
   (-query-state-document-ids [_ tx input]
