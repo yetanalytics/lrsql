@@ -26,7 +26,6 @@
   ;; Commands
   (-insert-statement! [this tx input])
   (-insert-statement-to-statement! [this tx input])
-  (-delete-statement-to-statement! [this tx input])
   (-void-statement! [this tx input])
   ;; Queries
   (-query-statement [this tx input])
@@ -39,9 +38,8 @@
   ;; Commands
   (-insert-actor! [this tx input])
   (-insert-statement-to-actor! [this tx input])
-  (-delete-statement-to-actor! [this tx input])
   (-update-actor! [this tx input])
-  (-delete-actor! [this tx input])
+  (-wipe-actor! [this tx input])
   ;; Queries
   (-query-actor [this tx input]))
 
@@ -49,7 +47,6 @@
   ;; Commands
   (-insert-activity! [this tx input])
   (-insert-statement-to-activity! [this tx input])
-  (-delete-statement-to-activity! [this tx input])
   (-update-activity! [this tx input])
   ;; Queries
   (-query-activity [this tx input]))
@@ -65,7 +62,6 @@
   (-insert-state-document! [this tx input])
   (-update-state-document! [this tx input])
   (-delete-state-document! [this tx input])
-  (-delete-state-documents! [this tx input])
   ;; Queries
   (-query-state-document [this tx input])
   (-query-state-document-ids [this tx input])

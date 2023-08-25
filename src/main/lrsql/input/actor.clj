@@ -67,14 +67,10 @@
 ;; Actor Delete
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #_(s/fdef delete-actor-input
-  :args (s/cat :actor (s/alt :agent ::xs/agent
-                             :group ::xs/group))
-  :ret (s/nilable ::as/actor-input))
-;args/spec: who knows
-(defn delete-actor-input [actor-ifi]
-;needs changing, should probably be just ifi?
-  {:actor-ifi actor-ifi})
-
+  :args  (s/keys :req-un [:lrsql.spec.actor/actor-ifi])
+  :ret   (s/keys :req-un [:lrsql.spec.actor/actor-ifi]))
+(defn delete-actor-input [actor-ifi-obj]
+  actor-ifi-obj)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Actor Query

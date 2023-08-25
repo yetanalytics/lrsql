@@ -116,8 +116,6 @@
     (insert-statement! tx input))
   (-insert-statement-to-statement! [_ tx input]
     (insert-statement-to-statement! tx input))
-  (-delete-statement-to-statement! [_ tx input]
-    (delete-statement-to-statement! tx input))
   (-void-statement! [_ tx input]
     (void-statement! tx input))
   (-query-statement [_ tx input]
@@ -136,12 +134,17 @@
     (insert-actor! tx input))
   (-insert-statement-to-actor! [_ tx input]
     (insert-statement-to-actor! tx input))
-  (-delete-statement-to-actor! [_ tx input]
-    (delete-statement-to-actor! tx input))
   (-update-actor! [_ tx input]
     (update-actor! tx input))
-  (-delete-actor! [_ tx input]
-    (delete-actor! tx input))
+  (-wipe-actor! [_ tx input]
+    (delete-actor-st2st input)
+    (delete-actor-st2activ input)
+    (delete-actor-attachments input)
+    (delete-actor-statements input)
+    (delete-actor-agent-profile input)
+    (delete-actor-state-document input)
+    (delete-actor-actor input))
+  
   (-query-actor [_ tx input]
     (query-actor tx input))
 
@@ -150,8 +153,6 @@
     (insert-activity! tx input))
   (-insert-statement-to-activity! [_ tx input]
     (insert-statement-to-activity! tx input))
-  (-delete-statement-to-activity! [_ tx input]
-    (delete-statement-to-activity! tx input))
   (-update-activity! [_ tx input]
     (update-activity! tx input))
   (-query-activity [_ tx input]
@@ -170,8 +171,6 @@
     (update-state-document! tx input))
   (-delete-state-document! [_ tx input]
     (delete-state-document! tx input))
-  (-delete-state-documents! [_ tx input]
-    (delete-state-documents! tx input))
   (-query-state-document [_ tx input]
     (query-state-document tx input))
   (-query-state-document-ids [_ tx input]

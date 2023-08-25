@@ -60,26 +60,43 @@ WHERE api_key = :api-key
 AND secret_key = :secret-key
 AND scope = :scope
 
--- :name delete-statement-to-actor!
+----------------------begin components of delete-actor-----
+-- :name delete-actor-st2st
 -- :command :execute
 -- :result :affected
-DELETE FROM statement_to_actor where actor_ifi = :actor-ifi
+DELETE FROM statement_to_statement 
+WHERE ancestor_id IN (query_goes_here)
+OR descendant_id IN (query_goes_here)
 
--- :name delete-statement-to-statement!
+-- :name delete-actor-st2activ
 -- :command :execute
 -- :result :affected
-DELETE FROM statement_to_statement
-WHERE (descendant_id in (:v*:descendant-ids))
-OR (ancestor_id in (:v*:ancestor-ids))
+DELETE FROM statement_to_activity WHERE statement_id IN (SELECT statement_id FROM statement_to_actor
+WHERE actor_ifi = :actor-ifi)
 
--- :name delete-statement-to-activity!
--- :command :execute
--- :result :affected   
-DELETE FROM statement_to_activity sta 
-WHERE sta.statement_id IN (:v*:statement-ids)
-
--- :name delete-actor!
+-- :name delete-actor-attachments
 -- :command :execute
 -- :result :affected
-DELETE FROM actor
-WHERE actor_ifi = :actor-ifi
+DELETE FROM attachments WHERE statement_id IN (SELECT statement_id FROM statement_to_actor
+WHERE actor_ifi = :actor-ifi)
+
+-- :name delete-actor-statements
+-- :command :execute
+-- :result :affected
+DELETE FROM xapi_statement WHERE statement_id IN (SELECT statement_id FROM statement_to_actor
+WHERE actor_ifi = :actor-ifi)
+
+-- :name delete-actor-agent-profile
+-- :command :execute
+-- :result :affected
+DELETE FROM agent_profile_document WHERE actor_ifi = :actor-ifi
+
+-- :name delete-actor-state-document
+-- :command :execute
+-- :result :affected
+DELETE FROM state_documnent WHERE actor_ifi = :actor-ifi
+
+-- :name delete-actor-actor
+-- :command :execute
+-- :result :affected
+DELETE FROM actor where actor_ifi = :actor-ifi
