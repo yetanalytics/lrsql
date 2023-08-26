@@ -125,7 +125,7 @@
   (-query-statement-exists [_ tx input]
     (query-statement-exists tx input))
   (-query-statement-descendants [_ tx input]
-    (query-statement-descendants tx input)))
+    (query-statement-descendants tx input))
 
   bp/ActorBackend
   (-insert-actor! [_ tx input]

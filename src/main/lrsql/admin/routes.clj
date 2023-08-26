@@ -5,7 +5,7 @@
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors.account :as ai]
             [lrsql.admin.interceptors.credentials :as ci]
-            [lrsql.admin.interceptors.delete-actor :as da]
+            [lrsql.admin.interceptors.delete :as da]
             [lrsql.admin.interceptors.ui :as ui]
             [lrsql.admin.interceptors.jwt :as ji]
             [lrsql.admin.interceptors.status :as si]
@@ -112,13 +112,13 @@
                              (ui/get-env inject-config))
      :route-name :lrsql.admin.ui/get-env]})
 
-(defn delete-actor-routes [common-interceptors jwt-secret jwt-leeway]
+(defn admin-delete-actor-route [common-interceptors jwt-secret jwt-leeway]
   #{["/agents" :delete (conj common-interceptors
                              da/validate-delete-actor-params
                              (ji/validate-jwt jwt-secret jwt-leeway)
                              ji/validate-jwt-account
                              da/delete-actor)
-     :route-name :lrsql.admin.delete-actor/delete-actor]})
+     :route-name :lrsql.admin.delete/delete-actor]})
 
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
@@ -152,6 +152,6 @@
                 (when enable-admin-status
                   (admin-status-routes
                    common-interceptors-oidc secret leeway))
-                (delete-actor-routes common-interceptors-oidc secret leeway))))
+                (admin-delete-actor-route common-interceptors-oidc secret leeway))))
 
 
