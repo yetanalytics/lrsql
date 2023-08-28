@@ -27,5 +27,6 @@
           (is (conf/conformant?
                "-e" url "-b" "-z" "-a"
                "-u" "username"
-               "-p" "password"))
+               "-p" "password"
+               "-x" "1.0.3"))
           (component/stop sys'))))))
