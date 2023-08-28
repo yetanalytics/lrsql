@@ -1,7 +1,8 @@
 (ns lrsql.util.admin
   (:require [buddy.hashers  :as bh]
             [buddy.sign.jwt :as bj]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [clojure.string :refer [split]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Passwords
@@ -54,6 +55,30 @@
   (if tok ; Avoid encountering a null pointer exception
     (try
       (-> tok (bj/unsign secret {:leeway leeway}) :acc u/str->uuid)
+      (catch clojure.lang.ExceptionInfo _
+        :lrsql.admin/unauthorized-token-error))
+    :lrsql.admin/unauthorized-token-error))
+
+(defn proxy-jwt->username-and-issuer
+  "Decode (without validating!) a JWT claim and get the username, issuer, 
+   and verify that the role-key on the claim contains the expected role."
+  [tok uname-key issuer-key role-key role]
+  (if tok
+    (try
+      (let [body
+            (-> tok
+                (split #"\.")
+                second
+                u/base64encoded-str->str
+                u/parse-json)
+            roles     (get body role-key)
+            has-role? (if (coll? roles)
+                        (some? ((set roles) role))
+                        (= roles role))]
+        (if has-role?
+          {:username (get body uname-key)
+           :issuer   (get body issuer-key)}
+          :lrsql.admin/unauthorized-token-error))
       (catch clojure.lang.ExceptionInfo _
         :lrsql.admin/unauthorized-token-error))
     :lrsql.admin/unauthorized-token-error))

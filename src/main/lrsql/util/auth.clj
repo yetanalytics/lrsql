@@ -6,8 +6,7 @@
             [buddy.core.codecs :refer [bytes->hex]]
             [buddy.core.nonce  :refer [random-bytes]]
             [lrsql.spec.auth :as as]
-            [lrsql.util :as u])
-  (:import [java.util Base64 Base64$Decoder]))
+            [lrsql.util :as u]))
 
 ;; NOTE: Additional scopes may be implemented in the future.
 
@@ -34,10 +33,6 @@
   [scope-kw]
   (get scope-kw-str-map scope-kw))
 
-(def ^Base64$Decoder decoder
-  "The default Base64 decoder."
-  (Base64/getDecoder))
-
 (s/fdef header->key-pair
   :args (s/cat :auth-header (s/nilable string?))
   :ret (s/nilable as/key-pair-spec))
@@ -51,7 +46,7 @@
   (when auth-header
     (try (let [^String auth-part   (second (re-matches #"Basic\s+(.*)"
                                                        auth-header))
-               ^String decoded     (u/bytes->str (.decode decoder auth-part))
+               ^String decoded     (u/base64encoded-str->str auth-part)
                [?api-key ?srt-key] (cstr/split decoded #":")]
            {:api-key    (if ?api-key ?api-key "")
             :secret-key (if ?srt-key ?srt-key "")})

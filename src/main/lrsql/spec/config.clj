@@ -148,6 +148,11 @@
 
 (s/def ::jwt-exp-time pos-int?)
 (s/def ::jwt-exp-leeway nat-int?)
+(s/def ::jwt-no-val boolean?)
+(s/def ::jwt-no-val-uname (s/nilable string?))
+(s/def ::jwt-no-val-issuer (s/nilable string?))
+(s/def ::jwt-no-val-role-key (s/nilable string?))
+(s/def ::jwt-no-val-role (s/nilable string?))
 
 (s/def ::key-file string?) ; TODO: correct file extension/path?
 (s/def ::key-alias string?)
@@ -169,31 +174,44 @@
 (s/def ::oidc-enable-local-admin boolean?)
 
 (s/def ::webserver
-  (s/keys :req-un [::http-host
-                   ::http-port
-                   ::ssl-port
-                   ::enable-http
-                   ::enable-http2
-                   ::allow-all-origins
-                   ::allowed-origins
-                   ::url-prefix
-                   ::key-alias
-                   ::key-password
-                   ::key-enable-selfie
-                   ::jwt-exp-time
-                   ::jwt-exp-leeway
-                   ::enable-admin-ui
-                   ::enable-admin-status
-                   ::enable-stmt-html
-                   ::oidc-verify-remote-issuer
-                   ::oidc-client-template
-                   ::oidc-enable-local-admin]
-          :opt-un [::key-file
-                   ::key-pkey-file
-                   ::key-cert-chain
-                   ::oidc-issuer
-                   ::oidc-audience
-                   ::oidc-client-id]))
+  (s/and
+   (s/keys :req-un [::http-host
+                    ::http-port
+                    ::ssl-port
+                    ::enable-http
+                    ::enable-http2
+                    ::allow-all-origins
+                    ::allowed-origins
+                    ::url-prefix
+                    ::key-alias
+                    ::key-password
+                    ::key-enable-selfie
+                    ::jwt-exp-time
+                    ::jwt-exp-leeway
+                    ::jwt-no-val
+                    ::enable-admin-ui
+                    ::enable-admin-status
+                    ::enable-stmt-html
+                    ::oidc-verify-remote-issuer
+                    ::oidc-client-template
+                    ::oidc-enable-local-admin]
+           :opt-un [::key-file
+                    ::key-pkey-file
+                    ::key-cert-chain
+                    ::jwt-no-val-uname
+                    ::jwt-no-val-issuer
+                    ::jwt-no-val-role
+                    ::jwt-no-val-role-key
+                    ::oidc-issuer
+                    ::oidc-audience
+                    ::oidc-client-id])
+   ;; conditional validation for presence of no-val supporting config
+   (fn [{:keys [jwt-no-val jwt-no-val-uname jwt-no-val-issuer
+                jwt-no-val-role-key jwt-no-val-role]}]
+     (if jwt-no-val
+       (and jwt-no-val-uname jwt-no-val-issuer jwt-no-val-role-key
+            jwt-no-val-role)
+       true))))
 
 (s/def ::tuning
   (s/keys :opt-un [::enable-jsonb]))

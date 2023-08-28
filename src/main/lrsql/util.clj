@@ -14,7 +14,8 @@
   (:import [java.util UUID Calendar]
            [java.time Instant]
            [java.io StringReader PushbackReader ByteArrayOutputStream]
-           [java.nio.charset Charset]))
+           [java.nio.charset Charset]
+           [java.util Base64 Base64$Decoder Base64$Encoder]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Macros
@@ -235,6 +236,28 @@
   "Converts `bytes` into a string. Assumes UTF-8 encoding."
   [^"[B" bytes]
   (String. bytes utf8-charset))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; b64 Strings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def ^Base64$Decoder decoder
+  "The default Base64 decoder."
+  (Base64/getDecoder))
+
+(defn base64encoded-str->str
+  "Base64 Decodes a b64 string into a text string."
+  [b64]
+  (bytes->str (.decode decoder b64)))
+
+(def ^Base64$Encoder encoder
+  "The default Base64 decoder."
+  (Base64/getEncoder))
+
+(defn str->base64encoded-str
+  "Base64 Encodes a text string into a b64 string."
+  [str]
+  (bytes->str (.encode encoder (str->bytes str))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; JSON
