@@ -2,10 +2,12 @@
   "Test for admin-related interceptors + routes
    (as opposed to just the protocol)."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
+            [clojure.string :refer [lower-case]]
             [babashka.curl :as curl]
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.test-support :as support]
+            [lrsql.util.headers :as h]
             [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -80,15 +82,18 @@
      (catch clojure.lang.ExceptionInfo e#
        (is (= ~code (-> e# ex-data :status))))))
 
+(def sec-header-names (mapv #(lower-case (% h/sec-head-names))
+                            (keys h/sec-head-names)))
+
 (deftest admin-routes-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
         ;; Seed information
-        {:keys [api-key-default
-                api-secret-default]} (get-in sys' [:lrs :config])
+        {:keys [admin-user-default
+                admin-pass-default]} (get-in sys' [:lrs :config])
         seed-body (u/write-json-str
-                   {"username" api-key-default
-                    "password" api-secret-default})
+                   {"username" admin-user-default
+                    "password" admin-pass-default})
         seed-jwt  (-> (login-account content-type seed-body)
                       :body
                       u/parse-json
@@ -134,7 +139,7 @@
             ;; success
         (is (= 200 status))
             ;; is the created user
-        (is (= (get edn-body "username") api-key-default))))
+        (is (= (get edn-body "username") admin-user-default))))
     (testing "log into the `myname` account"
       (let [{:keys [status body]}
             (login-account content-type req-body)
@@ -283,6 +288,41 @@
                   :throw   false})]
             ;; failure
             (is (= 400 status))))))
+    (testing "omitted sec headers because not configured"
+      (let [{:keys [headers]} (get-env content-type)]
+        (is (empty? (select-keys headers sec-header-names)))))
+    (component/stop sys')))
+
+(def custom-sec-header-config
+  {:sec-head-hsts         h/default-value
+   :sec-head-frame        "Chocolate"
+   :sec-head-content-type h/default-value
+   :sec-head-xss          "Banana"
+   :sec-head-download     h/default-value
+   :sec-head-cross-domain "Pancakes"
+   :sec-head-content      h/default-value})
+
+(def custom-sec-header-expected
+  (reduce-kv
+   (fn [hdrs k v]
+     (assoc hdrs (lower-case (k h/sec-head-names))
+            (if (= v h/default-value)
+              (k h/sec-head-defaults)
+              v)))
+   {} custom-sec-header-config))
+
+(deftest custom-header-admin-routes
+  (let [hdr-conf (reduce-kv (fn [m k v] (assoc m [:webserver k] v))
+                            {} custom-sec-header-config)
+        sys  (support/test-system
+              :conf-overrides hdr-conf)
+        sys' (component/start sys)]
+    (testing "Custom Sec Headers"
+      ;; Run a basic admin routes call and verify success
+      (let [{:keys [headers]} (get-env content-type)]
+        ;; equals the same combination of custom and default hdr values
+        (is (= custom-sec-header-expected
+               (select-keys headers sec-header-names)))))
     (component/stop sys')))
 
 (def proxy-jwt-body
