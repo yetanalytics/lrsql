@@ -108,9 +108,11 @@ CREATE TABLE IF NOT EXISTS statement_to_actor (
   actor_ifi    VARCHAR(255) NOT NULL,
   actor_type   actor_type_enum NOT NULL,
   CONSTRAINT statement_fk
-    FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
+    FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
+    ON DELETE CASCADE,
   CONSTRAINT actor_fk
     FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
+    ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS stmt_actor_stmt_fk ON statement_to_actor(statement_id);
 CREATE INDEX IF NOT EXISTS stmt_actor_actor_fk ON statement_to_actor(actor_ifi, actor_type);

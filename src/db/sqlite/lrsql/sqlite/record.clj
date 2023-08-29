@@ -138,8 +138,8 @@
     (delete-actor-st2st tx input)
     (delete-actor-st2activ tx input)
     (delete-actor-attachments tx input)
-    (delete-actor-st2actor tx input)
     (delete-actor-statements tx input)
+    #_(delete-actor-st2actor tx input) ; this is done by ON DELETE CASCADE
     (delete-actor-agent-profile tx input)
     (delete-actor-state-document tx input)
     (delete-actor-actor tx input))
