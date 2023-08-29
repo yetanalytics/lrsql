@@ -1,6 +1,5 @@
 (ns lrsql.util.headers
-  (:require [io.pedestal.http.csrf :as csrf]
-            [io.pedestal.http.secure-headers :as hsh]
+  (:require [io.pedestal.http.secure-headers :as hsh]
             [io.pedestal.interceptor :refer [interceptor]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8,7 +7,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn headers-interceptor
-  "Takes a map of header names to values and creates an interceptor to inject 
+  "Takes a map of header names to values and creates an interceptor to inject
    them in response."
   [headers]
   (interceptor
@@ -52,7 +51,7 @@
        agg)) {} sec-header-opts))
 
 (defn secure-headers
-  "Iterate header-opts, generating values for each header and returning an 
+  "Iterate header-opts, generating values for each header and returning an
    interceptor"
   [sec-header-opts]
   (let [sec-headers (build-sec-headers sec-header-opts)]
