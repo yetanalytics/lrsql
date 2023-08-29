@@ -89,8 +89,12 @@ CREATE TABLE IF NOT EXISTS statement_to_actor (
   actor_type   TEXT CHECK (
                  actor_type IN ('Agent', 'Group')
                ) NOT NULL,                -- enum
-  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
-  FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
+  CONSTRAINT fk_statements	       	       	       
+    FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_actors
+    FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
+    ON DELETE CASCADE
 )
 
 -- :name create-statement-actor-statement-id-index!
