@@ -17,14 +17,16 @@
 
 (defn query-admin
   "Query an admin account with the given username (or account-id) and password.
-   Returns a map containing `:account-id` and `:passhash` on success, or nil on
-   failure."
+   Returns a map containing `:account-id`, `:passhash` and `username` on 
+   success, or nil on failure."
   [bk tx input]
   (when-some [{account-id :id
-               passhash   :passhash}
+               passhash   :passhash
+               username   :username}
               (bp/-query-account bk tx input)]
     {:account-id account-id
-     :passhash   passhash}))
+     :passhash   passhash
+     :username   username}))
 
 (defn query-admin-exists
   "Query whether an admin account with the given ID exists. Returns true

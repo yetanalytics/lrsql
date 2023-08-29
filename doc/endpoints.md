@@ -22,6 +22,7 @@ The following examples use `http://example.org` as the URL body. All methods ret
 - `POST http://example.org/admin/account/create`: Create a new admin account. The request body must be a JSON object that contains `username` and `password` strings. The endpoint returns a JSON object with the ID (UUID) of the newly created user on success, and returns a `409 CONFLICT` if the account already exists.
 - `DELETE http://example.org/admin/account`: Delete an existing account. The JSON request body must contain a UUID `account-id` value. The endpoint returns a JSON object with the ID of the deleted account on success and returns a `404 NOT FOUND` error if the account does not exist.
 - `GET http://example.org/admin/account`: Return an array of all admin accounts in the system on success.
+- `GET http://example.org/admin/me`: Returns the currently authenticated admin accounts on success.
 
 #### Admin Credential Routes
 
