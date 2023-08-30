@@ -51,22 +51,25 @@
                    :conn-pool)
           statement-results
           (jdbc/with-transaction [tx conn]
-            (reduce
-             (fn [acc {:keys [reaction-id
-                              error]
-                       :as   result}]
-               (if error
-                 (let [input (react-input/error-reaction-input
-                              reaction-id error)]
-                   (react-cmd/error-reaction! backend tx input)
-                   (reset! reaction-cache nil)
-                   acc)
-                 (conj acc (select-keys result [:statement :authority]))))
-             []
-             (:result
-              (react-q/query-statement-reactions
-               backend tx {:reactions  (rp/-get-reactions this tx 1000) ;; TODO: config
-                           :trigger-id statement-id}))))]
+            (let [reactions (rp/-get-reactions this tx 10000)]
+              (if (empty? reactions)
+                []
+                (reduce
+                 (fn [acc {:keys [reaction-id
+                                  error]
+                           :as   result}]
+                   (if error
+                     (let [input (react-input/error-reaction-input
+                                  reaction-id error)]
+                       (react-cmd/error-reaction! backend tx input)
+                       (reset! reaction-cache nil)
+                       acc)
+                     (conj acc (select-keys result [:statement :authority]))))
+                 []
+                 (:result
+                  (react-q/query-statement-reactions
+                   backend tx {:reactions  reactions
+                               :trigger-id statement-id}))))))]
       ;; Submit statements one at a time with varying authority
       {:statement-ids
        (reduce
