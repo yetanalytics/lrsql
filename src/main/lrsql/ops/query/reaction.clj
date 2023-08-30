@@ -98,74 +98,71 @@
 
 (defn query-statement-reactions
   "Given a statement ID, produce any reactions to that statement."
-  [bk tx {:keys [trigger-id]}]
-  (let [active-reactions (query-active-reactions bk tx)]
-    ;; If there are no reactions, short-circuit w/o additional queries
-    (if (empty? active-reactions)
-      {:result []}
-      (let [{statement :payload}  (bp/-query-statement
-                                   bk tx {:statement-id trigger-id})
-            {s-reactions :result} (ur/query-reaction-history
-                                   bk tx {:statement-id trigger-id})]
-        {:result
-         (into
-          []
-          (mapcat
-           (fn [{:keys       [ruleset]
-                 reaction-id :id}]
-             ;; Cycle Check
-             (if (contains? s-reactions reaction-id)
-               (do
-                 (log/warnf
-                  "Reaction %s found in statement %s history, ignoring!"
-                  reaction-id trigger-id)
-                 []) ;; ignore
-               (let [{:keys [identityPaths
-                             template]} ruleset
-                     statement-identity (ru/statement-identity
-                                         identityPaths statement)]
-                 (if-not statement-identity
-                   [] ;; ignore
-                   (let [[q-success ?q-result-or-error]
-                         (reaction-query
-                          bk tx ruleset reaction-id trigger-id statement-identity)]
-                     (if (false? q-success)
-                       ;; Query Error
-                       [?q-result-or-error]
-                       (for [ruleset-match ?q-result-or-error
-                             :let
-                             [[t-success ?t-result-or-error]
-                              (generate-statement
-                               reaction-id trigger-id ruleset-match template)]]
-                         (if (false? t-success)
-                           ;; Template Error
-                           ?t-result-or-error
-                           (let [new-statement ?t-result-or-error
-                                 valid?        (s/valid? ::xs/statement
-                                                         new-statement)]
-                             (if-not valid?
-                               ;; Invalid Statement Error
-                               (let [explanation
-                                     (s/explain-str ::xs/statement new-statement)]
-                                 (log/errorf
-                                  "Reaction Invalid Statement Error - Reaction ID: %s Spec Error: %s"
-                                  reaction-id
-                                  explanation)
-                                 (reaction-error-response
-                                  reaction-id
-                                  trigger-id
-                                  "ReactionInvalidStatementError"
-                                  (format "Reaction Invalid Statement Error - Spec Error: %s"
-                                          explanation)))
-                               ;; Success Response
-                               {:reaction-id reaction-id
-                                :trigger-id  trigger-id
-                                :statement   (ru/add-reaction-metadata
-                                              new-statement
-                                              reaction-id
-                                              trigger-id)
-                                ;; Use a custom authority from the template or use
-                                ;; the trigger statement's authority
-                                :authority   (or (get new-statement "authority")
-                                                 (get statement "authority"))}))))))))))
-           active-reactions))}))))
+  [bk tx {:keys [reactions
+                 trigger-id]}]
+  (let [{statement :payload}  (bp/-query-statement
+                               bk tx {:statement-id trigger-id})
+        {s-reactions :result} (ur/query-reaction-history
+                               bk tx {:statement-id trigger-id})]
+    {:result
+     (into
+      []
+      (mapcat
+       (fn [{:keys       [ruleset]
+             reaction-id :id}]
+         ;; Cycle Check
+         (if (contains? s-reactions reaction-id)
+           (do
+             (log/warnf
+              "Reaction %s found in statement %s history, ignoring!"
+              reaction-id trigger-id)
+             []) ;; ignore
+           (let [{:keys [identityPaths
+                         template]} ruleset
+                 statement-identity (ru/statement-identity
+                                     identityPaths statement)]
+             (if-not statement-identity
+               [] ;; ignore
+               (let [[q-success ?q-result-or-error]
+                     (reaction-query
+                      bk tx ruleset reaction-id trigger-id statement-identity)]
+                 (if (false? q-success)
+                   ;; Query Error
+                   [?q-result-or-error]
+                   (for [ruleset-match ?q-result-or-error
+                         :let
+                         [[t-success ?t-result-or-error]
+                          (generate-statement
+                           reaction-id trigger-id ruleset-match template)]]
+                     (if (false? t-success)
+                       ;; Template Error
+                       ?t-result-or-error
+                       (let [new-statement ?t-result-or-error
+                             valid?        (s/valid? ::xs/statement
+                                                     new-statement)]
+                         (if-not valid?
+                           ;; Invalid Statement Error
+                           (let [explanation
+                                 (s/explain-str ::xs/statement new-statement)]
+                             (log/errorf
+                              "Reaction Invalid Statement Error - Reaction ID: %s Spec Error: %s"
+                              reaction-id
+                              explanation)
+                             (reaction-error-response
+                              reaction-id
+                              trigger-id
+                              "ReactionInvalidStatementError"
+                              (format "Reaction Invalid Statement Error - Spec Error: %s"
+                                      explanation)))
+                           ;; Success Response
+                           {:reaction-id reaction-id
+                            :trigger-id  trigger-id
+                            :statement   (ru/add-reaction-metadata
+                                          new-statement
+                                          reaction-id
+                                          trigger-id)
+                            ;; Use a custom authority from the template or use
+                            ;; the trigger statement's authority
+                            :authority   (or (get new-statement "authority")
+                                             (get statement "authority"))}))))))))))
+       reactions))}))

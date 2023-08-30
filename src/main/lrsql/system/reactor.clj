@@ -46,7 +46,9 @@
              []
              (:result
               (react-q/query-statement-reactions
-               backend tx {:trigger-id statement-id}))))]
+               backend tx {:reactions  (react-q/query-active-reactions
+                                        backend tx)
+                           :trigger-id statement-id}))))]
       ;; Submit statements one at a time with varying authority
       {:statement-ids
        (reduce

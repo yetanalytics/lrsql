@@ -119,6 +119,12 @@
   (s/keys :req-un [:lrsql.spec.reaction.error/type
                    :lrsql.spec.reaction.error/message]))
 
+(s/def ::id ::reaction-id)
+(s/def ::reactions
+  (s/every
+   (s/keys :req-un [::id
+                    ::ruleset])))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inputs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -129,7 +135,8 @@
                    ::statement-identity]))
 
 (def query-statement-reactions-input-spec
-  (s/keys :req-un [::trigger-id]))
+  (s/keys :req-un [::reactions
+                   ::trigger-id]))
 
 (s/def :lrsql.spec.reaction.query-reaction-history/statement-id
   uuid?)
@@ -166,8 +173,6 @@
 
 (def query-reaction-ret-spec
   (s/every (s/map-of simple-keyword? ::xs/statement)))
-
-(s/def ::id ::reaction-id)
 
 (def query-active-reactions-ret-spec
   (s/every (s/keys :req-un [::id

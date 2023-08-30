@@ -109,7 +109,9 @@
                   ;; Authority derived from the trigger statement
                   :authority   (:agent tc/auth-ident)}]}
                (qr/query-statement-reactions
-                bk ds {:trigger-id trigger-id})))
+                bk ds {:reactions  (qr/query-active-reactions
+                                    bk ds)
+                       :trigger-id trigger-id})))
         (finally (component/stop sys'))))))
 
 (deftest query-statement-reactions-custom-authority-test
@@ -149,7 +151,9 @@
                   ;; Authority derived from the template
                   :authority   {"mbox" "mailto:bob@example.com"}}]}
                (qr/query-statement-reactions
-                bk ds {:trigger-id trigger-id})))
+                bk ds {:reactions  (qr/query-active-reactions
+                                    bk ds)
+                       :trigger-id trigger-id})))
         (finally (component/stop sys'))))))
 
 (deftest query-statement-reactions-template-error-test
@@ -188,7 +192,9 @@
                                 :message
                                 "No value found at [\"x\" \"actor\" \"mbox\"]"}}]}
                (qr/query-statement-reactions
-                bk ds {:trigger-id trigger-id})))
+                bk ds {:reactions  (qr/query-active-reactions
+                                    bk ds)
+                       :trigger-id trigger-id})))
         (finally (component/stop sys'))))))
 
 (deftest query-statement-reactions-invalid-statement-error-test
@@ -231,5 +237,7 @@
 #:statement{:foo \"mailto:bob@example.com\"} - failed: (contains? % :statement/object) spec: :xapi-schema.spec/statement
 "}}]}
                (qr/query-statement-reactions
-                bk ds {:trigger-id trigger-id})))
+                bk ds {:reactions  (qr/query-active-reactions
+                                    bk ds)
+                       :trigger-id trigger-id})))
         (finally (component/stop sys'))))))
