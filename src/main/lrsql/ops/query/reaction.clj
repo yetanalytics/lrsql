@@ -45,6 +45,43 @@
    :error       {:type    error-type
                  :message error-message}})
 
+(defn- reaction-query
+  [bk tx ruleset reaction-id trigger-id statement-identity]
+  (try
+    [true (ur/query-reaction
+           bk
+           tx
+           {:ruleset            ruleset
+            :trigger-id         trigger-id
+            :statement-identity statement-identity})]
+    (catch Exception ex
+      (log/errorf
+       ex
+       "Reaction Query Error - Reaction ID: %s"
+       reaction-id)
+      [false (reaction-error-response
+              reaction-id
+              trigger-id
+              "ReactionQueryError"
+              (ex-message ex))])))
+
+(defn- generate-statement
+  [reaction-id trigger-id ruleset-match template]
+  (try
+    [true (ru/generate-statement
+           ruleset-match
+           template)]
+    (catch Exception ex
+      (log/errorf
+       ex
+       "Reaction Template Error - Reaction ID: %s"
+       reaction-id)
+      [false (reaction-error-response
+              reaction-id
+              trigger-id
+              "ReactionTemplateError"
+              (ex-message ex))])))
+
 (defn query-statement-reactions
   "Given a statement ID, produce any reactions to that statement."
   [bk tx {:keys [trigger-id]}]
@@ -76,43 +113,16 @@
                  (if-not statement-identity
                    [] ;; ignore
                    (let [[q-success ?q-result-or-error]
-                         (try
-                           [true (ur/query-reaction
-                                  bk
-                                  tx
-                                  {:ruleset            ruleset
-                                   :trigger-id         trigger-id
-                                   :statement-identity statement-identity})]
-                           (catch Exception ex
-                             (log/errorf
-                              ex
-                              "Reaction Query Error - Reaction ID: %s"
-                              reaction-id)
-                             [false (reaction-error-response
-                                     reaction-id
-                                     trigger-id
-                                     "ReactionQueryError"
-                                     (ex-message ex))]))]
+                         (reaction-query
+                          bk tx ruleset reaction-id trigger-id statement-identity)]
                      (if (false? q-success)
                        ;; Query Error
                        [?q-result-or-error]
                        (for [ruleset-match ?q-result-or-error
                              :let
                              [[t-success ?t-result-or-error]
-                              (try
-                                [true (ru/generate-statement
-                                       ruleset-match
-                                       template)]
-                                (catch Exception ex
-                                  (log/errorf
-                                   ex
-                                   "Reaction Template Error - Reaction ID: %s"
-                                   reaction-id)
-                                  [false (reaction-error-response
-                                          reaction-id
-                                          trigger-id
-                                          "ReactionTemplateError"
-                                          (ex-message ex))]))]]
+                              (generate-statement
+                               reaction-id trigger-id ruleset-match template)]]
                          (if (false? t-success)
                            ;; Template Error
                            ?t-result-or-error
