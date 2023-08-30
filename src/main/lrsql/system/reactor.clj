@@ -51,7 +51,7 @@
                    :conn-pool)
           statement-results
           (jdbc/with-transaction [tx conn]
-            (let [reactions (rp/-get-reactions this tx 10000)]
+            (let [reactions (rp/-get-reactions this tx 10000)] ;; TODO: Make this config
               (if (empty? reactions)
                 []
                 (reduce
