@@ -37,7 +37,7 @@
     (or
      ;; get from cache
      (when (not (zero? ttl))
-       (:reactions (react-init/validate-cache! reaction-cache ttl)))
+       (react-init/validate-cache! reaction-cache ttl))
      ;; get from db and set in cache
      (do (log/debug "querying for reactions...")
          (:reactions

@@ -58,9 +58,10 @@
                   (a/<!
                    (a/thread
                      (rp/-react-to-statement reactor trigger-id)))]
-              (log/debugf "Created reaction to %s, statement IDs: %s"
-                          trigger-id
-                          (cs/join ", " statement-ids))
+              (when (not-empty statement-ids)
+                (log/debugf "Created reaction to %s, statement IDs: %s"
+                            trigger-id
+                            (cs/join ", " statement-ids)))
               (recur))
             (do
               (log/debugf "Reaction channel shutdown")
@@ -122,6 +123,7 @@
             (when-let [{:keys [query-at]} state]
               (let [age (- (System/currentTimeMillis)
                            query-at)]
+
                 (when (> ttl age)
-                  (log/debug "reaction cache hit")
+                  (log/debugf "reaction cache hit ttl: %s age: %s" ttl age)
                   state)))))))
