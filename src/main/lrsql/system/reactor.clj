@@ -13,11 +13,8 @@
                     reaction-executor]
   component/Lifecycle
   (start [this]
-    (assoc this
-           :reaction-executor
-           (react-init/reaction-executor
-            (:reaction-channel lrs)
-            this)))
+    (-> this
+        rp/-start-executor))
   (stop [this]
     (react-init/shutdown-reactions!
      (:reaction-channel lrs)
@@ -27,6 +24,12 @@
            :lrs nil
            :reaction-executor nil))
   rp/StatementReactor
+  (-start-executor [this]
+    (if-let [reaction-channel (:reaction-channel lrs)]
+      (assoc this
+             :reaction-executor
+             (react-init/reaction-executor reaction-channel this))
+      this))
   (-react-to-statement [_ statement-id]
     (let [conn (-> lrs
                    :connection

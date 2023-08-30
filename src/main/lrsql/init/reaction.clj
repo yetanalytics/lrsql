@@ -39,35 +39,34 @@
                  trigger-id))))
 
 (s/fdef reaction-executor
-  :args (s/cat :?reaction-channel (s/nilable ::common-spec/channel)
+  :args (s/cat :reaction-channel (s/nilable ::common-spec/channel)
                :reactor rs/reactor?)
   :ret (s/nilable ::common-spec/channel))
 
 (defn reaction-executor
   "Given a (possibly nil) reaction channel and a reactor implementation, process
   reactions in a thread pool. If the channel is nil, returns nil."
-  [?reaction-channel reactor]
-  (when ?reaction-channel
-    (log/info "Starting reaction processor...")
-    (let [reaction-executor
-          (a/go-loop []
-            (log/debug "Listening for reaction trigger...")
-            (if-let [trigger-id (a/<! ?reaction-channel)]
-              (let [_ (log/debugf "Reacting to statement ID: %s"
-                                  trigger-id)
-                    {:keys [statement-ids]}
-                    (a/<!
-                     (a/thread
-                       (rp/-react-to-statement reactor trigger-id)))]
-                (log/debugf "Created reaction to %s, statement IDs: %s"
-                            trigger-id
-                            (cs/join ", " statement-ids))
-                (recur))
-              (do
-                (log/debugf "Reaction channel shutdown")
-                ::shutdown)))]
-      (log/info "Reaction processor started.")
-      reaction-executor)))
+  [reaction-channel reactor]
+  (log/info "Starting reaction processor...")
+  (let [reaction-executor
+        (a/go-loop []
+          (log/debug "Listening for reaction trigger...")
+          (if-let [trigger-id (a/<! reaction-channel)]
+            (let [_ (log/debugf "Reacting to statement ID: %s"
+                                trigger-id)
+                  {:keys [statement-ids]}
+                  (a/<!
+                   (a/thread
+                     (rp/-react-to-statement reactor trigger-id)))]
+              (log/debugf "Created reaction to %s, statement IDs: %s"
+                          trigger-id
+                          (cs/join ", " statement-ids))
+              (recur))
+            (do
+              (log/debugf "Reaction channel shutdown")
+              ::shutdown)))]
+    (log/info "Reaction processor started.")
+    reaction-executor))
 
 (s/fdef shutdown-reactions!
   :args (s/cat :?reaction-channel (s/nilable ::common-spec/channel)
