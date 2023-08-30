@@ -8,13 +8,15 @@
             [lrsql.admin.interceptors.ui :as ui]
             [lrsql.admin.interceptors.jwt :as ji]
             [lrsql.admin.interceptors.status :as si]
-            [lrsql.util.interceptor :as util-i]))
+            [lrsql.util.interceptor :as util-i]
+            [lrsql.util.headers :as h]))
 
 (defn- make-common-interceptors
-  [lrs]
+  [lrs sec-head-opts]
   [i/error-interceptor
    (util-i/handle-json-parse-exn true)
    i/x-forwarded-for-interceptor
+   (h/secure-headers sec-head-opts)
    json-body
    (body-params)
    (i/lrs-interceptor lrs)])
@@ -144,12 +146,13 @@
            enable-admin-status
            enable-account-routes
            oidc-interceptors
-           oidc-ui-interceptors]
+           oidc-ui-interceptors
+           head-opts]
     :or   {oidc-interceptors     []
            oidc-ui-interceptors  []
            enable-account-routes true}}
    routes]
-  (let [common-interceptors      (make-common-interceptors lrs)
+  (let [common-interceptors      (make-common-interceptors lrs head-opts)
         common-interceptors-oidc (into common-interceptors oidc-interceptors)
         no-val-opts              {:no-val? no-val?
                                   :no-val-uname no-val-uname

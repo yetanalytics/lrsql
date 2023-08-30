@@ -173,6 +173,14 @@
 (s/def ::oidc-verify-remote-issuer boolean?)
 (s/def ::oidc-enable-local-admin boolean?)
 
+(s/def ::sec-head-hsts (s/nilable string?))
+(s/def ::sec-head-frame (s/nilable string?))
+(s/def ::sec-head-content-type (s/nilable string?))
+(s/def ::sec-head-xss (s/nilable string?))
+(s/def ::sec-head-download (s/nilable string?))
+(s/def ::sec-head-cross-domain (s/nilable string?))
+(s/def ::sec-head-content (s/nilable string?))
+
 (s/def ::webserver
   (s/and
    (s/keys :req-un [::http-host
@@ -202,6 +210,13 @@
                     ::jwt-no-val-issuer
                     ::jwt-no-val-role
                     ::jwt-no-val-role-key
+                    ::sec-head-hsts
+                    ::sec-head-frame
+                    ::sec-head-content-type
+                    ::sec-head-xss
+                    ::sec-head-download
+                    ::sec-head-cross-domain
+                    ::sec-head-content
                     ::oidc-issuer
                     ::oidc-audience
                     ::oidc-client-id])
