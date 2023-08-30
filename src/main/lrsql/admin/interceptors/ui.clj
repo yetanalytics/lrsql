@@ -14,8 +14,9 @@
   config to inject:
     :enable-admin-status - boolean, determines if the admin status endpoint is
       enabled."
-  [{:keys [enable-admin-status]
-    :or   {enable-admin-status false}}]
+  [{:keys [enable-admin-status no-val?]
+    :or   {enable-admin-status false
+           no-val?             false}}]
   (interceptor
    {:name ::get-env
     :enter
@@ -30,5 +31,6 @@
                 (merge
                  {:url-prefix          url-prefix
                   :enable-stmt-html    (some? enable-stmt-html)
-                  :enable-admin-status enable-admin-status}
+                  :enable-admin-status enable-admin-status
+                  :no-val?             no-val?}
                  oidc-env)})))}))

@@ -8,4 +8,13 @@
         <packageUrl regex="true">^pkg:maven/org\.msgpack/msgpack@.*$</packageUrl>
         <cve>CVE-2022-41719</cve>
     </suppress>
+    <!-- This CVE affects a single version of Postgres Server itself, not the driver at all and cannot be patched in this project -->
+    <suppress base="true">
+        <notes><![CDATA[
+        FP per issue #5899
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.postgresql/postgresql@.*$</packageUrl>
+        <cpe>cpe:/a:postgresql:postgresql_jdbc_driver</cpe>
+        <cve>CVE-2020-21469</cve>
+    </suppress>
 </suppressions>

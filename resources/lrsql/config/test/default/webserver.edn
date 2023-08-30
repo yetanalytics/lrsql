@@ -4,6 +4,11 @@
  :key-enable-selfie         true
  :jwt-exp-time              3600
  :jwt-exp-leeway            1
+ :jwt-no-val                false
+ :jwt-no-val-uname          nil
+ :jwt-no-val-issuer         nil
+ :jwt-no-val-role-key       nil
+ :jwt-no-val-role           nil
  :enable-http               true
  :enable-http2              true
  :ssl-port                  8443
