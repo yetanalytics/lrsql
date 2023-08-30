@@ -261,6 +261,12 @@
     (let [conn (lrs-conn this)]
       (jdbc/with-transaction [tx conn]
         (admin-q/query-all-admin-accounts backend tx))))
+  (-get-account
+    [this account-id]
+    (let [conn (lrs-conn this)
+          input (admin-input/query-account-input account-id)]
+      (jdbc/with-transaction [tx conn]
+        (select-keys (admin-q/query-admin backend tx input) [:account-id :username]))))
   (-authenticate-account
     [this username password]
     (let [conn  (lrs-conn this)
