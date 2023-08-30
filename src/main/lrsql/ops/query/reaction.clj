@@ -31,6 +31,20 @@
       :error    error})
    (bp/-query-all-reactions bk tx)))
 
+(s/fdef query-active-reactions
+  :args (s/cat :bx rs/reaction-backend?
+               :tx transaction?)
+  :ret rs/query-active-reactions-ret-spec)
+
+(defn query-active-reactions
+  "Return all currently active reactions."
+  [bk tx]
+  (mapv
+   (fn [{:keys [id ruleset]}]
+     {:id      id
+      :ruleset (ru/stringify-template ruleset)})
+   (bp/-query-active-reactions bk tx)))
+
 (s/fdef query-statement-reactions
   :args (s/cat :bk rs/reaction-backend?
                :tx transaction?
@@ -85,7 +99,7 @@
 (defn query-statement-reactions
   "Given a statement ID, produce any reactions to that statement."
   [bk tx {:keys [trigger-id]}]
-  (let [active-reactions (ur/query-active-reactions bk tx)]
+  (let [active-reactions (query-active-reactions bk tx)]
     ;; If there are no reactions, short-circuit w/o additional queries
     (if (empty? active-reactions)
       {:result []}

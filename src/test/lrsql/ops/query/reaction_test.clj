@@ -52,6 +52,32 @@
                     (map #(select-keys % [:ruleset :active :error]))))))
       (finally (component/stop sys')))))
 
+(deftest query-active-reactions-test
+  (let [sys  (support/test-system
+              :conf-overrides
+              {[:lrs :enable-reactions] false})
+        sys' (component/start sys)
+        lrs  (-> sys' :lrs)
+        bk   (:backend lrs)
+        ds   (-> sys' :lrs :connection :conn-pool)]
+    (try
+      ;; Create an active reaction
+      (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
+      ;; Create an inactive reaction
+      (adp/-create-reaction lrs tc/simple-reaction-ruleset false)
+      ;; Create a reaction and error it
+      (let [{reaction-id :result} (adp/-create-reaction
+                                   lrs tc/simple-reaction-ruleset true)]
+        (cr/error-reaction! bk ds (ir/error-reaction-input
+                                   reaction-id
+                                   {:type "ReactionQueryError"
+                                    :message "Unknown Query Error!"})))
+      (testing "Finds only active reactions"
+        (is (= [{:ruleset tc/simple-reaction-ruleset}]
+                 (->> (qr/query-active-reactions bk ds)
+                      (map #(select-keys % [:ruleset]))))))
+      (finally (component/stop sys')))))
+
 (deftest query-statement-reactions-valid-test
   (testing "valid reaction"
     (let [sys        (support/test-system

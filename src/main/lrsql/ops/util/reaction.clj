@@ -3,7 +3,6 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.reaction :as rs]
-            [lrsql.util.reaction :as ru]
             [cheshire.core :as json]
             [xapi-schema.spec :as-alias xs]
             [clojure.java.io :as io]))
@@ -195,20 +194,6 @@
    (bp/-query-reaction bk tx
                        {:sql (query-reaction-sqlvec
                               bk input)})))
-
-(s/fdef query-active-reactions
-  :args (s/cat :bx rs/reaction-backend?
-               :tx transaction?)
-  :ret rs/query-active-reactions-ret-spec)
-
-(defn query-active-reactions
-  "Return all currently active reactions."
-  [bk tx]
-  (mapv
-   (fn [{:keys [id ruleset]}]
-     {:id      id
-      :ruleset (ru/stringify-template ruleset)})
-   (bp/-query-active-reactions bk tx)))
 
 (s/fdef query-reaction-history
   :args (s/cat :bx rs/reaction-backend?

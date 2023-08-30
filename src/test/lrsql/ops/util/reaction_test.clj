@@ -7,9 +7,7 @@
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.admin.protocol :as adp]
             [lrsql.util :as u]
-            [lrsql.util.reaction :as ru]
-            [lrsql.ops.command.reaction :as cr]
-            [lrsql.input.reaction :as ir]))
+            [lrsql.util.reaction :as ru]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helper Functions
@@ -114,32 +112,6 @@
           (is (= 1 (count query-result)))
           (let [[{:keys [a]}] query-result]
             (is (= tc/reaction-stmt-d (remove-props a))))))
-      (finally (component/stop sys')))))
-
-(deftest query-active-reactions-test
-  (let [sys  (support/test-system
-              :conf-overrides
-              {[:lrs :enable-reactions] false})
-        sys' (component/start sys)
-        lrs  (-> sys' :lrs)
-        bk   (:backend lrs)
-        ds   (-> sys' :lrs :connection :conn-pool)]
-    (try
-      ;; Create an active reaction
-      (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
-      ;; Create an inactive reaction
-      (adp/-create-reaction lrs tc/simple-reaction-ruleset false)
-      ;; Create a reaction and error it
-      (let [{reaction-id :result} (adp/-create-reaction
-                                   lrs tc/simple-reaction-ruleset true)]
-        (cr/error-reaction! bk ds (ir/error-reaction-input
-                                   reaction-id
-                                   {:type "ReactionQueryError"
-                                    :message "Unknown Query Error!"})))
-      (testing "Finds only active reactions"
-        (is (= [{:ruleset tc/simple-reaction-ruleset}]
-                 (->> (ur/query-active-reactions bk ds)
-                      (map #(select-keys % [:ruleset]))))))
       (finally (component/stop sys')))))
 
 (deftest query-reaction-history-test
