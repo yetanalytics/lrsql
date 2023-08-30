@@ -87,3 +87,41 @@
     (a/<!! ?reaction-executor)
     (log/debug "Reaction executor shut down.")
     (log/info "Reaction processor stopped.")))
+
+(s/fdef new-reaction-cache
+  :args (s/cat)
+  :ret #(instance? clojure.lang.Atom %))
+
+(defn new-reaction-cache
+  "Create a new empty reaction cache."
+  []
+  (atom nil))
+
+(s/fdef cache-reactions
+  :args (s/cat :reactions ::rs/reactions)
+  :ret rs/reaction-cache-state-spec)
+
+(defn cache-reactions
+  "Provide the reaction cache state for a given list of reactions."
+  [reactions]
+  {:query-at  (System/currentTimeMillis)
+   :reactions reactions})
+
+(s/fdef validate-cache!
+  :args (s/cat :reaction-cache #(instance? clojure.lang.Atom %)
+               :ttl nat-int?)
+  :ret (s/nilable ::rs/reactions))
+
+(defn validate-cache!
+  "Check the reaction cache and if it is valid return reactions. Otherwise clear
+  it."
+  [reaction-cache ttl]
+  (:reactions
+   (swap! reaction-cache
+          (fn [state]
+            (when-let [{:keys [query-at]} state]
+              (let [age (- (System/currentTimeMillis)
+                           query-at)]
+                (when (> ttl age)
+                  (log/debug "reaction cache hit")
+                  state)))))))

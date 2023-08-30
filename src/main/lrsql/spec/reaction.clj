@@ -125,6 +125,13 @@
    (s/keys :req-un [::id
                     ::ruleset])))
 
+(s/def ::query-at nat-int?)
+
+(def reaction-cache-state-spec
+  (s/nilable
+   (s/keys :req-un [::query-at
+                    ::reactions])))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Inputs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

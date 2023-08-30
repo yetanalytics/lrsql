@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component    :as component]
             [next.jdbc                     :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
+            [clojure.tools.logging         :as log]
             [lrsql.reaction.protocol       :as rp]
             [lrsql.init.reaction           :as react-init]
             [lrsql.input.reaction          :as react-input]
@@ -10,10 +11,12 @@
 
 (defrecord Reactor [backend
                     lrs
-                    reaction-executor]
+                    reaction-executor
+                    reaction-cache]
   component/Lifecycle
   (start [this]
     (-> this
+        (assoc :reaction-cache (react-init/new-reaction-cache))
         rp/-start-executor))
   (stop [this]
     (react-init/shutdown-reactions!
@@ -30,7 +33,19 @@
              :reaction-executor
              (react-init/reaction-executor reaction-channel this))
       this))
-  (-react-to-statement [_ statement-id]
+  (-get-reactions [_ tx ttl]
+    (or
+     ;; get from cache
+     (when (not (zero? ttl))
+       (:reactions (react-init/validate-cache! reaction-cache ttl)))
+     ;; get from db and set in cache
+     (do (log/debug "querying for reactions...")
+         (:reactions
+          (reset! reaction-cache
+                  (react-init/cache-reactions
+                   (react-q/query-active-reactions
+                    backend tx)))))))
+  (-react-to-statement [this statement-id]
     (let [conn (-> lrs
                    :connection
                    :conn-pool)
@@ -44,13 +59,13 @@
                  (let [input (react-input/error-reaction-input
                               reaction-id error)]
                    (react-cmd/error-reaction! backend tx input)
+                   (reset! reaction-cache nil)
                    acc)
                  (conj acc (select-keys result [:statement :authority]))))
              []
              (:result
               (react-q/query-statement-reactions
-               backend tx {:reactions  (react-q/query-active-reactions
-                                        backend tx)
+               backend tx {:reactions  (rp/-get-reactions this tx 1000) ;; TODO: config
                            :trigger-id statement-id}))))]
       ;; Submit statements one at a time with varying authority
       {:statement-ids
