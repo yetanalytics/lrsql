@@ -78,14 +78,14 @@
             :min-count 1
             :gen-max 3))
 
-(s/def ::identity-paths
+(s/def ::identityPaths
   (s/every ::path))
 
 ;; A JSON structure resembling a statement, but with path refs to cond results
 (s/def ::template ::xs/any-json)
 
 (s/def ::ruleset
-  (s/keys :req-un [::identity-paths
+  (s/keys :req-un [::identityPaths
                    ::conditions
                    ::template]))
 
@@ -232,3 +232,19 @@
 
 (def error-reaction-ret-spec
   (s/keys :req-un [:lrsql.spec.reaction.error-reaction/result]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Params
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def create-reaction-params-spec
+  (s/keys :req-un [::ruleset
+                   ::active]))
+
+(def update-reaction-params-spec
+  (s/keys :req-un [::reaction-id
+                   (or ::ruleset
+                       ::active)]))
+
+(def delete-reaction-params-spec
+  (s/keys :req-un [::reaction-id]))

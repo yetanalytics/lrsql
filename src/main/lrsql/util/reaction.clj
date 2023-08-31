@@ -34,7 +34,7 @@
      s)))
 
 (s/fdef statement-identity
-  :args (s/cat :identity-paths ::rs/identity-paths
+  :args (s/cat :identityPaths ::rs/identityPaths
                :statement ::xs/statement)
   :ret (s/nilable
         ::rs/statement-identity))
@@ -94,3 +94,21 @@
   "On read, the reaction template has keyword keys. Stringify them!"
   [raw-ruleset]
   (update raw-ruleset :template walk/stringify-keys))
+
+(s/fdef json->ruleset
+  :args (s/cat :raw-ruleset ::cs/any-json)
+  :ret ::cs/any-json)
+
+(defn json->ruleset
+  "Pre-validation, read in the ruleset from JSON, ensuring string keys in the
+  template."
+  [{:keys [template] :as raw-ruleset}]
+  (cond-> raw-ruleset
+    template (assoc :template (walk/stringify-keys template))))
+
+(defn json->input
+  "Where an input contains a camel id, kebab it"
+  [{:keys [reactionId] :as input}]
+  (-> input
+      (dissoc :reactionId)
+      (assoc :reaction-id reactionId)))

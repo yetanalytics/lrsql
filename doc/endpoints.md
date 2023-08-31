@@ -35,4 +35,13 @@ The following examples use `http://example.org` as the URL body. All methods ret
 
 - `GET http://example.org/admin/env`: Get select environment variables about the configuration which may aid in client-side operations. Currently returns a map containing the configuration variables `urlPrefix` and `enableStmtHtml`.
 
+### Reaction Management Routes
+
+If [Reactions](reactions.md) are enabled, the following routes can be used to manage them:
+
+- `POST http://example.org/admin/reaction`: Create a new reaction by providing a JSON `ruleset` and `active` boolean. On success returns 200 with the `reactionId` of the new reaction.
+- `GET http://example.org/admin/reaction`: List all reactions, active and inactive.
+- `PUT http://example.org/admin/reaction`: Given a `reactionId` and either a JSON `ruleset` or boolean `active` parameter, update the given reaction. On success returns 200 with the `reactionId` of the updated reaction. Returns 404 if the reaction is not found.
+- `DELETE http://example.org/admin/reaction`: Delete a reaction specified by `reactionId`. Returns 200 with the `reactionId` of the deleted reaction on success or 404 if not found.
+
 [<- Back to Index](index.md)

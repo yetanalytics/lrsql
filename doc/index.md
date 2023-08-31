@@ -22,6 +22,7 @@
 - [HTTP Endpoints](endpoints.md)
 - [Developer Documentation](dev.md)
 - [Example AWS Deployment](aws.md)
+- [Reactions](reactions.md)
 
 ### Releases
 
