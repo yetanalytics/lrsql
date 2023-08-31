@@ -4,9 +4,7 @@
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.reaction :as rs]
             [lrsql.util.reaction :as ru]
-            [cheshire.core :as json]
-            [xapi-schema.spec :as-alias xs]
-            [clojure.java.io :as io]))
+            [xapi-schema.spec :as-alias xs]))
 
 (def ops
   {"gt"    ">"
@@ -185,16 +183,9 @@
 (defn query-reaction
   "For the given reaction input, return matching statements named for conditions."
   [bk tx input]
-  (mapv
-   (fn [row]
-     (into {}
-           (for [[condition-name statement-bs] row]
-             [condition-name
-              (with-open [r (io/reader statement-bs)]
-                (json/parse-stream r))])))
-   (bp/-query-reaction bk tx
-                       {:sql (query-reaction-sqlvec
-                              bk input)})))
+  (bp/-query-reaction bk tx
+                      {:sql (query-reaction-sqlvec
+                             bk input)}))
 
 (s/fdef query-active-reactions
   :args (s/cat :bx rs/reaction-backend?

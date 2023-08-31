@@ -3,7 +3,9 @@
   (:require [clojure.string :as cstr]
             [next.jdbc.prepare :refer [SettableParameter]]
             [next.jdbc.result-set :refer [ReadableColumn]]
-            [lrsql.util :as u])
+            [lrsql.util :as u]
+            [clojure.java.io :as io]
+            [cheshire.core :as json])
   (:import [java.util UUID]
            [java.time Instant]
            [java.sql PreparedStatement ResultSetMetaData]))
@@ -61,6 +63,19 @@
       (parse-sqlite-int bool-labels label n))
     (read-column-by-index [^Integer n ^ResultSetMetaData rsmeta ^long i]
       (parse-sqlite-int bool-labels (.getColumnLabel rsmeta i) n))))
+
+(defn parse-query-reaction-result
+  "Reaction condition statements are not automatically coerced because the
+  columns are aliased. Properly parse reaction results."
+  [result-rows]
+  (mapv
+   (fn [row]
+     (into {}
+           (for [[condition-name statement-bs] row]
+             [condition-name
+              (with-open [r (io/reader statement-bs)]
+                (json/parse-stream r))])))
+   result-rows))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Write
