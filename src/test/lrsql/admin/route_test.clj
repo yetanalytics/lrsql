@@ -2,10 +2,12 @@
   "Test for admin-related interceptors + routes
    (as opposed to just the protocol)."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
+            [clojure.string :refer [lower-case]]
             [babashka.curl :as curl]
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.test-support :as support]
+            [lrsql.util.headers :as h]
             [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -44,6 +46,11 @@
   (curl/get "http://0.0.0.0:8080/admin/account"
             {:headers headers}))
 
+(defn- get-me
+  [headers]
+  (curl/get "http://0.0.0.0:8080/admin/me"
+            {:headers headers}))
+
 (defn- update-account-password
   [headers
    body]
@@ -75,15 +82,18 @@
      (catch clojure.lang.ExceptionInfo e#
        (is (= ~code (-> e# ex-data :status))))))
 
+(def sec-header-names (mapv #(lower-case (% h/sec-head-names))
+                            (keys h/sec-head-names)))
+
 (deftest admin-routes-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
         ;; Seed information
-        {:keys [api-key-default
-                api-secret-default]} (get-in sys' [:lrs :config])
+        {:keys [admin-user-default
+                admin-pass-default]} (get-in sys' [:lrs :config])
         seed-body (u/write-json-str
-                   {"username" api-key-default
-                    "password" api-secret-default})
+                   {"username" admin-user-default
+                    "password" admin-pass-default})
         seed-jwt  (-> (login-account content-type seed-body)
                       :body
                       u/parse-json
@@ -122,6 +132,14 @@
         (is (vector? edn-body))
         ;; has the created user
         (is (some #(= (get % "username") "myname") edn-body))))
+    (testing "get my admin account"
+      (let [{:keys [status
+                    body]} (get-me headers)
+            edn-body       (u/parse-json body)]
+            ;; success
+        (is (= 200 status))
+            ;; is the created user
+        (is (= (get edn-body "username") admin-user-default))))
     (testing "log into the `myname` account"
       (let [{:keys [status body]}
             (login-account content-type req-body)
@@ -270,6 +288,84 @@
                   :throw   false})]
             ;; failure
             (is (= 400 status))))))
+    (testing "omitted sec headers because not configured"
+      (let [{:keys [headers]} (get-env content-type)]
+        (is (empty? (select-keys headers sec-header-names)))))
+    (component/stop sys')))
+
+(def custom-sec-header-config
+  {:sec-head-hsts         h/default-value
+   :sec-head-frame        "Chocolate"
+   :sec-head-content-type h/default-value
+   :sec-head-xss          "Banana"
+   :sec-head-download     h/default-value
+   :sec-head-cross-domain "Pancakes"
+   :sec-head-content      h/default-value})
+
+(def custom-sec-header-expected
+  (reduce-kv
+   (fn [hdrs k v]
+     (assoc hdrs (lower-case (k h/sec-head-names))
+            (if (= v h/default-value)
+              (k h/sec-head-defaults)
+              v)))
+   {} custom-sec-header-config))
+
+(deftest custom-header-admin-routes
+  (let [hdr-conf (reduce-kv (fn [m k v] (assoc m [:webserver k] v))
+                            {} custom-sec-header-config)
+        sys  (support/test-system
+              :conf-overrides hdr-conf)
+        sys' (component/start sys)]
+    (testing "Custom Sec Headers"
+      ;; Run a basic admin routes call and verify success
+      (let [{:keys [headers]} (get-env content-type)]
+        ;; equals the same combination of custom and default hdr values
+        (is (= custom-sec-header-expected
+               (select-keys headers sec-header-names)))))
+    (component/stop sys')))
+
+(def proxy-jwt-body
+  {"usercertificate" "unique.user.1234"
+   "iss"             "https://idp.domain.com/auth"
+   "group-full"      ["/domain/app/ADMIN"]})
+
+(defn- proxy-jwt
+  "Takes an edn claims body and returns a (not properly signed!) JWT
+   for proxy jwt testing"
+  [body]
+  (str "eyJhbGciOiJIUzI1NiJ9."
+       (u/str->base64encoded-str (u/write-json-str body))
+       ".GLkxNsaxkZQiW4voy4RKEpLy8RxyzcpMBAeBw-aIykQ"))
+
+(deftest proxy-jwt-admin-routes
+  (let [sys  (support/test-system
+              :conf-overrides
+              {[:webserver :jwt-no-val]          true
+               [:webserver :jwt-no-val-uname]    "usercertificate"
+               [:webserver :jwt-no-val-issuer]   "iss"
+               [:webserver :jwt-no-val-role-key] "group-full"
+               [:webserver :jwt-no-val-role]     "/domain/app/ADMIN"})
+        sys' (component/start sys)
+        ;; proxy jwt auth
+        proxy-auth {"Authorization" (str "Bearer " (proxy-jwt proxy-jwt-body))}
+        headers  (merge content-type proxy-auth)]
+    (testing "Proxy JWT authentication"
+      ;; Run a basic admin routes call and verify success
+      (let [{:keys [status body]} (get-account headers)
+            edn-body (u/parse-json body :object? false)]
+        ;; 200 response
+        (is (= status 200))
+        ;; not only is there a body but it should now contain our jwt user
+        (is (some #(= (get % "username") (get proxy-jwt-body "usercertificate"))
+                  edn-body))))
+    (testing "Bad Proxy JWT role"
+      ;; Remove the matching role from jwt role-key field and rerun admin call
+      (let [bad-jwt-bdy (assoc proxy-jwt-body "group-full" ["NOTADMIN"])
+            bad-auth {"Authorization" (str "Bearer " (proxy-jwt bad-jwt-bdy))}
+            bad-headers (merge content-type bad-auth)]
+        ;; Bad Auth because nonmatching role
+        (is-err-code (get-account bad-headers) 401)))
     (component/stop sys')))
 
 (deftest auth-routes-test

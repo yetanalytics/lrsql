@@ -27,10 +27,22 @@
                 enable-admin-ui
                 enable-admin-status
                 enable-stmt-html
+                sec-head-hsts
+                sec-head-frame
+                sec-head-content-type
+                sec-head-xss
+                sec-head-download
+                sec-head-cross-domain
+                sec-head-content
                 allow-all-origins
-                allowed-origins]
-         jwt-exp :jwt-exp-time
-         jwt-lwy :jwt-exp-leeway}
+                allowed-origins
+                jwt-no-val
+                jwt-no-val-uname
+                jwt-no-val-issuer
+                jwt-no-val-role-key
+                jwt-no-val-role]
+         jwt-exp           :jwt-exp-time
+         jwt-lwy           :jwt-exp-leeway}
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
@@ -57,12 +69,25 @@
               {:lrs                   lrs
                :exp                   jwt-exp
                :leeway                jwt-lwy
+               :no-val?               jwt-no-val
+               :no-val-issuer         jwt-no-val-issuer
+               :no-val-uname          jwt-no-val-uname
+               :no-val-role-key       jwt-no-val-role-key
+               :no-val-role           jwt-no-val-role
                :secret                private-key
                :enable-admin-ui       enable-admin-ui
                :enable-admin-status   enable-admin-status
                :enable-account-routes enable-local-admin
                :oidc-interceptors     oidc-admin-interceptors
-               :oidc-ui-interceptors  oidc-admin-ui-interceptors}))
+               :oidc-ui-interceptors  oidc-admin-ui-interceptors
+               :head-opts
+               {:sec-head-hsts         sec-head-hsts
+                :sec-head-frame        sec-head-frame
+                :sec-head-content-type sec-head-content-type
+                :sec-head-xss          sec-head-xss
+                :sec-head-download     sec-head-download
+                :sec-head-cross-domain sec-head-cross-domain
+                :sec-head-content      sec-head-content}}))
         ;; Build allowed-origins list. Add without ports as well for
         ;; default ports
         allowed-list
