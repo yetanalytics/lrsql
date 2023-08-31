@@ -89,12 +89,8 @@ CREATE TABLE IF NOT EXISTS statement_to_actor (
   actor_type   TEXT CHECK (
                  actor_type IN ('Agent', 'Group')
                ) NOT NULL,                -- enum
-  CONSTRAINT fk_statements	       	       	       
-    FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
-    ON DELETE CASCADE,
-  CONSTRAINT fk_actors
-    FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
-    ON DELETE CASCADE
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
+  FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 )
 
 -- :name create-statement-actor-statement-id-index!
@@ -430,3 +426,27 @@ ALTER TABLE activity_profile_document DROP COLUMN last_modified;
 -- :command :execute
 -- :doc Convert `activity_profile_document.last_modified` to timestamp - 04
 ALTER TABLE activity_profile_document RENAME COLUMN last_modified_tmp TO last_modified;
+
+--:name query-statement-to-actor-has-cascade-delete?
+select on_delete from pragma_foreign_key_list("statement_to_actor") where "table" ="xapi_statement"
+
+-- :name alter-statement-to-actor-add-cascade-delete!
+-- :command :execute
+UPDATE sqlite_schema
+SET sql = 'CREATE TABLE statement_to_actor (
+  id           TEXT NOT NULL PRIMARY KEY, -- uuid
+  statement_id TEXT NOT NULL,             -- uuid
+  usage        TEXT CHECK (
+                 usage IN (''Actor'', ''Object'', ''Authority'', ''Instructor'', ''Team'',
+                           ''SubActor'', ''SubObject'', ''SubInstructor'', ''SubTeam'')
+               ) NOT NULL,                -- enum
+  actor_ifi    TEXT NOT NULL,             -- ifi string
+  actor_type   TEXT CHECK (
+                 actor_type IN (''Agent'', ''Group'')
+               ) NOT NULL,                -- enum
+
+    FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
+    ON DELETE CASCADE,
+    FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
+)'
+WHERE type = 'table' AND name = 'statement_to_actor'
