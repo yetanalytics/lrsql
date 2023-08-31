@@ -377,7 +377,7 @@ json_extract_path_text(:i:col, :v*:path):::sql:type
 
 -- :snip snip-contains
 -- :doc Does the json at col and path contain the given value? A special case with differing structure across backends
-(SELECT 1 WHERE (:i:col#>>'{:v:path}')::jsonb @> (:snip:right)::jsonb)
+(SELECT TRUE FROM json_array_elements_text(json_extract_path(:i:col, :v*:path)) WHERE value:::sql:type = :snip:right)
 
 -- :snip snip-query-reaction
 SELECT :i*:select

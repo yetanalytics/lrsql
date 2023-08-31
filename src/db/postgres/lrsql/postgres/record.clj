@@ -239,11 +239,8 @@
     (delete-reaction! tx params))
   (-error-reaction! [_ tx params]
     (error-reaction! tx params))
-  (-snip-json-extract [_ {:keys [path type] :as params}]
-    (clojure.pprint/pprint ["record params for extract" params
-                            "morphed" (pd/path->string path)])
-    (snip-json-extract (assoc params
-                              :type (type pd/type->pg-type))))
+  (-snip-json-extract [_ {:keys [type] :as params}]
+    (snip-json-extract (assoc params :type (type pd/type->pg-type))))
   (-snip-val [_ params]
     (snip-val params))
   (-snip-col [_ params]
@@ -256,8 +253,8 @@
     (snip-or params))
   (-snip-not [_ params]
     (snip-not params))
-  (-snip-contains [_ params]
-    (snip-contains (update params :path ru/path->string)))
+  (-snip-contains [_ {:keys [type] :as params}]
+    (snip-contains (assoc params :type (type pd/type->pg-type))))
   (-snip-query-reaction [_ params]
     (snip-query-reaction params))
   (-query-reaction [_ tx params]

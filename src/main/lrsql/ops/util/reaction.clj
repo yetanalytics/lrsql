@@ -117,7 +117,8 @@
         (bp/-snip-contains bk
                            {:col   (format "%s.payload" condition-name)
                             :path  path
-                            :right right-snip})
+                            :right right-snip
+                            :type  (infer-type path val)})
         (let [op-sql (get ops op)]
           (when (nil? op-sql)
             (throw (ex-info "Invalid Operation"
