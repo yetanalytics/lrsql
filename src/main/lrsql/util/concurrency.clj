@@ -49,7 +49,8 @@
     (catch Exception e
       (if (and (< attempt max-attempt)
                (retry-test e))
-        (let [sleep (backoff-ms (inc attempt) opts)]
+        ;; Type hinted to long for JDK16+ which won't accept it without
+        (let [^long sleep (backoff-ms (inc attempt) opts)]
           (Thread/sleep sleep)
           (rerunable-txn* txn-expr (inc attempt) opts))
         (do
