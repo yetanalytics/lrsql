@@ -67,6 +67,7 @@
     (boolean? val) :bool
     (integer? val) :int
     (number? val)  :dec
+    (nil? val)     :json
     :else          :string))
 
 (defn- infer-type

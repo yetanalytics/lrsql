@@ -65,7 +65,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def type->pg-type
-  {:bool "BOOLEAN"
-   :int "INTEGER"
-   :dec "DECIMAL"
-   :string "TEXT"})
+  {:bool   "BOOLEAN"
+   :int    "INTEGER"
+   :dec    "DECIMAL"
+   :string "TEXT"
+   :json   "JSONB"})
