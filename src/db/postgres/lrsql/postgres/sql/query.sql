@@ -357,6 +357,10 @@ ORDER BY stored_time ASC;
 -- :snip snip-json-extract
 json_extract_path_text(:i:col, :v*:path):::sql:type
 
+-- :snip snip-jsonb-extract
+-- :doc essentially identical alternate for snip-json-extract for jsonb mode
+jsonb_extract_path_text(:i:col, :v*:path):::sql:type
+
 -- :snip snip-val
 :v:val
 
@@ -375,9 +379,13 @@ json_extract_path_text(:i:col, :v*:path):::sql:type
 -- :snip snip-not
 (NOT :snip:clause)
 
--- :snip snip-contains
+-- :snip snip-contains-json
 -- :doc Does the json at col and path contain the given value? A special case with differing structure across backends
 (SELECT TRUE FROM json_array_elements_text(json_extract_path(:i:col, :v*:path)) WHERE value:::sql:type = :snip:right)
+
+-- :snip snip-contains-jsonb
+-- :doc Does the jsonb at col and path contain the given value? A special case with differing structure across backends
+(SELECT TRUE FROM jsonb_array_elements_text(jsonb_extract_path(:i:col, :v*:path)) WHERE value:::sql:type = :snip:right)
 
 -- :snip snip-query-reaction
 SELECT :i*:select

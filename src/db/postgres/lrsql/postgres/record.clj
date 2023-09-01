@@ -240,7 +240,9 @@
   (-error-reaction! [_ tx params]
     (error-reaction! tx params))
   (-snip-json-extract [_ {:keys [type] :as params}]
-    (snip-json-extract (assoc params :type (type pd/type->pg-type))))
+    (if (-> tuning :config :enable-jsonb)
+      (snip-jsonb-extract (assoc params :type (type pd/type->pg-type)))
+      (snip-json-extract (assoc params :type (type pd/type->pg-type)))))
   (-snip-val [_ params]
     (snip-val params))
   (-snip-col [_ params]
@@ -254,7 +256,9 @@
   (-snip-not [_ params]
     (snip-not params))
   (-snip-contains [_ {:keys [type] :as params}]
-    (snip-contains (assoc params :type (type pd/type->pg-type))))
+    (if (-> tuning :config :enable-jsonb)
+      (snip-contains-jsonb (assoc params :type (type pd/type->pg-type)))
+      (snip-contains-json (assoc params :type (type pd/type->pg-type)))))
   (-snip-query-reaction [_ params]
     (snip-query-reaction params))
   (-query-reaction [_ tx params]
