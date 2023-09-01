@@ -50,7 +50,7 @@
       (if (and (< attempt max-attempt)
                (retry-test e))
         (let [sleep (backoff-ms (inc attempt) opts)]
-          (Thread/sleep sleep)
+          (Thread/sleep (long sleep))
           (rerunable-txn* txn-expr (inc attempt) opts))
         (do
           (log/warn "Rerunable Transaction exhausted attempts or could not be retried")
