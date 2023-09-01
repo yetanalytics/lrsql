@@ -5,8 +5,7 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.postgres.data :as pd]
-            [clojure.string :refer [includes?]]
-            [lrsql.util.reaction :as ru])
+            [clojure.string :refer [includes?]])
   (:import [org.postgresql.util PSQLException]))
 
 ;; Init HugSql functions

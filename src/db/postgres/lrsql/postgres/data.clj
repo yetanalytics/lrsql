@@ -69,7 +69,3 @@
    :int "INTEGER"
    :dec "DECIMAL"
    :string "TEXT"})
-
-(defn path->string
-  [path]
-  (format "{%s}" (clojure.string/join "," path)))
