@@ -38,6 +38,8 @@
   (s/keys :req-un [:ref/condition
                    ::path]))
 
+(s/def ::datatype keyword?)
+
 (s/def ::op
   #{"gt"
     "lt"
