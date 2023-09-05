@@ -35,7 +35,8 @@
   [stmts stmt]
   (-> (filter #(= (get % "id") (get stmt "id")) stmts)
       first
-      (get "stored")))
+      (get "stored")
+      u/str->time))
 
 (deftest query-reaction-test
   (let [sys    (support/test-system

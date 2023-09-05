@@ -100,7 +100,7 @@
 
 (s/def ::trigger-id uuid?)
 
-(s/def ::trigger-stored ::xs/timestamp)
+(s/def ::trigger-stored inst?)
 
 (s/def ::active boolean?)
 
