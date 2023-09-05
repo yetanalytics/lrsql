@@ -358,3 +358,43 @@ ALTER TABLE activity ALTER COLUMN payload SET DATA TYPE JSONB;
 ALTER TABLE xapi_statement ALTER COLUMN payload SET DATA TYPE JSON;
 ALTER TABLE actor ALTER COLUMN payload SET DATA TYPE JSON;
 ALTER TABLE activity ALTER COLUMN payload SET DATA TYPE JSON;
+
+/* Migration 2023-07-21-00 - Add Reaction Table */
+
+-- :name create-reaction-table!
+-- :command :execute
+-- :doc Create the `reaction` table if it does not yet exist.
+CREATE TABLE IF NOT EXISTS reaction (
+  id           UUID PRIMARY KEY,
+  ruleset      JSON NOT NULL,         -- serialized reaction spec
+  created      TIMESTAMP NOT NULL,    -- timestamp
+  modified     TIMESTAMP NOT NULL,    -- timestamp
+  active       BOOLEAN,               -- true/false/null - active/inactive/soft delete
+  error        JSON                   -- serialized error
+);
+
+-- :name query-xapi-statement-reaction-id-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `xapi_statement.reaction_id` exists.
+SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'reaction_id';
+
+-- :name xapi-statement-add-reaction-id!
+-- :command :execute
+-- :doc Adds `xapi_statement.reaction_id` and associated fk and index
+ALTER TABLE xapi_statement ADD COLUMN reaction_id UUID;
+ALTER TABLE xapi_statement ADD CONSTRAINT stmt_reaction_id_fk FOREIGN KEY (reaction_id) REFERENCES reaction(id);
+CREATE INDEX IF NOT EXISTS stmt_reaction_id_idx ON xapi_statement(reaction_id);
+
+-- :name query-xapi-statement-trigger-id-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `xapi_statement.trigger_id` exists.
+SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'trigger_id';
+
+-- :name xapi-statement-add-trigger-id!
+-- :command :execute
+-- :doc Adds `xapi_statement.trigger_id` and associated fk and index
+ALTER TABLE xapi_statement ADD COLUMN trigger_id UUID;
+ALTER TABLE xapi_statement ADD CONSTRAINT stmt_trigger_id_fk FOREIGN KEY (trigger_id) REFERENCES xapi_statement(statement_id);
+CREATE INDEX IF NOT EXISTS stmt_trigger_id_idx ON xapi_statement(trigger_id);

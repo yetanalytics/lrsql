@@ -5,6 +5,7 @@
             [lrsql.spec.reaction :as rs]
             [lrsql.util.reaction :as ru]
             [lrsql.ops.util.reaction :as ur]
+            [lrsql.util :as u]
             [xapi-schema.spec :as xs]
             [clojure.tools.logging :as log]))
 
@@ -113,7 +114,7 @@
                                          identityPaths statement)]
                  (if-not statement-identity
                    [] ;; ignore
-                   (let [stored (get statement "stored")
+                   (let [stored (u/str->time (get statement "stored"))
                          [q-success ?q-result-or-error]
                          (reaction-query
                           bk tx ruleset reaction-id trigger-id stored

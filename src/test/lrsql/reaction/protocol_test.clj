@@ -82,7 +82,7 @@
                     ["SELECT reaction_id, trigger_id
                       FROM xapi_statement
                       WHERE statement_id = ?"
-                     reaction-s-id]))))))
+                     (u/str->uuid reaction-s-id)]))))))
       (finally
         (component/stop sys')))))
 

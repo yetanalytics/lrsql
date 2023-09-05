@@ -38,6 +38,8 @@
   (s/keys :req-un [:ref/condition
                    ::path]))
 
+(s/def ::datatype keyword?)
+
 (s/def ::op
   #{"gt"
     "lt"
@@ -98,7 +100,7 @@
 
 (s/def ::trigger-id uuid?)
 
-(s/def ::trigger-stored ::xs/timestamp)
+(s/def ::trigger-stored inst?)
 
 (s/def ::active boolean?)
 

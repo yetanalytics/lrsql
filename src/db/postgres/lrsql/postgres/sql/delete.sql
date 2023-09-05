@@ -61,3 +61,14 @@ DELETE FROM credential_to_scope
 WHERE api_key = :api-key
 AND secret_key = :secret-key
 AND scope = :scope::scope_enum;
+
+-- :name delete-reaction!
+-- :command :execute
+-- :result :affected
+-- :doc (Soft) delete a reaction.
+UPDATE reaction
+SET
+  active = NULL,
+  modified = :modified
+WHERE
+  id = :reaction-id
