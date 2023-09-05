@@ -100,6 +100,8 @@
 
 (s/def ::trigger-id uuid?)
 
+(s/def ::trigger-stored ::xs/timestamp)
+
 (s/def ::active boolean?)
 
 (s/def ::primary-key uuid?)
@@ -128,6 +130,7 @@
 (def query-reaction-input-spec
   (s/keys :req-un [::ruleset
                    ::trigger-id
+                   ::trigger-stored
                    ::statement-identity]))
 
 (def query-statement-reactions-input-spec

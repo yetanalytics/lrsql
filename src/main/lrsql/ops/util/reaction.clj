@@ -158,21 +158,35 @@
 (s/fdef render-ground
   :args (s/cat :bk rs/reaction-backend?
                :condition-names (s/every ::rs/condition-name)
-               :trigger-id ::rs/trigger-id)
+               :trigger-id ::rs/trigger-id
+               :trigger-stored ::rs/trigger-stored)
   :ret ::rs/sqlvec)
 
 (defn- render-ground
-  [bk condition-names trigger-id]
-  (bp/-snip-or
+  [bk condition-names trigger-id trigger-stored]
+  (bp/-snip-and
    bk
-   {:clauses (mapv
-              (fn [k]
-                (bp/-snip-clause
-                 bk
-                 {:left  (render-col bk k "statement_id")
-                  :op    "="
-                  :right (bp/-snip-val bk {:val trigger-id})}))
-              condition-names)}))
+   {:clauses
+    (conj
+     ;; ensure that all stmts are stored at or before trigger stmt stored time
+     (mapv (fn [k]
+             (bp/-snip-clause
+              bk
+              {:left  (render-col bk k "stored")
+               :op    "<="
+               :right (bp/-snip-val bk {:val trigger-stored})}))
+           condition-names)
+     ;; ensure that at least one statement is the trigger stmt
+     (bp/-snip-or
+      bk
+      {:clauses (mapv
+                 (fn [k]
+                   (bp/-snip-clause
+                    bk
+                    {:left  (render-col bk k "statement_id")
+                     :op    "="
+                     :right (bp/-snip-val bk {:val trigger-id})}))
+                 condition-names)}))}))
 
 (s/fdef query-reaction-sqlvec
   :args (s/cat :bk rs/reaction-backend?
@@ -183,6 +197,7 @@
   [bk
    {{:keys [conditions]} :ruleset
     :keys                [trigger-id
+                          trigger-stored
                           statement-identity]}]
   (let [condition-names (map name (keys conditions))]
     (bp/-snip-query-reaction
@@ -203,7 +218,7 @@
               (concat
                (when (seq statement-identity)
                  [(render-identity bk condition-names statement-identity)])
-               [(render-ground bk condition-names trigger-id)]
+               [(render-ground bk condition-names trigger-id trigger-stored)]
                (map
                 (fn [[condition-key condition]]
                   (render-condition
