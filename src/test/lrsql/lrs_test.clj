@@ -1045,7 +1045,7 @@
         (let [;; Add a good reaction
               {reaction-id
                :result} (adp/-create-reaction
-                          lrs tc/simple-reaction-ruleset true)
+                          lrs "reaction-0" tc/simple-reaction-ruleset true)
               ;; Add a bad reaction
               bad-ruleset
               (assoc
@@ -1058,7 +1058,7 @@
                           "objectType" "Activity"}})
               {bad-reaction-id
                :result} (adp/-create-reaction
-                          lrs bad-ruleset true)]
+                          lrs "reaction-bad" bad-ruleset true)]
           ;; Add statements
           (doseq [s [tc/reaction-stmt-a
                      tc/reaction-stmt-b]]
@@ -1092,10 +1092,12 @@
                                %))))))
           (testing "Bad ruleset error is retrievable"
             (is (= [{:id      reaction-id
+                     :title   "reaction-0"
                      :ruleset tc/simple-reaction-ruleset
                      :active  true
                      :error   nil}
                     {:id      bad-reaction-id
+                     :title   "reaction-bad"
                      :ruleset bad-ruleset
                      :active  false
                      :error

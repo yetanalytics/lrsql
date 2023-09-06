@@ -372,19 +372,19 @@
         (admin-q/query-status backend tx input))))
 
   adp/AdminReactionManager
-  (-create-reaction [this ruleset active]
+  (-create-reaction [this title ruleset active]
     (let [conn  (lrs-conn this)
-          input (react-input/insert-reaction-input ruleset active)]
+          input (react-input/insert-reaction-input title ruleset active)]
       (jdbc/with-transaction [tx conn]
         (react-cmd/insert-reaction! backend tx input))))
   (-get-all-reactions [this]
     (let [conn (lrs-conn this)]
       (jdbc/with-transaction [tx conn]
         (react-q/query-all-reactions backend tx))))
-  (-update-reaction [this reaction-id ruleset active]
+  (-update-reaction [this reaction-id title ruleset active]
     (let [conn  (lrs-conn this)
           input (react-input/update-reaction-input
-                 reaction-id ruleset active)]
+                 reaction-id title ruleset active)]
       (jdbc/with-transaction [tx conn]
         (react-cmd/update-reaction! backend tx input))))
   (-delete-reaction [this reaction-id]

@@ -41,7 +41,7 @@
         ;; Add a reaction
         (let [{reaction-id
                :result}  (adp/-create-reaction
-                          lrs tc/simple-reaction-ruleset true)
+                          lrs "reaction-0" tc/simple-reaction-ruleset true)
               trigger-id (u/str->uuid
                           (get tc/reaction-stmt-b "id"))
               ;; Add statements
@@ -108,6 +108,7 @@
               {reaction-id
                :result}  (adp/-create-reaction
                           lrs
+                          "reaction-bad"
                           bad-ruleset
                           true)
               trigger-id (u/str->uuid
@@ -138,6 +139,7 @@
                         #(mapv remove-props %))))))
           (testing "Error is retrievable"
             (is (= [{:id      reaction-id
+                     :title   "reaction-bad"
                      :ruleset bad-ruleset
                      :active  false
                      :error

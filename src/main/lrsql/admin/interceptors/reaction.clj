@@ -86,10 +86,10 @@
     :enter
     (fn create-reaction [ctx]
       (let [{lrs                      :com.yetanalytics/lrs
-             {:keys [ruleset active]} ::data}
+             {:keys [title ruleset active]} ::data}
             ctx
             {:keys [result]}
-            (adp/-create-reaction lrs ruleset active)]
+            (adp/-create-reaction lrs title ruleset active)]
         (assoc ctx
                :response
                {:status 200 :body {:reactionId result}})))}))
@@ -120,10 +120,10 @@
     :enter
     (fn create-reaction [ctx]
       (let [{lrs                                  :com.yetanalytics/lrs
-             {:keys [reaction-id ruleset active]} ::data}
+             {:keys [reaction-id title ruleset active]} ::data}
             ctx
             {:keys [result]}
-            (adp/-update-reaction lrs reaction-id ruleset active)]
+            (adp/-update-reaction lrs reaction-id title ruleset active)]
         (cond
           (uuid? result)
           (assoc ctx

@@ -231,9 +231,19 @@
 
   bp/ReactionBackend
   (-insert-reaction! [_ tx params]
-    (insert-reaction! tx params))
+    (try
+      (insert-reaction! tx params)
+      (catch PSQLException ex
+        (if (= "23505" (.getSQLState ex))
+          :lrsql.reaction/title-conflict-error
+          (throw ex)))))
   (-update-reaction! [_ tx params]
-    (update-reaction! tx params))
+    (try
+      (update-reaction! tx params)
+      (catch PSQLException ex
+        (if (= "23505" (.getSQLState ex))
+          :lrsql.reaction/title-conflict-error
+          (throw ex)))))
   (-delete-reaction! [_ tx params]
     (delete-reaction! tx params))
   (-error-reaction! [_ tx params]
@@ -268,4 +278,3 @@
     (query-all-reactions tx))
   (-query-reaction-history [_ tx params]
     (query-reaction-history tx params)))
-

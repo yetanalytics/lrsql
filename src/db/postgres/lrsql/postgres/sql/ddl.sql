@@ -366,11 +366,12 @@ ALTER TABLE activity ALTER COLUMN payload SET DATA TYPE JSON;
 -- :doc Create the `reaction` table if it does not yet exist.
 CREATE TABLE IF NOT EXISTS reaction (
   id           UUID PRIMARY KEY,
-  ruleset      JSON NOT NULL,         -- serialized reaction spec
-  created      TIMESTAMP NOT NULL,    -- timestamp
-  modified     TIMESTAMP NOT NULL,    -- timestamp
-  active       BOOLEAN,               -- true/false/null - active/inactive/soft delete
-  error        JSON                   -- serialized error
+  title        VARCHAR(255) NOT NULL UNIQUE, -- string title
+  ruleset      JSON NOT NULL,                -- serialized reaction spec
+  created      TIMESTAMP NOT NULL,           -- timestamp
+  modified     TIMESTAMP NOT NULL,           -- timestamp
+  active       BOOLEAN,                      -- true/false/null - active/inactive/soft delete
+  error        JSON                          -- serialized error
 );
 
 -- :name query-xapi-statement-reaction-id-exists

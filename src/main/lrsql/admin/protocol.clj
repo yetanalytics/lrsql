@@ -33,11 +33,11 @@
     "Get various LRS metrics."))
 
 (defprotocol AdminReactionManager
-  (-create-reaction [this ruleset active]
-    "Create a new reaction with the given ruleset and status.")
+  (-create-reaction [this title ruleset active]
+    "Create a new reaction with the given title, ruleset and status.")
   (-get-all-reactions [this]
     "Return all reactions with any status.")
-  (-update-reaction [this reaction-id ruleset active]
-    "Update a reaction with a new ruleset and/or active status")
+  (-update-reaction [this reaction-id title ruleset active]
+    "Update a reaction with a new title, ruleset and/or active status")
   (-delete-reaction [this reaction-id]
     "Soft-delete a reaction."))
