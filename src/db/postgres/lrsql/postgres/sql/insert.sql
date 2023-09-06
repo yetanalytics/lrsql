@@ -5,9 +5,9 @@
 -- :result :affected
 -- :doc Insert a new statement with statement resource params.
 INSERT INTO xapi_statement (
-  id, statement_id, registration, verb_iri, is_voided, payload, timestamp, stored
+  id, statement_id, registration, verb_iri, is_voided, payload, timestamp, stored, reaction_id, trigger_id
 ) VALUES (
-  :primary-key, :statement-id, :registration, :verb-iri, :voided?, :payload, :timestamp, :stored
+  :primary-key, :statement-id, :registration, :verb-iri, :voided?, :payload, :timestamp, :stored, :reaction-id, :trigger-id
 );
 
 -- :name insert-actor!
@@ -148,4 +148,14 @@ INSERT INTO credential_to_scope (
   id, api_key, secret_key, scope
 ) VALUES (
   :primary-key, :api-key, :secret-key, :scope::scope_enum
+);
+
+-- :name insert-reaction!
+-- :command :insert
+-- :result :affected
+-- :doc Given a primary key, serialized ruleset and status, insert a new reaction into the `reaction` table.
+INSERT INTO reaction (
+  id, ruleset, active, created, modified
+) VALUES (
+  :primary-key, :ruleset, :active, :created, :modified
 );

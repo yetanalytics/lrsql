@@ -38,6 +38,8 @@
   (s/keys :req-un [:ref/condition
                    ::path]))
 
+(s/def ::datatype keyword?)
+
 (s/def ::op
   #{"gt"
     "lt"
@@ -98,6 +100,8 @@
 
 (s/def ::trigger-id uuid?)
 
+(s/def ::trigger-stored inst?)
+
 (s/def ::active boolean?)
 
 (s/def ::primary-key uuid?)
@@ -126,6 +130,7 @@
 (def query-reaction-input-spec
   (s/keys :req-un [::ruleset
                    ::trigger-id
+                   ::trigger-stored
                    ::statement-identity]))
 
 (def query-statement-reactions-input-spec

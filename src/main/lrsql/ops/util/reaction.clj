@@ -28,12 +28,13 @@
 (s/fdef render-ref
   :args (s/cat :bk rs/reaction-backend?
                :condition-name ::rs/condition-name
-               :path ::rs/path)
+               :path ::rs/path
+               :kwargs (s/keys* :opt-un [::rs/datatype]))
   :ret ::rs/sqlvec)
 
 (defn- render-ref
   "Render json references with optimizations for denorm fields"
-  [bk condition-name path]
+  [bk condition-name path & {:keys [datatype]}]
   (case path
     ["timestamp"]
     (render-col bk condition-name "timestamp")
@@ -46,7 +47,40 @@
     (bp/-snip-json-extract
      bk
      {:col  (format "%s.payload" condition-name)
-      :path path})))
+      :path path
+      :datatype datatype})))
+
+(def basic-stmt-types
+  {"result" {"success"    :bool
+             "completion" :bool
+             "score" {"scaled" :dec
+                      "raw"    :dec
+                      "min"    :dec
+                      "max"    :dec}}})
+
+(def xapi-type-map
+  (assoc basic-stmt-types "object" basic-stmt-types))
+
+(defn- json-type
+  [val]
+  (cond
+    (boolean? val) :bool
+    (integer? val) :int
+    (number? val)  :dec
+    (nil? val)     :json
+    :else          :string))
+
+(defn- infer-type
+  [path val]
+  ;;covers result, context, substmt result, substmt context
+  (if (some #(= % "extensions") [(get path 1) (get path 2)])
+    ;; custom value type, or string if value null
+    (json-type val)
+    ;;xapi-spec type
+    (or (get-in xapi-type-map path)
+        :string)))
+
+
 
 (s/fdef render-condition
   :args (s/cat :bk rs/reaction-backend?
@@ -77,21 +111,24 @@
                        (bp/-snip-val bk {:val val})
                        (let [{ref-condition :condition
                               ref-path      :path} ref]
-                         (render-ref bk ref-condition ref-path)))]
+                         (render-ref bk ref-condition ref-path
+                                     :datatype (infer-type ref-path nil))))]
       (case op
         ;; Clause special cases
         "contains"
         (bp/-snip-contains bk
                            {:col   (format "%s.payload" condition-name)
                             :path  path
-                            :right right-snip})
+                            :right right-snip
+                            :datatype  (infer-type path val)})
         (let [op-sql (get ops op)]
           (when (nil? op-sql)
             (throw (ex-info "Invalid Operation"
                             {:type      ::invalid-operation
                              :operation op})))
           (bp/-snip-clause bk
-                           {:left  (render-ref bk condition-name path)
+                           {:left  (render-ref bk condition-name path
+                                               :datatype (infer-type path val))
                             :op    op-sql
                             :right right-snip}))))
     :else (throw (ex-info "Invalid Condition"
@@ -113,28 +150,43 @@
                          [path ident-val] statement-identity]
                      (bp/-snip-clause
                       bk
-                      {:left  (render-ref bk condition-name path)
+                      {:left  (render-ref bk condition-name path
+                                          :datatype (infer-type path ident-val))
                        :op    "="
                        :right (bp/-snip-val bk {:val ident-val})})))}))
 
 (s/fdef render-ground
   :args (s/cat :bk rs/reaction-backend?
                :condition-names (s/every ::rs/condition-name)
-               :trigger-id ::rs/trigger-id)
+               :trigger-id ::rs/trigger-id
+               :trigger-stored ::rs/trigger-stored)
   :ret ::rs/sqlvec)
 
 (defn- render-ground
-  [bk condition-names trigger-id]
-  (bp/-snip-or
+  [bk condition-names trigger-id trigger-stored]
+  (bp/-snip-and
    bk
-   {:clauses (mapv
-              (fn [k]
-                (bp/-snip-clause
-                 bk
-                 {:left  (render-col bk k "statement_id")
-                  :op    "="
-                  :right (bp/-snip-val bk {:val trigger-id})}))
-              condition-names)}))
+   {:clauses
+    (conj
+     ;; ensure that all stmts are stored at or before trigger stmt stored time
+     (mapv (fn [k]
+             (bp/-snip-clause
+              bk
+              {:left  (render-col bk k "stored")
+               :op    "<="
+               :right (bp/-snip-val bk {:val trigger-stored})}))
+           condition-names)
+     ;; ensure that at least one statement is the trigger stmt
+     (bp/-snip-or
+      bk
+      {:clauses (mapv
+                 (fn [k]
+                   (bp/-snip-clause
+                    bk
+                    {:left  (render-col bk k "statement_id")
+                     :op    "="
+                     :right (bp/-snip-val bk {:val trigger-id})}))
+                 condition-names)}))}))
 
 (s/fdef query-reaction-sqlvec
   :args (s/cat :bk rs/reaction-backend?
@@ -145,6 +197,7 @@
   [bk
    {{:keys [conditions]} :ruleset
     :keys                [trigger-id
+                          trigger-stored
                           statement-identity]}]
   (let [condition-names (map name (keys conditions))]
     (bp/-snip-query-reaction
@@ -165,7 +218,7 @@
               (concat
                (when (seq statement-identity)
                  [(render-identity bk condition-names statement-identity)])
-               [(render-ground bk condition-names trigger-id)]
+               [(render-ground bk condition-names trigger-id trigger-stored)]
                (map
                 (fn [[condition-key condition]]
                   (render-condition

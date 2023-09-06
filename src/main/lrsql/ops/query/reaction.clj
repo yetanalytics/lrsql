@@ -5,6 +5,7 @@
             [lrsql.spec.reaction :as rs]
             [lrsql.util.reaction :as ru]
             [lrsql.ops.util.reaction :as ur]
+            [lrsql.util :as u]
             [xapi-schema.spec :as xs]
             [clojure.tools.logging :as log]))
 
@@ -46,13 +47,14 @@
                  :message error-message}})
 
 (defn- reaction-query
-  [bk tx ruleset reaction-id trigger-id statement-identity]
+  [bk tx ruleset reaction-id trigger-id trigger-stored statement-identity]
   (try
     [true (ur/query-reaction
            bk
            tx
            {:ruleset            ruleset
             :trigger-id         trigger-id
+            :trigger-stored     trigger-stored
             :statement-identity statement-identity})]
     (catch Exception ex
       (log/errorf
@@ -112,9 +114,11 @@
                                          identityPaths statement)]
                  (if-not statement-identity
                    [] ;; ignore
-                   (let [[q-success ?q-result-or-error]
+                   (let [stored (u/str->time (get statement "stored"))
+                         [q-success ?q-result-or-error]
                          (reaction-query
-                          bk tx ruleset reaction-id trigger-id statement-identity)]
+                          bk tx ruleset reaction-id trigger-id stored
+                          statement-identity)]
                      (if (false? q-success)
                        ;; Query Error
                        [?q-result-or-error]

@@ -31,22 +31,30 @@
 (use-fixtures :once support/instrumentation-fixture)
 (use-fixtures :each support/fresh-db-fixture)
 
+(defn- stored-by-stmt
+  [stmts stmt]
+  (-> (filter #(= (get % "id") (get stmt "id")) stmts)
+      first
+      (get "stored")
+      u/str->time))
+
 (deftest query-reaction-test
-  (let [sys  (support/test-system
-              :conf-overrides
-              {[:lrs :enable-reactions] false})
-        sys' (component/start sys)
-        lrs  (-> sys' :lrs)
-        bk   (:backend lrs)
-        ds   (-> sys' :lrs :connection :conn-pool)]
-
-    (doseq [s [tc/reaction-stmt-d
-               tc/reaction-stmt-a
-               tc/reaction-stmt-b
-               tc/reaction-stmt-c]]
-      (Thread/sleep 100)
-      (lrsp/-store-statements lrs tc/auth-ident [s] []))
-
+  (let [sys    (support/test-system
+                :conf-overrides
+                {[:lrs :enable-reactions] false})
+        sys'   (component/start sys)
+        lrs    (-> sys' :lrs)
+        bk     (:backend lrs)
+        ds     (-> sys' :lrs :connection :conn-pool)
+        _      (doseq [s [tc/reaction-stmt-d
+                          tc/reaction-stmt-a
+                          tc/reaction-stmt-b
+                          tc/reaction-stmt-c]]
+                 (Thread/sleep 100)
+                 (lrsp/-store-statements lrs tc/auth-ident [s] []))
+        stmts  (-> (lrsp/-get-statements lrs tc/auth-ident {} [])
+                   :statement-result
+                   :statements)]
     (try
       (testing "Returns relevant statements"
         (let [query-result (ur/query-reaction
@@ -54,6 +62,9 @@
                             {:ruleset    tc/simple-reaction-ruleset
                              :trigger-id (u/str->uuid
                                           (get tc/reaction-stmt-b "id"))
+                             :trigger-stored (stored-by-stmt
+                                              stmts
+                                              tc/reaction-stmt-b)
                              :statement-identity
                              {["actor" "mbox"] "mailto:bob@example.com"}})]
           ;; unambiguous, finds only a single row with a and b
@@ -67,8 +78,11 @@
                             {:ruleset
                              (merge tc/simple-reaction-ruleset
                                     {:identityPaths []})
-                             :trigger-id         (u/str->uuid
-                                                  (get tc/reaction-stmt-b "id"))
+                             :trigger-id     (u/str->uuid
+                                              (get tc/reaction-stmt-b "id"))
+                             :trigger-stored (stored-by-stmt
+                                              stmts
+                                              tc/reaction-stmt-b)
                              :statement-identity {}})]
           ;; ambiguous, finds a and b but ALSO d and b
           (is (= 2 (count query-result)))))
@@ -87,6 +101,9 @@
                                          :val  "bar"}]}}})
                              :trigger-id (u/str->uuid
                                           (get tc/reaction-stmt-d "id"))
+                             :trigger-stored (stored-by-stmt
+                                              stmts
+                                              tc/reaction-stmt-d)
                              :statement-identity
                              {["actor" "mbox"] "mailto:alice@example.com"}})]
           (is (= 1 (count query-result)))
@@ -109,6 +126,9 @@
                                          :val  1000}]}}})
                              :trigger-id (u/str->uuid
                                           (get tc/reaction-stmt-d "id"))
+                             :trigger-stored (stored-by-stmt
+                                              stmts
+                                              tc/reaction-stmt-d)
                              :statement-identity
                              {["actor" "mbox"] "mailto:alice@example.com"}})]
           (is (= 1 (count query-result)))
@@ -138,8 +158,8 @@
                                     :message "Unknown Query Error!"})))
       (testing "Finds only active reactions"
         (is (= [{:ruleset tc/simple-reaction-ruleset}]
-                 (->> (ur/query-active-reactions bk ds)
-                      (map #(select-keys % [:ruleset]))))))
+               (->> (ur/query-active-reactions bk ds)
+                    (map #(select-keys % [:ruleset]))))))
       (finally (component/stop sys')))))
 
 (deftest query-reaction-history-test
@@ -164,7 +184,7 @@
                            tc/reaction-stmt-b
                            tc/reaction-stmt-c
                            tc/reaction-stmt-d]]
-                     (u/str->uuid (get stmt "id")))]
+                 (u/str->uuid (get stmt "id")))]
 
     ;; store a statements with chained reaciton data
     (lrsp/-store-statements lrs
@@ -186,9 +206,9 @@
     (try
       (testing "Finds the reaction-history of each statement"
         (are [stmt-id reactions]
-            (= {:result reactions}
-               (ur/query-reaction-history
-                bk ds {:statement-id stmt-id}))
+             (= {:result reactions}
+                (ur/query-reaction-history
+                 bk ds {:statement-id stmt-id}))
           a-id #{}
           b-id #{reaction-0-id}
           c-id #{reaction-0-id reaction-1-id}
