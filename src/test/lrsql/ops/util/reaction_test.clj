@@ -146,12 +146,15 @@
         ds   (-> sys' :lrs :connection :conn-pool)]
     (try
       ;; Create an active reaction
-      (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
+      (adp/-create-reaction lrs "reaction-0" tc/simple-reaction-ruleset true)
       ;; Create an inactive reaction
-      (adp/-create-reaction lrs tc/simple-reaction-ruleset false)
+      (adp/-create-reaction lrs "reaction-1" tc/simple-reaction-ruleset false)
       ;; Create a reaction and error it
       (let [{reaction-id :result} (adp/-create-reaction
-                                   lrs tc/simple-reaction-ruleset true)]
+                                   lrs
+                                   "reaction-bad"
+                                   tc/simple-reaction-ruleset
+                                   true)]
         (cr/error-reaction! bk ds (ir/error-reaction-input
                                    reaction-id
                                    {:type "ReactionQueryError"
@@ -175,8 +178,13 @@
          reaction-2-id]
         (map
          :result
-         (repeatedly 3
-                     #(adp/-create-reaction lrs tc/simple-reaction-ruleset true)))
+         (map
+          #(adp/-create-reaction
+            lrs
+            (format "reaction-%d" %)
+            tc/simple-reaction-ruleset
+            true)
+          (range 3)))
         [a-id
          b-id
          c-id

@@ -19,12 +19,14 @@
   [bk tx]
   (mapv
    (fn [{:keys [id
+                title
                 ruleset
                 active
                 created
                 modified
                 error]}]
      {:id       id
+      :title    title
       :ruleset  (ru/stringify-template ruleset)
       :active   active
       :created  created

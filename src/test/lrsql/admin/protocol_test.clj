@@ -275,7 +275,7 @@
         lrs  (:lrs sys')]
     (try
       (let [{create-result :result} (adp/-create-reaction
-                                     lrs tc/simple-reaction-ruleset true)]
+                                     lrs "reaction-0" tc/simple-reaction-ruleset true)]
         (testing "Create reaction"
           (is (uuid? create-result)))
         (testing "Get all reactions"
@@ -287,11 +287,11 @@
         (testing "Update reaction"
           (is (= {:result :lrsql.reaction/reaction-not-found-error}
                  (adp/-update-reaction
-                  lrs (u/generate-squuid) tc/simple-reaction-ruleset false)))
+                  lrs (u/generate-squuid) nil tc/simple-reaction-ruleset false)))
           ;; Make inactive
           (is (= {:result create-result}
                  (adp/-update-reaction
-                  lrs create-result nil false)))
+                  lrs create-result nil nil false)))
           (is (= [{:id      create-result
                    :ruleset tc/simple-reaction-ruleset
                    :active  false}]
@@ -300,7 +300,7 @@
           ;; Make active again
           (is (= {:result create-result}
                  (adp/-update-reaction
-                  lrs create-result nil true)))
+                  lrs create-result nil nil true)))
           (is (= [{:id      create-result
                    :ruleset tc/simple-reaction-ruleset
                    :active  true}]

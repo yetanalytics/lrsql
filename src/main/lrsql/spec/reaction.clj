@@ -108,6 +108,8 @@
 
 (s/def ::reaction-id uuid?)
 
+(s/def ::title string?)
+
 (s/def ::created c/instant-spec)
 
 (s/def ::modified c/instant-spec)
@@ -145,6 +147,7 @@
 
 (def insert-reaction-input-spec
   (s/keys :req-un [::primary-key
+                   ::title
                    ::ruleset
                    ::active
                    ::created
@@ -154,7 +157,8 @@
   (s/keys :req-un [::reaction-id
                    ::modified]
           :opt-un [::ruleset
-                   ::active]))
+                   ::active
+                   ::title]))
 
 (def delete-reaction-input-spec
   (s/keys :req-un [::reaction-id
@@ -183,6 +187,7 @@
 
 (def query-all-reactions-ret-spec
   (s/every (s/keys :req-un [::id
+                            ::title
                             ::ruleset
                             ::active
                             ::created
@@ -209,7 +214,10 @@
 (def query-reaction-history-ret-spec
   (s/keys :req-un [:lrsql.spec.reaction.query-reaction-history/result]))
 
-(s/def :lrsql.spec.reaction.insert/result uuid?)
+(s/def :lrsql.spec.reaction.insert/result
+  (s/nonconforming
+   (s/or :success uuid?
+         :failure #{:lrsql.reaction/title-conflict-error})))
 
 (def insert-reaction-ret-spec
   (s/keys :req-un [:lrsql.spec.reaction.insert/result]))
@@ -217,7 +225,8 @@
 (s/def :lrsql.spec.reaction.update/result
   (s/nonconforming
    (s/or :success uuid?
-         :failure #{:lrsql.reaction/reaction-not-found-error})))
+         :failure #{:lrsql.reaction/reaction-not-found-error
+                    :lrsql.reaction/title-conflict-error})))
 
 (def update-reaction-ret-spec
   (s/keys :req-un [:lrsql.spec.reaction.update/result]))
@@ -243,13 +252,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def create-reaction-params-spec
-  (s/keys :req-un [::ruleset
+  (s/keys :req-un [::title
+                   ::ruleset
                    ::active]))
 
 (def update-reaction-params-spec
   (s/keys :req-un [::reaction-id
                    (or ::ruleset
-                       ::active)]))
+                       ::active
+                       ::title)]))
 
 (def delete-reaction-params-spec
   (s/keys :req-un [::reaction-id]))

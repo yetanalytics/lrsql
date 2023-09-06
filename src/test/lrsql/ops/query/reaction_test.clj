@@ -26,12 +26,15 @@
 
     (try
       ;; Create an active reaction
-      (adp/-create-reaction lrs tc/simple-reaction-ruleset true)
+      (adp/-create-reaction lrs "reaction-0" tc/simple-reaction-ruleset true)
       ;; Create an inactive reaction
-      (adp/-create-reaction lrs tc/simple-reaction-ruleset false)
+      (adp/-create-reaction lrs "reaction-1" tc/simple-reaction-ruleset false)
       ;; Create a reaction and error it
       (let [{reaction-id :result} (adp/-create-reaction
-                                   lrs tc/simple-reaction-ruleset true)]
+                                   lrs
+                                   "reaction-bad"
+                                   tc/simple-reaction-ruleset
+                                   true)]
         (cr/error-reaction! bk ds (ir/error-reaction-input
                                    reaction-id
                                    {:type "ReactionQueryError"
@@ -64,7 +67,7 @@
           trigger-id (u/str->uuid (get tc/reaction-stmt-b "id"))
           {reaction-id
            :result}  (adp/-create-reaction
-                      lrs tc/simple-reaction-ruleset true)]
+                      lrs "reaction-0" tc/simple-reaction-ruleset true)]
       ;; Add statements
       (doseq [s [tc/reaction-stmt-a
                  tc/reaction-stmt-b]]
@@ -99,6 +102,7 @@
           {reaction-id
            :result}  (adp/-create-reaction
                       lrs
+                      "reaction-0"
                       (assoc-in
                        tc/simple-reaction-ruleset
                        [:template "authority"]
@@ -140,6 +144,7 @@
            :result}
           (adp/-create-reaction
            lrs
+           "reaction-bad-template"
            (merge
             tc/simple-reaction-ruleset
             {:template
@@ -182,6 +187,7 @@
            :result}
           (adp/-create-reaction
            lrs
+           "reaction-invalid-statement"
            (merge
             tc/simple-reaction-ruleset
             {:template
