@@ -6,7 +6,8 @@
             [lrsql.backend.data :as bd]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.sqlite.data :as sd]
-            [lrsql.util.reaction :as ru]))
+            [lrsql.util.reaction :as ru])
+  (:import [org.sqlite SQLiteException SQLiteErrorCode]))
 
 ;; Init HugSql functions
 
@@ -282,9 +283,19 @@
 
   bp/ReactionBackend
   (-insert-reaction! [_ tx params]
-    (insert-reaction! tx params))
+    (try
+      (insert-reaction! tx params)
+      (catch SQLiteException ex
+        (if (= SQLiteErrorCode/SQLITE_CONSTRAINT_UNIQUE (.getResultCode ex))
+          :lrsql.reaction/title-conflict-error
+          (throw ex)))))
   (-update-reaction! [_ tx params]
-    (update-reaction! tx params))
+    (try
+      (update-reaction! tx params)
+      (catch SQLiteException ex
+        (if (= SQLiteErrorCode/SQLITE_CONSTRAINT_UNIQUE (.getResultCode ex))
+          :lrsql.reaction/title-conflict-error
+          (throw ex)))))
   (-delete-reaction! [_ tx params]
     (delete-reaction! tx params))
   (-error-reaction! [_ tx params]

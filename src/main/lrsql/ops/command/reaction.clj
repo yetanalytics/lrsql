@@ -13,8 +13,11 @@
 (defn insert-reaction!
   "Insert a new reaction."
   [bk tx {:keys [primary-key] :as input}]
-  (bp/-insert-reaction! bk tx input)
-  {:result primary-key})
+  {:result
+   (if (= (bp/-insert-reaction! bk tx input)
+          :lrsql.reaction/title-conflict-error)
+     :lrsql.reaction/title-conflict-error
+     primary-key)})
 
 (s/fdef update-reaction!
   :args (s/cat :bk rs/reaction-backend?
@@ -26,9 +29,11 @@
   "Update an existing reaction."
   [bk tx {:keys [reaction-id] :as input}]
   (let [result (bp/-update-reaction! bk tx input)]
-    {:result (if (= 1 result)
-               reaction-id
-               :lrsql.reaction/reaction-not-found-error)}))
+    {:result (cond
+               (= 1 result) reaction-id
+               (= 0 result) :lrsql.reaction/reaction-not-found-error
+               (= :lrsql.reaction/title-conflict-error result)
+               :lrsql.reaction/title-conflict-error)}))
 
 (s/fdef delete-reaction!
   :args (s/cat :bk rs/reaction-backend?
