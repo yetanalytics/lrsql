@@ -90,11 +90,6 @@ WHERE actor_ifi = :actor-ifi)
 DELETE FROM xapi_statement WHERE statement_id IN (SELECT statement_id FROM statement_to_actor
 WHERE actor_ifi = :actor-ifi)
 
--- :name delete-actor-st2actor
--- :command :execute
--- :result :affected
-DELETE FROM statement_to_actor WHERE actor_ifi = :actor-ifi
-
 -- :name delete-actor-agent-profile
 -- :command :execute
 -- :result :affected

@@ -360,3 +360,9 @@ ALTER TABLE activity ALTER COLUMN payload SET DATA TYPE JSONB;
 ALTER TABLE xapi_statement ALTER COLUMN payload SET DATA TYPE JSON;
 ALTER TABLE actor ALTER COLUMN payload SET DATA TYPE JSON;
 ALTER TABLE activity ALTER COLUMN payload SET DATA TYPE JSON;
+
+-- :name add-statement-to-actor-cascading-delete!
+-- :command :execute
+-- :doc Adds a cascading delete to delete st2actor entries when corresponding statements are deleted
+ALTER TABLE DROP CONSTRAINT statement_fk;
+ALTER TABLE ADD CONSTRAINT statement_fk FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id) ON CASCADE DELETE;
