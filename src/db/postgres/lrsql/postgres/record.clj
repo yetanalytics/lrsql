@@ -101,13 +101,7 @@
   (-update-actor! [_ tx input]
     (update-actor! tx input))
   (-delete-actor! [_ tx input]
-    (delete-actor-st2st tx input)
-    (delete-actor-st2activ tx input)
-    (delete-actor-attachments tx input)
-    (delete-actor-statements tx input)
-    (delete-actor-agent-profile tx input)
-    (delete-actor-state-document tx input)
-    (delete-actor-actor tx input))
+    (delete-actor-and-dependents! tx input))
   (-query-actor [_ tx input]
     (query-actor tx input))
 
