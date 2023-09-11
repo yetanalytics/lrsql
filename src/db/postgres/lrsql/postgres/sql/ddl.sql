@@ -363,4 +363,4 @@ ALTER TABLE activity ALTER COLUMN payload SET DATA TYPE JSON;
 -- :command :execute
 -- :doc Adds a cascading delete to delete st2actor entries when corresponding statements are deleted
 ALTER TABLE statement_to_actor DROP CONSTRAINT statement_fk;
-ALTER TABLE statement_to_actor ADD CONSTRAINT statement_fk FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id) ON CASCADE DELETE;
+ALTER TABLE statement_to_actor ADD CONSTRAINT statement_fk FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id) ON DELETE CASCADE;
