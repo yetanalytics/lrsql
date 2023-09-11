@@ -66,7 +66,8 @@
       (migrate-agent-profile-document-last-modified! tx pd/local-tz-input))
     (if (-> tuning :config :enable-jsonb)
       (migrate-to-jsonb! tx)
-      (migrate-to-json! tx)))
+      (migrate-to-json! tx))
+    (add-statement-to-actor-cascading-delete! tx))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]

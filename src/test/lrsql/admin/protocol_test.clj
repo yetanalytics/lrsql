@@ -184,7 +184,7 @@
                 :result
                 (= :lrsql.admin/oidc-issuer-mismatch-error)))))
     (testing "actor-delete"
-      (let [stmts  [stmt-0 stmt-1 stmt-2 stmt-3]
+      (let [stmts [stmt-0 stmt-1 stmt-2 stmt-3]
             ifis (->> (conj stmts (stmt-3 "object"))
                       (map #(ua/actor->ifi (% "actor"))))
             get-stmt-#s (fn []
