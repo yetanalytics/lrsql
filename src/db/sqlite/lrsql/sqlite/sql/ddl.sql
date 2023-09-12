@@ -445,8 +445,8 @@ SET sql = 'CREATE TABLE statement_to_actor (
                  actor_type IN (''Agent'', ''Group'')
                  ),                       -- enum
 
-    FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
     ON DELETE CASCADE,
-    FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
+  FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 )'
 WHERE type = 'table' AND name = 'statement_to_actor'
