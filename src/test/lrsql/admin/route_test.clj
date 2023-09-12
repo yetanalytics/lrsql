@@ -324,10 +324,6 @@
     
     (component/stop sys')))
 
-
-
-
-
 (def custom-sec-header-config
   {:sec-head-hsts         h/default-value
    :sec-head-frame        "Chocolate"
