@@ -6,9 +6,11 @@
             [babashka.curl :as curl]
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.test-support :as support]
             [lrsql.util.headers :as h]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [lrsql.util.actor :as ua]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -69,6 +71,11 @@
   [headers]
   (curl/get "http://localhost:8080/admin/status"
             {:headers headers}))
+
+(defn- delete-actor
+  [headers body]
+  (curl/delete "http://0.0.0.0:8080/admin/agents" {:headers headers
+                                                   :body body}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -291,7 +298,34 @@
     (testing "omitted sec headers because not configured"
       (let [{:keys [headers]} (get-env content-type)]
         (is (empty? (select-keys headers sec-header-names)))))
+    (testing "delete actor route"
+      (let [stmt-0 {"id"      "00000000-0000-4000-8000-000000000000"
+                    "actor"   {"mbox"       "mailto:sample.foo@example.com"
+                               "objectType" "Agent"}
+                    "verb"    {"id"      "http://adlnet.gov/expapi/verbs/answered"
+                               "display" {"en-US" "answered"
+                                          "zh-CN" "回答了"}}
+                    "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
+                    "context" {"platform" "example"}}
+            lrs (:lrs sys')
+            auth-ident {:agent  {"objectType" "Agent"
+                                 "account"    {"homePage" "http://example.org"
+                                               "name"     "12341234-0000-4000-1234-123412341234"}}
+                        :scopes #{:scope/all}}
+            ifi (ua/actor->ifi ("actor" stmt-0))
+            count-by-id #(-> (lrsp/-get-statements lrs auth-ident {:statementsId (stmt-0 "id")} [])
+                             :statement-result :statements count)]
+        (lrsp/-store-statements lrs auth-ident [stmt-0] [])
+        (assert (= 1 (count-by-id (stmt-0 "id"))))
+        (delete-actor headers
+                     (u/write-json-str  {"actor-ifi" ifi}))
+        (is (= 0  (count-by-id (stmt-0 "id"))))))
+    
     (component/stop sys')))
+
+
+
+
 
 (def custom-sec-header-config
   {:sec-head-hsts         h/default-value
