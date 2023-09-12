@@ -214,7 +214,7 @@
         (adp/-delete-actor lrs {:actor-ifi parent-ifi})
         (is (= 0 (count-of-actor child-ifi)))
         (adp/-delete-actor lrs {:actor-ifi child-ifi}))
-      (testing "for StatementRefs, delete-actor deletes statement->actor relationsips but leaves statements by another actor untouched"
+      (testing "for StatementRefs, delete-actor deletes statement->actor relationships but leaves statements by another actor untouched"
         (let [[ifi-0 ifi-2] (mapv stmt->ifi [stmt-0 stmt-2])]
           (lrsp/-store-statements lrs auth-ident [stmt-0] [])
           (lrsp/-store-statements lrs auth-ident [stmt-2] [])      
