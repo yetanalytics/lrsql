@@ -202,19 +202,19 @@
           count-of-actor (fn [actor-ifi] (-> (lrsp/-get-statements lrs auth-ident {:actor-ifi actor-ifi} []) :statement-result :statements count))
           child-ifi (stmt->ifi (stmt-3 "object"))
           parent-ifi (stmt->ifi stmt-3)]
-      (testing "substatement up"
+      (testing "delete-actor correctly deletes statements that are parent to actor (sub)statements"
         (lrsp/-store-statements lrs auth-ident [stmt-3] [])
         (assert (= 1 (count-of-actor parent-ifi)))
         (adp/-delete-actor lrs {:actor-ifi child-ifi})
         (is (= 0 (count-of-actor parent-ifi)));
         (adp/-delete-actor lrs {:actor-ifi parent-ifi}))
-      (testing "substatement down"
+      (testing "delete-actor correctly deletes substatements that are child to actor statements"
         (lrsp/-store-statements lrs auth-ident [stmt-3] [])
         (assert (= 1 (count-of-actor child-ifi)))
         (adp/-delete-actor lrs {:actor-ifi parent-ifi})
         (is (= 0 (count-of-actor child-ifi)))
         (adp/-delete-actor lrs {:actor-ifi child-ifi}))
-      (testing "statement ref connections deleted"
+      (testing "for StatementRefs, delete-actor deletes statement->actor relationsips but leaves statements by another actor untouched"
         (let [[ifi-0 ifi-2] (mapv stmt->ifi [stmt-0 stmt-2])]
           (lrsp/-store-statements lrs auth-ident [stmt-0] [])
           (lrsp/-store-statements lrs auth-ident [stmt-2] [])      
