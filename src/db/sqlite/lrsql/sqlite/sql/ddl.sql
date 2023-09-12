@@ -436,14 +436,14 @@ UPDATE sqlite_schema
 SET sql = 'CREATE TABLE statement_to_actor (
   id           TEXT NOT NULL PRIMARY KEY, -- uuid
   statement_id TEXT NOT NULL,             -- uuid
-  usage        TEXT CHECK (
+  usage        TEXT NOT NULL CHECK (
                  usage IN (''Actor'', ''Object'', ''Authority'', ''Instructor'', ''Team'',
                            ''SubActor'', ''SubObject'', ''SubInstructor'', ''SubTeam'')
-               ) NOT NULL,                -- enum
+                                   ),     -- enum
   actor_ifi    TEXT NOT NULL,             -- ifi string
-  actor_type   TEXT CHECK (
+  actor_type   TEXT NOT NULL CHECK (
                  actor_type IN (''Agent'', ''Group'')
-               ) NOT NULL,                -- enum
+                 ),                       -- enum
 
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
     ON DELETE CASCADE,
