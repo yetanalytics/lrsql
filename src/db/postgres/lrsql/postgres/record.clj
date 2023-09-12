@@ -67,7 +67,8 @@
     (if (-> tuning :config :enable-jsonb)
       (migrate-to-jsonb! tx)
       (migrate-to-json! tx))
-    (add-statement-to-actor-cascading-delete! tx))
+    (when (= [] (check-statement-to-actor-cascading-delete tx))
+      (add-statement-to-actor-cascading-delete! tx)))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]

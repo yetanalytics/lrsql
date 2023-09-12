@@ -359,6 +359,14 @@ ALTER TABLE xapi_statement ALTER COLUMN payload SET DATA TYPE JSON;
 ALTER TABLE actor ALTER COLUMN payload SET DATA TYPE JSON;
 ALTER TABLE activity ALTER COLUMN payload SET DATA TYPE JSON;
 
+
+-- :name check-statement-to-actor-cascading-delete
+-- :command :execute
+SELECT 1
+FROM pg_constraint
+WHERE conname = 'statement_fk'
+AND pg_get_constraintdef(oid) LIKE '%ON DELETE CASCADE%'
+
 -- :name add-statement-to-actor-cascading-delete!
 -- :command :execute
 -- :doc Adds a cascading delete to delete st2actor entries when corresponding statements are deleted
