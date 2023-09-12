@@ -312,7 +312,7 @@
                                  "account"    {"homePage" "http://example.org"
                                                "name"     "12341234-0000-4000-1234-123412341234"}}
                         :scopes #{:scope/all}}
-            ifi (ua/actor->ifi ("actor" stmt-0))
+            ifi (ua/actor->ifi (stmt-0 "actor"))
             count-by-id #(-> (lrsp/-get-statements lrs auth-ident {:statementsId (stmt-0 "id")} [])
                              :statement-result :statements count)]
         (lrsp/-store-statements lrs auth-ident [stmt-0] [])
