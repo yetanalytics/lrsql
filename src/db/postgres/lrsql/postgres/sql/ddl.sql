@@ -361,6 +361,7 @@ ALTER TABLE activity ALTER COLUMN payload SET DATA TYPE JSON;
 
 
 -- :name check-statement-to-actor-cascading-delete
+-- :result :one
 -- :command :execute
 SELECT 1
 FROM pg_constraint
