@@ -7,6 +7,7 @@
             [lrsql.admin.protocol :as adp]
             [lrsql.test-support   :as support]
             [lrsql.util           :as u]
+            [next.jdbc :as jdbc]
             [lrsql.util.actor     :as ua]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -68,17 +69,16 @@
 ;; A fourth statement (with a third actor) containing a substatement (by a fourth actor
 (def stmt-3
   {"id"     "00000000-0000-4000-8000-000000000003"
-   "actor"   {"mbox"       "mailto:sample.bar@example.com"
+   "actor"  {"mbox"        "mailto:sample.bar@example.com"
               "objectType" "Agent"}
-   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/asked"
-             "display" {"en-US" "asked"}}
-   "object"  {"objectType" "SubStatement"
-                       "actor"      {"mbox"       "mailto:sample.baz@example.com"
-                                     "objectType" "Agent"}
-                       "verb"       {"id"      "http://adlnet.gov/expapi/verbs/answered"
-                                     "display" {"en-US" "answered"}}
-                       "object"    {"id" "http://www.example.com/tincan/activities/multipart"}
-}})
+   "verb"   {"id"          "http://adlnet.gov/expapi/verbs/asked"
+             "display"     {"en-US" "asked"}}
+   "object" {"objectType"  "SubStatement"
+             "actor"       {"mbox"       "mailto:sample.baz@example.com"
+                            "objectType" "Agent"}
+             "verb"        {"id"      "http://adlnet.gov/expapi/verbs/answered"
+                            "display" {"en-US" "answered"}}
+             "object"      {"id" "http://www.example.com/tincan/activities/multipart"}}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -187,14 +187,17 @@
       (let [stmts [stmt-0 stmt-1 stmt-2 stmt-3]
             ifis (->> (conj stmts (stmt-3 "object"))
                       (map #(ua/actor->ifi (% "actor"))))
+            get-actor-ss-count (fn [ifi]
+                                 (-> (lrsp/-get-statements lrs auth-ident {:actor-ifi ifi} [])
+                                     (get-in [:statement-result :statements])
+                                     count))
             get-stmt-#s (fn []
                           (reduce (fn [m actor-ifi]
-                                    (assoc m actor-ifi
-                                           (count (:statements (:statement-result (lrsp/-get-statements lrs auth-ident {:actor-ifi actor-ifi} []))))))
+                                    (assoc m actor-ifi (get-actor-ss-count actor-ifi)))
                                   {} ifis))]
         (lrsp/-store-statements lrs auth-ident stmts [])
 
-        (assert (every? #(> % 0) (vals (get-stmt-#s))))
+        (is (every? #(> % 0) (vals (get-stmt-#s))))
         (doseq [ifi ifis]
           (adp/-delete-actor lrs {:actor-ifi ifi}))
         (is (every? #(= % 0) (vals (get-stmt-#s))))))
@@ -204,28 +207,27 @@
           parent-ifi (stmt->ifi stmt-3)]
       (testing "delete-actor correctly deletes statements that are parent to actor (sub)statements"
         (lrsp/-store-statements lrs auth-ident [stmt-3] [])
-        (assert (= 1 (count-of-actor parent-ifi)))
+        (is (= 1 (count-of-actor parent-ifi)))
         (adp/-delete-actor lrs {:actor-ifi child-ifi})
-        (is (= 0 (count-of-actor parent-ifi)));
+        (is (zero? (count-of-actor parent-ifi)));
         (adp/-delete-actor lrs {:actor-ifi parent-ifi}))
       (testing "delete-actor correctly deletes substatements that are child to actor statements"
         (lrsp/-store-statements lrs auth-ident [stmt-3] [])
-        (assert (= 1 (count-of-actor child-ifi)))
+        (is (= 1 (count-of-actor child-ifi)))
         (adp/-delete-actor lrs {:actor-ifi parent-ifi})
-        (is (= 0 (count-of-actor child-ifi)))
+        (is (zero? (count-of-actor child-ifi)))
         (adp/-delete-actor lrs {:actor-ifi child-ifi}))
       (testing "for StatementRefs, delete-actor deletes statement->actor relationships but leaves statements by another actor untouched"
         (let [[ifi-0 ifi-2] (mapv stmt->ifi [stmt-0 stmt-2])]
-          (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-          (lrsp/-store-statements lrs auth-ident [stmt-2] [])      
-          (assert (= 2 (count-of-actor ifi-0)))
-          (assert (= 2 (count-of-actor ifi-2)))
+          (lrsp/-store-statements lrs auth-ident [stmt-0 stmt-2] [])
+          (is (= 2 (count-of-actor ifi-0)))
+          (is (= 2 (count-of-actor ifi-2)))
           (adp/-delete-actor lrs {:actor-ifi ifi-0})
           (is (= 1 (count-of-actor ifi-0)))
           (is (= 1 (count-of-actor ifi-2)))
           (adp/-delete-actor lrs {:actor-ifi ifi-2})
-          (is (= 0 (count-of-actor ifi-0)))
-          (is (= 0 (count-of-actor ifi-2))))))
+          (is (zero? (count-of-actor ifi-0)))
+          (is (zero? (count-of-actor ifi-2))))))
     (component/stop sys')))
 
 ;; TODO: Add tests for creds with no explicit scopes, once
