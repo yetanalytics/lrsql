@@ -428,7 +428,7 @@ ALTER TABLE activity_profile_document DROP COLUMN last_modified;
 ALTER TABLE activity_profile_document RENAME COLUMN last_modified_tmp TO last_modified;
 
 --:name query-statement-to-actor-has-cascade-delete?
-select on_delete from pragma_foreign_key_list("statement_to_actor") where "table" ="xapi_statement"
+SELECT on_delete FROM pragma_foreign_key_list("statement_to_actor") WHERE "table" = "xapi_statement"
 
 -- :name alter-statement-to-actor-add-cascade-delete!
 -- :command :execute

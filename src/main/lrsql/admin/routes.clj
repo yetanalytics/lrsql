@@ -150,6 +150,7 @@
            no-val-uname
            no-val-role-key
            no-val-role
+           enable-admin-delete-actor
            enable-admin-ui
            enable-admin-status
            enable-account-routes
@@ -178,8 +179,10 @@
                    (into common-interceptors
                          oidc-ui-interceptors)
                    {:enable-admin-status enable-admin-status
-                    :no-val? no-val?}))
+                    :no-val? no-val?
+                    :enable-admin-delete-actor enable-admin-delete-actor}))
                 (when enable-admin-status
                   (admin-status-routes
                    common-interceptors-oidc secret leeway no-val-opts))
-                (admin-lrs-management-routes common-interceptors-oidc secret leeway no-val-opts))))
+                (when enable-admin-delete-actor
+                  (admin-lrs-management-routes common-interceptors-oidc secret leeway no-val-opts)))))

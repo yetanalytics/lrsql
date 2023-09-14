@@ -21,6 +21,24 @@
 (use-fixtures :each support/fresh-db-fixture)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Test data
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def auth-ident {:agent  {"objectType" "Agent"
+                          "account"    {"homePage" "http://example.org"
+                                        "name"     "12341234-0000-4000-1234-123412341234"}}
+                 :scopes #{:scope/all}})
+
+(def stmt-0 {"id"      "00000000-0000-4000-8000-000000000000"
+             "actor"   {"mbox"       "mailto:sample.foo@example.com"
+                        "objectType" "Agent"}
+             "verb"    {"id"      "http://adlnet.gov/expapi/verbs/answered"
+                        "display" {"en-US" "answered"
+                                   "zh-CN" "回答了"}}
+             "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
+             "context" {"platform" "example"}})
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Test content
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -299,28 +317,17 @@
       (let [{:keys [headers]} (get-env content-type)]
         (is (empty? (select-keys headers sec-header-names)))))
     (testing "delete actor route"
-      (let [stmt-0 {"id"      "00000000-0000-4000-8000-000000000000"
-                    "actor"   {"mbox"       "mailto:sample.foo@example.com"
-                               "objectType" "Agent"}
-                    "verb"    {"id"      "http://adlnet.gov/expapi/verbs/answered"
-                               "display" {"en-US" "answered"
-                                          "zh-CN" "回答了"}}
-                    "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
-                    "context" {"platform" "example"}}
-            lrs (:lrs sys')
-            auth-ident {:agent  {"objectType" "Agent"
-                                 "account"    {"homePage" "http://example.org"
-                                               "name"     "12341234-0000-4000-1234-123412341234"}}
-                        :scopes #{:scope/all}}
+      (let [lrs (:lrs sys')
+
             ifi (ua/actor->ifi (stmt-0 "actor"))
             count-by-id (fn [id]
                           (-> (lrsp/-get-statements lrs auth-ident {:statementsId id} [])
                               :statement-result :statements count))]
         (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-        (assert (= 1 (count-by-id (stmt-0 "id"))))
+        (is (= 1 (count-by-id (stmt-0 "id"))))
         (delete-actor headers
                      (u/write-json-str  {"actor-ifi" ifi}))
-        (is (= 0  (count-by-id (stmt-0 "id"))))))
+        (is (zero? (count-by-id (stmt-0 "id"))))))
     
     (component/stop sys')))
 

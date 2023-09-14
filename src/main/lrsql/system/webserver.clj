@@ -24,6 +24,7 @@
                 ssl-port
                 url-prefix
                 key-password
+                enable-admin-delete-actor
                 enable-admin-ui
                 enable-admin-status
                 enable-stmt-html
@@ -75,6 +76,7 @@
                :no-val-role-key       jwt-no-val-role-key
                :no-val-role           jwt-no-val-role
                :secret                private-key
+               :enable-admin-delete-actor enable-admin-delete-actor
                :enable-admin-ui       enable-admin-ui
                :enable-admin-status   enable-admin-status
                :enable-account-routes enable-local-admin
