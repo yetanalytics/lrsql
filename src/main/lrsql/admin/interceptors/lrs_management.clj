@@ -2,14 +2,17 @@
   (:require [clojure.spec.alpha :as s]
             [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
-            [lrsql.admin.protocol :as adp]))
+            [lrsql.admin.protocol :as adp]
+            [lrsql.spec.admin :as ads]))
 
 (def validate-delete-actor-params
   (interceptor
    {:name ::validate-delete-actor-params
     :enter (fn validate-delete-params [ctx]
              (let [params (get-in ctx [:request :json-params])]
-               (if-some [err (s/explain-data (s/keys :req-un [:lrsql.spec.actor/actor-ifi]) params)]
+               (if-some [err (s/explain-data
+                              ads/delete-actor-spec 
+                               params)]
                  (assoc (chain/terminate ctx)
                         :response
                         {:status 400

@@ -153,3 +153,6 @@
 
 (def update-admin-password-ret-spec
   (s/keys :req-un [:lrsql.spec.admin.update-password/result]))
+
+(def delete-actor-spec
+  (s/keys :req-un [:lrsql.spec.actor/actor-ifi]))
