@@ -249,7 +249,7 @@
         (is (empty? (jdbc/execute! ds ["select * from agent_profile_document where agent_ifi  = ?" ifi])))))
 
     (let [ifi (ua/actor->ifi (lrst/stmt-4 "actor"))
-          stmt-id (lrst/stmt-4 "id")
+          stmt-id (u/str->uuid (lrst/stmt-4 "id"))
           ds (-> lrs :connection :conn-pool)]
       (lrsp/-store-statements lrs auth-ident [lrst/stmt-4] [lrst/stmt-4-attach])
       (adp/-delete-actor lrs {:actor-ifi ifi})
