@@ -191,7 +191,8 @@
         (let [actor (stmt-1 "actor")]
           (lrsp/-store-statements lrs auth-ident [stmt-1] [])
           (adp/-delete-actor lrs {:actor-ifi (ua/actor->ifi actor)})
-          (= {:person {"objectType" "Person"}} (lrsp/-get-person lrs auth-ident {:agent actor}))))
+          (is (= (lrsp/-get-person lrs auth-ident {:agent actor})
+                 {:person {"objectType" "Person"}}))))
       (let [arb-query #(jdbc/execute! ds %)]
         (testing "delete-actor: delete statements"
           (let [stmts [stmt-0 stmt-1 stmt-2 stmt-3]
