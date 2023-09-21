@@ -5,6 +5,7 @@
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors.account :as ai]
             [lrsql.admin.interceptors.credentials :as ci]
+            [lrsql.admin.interceptors.lrs-management :as lm]
             [lrsql.admin.interceptors.ui :as ui]
             [lrsql.admin.interceptors.jwt :as ji]
             [lrsql.admin.interceptors.status :as si]
@@ -114,7 +115,6 @@
                                 si/get-status)
      :route-name :lrsql.admin.status/get]})
 
-
 (defn admin-ui-routes
   [common-interceptors inject-config]
   #{;; Redirect root to admin UI
@@ -164,6 +164,14 @@
                                      ri/delete-reaction)
      :route-name :lrsql.admin.reaction/delete]})
 
+(defn admin-lrs-management-routes [common-interceptors jwt-secret jwt-leeway no-val-opts]
+  #{["/admin/agents" :delete (conj common-interceptors
+                                   lm/validate-delete-actor-params
+                                   (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
+                                   ji/validate-jwt-account
+                                   lm/delete-actor)
+     :route-name :lrsql.lrs-management/delete-actor]})
+
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
    add additional routes specific to creating and updating admin
@@ -177,6 +185,7 @@
            no-val-uname
            no-val-role-key
            no-val-role
+           enable-admin-delete-actor
            enable-admin-ui
            enable-admin-status
            enable-account-routes
@@ -205,12 +214,15 @@
                   (admin-ui-routes
                    (into common-interceptors
                          oidc-ui-interceptors)
-                   {:enable-admin-status enable-admin-status
-                    :enable-reactions    enable-reaction-routes
-                    :no-val?             no-val?}))
+                   {:enable-admin-status       enable-admin-status
+                    :enable-reactions          enable-reaction-routes
+                    :enable-admin-delete-actor enable-admin-delete-actor
+                    :no-val?                   no-val?}))
                 (when enable-admin-status
                   (admin-status-routes
                    common-interceptors-oidc secret leeway no-val-opts))
                 (when enable-reaction-routes
                   (admin-reaction-routes
-                   common-interceptors secret leeway no-val-opts)))))
+                   common-interceptors secret leeway no-val-opts))
+                (when enable-admin-delete-actor
+                  (admin-lrs-management-routes common-interceptors-oidc secret leeway no-val-opts)))))

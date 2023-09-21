@@ -6,11 +6,13 @@
             [babashka.curl :as curl]
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.test-support :as support]
             [lrsql.test-constants :as tc]
             [lrsql.util :as u]
             [lrsql.util.headers :as h]
-            [lrsql.util.reaction :as ru]))
+            [lrsql.util.reaction :as ru]
+            [lrsql.util.actor :as ua]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -19,6 +21,24 @@
 (support/instrument-lrsql)
 
 (use-fixtures :each support/fresh-db-fixture)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Test data
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def auth-ident {:agent  {"objectType" "Agent"
+                          "account"    {"homePage" "http://example.org"
+                                        "name"     "12341234-0000-4000-1234-123412341234"}}
+                 :scopes #{:scope/all}})
+
+(def stmt-0 {"id"      "00000000-0000-4000-8000-000000000000"
+             "actor"   {"mbox"       "mailto:sample.foo@example.com"
+                        "objectType" "Agent"}
+             "verb"    {"id"      "http://adlnet.gov/expapi/verbs/answered"
+                        "display" {"en-US" "answered"
+                                   "zh-CN" "回答了"}}
+             "object"  {"id" "http://www.example.com/tincan/activities/multipart"}
+             "context" {"platform" "example"}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Test content
@@ -71,6 +91,11 @@
   [headers]
   (curl/get "http://localhost:8080/admin/status"
             {:headers headers}))
+
+(defn- delete-actor
+  [headers body]
+  (curl/delete "http://0.0.0.0:8080/admin/agents" {:headers headers
+                                                   :body body}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -381,6 +406,18 @@
       (testing "omitted sec headers because not configured"
         (let [{:keys [headers]} (get-env content-type)]
           (is (empty? (select-keys headers sec-header-names)))))
+      (testing "delete actor route"
+        (let [lrs (:lrs sys')
+
+              ifi (ua/actor->ifi (stmt-0 "actor"))
+              count-by-id (fn [id]
+                            (-> (lrsp/-get-statements lrs auth-ident {:statementsId id} [])
+                                :statement-result :statements count))]
+          (lrsp/-store-statements lrs auth-ident [stmt-0] [])
+          (is (= 1 (count-by-id (stmt-0 "id"))))
+          (delete-actor headers
+                        (u/write-json-str  {"actor-ifi" ifi}))
+          (is (zero? (count-by-id (stmt-0 "id"))))))
       (finally
         (component/stop sys')))))
 

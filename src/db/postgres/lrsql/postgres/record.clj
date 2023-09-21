@@ -71,7 +71,9 @@
       (xapi-statement-add-trigger-id! tx))
     (if (-> tuning :config :enable-jsonb)
       (migrate-to-jsonb! tx)
-      (migrate-to-json! tx)))
+      (migrate-to-json! tx))
+    (when (nil? (check-statement-to-actor-cascading-delete tx))
+      (add-statement-to-actor-cascading-delete! tx)))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
@@ -105,6 +107,8 @@
     (insert-statement-to-actor! tx input))
   (-update-actor! [_ tx input]
     (update-actor! tx input))
+  (-delete-actor! [_ tx input]
+    (delete-actor-and-dependents! tx input))
   (-query-actor [_ tx input]
     (query-actor tx input))
 

@@ -14,10 +14,12 @@
   config to inject:
     :enable-admin-status - boolean, determines if the admin status endpoint is
       enabled."
-  [{:keys [enable-admin-status
+  [{:keys [enable-admin-delete-actor
+           enable-admin-status
            enable-reactions
            no-val?]
-    :or   {enable-admin-status false
+    :or   {enable-admin-delete-actor false
+           enable-admin-status false
            enable-reactions    false
            no-val?             false}}]
   (interceptor
@@ -34,6 +36,7 @@
                 (merge
                  {:url-prefix          url-prefix
                   :enable-stmt-html    (some? enable-stmt-html)
+                  :enable-admin-delete-actor enable-admin-delete-actor
                   :enable-admin-status enable-admin-status
                   :enable-reactions    enable-reactions
                   :no-val?             no-val?}

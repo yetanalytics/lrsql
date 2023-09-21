@@ -427,7 +427,6 @@ ALTER TABLE activity_profile_document DROP COLUMN last_modified;
 -- :doc Convert `activity_profile_document.last_modified` to timestamp - 04
 ALTER TABLE activity_profile_document RENAME COLUMN last_modified_tmp TO last_modified;
 
-
 /* Migration 2023-07-21-00 - Add Reaction Table */
 
 -- :name create-reaction-table!
@@ -458,3 +457,27 @@ ALTER TABLE xapi_statement ADD COLUMN reaction_id TEXT REFERENCES reaction(id);
 -- :command :execute
 -- :doc Adds `xapi_statement.trigger_id`
 ALTER TABLE xapi_statement ADD COLUMN trigger_id TEXT REFERENCES xapi_statement(statement_id);
+
+--:name query-statement-to-actor-has-cascade-delete?
+SELECT on_delete FROM pragma_foreign_key_list("statement_to_actor") WHERE "table" = "xapi_statement"
+
+-- :name alter-statement-to-actor-add-cascade-delete!
+-- :command :execute
+UPDATE sqlite_schema
+SET sql = 'CREATE TABLE statement_to_actor (
+  id           TEXT NOT NULL PRIMARY KEY, -- uuid
+  statement_id TEXT NOT NULL,             -- uuid
+  usage        TEXT NOT NULL CHECK (
+                 usage IN (''Actor'', ''Object'', ''Authority'', ''Instructor'', ''Team'',
+                           ''SubActor'', ''SubObject'', ''SubInstructor'', ''SubTeam'')
+                                   ),     -- enum
+  actor_ifi    TEXT NOT NULL,             -- ifi string
+  actor_type   TEXT NOT NULL CHECK (
+                 actor_type IN (''Agent'', ''Group'')
+                 ),                       -- enum
+
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
+    ON DELETE CASCADE,
+  FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
+)'
+WHERE type = 'table' AND name = 'statement_to_actor'

@@ -399,3 +399,17 @@ SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND
 ALTER TABLE xapi_statement ADD COLUMN trigger_id UUID;
 ALTER TABLE xapi_statement ADD CONSTRAINT stmt_trigger_id_fk FOREIGN KEY (trigger_id) REFERENCES xapi_statement(statement_id);
 CREATE INDEX IF NOT EXISTS stmt_trigger_id_idx ON xapi_statement(trigger_id);
+
+-- :name check-statement-to-actor-cascading-delete
+-- :result :one
+-- :command :execute
+SELECT 1
+FROM pg_constraint
+WHERE conname = 'statement_fk'
+AND pg_get_constraintdef(oid) LIKE '%ON DELETE CASCADE%'
+
+-- :name add-statement-to-actor-cascading-delete!
+-- :command :execute
+-- :doc Adds a cascading delete to delete st2actor entries when corresponding statements are deleted
+ALTER TABLE statement_to_actor DROP CONSTRAINT statement_fk;
+ALTER TABLE statement_to_actor ADD CONSTRAINT statement_fk FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id) ON DELETE CASCADE;

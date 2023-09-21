@@ -34,6 +34,7 @@ The following examples use `http://example.org` as the URL body. All methods ret
 #### Misc Admin Routes
 
 - `GET http://example.org/admin/env`: Get select environment variables about the configuration which may aid in client-side operations. Currently returns a map containing the configuration variables `urlPrefix` and `enableStmtHtml`.
+- `DELETE http://example.org/admin/agents`: Runs a *hard delete* of all records of an actor, and associated records (statements, attachments, etc).  Intended for privacy purposes like GDPR.  Body should be a JSON object of form `{"actor-ifi":<actor-ifi>}`.  Disabled unless the configuration variable enableAdminDeleteActor to be set to `true`.
 
 ### Reaction Management Routes
 

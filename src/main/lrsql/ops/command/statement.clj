@@ -71,6 +71,10 @@
         (bp/-update-actor! bk tx input)))
     (bp/-insert-actor! bk tx input)))
 
+(defn delete-actor!
+  [bk tx input];should just be {:actor-ifi actor-ifi}
+  (bp/-delete-actor! bk tx input))
+
 (defn- insert-activity!
   [bk tx input]
   (if-some [old-activ (some->> (select-keys input [:activity-iri])

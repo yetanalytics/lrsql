@@ -41,3 +41,6 @@
     "Update a reaction with a new title, ruleset and/or active status")
   (-delete-reaction [this reaction-id]
     "Soft-delete a reaction."))
+
+(defprotocol AdminLRSManager
+  (-delete-actor [this params]))

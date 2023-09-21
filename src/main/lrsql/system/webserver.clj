@@ -24,6 +24,7 @@
                 ssl-port
                 url-prefix
                 key-password
+                enable-admin-delete-actor
                 enable-admin-ui
                 enable-admin-status
                 enable-stmt-html
@@ -69,21 +70,22 @@
                                           (handle-json-parse-exn)]
                                          oidc-resource-interceptors)})
              (add-admin-routes
-              {:lrs                    lrs
-               :exp                    jwt-exp
-               :leeway                 jwt-lwy
-               :no-val?                jwt-no-val
-               :no-val-issuer          jwt-no-val-issuer
-               :no-val-uname           jwt-no-val-uname
-               :no-val-role-key        jwt-no-val-role-key
-               :no-val-role            jwt-no-val-role
-               :secret                 private-key
-               :enable-admin-ui        enable-admin-ui
-               :enable-admin-status    enable-admin-status
-               :enable-account-routes  enable-local-admin
-               :enable-reaction-routes enable-reactions
-               :oidc-interceptors      oidc-admin-interceptors
-               :oidc-ui-interceptors   oidc-admin-ui-interceptors
+              {:lrs                       lrs
+               :exp                       jwt-exp
+               :leeway                    jwt-lwy
+               :no-val?                   jwt-no-val
+               :no-val-issuer             jwt-no-val-issuer
+               :no-val-uname              jwt-no-val-uname
+               :no-val-role-key           jwt-no-val-role-key
+               :no-val-role               jwt-no-val-role
+               :secret                    private-key
+               :enable-admin-delete-actor enable-admin-delete-actor
+               :enable-admin-ui           enable-admin-ui
+               :enable-admin-status       enable-admin-status
+               :enable-account-routes     enable-local-admin
+               :enable-reaction-routes    enable-reactions
+               :oidc-interceptors         oidc-admin-interceptors
+               :oidc-ui-interceptors      oidc-admin-ui-interceptors
                :head-opts
                {:sec-head-hsts         sec-head-hsts
                 :sec-head-frame        sec-head-frame
