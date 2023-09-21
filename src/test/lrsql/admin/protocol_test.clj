@@ -194,7 +194,7 @@
           (is (= (lrsp/-get-person lrs auth-ident {:agent actor})
                  {:person {"objectType" "Person"}}))))
       (let [arb-query #(jdbc/execute! ds %)]
-        (testing "delete-actor: delete statements"
+        (testing "delete-actor: delete statements related to actor"
           (let [stmts [stmt-0 stmt-1 stmt-2 stmt-3]
                 ifis (->> (conj stmts (stmt-3 "object"))
                           (map #(ua/actor->ifi (% "actor"))))
@@ -212,7 +212,7 @@
             (doseq [ifi ifis]
               (adp/-delete-actor lrs {:actor-ifi ifi}))
             (is (every? zero? (vals (get-stmt-#s))))))
-        (testing "actor delete and related statements"
+        (testing "delete-actor: delete statements related to deleted statements"
           (let [stmt->ifi #(ua/actor->ifi (% "actor"))
                 count-of-actor (fn [actor-ifi] (-> (lrsp/-get-statements lrs auth-ident {:actor-ifi actor-ifi} []) :statement-result :statements count))
                 child-ifi (stmt->ifi (stmt-3 "object"))
@@ -238,30 +238,27 @@
                 (adp/-delete-actor lrs {:actor-ifi ifi-2})
                 (is (= [0 0] (mapv count-of-actor [ifi-0 ifi-2])))))))
 
-        (testing "delete-actor handles dependent tables: state_document"
+        (testing "delete-actor: delete state_document of deleted actor"
           (let [ifi (ua/actor->ifi (:agent lrst/state-id-params))]
             (lrsp/-set-document lrs auth-ident lrst/state-id-params lrst/state-doc-1 true)
             (adp/-delete-actor lrs {:actor-ifi ifi})
             (is (empty? (arb-query ["select * from state_document where agent_ifi  = ?" ifi])))))
 
-        (testing "delete-actor deletes agent profile documents"
+        (testing "delete-actor: delete agent profile document of deleted actor"
           (let [{:keys [agent profileId]}  lrst/agent-prof-id-params
                 ifi (ua/actor->ifi agent)]
             (lrsp/-set-document lrs auth-ident lrst/agent-prof-id-params lrst/agent-prof-doc true)
             (adp/-delete-actor lrs {:actor-ifi ifi})
             (is (nil? (:document (lrsp/-get-document lrs auth-ident {:profileId profileId
                                                                      :agent agent}))))))
-        (testing "delete-actor handles statement attachments and the statement-to-activity table"
+        (testing "delete-actor: delete attachments of deleted statements"
           (let [ifi (ua/actor->ifi (lrst/stmt-4 "actor"))
                 stmt-id (u/str->uuid (lrst/stmt-4 "id"))]
             (lrsp/-store-statements lrs auth-ident [lrst/stmt-4] [lrst/stmt-4-attach])
             (adp/-delete-actor lrs {:actor-ifi ifi})
             (is (empty? (:attachments (lrsp/-get-statements lrs auth-ident {:statement_id stmt-id} []))))
-            (is (empty? (arb-query ["select * from statement_to_activity where statement_id  = ?" stmt-id]))))))
-
-      )
-
-
+            (testing "delete actor: delete statement-to-activity entries for deleted statements"
+              (is (empty? (arb-query ["select * from statement_to_activity where statement_id  = ?" stmt-id]))))))))
     (component/stop sys')))
 
 ;; TODO: Add tests for creds with no explicit scopes, once
