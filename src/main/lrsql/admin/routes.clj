@@ -10,14 +10,15 @@
             [lrsql.admin.interceptors.jwt :as ji]
             [lrsql.admin.interceptors.status :as si]
             [lrsql.util.interceptor :as util-i]
-            [lrsql.util.headers :as h]))
+            [lrsql.util.headers :as h]
+            [lrsql.admin.interceptors.csrf :refer [csrf-check-interceptor]]))
 
-(defn- make-common-interceptors
-  [lrs sec-head-opts]
+(defn- make-common-interceptors [lrs sec-head-opts]
   [i/error-interceptor
    (util-i/handle-json-parse-exn true)
    i/x-forwarded-for-interceptor
    (h/secure-headers sec-head-opts)
+   csrf-check-interceptor
    json-body
    (body-params)
    (i/lrs-interceptor lrs)])
