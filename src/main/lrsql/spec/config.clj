@@ -166,6 +166,8 @@
 (s/def ::enable-admin-status boolean?)
 (s/def ::enable-stmt-html boolean?)
 
+(s/def ::proxy-path (s/nilable string?))
+
 (s/def ::oidc-issuer (s/nilable string?))
 (s/def ::oidc-audience (s/nilable string?))
 (s/def ::oidc-client-id (s/nilable string?))
@@ -191,6 +193,7 @@
                     ::allow-all-origins
                     ::allowed-origins
                     ::url-prefix
+                    ::proxy-path
                     ::key-alias
                     ::key-password
                     ::key-enable-selfie

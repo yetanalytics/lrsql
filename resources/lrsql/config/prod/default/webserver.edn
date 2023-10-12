@@ -26,6 +26,7 @@
  :allowed-origins           #array #or [#env LRSQL_ALLOWED_ORIGINS nil]
  :ssl-port                  #long #or [#env LRSQL_SSL_PORT 8443]
  :url-prefix                #or [#env LRSQL_URL_PREFIX "/xapi"]
+ :proxy-path                #or [#env LRSQL_PROXY_PATH nil]
  :enable-admin-delete-actor #boolean #or [#env LRSQL_ENABLE_ADMIN_DELETE_ACTOR false]
  :enable-admin-ui           #boolean #or [#env LRSQL_ENABLE_ADMIN_UI true]
  :enable-admin-status       #boolean #or [#env LRSQL_ENABLE_ADMIN_STATUS true]
