@@ -19,6 +19,7 @@
                              ;; Allow access from admin-ui dev
                              "http://localhost:9500"]
  :url-prefix                "/xapi"
+ :proxy-path                nil
  :enable-admin-delete-actor true
  :enable-admin-ui           true
  :enable-admin-status       true

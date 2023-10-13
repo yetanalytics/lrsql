@@ -6,15 +6,16 @@
 
 (defn admin-ui-redirect
   "Handler function to redirect to the admin ui"
-  [_]
-  (resp/redirect "/admin/index.html"))
+  [path-prefix]
+  (fn [_]
+    (resp/redirect (str path-prefix "/admin/index.html"))))
 
 (defn get-env
   "Provide select config data to client upon request. Takes a map with static
   config to inject:
     :enable-admin-status - boolean, determines if the admin status endpoint is
       enabled."
-  [{:keys [enable-admin-delete-actor enable-admin-status no-val?]
+  [{:keys [enable-admin-delete-actor enable-admin-status no-val? proxy-path]
     :or   {enable-admin-delete-actor false
            enable-admin-status false
            no-val?             false}}]
@@ -30,9 +31,10 @@
                {:status 200
                 :body
                 (merge
-                 {:url-prefix          url-prefix
-                  :enable-stmt-html    (some? enable-stmt-html)
-                  :enable-admin-delete-actor enable-admin-delete-actor 
-                  :enable-admin-status enable-admin-status
-                  :no-val?             no-val?}
+                 {:url-prefix                url-prefix
+                  :proxy-path                proxy-path
+                  :enable-stmt-html          (some? enable-stmt-html)
+                  :enable-admin-delete-actor enable-admin-delete-actor
+                  :enable-admin-status       enable-admin-status
+                  :no-val?                   no-val?}
                  oidc-env)})))}))
