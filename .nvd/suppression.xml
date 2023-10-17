@@ -17,13 +17,4 @@
         <cpe>cpe:/a:postgresql:postgresql_jdbc_driver</cpe>
         <cve>CVE-2020-21469</cve>
     </suppress>
-    <!-- This CVE is actually listed has having "no known exploit scenario"
-         (plus LRS validation should prevent issues anyways) -->
-    <suppress>
-        <notes><![CDATA[
-        file name: jetty-http-9.4.51.v20230217.jar
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty/jetty\-http@.*$</packageUrl>
-        <vulnerabilityName>CVE-2023-40167</vulnerabilityName>
-    </suppress>
 </suppressions>

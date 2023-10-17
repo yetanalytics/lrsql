@@ -23,6 +23,7 @@
                 http-port
                 ssl-port
                 url-prefix
+                proxy-path
                 key-password
                 enable-admin-delete-actor
                 enable-admin-ui
@@ -81,6 +82,7 @@
                :secret                    private-key
                :enable-admin-delete-actor enable-admin-delete-actor
                :enable-admin-ui           enable-admin-ui
+               :proxy-path                proxy-path
                :enable-admin-status       enable-admin-status
                :enable-account-routes     enable-local-admin
                :enable-reaction-routes    enable-reactions

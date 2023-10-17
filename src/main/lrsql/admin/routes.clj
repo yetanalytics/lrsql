@@ -116,15 +116,15 @@
      :route-name :lrsql.admin.status/get]})
 
 (defn admin-ui-routes
-  [common-interceptors inject-config]
+  [common-interceptors {:keys [proxy-path] :as inject-config}]
   #{;; Redirect root to admin UI
-    ["/" :get `ui/admin-ui-redirect
+    ["/" :get (ui/admin-ui-redirect proxy-path)
      :route-name :lrsql.admin.ui/root-redirect]
     ;; Redirect admin w/o slash to admin UI
-    ["/admin" :get `ui/admin-ui-redirect
+    ["/admin" :get (ui/admin-ui-redirect proxy-path)
      :route-name :lrsql.admin.ui/path-redirect]
     ;; Redirect admin with slash to admin UI
-    ["/admin/" :get `ui/admin-ui-redirect
+    ["/admin/" :get (ui/admin-ui-redirect proxy-path)
      :route-name :lrsql.admin.ui/slash-redirect]
     ["/admin/env" :get (conj common-interceptors
                              (ui/get-env inject-config))
@@ -188,6 +188,7 @@
            enable-admin-delete-actor
            enable-admin-ui
            enable-admin-status
+           proxy-path
            enable-account-routes
            enable-reaction-routes
            oidc-interceptors
@@ -214,10 +215,11 @@
                   (admin-ui-routes
                    (into common-interceptors
                          oidc-ui-interceptors)
-                   {:enable-admin-status       enable-admin-status
-                    :enable-reactions          enable-reaction-routes
-                    :enable-admin-delete-actor enable-admin-delete-actor
-                    :no-val?                   no-val?}))
+                   {:enable-admin-status enable-admin-status
+                    :enable-reactions enable-reaction-routes
+                    :no-val? no-val?
+                    :proxy-path proxy-path
+                    :enable-admin-delete-actor enable-admin-delete-actor}))
                 (when enable-admin-status
                   (admin-status-routes
                    common-interceptors-oidc secret leeway no-val-opts))
