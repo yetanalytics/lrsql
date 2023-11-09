@@ -157,6 +157,16 @@ This section is for optionally configuring OIDC Authentication/Authorization thr
 | `LRSQL_OIDC_VERIFY_REMOTE_ISSUER` | `oidcVerifyRemoteIssuer` | Verify on startup that the issuer in remote configuration matches `LRSQL_OIDC_ISSUER`.                                                                                                                    | `true`                                                                                     |
 | `LRSQL_OIDC_ENABLE_LOCAL_ADMIN`   | `oidcEnableLocalAdmin`   | Whether or not to enable local administrative account authentication, login and management when `LRSQL_OIDC_ISSUER` is set.                                                                               | `false`                                                                                    |
 
+#### ClamAV Virus Scanning
+
+This section is for optionally configuring ClamAV antivirus scanning for inbound files.
+
+| Env Var               | Config         | Description                                         | Default     |
+|-----------------------|----------------|-----------------------------------------------------|-------------|
+| `LRSQL_ENABLE_CLAMAV` | `enableClamav` | Whether or not to enable ClamAV antivirus scanning. | `false`     |
+| `LRSQL_CLAMAV_HOST`   | `clamavHost`   | ClamAV Daemon Host                                  | `localhost` |
+| `LRSQL_CLAMAV_PORT`   | `clamavPort`   | ClamAV Daemon Port                                  | `3310`      |
+
 #### CORS
 
 | Env Var                           | Config                   | Description                                                                                                                                                                                                                                            | Default                                                                                    |
@@ -169,7 +179,7 @@ These config vars enable and configure browser security response headers from th
 
 | Env Var  | Config | Header Name  | `[default]` value  |
 | --------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `LRSQL_SEC_HEAD_HSTS`   | `secHeadHsts`   | `Strict-Transport-Security` |`max-age=31536000; includeSubdomains` 
+| `LRSQL_SEC_HEAD_HSTS`   | `secHeadHsts`   | `Strict-Transport-Security` |`max-age=31536000; includeSubdomains`
 | `LRSQL_SEC_HEAD_FRAME`   | `secHeadFrame`   |  `X-Frame-Options` |`DENY` |
 | `LRSQL_SEC_HEAD_CONTENT_TYPE`   | `secHeadContentType`   |  `X-Content-Type-Options` | `nosniff` |
 | `LRSQL_SEC_HEAD_XSS`   | `secHeadXss`   |  `X-Xss-Protection` | `1; mode=block` |
