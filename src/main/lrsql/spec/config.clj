@@ -186,7 +186,6 @@
 (s/def ::enable-clamav boolean?)
 (s/def ::clamav-host string?)
 (s/def ::clamav-port nat-int?)
-(s/def ::test-clamav-version string?)
 
 (s/def ::webserver
   (s/and
@@ -230,8 +229,7 @@
                     ::sec-head-content
                     ::oidc-issuer
                     ::oidc-audience
-                    ::oidc-client-id
-                    ::test-clamav-version])
+                    ::oidc-client-id])
    ;; conditional validation for presence of no-val supporting config
    (fn [{:keys [jwt-no-val jwt-no-val-uname jwt-no-val-issuer
                 jwt-no-val-role-key jwt-no-val-role]}]
