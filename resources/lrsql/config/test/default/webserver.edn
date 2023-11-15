@@ -29,4 +29,5 @@
  :oidc-enable-local-admin   false
  :enable-clamav             false
  :clamav-host               "localhost"
- :clamav-port               3310}
+ :clamav-port               3310
+ :test-clamav-version       #or [#env LRSQL_TEST_CLAMAV_VERSION "1.2.1"]}
