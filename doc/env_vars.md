@@ -159,7 +159,7 @@ This section is for optionally configuring OIDC Authentication/Authorization thr
 
 #### ClamAV Virus Scanning
 
-This section is for optionally configuring ClamAV antivirus scanning for inbound files.
+This section is for optionally configuring [ClamAV antivirus scanning](https://www.clamav.net/) for inbound files.
 
 | Env Var               | Config         | Description                                         | Default     |
 |-----------------------|----------------|-----------------------------------------------------|-------------|
