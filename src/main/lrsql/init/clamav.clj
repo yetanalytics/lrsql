@@ -5,11 +5,6 @@
   (:import [xyz.capybara.clamav ClamavClient]
            [xyz.capybara.clamav.commands.scan.result ScanResult ScanResult$OK]))
 
-;; questions
-;;
-;; * What do we want to know about found viruses? Anything?
-;; *
-
 (defn init-file-scanner
   "Given ClamAV config, creates a client and returns a function that reads in
   the input and scans it with ClamAV.
