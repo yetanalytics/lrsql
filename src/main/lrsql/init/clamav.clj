@@ -19,7 +19,10 @@
         (let [^ScanResult scan-result (.scan client in)]
           (when-not (instance? ScanResult$OK scan-result)
             (let [virus-list (-> scan-result
-                                 bean ;; FIXME: Normal property access?
+                                 ;; bean access seems to work, could probably be
+                                 ;; improved with a better understanding of
+                                 ;; kotlin-java interop
+                                 bean
                                  :foundViruses
                                  (get "stream")
                                  (->> (into [])))]
