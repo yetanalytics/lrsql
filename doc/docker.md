@@ -68,7 +68,7 @@ Note that you will also need to ensure that a Postgres instance is accessible to
 docker compose up
 ```
 
-Docker will start Postgres and then SQL LRS. Note that Postgres can sometimes take a while to start causing SQL LRS initialization to fail. If this happens, stop the system with ctrl-C and run the command again, optionally increasing the value of `LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT` to allow more time before the SQL LRS declares a connection failure (see `docker-compose.yml` file).
+Docker will start Postgres and the ClamAV antivirus daemon, then SQL LRS. Note that Postgres can sometimes take a while to start causing SQL LRS initialization to fail. If this happens, stop the system with ctrl-C and run the command again, optionally increasing the value of `LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT` to allow more time before the SQL LRS declares a connection failure (see `docker-compose.yml` file).
 
 ### Customization
 
