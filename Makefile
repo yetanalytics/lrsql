@@ -13,7 +13,6 @@ resources/public/admin:
 	unzip ${LRS_ADMIN_ZIPFILE} -d resources/public/admin
 	rm ${LRS_ADMIN_ZIPFILE}
 
-
 # *** Development ***
 
 # `clean-dev` removes all development files.
@@ -54,6 +53,9 @@ test-postgres-14:
 
 test-postgres-15:
 	LRSQL_TEST_DB_VERSION=15 $(TEST_PG_COMMAND)
+
+test-postgres-16:
+	LRSQL_TEST_DB_VERSION=16 $(TEST_PG_COMMAND)
 
 ci: test-sqlite test-postgres
 
