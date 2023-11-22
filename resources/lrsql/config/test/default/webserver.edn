@@ -26,4 +26,7 @@
  :enable-stmt-html          true
  :oidc-verify-remote-issuer true
  :oidc-client-template      "config/oidc_client.json.template"
- :oidc-enable-local-admin   false}
+ :oidc-enable-local-admin   false
+ :enable-clamav             false
+ :clamav-host               "localhost"
+ :clamav-port               3310}

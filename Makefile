@@ -13,7 +13,6 @@ resources/public/admin:
 	unzip ${LRS_ADMIN_ZIPFILE} -d resources/public/admin
 	rm ${LRS_ADMIN_ZIPFILE}
 
-
 # *** Development ***
 
 # `clean-dev` removes all development files.
@@ -24,7 +23,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp target/nvd
@@ -54,6 +53,9 @@ test-postgres-14:
 
 test-postgres-15:
 	LRSQL_TEST_DB_VERSION=15 $(TEST_PG_COMMAND)
+
+test-postgres-16:
+	LRSQL_TEST_DB_VERSION=16 $(TEST_PG_COMMAND)
 
 ci: test-sqlite test-postgres
 
@@ -107,6 +109,9 @@ keycloak-demo:
 
 superset-demo:
 	cd dev-resources/superset_demo; docker compose up -d
+
+clamav-demo:
+	cd dev-resources/clamav; docker compose up -d
 
 # *** Build ***
 
