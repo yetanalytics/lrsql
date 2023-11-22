@@ -23,7 +23,7 @@
   com.layerware/hugsql-adapter-next-jdbc   {:mvn/version "0.5.1"}
   com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
                                             :exclusions  [org.slf4j/slf4j-api]}
-  ;; Pedestal and Jetty webserver deps 
+  ;; Pedestal and Jetty webserver deps
   io.pedestal/pedestal.jetty
   {:mvn/version "0.6.1"
    :exclusions
@@ -50,9 +50,10 @@
                        :exclusions [buddy/buddy-core]}
   org.bouncycastle/bcprov-jdk18on {:mvn/version "1.75"}
   less-awful-ssl/less-awful-ssl   {:mvn/version "1.0.6"}
+  xyz.capybara/clamav-client      {:mvn/version "2.1.2"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
-  {:mvn/version "1.2.15"
+  {:mvn/version "1.2.16"
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript
                  com.yetanalytics/xapi-schema]}

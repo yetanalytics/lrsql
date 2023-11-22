@@ -1,0 +1,45 @@
+--105423a5219f5a63362a375ba7a64a8f234da19c7d01e56800c3c64b26bb2fa0
+Content-Type:application/json
+
+{
+    "actor": {
+        "mbox": "mailto:sample.agent@example.com",
+        "name": "Sample Agent",
+        "objectType": "Agent"
+    },
+    "verb": {
+        "id": "http://adlnet.gov/expapi/verbs/answered",
+        "display": {
+            "en-US": "answered"
+        }
+    },
+    "object": {
+        "id": "http://www.example.com/tincan/activities/multipart",
+        "objectType": "Activity",
+        "definition": {
+            "name": {
+                "en-US": "Multi Part Activity"
+            },
+            "description": {
+                "en-US": "Multi Part Activity Description"
+            }
+        }
+    },
+    "attachments": [
+        {
+            "usageType": "http://example.com/attachment-usage/test",
+            "display": { "en-US": "A test attachment" },
+            "description": { "en-US": "A test attachment (description)" },
+            "contentType": "text/plain; charset=ascii",
+            "length": 27,
+            "sha2": "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"
+        }
+    ]
+}
+--105423a5219f5a63362a375ba7a64a8f234da19c7d01e56800c3c64b26bb2fa0
+Content-Type:text/plain
+Content-Transfer-Encoding:binary
+X-Experience-API-Hash:495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a
+
+here is a simple attachment
+--105423a5219f5a63362a375ba7a64a8f234da19c7d01e56800c3c64b26bb2fa0--
