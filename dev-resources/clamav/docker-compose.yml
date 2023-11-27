@@ -1,0 +1,7 @@
+# To run: docker compose up
+# See the Docker Compose docs for more info: https://docs.docker.com/compose/
+services:
+  clamav:
+    image: clamav/clamav:1.2.1
+    ports:
+      - "3310:3310"

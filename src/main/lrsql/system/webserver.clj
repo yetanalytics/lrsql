@@ -8,6 +8,7 @@
             [clojure.core :refer [format]]
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.init.oidc :as oidc]
+            [lrsql.init.clamav :as clamav]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
@@ -42,7 +43,10 @@
                 jwt-no-val-uname
                 jwt-no-val-issuer
                 jwt-no-val-role-key
-                jwt-no-val-role]
+                jwt-no-val-role
+                enable-clamav
+                clamav-host
+                clamav-port]
          jwt-exp           :jwt-exp-time
          jwt-lwy           :jwt-exp-leeway}
         config
@@ -69,7 +73,11 @@
                      :wrap-interceptors (into
                                          [i/error-interceptor
                                           (handle-json-parse-exn)]
-                                         oidc-resource-interceptors)})
+                                         oidc-resource-interceptors)
+                     :file-scanner      (when enable-clamav
+                                          (clamav/init-file-scanner
+                                           {:clamav-host clamav-host
+                                            :clamav-port clamav-port}))})
              (add-admin-routes
               {:lrs                       lrs
                :exp                       jwt-exp

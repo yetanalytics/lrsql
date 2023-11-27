@@ -188,6 +188,10 @@
 (s/def ::sec-head-cross-domain (s/nilable string?))
 (s/def ::sec-head-content (s/nilable string?))
 
+(s/def ::enable-clamav boolean?)
+(s/def ::clamav-host string?)
+(s/def ::clamav-port nat-int?)
+
 (s/def ::webserver
   (s/and
    (s/keys :req-un [::http-host
@@ -210,7 +214,10 @@
                     ::enable-stmt-html
                     ::oidc-verify-remote-issuer
                     ::oidc-client-template
-                    ::oidc-enable-local-admin]
+                    ::oidc-enable-local-admin
+                    ::enable-clamav
+                    ::clamav-host
+                    ::clamav-port]
            :opt-un [::key-file
                     ::key-pkey-file
                     ::key-cert-chain

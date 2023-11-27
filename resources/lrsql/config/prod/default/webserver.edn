@@ -36,4 +36,7 @@
  :oidc-client-id            #env LRSQL_OIDC_CLIENT_ID
  :oidc-client-template      #or [#env LRSQL_OIDC_CLIENT_TEMPLATE "config/oidc_client.json.template"]
  :oidc-verify-remote-issuer #boolean #or [#env LRSQL_OIDC_VERIFY_REMOTE_ISSUER true]
- :oidc-enable-local-admin   #boolean #or [#env LRSQL_OIDC_ENABLE_LOCAL_ADMIN false]}
+ :oidc-enable-local-admin   #boolean #or [#env LRSQL_OIDC_ENABLE_LOCAL_ADMIN false]
+ :enable-clamav             #boolean #or [#env LRSQL_ENABLE_CLAMAV false]
+ :clamav-host               #or [#env LRSQL_CLAMAV_HOST "localhost"]
+ :clamav-port               #long #or [#env LRSQL_CLAMAV_PORT 3310]}
