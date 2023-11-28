@@ -90,9 +90,17 @@
             ctx
             {:keys [result]}
             (adp/-create-reaction lrs title ruleset active)]
-        (assoc ctx
-               :response
-               {:status 200 :body {:reactionId result}})))}))
+        (cond
+          (uuid? result)
+          (assoc ctx
+                 :response
+                 {:status 200 :body {:reactionId result}})
+          (= :lrsql.reaction/title-conflict-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400
+                  :body   {:error (format "Title \"%s\" is already in use."
+                                          title)}}))))}))
 
 (def get-all-reactions
   "List all reactions."
