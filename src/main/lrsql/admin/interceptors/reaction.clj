@@ -142,7 +142,13 @@
                  :response
                  {:status 404
                   :body   {:error (format "The reaction \"%s\" does not exist!"
-                                          (u/uuid->str reaction-id))}}))))}))
+                                          (u/uuid->str reaction-id))}})
+          (= :lrsql.reaction/title-conflict-error result)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 400
+                  :body   {:error (format "Title \"%s\" is already in use."
+                                          title)}}))))}))
 
 (def delete-reaction
   "Delete a reaction."
