@@ -85,7 +85,7 @@
    {:name ::create-reaction
     :enter
     (fn create-reaction [ctx]
-      (let [{lrs                      :com.yetanalytics/lrs
+      (let [{lrs                            :com.yetanalytics/lrs
              {:keys [title ruleset active]} ::data}
             ctx
             {:keys [result]}
