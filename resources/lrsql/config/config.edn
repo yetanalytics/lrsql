@@ -30,7 +30,7 @@
  #profile
   {;; Test/Dev
    :test-sqlite     #include "test/default/connection.edn"
-   :test-sqlite-mem #include "test/default/connection.edn"
+   :test-sqlite-mem #include "test/sqlite_mem/connection.edn"
    :test-postgres   #include "test/postgres/connection.edn"
    :test-oidc       #include "test/default/connection.edn"
    ;; Production
