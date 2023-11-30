@@ -39,21 +39,24 @@ The following environment variables are aliases for [HikariCP properties](https:
 | `LRSQL_POOL_IDLE_TIMEOUT`                | `poolIdleTimeout`               | `600000`          | `≥ 10000` or `0`                                                                                                                                   |
 | `LRSQL_POOL_VALIDATION_TIMEOUT`          | `poolValidationTimeout`         | `5000`            | `≥ 250`, less than `poolConnectionTimeout`                                                                                                         |
 | `LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT` | `poolInitializationFailTimeout` | `1`               | Any integer                                                                                                                                        |
-| `LRSQL_POOL_MAX_LIFETIME`                | `poolMaxLifetime`               | `1800000`         | `≥ 30000` or `0`                                                                                                                                   |
-| `LRSQL_POOL_MINIMUM_IDLE`                | `poolMinimumIdle`               | `1`\* or `10`\*\* | `≥ 0`                                                                                                                                              |
-| `LRSQL_POOL_MAXIMUM_SIZE`                | `poolMaximumSize`               | `1`\* or `10`\*\* | `≥ 1`                                                                                                                                              |
+| `LRSQL_POOL_MAX_LIFETIME`                | `poolMaxLifetime`               | `1800000` or `0`\*\*         | `≥ 30000` or `0`                                                                                                                                   |
+| `LRSQL_POOL_MINIMUM_IDLE`                | `poolMinimumIdle`               | `1`\* or `10`\*\*\* | `≥ 0`                                                                                                                                              |
+| `LRSQL_POOL_MAXIMUM_SIZE`                | `poolMaximumSize`               | `1`\* or `10`\*\*\* | `≥ 1`                                                                                                                                              |
 | `LRSQL_POOL_ISOLATE_INTERNAL_QUERIES`    | `poolIsolateInternalQueries`    | `false`           | `true`/`false`                                                                                                                                     |
 | `LRSQL_POOL_LEAK_DETECTION_THRESHOLD`    | `poolLeakDetectionThreshold`    | `0`†              | `≥ 2000` or `0`                                                                                                                                    |
 | `LRSQL_POOL_TRANSACTION_ISOLATION`       | `poolTransactionIsolation`      | Not set           | [JDBC Connection constant](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/Connection.html) (e.g. `TRANSACTION_SERIALIZABLE`) |
 | `LRSQL_POOL_NAME`                        | `poolName`                      | Not set           | Any string                                                                                                                                         |
 
 \* SQLite default.
-\*\* Postgres default.
+\*\* SQLite in-memory default.
+\*\*\* Postgres default.
 † The property is set to be disabled by default.
 
 _NOTE 1:_ SQLite uses different defaults for `poolMinimumIdle` and `poolMaximumSize` than Postgres due to issues with multi-threading with those DBMSs. Setting `poolMaximumSize` to values other than `1` will potentially cause exceptions when running concurrent operations.
 
-_NOTE 2:_ None of the DBMSs that SQL LRS currently supports allow for `TRANSACTION_NONE` as a `poolTransactionIsolation` value.
+_NOTE 2:_ SQLite, while in in-memory mode, automatically deletes the database whenever the connection is removed, which can occur if a connection is closed and `maxLifetime` is exceeded. Thus, `maxLifetime` is set to `0`, denoting infinite connection lifetime, for convenience.
+
+_NOTE 3:_ None of the DBMSs that SQL LRS currently supports allow for `TRANSACTION_NONE` as a `poolTransactionIsolation` value.
 
 #### Metric Reporting via JMX
 
