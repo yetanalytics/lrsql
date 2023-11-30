@@ -54,7 +54,7 @@ The following environment variables are aliases for [HikariCP properties](https:
 
 _NOTE 1:_ SQLite uses different defaults for `poolMinimumIdle` and `poolMaximumSize` than Postgres due to issues with multi-threading with those DBMSs. Setting `poolMaximumSize` to values other than `1` will potentially cause exceptions when running concurrent operations.
 
-_NOTE 2:_ SQLite, while in in-memory mode, automatically deletes the database whenever the connection is removed, which can occur if a connection is closed and `maxLifetime` is exceeded. Thus, `maxLifetime` is set to `0`, denoting infinite connection lifetime, for convenience.
+_NOTE 2:_ SQLite, while in in-memory mode, automatically deletes the database whenever the connection is removed, which can occur if a connection is closed and `poolMaxLifetime` is exceeded. Thus, `poolMaxLifetime` is set to `0`, denoting infinite connection lifetime, for convenience.
 
 _NOTE 3:_ None of the DBMSs that SQL LRS currently supports allow for `TRANSACTION_NONE` as a `poolTransactionIsolation` value.
 
