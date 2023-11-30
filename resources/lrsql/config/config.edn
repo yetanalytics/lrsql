@@ -35,7 +35,7 @@
    :test-oidc       #include "test/default/connection.edn"
    ;; Production
    :prod-sqlite     #include "prod/default/connection.edn"
-   :prod-sqlite-mem #include "prod/default/connection.edn"
+   :prod-sqlite-mem #include "prod/sqlite_mem/connection.edn"
    :prod-postgres   #include "prod/postgres/connection.edn"}
  :tuning
  #profile
