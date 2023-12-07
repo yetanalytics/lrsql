@@ -1,0 +1,6 @@
+;; SQLite deletes the in-mem DB whenever a connection closes, which by default
+;; happens after 30 min/1800000 ms, so we set it to 0 to make the lifetime
+;; infinite.
+#merge
+ [#include "prod/default/connection.edn"
+  {:pool-max-lifetime #long #or [#env LRSQL_POOL_MAX_LIFETIME 0]}]
