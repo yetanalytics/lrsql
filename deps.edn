@@ -54,7 +54,10 @@
   com.yetanalytics/pedestal-oidc
   {:mvn/version "0.0.8"
    :exclusions  [org.clojure/clojure
-                 buddy/buddy-sign]}}
+                 buddy/buddy-sign]}
+  com.yetanalytics/lrs-reactions
+  {:mvn/version "0.0.1-SNAPSHOT"
+   :exclusions [org.clojure/clojure]}}
  :aliases
  {:db-sqlite
   {:extra-paths ["src/db/sqlite"]
