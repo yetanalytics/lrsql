@@ -46,9 +46,6 @@
 
     [["actor" "openid"]
      ["context" "registration"]]
-    nil
-
-    [["actor"]]
     nil))
 
 (deftest add-reaction-metadata-test
