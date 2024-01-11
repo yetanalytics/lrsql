@@ -56,7 +56,7 @@
                            m))
                        {}
                        identity-paths)]
-      (when (and found-paths (not (empty? found-paths)))
+      (when (seq found-paths)
         found-paths))))
 
 (s/fdef add-reaction-metadata
