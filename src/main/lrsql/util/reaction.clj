@@ -41,19 +41,23 @@
 
 (defn statement-identity
   "Given a vector of identity paths and a statement, return a map of paths to
-  values. Return nil if any are missing or a collection is found."
+  values. Return nil if no specified paths or a collection is found."
   [identity-paths
    statement]
-  (reduce
-   (fn [m path]
-     (if-some [found-val (get-in statement
-                                 path)]
-       (if (coll? found-val)
-         (reduced nil)
-         (assoc m path found-val))
-       (reduced nil)))
-   {}
-   identity-paths))
+  (if (empty? identity-paths)
+    {} ;; empty explicitly covers all statements
+    (let [found-paths (reduce
+                       (fn [m path]
+                         (if-some [found-val (get-in statement
+                                                     path)]
+                           (if (coll? found-val)
+                             (reduced nil)
+                             (assoc m path found-val))
+                           m))
+                       {}
+                       identity-paths)]
+      (when (seq found-paths)
+        found-paths))))
 
 (s/fdef add-reaction-metadata
   :args (s/cat :statement ::xs/statement

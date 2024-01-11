@@ -40,13 +40,26 @@
     {["actor" "mbox"] "mailto:bob@example.com"}
 
     [["actor" "mbox"]
+     ["actor" "mbox_sha1sum"]
+     ["actor" "openid"]
+     ["actor" "account" "homePage"]
+     ["actor" "account" "name"]]
+    {["actor" "mbox"] "mailto:bob@example.com"}
+
+    [["actor" "mbox"]
      ["context" "registration"]]
     {["actor" "mbox"]           "mailto:bob@example.com"
      ["context" "registration"] "6fbd600f-d17c-4c74-801a-2ec2e53231f7"}
 
     [["actor" "openid"]
      ["context" "registration"]]
-    nil))
+    {["context" "registration"] "6fbd600f-d17c-4c74-801a-2ec2e53231f7"}
+
+    [["actor" "openid"]]
+    nil
+
+    []
+    {}))
 
 (deftest add-reaction-metadata-test
   (let [reaction-id (u/generate-squuid)
