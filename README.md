@@ -53,6 +53,6 @@ Before contributing to this project, please read the [Contribution Guidelines](C
 
 ## License
 
-Copyright © 2021-2023 Yet Analytics, Inc.
+Copyright © 2021-2024 Yet Analytics, Inc.
 
 Distributed under the Apache License version 2.0.

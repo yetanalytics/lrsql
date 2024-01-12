@@ -126,7 +126,7 @@ span.build {
         </div>
         {{content|safe}}
         <div class="footer">
-         &copy; 2021-2023 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         &copy; 2021-2024 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
          <span class="build">Build: {{sha | safe}}</span>
