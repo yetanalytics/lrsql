@@ -43,10 +43,9 @@
                  org.clojure/clojurescript
                  com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
-  {:git/url "https://github.com/yetanalytics/xapi-schema"
-   :git/sha "f790daaeec7a7e3e39700226c294be8b70020afc"
-   :exclusions [org.clojure/clojure
-                org.clojure/clojurescript]}
+  {:mvn/version "1.2.2"
+   :exclusions  [org.clojure/clojure
+                 org.clojure/clojurescript]}
   com.yetanalytics/colossal-squuid
   {:mvn/version "0.1.4"
    :exclusions  [org.clojure/clojure
