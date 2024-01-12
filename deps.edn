@@ -43,7 +43,7 @@
                  org.clojure/clojurescript
                  com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
-  {:mvn/version "1.2.0"
+  {:mvn/version "1.2.2"
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript]}
   com.yetanalytics/colossal-squuid
