@@ -5,6 +5,7 @@
             [lrsql.spec.common :as cs]
             [lrsql.spec.reaction :as rs]
             [lrsql.spec.statement :as ss]
+            [clojure.string :refer [lower-case]]
             [xapi-schema.spec :as xs]))
 
 (s/fdef path->string
@@ -80,7 +81,10 @@
   (walk/postwalk #(if (and (map? %)
                            (= (key (first %)) "$templatePath"))
                     (let [input-path (val (first %))
-                          path (update input-path 0 keyword)
+                          path (update input-path 0 (fn [cn]
+                                                      (-> cn 
+                                                          lower-case 
+                                                          keyword)))
                           result (get-in cond->statement path :not-found)]
                       (case result
                         :not-found (throw (ex-info (str "No value found at " input-path)
