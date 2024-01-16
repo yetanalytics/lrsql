@@ -1073,7 +1073,9 @@
                        "verb"  {"id" "https://example.com/verbs/completed"},
                        "object"
                        {"id"         "https://example.com/activities/a-and-b",
-                        "objectType" "Activity"}}
+                        "objectType" "Activity"}
+                       "context"
+                       {"extensions" {"https://example.com/foo" nil}}}
                       (remove-id tc/reaction-stmt-b)
                       (remove-id tc/reaction-stmt-a)]
                      :more ""}

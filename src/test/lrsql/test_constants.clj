@@ -17,10 +17,11 @@
 (def simple-reaction-ruleset
   {:identityPaths [["actor" "mbox"]]
    :template
-   {"actor"  {"mbox" {"$templatePath" ["a" "actor" "mbox"]}}
-    "verb"   {"id" "https://example.com/verbs/completed"}
-    "object" {"id"         "https://example.com/activities/a-and-b"
-              "objectType" "Activity"}}
+   {"actor"   {"mbox" {"$templatePath" ["a" "actor" "mbox"]}}
+    "verb"    {"id" "https://example.com/verbs/completed"}
+    "object"  {"id"         "https://example.com/activities/a-and-b"
+               "objectType" "Activity"}
+    "context" {"extensions" {"https://example.com/foo" nil}}}
    :conditions
    {:a
     {:and
