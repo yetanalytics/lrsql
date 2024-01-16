@@ -55,12 +55,13 @@
           (testing "New statement added"
             (is (= {:statement-result
                     {:statements
-                     [{"id"    reaction-s-id
-                       "actor" {"mbox" "mailto:bob@example.com"},
-                       "verb"  {"id" "https://example.com/verbs/completed"},
+                     [{"id"      reaction-s-id
+                       "actor"   {"mbox" "mailto:bob@example.com"},
+                       "verb"    {"id" "https://example.com/verbs/completed"},
                        "object"
                        {"id"         "https://example.com/activities/a-and-b",
-                        "objectType" "Activity"}}
+                        "objectType" "Activity"}
+                       "context" {"extensions" {"https://example.com/foo" nil}}}
                       tc/reaction-stmt-b
                       tc/reaction-stmt-a]
                      :more ""}
