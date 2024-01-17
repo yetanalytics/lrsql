@@ -144,8 +144,8 @@
            (r/encode-condition-name "foo")))
     (is (not= (r/encode-condition-name "foo")
               (r/encode-condition-name "bar"))))
-  (testing "alphanumeric"
-    (is (re-matches #"[a-z0-9\_]*" (r/encode-condition-name "foo"))))
+  (testing "alphanumeric valid col name"
+    (is (re-matches #"[a-z][a-z0-9\_]*" (r/encode-condition-name "foo"))))
   (testing "reversible"
     (is (-> "foo"
             r/encode-condition-name
