@@ -23,7 +23,9 @@
 
 (defn- render-col
   [bk condition-name col]
-  (bp/-snip-col bk {:col (format "%s.%s" condition-name col)}))
+  (bp/-snip-col bk {:col (format "%s.%s"
+                                 (ru/encode-condition-name condition-name)
+                                 col)}))
 
 (s/fdef render-ref
   :args (s/cat :bk rs/reaction-backend?
@@ -46,7 +48,7 @@
     (render-col bk condition-name "registration")
     (bp/-snip-json-extract
      bk
-     {:col  (format "%s.payload" condition-name)
+     {:col  (format "%s.payload" (ru/encode-condition-name condition-name))
       :path path
       :datatype datatype})))
 
@@ -117,7 +119,9 @@
         ;; Clause special cases
         "contains"
         (bp/-snip-contains bk
-                           {:col   (format "%s.payload" condition-name)
+                           {:col   (format
+                                    "%s.payload"
+                                    (ru/encode-condition-name condition-name))
                             :path  path
                             :right right-snip
                             :datatype  (infer-type path val)})
@@ -150,8 +154,9 @@
                          [path ident-val] statement-identity]
                      (bp/-snip-clause
                       bk
-                      {:left  (render-ref bk condition-name path
-                                          :datatype (infer-type path ident-val))
+                      {:left  (render-ref
+                               bk condition-name path
+                               :datatype (infer-type path ident-val))
                        :op    "="
                        :right (bp/-snip-val bk {:val ident-val})})))}))
 
@@ -204,11 +209,12 @@
      bk
      {:select (mapv
                (fn [cn]
-                 [(format "%s.payload" cn) cn])
+                 (let [ecn (ru/encode-condition-name cn)]
+                   [(format "%s.payload" ecn) ecn]))
                condition-names)
       :from   (mapv
                (fn [cn]
-                 ["xapi_statement" cn])
+                 ["xapi_statement" (ru/encode-condition-name cn)])
                condition-names)
       :where
       (bp/-snip-and
@@ -236,9 +242,22 @@
 (defn query-reaction
   "For the given reaction input, return matching statements named for conditions."
   [bk tx input]
-  (bp/-query-reaction bk tx
-                      {:sql (query-reaction-sqlvec
-                             bk input)}))
+  (mapv
+   (fn [row]
+     (reduce-kv
+      (fn [m k v]
+        (assoc m
+               (-> k
+                   name
+                   ru/decode-condition-name
+                   keyword)
+               v))
+      {}
+      row))
+   (bp/-query-reaction
+    bk tx
+    {:sql (query-reaction-sqlvec
+           bk input)})))
 
 (s/fdef query-active-reactions
   :args (s/cat :bx rs/reaction-backend?

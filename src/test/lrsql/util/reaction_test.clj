@@ -137,3 +137,17 @@
            {:data  {:type :lrsql.util.reaction/invalid-path
                     :path ["completed_a" "actor" "birthday"]}
             :cause "No value found at [\"completed_a\" \"actor\" \"birthday\"]"}))))
+
+(deftest encode-condition-name-test
+  (testing "unique"
+    (is (= (r/encode-condition-name "foo")
+           (r/encode-condition-name "foo")))
+    (is (not= (r/encode-condition-name "foo")
+              (r/encode-condition-name "bar"))))
+  (testing "alphanumeric valid col name"
+    (is (re-matches #"[a-z][a-z0-9\_]*" (r/encode-condition-name "foo"))))
+  (testing "reversible"
+    (is (-> "foo"
+            r/encode-condition-name
+            r/decode-condition-name
+            (= "foo")))))

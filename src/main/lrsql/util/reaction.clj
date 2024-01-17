@@ -5,7 +5,9 @@
             [lrsql.spec.common :as cs]
             [lrsql.spec.reaction :as rs]
             [lrsql.spec.statement :as ss]
-            [xapi-schema.spec :as xs]))
+            [xapi-schema.spec :as xs]
+            [buddy.core.codecs :as bc]
+            [buddy.core.codecs.base64 :as b64]))
 
 (s/fdef path->string
   :args (s/cat :path ::rs/path
@@ -116,3 +118,28 @@
   (-> input
       (dissoc :reactionId)
       (assoc :reaction-id reactionId)))
+
+(s/fdef encode-condition-name
+  :args (s/cat :condition-name ::rs/condition-name)
+  :ret string?)
+
+(defn encode-condition-name
+  "Given a condition name string, encode it as hex."
+  [condition-name]
+  (-> condition-name
+      b64/encode
+      bc/bytes->hex
+      (->> (format "cond_%s")))) ;; add prefix to be valid SQL colname
+
+(s/fdef decode-condition-name
+  :args (s/cat :encoded-condition-name string?)
+  :ret ::rs/condition-name)
+
+(defn decode-condition-name
+  "Convert a condition name back to human-readable"
+  [encoded-condition-name]
+  (-> encoded-condition-name
+      (subs 5) ;; remove prefix
+      bc/hex->bytes
+      b64/decode
+      bc/bytes->str))
