@@ -78,11 +78,12 @@
                 [{:reaction-id reaction-id
                   :trigger-id  trigger-id
                   :statement
-                  {"actor" {"mbox" "mailto:bob@example.com"},
-                   "verb"  {"id" "https://example.com/verbs/completed"},
+                  {"actor"   {"mbox" "mailto:bob@example.com"},
+                   "verb"    {"id" "https://example.com/verbs/completed"},
                    "object"
                    {"id"         "https://example.com/activities/a-and-b",
-                    "objectType" "Activity"}}
+                    "objectType" "Activity"}
+                   "context" {"extensions" {"https://example.com/foo" nil}}}
                   ;; Authority derived from the trigger statement
                   :authority   (:agent tc/auth-ident)}]}
                (qr/query-statement-reactions
@@ -118,11 +119,12 @@
                 [{:reaction-id reaction-id
                   :trigger-id  trigger-id
                   :statement
-                  {"actor" {"mbox" "mailto:bob@example.com"},
-                   "verb"  {"id" "https://example.com/verbs/completed"},
+                  {"actor"     {"mbox" "mailto:bob@example.com"},
+                   "verb"      {"id" "https://example.com/verbs/completed"},
                    "object"
                    {"id"         "https://example.com/activities/a-and-b",
                     "objectType" "Activity"}
+                   "context"   {"extensions" {"https://example.com/foo" nil}}
                    "authority" {"mbox" "mailto:bob@example.com"}}
                   ;; Authority derived from the template
                   :authority   {"mbox" "mailto:bob@example.com"}}]}

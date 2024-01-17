@@ -1,7 +1,8 @@
 (ns lrsql.admin.routes
   (:require [clojure.set :as cset]
             [io.pedestal.http :refer [json-body]]
-            [io.pedestal.http.body-params :refer [body-params]]
+            [io.pedestal.http.body-params :refer [body-params
+                                                  default-parser-map]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors.account :as ai]
             [lrsql.admin.interceptors.credentials :as ci]
@@ -20,7 +21,11 @@
    i/x-forwarded-for-interceptor
    (h/secure-headers sec-head-opts)
    json-body
-   (body-params)
+   (body-params
+    ;; By default the JSON parser will attempt to parse strings with `/` as
+    ;; qualified keywords. We prevent this so (name x) is always the string.
+    (default-parser-map
+     :json-options {:key-fn #(keyword nil %)}))
    (i/lrs-interceptor lrs)])
 
 (defn admin-account-routes
