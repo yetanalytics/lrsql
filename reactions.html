@@ -1,0 +1,235 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Yet SQL LRS Documentation</title>
+        <style type="text/css">
+body{
+    margin: 0 auto;
+    padding: 30px;
+    font: 20px Tahoma, Helvetica, Arial, Sans-Serif;
+    line-height: 1.5;
+}
+h1, h2, h3, h4 {
+	display: block; text-decoration: none;
+	font: Helvetica, Arial, Sans-Serif;
+ }
+h1 {
+  font-size: 35px;
+ }
+h2 {
+  font-size: 30px;
+ }
+h3 {
+  font-size: 25px;
+ }
+h4 {
+  font-size: 20px;
+ }
+textarea {
+	width: 600px; margin: 0 auto; background: #222; padding: 20px;
+	font-size: 22px; color: #555; text-shadow: 0px 2px 3px #171717;
+	-webkit-box-shadow: 0px 2px 3px #555;
+	-moz-box-shadow: 0px 2px 3px #555;
+	-webkit-border-radius: 10px;
+	-moz-border-radius: 10px;
+}
+code {
+  background: #eeeeee;
+}
+pre {
+  margin: 0 auto;
+  background: #eeeeee;
+  padding: 20px;
+	font-size: 15px;
+	margin-bottom: 20px;
+}
+a {
+	text-decoration: none;
+	font: 18px Helvetica, Arial, Sans-Serif;
+ }
+hr {
+  height: 3px;
+  border: 0;
+  background-color: #333;
+}
+img {
+  max-width: 95%;
+  display: block;
+  margin: auto;
+}
+div#container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80%;
+}
+/* a la https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Styling_tables#Spacing_and_layout */
+table {
+  width: 95%;
+  margin-right: auto;
+  margin-left: auto;
+  border-collapse: collapse;
+  border: 1px solid #dee2e5;
+}
+th, td {
+  border: 1px solid #dee2e5;
+  padding: 20px;
+  line-height: 1.25;
+}
+tbody tr:nth-child(even) {
+  background-color: #f6f8fa;
+}
+p {
+  text-align: justify;
+}
+
+div.logo-container {
+  width: 100%;
+}
+
+div.logo {
+  width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+div.footer {
+  font-size: medium;
+  color:white;
+  background-color: rgb(17, 55, 92) !important;
+  width: 100%;
+  display: block;
+  text-align: center;
+  padding-top: 30px;
+  padding-bottom: 30px;
+}
+.footer a, .footer a:visited {
+  color: white !important;
+}
+
+.footer a:hover {
+  color: white !important;
+  text-decoration: underline;
+}
+
+span.build {
+  display: block;
+  font-size: .7em;
+}
+
+</style>
+    </head>
+    <body>
+      <div id="container">
+        <div class="logo-container">
+          <div class="logo">
+            <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
+          </div>
+        </div>
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="reactions">Reactions</h1><p>Reactions allow SQL LRS to watch for patterns in submitted xAPI data and dynamically generate new statements in response.</p><h2 id="usage">Usage</h2><p>To use Reactions the <code>LRSQL&#95;ENABLE&#95;REACTIONS</code> environment variable or the <code>enableReactions</code> LRS configuration property must be set to <code>true</code>. Reactions are disabled by default.</p><p>Reactions are defined in JSON:</p><pre><code class="json">
+{
+  &quot;identityPaths&quot;: &#91;
+    &#91;
+      &quot;actor&quot;,
+      &quot;mbox&quot;
+    &#93;
+  &#93;,
+  &quot;conditions&quot;: {
+    &quot;a&quot;: {
+      &quot;and&quot;: &#91;
+        {
+          &quot;path&quot;: &#91;
+            &quot;object&quot;,
+            &quot;id&quot;
+          &#93;,
+          &quot;op&quot;: &quot;eq&quot;,
+          &quot;val&quot;: &quot;https://example.com/activities/a&quot;
+        },
+        {
+          &quot;path&quot;: &#91;
+            &quot;verb&quot;,
+            &quot;id&quot;
+          &#93;,
+          &quot;op&quot;: &quot;eq&quot;,
+          &quot;val&quot;: &quot;https://example.com/verbs/completed&quot;
+        },
+        {
+          &quot;path&quot;: &#91;
+            &quot;result&quot;,
+            &quot;success&quot;
+          &#93;,
+          &quot;op&quot;: &quot;eq&quot;,
+          &quot;val&quot;: true
+        }
+      &#93;
+    },
+    &quot;b&quot;: {
+      &quot;and&quot;: &#91;
+        {
+          &quot;path&quot;: &#91;
+            &quot;object&quot;,
+            &quot;id&quot;
+          &#93;,
+          &quot;op&quot;: &quot;eq&quot;,
+          &quot;val&quot;: &quot;https://example.com/activities/b&quot;
+        },
+        {
+          &quot;path&quot;: &#91;
+            &quot;verb&quot;,
+            &quot;id&quot;
+          &#93;,
+          &quot;op&quot;: &quot;eq&quot;,
+          &quot;val&quot;: &quot;https://example.com/verbs/completed&quot;
+        },
+        {
+          &quot;path&quot;: &#91;
+            &quot;result&quot;,
+            &quot;success&quot;
+          &#93;,
+          &quot;op&quot;: &quot;eq&quot;,
+          &quot;val&quot;: true
+        },
+        {
+          &quot;path&quot;: &#91;
+            &quot;timestamp&quot;
+          &#93;,
+          &quot;op&quot;: &quot;gt&quot;,
+          &quot;ref&quot;: {
+            &quot;condition&quot;: &quot;a&quot;,
+            &quot;path&quot;: &#91;
+              &quot;timestamp&quot;
+            &#93;
+          }
+        }
+      &#93;
+    }
+  },
+  &quot;template&quot;: {
+    &quot;actor&quot;: {
+      &quot;mbox&quot;: {
+        &quot;$templatePath&quot;: &#91;
+          &quot;a&quot;,
+          &quot;actor&quot;,
+          &quot;mbox&quot;
+        &#93;
+      }
+    },
+    &quot;verb&quot;: {
+      &quot;id&quot;: &quot;https://example.com/verbs/completed&quot;
+    },
+    &quot;object&quot;: {
+      &quot;id&quot;: &quot;https://example.com/activities/a-and-b&quot;,
+      &quot;objectType&quot;: &quot;Activity&quot;
+    }
+  }
+}
+
+
+</code></pre><h3 id="identity&#95;paths">Identity Paths</h3><p><code>identityPaths</code> is an array of zero or more paths that must match across all statements in the sequence. These could include an actor identifier or statement registration.</p><h3 id="conditions">Conditions</h3><p><code>conditions</code> is a mapping of names to rules for finding significant statements. Rules can be composed with boolean logic.</p><p>In the example given above statement <code>a</code> must have an object id equal to <code>https://example.com/activities/a</code>, a verb id equal to <code>https://example.com/verbs/completed</code>, and a result success equal to <code>true</code>. Statement <code>b</code> must have the same verb and result success but an object id equal to <code>https://example.com/activities/b</code> and a timestamp greater than that of <code>a</code>.</p><h4 id="rules">Rules</h4><p>All rules have a <code>path</code> array that indicates a path in an xAPI statement and an <code>op</code> that is one of the following operators:</p><ul><li><code>gt</code> - Greater than</li><li><code>lt</code> - Less than</li><li><code>gte</code> - Greater than or equal</li><li><code>lte</code> - Less than or equal</li><li><code>eq</code> - Equal</li><li><code>noteq</code> - Not equal</li><li><code>like</code> - Fuzzy match using SQL <code>%</code> syntax</li><li><code>contains</code> - Array contains</li></ul><p>Rules either have a <code>val</code> literal value or a <code>ref</code> which is a path into a statement found for another condition.</p><h4 id="booleans">Booleans</h4><p>Booleans compose multiple rules together. Booleans are objects with a single key:</p><ul><li><code>and</code> - Array of rules which must all be true</li><li><code>or</code> - Array of rules of which one must be true</li><li><code>not</code> - Rule to nullify</li></ul><h3 id="template">Template</h3><p><code>template</code> describes the xAPI statement the reaction will produce. It is identical to an xAPI statement except where an object with the <code>$templatePath</code> key is found, where this is a path to one of the statements found for a given condition from which to derive a value. In the example above the template statement uses the actor mbox from statement <code>a</code>.</p><p><a href='index.html'><- Back to Index</a></p>
+        <div class="footer">
+         &copy; 2021-2024 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
+         Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
+         <span class="build">Build: 00c7f177ba099d2f2310a0dc8603cb84b2d860ad</span>
+        </div>
+      </div>
+    </body>
+</html>
