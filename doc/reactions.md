@@ -132,7 +132,7 @@ All rules have a `path` array that indicates a path in an xAPI statement and an 
 * `lte` - Less than or equal
 * `eq` - Equal
 * `noteq` - Not equal
-* `like` - Fuzzy match using SQL `%` syntax
+* `like` - Fuzzy match using SQL `%` syntax. For example, `bo%` matches `bob` and `boz`.
 * `contains` - Array contains
 
 Rules either have a `val` literal value or a `ref` which is a path into a statement found for another condition.
