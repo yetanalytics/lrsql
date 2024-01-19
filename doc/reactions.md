@@ -147,6 +147,6 @@ Booleans compose multiple rules together. Booleans are objects with a single key
 
 ### Template
 
-`template` describes the xAPI statement the reaction will produce. It is identical to an xAPI statement except where an object with the `$templatePath` key is found, where this is a path to one of the statements found for a given condition from which to derive a value. In the example above the template statement uses the actor mbox from statement `a`.
+`template` describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with `$templatePath`. This is a path that points to a value in a statement matched by `conditions`, using the same syntax as an `identityPaths` path. In the above example, the `$templatePath` points to the actor `mbox` for the actor matched by condition `a`.
 
 [<- Back to Index](index.md)
