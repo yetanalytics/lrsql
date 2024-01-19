@@ -8,7 +8,7 @@ Reactions allow SQL LRS to watch for patterns in submitted xAPI data and dynamic
 
 To use Reactions the `LRSQL_ENABLE_REACTIONS` environment variable or the `enableReactions` LRS configuration property must be set to `true`. Reactions are disabled by default.
 
-Reactions are defined in JSON:
+Reaction "rulesets" are defined in JSON:
 
 ``` json
 
@@ -17,6 +17,24 @@ Reactions are defined in JSON:
     [
       "actor",
       "mbox"
+    ],
+    [
+      "actor",
+      "mbox_sha1sum"
+    ],
+    [
+      "actor",
+      "openid"
+    ],
+    [
+      "actor",
+      "account",
+      "homePage"
+    ],
+    [
+      "actor",
+      "account",
+      "name"
     ]
   ],
   "conditions": {
@@ -114,7 +132,9 @@ Reactions are defined in JSON:
 
 ### Identity Paths
 
-`identityPaths` is an array of zero or more paths that must match across all statements in the sequence. These could include an actor identifier or statement registration.
+Identity Paths (`identityPaths` in the ruleset JSON) are a method of grouping statements for which you are attempting to match conditions. Typically, Reactions may revolve around actor Inverse Functional Identifiers (IFIs), e.g. `["actor", "mbox"]` or `["actor", "account", "name"]` which is equivalent to saying "For a given Actor, look for statements that share IFI values".
+
+Alternative approaches to Identity Path may be used by modifying `identityPaths`, for instance `["context", "registration"]` to group statements by learning session.
 
 ### Conditions
 
