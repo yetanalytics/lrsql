@@ -108,18 +108,11 @@
    {:name ::get-all-reactions
     :enter
     (fn get-all-reactions [ctx]
-      (let [{lrs :com.yetanalytics/lrs} ctx
-            result
-            (adp/-get-all-reactions lrs)]
+      (let [{lrs :com.yetanalytics/lrs} ctx]
         (assoc ctx
                :response
-               {:status 200 :body {:reactions
-                                   (map
-                                    (fn [reaction-record]
-                                      (-> reaction-record
-                                          (update :created u/time->str)
-                                          (update :modified u/time->str)))
-                                    result)}})))}))
+               {:status 200
+                :body   {:reactions (adp/-get-all-reactions lrs)}})))}))
 
 (def update-reaction
   "Update an existing reaction."

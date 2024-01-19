@@ -128,13 +128,16 @@
 (s/def :lrsql.spec.reaction.query-all-reactions/error
   (s/nilable ::error))
 
+(s/def :lrsql.spec.reaction.query-all-reactions/created ::xs/timestamp)
+(s/def :lrsql.spec.reaction.query-all-reactions/modified ::xs/timestamp)
+
 (def query-all-reactions-ret-spec
   (s/every (s/keys :req-un [::id
                             ::title
                             ::ruleset
                             ::active
-                            ::created
-                            ::modified
+                            :lrsql.spec.reaction.query-all-reactions/created
+                            :lrsql.spec.reaction.query-all-reactions/modified
                             :lrsql.spec.reaction.query-all-reactions/error])))
 
 (def query-statement-reactions-ret-element-spec

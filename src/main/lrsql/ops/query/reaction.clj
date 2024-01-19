@@ -29,8 +29,8 @@
       :title    title
       :ruleset  (ru/stringify-template ruleset)
       :active   active
-      :created  created
-      :modified modified
+      :created  (u/time->str created)
+      :modified (u/time->str modified)
       :error    error})
    (bp/-query-all-reactions bk tx)))
 
