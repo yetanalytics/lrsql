@@ -1,15 +1,15 @@
 (ns lrsql.init.reaction
   "Reaction initialization functions."
-  (:require [clojure.core.async            :as a]
-            [clojure.spec.alpha            :as s]
-            [clojure.tools.logging         :as log]
-            [lrsql.reaction.protocol       :as rp]
-            [lrsql.util                    :as u]
-            [lrsql.spec.config             :as config-spec]
-            [lrsql.spec.common             :as common-spec]
-            [lrsql.spec.reaction           :as rs]
-            [xapi-schema.spec              :as xs]
-            [clojure.string                :as cs]))
+  (:require [clojure.core.async      :as a]
+            [clojure.spec.alpha      :as s]
+            [clojure.tools.logging   :as log]
+            [lrsql.reaction.protocol :as rp]
+            [lrsql.util              :as u]
+            [lrsql.spec.config       :as config-spec]
+            [lrsql.spec.common       :as common-spec]
+            [lrsql.spec.reaction     :as rs]
+            [xapi-schema.spec        :as xs]
+            [clojure.string          :as cs]))
 
 (s/fdef reaction-channel
   :args (s/cat :config ::config-spec/lrs)
