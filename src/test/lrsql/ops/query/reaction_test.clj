@@ -78,12 +78,7 @@
                 [{:reaction-id reaction-id
                   :trigger-id  trigger-id
                   :statement
-                  {"actor"   {"mbox" "mailto:bob@example.com"},
-                   "verb"    {"id" "https://example.com/verbs/completed"},
-                   "object"
-                   {"id"         "https://example.com/activities/a-and-b",
-                    "objectType" "Activity"}
-                   "context" {"extensions" {"https://example.com/foo" nil}}}
+                  tc/reaction-stmt-result
                   ;; Authority derived from the trigger statement
                   :authority   (:agent tc/auth-ident)}]}
                (qr/query-statement-reactions
@@ -119,13 +114,9 @@
                 [{:reaction-id reaction-id
                   :trigger-id  trigger-id
                   :statement
-                  {"actor"     {"mbox" "mailto:bob@example.com"},
-                   "verb"      {"id" "https://example.com/verbs/completed"},
-                   "object"
-                   {"id"         "https://example.com/activities/a-and-b",
-                    "objectType" "Activity"}
-                   "context"   {"extensions" {"https://example.com/foo" nil}}
-                   "authority" {"mbox" "mailto:bob@example.com"}}
+                  (merge
+                   tc/reaction-stmt-result
+                   {"authority" {"mbox" "mailto:bob@example.com"}})
                   ;; Authority derived from the template
                   :authority   {"mbox" "mailto:bob@example.com"}}]}
                (qr/query-statement-reactions
@@ -149,12 +140,7 @@
            "reaction-bad-template"
            (merge
             tc/simple-reaction-ruleset
-            {:template
-             ;; Template with invalid path
-             {"actor"  {"mbox" {"$templatePath" ["x" "actor" "mbox"]}}
-              "verb"   {"id" "https://example.com/verbs/completed"}
-              "object" {"id"         "https://example.com/activities/a-and-b"
-                        "objectType" "Activity"}}})
+            {:template tc/invalid-template-invalid-path})
            true)]
       (try
         ;; Add statements

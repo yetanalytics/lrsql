@@ -85,3 +85,18 @@
    "context" {"extensions"
               {"https://example.com/array"  ["foo" "bar" "baz"]
                "https://example.com/number" 200}}})
+
+(def reaction-stmt-result
+  {"actor" {"mbox" "mailto:bob@example.com"},
+   "verb"  {"id" "https://example.com/verbs/completed"},
+   "object"
+   {"id"         "https://example.com/activities/a-and-b",
+    "objectType" "Activity"}
+   "context"
+   {"extensions" {"https://example.com/foo" nil}}})
+
+(def invalid-template-invalid-path
+  {"actor"  {"mbox" {"$templatePath" ["x" "actor" "mbox"]}}
+   "verb"   {"id" "https://example.com/verbs/completed"}
+   "object" {"id"         "https://example.com/activities/a-and-b"
+             "objectType" "Activity"}})
