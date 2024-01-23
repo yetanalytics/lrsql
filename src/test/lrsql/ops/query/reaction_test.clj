@@ -158,6 +158,12 @@
                 bk ds {:trigger-id trigger-id})))
         (finally (component/stop sys'))))))
 
+(def invalid-statement-spec-error-str
+  "Reaction Invalid Statement Error - Spec Error: #:statement{:foo \"mailto:bob@example.com\"} - failed: (contains? % :statement/actor) spec: :xapi-schema.spec/statement
+#:statement{:foo \"mailto:bob@example.com\"} - failed: (contains? % :statement/verb) spec: :xapi-schema.spec/statement
+#:statement{:foo \"mailto:bob@example.com\"} - failed: (contains? % :statement/object) spec: :xapi-schema.spec/statement
+")
+
 (deftest query-statement-reactions-invalid-statement-error-test
   ;; Turn off instrumentation for this one
   ;; This will keep the instrumentation error from clobbering
@@ -192,12 +198,8 @@
                 [{:reaction-id reaction-id
                   :trigger-id  trigger-id
                   :error
-                  {:type "ReactionInvalidStatementError",
-                   :message
-                   "Reaction Invalid Statement Error - Spec Error: #:statement{:foo \"mailto:bob@example.com\"} - failed: (contains? % :statement/actor) spec: :xapi-schema.spec/statement
-#:statement{:foo \"mailto:bob@example.com\"} - failed: (contains? % :statement/verb) spec: :xapi-schema.spec/statement
-#:statement{:foo \"mailto:bob@example.com\"} - failed: (contains? % :statement/object) spec: :xapi-schema.spec/statement
-"}}]}
+                  {:type    "ReactionInvalidStatementError",
+                   :message invalid-statement-spec-error-str}}]}
                (qr/query-statement-reactions
                 bk ds {:trigger-id trigger-id})))
         (finally (component/stop sys'))))))
