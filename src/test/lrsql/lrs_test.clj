@@ -1032,6 +1032,21 @@
 ;; Statement Reaction Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def invalid-template-invalid-path
+  {"actor"  {"mbox" {"$templatePath" ["x" "actor" "mbox"]}}
+   "verb"   {"id" "https://example.com/verbs/completed"}
+   "object" {"id"         "https://example.com/activities/a-and-b"
+             "objectType" "Activity"}})
+
+(def reaction-statement-result
+  {"actor" {"mbox" "mailto:bob@example.com"},
+   "verb"  {"id" "https://example.com/verbs/completed"},
+   "object"
+   {"id"         "https://example.com/activities/a-and-b",
+    "objectType" "Activity"}
+   "context"
+   {"extensions" {"https://example.com/foo" nil}}})
+
 (defn- remove-id
   [statement]
   (dissoc statement "id"))
@@ -1051,11 +1066,7 @@
               (assoc
                tc/simple-reaction-ruleset
                :template
-               ;; Template with invalid path
-               {"actor"  {"mbox" {"$templatePath" ["x" "actor" "mbox"]}}
-                "verb"   {"id" "https://example.com/verbs/completed"}
-                "object" {"id"         "https://example.com/activities/a-and-b"
-                          "objectType" "Activity"}})
+               invalid-template-invalid-path)
               {bad-reaction-id
                :result} (adp/-create-reaction
                           lrs "reaction-bad" bad-ruleset true)]
@@ -1069,13 +1080,7 @@
           (testing "New statement added"
             (is (= {:statement-result
                     {:statements
-                     [{"actor" {"mbox" "mailto:bob@example.com"},
-                       "verb"  {"id" "https://example.com/verbs/completed"},
-                       "object"
-                       {"id"         "https://example.com/activities/a-and-b",
-                        "objectType" "Activity"}
-                       "context"
-                       {"extensions" {"https://example.com/foo" nil}}}
+                     [reaction-statement-result
                       (remove-id tc/reaction-stmt-b)
                       (remove-id tc/reaction-stmt-a)]
                      :more ""}
