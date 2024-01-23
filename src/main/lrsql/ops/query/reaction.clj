@@ -86,13 +86,45 @@
               "ReactionTemplateError"
               (ex-message ex))])))
 
+(defn- check-reaction-gen
+  [{:keys [trigger-id statement]}
+   {reaction-id :id}
+   new-statement]
+  (let [valid? (s/valid? ::xs/statement
+                         new-statement)]
+    (if-not valid?
+      ;; Invalid Statement Error
+      (let [explanation
+            (s/explain-str ::xs/statement new-statement)]
+        (log/errorf
+         "Reaction Invalid Statement Error - Reaction ID: %s Spec Error: %s"
+         reaction-id
+         explanation)
+        (reaction-error-response
+         reaction-id
+         trigger-id
+         "ReactionInvalidStatementError"
+         (format "Reaction Invalid Statement Error - Spec Error: %s"
+                 explanation)))
+      ;; Success Response
+      {:reaction-id reaction-id
+       :trigger-id  trigger-id
+       :statement   (ru/add-reaction-metadata
+                     new-statement
+                     reaction-id
+                     trigger-id)
+       ;; Use a custom authority from the template or use
+       ;; the trigger statement's authority
+       :authority   (or (get new-statement "authority")
+                        (get statement "authority"))})))
+
 (defn- check-reaction-query
   [bk tx
    {:keys [statement trigger-id statement-identity]
-    :as   _opts}
+    :as   opts}
    {:keys       [ruleset]
     reaction-id :id
-    :as         _reaction}]
+    :as         reaction}]
   (let [{:keys [template]}  ruleset
         stored (u/str->time (get statement "stored"))
         [q-success ?q-result-or-error]
@@ -110,34 +142,10 @@
         (if (false? t-success)
           ;; Template Error
           ?t-result-or-error
-          (let [new-statement ?t-result-or-error
-                valid?        (s/valid? ::xs/statement
-                                        new-statement)]
-            (if-not valid?
-              ;; Invalid Statement Error
-              (let [explanation
-                    (s/explain-str ::xs/statement new-statement)]
-                (log/errorf
-                 "Reaction Invalid Statement Error - Reaction ID: %s Spec Error: %s"
-                 reaction-id
-                 explanation)
-                (reaction-error-response
-                 reaction-id
-                 trigger-id
-                 "ReactionInvalidStatementError"
-                 (format "Reaction Invalid Statement Error - Spec Error: %s"
-                         explanation)))
-              ;; Success Response
-              {:reaction-id reaction-id
-               :trigger-id  trigger-id
-               :statement   (ru/add-reaction-metadata
-                             new-statement
-                             reaction-id
-                             trigger-id)
-               ;; Use a custom authority from the template or use
-               ;; the trigger statement's authority
-               :authority   (or (get new-statement "authority")
-                                (get statement "authority"))})))))))
+          (check-reaction-gen
+           opts
+           reaction
+           ?t-result-or-error))))))
 
 (defn- check-reaction [bk tx
                        {:keys [s-reactions
