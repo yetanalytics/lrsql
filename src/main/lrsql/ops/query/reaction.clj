@@ -49,6 +49,8 @@
                  :message error-message}})
 
 (defn- reaction-query
+  "Query for match of a given reaction and statement. Return a tuple of
+  [<success boolean> <match-or-error>]"
   [bk tx ruleset reaction-id trigger-id trigger-stored statement-identity]
   (try
     [true (ur/query-reaction
@@ -70,6 +72,8 @@
               (ex-message ex))])))
 
 (defn- generate-statement
+  "Attempt to generate a statement from a template and matched ruleset. Return a
+  tuple of [<success boolean> <statement-or-error>]"
   [reaction-id trigger-id ruleset-match template]
   (try
     [true (ru/generate-statement
@@ -86,7 +90,10 @@
               "ReactionTemplateError"
               (ex-message ex))])))
 
-(defn- check-reaction-gen
+(defn- check-reaction-gen-validate
+  "Lowest level of check-reaction-*. Checks each generated statement and returns
+  an error in the list if it is not valid. Otherwise returns the statement and
+  metadata in a map."
   [{:keys [trigger-id statement]}
    {reaction-id :id}
    new-statement]
@@ -118,15 +125,38 @@
        :authority   (or (get new-statement "authority")
                         (get statement "authority"))})))
 
+(defn- check-reaction-gen
+  "For each match to a ruleset, attempt to generate a statement. If an error is
+  encountered, return it in the list."
+  [{:keys [trigger-id] :as opts}
+   {reaction-id :id
+    :keys       [ruleset]
+    :as         reaction}
+   ruleset-matches]
+  (let [{:keys [template]} ruleset]
+    (for [ruleset-match ruleset-matches
+          :let
+          [[t-success ?t-result-or-error]
+           (generate-statement
+            reaction-id trigger-id ruleset-match template)]]
+      (if (false? t-success)
+        ;; Template Error
+        ?t-result-or-error
+        (check-reaction-gen-validate
+         opts
+         reaction
+         ?t-result-or-error)))))
+
 (defn- check-reaction-query
+  "For a given statement and reaction, check for any matches. Either return
+  error or proceed with statement generation."
   [bk tx
    {:keys [statement trigger-id statement-identity]
     :as   opts}
    {:keys       [ruleset]
     reaction-id :id
     :as         reaction}]
-  (let [{:keys [template]}  ruleset
-        stored (u/str->time (get statement "stored"))
+  (let [stored (u/str->time (get statement "stored"))
         [q-success ?q-result-or-error]
         (reaction-query
          bk tx ruleset reaction-id trigger-id stored
@@ -134,27 +164,26 @@
     (if (false? q-success)
       ;; Query Error
       [?q-result-or-error]
-      (for [ruleset-match ?q-result-or-error
-            :let
-            [[t-success ?t-result-or-error]
-             (generate-statement
-              reaction-id trigger-id ruleset-match template)]]
-        (if (false? t-success)
-          ;; Template Error
-          ?t-result-or-error
-          (check-reaction-gen
-           opts
-           reaction
-           ?t-result-or-error))))))
+      (check-reaction-gen
+       opts
+       reaction
+       ?q-result-or-error))))
 
-(defn- check-reaction [bk tx
-                       {:keys [s-reactions
-                               statement
-                               trigger-id]
-                        :as   opts}
-                       {:keys       [ruleset]
-                        reaction-id :id
-                        :as         reaction}]
+(defn- check-reaction
+  "Nested function to generate possible reactions to a statement that:
+    * Cycle-checks reaction relations (this function)
+    * Checks that the statement is identifiable (this function)
+    * Queries for ruleset pattern matches (check-reaction-query)
+    * Generates statements based on matches (check-reaction-gen)
+    * Validates generated output for xAPI validity (check-reaction-gen-validate)"
+  [bk tx
+   {:keys [s-reactions
+           statement
+           trigger-id]
+    :as   opts}
+   {:keys       [ruleset]
+    reaction-id :id
+    :as         reaction}]
   ;; Cycle Check
   (if (contains? s-reactions reaction-id)
     (do
