@@ -124,12 +124,30 @@ span.build {
             <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
           </div>
         </div>
-        <p><a href='index.html'><- Back to Index</a></p><h1 id="reactions">Reactions</h1><p>Reactions allow SQL LRS to watch for patterns in submitted xAPI data and dynamically generate new statements in response.</p><h2 id="usage">Usage</h2><p>To use Reactions the <code>LRSQL&#95;ENABLE&#95;REACTIONS</code> environment variable or the <code>enableReactions</code> LRS configuration property must be set to <code>true</code>. Reactions are disabled by default.</p><p>Reactions are defined in JSON:</p><pre><code class="json">
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="reactions">Reactions</h1><p>Reactions allow SQL LRS to watch for patterns in submitted xAPI data and dynamically generate new statements in response.</p><h2 id="usage">Usage</h2><p>To use Reactions the <code>LRSQL&#95;ENABLE&#95;REACTIONS</code> environment variable or the <code>enableReactions</code> LRS configuration property must be set to <code>true</code>. Reactions are disabled by default.</p><p>Reaction "rulesets" are defined in JSON:</p><pre><code class="json">
 {
   &quot;identityPaths&quot;: &#91;
     &#91;
       &quot;actor&quot;,
       &quot;mbox&quot;
+    &#93;,
+    &#91;
+      &quot;actor&quot;,
+      &quot;mbox&#95;sha1sum&quot;
+    &#93;,
+    &#91;
+      &quot;actor&quot;,
+      &quot;openid&quot;
+    &#93;,
+    &#91;
+      &quot;actor&quot;,
+      &quot;account&quot;,
+      &quot;homePage&quot;
+    &#93;,
+    &#91;
+      &quot;actor&quot;,
+      &quot;account&quot;,
+      &quot;name&quot;
     &#93;
   &#93;,
   &quot;conditions&quot;: {
@@ -223,12 +241,60 @@ span.build {
 }
 
 
-</code></pre><h3 id="identity&#95;paths">Identity Paths</h3><p><code>identityPaths</code> is an array of zero or more paths that must match across all statements in the sequence. These could include an actor identifier or statement registration.</p><h3 id="conditions">Conditions</h3><p><code>conditions</code> is a mapping of names to rules for finding significant statements. Rules can be composed with boolean logic.</p><p>In the example given above statement <code>a</code> must have an object id equal to <code>https://example.com/activities/a</code>, a verb id equal to <code>https://example.com/verbs/completed</code>, and a result success equal to <code>true</code>. Statement <code>b</code> must have the same verb and result success but an object id equal to <code>https://example.com/activities/b</code> and a timestamp greater than that of <code>a</code>.</p><h4 id="rules">Rules</h4><p>All rules have a <code>path</code> array that indicates a path in an xAPI statement and an <code>op</code> that is one of the following operators:</p><ul><li><code>gt</code> - Greater than</li><li><code>lt</code> - Less than</li><li><code>gte</code> - Greater than or equal</li><li><code>lte</code> - Less than or equal</li><li><code>eq</code> - Equal</li><li><code>noteq</code> - Not equal</li><li><code>like</code> - Fuzzy match using SQL <code>%</code> syntax</li><li><code>contains</code> - Array contains</li></ul><p>Rules either have a <code>val</code> literal value or a <code>ref</code> which is a path into a statement found for another condition.</p><h4 id="booleans">Booleans</h4><p>Booleans compose multiple rules together. Booleans are objects with a single key:</p><ul><li><code>and</code> - Array of rules which must all be true</li><li><code>or</code> - Array of rules of which one must be true</li><li><code>not</code> - Rule to nullify</li></ul><h3 id="template">Template</h3><p><code>template</code> describes the xAPI statement the reaction will produce. It is identical to an xAPI statement except where an object with the <code>$templatePath</code> key is found, where this is a path to one of the statements found for a given condition from which to derive a value. In the example above the template statement uses the actor mbox from statement <code>a</code>.</p><p><a href='index.html'><- Back to Index</a></p>
+</code></pre><h3 id="identity&#95;paths">Identity Paths</h3><p>Identity Paths (<code>identityPaths</code> in the ruleset JSON) are a method of grouping statements for which you are attempting to match conditions. Typically, Reactions may revolve around actor Inverse Functional Identifiers (IFIs), e.g. <code>&#91;&quot;actor&quot;, &quot;mbox&quot;&#93;</code> or <code>&#91;&quot;actor&quot;, &quot;account&quot;, &quot;name&quot;&#93;</code> which is equivalent to saying "For a given Actor, look for statements that share IFI values".</p><p>Alternative approaches to Identity Path may be used by modifying <code>identityPaths</code>, for instance <code>&#91;&quot;context&quot;, &quot;registration&quot;&#93;</code> to group statements by learning session.</p><h3 id="conditions">Conditions</h3><p><code>conditions</code> is a mapping of names to rules for finding significant statements. Rules can be composed with boolean logic.</p><p>In the example given above statement <code>a</code> must have an object id equal to <code>https://example.com/activities/a</code>, a verb id equal to <code>https://example.com/verbs/completed</code>, and a result success equal to <code>true</code>. Statement <code>b</code> must have the same verb and result success but an object id equal to <code>https://example.com/activities/b</code> and a timestamp greater than that of <code>a</code>.</p><h4 id="rules">Rules</h4><p>All rules have a <code>path</code> array that indicates a path in an xAPI statement and an <code>op</code> that is one of the following operators:</p><ul><li><code>gt</code> - Greater than</li><li><code>lt</code> - Less than</li><li><code>gte</code> - Greater than or equal</li><li><code>lte</code> - Less than or equal</li><li><code>eq</code> - Equal</li><li><code>noteq</code> - Not equal</li><li><code>like</code> - Fuzzy match using SQL <code>%</code> syntax. For example, <code>bo%</code> matches <code>bob</code> and <code>boz</code>.</li><li><code>contains</code> - Array contains</li></ul><p>Rules either have a <code>val</code> literal value or a <code>ref</code> which is a path into a statement found for another condition.</p><h4 id="booleans">Booleans</h4><p>Booleans compose multiple rules together. Booleans are objects with a single key:</p><ul><li><code>and</code> - Array of rules which must all be true</li><li><code>or</code> - Array of rules of which one must be true</li><li><code>not</code> - Rule to nullify</li></ul><h3 id="template">Template</h3><p><code>template</code> describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with <code>$templatePath</code>. This is a path that points to a value in a statement matched by <code>conditions</code>, using the same syntax as an <code>identityPaths</code> path. In the above example, the <code>$templatePath</code> points to the actor <code>mbox</code> for the actor matched by condition <code>a</code>.</p><h2 id="example">Example</h2><p>Given the reaction specified above, if the following statements are posted to the LRS:</p><pre><code class="json">&#91;
+  {
+    &quot;actor&quot;: {
+      &quot;mbox&quot;: &quot;mailto:bob@example.com&quot;
+    },
+    &quot;verb&quot;: {
+      &quot;id&quot;: &quot;https://example.com/verbs/completed&quot;
+    },
+    &quot;object&quot;: {
+      &quot;id&quot;: &quot;https://example.com/activities/a&quot;,
+      &quot;objectType&quot;: &quot;Activity&quot;
+    },
+    &quot;result&quot;: {
+      &quot;success&quot;: true
+    },
+    &quot;timestamp&quot;: &quot;2024-01-23T01:00:00.000Z&quot;
+  },
+  {
+    &quot;actor&quot;: {
+      &quot;mbox&quot;: &quot;mailto:bob@example.com&quot;
+    },
+    &quot;verb&quot;: {
+      &quot;id&quot;: &quot;https://example.com/verbs/completed&quot;
+    },
+    &quot;object&quot;: {
+      &quot;id&quot;: &quot;https://example.com/activities/b&quot;,
+      &quot;objectType&quot;: &quot;Activity&quot;
+    },
+    &quot;result&quot;: {
+      &quot;success&quot;: true
+    },
+    &quot;timestamp&quot;: &quot;2024-01-23T02:00:00.000Z&quot;
+  }
+&#93;
+
+</code></pre><p>Then the following statement will be added subsequently (note that some unrelated fields are removed for clarity):</p><pre><code class="json">{
+  &quot;actor&quot;: {
+    &quot;mbox&quot;: &quot;mailto:bob@example.com&quot;
+  },
+  &quot;verb&quot;: {
+    &quot;id&quot;: &quot;https://example.com/verbs/completed&quot;
+  },
+  &quot;object&quot;: {
+    &quot;id&quot;: &quot;https://example.com/activities/a-and-b&quot;,
+    &quot;objectType&quot;: &quot;Activity&quot;
+  }
+}
+
+</code></pre><p><a href='index.html'><- Back to Index</a></p>
         <div class="footer">
          &copy; 2021-2024 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
-         <span class="build">Build: 00c7f177ba099d2f2310a0dc8603cb84b2d860ad</span>
+         <span class="build">Build: 113ffda1716b7908ccbbabdcc0a333235b97e05e</span>
         </div>
       </div>
     </body>
