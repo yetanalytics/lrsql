@@ -10,8 +10,8 @@
             [lrsql.input.activity   :as i-av]
             [lrsql.input.attachment :as i-at]
             ;; Utils
-            [lrsql.util :as u]
-            [lrsql.util.actor :as au]))
+            [lrsql.util          :as u]
+            [lrsql.util.actor    :as au]))
 
 (def voiding-verb "http://adlnet.gov/expapi/verbs/voided")
 
@@ -234,7 +234,11 @@
                     :voiding?          voiding?
                     :payload           statement
                     :timestamp         timestamp
-                    :stored            stored}
+                    :stored            stored
+                    :reaction-id
+                    (some-> statement meta ::ss/reaction-id)
+                    :trigger-id
+                    (some-> statement meta ::ss/trigger-id)}
         ;; Actor HugSql Inputs
         [actor-inputs stmt-actor-inputs]
         (insert-stmt-actor-inputs stmt-id

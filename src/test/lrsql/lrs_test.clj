@@ -5,8 +5,10 @@
             [com.yetanalytics.datasim.input :as sim-input]
             [com.yetanalytics.datasim.sim   :as sim]
             [com.yetanalytics.lrs.protocol  :as lrsp]
-            [lrsql.test-support :as support]
-            [lrsql.util         :as u]))
+            [lrsql.admin.protocol           :as adp]
+            [lrsql.test-support             :as support]
+            [lrsql.test-constants           :as tc]
+            [lrsql.util                     :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init Test Config
@@ -1025,6 +1027,79 @@
                     #{})
                    (get-in [:statement "id"]))))))
     (component/stop sys')))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Reaction Tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- remove-id
+  [statement]
+  (dissoc statement "id"))
+
+(deftest reaction-test
+  (let [sys           (support/test-system)
+        sys'          (component/start sys)
+        {:keys [lrs]} sys']
+    (try
+      (testing "Processes simple reaction"
+        (let [;; Add a good reaction
+              {reaction-id
+               :result} (adp/-create-reaction
+                          lrs "reaction-0" tc/simple-reaction-ruleset true)
+              ;; Add a bad reaction
+              bad-ruleset
+              (assoc
+               tc/simple-reaction-ruleset
+               :template
+               tc/invalid-template-invalid-path)
+              {bad-reaction-id
+               :result} (adp/-create-reaction
+                          lrs "reaction-bad" bad-ruleset true)]
+          ;; Add statements
+          (doseq [s [tc/reaction-stmt-a
+                     tc/reaction-stmt-b]]
+            (Thread/sleep 100)
+            (lrsp/-store-statements lrs tc/auth-ident [s] []))
+          ;; Wait a little bit for the reactor
+          (Thread/sleep 300)
+          (testing "New statement added"
+            (is (= {:statement-result
+                    {:statements
+                     [tc/reaction-stmt-result
+                      (remove-id tc/reaction-stmt-b)
+                      (remove-id tc/reaction-stmt-a)]
+                     :more ""}
+                    :attachments []}
+                   (-> (lrsp/-get-statements
+                        lrs
+                        tc/auth-ident
+                        {}
+                        [])
+                       ;; Remove LRS fields
+                       (update-in
+                        [:statement-result :statements]
+                        #(mapv (comp
+                                remove-id
+                                remove-props)
+                               %))))))
+          (testing "Bad ruleset error is retrievable"
+            (is (= [{:id      reaction-id
+                     :title   "reaction-0"
+                     :ruleset tc/simple-reaction-ruleset
+                     :active  true
+                     :error   nil}
+                    {:id      bad-reaction-id
+                     :title   "reaction-bad"
+                     :ruleset bad-ruleset
+                     :active  false
+                     :error
+                     {:type    "ReactionTemplateError",
+                      :message "No value found at [\"x\" \"actor\" \"mbox\"]"}}]
+                   (mapv
+                    #(dissoc % :created :modified)
+                    (adp/-get-all-reactions lrs)))))))
+      (finally
+        (component/stop sys')))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Tests

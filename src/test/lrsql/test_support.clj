@@ -107,6 +107,14 @@
 
 (def fresh-db-fixture fresh-sqlite-fixture)
 
+(defn instrumentation-fixture
+  "Turn on instrumentation before running tests, turn off after."
+  [f]
+  (instrument-lrsql)
+  (try
+    (f)
+    (finally (unstrument-lrsql))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Conformance test helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

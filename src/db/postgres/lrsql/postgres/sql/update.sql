@@ -76,3 +76,27 @@ UPDATE admin_account
 SET
   passhash = :new-passhash
 WHERE id = :account-id;
+
+-- :name update-reaction!
+-- :command :execute
+-- :result :affected
+-- :doc Update the `title`, `ruleset` and/or `active` status of a reaction.
+UPDATE reaction
+SET
+--~ (when (:title params) "title = :title,")
+--~ (when (:ruleset params) "ruleset = :ruleset,")
+--~ (when (or (true? (:active params)) (false? (:active params))) "active = :active,")
+--~ (when (:ruleset params) "error = null,")
+  modified = :modified
+WHERE id = :reaction-id
+
+-- :name error-reaction!
+-- :command :execute
+-- :result :affected
+-- :doc Set the `error` column on a reaction and make it inactive.
+UPDATE reaction
+SET
+  error = :error,
+  active = false,
+  modified = :modified
+WHERE id = :reaction-id

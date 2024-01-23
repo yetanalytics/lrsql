@@ -427,6 +427,37 @@ ALTER TABLE activity_profile_document DROP COLUMN last_modified;
 -- :doc Convert `activity_profile_document.last_modified` to timestamp - 04
 ALTER TABLE activity_profile_document RENAME COLUMN last_modified_tmp TO last_modified;
 
+/* Migration 2023-07-21-00 - Add Reaction Table */
+
+-- :name create-reaction-table!
+-- :command :execute
+-- :doc Create the `reaction` table if it does not yet exist.
+CREATE TABLE IF NOT EXISTS reaction (
+  id         TEXT NOT NULL PRIMARY KEY, -- uuid
+  title      TEXT NOT NULL UNIQUE,      -- string
+  ruleset    BLOB NOT NULL,             -- serialized reaction spec
+  created    TIMESTAMP NOT NULL,        -- timestamp
+  modified   TIMESTAMP NOT NULL,        -- timestamp
+  active     INTEGER,                   -- true/false/null - active/inactive/soft delete
+  error      BLOB                       -- serialized error
+)
+
+-- :name query-xapi-statement-reaction-id-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `xapi_statement.reaction_id` exists.
+SELECT 1 FROM pragma_table_info('xapi_statement') WHERE name = 'reaction_id'
+
+-- :name xapi-statement-add-reaction-id!
+-- :command :execute
+-- :doc Adds `xapi_statement.reaction_id`
+ALTER TABLE xapi_statement ADD COLUMN reaction_id TEXT REFERENCES reaction(id);
+
+-- :name xapi-statement-add-trigger-id!
+-- :command :execute
+-- :doc Adds `xapi_statement.trigger_id`
+ALTER TABLE xapi_statement ADD COLUMN trigger_id TEXT REFERENCES xapi_statement(statement_id);
+
 --:name query-statement-to-actor-has-cascade-delete?
 SELECT on_delete FROM pragma_foreign_key_list("statement_to_actor") WHERE "table" = "xapi_statement"
 

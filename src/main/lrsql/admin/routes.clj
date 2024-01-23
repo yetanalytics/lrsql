@@ -1,7 +1,8 @@
 (ns lrsql.admin.routes
   (:require [clojure.set :as cset]
             [io.pedestal.http :refer [json-body]]
-            [io.pedestal.http.body-params :refer [body-params]]
+            [io.pedestal.http.body-params :refer [body-params
+                                                  default-parser-map]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors.account :as ai]
             [lrsql.admin.interceptors.credentials :as ci]
@@ -9,6 +10,7 @@
             [lrsql.admin.interceptors.ui :as ui]
             [lrsql.admin.interceptors.jwt :as ji]
             [lrsql.admin.interceptors.status :as si]
+            [lrsql.admin.interceptors.reaction :as ri]
             [lrsql.util.interceptor :as util-i]
             [lrsql.util.headers :as h]))
 
@@ -19,7 +21,11 @@
    i/x-forwarded-for-interceptor
    (h/secure-headers sec-head-opts)
    json-body
-   (body-params)
+   (body-params
+    ;; By default the JSON parser will attempt to parse strings with `/` as
+    ;; qualified keywords. We prevent this so (name x) is always the string.
+    (default-parser-map
+     :json-options {:key-fn #(keyword nil %)}))
    (i/lrs-interceptor lrs)])
 
 (defn admin-account-routes
@@ -129,6 +135,40 @@
                              (ui/get-env inject-config))
      :route-name :lrsql.admin.ui/get-env]})
 
+(defn admin-reaction-routes
+  [common-interceptors jwt-secret jwt-leeway no-val-opts]
+  #{;; Create a reaction
+    ["/admin/reaction" :post (conj common-interceptors
+                                   ri/validate-create-reaction-params
+                                   (ji/validate-jwt
+                                    jwt-secret jwt-leeway no-val-opts)
+                                   ji/validate-jwt-account
+                                   ri/create-reaction)
+     :route-name :lrsql.admin.reaction/post]
+    ;; Get all reactions
+    ["/admin/reaction" :get (conj common-interceptors
+                                  (ji/validate-jwt
+                                   jwt-secret jwt-leeway no-val-opts)
+                                  ji/validate-jwt-account
+                                  ri/get-all-reactions)
+     :route-name :lrsql.admin.reaction/get]
+    ;; Update a reaction
+    ["/admin/reaction" :put (conj common-interceptors
+                                  ri/validate-update-reaction-params
+                                  (ji/validate-jwt
+                                   jwt-secret jwt-leeway no-val-opts)
+                                  ji/validate-jwt-account
+                                  ri/update-reaction)
+     :route-name :lrsql.admin.reaction/put]
+    ;; Delete a reaction
+    ["/admin/reaction" :delete (conj common-interceptors
+                                     ri/validate-delete-reaction-params
+                                     (ji/validate-jwt
+                                      jwt-secret jwt-leeway no-val-opts)
+                                     ji/validate-jwt-account
+                                     ri/delete-reaction)
+     :route-name :lrsql.admin.reaction/delete]})
+
 (defn admin-lrs-management-routes [common-interceptors jwt-secret jwt-leeway no-val-opts]
   #{["/admin/agents" :delete (conj common-interceptors
                                    lm/validate-delete-actor-params
@@ -155,6 +195,7 @@
            enable-admin-status
            proxy-path
            enable-account-routes
+           enable-reaction-routes
            oidc-interceptors
            oidc-ui-interceptors
            head-opts]
@@ -180,11 +221,15 @@
                    (into common-interceptors
                          oidc-ui-interceptors)
                    {:enable-admin-status enable-admin-status
+                    :enable-reactions enable-reaction-routes
                     :no-val? no-val?
                     :proxy-path proxy-path
                     :enable-admin-delete-actor enable-admin-delete-actor}))
                 (when enable-admin-status
                   (admin-status-routes
                    common-interceptors-oidc secret leeway no-val-opts))
+                (when enable-reaction-routes
+                  (admin-reaction-routes
+                   common-interceptors secret leeway no-val-opts))
                 (when enable-admin-delete-actor
                   (admin-lrs-management-routes common-interceptors-oidc secret leeway no-val-opts)))))

@@ -15,9 +15,10 @@
   config to inject:
     :enable-admin-status - boolean, determines if the admin status endpoint is
       enabled."
-  [{:keys [enable-admin-delete-actor enable-admin-status no-val? proxy-path]
+  [{:keys [enable-admin-delete-actor enable-admin-status enable-reactions no-val? proxy-path]
     :or   {enable-admin-delete-actor false
            enable-admin-status false
+           enable-reactions    false
            no-val?             false}}]
   (interceptor
    {:name ::get-env
@@ -36,5 +37,6 @@
                   :enable-stmt-html          (some? enable-stmt-html)
                   :enable-admin-delete-actor enable-admin-delete-actor
                   :enable-admin-status       enable-admin-status
+                  :enable-reactions          enable-reactions
                   :no-val?                   no-val?}
                  oidc-env)})))}))

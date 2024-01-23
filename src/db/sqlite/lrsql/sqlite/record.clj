@@ -5,7 +5,9 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.data :as bd]
             [lrsql.init :refer [init-hugsql-adapter!]]
-            [lrsql.sqlite.data :as sd]))
+            [lrsql.sqlite.data :as sd]
+            [lrsql.util.reaction :as ru])
+  (:import [org.sqlite SQLiteException SQLiteErrorCode]))
 
 ;; Init HugSql functions
 
@@ -103,6 +105,10 @@
       (migrate-timestamps-activity-profile-03! tx)
       (migrate-timestamps-activity-profile-04! tx))
     (update-schema-simple! tx alter-credential-to-scope-scope-datatype!)
+    (create-reaction-table! tx)
+    (when-not (some? (query-xapi-statement-reaction-id-exists tx))
+      (xapi-statement-add-reaction-id! tx)
+      (xapi-statement-add-trigger-id! tx))
     (when-not (= "CASCADE" (:on-delete (first (query-statement-to-actor-has-cascade-delete? tx))))
       (update-schema-simple! tx alter-statement-to-actor-add-cascade-delete!))
     (log/infof "sqlite schema_version: %d"
@@ -144,7 +150,7 @@
     (delete-actor-agent-profile tx input)
     (delete-actor-state-document tx input)
     (delete-actor-actor tx input))
-  
+
   (-query-actor [_ tx input]
     (query-actor tx input))
 
@@ -250,7 +256,9 @@
   (-set-read! [_]
     (bd/set-read-time->instant!)
     (bd/set-read-bytes->json! ; SQLite returns JSON data as byte arrays even
-     #{"payload"})            ; though the data type is "BLOB"
+     #{"payload"}             ; though the data type is "BLOB"
+     #{"ruleset"
+       "error"})
     (sd/set-read-str->uuid-or-inst!
      #{"id"
        "statement_id"
@@ -258,8 +266,14 @@
        "ancestor_id"
        "descendant_id"
        "cred_id"
-       "account_id"}
-     #{"last_modified"}))
+       "account_id"
+       "reaction_id"
+       "trigger_id"}
+     #{"last_modified"
+       "created"
+       "modified"})
+    (sd/set-read-int->bool!
+     #{"active"}))
   (-set-write! [_]
     (bd/set-write-json->bytes!)
     (sd/set-write-uuid->str!)
@@ -276,4 +290,50 @@
   (-query-platform-frequency [_ tx]
     (query-platform-frequency tx))
   (-query-timeline [_ tx input]
-    (query-timeline tx input)))
+    (query-timeline tx input))
+
+  bp/ReactionBackend
+  (-insert-reaction! [_ tx params]
+    (try
+      (insert-reaction! tx params)
+      (catch SQLiteException ex
+        (if (= SQLiteErrorCode/SQLITE_CONSTRAINT_UNIQUE (.getResultCode ex))
+          :lrsql.reaction/title-conflict-error
+          (throw ex)))))
+  (-update-reaction! [_ tx params]
+    (try
+      (update-reaction! tx params)
+      (catch SQLiteException ex
+        (if (= SQLiteErrorCode/SQLITE_CONSTRAINT_UNIQUE (.getResultCode ex))
+          :lrsql.reaction/title-conflict-error
+          (throw ex)))))
+  (-delete-reaction! [_ tx params]
+    (delete-reaction! tx params))
+  (-error-reaction! [_ tx params]
+    (error-reaction! tx params))
+  (-snip-json-extract [_ params]
+    (snip-json-extract (update params :path ru/path->string)))
+  (-snip-val [_ params]
+    (snip-val params))
+  (-snip-col [_ params]
+    (snip-col params))
+  (-snip-clause [_ params]
+    (snip-clause params))
+  (-snip-and [_ params]
+    (snip-and params))
+  (-snip-or [_ params]
+    (snip-or params))
+  (-snip-not [_ params]
+    (snip-not params))
+  (-snip-contains [_ params]
+    (snip-contains (update params :path ru/path->string)))
+  (-snip-query-reaction [_ params]
+    (snip-query-reaction params))
+  (-query-reaction [_ tx params]
+    (sd/parse-query-reaction-result (query-reaction tx params)))
+  (-query-active-reactions [_ tx]
+    (query-active-reactions tx))
+  (-query-all-reactions [_ tx]
+    (query-all-reactions tx))
+  (-query-reaction-history [_ tx params]
+    (query-reaction-history tx params)))

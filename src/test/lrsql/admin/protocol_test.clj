@@ -8,7 +8,8 @@
             [lrsql.lrs-test :as lrst]
             [lrsql.test-support   :as support]
             [lrsql.util           :as u]
-            [next.jdbc :as jdbc]
+            [lrsql.test-constants :as tc]
+            [next.jdbc            :as jdbc]
             [lrsql.util.actor     :as ua]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -206,7 +207,7 @@
                               (reduce (fn [m actor-ifi]
                                         (assoc m actor-ifi (get-actor-ss-count actor-ifi)))
                                       {} ifis))]
-            
+
             (lrsp/-store-statements lrs auth-ident stmts [])
             (is (every? pos-int? (vals (get-stmt-#s))))
             (doseq [ifi ifis]
@@ -364,3 +365,88 @@
                                              :count  1}])}
                  (adp/-get-status lrs {}))))))
     (component/stop sys')))
+
+(defn- strip-reaction-results
+  [reaction-rows]
+  (into #{}
+        (map
+         (fn [row]
+           (select-keys row [:id :title :ruleset :active]))
+         reaction-rows)))
+
+(deftest reaction-manager-test
+  (let [sys  (support/test-system)
+        sys' (component/start sys)
+        lrs  (:lrs sys')]
+    (try
+      (let [{create-result-0 :result}
+            (adp/-create-reaction
+             lrs "reaction-0" tc/simple-reaction-ruleset true)
+            {create-result-1 :result}
+            (adp/-create-reaction
+             lrs "reaction-1" tc/simple-reaction-ruleset true)]
+        (testing "Create reaction"
+          (is (uuid? create-result-0))
+          (is (uuid? create-result-1))
+          (testing "title is unique"
+            (is (= :lrsql.reaction/title-conflict-error
+                   (:result (adp/-create-reaction
+                             lrs "reaction-0" tc/simple-reaction-ruleset true))))))
+        (testing "Get all reactions"
+          (is (= #{{:id      create-result-0
+                    :title   "reaction-0"
+                    :ruleset tc/simple-reaction-ruleset
+                    :active  true}
+                   {:id      create-result-1
+                    :title   "reaction-1"
+                    :ruleset tc/simple-reaction-ruleset
+                    :active  true}}
+                 (strip-reaction-results
+                  (adp/-get-all-reactions lrs)))))
+        (testing "Update reaction"
+          (is (= {:result :lrsql.reaction/reaction-not-found-error}
+                 (adp/-update-reaction
+                  lrs (u/generate-squuid) nil tc/simple-reaction-ruleset false)))
+          ;; Make inactive
+          (is (= {:result create-result-0}
+                 (adp/-update-reaction
+                  lrs create-result-0 nil nil false)))
+          (is (= #{{:id      create-result-0
+                    :title   "reaction-0"
+                    :ruleset tc/simple-reaction-ruleset
+                    :active  false}
+                   {:id      create-result-1
+                    :title   "reaction-1"
+                    :ruleset tc/simple-reaction-ruleset
+                    :active  true}}
+                 (strip-reaction-results
+                  (adp/-get-all-reactions lrs))))
+          ;; Make active again
+          (is (= {:result create-result-0}
+                 (adp/-update-reaction
+                  lrs create-result-0 nil nil true)))
+          (is (= #{{:id      create-result-0
+                    :title   "reaction-0"
+                    :ruleset tc/simple-reaction-ruleset
+                    :active  true}
+                   {:id      create-result-1
+                    :title   "reaction-1"
+                    :ruleset tc/simple-reaction-ruleset
+                    :active  true}}
+                 (strip-reaction-results
+                  (adp/-get-all-reactions lrs))))
+          (testing "title is unique"
+            (is (= :lrsql.reaction/title-conflict-error
+                   (:result (adp/-update-reaction
+                             lrs create-result-0 "reaction-1" nil false))))))
+        (testing "Delete reaction"
+          (is (= {:result :lrsql.reaction/reaction-not-found-error}
+                 (adp/-delete-reaction lrs (u/generate-squuid))))
+          (is (= {:result create-result-0}
+                 (adp/-delete-reaction lrs create-result-0)))
+          (is (= {:result create-result-1}
+                 (adp/-delete-reaction lrs create-result-1)))
+          (is (= []
+                 (adp/-get-all-reactions lrs)))))
+      (finally
+        (component/stop sys')))))

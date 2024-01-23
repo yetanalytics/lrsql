@@ -62,11 +62,22 @@ WHERE api_key = :api-key
 AND secret_key = :secret-key
 AND scope = :scope::scope_enum;
 
+-- :name delete-reaction!
+-- :command :execute
+-- :result :affected
+-- :doc (Soft) delete a reaction.
+UPDATE reaction
+SET
+  active = NULL,
+  modified = :modified
+WHERE
+  id = :reaction-id
+
 ----------------------begin components of delete-actor-----
 -- :name delete-actor-and-dependents!
 -- :command :execute
 -- :result :affected
-DELETE FROM statement_to_statement 
+DELETE FROM statement_to_statement
 WHERE ancestor_id IN (
   SELECT statement_id FROM statement_to_actor
   WHERE actor_ifi = :actor-ifi

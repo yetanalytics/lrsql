@@ -7,6 +7,7 @@
             [lrsql.admin.protocol          :as adp]
             [lrsql.init                    :as init]
             [lrsql.init.oidc               :as oidc-init]
+            [lrsql.init.reaction           :as react-init]
             [lrsql.backend.protocol        :as bp]
             [lrsql.input.actor             :as agent-input]
             [lrsql.input.activity          :as activity-input]
@@ -15,15 +16,18 @@
             [lrsql.input.auth              :as auth-input]
             [lrsql.input.statement         :as stmt-input]
             [lrsql.input.document          :as doc-input]
+            [lrsql.input.reaction          :as react-input]
             [lrsql.ops.command.admin       :as admin-cmd]
             [lrsql.ops.command.auth        :as auth-cmd]
             [lrsql.ops.command.document    :as doc-cmd]
             [lrsql.ops.command.statement   :as stmt-cmd]
+            [lrsql.ops.command.reaction    :as react-cmd]
             [lrsql.ops.query.actor         :as actor-q]
             [lrsql.ops.query.activity      :as activ-q]
             [lrsql.ops.query.admin         :as admin-q]
             [lrsql.ops.query.auth          :as auth-q]
             [lrsql.ops.query.document      :as doc-q]
+            [lrsql.ops.query.reaction      :as react-q]
             [lrsql.ops.query.statement     :as stmt-q]
             [lrsql.spec.config             :as cs]
             [lrsql.util.auth               :as auth-util]
@@ -45,7 +49,8 @@
                                 backend
                                 config
                                 authority-fn
-                                oidc-authority-fn]
+                                oidc-authority-fn
+                                reaction-channel]
   cmp/Lifecycle
   (start
     [lrs]
@@ -74,11 +79,16 @@
         (assoc lrs
                :connection connection
                :authority-fn auth-fn
-               :oidc-authority-fn oidc-auth-fn))))
+               :oidc-authority-fn oidc-auth-fn
+               :reaction-channel (react-init/reaction-channel config)))))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
-    (assoc lrs :connection nil :authority-fn nil))
+    (assoc lrs
+           :connection nil
+           :authority-fn nil
+           :oidc-authority-fn nil
+           :reaction-channel nil))
 
   lrsp/AboutResource
   (-get-about
@@ -132,8 +142,11 @@
                     stmt-result)
                 ;; Non-error result - continue
                 (if-some [stmt-id (:statement-id stmt-result)]
-                  (recur (rest stmt-ins)
-                         (update stmt-res :statement-ids conj stmt-id))
+                  (do
+                    ;; Submit statement for reaction if enabled
+                    (react-init/offer-trigger! reaction-channel stmt-id)
+                    (recur (rest stmt-ins)
+                           (update stmt-res :statement-ids conj stmt-id)))
                   (recur (rest stmt-ins)
                          stmt-res))))
             ;; No more statement inputs - return
@@ -357,6 +370,28 @@
           input (admin-stat-input/query-status-input params)]
       (jdbc/with-transaction [tx conn]
         (admin-q/query-status backend tx input))))
+
+  adp/AdminReactionManager
+  (-create-reaction [this title ruleset active]
+    (let [conn  (lrs-conn this)
+          input (react-input/insert-reaction-input title ruleset active)]
+      (jdbc/with-transaction [tx conn]
+        (react-cmd/insert-reaction! backend tx input))))
+  (-get-all-reactions [this]
+    (let [conn (lrs-conn this)]
+      (jdbc/with-transaction [tx conn]
+        (react-q/query-all-reactions backend tx))))
+  (-update-reaction [this reaction-id title ruleset active]
+    (let [conn  (lrs-conn this)
+          input (react-input/update-reaction-input
+                 reaction-id title ruleset active)]
+      (jdbc/with-transaction [tx conn]
+        (react-cmd/update-reaction! backend tx input))))
+  (-delete-reaction [this reaction-id]
+    (let [conn  (lrs-conn this)
+          input (react-input/delete-reaction-input reaction-id)]
+      (jdbc/with-transaction [tx conn]
+        (react-cmd/delete-reaction! backend tx input))))
 
   adp/AdminLRSManager
   (-delete-actor [this {:keys [actor-ifi]}]
