@@ -169,4 +169,64 @@ Booleans compose multiple rules together. Booleans are objects with a single key
 
 `template` describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with `$templatePath`. This is a path that points to a value in a statement matched by `conditions`, using the same syntax as an `identityPaths` path. In the above example, the `$templatePath` points to the actor `mbox` for the actor matched by condition `a`.
 
+## Example
+
+Given the reaction specified above, if the following statements are posted to the LRS:
+
+``` json
+[
+  {
+    "actor": {
+      "mbox": "mailto:bob@example.com"
+    },
+    "verb": {
+      "id": "https://example.com/verbs/completed"
+    },
+    "object": {
+      "id": "https://example.com/activities/a",
+      "objectType": "Activity"
+    },
+    "result": {
+      "success": true
+    },
+    "timestamp": "2024-01-23T01:00:00.000Z"
+  },
+  {
+    "actor": {
+      "mbox": "mailto:bob@example.com"
+    },
+    "verb": {
+      "id": "https://example.com/verbs/completed"
+    },
+    "object": {
+      "id": "https://example.com/activities/b",
+      "objectType": "Activity"
+    },
+    "result": {
+      "success": true
+    },
+    "timestamp": "2024-01-23T02:00:00.000Z"
+  }
+]
+
+```
+
+Then the following statement will be added subsequently (note that some unrelated fields are removed for clarity):
+
+``` json
+{
+  "actor": {
+    "mbox": "mailto:bob@example.com"
+  },
+  "verb": {
+    "id": "https://example.com/verbs/completed"
+  },
+  "object": {
+    "id": "https://example.com/activities/a-and-b",
+    "objectType": "Activity"
+  }
+}
+
+```
+
 [<- Back to Index](index.md)
