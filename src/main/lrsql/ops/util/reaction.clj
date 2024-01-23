@@ -82,8 +82,6 @@
     (or (get-in xapi-type-map path)
         :string)))
 
-
-
 (s/fdef render-condition
   :args (s/cat :bk rs/reaction-backend?
                :condition-name ::rs/condition-name
