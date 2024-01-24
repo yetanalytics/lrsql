@@ -190,6 +190,7 @@
            no-val-uname
            no-val-role-key
            no-val-role
+           no-val-logout-url
            enable-admin-delete-actor
            enable-admin-ui
            enable-admin-status
@@ -205,11 +206,11 @@
    routes]
   (let [common-interceptors      (make-common-interceptors lrs head-opts)
         common-interceptors-oidc (into common-interceptors oidc-interceptors)
-        no-val-opts              {:no-val? no-val?
-                                  :no-val-uname no-val-uname
-                                  :no-val-issuer no-val-issuer
+        no-val-opts              {:no-val?         no-val?
+                                  :no-val-uname    no-val-uname
+                                  :no-val-issuer   no-val-issuer
                                   :no-val-role-key no-val-role-key
-                                  :no-val-role no-val-role}]
+                                  :no-val-role     no-val-role}]
     (cset/union routes
                 (when enable-account-routes
                   (admin-account-routes
@@ -220,10 +221,11 @@
                   (admin-ui-routes
                    (into common-interceptors
                          oidc-ui-interceptors)
-                   {:enable-admin-status enable-admin-status
-                    :enable-reactions enable-reaction-routes
-                    :no-val? no-val?
-                    :proxy-path proxy-path
+                   {:enable-admin-status       enable-admin-status
+                    :enable-reactions          enable-reaction-routes
+                    :no-val?                   no-val?
+                    :no-val-logout-url         no-val-logout-url
+                    :proxy-path                proxy-path
                     :enable-admin-delete-actor enable-admin-delete-actor}))
                 (when enable-admin-status
                   (admin-status-routes
@@ -232,4 +234,5 @@
                   (admin-reaction-routes
                    common-interceptors secret leeway no-val-opts))
                 (when enable-admin-delete-actor
-                  (admin-lrs-management-routes common-interceptors-oidc secret leeway no-val-opts)))))
+                  (admin-lrs-management-routes
+                   common-interceptors-oidc secret leeway no-val-opts)))))

@@ -44,6 +44,7 @@
                 jwt-no-val-issuer
                 jwt-no-val-role-key
                 jwt-no-val-role
+                jwt-no-val-logout-url
                 enable-clamav
                 clamav-host
                 clamav-port]
@@ -87,6 +88,7 @@
                :no-val-uname              jwt-no-val-uname
                :no-val-role-key           jwt-no-val-role-key
                :no-val-role               jwt-no-val-role
+               :no-val-logout-url         jwt-no-val-logout-url
                :secret                    private-key
                :enable-admin-delete-actor enable-admin-delete-actor
                :enable-admin-ui           enable-admin-ui
