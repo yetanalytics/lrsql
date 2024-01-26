@@ -329,6 +329,40 @@ SET sql = 'CREATE TABLE credential_to_scope (
 )'
 WHERE type = 'table' AND name = 'credential_to_scope'
 
+/* Migration 2024-01-24 - Add document/profile and document/profile/read scopes */
+
+/* The suggested scope name would simply be profile, but that would clash with
+   the reserved OIDC profile scope. Since they have always remained unused, we
+   are safe to remove them from the enum table. */
+
+-- :name alter-credential-to-scope-scope-datatype-2!
+-- :command :execute
+-- :doc Change the enum datatype of the `credential_to_scope.scope` column.
+UPDATE sqlite_schema
+SET sql = 'CREATE TABLE credential_to_scope (
+  id         TEXT NOT NULL PRIMARY KEY,
+  api_key    TEXT NOT NULL,
+  secret_key TEXT NOT NULL,
+  scope      TEXT CHECK (
+               scope IN (''statements/write'',
+                         ''statements/read'',
+                         ''statements/read/mine'',
+                         ''all/read'',
+                         ''all'',
+                         ''define'',
+                         ''state'',
+                         ''state/read'',
+                         ''activities_profile'',
+                         ''activities_profile/read'',
+                         ''agents_profile'',
+                         ''agents_profile/read'')
+             ),
+  FOREIGN KEY (api_key, secret_key)
+    REFERENCES lrs_credential(api_key, secret_key)
+    ON DELETE CASCADE
+)'
+WHERE type = 'table' AND name = 'credential_to_scope'
+
 /* Migration 2023-05-08-00 - Add timestamp to xapi_statement */
 
 -- :name query-xapi-statement-timestamp-exists
