@@ -14,6 +14,8 @@
   {"all"                  :scope/all
    "all/read"             :scope/all.read
    "state"                :scope/state
+   "activities_profile"   :scope/activities_profile
+   "agents_profile"       :scope/agents_profile
    "statements/read"      :scope/statements.read
    "statements/write"     :scope/statements.write
    "statements/read/mine" :scope/statements.read.mine})
@@ -145,6 +147,18 @@
       (and
        (cstr/ends-with? path "activities/state")
        (contains? scopes :scope/state))
+      true
+
+      ;; activities/profile
+      (and
+       (cstr/ends-with? path "activities/profile")
+       (contains? scopes :scope/activities_profile))
+      true
+
+      ;; agents/profile
+      (and
+       (cstr/ends-with? path "agents/profile")
+       (contains? scopes :scope/agents_profile))
       true
 
       ;; all other paths (e.g. /about, /activities)
