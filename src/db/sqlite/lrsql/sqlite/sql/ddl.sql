@@ -337,7 +337,7 @@ WHERE type = 'table' AND name = 'credential_to_scope'
 
 -- :name alter-credential-to-scope-scope-datatype-2!
 -- :command :execute
--- :doc Change the enum datatype of the `credential_to_scope.scope` column.
+-- :doc Change the enum datatype of the `credential_to_scope.scope` column a second time.
 UPDATE sqlite_schema
 SET sql = 'CREATE TABLE credential_to_scope (
   id         TEXT NOT NULL PRIMARY KEY,
