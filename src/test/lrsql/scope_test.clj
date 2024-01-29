@@ -121,13 +121,19 @@
       u/parse-json
       (get "json-web-token")))
 
-(defn- get-creds
-  [headers* scope]
+(defn- get-creds*
+  [headers* scopes ?authority]
   (-> (curl/post "http://localhost:8080/admin/creds"
                  {:headers headers*
-                  :body (u/write-json-str {"scopes" [scope]})})
+                  :body (u/write-json-str (cond-> {"scopes" scopes}
+                                            (some? ?authority)
+                                            (assoc "agent" ?authority)))})
       :body
       u/parse-json))
+
+(defn- get-creds
+  [headers* scope]
+  (get-creds* headers* [scope] nil))
 
 (defn- add-url-params
   [endpoint params]
@@ -442,7 +448,7 @@
 
 (def-scope-test "statements/write"
   {"/statements" {:read?  false
-                          :write? true}})
+                  :write? true}})
 
 (def-scope-test "statements/read"
   {"/statements" {:read?  true
@@ -463,3 +469,61 @@
 (def-scope-test "agents_profile"
   {"/agents/profile" {:read?  true
                       :write? true}})
+
+(deftest statement-read-mine-authority-scope-test
+  (let [sys      (support/test-system)
+        sys*     (component/start sys)
+        jwt      (login)
+        headers* (merge headers {"Authorization" (str "Bearer " jwt)})
+        creds-1  (get-creds* headers*
+                             ["statements/read/mine" "statements/write"]
+                             {"mbox" "mailto:agent1@yetanalytics.com"})
+        creds-2  (get-creds* headers*
+                             ["statements/read/mine" "statements/write"]
+                             {"mbox" "mailto:agent2@yetanalytics.com"})]
+    (try
+      (testing "/statements POST"
+        (is (= 200
+               (try-post stmt-endpoint creds-1 {:body stmt-body-0})))
+        (is (= 200
+               (try-post stmt-endpoint creds-2 {:body stmt-body-1}))))
+      (testing "/statements GET with correct authority"
+        (is (= 200
+               (try-get stmt-endpoint
+                        creds-1
+                        {:params {:statementId stmt-id-0}})))
+        (is (= 200
+               (try-get stmt-endpoint
+                        creds-2
+                        {:params {:statementId stmt-id-1}}))))
+      (testing "/statements HEAD with correct authority"
+        (is (= 200
+               (try-head stmt-endpoint
+                         creds-1
+                         {:params {:statementId stmt-id-0}})))
+        (is (= 200
+               (try-head stmt-endpoint
+                         creds-2
+                         {:params {:statementId stmt-id-1}}))))
+      ;; Treated as 404 Not Found as the statement does not exist within the
+      ;; scope of the authority, rather than a blanket 403 Forbidden.
+      (testing "/statements GET with wrong authority"
+        (is (= 404
+               (try-get stmt-endpoint
+                        creds-1
+                        {:params {:statementId stmt-id-1}})))
+        (is (= 404
+               (try-get stmt-endpoint
+                        creds-2
+                        {:params {:statementId stmt-id-0}}))))
+      (testing "/statements HEAD with wrong authority"
+        (is (= 404
+               (try-head stmt-endpoint
+                         creds-1
+                         {:params {:statementId stmt-id-1}})))
+        (is (= 404
+               (try-head stmt-endpoint
+                         creds-2
+                         {:params {:statementId stmt-id-0}}))))
+      (finally
+        (component/stop sys*)))))
