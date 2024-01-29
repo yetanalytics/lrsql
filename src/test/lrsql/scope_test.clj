@@ -1,4 +1,7 @@
 (ns lrsql.scope-test
+  "HTTP tests for different scopes, as listed in this section:
+   https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#details-15
+   "
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.string :as cstr]
             [babashka.curl :as curl]
