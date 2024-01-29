@@ -9,4 +9,5 @@
   </root>
   <!-- silence the selfie warnings -->
   <logger name="lrsql.util.cert" level="error" />
+  <logger name="lrsql.ops.query.reaction" level="off" />
 </configuration>
