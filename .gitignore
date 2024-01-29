@@ -23,6 +23,7 @@ Test.java
 .DS_Store
 # VSCode
 .clj-kondo/.cache/
+.clj-kondo/http-kit
 .calva/
 .lsp/
 .vscode/
