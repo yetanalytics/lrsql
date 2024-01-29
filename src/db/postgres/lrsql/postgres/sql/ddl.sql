@@ -304,10 +304,10 @@ CREATE TYPE scope_enum AS ENUM (
   'state/read',
   'define',
   -- new; add document/profile scopes (also document/state out of being pedantic)
-  'activity_profile',
-  'activity_profile/read',
-  'agent_profile',
-  'agent_profile/read');
+  'activities_profile',
+  'activities_profile/read',
+  'agents_profile',
+  'agents_profile/read');
 ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USING (scope::scope_enum);
 
 /* Migration 2023-05-08-00 - Add timestamp to xapi_statement */
