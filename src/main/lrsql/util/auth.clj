@@ -137,7 +137,7 @@
       (cond
         (#{:get :head} request-method)
         (some? (most-permissive-statement-read-scope auth-identity))
-        (#{:put :post} request-method) ; No statement delete implemented
+        (#{:put :post} request-method) ; No statement delete for /statements resource
         (some? (most-permissive-statement-write-scope auth-identity))
         :else
         (do (log-scope-error scopes)
