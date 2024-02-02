@@ -31,7 +31,9 @@
                          (if (some? username)
                            (:result (adp/-ensure-account-oidc lrs username issuer))
                            result))
-                       (catch Exception _
+                       (catch Exception ex
+                         ;; We want any error here to return a 401, but we log
+                         (log/warnf ex "No-val JWT Error: %s" (ex-message ex))
                          :lrsql.admin/unauthorized-token-error))
                      ;; normal jwt, check signature etc
                      (admin-u/jwt->account-id token secret leeway))]
