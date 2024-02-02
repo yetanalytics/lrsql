@@ -31,7 +31,7 @@
                          (if (some? username)
                            (:result (adp/-ensure-account-oidc lrs username issuer))
                            result))
-                       (catch Exception ex_
+                       (catch Exception _
                          :lrsql.admin/unauthorized-token-error))
                      ;; normal jwt, check signature etc
                      (admin-u/jwt->account-id token secret leeway))]
