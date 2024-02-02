@@ -2,14 +2,15 @@
   (:require [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
-            [lrsql.util.admin :as admin-u]))
+            [lrsql.util.admin :as admin-u]
+            [clojure.tools.logging :as log]))
 
 ;; NOTE: These interceptors are specifically for JWT validation.
 ;; For JWT generation see `account/generate-jwt`.
 
 (defn validate-jwt
-  "Validate that the header JWT is valid (e.g. not expired and signed properly). 
-   If no-val? is true run an entirely separate decoding that gets the username 
+  "Validate that the header JWT is valid (e.g. not expired and signed properly).
+   If no-val? is true run an entirely separate decoding that gets the username
    and issuer claims, verifies a role and ensures the account if necessary."
   [secret leeway {:keys [no-val? no-val-uname no-val-issuer no-val-role-key
                          no-val-role]}]
