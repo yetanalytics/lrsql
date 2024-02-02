@@ -23,13 +23,16 @@
                        admin-u/header->jwt)
             result (if no-val?
                      ;; decode jwt w/o validation and ensure account
-                     (let [{:keys [issuer username] :as result}
-                           (admin-u/proxy-jwt->username-and-issuer
-                            token no-val-uname no-val-issuer no-val-role-key
-                            no-val-role)]
-                       (if (some? username)
-                         (:result (adp/-ensure-account-oidc lrs username issuer))
-                         result))
+                     (try
+                       (let [{:keys [issuer username] :as result}
+                             (admin-u/proxy-jwt->username-and-issuer
+                              token no-val-uname no-val-issuer no-val-role-key
+                              no-val-role)]
+                         (if (some? username)
+                           (:result (adp/-ensure-account-oidc lrs username issuer))
+                           result))
+                       (catch Exception ex_
+                         :lrsql.admin/unauthorized-token-error))
                      ;; normal jwt, check signature etc
                      (admin-u/jwt->account-id token secret leeway))]
         (cond
