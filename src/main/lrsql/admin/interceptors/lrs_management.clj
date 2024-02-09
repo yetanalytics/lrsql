@@ -3,7 +3,9 @@
             [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
-            [lrsql.spec.admin :as ads]))
+            [lrsql.spec.admin :as ads]
+            [lrsql.system.openapi :as openapi]
+            [com.yetanalytics.gen-openapi.core :as oa-core]))
 
 (def validate-delete-actor-params
   (interceptor
@@ -31,3 +33,13 @@
                (assoc ctx
                       :response {:status 200
                                  :body params})))}))
+
+(def openapi
+  (interceptor
+   {:name ::openapi
+    :enter (fn openapi [ctx]
+             (assoc ctx :response
+                    {:status 200
+                     :body (oa-core/make-oa-map
+                            openapi/general-map
+                            @openapi/oa-routes)}))}))
