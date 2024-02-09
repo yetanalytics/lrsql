@@ -12,7 +12,14 @@
             [lrsql.admin.interceptors.status :as si]
             [lrsql.admin.interceptors.reaction :as ri]
             [lrsql.util.interceptor :as util-i]
-            [lrsql.util.headers :as h]))
+            [lrsql.util.headers :as h]
+            [lrsql.system.openapi :as oa]
+
+            [com.yetanalytics.gen-openapi.core :as gc]
+            [com.yetanalytics.gen-openapi.splice :as splice]
+            [com.yetanalytics.gen-openapi.generate :as g]
+
+            [com.yetanalytics.gen-openapi.generate.schema :as gs]))
 
 (defn- make-common-interceptors
   [lrs sec-head-opts]
@@ -31,85 +38,172 @@
 (defn admin-account-routes
   [common-interceptors jwt-secret jwt-exp jwt-leeway no-val-opts]
   #{;; Log into an existing account
-    ["/admin/account/login" :post (conj common-interceptors
-                                        (ai/validate-params
-                                         :strict? false)
-                                        ai/authenticate-admin
-                                        (ai/generate-jwt jwt-secret jwt-exp))
-     :route-name :lrsql.admin.account/login]
-    ;; Create new account
-    ["/admin/account/create" :post (conj common-interceptors
+    (gc/annotate
+     ["/admin/account/login" :post (conj common-interceptors
                                          (ai/validate-params
+                                          :strict? false)
+                                         ai/authenticate-admin
+                                         (ai/generate-jwt jwt-secret jwt-exp))
+      :route-name :lrsql.admin.account/login]
+     {:description "Log into an existing account"
+      :requestBody (g/request (gs/o {:username :t#string
+                                     :password :t#string}))
+      :operationId :login
+      :responses {200 (g/response "Account ID and JWT"
+                                  (gs/o {:account-id :t#string
+                                         :json-web-token :t#string}))
+                  400 (g/rref :error-400)
+                  401 (g/rref :error-401)}})
+    ;; Create new account
+    (gc/annotate
+     ["/admin/account/create" :post (conj common-interceptors
+                                          (ai/validate-params
                                           :strict? true)
-                                         (ji/validate-jwt
-                                          jwt-secret jwt-leeway no-val-opts)
-                                         ji/validate-jwt-account
-                                         ai/create-admin)
-     :route-name :lrsql.admin.account/create]
+                                          (ji/validate-jwt
+                                           jwt-secret jwt-leeway no-val-opts)
+                                          ji/validate-jwt-account
+                                          ai/create-admin)
+      :route-name :lrsql.admin.account/create]
+     {:description "Create new account"
+      :requestBody (g/request (gs/o {:username :t#string
+                                     :password :t#string}))
+      :operationId :create-account
+      :security [{:bearerAuth []}]
+      :responses {200 (g/response "ID of new account"
+                                   (gs/o {:account-id :t#string}))
+                  400 (g/rref :error-400)
+                  401 (g/rref :error-401)}})
     ;; Update account password
-    ["/admin/account/password"
-     :put (conj common-interceptors
-                ai/validate-update-password-params
-                (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
-                ji/validate-jwt-account
-                ai/update-admin-password)]
+    (gc/annotate
+     ["/admin/account/password" :put (conj common-interceptors
+                                           ai/validate-update-password-params
+                                           (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
+                                           ji/validate-jwt-account
+                                           ai/update-admin-password)]
+     {:description "Update account password"
+      :requestBody (g/request (gs/o {:old-password :t#string
+                                     :new-password :t#string}))
+      :operationId :update-password
+      :security [{:bearerAuth []}]
+      :responses {200 (g/response "ID of updated account"
+                                  (gs/o {:account-id :t#string}))
+                  400 (g/rref :error-400)
+                  401 (g/rref :error-401)}})
     ;; Get all accounts
-    ["/admin/account" :get (conj common-interceptors
-                                 (ji/validate-jwt
-                                  jwt-secret jwt-leeway no-val-opts)
-                                 ji/validate-jwt-account
-                                 ai/get-accounts)
-     :route-name :lrsql.admin.account/get]
+    (gc/annotate
+     ["/admin/account" :get (conj common-interceptors
+                                  (ji/validate-jwt
+                                   jwt-secret jwt-leeway no-val-opts)
+                                  ji/validate-jwt-account
+                                  ai/get-accounts)
+      :route-name :lrsql.admin.account/get]
+     {:description "Get all accounts"
+      :operationId :get-admin-accounts
+      :security [{:bearerAuth []}]
+      :responses {200 (g/response "Array of account objects"
+                                  (gs/a (gs/o {:account-id :t#string 
+                                               :username :t#string})))
+                  401 (g/rref :error-401)}})
     ;; Get my accounts
-    ["/admin/me" :get (conj common-interceptors
-                            (ji/validate-jwt
-                             jwt-secret jwt-leeway no-val-opts)
-                            ji/validate-jwt-account
-                            ai/me)
-     :route-name :lrsql.admin.me/get]
+    (gc/annotate
+     ["/admin/me" :get (conj common-interceptors
+                             (ji/validate-jwt
+                              jwt-secret jwt-leeway no-val-opts)
+                             ji/validate-jwt-account
+                             ai/me)
+      :route-name :lrsql.admin.me/get]
+     {:description "Get account of querying account"
+      :operationId :get-own-account
+      :security [{:bearerAuth []}]
+      :responses {200 (g/response  "Account object referring to own account"
+                                   (gs/o {:account-id :t#string
+                                          :username :t#string}) )
+                  401 (g/rref :error-401)}})
     ;; Delete account (and associated credentials)
-    ["/admin/account" :delete (conj common-interceptors
-                                    ai/validate-delete-params
-                                    (ji/validate-jwt
-                                     jwt-secret jwt-leeway no-val-opts)
-                                    ji/validate-jwt-account
-                                    ai/delete-admin)
-     :route-name :lrsql.admin.account/delete]})
+    (gc/annotate
+     ["/admin/account" :delete (conj common-interceptors
+                                       ai/validate-delete-params
+                                       (ji/validate-jwt
+                                        jwt-secret jwt-leeway no-val-opts)
+                                       ji/validate-jwt-account
+                                       ai/delete-admin)
+        :route-name :lrsql.admin.account/delete]
+     {:description "Delete account (and associated credentials)"
+      :requestBody (g/request (gs/o {:account-id :t#string}))
+      :operationId :delete-admin-account
+      :security [{:bearerAuth []}]
+      :responses {200 (g/response  "ID of deleted account"
+                                   (gs/o {:account-id :t#string}))
+                  400 (g/rref :error-400)
+                  401 (g/rref :error-401)}})})
 
 (defn admin-cred-routes
   [common-interceptors jwt-secret jwt-leeway no-val-opts]
   #{;; Create new API key pair w/ scope set
-    ["/admin/creds" :post (conj common-interceptors
-                                (ci/validate-params {:scopes? true})
+    (gc/annotate
+     ["/admin/creds" :post (conj common-interceptors
+                                 (ci/validate-params {:scopes? true})
+                                 (ji/validate-jwt
+                                  jwt-secret jwt-leeway no-val-opts)
+                                 ji/validate-jwt-account
+                                 ci/create-api-keys)
+      :route-name :lrsql.admin.creds/put]
+     {:description "Create new API key pair w/scope set"
+      :requestBody (g/request :r#Scopes)
+      :operationId :create-api-keys
+      :security [{:bearerAuth []}]
+      :responses {400 (g/rref :error-400)
+                  401 (g/rref :error-401)
+                  200 (g/response "Object containing key, secret key, and array of scopes"
+                                  :r#ScopedKeyPair)}})
+    ;; Create or update new keys w/ scope set
+    (gc/annotate
+     ["/admin/creds" :put (conj common-interceptors
+                                (ci/validate-params {:key-pair? true
+                                                     :scopes?   true})
                                 (ji/validate-jwt
                                  jwt-secret jwt-leeway no-val-opts)
                                 ji/validate-jwt-account
-                                ci/create-api-keys)
-     :route-name :lrsql.admin.creds/put]
-    ;; Create or update new keys w/ scope set
-    ["/admin/creds" :put (conj common-interceptors
-                               (ci/validate-params {:key-pair? true
-                                                    :scopes?   true})
-                               (ji/validate-jwt
-                                jwt-secret jwt-leeway no-val-opts)
-                               ji/validate-jwt-account
-                               ci/update-api-keys)
-     :route-name :lrsql.admin.creds/post]
+                                ci/update-api-keys)
+      :route-name :lrsql.admin.creds/post]
+     {:description "Create or update new keys w/scope set"
+      :requestBody  (g/request :r#ScopedKeyPair)
+      :operationId :update-api-keys
+      :security [{:bearerAuth []}]
+      :responses {400 (g/rref :error-400)
+                  401 (g/rref :error-401)
+                  200 (g/response "Key, secret key, and scopes of updated account"
+                                  :r#ScopedKeyPair)}})
     ;; Get current keys + scopes associated w/ account
-    ["/admin/creds" :get (conj common-interceptors
-                               (ji/validate-jwt
-                                jwt-secret jwt-leeway no-val-opts)
-                               ji/validate-jwt-account
-                               ci/read-api-keys)
-     :route-name :lrsql.admin.creds/get]
+    (gc/annotate
+     ["/admin/creds" :get (conj common-interceptors
+                                (ji/validate-jwt
+                                 jwt-secret jwt-leeway no-val-opts)
+                                ji/validate-jwt-account
+                                ci/read-api-keys)
+      :route-name :lrsql.admin.creds/get]
+     {:description "Get current keys + scopes associated w/account"
+      :operationId :get-api-keys
+      :security [{:bearerAuth []}]
+      :responses {200 (g/response "Array of scoped key pairs"
+                                   (gs/a :r#ScopedKeyPair))
+                  401 (g/rref :error-401)}})
     ;; Delete API key pair and associated scopes
-    ["/admin/creds" :delete (conj common-interceptors
-                                  (ci/validate-params {:key-pair? true})
-                                  (ji/validate-jwt
-                                   jwt-secret jwt-leeway no-val-opts)
-                                  ji/validate-jwt-account
-                                  ci/delete-api-keys)
-     :route-name :lrsql.admin.creds/delete]})
+    (gc/annotate
+     ["/admin/creds" :delete (conj common-interceptors
+                                   (ci/validate-params {:key-pair? true})
+                                   (ji/validate-jwt
+                                    jwt-secret jwt-leeway no-val-opts)
+                                   ji/validate-jwt-account
+                                   ci/delete-api-keys)
+      :route-name :lrsql.admin.creds/delete]
+     {:description  "Delete API key pair and associated scopes"
+      :requestBody (g/request :r#KeyPair)
+      :operationId :delete-api-key
+      :security [{:bearerAuth []}]
+      :responses {200 (g/response "Empty body" {})
+                  400 (g/rref :error-400)
+                  401 (g/rref :error-401)}})})
 
 (defn admin-status-routes
   [common-interceptors jwt-secret jwt-leeway no-val-opts]
@@ -177,7 +271,9 @@
                                    (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
                                    ji/validate-jwt-account
                                    lm/delete-actor)
-     :route-name :lrsql.lrs-management/delete-actor]})
+     :route-name :lrsql.lrs-management/delete-actor]
+    ["/admin/openapi" :get (conj common-interceptors
+                                 lm/openapi)]})
 
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
