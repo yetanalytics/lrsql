@@ -10,6 +10,7 @@
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
             [lrsql.spec.config :as cs]
+            [lrsql.system.openapi :as openapi]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
             [lrsql.util.interceptor :refer [handle-json-parse-exn]]))
@@ -151,7 +152,9 @@
               server  (-> service
                           i/xapi-default-interceptors
                           http/create-server
-                          http/start)]
+                          http/start)
+              _ (do (spit "dev-resources/openapi.json" (openapi/compile-openapi-json (::http/routes service) {}))
+                    (spit "dev-resources/openapi.yaml" (openapi/compile-openapi-yaml (::http/routes service) {})))]
           ;; Logging
           (let [{{ssl-port :ssl-port} ::http/container-options
                  http-port ::http/port

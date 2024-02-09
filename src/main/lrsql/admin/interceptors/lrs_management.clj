@@ -31,3 +31,14 @@
                (assoc ctx
                       :response {:status 200
                                  :body params})))}))
+
+
+#_(def holder (atom nil))
+(def openapi
+  (interceptor
+   {:name ::openapi
+    :enter (fn openapi [ctx]
+             #_(reset! holder ctx)
+             (assoc ctx :response {:status 200
+                                   :body "OK"})
+             #_(let [{lrs :com.yetanalytics/lrs} ctx]))}))
