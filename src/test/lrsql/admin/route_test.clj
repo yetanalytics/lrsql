@@ -156,12 +156,11 @@
         (is-err-code (create-account nil req-body) 400))
       (testing "create accounts with invalid username and passwords"
         (are [input expected-status]
-            (let [{:keys [status
-                          body]} (create-account
-                                  headers
-                                  (u/write-json-str
-                                   input)
-                                  :throw false)]
+            (let [{:keys [status]} (create-account
+                                    headers
+                                    (u/write-json-str
+                                     input)
+                                    :throw false)]
               (= expected-status status))
           ;; both empty
           {"username" ""
