@@ -12,15 +12,22 @@
 ;; Validation Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def validate-params
+(defn validate-params
   "Validate that the JSON params contain the params `username` and `password`
-   for login and create."
+   for login and delete. If `:strict?` kwarg is true (default) will validate
+   that both meet minimum requirements."
+  [& {:keys [strict?]
+      :or {strict? true}}]
   (interceptor
    {:name ::validate-params
     :enter
     (fn validate-params [ctx]
       (let [params (get-in ctx [:request :json-params])]
-        (if-some [err (s/explain-data ads/admin-params-spec params)]
+        (if-some [err (s/explain-data
+                       (if strict?
+                         ads/admin-params-strict-spec
+                         ads/admin-params-spec)
+                       params)]
           ;; Invalid parameters - Bad Request
           (assoc (chain/terminate ctx)
                  :response
@@ -32,7 +39,6 @@
             (-> ctx
                 (assoc ::data acc-info)
                 (assoc-in [:request :session ::data] acc-info))))))}))
-
 
 (def validate-update-password-params
   "Validate that the JSON params contain the params `old-password`
