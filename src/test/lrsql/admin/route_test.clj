@@ -272,6 +272,14 @@
                                    "new-password" new-pass})
                     :status
                     (= 400))))
+          (testing "with an invalid password"
+            (are [password expected-status]
+                (-> (update-pass! {"old-password" new-pass
+                                   "new-password" password})
+                    :status
+                    (= expected-status))
+              ""         400
+              "password" 400))
           (testing "change it back"
             (is (-> (update-pass! {"old-password" new-pass
                                    "new-password" orig-pass})
