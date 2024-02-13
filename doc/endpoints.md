@@ -18,7 +18,14 @@ The following examples use `http://example.org` as the URL body. All methods ret
 
 #### Admin Account Routes
 
-- `POST http://example.org/admin/account/login`: Log into an existing account. The request body must be a JSON object that contains `username` and `password` strings. The response body contains a newly generated JSON Web Token (JWT) on success. A `401 UNAUTHORIZED` status code is returned if the credentials are incorrect.
+- `POST http://example.org/admin/account/login`: Log into an existing account. The request body must be a JSON object that contains `username` and `password` strings. These must conform to the following requirements:
+  * `username` must be a minimum of 7 characters.
+  * `password` must be a minimum of 10 characters.
+  * `password` must contain at least one lower case character.
+  * `password` must contain at least one upper case character.
+  * `password` must contain at least one numeric character.
+  * `password` must contain at least one of the following special characters: `!@#$%^&*_-+=?`.
+The response body contains a newly generated JSON Web Token (JWT) on success. A `401 UNAUTHORIZED` status code is returned if the credentials are incorrect.
 - `POST http://example.org/admin/account/create`: Create a new admin account. The request body must be a JSON object that contains `username` and `password` strings. The endpoint returns a JSON object with the ID (UUID) of the newly created user on success, and returns a `409 CONFLICT` if the account already exists.
 - `DELETE http://example.org/admin/account`: Delete an existing account. The JSON request body must contain a UUID `account-id` value. The endpoint returns a JSON object with the ID of the deleted account on success and returns a `404 NOT FOUND` error if the account does not exist.
 - `GET http://example.org/admin/account`: Return an array of all admin accounts in the system on success.
