@@ -1,7 +1,7 @@
 (ns lrsql.admin.route-test
   "Test for admin-related interceptors + routes
    (as opposed to just the protocol)."
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures are]]
             [clojure.string :refer [lower-case]]
             [babashka.curl :as curl]
             [com.stuartsierra.component :as component]
@@ -150,6 +150,43 @@
         (is-err-code (create-account headers req-body) 409) ; Conflict
         (is-err-code (create-account headers "") 400)       ; Bad Request
         (is-err-code (create-account nil req-body) 400))
+      (testing "create accounts with invalid username and passwords"
+        (are [input expected-status]
+            (let [{:keys [status
+                          body]} (create-account headers (u/write-json-str
+                                                          input))]
+              (= expected-status status))
+          ;; both empty
+          {"username" ""
+           "password" ""}                 400
+          ;; empty username valid pass
+          {"username" ""
+           "password" "_P4ssW0rd!"}       400
+          ;; specials in username valid pass
+          {"username" "bob!"
+           "password" "_P4ssW0rd!"}       400
+          {"username" "bob dobbs"
+           "password" "_P4ssW0rd!"}       400
+          {"username" "<script>alert('xss')</script>"
+           "password" "_P4ssW0rd!"}       400
+          ;; empty password
+          {"username" "bob"
+           "password" ""}                 400
+          ;; short password
+          {"username" "bob"
+           "password" "password"}         400
+          ;; only alpha
+          {"username" "bob"
+           "password" "passwordpassword"} 400
+          ;; only alphanum
+          {"username" "bob"
+           "password" "p4sswordp4ssword"} 400
+          ;; only alphanum + caps
+          {"username" "bob"
+           "password" "P4sswordP4ssword"} 400
+          ;; valid
+          {"username" "bob"
+           "password" "_P4ssW0rd!"}       200))
       (testing "get all admin accounts"
         (let [{:keys [status
                       body]} (get-account headers)
