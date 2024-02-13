@@ -1,7 +1,7 @@
 (ns lrsql.admin.route-test
   "Test for admin-related interceptors + routes
    (as opposed to just the protocol)."
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures are]]
             [clojure.string :refer [lower-case]]
             [babashka.curl :as curl]
             [com.stuartsierra.component :as component]
@@ -53,10 +53,12 @@
               :body    body}))
 
 (defn- create-account
-  [headers body]
+  [headers body & {:keys [throw]
+                   :or {throw true}}]
   (curl/post "http://0.0.0.0:8080/admin/account/create"
              {:headers headers
-              :body    body}))
+              :body    body
+              :throw   throw}))
 
 (defn- get-env
   [headers]
@@ -113,11 +115,12 @@
                             (keys h/sec-head-names)))
 
 (deftest admin-routes-test
-  (let [sys  (support/test-system)
-        sys' (component/start sys)
+  (let [sys       (support/test-system)
+        sys'      (component/start sys)
         ;; Seed information
         {:keys [admin-user-default
-                admin-pass-default]} (get-in sys' [:lrs :config])
+                admin-pass-default]}
+        (get-in sys' [:lrs :config])
         seed-body (u/write-json-str
                    {"username" admin-user-default
                     "password" admin-pass-default})
@@ -127,16 +130,17 @@
                       (get "json-web-token"))
         seed-auth {"Authorization" (str "Bearer " seed-jwt)}
         ;; New data information
-        headers  (merge content-type seed-auth)
-        req-body (u/write-json-str {"username" "myname"
-                                    "password" "swordfish"})]
+        headers   (merge content-type seed-auth)
+        orig-pass "Swordfish100?"
+        req-body  (u/write-json-str {"username" "mylongname"
+                                     "password" orig-pass})]
     (try
       (testing "seed jwt retrieved"
         ;; Sanity check that the test credentials are in place
         (is (some? seed-jwt)))
       (testing "got environment vars"
         (let [{:keys [status body]} (get-env content-type)
-              edn-body (u/parse-json body)]
+              edn-body              (u/parse-json body)]
           (is (= 200 status))
           (is (= (get edn-body "url-prefix") "/xapi"))
           (is (= (get edn-body "enable-stmt-html") true))))
@@ -150,6 +154,45 @@
         (is-err-code (create-account headers req-body) 409) ; Conflict
         (is-err-code (create-account headers "") 400)       ; Bad Request
         (is-err-code (create-account nil req-body) 400))
+      (testing "create accounts with invalid username and passwords"
+        (are [input expected-status]
+            (let [{:keys [status]} (create-account
+                                    headers
+                                    (u/write-json-str
+                                     input)
+                                    :throw false)]
+              (= expected-status status))
+          ;; both empty
+          {"username" ""
+           "password" ""}                 400
+          ;; empty username valid pass
+          {"username" ""
+           "password" "_P4ssW0rd!"}       400
+          ;; specials in username valid pass
+          {"username" "bobdobbs!"
+           "password" "_P4ssW0rd!"}       400
+          {"username" "bob dobbs"
+           "password" "_P4ssW0rd!"}       400
+          {"username" "<script>alert('xss')</script>"
+           "password" "_P4ssW0rd!"}       400
+          ;; empty password
+          {"username" "bobdobbs"
+           "password" ""}                 400
+          ;; short password
+          {"username" "bobdobbs"
+           "password" "password"}         400
+          ;; only alpha
+          {"username" "bobdobbs"
+           "password" "passwordpassword"} 400
+          ;; only alphanum
+          {"username" "bobdobbs"
+           "password" "p4sswordp4ssword"} 400
+          ;; only alphanum + caps
+          {"username" "bobdobbs"
+           "password" "P4sswordP4ssword"} 400
+          ;; valid
+          {"username" "bobdobbs"
+           "password" "_P4ssW0rd!"}       200))
       (testing "get all admin accounts"
         (let [{:keys [status
                       body]} (get-account headers)
@@ -159,7 +202,7 @@
           ;; is a vec
           (is (vector? edn-body))
           ;; has the created user
-          (is (some #(= (get % "username") "myname") edn-body))))
+          (is (some #(= (get % "username") "mylongname") edn-body))))
       (testing "get my admin account"
         (let [{:keys [status
                       body]} (get-me headers)
@@ -204,24 +247,24 @@
                                (get "json-web-token"))
               update-auth  {"Authorization" (str "Bearer " update-jwt)}
               update-head  (merge content-type update-auth)
-              new-pass     "fnordfish"
+              new-pass     "Fn0rdfish!"
               update-pass! (fn [payload]
                              (update-account-password
                               update-head
                               (u/write-json-str payload)))]
-          (is (-> (update-pass! {"old-password" "swordfish"
+          (is (-> (update-pass! {"old-password" orig-pass
                                  "new-password" new-pass})
                   :status
                   (= 200)))
           (is (-> (login-account
                    content-type
-                   (u/write-json-str {"username" "myname"
+                   (u/write-json-str {"username" "mylongname"
                                       "password" new-pass}))
                   :status
                   (= 200)))
           (testing "with the wrong password"
             (is (-> (update-pass! {"old-password" "verywrongpass"
-                                   "new-password" "whocares"})
+                                   "new-password" "Wh0c4r3s?!?"})
                     :status
                     (= 401))))
           (testing "without a change"
@@ -229,9 +272,17 @@
                                    "new-password" new-pass})
                     :status
                     (= 400))))
+          (testing "with an invalid password"
+            (are [password expected-status]
+                (-> (update-pass! {"old-password" new-pass
+                                   "new-password" password})
+                    :status
+                    (= expected-status))
+              ""         400
+              "password" 400))
           (testing "change it back"
             (is (-> (update-pass! {"old-password" new-pass
-                                   "new-password" "swordfish"})
+                                   "new-password" orig-pass})
                     :status
                     (= 200))))))
       (testing "delete the `myname` account using the seed account"
@@ -242,7 +293,9 @@
               del-id   (-> (get-account headers)
                            :body
                            (u/parse-json :object? false)
-                           (#(filter (fn [acc] (= (get acc "username") "myname")) %))
+                           (#(filter (fn [acc]
+                                       (= (get acc "username") "mylongname"))
+                                     %))
                            first
                            (get "account-id"))
               del-auth {"Authorization" (str "Bearer " del-jwt)}
@@ -365,7 +418,7 @@
                              :body
                              (u/write-json-str
                               {:reactionId (u/uuid->str reaction-id)
-                               :active      false})})]
+                               :active     false})})]
               (is (= 200 status))
               (is (= {:reactionId (u/uuid->str reaction-id)}
                      (u/parse-json body :keyword-keys? true))))
@@ -386,7 +439,7 @@
                         :body
                         (u/write-json-str
                          {:reactionId (u/uuid->str reaction-id)
-                          :ruleset     {}})})
+                          :ruleset    {}})})
              400))
           (testing "delete"
             (let [{:keys [status body]}
@@ -409,7 +462,7 @@
       (testing "delete actor route"
         (let [lrs (:lrs sys')
 
-              ifi (ua/actor->ifi (stmt-0 "actor"))
+              ifi         (ua/actor->ifi (stmt-0 "actor"))
               count-by-id (fn [id]
                             (-> (lrsp/-get-statements lrs auth-ident {:statementsId id} [])
                                 :statement-result :statements count))]

@@ -32,13 +32,15 @@
   [common-interceptors jwt-secret jwt-exp jwt-leeway no-val-opts]
   #{;; Log into an existing account
     ["/admin/account/login" :post (conj common-interceptors
-                                        ai/validate-params
+                                        (ai/validate-params
+                                         :strict? false)
                                         ai/authenticate-admin
                                         (ai/generate-jwt jwt-secret jwt-exp))
      :route-name :lrsql.admin.account/login]
     ;; Create new account
     ["/admin/account/create" :post (conj common-interceptors
-                                         ai/validate-params
+                                         (ai/validate-params
+                                          :strict? true)
                                          (ji/validate-jwt
                                           jwt-secret jwt-leeway no-val-opts)
                                          ji/validate-jwt-account
