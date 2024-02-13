@@ -14,8 +14,8 @@
 
 (defn validate-params
   "Validate that the JSON params contain the params `username` and `password`
-   for login and delete. If `:strict?` kwarg is true (default) will validate
-   that both meet minimum requirements."
+   for login and delete. If `:strict?` kwarg is true (default) then the username
+   and password will need to pass additional requirements."
   [& {:keys [strict?]
       :or {strict? true}}]
   (interceptor
