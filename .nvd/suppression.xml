@@ -17,4 +17,13 @@
         <cpe>cpe:/a:postgresql:postgresql_jdbc_driver</cpe>
         <cve>CVE-2020-21469</cve>
     </suppress>
+    <!-- This CVE does affect Clojure before 1.9.0, but all other flags are false positives -->
+    <suppress>
+        <notes><![CDATA[
+            all packages except for org.clojure/clojure
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven\/(?!org\.clojure\/clojure).*$</packageUrl>
+        <cpe>cpe:/a:clojure:clojure</cpe>
+        <cve>CVE-2017-20189</cve>
+    </suppress>
 </suppressions>

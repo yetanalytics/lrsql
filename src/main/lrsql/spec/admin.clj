@@ -17,8 +17,36 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/def ::account-id ::c/primary-key)
-(s/def ::username string?)
-(s/def ::password string?)
+
+;; username and password are treated as simple non-empty strings
+(s/def ::username (s/and string? not-empty))
+(s/def ::password (s/and string? not-empty))
+
+;; Except on input validation!
+;; Minimum lengths
+(def u-min-len 7)
+(def p-min-len 10)
+
+(def digit-set (into #{} (map char (range 48 58))))  ; 0-9
+(def upper-set (into #{} (map char (range 65 91))))  ; A-Z
+(def lower-set (into #{} (map char (range 97 123)))) ; a-z
+(def special-set #{\! \@ \# \$ \% \^ \& \* \_ \- \+ \= \?})
+
+(s/def :lrsql.spec.admin.params/username
+  (s/and string?
+         #(>= (count %) u-min-len)
+         (partial re-matches #"^[a-zA-Z0-9]*$")))
+(s/def :lrsql.spec.admin.params/password
+  (s/and string?
+         #(>= (count %) p-min-len)
+         #(let [pass-set   (set %)
+                has-chars? (partial some pass-set)]
+            (and
+             (has-chars? digit-set)
+             (has-chars? upper-set)
+             (has-chars? lower-set)
+             (has-chars? special-set)))))
+
 ;; passhash format may vary by password lib
 ;; Input passhash is not nilable
 (s/def :lrsql.spec.admin.input/passhash string?)
@@ -32,8 +60,8 @@
 ;; boolean to indicate whether OIDC is enabled
 (s/def :lrsql.spec.admin.input/oidc-enabled? boolean?)
 ;; Update password params
-(s/def ::old-password ::password)
-(s/def ::new-password ::password)
+(s/def ::old-password ::password) ;; old password can be invalid
+(s/def ::new-password :lrsql.spec.admin.params/password) ;; new one can't
 ;; Update password input
 (s/def :lrsql.spec.admin.input/new-passhash :lrsql.spec.admin.input/passhash)
 
@@ -41,9 +69,15 @@
 ;; Inputs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; No validation, used for login
 (def admin-params-spec
   (s/keys :req-un [::username
                    ::password]))
+
+;; Validation, used for create/update
+(def admin-params-strict-spec
+  (s/keys :req-un [:lrsql.spec.admin.params/username
+                   :lrsql.spec.admin.params/password]))
 
 (def admin-delete-params-spec
   (s/keys :req-un [::account-id]))
