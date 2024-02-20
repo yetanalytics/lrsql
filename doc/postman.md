@@ -2,7 +2,7 @@
 
 This page describes how to send an xAPI statement through [Postman](https://www.postman.com/), a well-known API platform for building and using APIs.
 
-First, install and run Postman. You may need to sign up if that is the firs time running of Postman. 
+First, install and run Postman. You may need to sign up if this is your first time running Postman. 
 
 #### 1. Set Request type
 Open POSTMAN and create a new request.
@@ -37,7 +37,7 @@ Go to the "Authorization" section, choose the type "Basic Auth", and enter your 
 
 Go to the "Body" section, select the "raw" option, and choose the "JSON (application/json)" content type.
 
-Copy and paste your JSON data into the body:
+Copy and paste your valid JSON xAPI Statement(s) into the body:
 
 ![postman body](images/postman_body.png)
 
