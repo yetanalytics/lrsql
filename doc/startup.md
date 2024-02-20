@@ -156,6 +156,8 @@ curl -X POST \
 
 where `api-key` and `api-secret` are the credential pair you created earlier, `host` and `port` are set for your webserver, and `statement data` is your Statement (which you can copy-paste from above). This should return a JSON array containing a single UUID; this is the Statement ID that the SQL LRS generated (since the Statement did not have a pre-existing ID).
 
+**NOTE:** You can use [postman](https://www.postman.com/) instead of `curl` to send xAPI statement. Please, see the [Postman](postman.md) page for further details. 
+
 In order to retrieve that statement, you can run the following command:
 
 ```
