@@ -64,7 +64,7 @@
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.42.0.0"}}}
   :db-postgres
   {:extra-paths ["src/db/postgres"]
-   :extra-deps  {org.postgresql/postgresql {:mvn/version "42.6.0"}
+   :extra-deps  {org.postgresql/postgresql {:mvn/version "42.6.1"}
                  com.kohlschutter.junixsocket/junixsocket-common
                  {:mvn/version "2.6.1"}
                  com.kohlschutter.junixsocket/junixsocket-native-common
@@ -85,7 +85,7 @@
                  "dev-resources"]
    :extra-deps  {;; DB deps
                  org.xerial/sqlite-jdbc        {:mvn/version "3.42.0.0"}
-                 org.postgresql/postgresql     {:mvn/version "42.5.1"}
+                 org.postgresql/postgresql     {:mvn/version "42.6.1"}
                  org.testcontainers/postgresql {:mvn/version "1.17.3"}
                  com.kohlschutter.junixsocket/junixsocket-common
                  {:mvn/version "2.6.1"}
