@@ -62,24 +62,25 @@
         ;; New data information
         headers  (merge content-type seed-auth)
         req-body (u/write-json-str {"username" "newUsername"
-                                    "password" "newPass"})]
-    (testing "seed jwt retrieved"
-      ;; Sanity check that the test credentials are in place
-      (is (some? seed-jwt)))
-    (testing "create account with default CORS check failure"
-      (let [bad-cors-headers
-            (merge headers {"Origin" "http://www.yetanalytics.com"})]
-        (is-err-code (create-account bad-cors-headers req-body) 403)))
-    (testing "create account with default CORS check success"
-      (let [good-cors-headers
-            (merge headers {"Origin" "http://localhost:8080"})
-            {:keys [status body]}
-            (create-account good-cors-headers req-body)
-            edn-body       (u/parse-json body)]
-        (is (= 200 status))
-        (is (try (u/str->uuid (get edn-body "account-id"))
-                 (catch Exception _ false)))))
-    (component/stop sys')))
+                                    "password" "N3wPassw0rd!"})]
+    (try
+      (testing "seed jwt retrieved"
+        ;; Sanity check that the test credentials are in place
+        (is (some? seed-jwt)))
+      (testing "create account with default CORS check failure"
+        (let [bad-cors-headers
+              (merge headers {"Origin" "http://www.yetanalytics.com"})]
+          (is-err-code (create-account bad-cors-headers req-body) 403)))
+      (testing "create account with default CORS check success"
+        (let [good-cors-headers
+              (merge headers {"Origin" "http://localhost:8080"})
+              {:keys [status body]}
+              (create-account good-cors-headers req-body)
+              edn-body       (u/parse-json body)]
+          (is (= 200 status))
+          (is (try (u/str->uuid (get edn-body "account-id"))
+                   (catch Exception _ false)))))
+      (finally (component/stop sys')))))
 
 (deftest cors-custom-test
   (let [sys  (support/test-system :conf-overrides
@@ -100,21 +101,22 @@
         ;; New data information
         headers  (merge content-type seed-auth)
         req-body (u/write-json-str {"username" "newUsername"
-                                    "password" "newPass"})]
-    (testing "seed jwt retrieved"
-      ;; Sanity check that the test credentials are in place
-      (is (some? seed-jwt)))
-    (testing "create account with custom CORS check failure"
-      (let [bad-cors-headers
-            (merge headers {"Origin" "http://localhost:8080"})]
-        (is-err-code (create-account bad-cors-headers req-body) 403)))
-    (testing "create account with custom CORS check success"
-      (let [good-cors-headers
-            (merge headers {"Origin" "http://www.yetanalytics.com"})
-            {:keys [status body]}
-            (create-account good-cors-headers req-body)
-            edn-body       (u/parse-json body)]
-        (is (= 200 status))
-        (is (try (u/str->uuid (get edn-body "account-id"))
-                 (catch Exception _ false)))))
-    (component/stop sys')))
+                                    "password" "N3wPassw0rd!"})]
+    (try
+      (testing "seed jwt retrieved"
+        ;; Sanity check that the test credentials are in place
+        (is (some? seed-jwt)))
+      (testing "create account with custom CORS check failure"
+        (let [bad-cors-headers
+              (merge headers {"Origin" "http://localhost:8080"})]
+          (is-err-code (create-account bad-cors-headers req-body) 403)))
+      (testing "create account with custom CORS check success"
+        (let [good-cors-headers
+              (merge headers {"Origin" "http://www.yetanalytics.com"})
+              {:keys [status body]}
+              (create-account good-cors-headers req-body)
+              edn-body       (u/parse-json body)]
+          (is (= 200 status))
+          (is (try (u/str->uuid (get edn-body "account-id"))
+                   (catch Exception _ false)))))
+      (finally (component/stop sys')))))

@@ -158,6 +158,7 @@
 (s/def ::jwt-no-val-issuer (s/nilable string?))
 (s/def ::jwt-no-val-role-key (s/nilable string?))
 (s/def ::jwt-no-val-role (s/nilable string?))
+(s/def ::jwt-no-val-logout-url (s/nilable string?))
 
 (s/def ::key-file string?) ; TODO: correct file extension/path?
 (s/def ::key-alias string?)
@@ -225,6 +226,7 @@
                     ::jwt-no-val-issuer
                     ::jwt-no-val-role
                     ::jwt-no-val-role-key
+                    ::jwt-no-val-logout-url
                     ::sec-head-hsts
                     ::sec-head-frame
                     ::sec-head-content-type
