@@ -22,8 +22,8 @@ results/
 Test.java
 .DS_Store
 # VSCode
-.clj-kondo/.cache/
-.clj-kondo/http-kit
+.clj-kondo/
+!.clj-kondo/config.edn
 .calva/
 .lsp/
 .vscode/
