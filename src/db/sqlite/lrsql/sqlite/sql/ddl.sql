@@ -305,7 +305,7 @@ ALTER TABLE admin_account ADD COLUMN oidc_issuer TEXT
 
 -- :name alter-credential-to-scope-scope-datatype!
 -- :command :execute
--- :doc Change the enum datatype of the `credential_to_scope.scope` column.
+-- :doc DEPRECATED. Change the enum datatype of the `credential_to_scope.scope` column.
 UPDATE sqlite_schema
 SET sql = 'CREATE TABLE credential_to_scope (
   id         TEXT NOT NULL PRIMARY KEY,
@@ -335,9 +335,9 @@ WHERE type = 'table' AND name = 'credential_to_scope'
    the reserved OIDC profile scope. Since they have always remained unused, we
    are safe to remove them from the enum table. */
 
--- :name alter-credential-to-scope-scope-datatype-2!
+-- :name alter-credential-to-scope-scope-datatype-v2!
 -- :command :execute
--- :doc Change the enum datatype of the `credential_to_scope.scope` column a second time.
+-- :doc Change the enum datatype of the `credential_to_scope.scope` column. Supersedes `alter-credential-to-scope-scope-datatype!`
 UPDATE sqlite_schema
 SET sql = 'CREATE TABLE credential_to_scope (
   id         TEXT NOT NULL PRIMARY KEY,

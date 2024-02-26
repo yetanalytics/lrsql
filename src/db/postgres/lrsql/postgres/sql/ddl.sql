@@ -262,7 +262,7 @@ ALTER TABLE IF EXISTS admin_account ADD COLUMN IF NOT EXISTS oidc_issuer VARCHAR
 
 -- :name alter-scope-enum-type!
 -- :command :execute
--- :doc Add `statements/read/mine` to `credential-to-scope.scope` enum.
+-- :doc DEPRECATED. Add `statements/read/mine` to `credential-to-scope.scope` enum.
 ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE VARCHAR(255);
 DROP TYPE IF EXISTS scope_enum;
 CREATE TYPE scope_enum AS ENUM (
@@ -289,9 +289,9 @@ ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USI
    respectively. Since profile and profile/read have always been unused, we
    are safe to remove them as enums. */
 
--- :name alter-scope-enum-type-2!
+-- :name alter-scope-enum-type-v2!
 -- :command :execute
--- :doc Add `activity_profile`, `activity_profile/read`, `agent_profile`, and `agent_profile/read` to `credential-to-scope.scope` enum.
+-- :doc Add `activity_profile`, `activity_profile/read`, `agent_profile`, and `agent_profile/read` to `credential-to-scope.scope` enum. Supersedes `alter-scope-enum-type!`
 ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE VARCHAR(255);
 DROP TYPE IF EXISTS scope_enum;
 CREATE TYPE scope_enum AS ENUM (
