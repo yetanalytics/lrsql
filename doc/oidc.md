@@ -5,7 +5,7 @@
 SQL LRS supports [OpenID Connect (OIDC)](https://openid.net/connect/) on top of [OAuth 2.0](https://oauth.net/2/) for authentication and authorization to access xAPI resources and administrative functions. OIDC support enables several integration use cases:
 
 - Send xAPI statements to the LRS from OIDC-authenticated client applications
-- Provision LRS credentials programatically via the API
+- Provision LRS credentials programmatically via the API
 - Log in to the LRS Admin UI with a foreign identity (SSO)
 
 ### Resource Server
@@ -28,7 +28,9 @@ xAPI resources accept tokens with the following scopes:
 | ---------------------- | ------------------------------------------------------------------------------------------------------ |
 | `all`                  | Full read/write access to all xAPI resources.                                                          |
 | `all/read`             | Read-only access to all xAPI resources.                                                                |
-| `state`                | Read/Write access to the xAPI State Resource.                                                          |
+| `state`                | Read/write access to xAPI State Documents.                                                          |
+| `activities_profile`   | Read/write access to xAPI Activity Profile Documents.
+| `agents_profile`       | Read/write access to xAPI Agent Profile Documents.
 | `statements/read`      | Read-only access to all xAPI Statements (but not non-Statement resources).                             |
 | `statements/read/mine` | Read-only access to xAPI Statements whose `authority` value matches the authority of the current user. |
 | `statements/write`     | Write-only access to xAPI Statements.                                                                  |
