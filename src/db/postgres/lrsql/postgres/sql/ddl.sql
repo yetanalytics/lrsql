@@ -303,7 +303,7 @@ CREATE TYPE scope_enum AS ENUM (
   'state',
   'state/read',
   'define',
-  -- new; add document/profile scopes (also document/state out of being pedantic)
+  -- NEW: add `activities_profile` + `agents_profile` scopes and remove unused `profile` scope
   'activities_profile',
   'activities_profile/read',
   'agents_profile',
