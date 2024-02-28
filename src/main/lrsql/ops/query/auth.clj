@@ -52,9 +52,9 @@
                   authority-url]} input
           ;; NOTE: According to the xAPI spec, the LRS MUST assume scopes
           ;; "statements/write" and "statements/read/mine" if no scope is
-          ;; specified, if OAuth 1.0 is used. Since we are using Basic
-          ;; Auth and since the above behavior is confusing, we simply
-          ;; return empty scope sets as-is.
+          ;; specified, if OAuth 1.0 is used. Since we are not using OAuth 1.0
+          ;; and since the above behavior is confusing, we simply return empty
+          ;; scope sets as-is.
           scope-set (->> scopes
                          (map au/scope-str->kw)
                          (into #{}))]

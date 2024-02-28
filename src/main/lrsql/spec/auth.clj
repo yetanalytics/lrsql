@@ -46,6 +46,8 @@
   #{"all"
     "all/read"
     "state"
+    "activities_profile"
+    "agents_profile"
     "statements/read"
     "statements/read/mine"
     "statements/write"})
@@ -54,6 +56,8 @@
   #{:scope/all
     :scope/all.read
     :scope/state
+    :scope/activities_profile
+    :scope/agents_profile
     :scope/statements.read
     :scope/statements.read.mine
     :scope/statements.write})

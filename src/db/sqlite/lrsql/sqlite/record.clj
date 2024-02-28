@@ -104,7 +104,7 @@
       (migrate-timestamps-activity-profile-02! tx)
       (migrate-timestamps-activity-profile-03! tx)
       (migrate-timestamps-activity-profile-04! tx))
-    (update-schema-simple! tx alter-credential-to-scope-scope-datatype!)
+    (update-schema-simple! tx alter-credential-to-scope-scope-datatype-v2!)
     (create-reaction-table! tx)
     (when-not (some? (query-xapi-statement-reaction-id-exists tx))
       (xapi-statement-add-reaction-id! tx)

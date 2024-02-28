@@ -85,6 +85,47 @@
       false {:request-method :get
              :path-info      "xapi/activities/profile"
              :scopes         #{:scope/state}}
+      ;; activities_profile scope
+      true  {:request-method :get
+             :path-info      "xapi/activities/profile"
+             :scopes         #{:scope/activities_profile}}
+      true  {:request-method :head
+             :path-info      "xapi/activities/profile"
+             :scopes         #{:scope/activities_profile}}
+      true  {:request-method :post
+             :path-info      "xapi/activities/profile"
+             :scopes         #{:scope/activities_profile}}
+      true  {:request-method :put
+             :path-info      "xapi/activities/profile"
+             :scopes         #{:scope/activities_profile}}
+      true  {:request-method :delete
+             :path-info      "xapi/activities/profile"
+             :scopes         #{:scope/activities_profile}}
+      false {:request-method :get
+             :path-info      "xapi/activities/state"
+             :scopes         #{:scope/activities_profile}}
+      false {:request-method :get
+             :path-info      "xapi/agents/profile"
+             :scopes         #{:scope/activities_profile}}
+      ;; agents_profile scope
+      true  {:request-method :get
+             :path-info      "xapi/agents/profile"
+             :scopes         #{:scope/agents_profile}}
+      true  {:request-method :head
+             :path-info      "xapi/agents/profile"
+             :scopes         #{:scope/agents_profile}}
+      true  {:request-method :post
+             :path-info      "xapi/agents/profile"
+             :scopes         #{:scope/agents_profile}}
+      true  {:request-method :put
+             :path-info      "xapi/agents/profile"
+             :scopes         #{:scope/agents_profile}}
+      true  {:request-method :delete
+             :path-info      "xapi/agents/profile"
+             :scopes         #{:scope/agents_profile}}
+      false {:request-method :get
+             :path-info      "xapi/activities/profile"
+             :scopes         #{:scope/agents_profile}}
       ;; statements/read scope
       true {:request-method :get
             :path-info      "xapi/statements"

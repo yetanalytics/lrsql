@@ -260,10 +260,9 @@ ALTER TABLE IF EXISTS admin_account ADD COLUMN IF NOT EXISTS oidc_issuer VARCHAR
    fail inside a transaction. Therefore we have to use this circuitous route:
    https://stackoverflow.com/a/56376907 */
 
-
 -- :name alter-scope-enum-type!
 -- :command :execute
--- :doc Add `statements/read/mine` to `credential-to-scope.scope` enum.
+-- :doc DEPRECATED. Add `statements/read/mine` to `credential-to-scope.scope` enum.
 ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE VARCHAR(255);
 DROP TYPE IF EXISTS scope_enum;
 CREATE TYPE scope_enum AS ENUM (
@@ -281,6 +280,35 @@ CREATE TYPE scope_enum AS ENUM (
   'profile/read');
 ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USING (scope::scope_enum);
 
+/* Migration 2024-01-24 - Add profile and profile/read scopes */
+
+/* Simply adding the profile scope will cause a name clash with the reserved
+   OIDC profile scope. As a result, we add prefixes to create activity_profile
+   and agent_profile (and their read-only versions); this has the additional
+   benefit of narrowing the scope to just activity and agent profiles,
+   respectively. Since profile and profile/read have always been unused, we
+   are safe to remove them as enums. */
+
+-- :name alter-scope-enum-type-v2!
+-- :command :execute
+-- :doc Add `activity_profile`, `activity_profile/read`, `agent_profile`, and `agent_profile/read` to `credential-to-scope.scope` enum. Supersedes `alter-scope-enum-type!`
+ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE VARCHAR(255);
+DROP TYPE IF EXISTS scope_enum;
+CREATE TYPE scope_enum AS ENUM (
+  'statements/write',
+  'statements/read',
+  'statements/read/mine', -- new
+  'all/read',
+  'all',
+  'state',
+  'state/read',
+  'define',
+  -- NEW: add `activities_profile` + `agents_profile` scopes and remove unused `profile` scope
+  'activities_profile',
+  'activities_profile/read',
+  'agents_profile',
+  'agents_profile/read');
+ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USING (scope::scope_enum);
 
 /* Migration 2023-05-08-00 - Add timestamp to xapi_statement */
 
