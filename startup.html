@@ -160,7 +160,7 @@ span.build {
     -H &quot;X-Experience-API-Version: 1.0.3&quot; \
     -u &quot;&#91;api-key&#93;:&#91;api-secret&#93;&quot; \
     -d '&#91;statement data&#93;'
-</code></pre><p>where <code>api-key</code> and <code>api-secret</code> are the credential pair you created earlier, <code>host</code> and <code>port</code> are set for your webserver, and <code>statement data</code> is your Statement (which you can copy-paste from above). This should return a JSON array containing a single UUID; this is the Statement ID that the SQL LRS generated (since the Statement did not have a pre-existing ID).</p><p>In order to retrieve that statement, you can run the following command:</p><pre><code>curl -X GET \
+</code></pre><p>where <code>api-key</code> and <code>api-secret</code> are the credential pair you created earlier, <code>host</code> and <code>port</code> are set for your webserver, and <code>statement data</code> is your Statement (which you can copy-paste from above). This should return a JSON array containing a single UUID; this is the Statement ID that the SQL LRS generated (since the Statement did not have a pre-existing ID).</p><p><strong>NOTE:</strong> You can use <a href='https://www.postman.com/'>postman</a> instead of <code>curl</code> to send xAPI statement. Please, see the <a href='postman.html'>Postman</a> page for further details. </p><p>In order to retrieve that statement, you can run the following command:</p><pre><code>curl -X GET \
     http://&#91;host&#93;:&#91;port&#93;/xapi/statements \
     -H &quot;Content-Type: application/json&quot; \
     -H &quot;X-Experience-API-Version: 1.0.3&quot; \
@@ -170,7 +170,7 @@ span.build {
          &copy; 2021-2024 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
-         <span class="build">Build: bbc65b084430f6e3708ba462fe90e15cc4aff704</span>
+         <span class="build">Build: 2202077ecdb95c615e3d7f2d65351cfbb180ff30</span>
         </div>
       </div>
     </body>
