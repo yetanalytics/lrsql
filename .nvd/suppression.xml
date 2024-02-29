@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-    <!-- The FP affects the Golang, not Java, version of msgpack -->
-    <suppress>
-        <notes><![CDATA[
-        file name: msgpack-0.6.12.jar
-        ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.msgpack/msgpack@.*$</packageUrl>
-        <cve>CVE-2022-41719</cve>
-    </suppress>
     <!-- This CVE affects a single version of Postgres Server itself, not the driver at all and cannot be patched in this project -->
     <suppress base="true">
         <notes><![CDATA[
