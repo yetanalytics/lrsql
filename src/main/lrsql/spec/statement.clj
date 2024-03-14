@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as sgen]
             [xapi-schema.spec :as xs]
-            [com.yetanalytics.lrs.protocol :as lrsp]
+            [xapi-schema.spec.resources :as xsr]
+            [com.yetanalytics.lrs.spec.common :as sc]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common     :as c]
@@ -171,8 +172,56 @@
 ;; Query params specs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; The `:from` param is a custom parameter that is used by SQL LRS. However,
+;; since it is not a param specified in the xAPI. Because of how the spec is
+;; structured, however, we basically need to redefine the entire the entire
+;; params spec just to add a new spec. Fortunately, though, it is easy to
+;; redefine specs thanks to how spec keywords work.
+
+;; The spec definitions are based on xapi-schema.resources:
+;; https://github.com/yetanalytics/xapi-schema/blob/master/src/xapi_schema/spec/resources.cljc#L65-L157
+
+(s/def :xapi.statements.GET.request.params/from
+  ::xs/uuid)
+
+(defmulti query-type
+  #(if (xsr/singular-query? %)
+     :xapi.statements.GET.request.params/singular
+     :xapi.statements.GET.request.params/multiple))
+
+(defmethod query-type :xapi.statements.GET.request.params/singular [_]
+  (s/keys :req-un [(or :xapi.statements.GET.request.params/statementId
+                       :xapi.statements.GET.request.params/voidedStatementId)]
+          :opt-un [:xapi.statements.GET.request.params/format
+                   :xapi.statements.GET.request.params/attachments]))
+
+(defmethod query-type :xapi.statements.GET.request.params/multiple [_]
+  (s/keys :opt-un [:xapi.statements.GET.request.params/agent
+                   :xapi.statements.GET.request.params/verb
+                   :xapi.statements.GET.request.params/activity
+                   :xapi.statements.GET.request.params/registration
+                   :xapi.statements.GET.request.params/related_activities
+                   :xapi.statements.GET.request.params/related_agents
+                   :xapi.statements.GET.request.params/since
+                   :xapi.statements.GET.request.params/until
+                   :xapi.statements.GET.request.params/limit
+                   :xapi.statements.GET.request.params/format
+                   :xapi.statements.GET.request.params/attachments
+                   :xapi.statements.GET.request.params/ascending
+                   ;; NEW SPEC
+                   :xapi.statements.GET.request.params/from]))
+
+(s/def :xapi.statements.GET.request/params
+  (s/multi-spec query-type (fn [gen-val _] gen-val)))
+
+;; See: :com.yetanalytics.lrs.protocol/get-statement-params
+(s/def ::get-statement-params
+  (sc/with-conform-gen :xapi.statements.GET.request/params))
+
+;; This is to instrument functions, not for production-time validation,
+;; which is handled by the `:xapi.statements.GET.request/params` spec.
 (s/def ::query-params
-  (s/merge ::lrsp/get-statements-params
+  (s/merge ::get-statement-params
            (s/keys :req-un [::limit])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
