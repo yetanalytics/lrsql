@@ -60,6 +60,6 @@
         ;; TODO: Disallow `page` param?
         (is (= 200
                (:status
-                (curl/get "http://0.0.0.0:8080/xapi/statements?unwrap_html=true"
+                (curl/get "http://0.0.0.0:8080/xapi/statements?page=123"
                           get-map)))))
       (component/stop sys'))))
