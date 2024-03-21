@@ -28,6 +28,7 @@
                 key-password
                 enable-admin-delete-actor
                 enable-admin-ui
+                admin-language
                 enable-admin-status
                 enable-stmt-html
                 sec-head-hsts
@@ -92,6 +93,7 @@
                :secret                    private-key
                :enable-admin-delete-actor enable-admin-delete-actor
                :enable-admin-ui           enable-admin-ui
+               :admin-language-code       admin-language
                :proxy-path                proxy-path
                :enable-admin-status       enable-admin-status
                :enable-account-routes     enable-local-admin

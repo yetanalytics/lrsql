@@ -212,6 +212,7 @@
                     ::jwt-no-val
                     ::enable-admin-ui
                     ::enable-admin-status
+                    ::admin-language
                     ::enable-stmt-html
                     ::oidc-verify-remote-issuer
                     ::oidc-client-template

@@ -196,6 +196,7 @@
            enable-admin-delete-actor
            enable-admin-ui
            enable-admin-status
+           admin-language-code
            proxy-path
            enable-account-routes
            enable-reaction-routes
@@ -228,7 +229,8 @@
                     :no-val?                   no-val?
                     :no-val-logout-url         no-val-logout-url
                     :proxy-path                proxy-path
-                    :enable-admin-delete-actor enable-admin-delete-actor}))
+                    :enable-admin-delete-actor enable-admin-delete-actor
+                    :admin-language-code       admin-language-code}))
                 (when enable-admin-status
                   (admin-status-routes
                    common-interceptors-oidc secret leeway no-val-opts))
