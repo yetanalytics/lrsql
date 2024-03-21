@@ -1,11 +1,7 @@
 (ns lrsql.init.customization
   "Utilities for white labeling/customization overrides"
   (:require [cheshire.core :as json]
-            [clojure.core.memoize :as mem]
-            [clojure.tools.logging :as log]
-            [clojure.java.io :as io]
-            [clojure.spec.alpha :as s])
-  (:import [java.io File]))
+            [clojure.java.io :as io]))
 
 (def lang-path
   "lrsql/customization/language.json")
