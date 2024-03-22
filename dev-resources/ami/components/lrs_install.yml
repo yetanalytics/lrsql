@@ -1,0 +1,27 @@
+name: Install LRSQL
+description: This document installs LRSQL.
+schemaVersion: 1.0
+parameters:
+  - Version:
+      type: string
+      default: 'v0.7.9'
+      description: The version of LRSQL we're downloading
+
+phases:
+  - name: build
+    steps:
+      - name: DownloadLRS
+        action: WebDownload
+        inputs:
+          - source: 'https://github.com/yetanalytics/releases/download/{{ Version }}/lrsql.zip'
+            destination: '/tmp/lrsql.zip'
+      - name: MakeLRSDirectory
+        action: ExecuteBash
+        inputs:
+          commands:
+            - mkdir /opt/lrsql
+      - name: UnzipLRS
+        action: ExecuteBash
+        inputs:
+          commands:
+            - unzip /tmp/lrsql.zip -d /opt/lrsql/ 
