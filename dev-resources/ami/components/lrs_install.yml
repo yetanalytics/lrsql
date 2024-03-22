@@ -24,4 +24,23 @@ phases:
         action: ExecuteBash
         inputs:
           commands:
-            - unzip /tmp/lrsql.zip -d /opt/lrsql/ 
+            - unzip /tmp/lrsql.zip -d /opt/lrsql/
+      - name: DefineSystemService
+        inputs:
+          commands:
+            - |
+              cat << EOF > /lib/systemd/system/lrsql.service
+              [Unit]
+              Description=SQL LRS Service
+              [Service]
+              User=root
+              Environment="LC_ALL=en_US.UTF-8"
+              WorkingDirectory=/opt/lrsql
+              ExecStart=/opt/lrsql/bin/run_postgres.sh
+              SuccessExitStatus=143
+              TimeoutStopSec=10
+              Restart=on-failure
+              RestartSec=5
+              [Install]
+              WantedBy=multi-user.target
+              EOF
