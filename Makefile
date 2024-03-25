@@ -170,8 +170,8 @@ target/bundle/config/authority.json.template.example:
 target/bundle/config: target/bundle/config/lrsql.json.example target/bundle/config/authority.json.template.example
 
 target/bundle/customization:
-	mkdir -p target/bundle/customization
-	cp resources/lrsql/customization/language.json target/bundle/customization/language.json
+	mkdir -p target/bundle/customization/lrsql/localization
+	cp resources/lrsql/localization/language.json target/bundle/customization/lrsql/localization/language.json
 
 # Make Runtime Environment (i.e. JREs)
 
