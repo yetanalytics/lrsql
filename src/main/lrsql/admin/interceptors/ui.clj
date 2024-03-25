@@ -3,7 +3,7 @@
             [io.pedestal.interceptor :refer [interceptor]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors.oidc :as oidc-i]
-            [lrsql.init.customization :refer [custom-language-map]]))
+            [lrsql.init.localization :refer [custom-language-map]]))
 
 (defn admin-ui-redirect
   "Handler function to redirect to the admin ui"

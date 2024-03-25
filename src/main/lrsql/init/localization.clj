@@ -1,10 +1,10 @@
-(ns lrsql.init.customization
-  "Utilities for white labeling/customization overrides"
+(ns lrsql.init.localization
+  "Utilities for white labeling/localization overrides"
   (:require [cheshire.core :as json]
             [clojure.java.io :as io]))
 
 (def lang-path
-  "lrsql/customization/language.json")
+  "lrsql/localization/language.json")
 
 (def custom-language-map
   "The language map function to render customized admin frontend language maps"
@@ -12,4 +12,3 @@
       io/resource
       slurp
       json/parse-string))
-
