@@ -1,35 +1,48 @@
 (ns lrsql.build
   "Build utils for LRSQL artifacts"
-  (:require [hf.depstar :as depstar]))
+  (:require [clojure.tools.build.api :as b]))
 
-(def uber-params
-  {:jar        "target/bundle/lrsql.jar"
-   :aot        true
-   :aliases    [:db-sqlite :db-postgres]
-   :compile-ns :all
-   :no-pom     true
-   ;; Don't ship crypto - shouldn't be included in the build path anyways,
-   ;; but we exclude them here as extra defense.
-   ;; On the other hand, we keep the unobfuscated OSS source code so that users
-   ;; have easy access to it.
-   :exclude    ["^.*jks$"
-                "^.*key$"
-                "^.*pem$"]})
+;; We add the `src/db` subdirectories separately to ensure that all `src` paths
+;; in the code start w/ `lrsql/` (see: the calls to `hugsql.core/def-db-fns`)
+(def src-dirs
+  ["src/main"
+   "resources"
+   "src/db/sqlite"
+   "src/db/postgres"])
+
+(def class-dir
+  "target/classes/")
+
+;; Don't ship crypto - shouldn't be included in the build path anyways,
+;; but we exclude them here as extra defense.
+;; On the other hand, we keep the unobfuscated OSS source code so that users
+;; have easy access to it.
+(def ignored-file-regexes
+  ["^.*jks$"
+   "^.*key$"
+   "^.*pem$"])
+
+(def uberjar-file
+  "target/bundle/lrsql.jar")
+
+(def basis
+  (b/create-basis
+   {:project "deps.edn"
+    :aliases [:db-sqlite :db-postgres]}))
 
 (defn uber
-  "All backends, as an uberjar"
-  [params]
-  (-> uber-params
-      (merge params)
-      (depstar/uberjar)))
-
-(defn uber-manual
-  "All backends, as an uberjar, manually
-  Ensure that target dir is empty prior to use"
-  [params]
-  (-> (merge uber-params
-             {:target-dir "target"})
-      (merge params)
-      (depstar/aot)
-      (assoc :jar-type :uber)
-      (depstar/build)))
+  "Create an Uberjar at `target/bundle/lrsql.jar` that can be executed to
+   run the SQL LRS app, in either SQLite or Postgres mode."
+  [_]
+  (b/copy-dir
+   {:src-dirs   src-dirs
+    :target-dir class-dir
+    :ignores    ignored-file-regexes})
+  (b/compile-clj
+   {:basis     basis
+    :src-dirs  src-dirs
+    :class-dir class-dir})
+  (b/uber
+   {:basis     basis
+    :class-dir class-dir
+    :uber-file uberjar-file}))
