@@ -25,24 +25,27 @@
 (def uberjar-file
   "target/bundle/lrsql.jar")
 
-(def basis
+(defn- create-basis []
   (b/create-basis
    {:project "deps.edn"
     :aliases [:db-sqlite :db-postgres]}))
 
+;; We create a single JAR for all DB backends in order to minimize artifact
+;; download size, since all backends share most of the app code
 (defn uber
   "Create an Uberjar at `target/bundle/lrsql.jar` that can be executed to
-   run the SQL LRS app, in either SQLite or Postgres mode."
+   run the SQL LRS app, for any DB backend."
   [_]
-  (b/copy-dir
-   {:src-dirs   src-dirs
-    :target-dir class-dir
-    :ignores    ignored-file-regexes})
-  (b/compile-clj
-   {:basis     basis
-    :src-dirs  src-dirs
-    :class-dir class-dir})
-  (b/uber
-   {:basis     basis
-    :class-dir class-dir
-    :uber-file uberjar-file}))
+  (let [basis (create-basis)]
+    (b/copy-dir
+     {:src-dirs   src-dirs
+      :target-dir class-dir
+      :ignores    ignored-file-regexes})
+    (b/compile-clj
+     {:basis     basis
+      :src-dirs  src-dirs
+      :class-dir class-dir})
+    (b/uber
+     {:basis     basis
+      :class-dir class-dir
+      :uber-file uberjar-file})))
