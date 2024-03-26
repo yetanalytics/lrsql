@@ -29,6 +29,7 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 - [Docker Image](doc/docker.md)
 - [OpenID Connect Support](doc/oidc.md)
   - [Auth0 Setup Guide](doc/oidc/auth0.md)
+- [Troubleshooting FAQ](doc/troubleshooting.md)
 
 ### DBMS-specific Sections
 
