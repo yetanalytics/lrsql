@@ -110,17 +110,15 @@
                                com.yetanalytics/xapi-schema]}}}
   ;; Build alias invoked like clojure -Xbuild uber
   :build
-  {:replace-deps {org.clojure/core.async          {:mvn/version "1.6.673"}
-                  com.github.seancorfield/depstar {:mvn/version "2.1.267"
-                                                   :exclusions [org.clojure/core.async]}}
+  {:replace-deps {io.github.clojure/tools.build {:git/tag "v0.10.0"
+                                                 :git/sha "3a2c484"}}
    :extra-paths  ["src/build"]
    :ns-default   lrsql.build}
   ;; Alias for dev so you can use from repl w/o breakage
   ;; Note the :extra-deps instead of :replace-deps
   :build-dev
-  {:extra-deps  {org.clojure/core.async          {:mvn/version "1.6.673"}
-                 com.github.seancorfield/depstar {:mvn/version "2.1.267"
-                                                  :exclusions [org.clojure/core.async]}}
+  {:extra-deps  {io.github.clojure/tools.build {:git/tag "v0.10.0"
+                                                :git/sha "3a2c484"}}
    :extra-paths ["src/build"]}
   :nvd
   {:replace-deps {nvd-clojure/nvd-clojure {:mvn/version "2.6.0"}}
