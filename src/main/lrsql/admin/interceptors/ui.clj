@@ -47,7 +47,7 @@
                           :enable-reactions          enable-reactions
                           :no-val?                   no-val?
                           :admin-language-code       admin-language-code
-                          :custom-language           custom-language-map}
+                          :custom-language           (custom-language-map)}
                    (and no-val?
                         (not-empty no-val-logout-url))
                    (assoc :no-val-logout-url no-val-logout-url))

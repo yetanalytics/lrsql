@@ -6,9 +6,13 @@
 (def lang-path
   "lrsql/localization/language.json")
 
-(def custom-language-map
+(defn custom-language-map*
   "The language map function to render customized admin frontend language maps"
+  []
   (-> lang-path
       io/resource
       slurp
       json/parse-string))
+
+(def custom-language-map
+  (memoize custom-language-map*))
