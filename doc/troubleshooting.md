@@ -20,4 +20,12 @@ See the `docker-compose.yml` file as a reference for running Postgres SQL LRS vi
 
 You may want to adjust the `LRSQL_POOL_MINIMUM_IDLE` config var, as it is set to 10 by default in Postgres mode. (See [here](env_vars.md#hikaricp-properties) for more info on connection pool configuration.)
 
+### My stored statements are sharing the same timestamp
+
+Statement `stored` timestamps are not strictly monotonic in SQL LRS; two or more Statements may be assigned the same timestamp if stored in quick succession.
+
+### Some of my statements are not being voided
+
+If a Statement voids a target Statement that is itself voiding, SQL LRS will accept it upon insertion, though it will not update the state of the target Statement as per the [xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#214-voided-statements). (Yet's Cloud LRS products, on the other hand, would have simply rejected the voiding Statement.)
+
 [<- Back to Index](index.md)
