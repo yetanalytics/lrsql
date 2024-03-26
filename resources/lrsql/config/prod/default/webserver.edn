@@ -30,6 +30,7 @@
  :proxy-path                #or [#env LRSQL_PROXY_PATH nil]
  :enable-admin-delete-actor #boolean #or [#env LRSQL_ENABLE_ADMIN_DELETE_ACTOR false]
  :enable-admin-ui           #boolean #or [#env LRSQL_ENABLE_ADMIN_UI true]
+ :admin-language            #or [#env LRSQL_ADMIN_LANGUAGE "en-US"]
  :enable-admin-status       #boolean #or [#env LRSQL_ENABLE_ADMIN_STATUS true]
  :enable-stmt-html          #boolean #or [#env LRSQL_ENABLE_STMT_HTML true]
  :oidc-issuer               #env LRSQL_OIDC_ISSUER
