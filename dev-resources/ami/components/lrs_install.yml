@@ -13,7 +13,7 @@ phases:
       - name: DownloadLRS
         action: WebDownload
         inputs:
-          - source: 'https://github.com/yetanalytics/releases/download/{{ Version }}/lrsql.zip'
+          - source: 'https://github.com/yetanalytics/lrsql/releases/download/ {{Version}} /lrsql.zip'
             destination: '/tmp/lrsql.zip'
       - name: MakeLRSDirectory
         action: ExecuteBash
@@ -25,7 +25,8 @@ phases:
         inputs:
           commands:
             - unzip /tmp/lrsql.zip -d /opt/lrsql/
-      - name: DefineSystemService
+      - name: DefineLRSQLSystemService
+        action: ExecuteBash
         inputs:
           commands:
             - |
@@ -44,3 +45,8 @@ phases:
               [Install]
               WantedBy=multi-user.target
               EOF
+      - name: EnableLRSQLService
+        action: ExecuteBash
+        inputs:
+          commands:
+            - systemctl enable lrsql.service
