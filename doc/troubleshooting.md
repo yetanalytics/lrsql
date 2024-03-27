@@ -6,7 +6,7 @@
 
 First of all, ensure that the SQL LRS app is running and that the host and port are configured correctly. If you are running SQL LRS as a Docker image, ensure that the port is exposed.
 
-In addition, you may need to adjust [configuration for CORS](env_vars.md#cors)  (Cross-Origin Resource Sharing). CORS restricts which endpoints SQL LRS will accept requests from; requests from disallowed endpoints will result in a 403 Forbidden response. Either specify allowed endpoints via `LRSQL_ALLOWED_ORIGINS` (the recommended method for production) or allow all endpoints via setting `LRSQL_ALLOW_ALL_ORIGINS` to `true`.
+In addition, if you are using a proper domain name (either via DNS or via a `hosts` file) or using a proxy server, you may need to adjust [configuration for CORS](env_vars.md#cors) (Cross-Origin Resource Sharing). CORS restricts which endpoints SQL LRS will accept requests from; requests from disallowed endpoints will result in a 403 Forbidden response. Either specify allowed endpoints via `LRSQL_ALLOWED_ORIGINS` (the recommended method for production) or allow all endpoints via setting `LRSQL_ALLOW_ALL_ORIGINS` to `true`.
 
 ### I am unable to run the Docker image in Postgres mode
 
