@@ -1,6 +1,6 @@
 [<- Back to Index](index.md)
 
-# Troubleshooting FAQ
+# Troubleshooting
 
 ### I am unable to connect to the LRS when opening the UI
 
