@@ -2,21 +2,18 @@
 
 # SQL LRS Overview
 
-### What is SQL LRS?
+SQL LRS is a Learning Record Store (LRS) application, which is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in Part 3 of the [xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md). SQL LRS is distinct from other LRSs developed at Yet Analytics for being SQL-based and supporting multiple SQL database management systems (DBMSs) like SQLite, and Postgres.
 
-A Learning Record Store (LRS) is a persistent store for xAPI statements and associated attachments and documents. The full LRS specification can be found in Part 3 of the [xAPI specification](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md). SQL LRS is distinct from other LRSs developed at Yet Analytics for being SQL-based and supporting multiple SQL database management systems (DBMSs) like SQLite, and Postgres.
+Features include:
+- A user interface that features API credential management, admin account management, statement browsing and management, and LRS monitoring
+- A [Docker image](docker.md)
+- Custom [Statement authority configuration](authority.md)
+- Authentication via [OpenID](oidc.md)
+- Support for BI platforms like [Apache Superset](superset.md)
+- [Reactions](reactions.md)
 
 ### How to use SQL LRS?
 
-SQL LRS Accounts can be created using the user interface (see [Getting Started](startup.md)) or API calls (see [Endpoints](endpoints.md)). Accounts can be used to create or access SQL LRS credentials. These credentials, which consist of an API key, a secret API key, and their scopes ([described in the xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#42-oauth-10-authorization-scope)), are then used as headers for LRS-specific methods to authenticate and authorize the request sender.
-
-### Differences from Cloud LRS
-
-If you previously used Yet's Cloud LRS products, it is important to be aware of certain differences:
-
-- Tenancy is not supported in SQL LRS; the entire database can be considered to be a single default tenant.
-- All operations in SQL LRS are synchronous; async operations are not supported.
-- `stored` timestamps are not strictly monotonic in SQL LRS; two or more Statements may be assigned the same timestamp if stored in quick succession.
-- If a Statement voids a target Statement that is itself voiding, SQL LRS will accept it upon insertion, though it will not update the state of the target Statement as per the [xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#214-voided-statements). (The Cloud LRS, on the other hand, will simply reject the voiding Statement.)
+SQL LRS admin accounts can be created using the user interface (see [Getting Started](startup.md)) or API calls (see [Endpoints](endpoints.md)). Accounts can be used to create or access SQL LRS credentials. These credentials, which consist of an API key, a secret API key, and their scopes ([described in the xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#42-oauth-10-authorization-scope)), are then used as headers for LRS-specific methods to authenticate and authorize the request sender.
 
 [<- Back to Index](index.md)
