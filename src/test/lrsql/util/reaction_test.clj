@@ -139,6 +139,11 @@
             :cause "No value found at [\"completed_a\" \"actor\" \"birthday\"]"}))))
 
 (deftest encode-condition-name-test
+  (testing "hex values"
+    (is (= "cond_5a6d397649474a6863673d3d"
+           (r/encode-condition-name "foo bar")))
+    (is (= "foo bar"
+           (r/decode-condition-name "cond_5a6d397649474a6863673d3d"))))
   (testing "unique"
     (is (= (r/encode-condition-name "foo")
            (r/encode-condition-name "foo")))
