@@ -1,6 +1,6 @@
 (ns lrsql.util
   (:require [clj-uuid]
-            [java-time]
+            [java-time.api           :as jt]
             [java-time.properties    :as jt-props]
             [clojure.spec.alpha      :as s]
             [clojure.tools.logging   :as log]
@@ -51,7 +51,7 @@
 (defn current-time
   "Return the current time as a java.util.Instant timestamp."
   []
-  (java-time/instant))
+  (jt/instant))
 
 (def valid-units
   (set (map jt-props/unit-key jt-props/predefined-units)))
@@ -68,7 +68,7 @@
    that was offset by the given amount. Valid units are given by
    `java-time.repl/show-units`."
   [^Instant ts offset-amount offset-unit]
-  (.plus ts offset-amount (java-time/unit offset-unit)))
+  (.plus ts offset-amount (jt/unit offset-unit)))
 
 (s/fdef str->time
   :args (s/cat :ts-str ::xs/timestamp)
@@ -78,12 +78,12 @@
   "Parse an ISO 8601 timestamp string into a java.util.Instant timestamp. The
   two parse fns are to support the Z and the +00:00 offset timestamp formats"
   [ts-str]
-  (wrap-parse-fn java-time/instant "timestamp" ts-str
+  (wrap-parse-fn jt/instant "timestamp" ts-str
                  :retry-parse-fn #(-> %
                                       ;; This step only needed for < JVM 11.
                                       ;; Newer will parse offset right away.
-                                      java-time/offset-date-time
-                                      java-time/instant)))
+                                      jt/offset-date-time
+                                      jt/instant)))
 
 (s/fdef time->str
   :args (s/cat :ts instant-spec)
@@ -93,7 +93,7 @@
   "Convert a java.util.Instant timestamp into a string. Said string is
    normalized according to the requirements of the lrs library."
   [ts]
-  (normalize (java-time/format ts)))
+  (normalize (jt/format ts)))
 
 (s/fdef time->millis
   :args (s/cat :ts instant-spec)

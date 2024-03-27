@@ -6,8 +6,7 @@
             [lrsql.spec.reaction :as rs]
             [lrsql.spec.statement :as ss]
             [xapi-schema.spec :as xs]
-            [buddy.core.codecs :as bc]
-            [buddy.core.codecs.base64 :as b64]))
+            [buddy.core.codecs :as bc]))
 
 (s/fdef path->string
   :args (s/cat :path ::rs/path
@@ -127,9 +126,10 @@
   "Given a condition name string, encode it as hex."
   [condition-name]
   (-> condition-name
-      b64/encode
+      bc/str->bytes
+      bc/bytes->b64
       bc/bytes->hex
-      (->> (format "cond_%s")))) ;; add prefix to be valid SQL colname
+      (->> (format "cond_%s")))) ; add prefix to be valid SQL colname
 
 (s/fdef decode-condition-name
   :args (s/cat :encoded-condition-name string?)
@@ -139,7 +139,7 @@
   "Convert a condition name back to human-readable"
   [encoded-condition-name]
   (-> encoded-condition-name
-      (subs 5) ;; remove prefix
+      (subs 5) ; remove prefix
       bc/hex->bytes
-      b64/decode
+      bc/b64->bytes
       bc/bytes->str))
