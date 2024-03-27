@@ -5,7 +5,6 @@
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
-            [clojure.core :refer [format]]
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
