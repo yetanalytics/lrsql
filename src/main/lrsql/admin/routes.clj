@@ -7,6 +7,7 @@
             [lrsql.admin.interceptors.account :as ai]
             [lrsql.admin.interceptors.credentials :as ci]
             [lrsql.admin.interceptors.lrs-management :as lm]
+            [lrsql.admin.interceptors.openapi :as oa]
             [lrsql.admin.interceptors.ui :as ui]
             [lrsql.admin.interceptors.jwt :as ji]
             [lrsql.admin.interceptors.status :as si]
@@ -171,13 +172,20 @@
                                      ri/delete-reaction)
      :route-name :lrsql.admin.reaction/delete]})
 
+
+
+
 (defn admin-lrs-management-routes [common-interceptors jwt-secret jwt-leeway no-val-opts]
-  #{["/admin/agents" :delete (conj common-interceptors
+  #{;Delete an actor and dependent statements
+    ["/admin/agents" :delete (conj common-interceptors
                                    lm/validate-delete-actor-params
                                    (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
                                    ji/validate-jwt-account
                                    lm/delete-actor)
-     :route-name :lrsql.lrs-management/delete-actor]})
+     :route-name :lrsql.lrs-management/delete-actor]
+    ;Get OpenAPI spec for lrsql in json format
+    ["/admin/openapi/v0" :get  (conj common-interceptors
+                                  oa/openapi)]})
 
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
