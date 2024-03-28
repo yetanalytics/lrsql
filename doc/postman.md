@@ -1,3 +1,5 @@
+[<- Back to Index](index.md)
+
 # Postman 
 
 This page describes how to send an xAPI statement through [Postman](https://www.postman.com/), a well-known API platform for building and using APIs.
@@ -43,3 +45,5 @@ Copy and paste your valid JSON xAPI Statement(s) into the body:
 
 
 Click the "Send" button to make the request.
+
+[<- Back to Index](index.md)

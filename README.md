@@ -19,6 +19,8 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 
 ## Documentation
 
+<!-- When you are updating this section, don't forget to also update doc/index.md -->
+
 [SQL LRS Overview](doc/overview.md)
 
 ### FAQ
