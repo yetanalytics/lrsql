@@ -1,6 +1,13 @@
 # Documentation Index
 
+<!-- When you are updating this page, don't forget to also update the README -->
+
 [SQL LRS Overview](overview.md)
+
+### FAQ
+
+- [General Questions](general_faq.md)
+- [Troubleshooting](troubleshooting.md)
 
 ### Basic Configuration
 
@@ -23,11 +30,12 @@
 - [Developer Documentation](dev.md)
 - [Example AWS Deployment](aws.md)
 - [Reactions](reactions.md)
-
-### Releases
-
-For releases and release notes see the [Releases](https://github.com/yetanalytics/lrsql/releases) page on the SQL LRS GitHub repository.
+- [Sending xAPI statement(s) with Postman](postman.md)
 
 ### Demos
 
 - [Visualization with Apache Superset](superset.md)
+
+### Releases
+
+For releases and release notes see the [Releases](https://github.com/yetanalytics/lrsql/releases) page on the SQL LRS GitHub repository.
