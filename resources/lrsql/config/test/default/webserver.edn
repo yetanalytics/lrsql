@@ -24,6 +24,7 @@
  :enable-admin-delete-actor true
  :enable-admin-ui           true
  :enable-admin-status       true
+ :admin-language            "en-US"
  :enable-stmt-html          true
  :oidc-verify-remote-issuer true
  :oidc-client-template      "config/oidc_client.json.template"

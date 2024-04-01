@@ -19,7 +19,14 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 
 ## Documentation
 
+<!-- When you are updating this section, don't forget to also update doc/index.md -->
+
 [SQL LRS Overview](doc/overview.md)
+
+### FAQ
+
+- [General Questions](doc/general_faq.md)
+- [Troubleshooting](doc/troubleshooting.md)
 
 ### Basic Configuration
 
@@ -43,7 +50,6 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 - [Example AWS Deployment](doc/aws.md)
 - [Reactions](doc/reactions.md)
 - [Sending xAPI statement(s) with Postman](doc/postman.md)
-
 
 ### Demos
 

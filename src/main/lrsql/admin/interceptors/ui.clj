@@ -2,7 +2,8 @@
   (:require [ring.util.response :as resp]
             [io.pedestal.interceptor :refer [interceptor]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
-            [lrsql.admin.interceptors.oidc :as oidc-i]))
+            [lrsql.admin.interceptors.oidc :as oidc-i]
+            [lrsql.init.localization :refer [custom-language-map]]))
 
 (defn admin-ui-redirect
   "Handler function to redirect to the admin ui"
@@ -17,6 +18,7 @@
       enabled."
   [{:keys [enable-admin-delete-actor
            enable-admin-status
+           admin-language-code
            enable-reactions
            no-val?
            no-val-logout-url
@@ -43,7 +45,9 @@
                           :enable-admin-delete-actor enable-admin-delete-actor
                           :enable-admin-status       enable-admin-status
                           :enable-reactions          enable-reactions
-                          :no-val?                   no-val?}
+                          :no-val?                   no-val?
+                          :admin-language-code       admin-language-code
+                          :custom-language           (custom-language-map)}
                    (and no-val?
                         (not-empty no-val-logout-url))
                    (assoc :no-val-logout-url no-val-logout-url))

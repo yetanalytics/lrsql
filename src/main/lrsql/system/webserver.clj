@@ -5,7 +5,6 @@
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
-            [clojure.core :refer [format]]
             [lrsql.admin.routes :refer [add-admin-routes]]
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
@@ -28,6 +27,7 @@
                 key-password
                 enable-admin-delete-actor
                 enable-admin-ui
+                admin-language
                 enable-admin-status
                 enable-stmt-html
                 sec-head-hsts
@@ -92,6 +92,7 @@
                :secret                    private-key
                :enable-admin-delete-actor enable-admin-delete-actor
                :enable-admin-ui           enable-admin-ui
+               :admin-language-code       admin-language
                :proxy-path                proxy-path
                :enable-admin-status       enable-admin-status
                :enable-account-routes     enable-local-admin
