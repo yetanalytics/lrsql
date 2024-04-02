@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 # TODO: ADD this to GH Actions and get version dynamically when new LRSQL release is cut
 VERSION="0.7.11"
