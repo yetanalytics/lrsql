@@ -1,0 +1,163 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "RDS Proxy for LRSQL"
+Parameters:
+  VPCStackName:
+    Description: Name of our VPC Stack
+    Type: String
+  DBStackName:
+    Description: DB Stack Reference
+    Type: String
+  SSMStackName:
+    Description: SSM Stack Reference
+    Type: String
+  ProxyUserName:
+    Description: Username for Proxy Server
+    Type: String
+    Default: proxy
+  ProxyCredentialsPath:
+    Description: Identifying Path for Proxy Credentials in Secrets Manager
+    Type: String
+    Default: "/lrsql/marketplace/DB_PROXY_USER"
+  ProxyPermissions:
+    Description: Set of permissions allowed for the proxy
+    Type: List<String>
+    Default: SELECT
+    AllowedValues:
+      - SELECT
+      - INSERT
+      - UPDATE
+      - DELETE
+  CreateUserBucketOverride:
+    Description: Override for s3 bucket containing RDSCreateUser Lambda code
+    Default: ""
+  CreateUserFnKeyOverride:
+    Description: Override for s3 Key containing RDSCreateUser Lambda Code
+    Default: ""
+Conditions:
+  CreateUserBucket: !Not [!Equals [!Ref CreateUserBucketOverride, ""]]
+  CreateUserFnKey: !Not [!Equals [!Ref CreateUserFnKeyOverride, ""]]
+Resources:
+  ProxyCredentialsSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Ref ProxyCredentialsPath 
+      Description: Credentials for proxy on PG 
+      GenerateSecretString:
+        SecretStringTemplate: !Sub 
+          - |
+            {
+              "engine": "postgres",
+              "host": "${DBEndpoint}",
+              "port": "${DBPort}",
+              "username": "${ProxyUserName}"
+            }
+          - DBEndpoint:
+              Fn::ImportValue:
+                !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
+          - DBPort:
+              Fn::ImportValue:
+                !Join [":", [!Ref "DBStackName", "DBPort"]]
+        GenerateStringKey: "password"
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+  CreateUserPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: IAM Policy for rds-create-user lambda access.
+      ManagedPolicyName: !Sub "${AWS::StackName}-${AWS::Region}-create-proxy-user-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          # Allow access to SSM and VPC related networking
+          - Effect: Allow
+            Action:
+              - "secretsmanager:GetSecretValue"
+              - "ssm:GetParameter"
+            Resource:
+              - !GetAtt ProxyCredentialsSecret.Arn
+          - Effect: Allow
+            Action:
+              - ec2:DescribeNetworkInterfaces
+              - ec2:CreateNetworkInterface
+              - ec2:DeleteNetworkInterface
+              - ec2:DescribeInstances
+              - ec2:AttachNetworkInterface
+            Resource: "*"
+  CreateUserRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - !Ref CreateUserPolicy
+
+  DatabaseSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG For Lambda Init Fn
+      VpcId:
+        Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'VPCId']]
+  CreateUserFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !If
+          - CreateUserBucket
+          - !Ref CreateUserBucketOverride
+          - !Sub "yet-rds-db-init-deploy-${AWS::Region}"
+        S3Key: !If
+          - CreateUserFnKey
+          - !Ref CreateUserFnKeyOverride
+          - !Sub "rds-create-user-${RDSDeployUserVersion}.zip"
+          
+      Handler: index.handler
+      Role: !GetAtt CreateUserRole.Arn
+      Timeout: 15
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref DatabaseSG
+        SubnetIds:
+          - Fn::ImportValue: !Join [':', [!Ref 'DBStackName', 'DBSubnetOne']]
+          - Fn::ImportValue: !Join [':', [!Ref 'DBStackName', 'DBSubnetTwo']]
+      
+  CreateProxyUser:
+    Type: Custom::CreateDBUser
+    Properties:
+      ServiceToken: !GetAtt CreateUserFn.Arn
+      Credentials: !GetAtt ProxyCredentials.Arn
+      Permissions: !Ref ProxyPermissions
+      DBMasterUsername:
+          Fn::ImportValue:
+            !Join [":", [!Ref "DBStackName", "DBMasterUserName"]]
+      DBMasterUserPasswordPath:
+          Fn::ImportValue:
+            !Join [":", [!Ref "SSMStackName", "DBMasterUserPasswordPath"]]
+      DBName:
+          Fn::ImportValue:
+            !Join [":", [!Ref "DBStackName", "DBName"]]
+  LrsqlRdsProxy:
+    Type: AWS::RDS::DBProxy
+    Properties:
+      DBProxyName: "lrsql-proxy"
+      EngineFamily: POSTGRESQL
+      Auth:
+        - AuthScheme: SECRETS
+          IAMAuth: DISABLED
+          SecretArn: !GetAtt LrsqlDBSecret.Arn
+      RoleArn: !GetAtt LrsqlDBProxyRole.Arn
+      VpcSubnetIds:
+        - Fn::ImportValue:
+            !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
+        - Fn::ImportValue:
+            !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
+      VpcSecurityGroupIds:
+        - !Ref LrsqlSecurityGroup
+      RequireTLS: true
+      IdleClientTimeout: 1800
+      DebugLogging: false
