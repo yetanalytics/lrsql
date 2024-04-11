@@ -29,10 +29,16 @@ Parameters:
       - DELETE
   CreateUserBucketOverride:
     Description: Override for s3 bucket containing RDSCreateUser Lambda code
+    Type: String
     Default: ""
   CreateUserFnKeyOverride:
     Description: Override for s3 Key containing RDSCreateUser Lambda Code
+    Type: String
     Default: ""
+  RDSCreateUserVersion:
+    Description: Semantic version of the rds-create-user lambda
+    Type: String
+    Default: "0.0.1"
 Conditions:
   CreateUserBucket: !Not [!Equals [!Ref CreateUserBucketOverride, ""]]
   CreateUserFnKey: !Not [!Equals [!Ref CreateUserFnKeyOverride, ""]]
@@ -54,7 +60,7 @@ Resources:
           - DBEndpoint:
               Fn::ImportValue:
                 !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
-          - DBPort:
+            DBPort:
               Fn::ImportValue:
                 !Join [":", [!Ref "DBStackName", "DBPort"]]
         GenerateStringKey: "password"
@@ -74,7 +80,7 @@ Resources:
               - "secretsmanager:GetSecretValue"
               - "ssm:GetParameter"
             Resource:
-              - !GetAtt ProxyCredentialsSecret.Arn
+              - !GetAtt ProxyCredentialsSecret.Id
           - Effect: Allow
             Action:
               - ec2:DescribeNetworkInterfaces
@@ -114,8 +120,8 @@ Resources:
         S3Key: !If
           - CreateUserFnKey
           - !Ref CreateUserFnKeyOverride
-          - !Sub "rds-create-user-${RDSDeployUserVersion}.zip"
-          
+          - !Sub "rds-create-user-${RDSCreateUserVersion}.zip"
+      Runtime: nodejs16.x
       Handler: index.handler
       Role: !GetAtt CreateUserRole.Arn
       Timeout: 15
@@ -130,7 +136,7 @@ Resources:
     Type: Custom::CreateDBUser
     Properties:
       ServiceToken: !GetAtt CreateUserFn.Arn
-      Credentials: !GetAtt ProxyCredentials.Arn
+      Credentials: !GetAtt ProxyCredentialsSecret.Id
       Permissions: !Ref ProxyPermissions
       DBMasterUsername:
           Fn::ImportValue:
@@ -141,6 +147,33 @@ Resources:
       DBName:
           Fn::ImportValue:
             !Join [":", [!Ref "DBStackName", "DBName"]]
+  LrsqlDBProxyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: rds.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}-rds-proxy-user-cluster-access" 
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - rds-db:connect
+                Resource:
+                  - Fn::ImportValue:
+                      !Join [":", [!Ref "DBStackName", "DBClusterArn"]]
+  LrsqlRdsProxySG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to RDS Proxy
+      VpcId:
+        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPCId"]]
   LrsqlRdsProxy:
     Type: AWS::RDS::DBProxy
     Properties:
@@ -149,7 +182,7 @@ Resources:
       Auth:
         - AuthScheme: SECRETS
           IAMAuth: DISABLED
-          SecretArn: !GetAtt LrsqlDBSecret.Arn
+          SecretArn: !GetAtt ProxyCredentialsSecret.Id
       RoleArn: !GetAtt LrsqlDBProxyRole.Arn
       VpcSubnetIds:
         - Fn::ImportValue:
@@ -157,7 +190,7 @@ Resources:
         - Fn::ImportValue:
             !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
       VpcSecurityGroupIds:
-        - !Ref LrsqlSecurityGroup
+        - LrsqlRdsProxySG 
       RequireTLS: true
       IdleClientTimeout: 1800
       DebugLogging: false
