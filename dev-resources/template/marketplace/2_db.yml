@@ -208,6 +208,11 @@ Outputs:
     Value: !Select [1, !GetAtt DBSubnetGroup.SubnetIds]
     Export:
       Name: !Sub "${AWS::StackName}:DBSubnetTwo"
+  DBClusterArn:
+    Description: Arn of DB Cluster
+    Value: !GetAtt DBCluster.DBClusterArn
+    Export:
+      Name: !Sub "${AWS::StackName}:DBClusterArn"
   # DBMasterUserPasswordPath:
   #   Description: Path to the DB Master password
   #   Value: 
