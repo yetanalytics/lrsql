@@ -4,9 +4,6 @@ Parameters:
   VPCStackName:
     Description: Name of our VPC Stack
     Type: String
-  DBSubnets:
-    Description: Subnets on which the DB is running
-    Type: List<AWS::EC2::Subnet::Id>
   # DB Details
   DBStackName:
     Description: DB Stack Reference
@@ -166,8 +163,9 @@ Resources:
       VpcConfig:
         SecurityGroupIds:
           - !Ref DBInitFnSG
-        SubnetIds: !Ref DBSubnets
-
+        SubnetIds:
+          - Fn::ImportValue: !Join [':', [!Ref 'DBStackName', 'DBSubnetOne']]
+          - Fn::ImportValue: !Join [':', [!Ref 'DBStackName', 'DBSubnetTwo']]
   DBInitFnSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
