@@ -198,16 +198,6 @@ Outputs:
     Value: !Ref DBMasterUserName
     Export:
       Name: !Sub "${AWS::StackName}:DBMasterUserName"
-  DBSubnetOne:
-    Description: First Subnet containing the DB
-    Value: !Select [0, !GetAtt DBSubnetGroup.SubnetIds]
-    Export:
-      Name: !Sub "${AWS::StackName}:DBSubnetOne"
-  DBSubnetTwo:
-    Description: Second Subnet containing the DB
-    Value: !Select [1, !GetAtt DBSubnetGroup.SubnetIds]
-    Export:
-      Name: !Sub "${AWS::StackName}:DBSubnetTwo"
   DBClusterArn:
     Description: Arn of DB Cluster
     Value: !GetAtt DBCluster.DBClusterArn

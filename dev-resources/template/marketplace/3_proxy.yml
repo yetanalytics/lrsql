@@ -129,8 +129,8 @@ Resources:
         SecurityGroupIds:
           - !Ref DatabaseSG
         SubnetIds:
-          - Fn::ImportValue: !Join [':', [!Ref 'DBStackName', 'DBSubnetOne']]
-          - Fn::ImportValue: !Join [':', [!Ref 'DBStackName', 'DBSubnetTwo']]
+          - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetOne']]
+          - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetTwo']]
       
   CreateProxyUser:
     Type: Custom::CreateDBUser
