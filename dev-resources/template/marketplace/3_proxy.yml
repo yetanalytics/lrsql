@@ -81,6 +81,11 @@ Resources:
               - "ssm:GetParameter"
             Resource:
               - !GetAtt ProxyCredentialsSecret.Id
+              - !Sub
+                - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBMasterUserPasswordPath}"
+                - DBMasterUserPasswordPath:
+                    Fn::ImportValue:
+                      !Join [":", [!Ref "SSMStackName", "DBMasterUserPasswordPath"]]
           - Effect: Allow
             Action:
               - ec2:DescribeNetworkInterfaces
@@ -120,7 +125,7 @@ Resources:
         S3Key: !If
           - CreateUserFnKey
           - !Ref CreateUserFnKeyOverride
-          - !Sub "rds-create-user-${RDSCreateUserVersion}.zip"
+          - !Sub "rds-create-user${RDSCreateUserVersion}.zip"
       Runtime: nodejs16.x
       Handler: index.handler
       Role: !GetAtt CreateUserRole.Arn
@@ -190,7 +195,7 @@ Resources:
         - Fn::ImportValue:
             !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
       VpcSecurityGroupIds:
-        - LrsqlRdsProxySG 
+        - !Ref LrsqlRdsProxySG 
       RequireTLS: true
       IdleClientTimeout: 1800
       DebugLogging: false
