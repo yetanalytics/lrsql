@@ -38,7 +38,7 @@ Parameters:
   RDSCreateUserVersion:
     Description: Semantic version of the rds-create-user lambda
     Type: String
-    Default: "0.0.1"
+    Default: "v0.0.2"
 Conditions:
   CreateUserBucket: !Not [!Equals [!Ref CreateUserBucketOverride, ""]]
   CreateUserFnKey: !Not [!Equals [!Ref CreateUserFnKeyOverride, ""]]
