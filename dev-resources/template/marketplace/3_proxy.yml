@@ -108,12 +108,29 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
         - !Ref CreateUserPolicy
 
-  DatabaseSG:
+  CreateUserSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: SG For Lambda Init Fn
       VpcId:
-        Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'VPCId']]
+        Fn::ImportValue:
+          !Join [":", [!Ref "VPCStackName", "VPCId"]]
+
+  CreateUserIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from the init fn to RDS instance
+      GroupId:
+        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
+      IpProtocol: tcp
+      FromPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      SourceSecurityGroupId: !Ref CreateUserSG
+
   CreateUserFn:
     Type: AWS::Lambda::Function
     Properties:
@@ -132,7 +149,7 @@ Resources:
       Timeout: 15
       VpcConfig:
         SecurityGroupIds:
-          - !Ref DatabaseSG
+          - !Ref CreateUserSG
         SubnetIds:
           - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetOne']]
           - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetTwo']]
