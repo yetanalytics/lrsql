@@ -10,9 +10,7 @@ services:
       POSTGRES_USER: lrsql_user
       POSTGRES_PASSWORD: lrsql_password
       POSTGRES_DB: lrsql_db
-  clamav:
-    image: clamav/clamav:1.2.1
-  lrs:
+  lrs_1:
     # build: . # switch to this for active dev
     image: yetanalytics/lrsql:latest
     command:
@@ -26,12 +24,38 @@ services:
       LRSQL_API_SECRET_DEFAULT: my_secret
       LRSQL_ADMIN_USER_DEFAULT: my_username
       LRSQL_ADMIN_PASS_DEFAULT: my_password
+      LRSQL_ALLOW_ALL_ORIGINS: true
       LRSQL_DB_HOST: db
       LRSQL_DB_NAME: lrsql_db
       LRSQL_DB_USER: lrsql_user
       LRSQL_DB_PASSWORD: lrsql_password
       # If Postgres is too slow to start, increase this
       LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
-      # Enable ClamAV Scanning
-      LRSQL_ENABLE_CLAMAV: true
-      LRSQL_CLAMAV_HOST: clamav
+  lrs_2:
+    # build: . # switch to this for active dev
+    image: yetanalytics/lrsql:latest
+    command:
+      - /lrsql/bin/run_postgres.sh
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+    environment:
+      LRSQL_API_KEY_DEFAULT: my_key
+      LRSQL_API_SECRET_DEFAULT: my_secret
+      LRSQL_ADMIN_USER_DEFAULT: my_username
+      LRSQL_ADMIN_PASS_DEFAULT: my_password
+      LRSQL_ALLOW_ALL_ORIGINS: true
+      LRSQL_DB_HOST: db
+      LRSQL_DB_NAME: lrsql_db
+      LRSQL_DB_USER: lrsql_user
+      LRSQL_DB_PASSWORD: lrsql_password
+      # If Postgres is too slow to start, increase this
+      LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
+  lb:
+    build: dev-resources/lb
+    ports:
+      - "8083:8083"
+    depends_on:
+      - lrs_1
+      - lrs_2
