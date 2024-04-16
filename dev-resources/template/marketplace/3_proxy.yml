@@ -119,7 +119,7 @@ Resources:
   CreateUserIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      Description: Ingress from the init fn to RDS instance
+      Description: Ingress from the create user fn to RDS instance
       GroupId:
         Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
       IpProtocol: tcp
