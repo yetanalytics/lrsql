@@ -203,6 +203,11 @@ Outputs:
     Value: !GetAtt DBCluster.DBClusterArn
     Export:
       Name: !Sub "${AWS::StackName}:DBClusterArn"
+  DBClusterIdentifier:
+    Description: Identifier of DBCluster
+    Value: !Ref DBCluster
+    Export:
+      Name: !Sub "${AWS::StackName}:DBClusterIdentifier"
   # DBMasterUserPasswordPath:
   #   Description: Path to the DB Master password
   #   Value: 
