@@ -216,3 +216,15 @@ Resources:
       RequireTLS: true
       IdleClientTimeout: 1800
       DebugLogging: false
+  LrsqlRdsProxyTargetGroup:
+    Type: AWS::RDS::DBProxyTargetGroup
+    Properties:
+      DBProxyName: !Ref LrsqlRdsProxy
+      DBClusterIdentifiers:
+        - Fn::ImportValue:
+            !Join [":", [!Ref "DBStackName", "DBClusterArn"]]
+      TargetGroupName: default
+      ConnectionPoolConfigurationInfo:
+        MaxConnectionsPercent: 100
+        MaxIdleConnectionsPercent: 50
+        ConnectionBorrowTimeout: 120
