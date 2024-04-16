@@ -190,6 +190,25 @@ Resources:
                 Resource:
                   - Fn::ImportValue:
                       !Join [":", [!Ref "DBStackName", "DBClusterArn"]]
+        - PolicyName: !Sub "${AWS::StackName}-rds-proxy-user-secret-access"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !GetAtt ProxyCredentialsSecret.Id
+        - PolicyName: !Sub "${AWS::StackName}-rds-proxy-user-kms"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    "kms:ViaService": !Sub "secretsmanager.${AWS::Region}.amazonaws.com"
   LrsqlRdsProxySG:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -222,7 +241,7 @@ Resources:
       DBProxyName: !Ref LrsqlRdsProxy
       DBClusterIdentifiers:
         - Fn::ImportValue:
-            !Join [":", [!Ref "DBStackName", "DBClusterArn"]]
+            !Join [":", [!Ref "DBStackName", "DBClusterIdentifier"]]
       TargetGroupName: default
       ConnectionPoolConfigurationInfo:
         MaxConnectionsPercent: 100
