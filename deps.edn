@@ -35,7 +35,7 @@
                        :exclusions [buddy/buddy-core]}
   buddy/buddy-hashers {:mvn/version "2.0.162"
                        :exclusions [buddy/buddy-core]}
-  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.75"}
+  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.78"}
   less-awful-ssl/less-awful-ssl   {:mvn/version "1.0.6"}
   xyz.capybara/clamav-client      {:mvn/version "2.1.2"}
   ;; Yet Analytics deps
