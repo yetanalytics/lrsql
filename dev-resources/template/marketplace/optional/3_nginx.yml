@@ -85,7 +85,7 @@ Resources:
           commands:
             01install_nginx:
               cwd: "~"
-              command: "amazon-linux-extras install -y nginx-mod-stream nginx"
+              command: "yum install -y nginx-mod-stream nginx"
             02start_proxy:
               cwd: "~"
               command: "systemctl start nginx"
@@ -96,6 +96,7 @@ Resources:
       - !Ref NginxInstanceSG
       SubnetId:
         Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PublicSubnetOne']]
+      KeyName: yet-dev-access
       UserData: 
         !Base64
           'Fn::Join':
@@ -106,7 +107,7 @@ Resources:
               # Run init
               - 'sudo /opt/aws/bin/cfn-init -v --stack '
               - !Ref AWS::StackName
-              - ' --resource EC2Bastion'
+              - ' --resource NginxRDSProxy'
               - ' --configsets proxy'
               - ' --region '
               - !Ref AWS::Region
