@@ -19,14 +19,12 @@ Parameters:
     Type: String
     Default: "/lrsql/marketplace/DB_PROXY_USER"
   ProxyPermissions:
-    Description: Set of permissions allowed for the proxy
+    Description: "Set of permissions allowed for the proxy in database (permissions described here: https://www.postgresql.org/docs/current/predefined-roles.html#PREDEFINED-ROLES-TABLE)"
     Type: List<String>
-    Default: SELECT
+    Default: pg_read_all_data 
     AllowedValues:
-      - SELECT
-      - INSERT
-      - UPDATE
-      - DELETE
+      - pg_read_all_data
+      - pg_write_all_data
   CreateUserBucketOverride:
     Description: Override for s3 bucket containing RDSCreateUser Lambda code
     Type: String
@@ -38,7 +36,11 @@ Parameters:
   RDSCreateUserVersion:
     Description: Semantic version of the rds-create-user lambda
     Type: String
-    Default: "v0.0.2"
+    Default: "v0.0.4"
+  SSMInstanceAMI:
+    Description: AMI ID
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
 Conditions:
   CreateUserBucket: !Not [!Equals [!Ref CreateUserBucketOverride, ""]]
   CreateUserFnKey: !Not [!Equals [!Ref CreateUserFnKeyOverride, ""]]
@@ -148,7 +150,7 @@ Resources:
       FromPort:
         Fn::ImportValue:
           !Join [":", [!Ref "DBStackName", "DBPort"]]
-      ToPort:
+      ToPort: 
         Fn::ImportValue:
           !Join [":", [!Ref "DBStackName", "DBPort"]]
       SourceSecurityGroupId: !Ref DBProxySG 
@@ -230,10 +232,6 @@ Resources:
       RoleArn: !GetAtt LrsqlDBProxyRole.Arn
       VpcSubnetIds:
         - Fn::ImportValue:
-            !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
-        - Fn::ImportValue:
-            !Join [":", [!Ref "VPCStackName", "PublicSubnetTwo"]]
-        - Fn::ImportValue:
             !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
         - Fn::ImportValue:
             !Join [":", [!Ref "VPCStackName", "PrivateSubnetTwo"]] 
@@ -254,9 +252,63 @@ Resources:
         MaxConnectionsPercent: 100
         MaxIdleConnectionsPercent: 50
         ConnectionBorrowTimeout: 120
+  SSMInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "ec2.amazonaws.com"
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Path: "/"
+  SSMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - Ref: SSMInstanceRole
+  SSMInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for SSMInstance 
+      VpcId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "VPCStackName", "VPCId"]] 
+  SSMInstanceIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      Description: Ingress from SSMInstance
+      GroupId: !Ref DBProxySG
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !Ref SSMInstanceSG
+  SSMEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      InstanceType: t3.micro
+      ImageId: !Ref SSMInstanceAMI
+      SecurityGroupIds:
+        - !Ref SSMInstanceSG 
+      SubnetId:
+        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
 Outputs:
-  LrsqlRdsProxyEndpoint:
+  Endpoint:
     Description: Proxy Endpoint
     Value: !GetAtt LrsqlRdsProxy.Endpoint
     Export:
       Name: !Sub "${AWS::StackName}:Endpoint"
+  DBProxySG:
+    Description: Proxy SG
+    Value: !Ref DBProxySG
+    Export:
+      Name: !Sub "${AWS::StackName}:DBProxySG"
+  SSMInstanceId:
+    Description: Instance ID of SSM EC2 Instance (needed for local ssm client config)
+    Value: !GetAtt SSMEC2Instance.InstanceId
+    Export:
+      Name: !Sub "${AWS::StackName}:SSMInstanceId"
