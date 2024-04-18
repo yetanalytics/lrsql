@@ -47,7 +47,6 @@ Resources:
       - !Ref NginxInstanceSG
       SubnetId:
         Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PublicSubnetOne']]
-      KeyName: yet-dev-access
       UserData:
         Fn::Base64: !Sub
           - |
