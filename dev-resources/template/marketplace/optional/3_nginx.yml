@@ -37,6 +37,7 @@ Resources:
       ToPort:
         Fn::ImportValue:
           !Join [":", [!Ref "DBStackName", "DBPort"]]
+      SourceSecurityGroupId: !Ref NginxInstanceSG
   NginxRDSProxy:
     Type: AWS::EC2::Instance
     Metadata:
@@ -77,7 +78,7 @@ Resources:
                       !Join [":", [!Ref "DBStackName", "DBPort"]]
                   Host:
                     Fn::ImportValue:
-                      !Join [":", [!Ref "DBStackName", "DBHost"]]
+                      !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
               mode: '000400'
               owner: root
               group: root
