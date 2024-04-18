@@ -40,55 +40,6 @@ Resources:
       SourceSecurityGroupId: !Ref NginxInstanceSG
   NginxRDSProxy:
     Type: AWS::EC2::Instance
-    Metadata:
-      AWS::CloudFormation::Init:
-        configSets:
-          proxy:
-            - 01_installAndRunProxy
-        00_installAndRunProxy:
-          files:
-            '/etc/nginx/nginx.conf':
-              content: !Sub 
-                - |
-                   worker_processes  1;
-                   error_log  /var/log/nginx/error.log;
-                   events {
-                     worker_connections  1024;
-                   }
-                   stream {
-                     # Define an upstream database server
-                     upstream database_server {
-                       # The IP address and port of your RDS instance
-                       server ${Host}:${Port};
-                     }
-
-                     # Configure a server to listen on a local port and proxy to the RDS instance
-                     server {
-                       listen ${Port}; # The port Nginx will listen on locally
-                       proxy_pass database_server; # Proxy connections to the upstream database
-
-                       # Optional configurations for better handling
-                       proxy_connect_timeout 10s;   # Timeout for establishing a connection to the RDS
-                       proxy_timeout 60s;           # Timeout for idle connections
-                       proxy_buffer_size 16k;       # Buffer size for network packets
-                     }
-                   }
-                - Port:
-                    Fn::ImportValue:
-                      !Join [":", [!Ref "DBStackName", "DBPort"]]
-                  Host:
-                    Fn::ImportValue:
-                      !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
-              mode: '000400'
-              owner: root
-              group: root
-          commands:
-            01install_nginx:
-              cwd: "~"
-              command: "yum install -y nginx-mod-stream nginx"
-            02start_proxy:
-              cwd: "~"
-              command: "systemctl start nginx"
     Properties:
       ImageId: !Ref AMI
       InstanceType: !Ref InstanceType
@@ -97,21 +48,34 @@ Resources:
       SubnetId:
         Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PublicSubnetOne']]
       KeyName: yet-dev-access
-      UserData: 
-        !Base64
-          'Fn::Join':
-            - ''
-            - - |
-              #!/bin/bash -xe
-              - |
-              # Run init
-              - 'sudo /opt/aws/bin/cfn-init -v --stack '
-              - !Ref AWS::StackName
-              - ' --resource NginxRDSProxy'
-              - ' --configsets proxy'
-              - ' --region '
-              - !Ref AWS::Region
-              - |+
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            yum update -y
+            yum install nginx nginx-mod-stream -y
+            cat <<'EOF' >/usr/share/nginx/modules/rds.conf
+            # Load the stream module
+            stream {
+              upstream database_server {
+                  server ${Host}:${Port};
+              }
+              server {
+                  listen ${Port};
+                  proxy_pass database_server;
+                  proxy_connect_timeout 10s;
+                  proxy_timeout 60s;
+                  proxy_buffer_size 16k;
+              }
+            }
+            EOF
+            systemctl start nginx
+          - Port:
+              Fn::ImportValue:
+                !Join [":", [!Ref "DBStackName", "DBPort"]]
+            Host:
+              Fn::ImportValue:
+                !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
 Outputs:
   ProxyPublicIp:
     Description: Public IP of Nginx Proxy 
