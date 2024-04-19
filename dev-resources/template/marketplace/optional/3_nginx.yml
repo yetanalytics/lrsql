@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "RDS nginx proxy"
+Transform: AWS::LanguageExtensions
 Parameters:
   VPCStackName:
     Description: Name of our VPC Stack
@@ -15,7 +16,78 @@ Parameters:
     Description: Instance Type
     Type: String
     Default: t3.micro
+  AllowedCIDRs:
+    Description: List of CIDR blocks allowed to access the instance.
+    Type: CommaDelimitedList
+
 Resources:
+
+  IngressRuleLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      Policies:
+        - PolicyName: LambdaPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+              - Effect: Allow
+                Action: ["cloudformation:DescribeStacks"]
+                Resource: "*"
+
+  IngressRuleLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.lambda_handler
+      Role: !GetAtt IngressRuleLambdaExecutionRole.Arn
+      Code:
+        ZipFile: 
+          !Sub
+            - |
+              import boto3
+              import cfnresponse
+
+              def lambda_handler(event, context):
+                  try:
+                      if event['RequestType'] in ['Create', 'Update']:
+                          cidr_blocks = event['ResourceProperties']['CidrBlocks']
+                          ingress_rules = [
+                              {
+                                  "IpProtocol": "tcp",
+                                  "FromPort": ${Port},
+                                  "ToPort": ${Port},
+                                  "CidrIp": cidr
+                              }
+                              for cidr in cidr_blocks
+                          ]
+                          response_data = {'IngressRules': ingress_rules}
+                          cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+                      else:
+                          cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                  except Exception as e:
+                      print(f"Error processing request: {str(e)}")
+                      cfnresponse.send(event, context, cfnresponse.FAILED, {})
+            - Port:
+                Fn::ImportValue:
+                  !Join [":", [!Ref "DBStackName", "DBPort"]]
+      Runtime: python3.8
+      Timeout: 120
+  
+  SecurityGroupIngressRules:
+    Type: Custom::SecurityGroupIngress
+    Properties:
+      ServiceToken: !GetAtt IngressRuleLambda.Arn
+      CidrBlocks: !Ref AllowedCIDRs
+
   NginxInstanceSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -23,6 +95,8 @@ Resources:
       VpcId:
         Fn::ImportValue:
           !Join [":", [!Ref "VPCStackName", "VPCId"]]
+      SecurityGroupIngress: !GetAtt SecurityGroupIngressRules.IngressRules
+    
   SSMInstanceIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
@@ -38,6 +112,7 @@ Resources:
         Fn::ImportValue:
           !Join [":", [!Ref "DBStackName", "DBPort"]]
       SourceSecurityGroupId: !Ref NginxInstanceSG
+
   NginxRDSProxy:
     Type: AWS::EC2::Instance
     Properties:
@@ -76,6 +151,7 @@ Resources:
               Fn::ImportValue:
                 !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
 Outputs:
+
   ProxyPublicIp:
     Description: Public IP of Nginx Proxy 
     Value: !GetAtt NginxRDSProxy.PublicIp
