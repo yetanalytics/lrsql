@@ -157,7 +157,7 @@ Resources:
           - !Ref DBInitFnKeyOverride
           - !Sub "rds-db-init-v${DBInitFnVersion}.zip"
       Handler: index.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs16.x
       Timeout: 15
       Role: !GetAtt DBInitFnExecRole.Arn
       VpcConfig:
