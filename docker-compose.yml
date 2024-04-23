@@ -24,11 +24,12 @@ services:
       LRSQL_API_SECRET_DEFAULT: my_secret
       LRSQL_ADMIN_USER_DEFAULT: my_username
       LRSQL_ADMIN_PASS_DEFAULT: my_password
-      LRSQL_ALLOW_ALL_ORIGINS: true
+      LRSQL_ALLOW_ALL_ORIGINS: "true"
       LRSQL_DB_HOST: db
       LRSQL_DB_NAME: lrsql_db
       LRSQL_DB_USER: lrsql_user
       LRSQL_DB_PASSWORD: lrsql_password
+      LRSQL_JWT_COMMON_SECRET: sandwich
       # If Postgres is too slow to start, increase this
       LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
   lrs_2:
@@ -45,11 +46,12 @@ services:
       LRSQL_API_SECRET_DEFAULT: my_secret
       LRSQL_ADMIN_USER_DEFAULT: my_username
       LRSQL_ADMIN_PASS_DEFAULT: my_password
-      LRSQL_ALLOW_ALL_ORIGINS: true
+      LRSQL_ALLOW_ALL_ORIGINS: "true"
       LRSQL_DB_HOST: db
       LRSQL_DB_NAME: lrsql_db
       LRSQL_DB_USER: lrsql_user
       LRSQL_DB_PASSWORD: lrsql_password
+      LRSQL_JWT_COMMON_SECRET: sandwich
       # If Postgres is too slow to start, increase this
       LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
   lb:
