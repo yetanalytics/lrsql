@@ -63,7 +63,7 @@
         (oidc/init
          config
          (:config lrs))
-        ;; LRS reaction toggle
+        ;; LRS config vars
         {:keys [enable-reactions stmt-get-max]}
         (:config lrs)
         ;; Make routes - the lrs error interceptor is appended to the
