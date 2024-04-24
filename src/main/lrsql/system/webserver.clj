@@ -63,8 +63,8 @@
         (oidc/init
          config
          (:config lrs))
-        ;; LRS reaction toggle
-        {:keys [enable-reactions]}
+        ;; LRS config vars
+        {:keys [enable-reactions stmt-get-max]}
         (:config lrs)
         ;; Make routes - the lrs error interceptor is appended to the
         ;; start to all lrs routes
@@ -93,6 +93,7 @@
                :enable-admin-delete-actor enable-admin-delete-actor
                :enable-admin-ui           enable-admin-ui
                :admin-language-code       admin-language
+               :stmt-get-max              stmt-get-max
                :proxy-path                proxy-path
                :enable-admin-status       enable-admin-status
                :enable-account-routes     enable-local-admin
