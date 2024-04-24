@@ -77,7 +77,11 @@ Parameters:
     Description: Version of SQL LRS to download and install (public release versions on GitHub)
     Type: String
     Default: v0.5.5
-
+  JWTCommonSecret:
+    Description: Multiple servers need a shared secret w/which to authenticate users.  Any string will do.
+    Type: String
+    Default: "/lrsql/demo/JWT_COMMON_SECRET"
+    
   ASGMinSize:
     Type: Number
     Default: 1
@@ -515,7 +519,8 @@ Resources:
                     "webserver": {
                       "httpHost": "0.0.0.0",
                       "httpPort": ${InstanceHttpPort},
-                      "allowedOrigins": ${AllowedOrigins}
+                      "allowedOrigins": ${AllowedOrigins},
+                      "jwtCommonSecret": ${JWTCommonSecret}
                     }
                   }
                 - DBName:
