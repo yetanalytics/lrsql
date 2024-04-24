@@ -22,6 +22,7 @@
            enable-reactions
            no-val?
            no-val-logout-url
+           stmt-get-max
            proxy-path]
     :or   {enable-admin-delete-actor false
            enable-admin-status false
@@ -47,7 +48,8 @@
                           :enable-reactions          enable-reactions
                           :no-val?                   no-val?
                           :admin-language-code       admin-language-code
-                          :custom-language           (custom-language-map)}
+                          :custom-language           (custom-language-map)
+                          :stmt-get-max              stmt-get-max}
                    (and no-val?
                         (not-empty no-val-logout-url))
                    (assoc :no-val-logout-url no-val-logout-url))
