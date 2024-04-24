@@ -36,7 +36,7 @@ Parameters:
     Type: String
     Description: Override for the S3 key to source the DB Init function. Use this if you are hosting your own DB init function code.
     Default: ""
-
+    
   # Server(s)
   InstanceType:
     Type: String
@@ -77,10 +77,6 @@ Parameters:
     Description: Version of SQL LRS to download and install (public release versions on GitHub)
     Type: String
     Default: v0.5.5
-  JWTCommonSecretPath:
-    Description: Path to shared JWT secret in Secrets Manager.
-    Type: String
-    AllowedPattern: ".+"
   ASGMinSize:
     Type: Number
     Default: 1
@@ -259,6 +255,28 @@ Resources:
         Fn::ImportValue:
           !Join [":", [!Ref "DBStackName", "DBName"]]
 
+  # Randomly generate shared JWT
+  GenerateJWTSecretFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: 'index.handler'
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import random
+          import string
+
+          def handler(event, context):
+              random_str = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+              return {'random_string': random_str}
+      Runtime: 'python3.8'
+      Timeout: 10
+
+  GenerateJWTSecretResource:
+    # Run the lambda init fn as a custom resource
+    Type: Custom::generateJWTCustomResource
+    DependsOn: GenerateJWTFunction
+
   # Servers
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -361,7 +379,9 @@ Resources:
 
   LrsInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
-    DependsOn: InitDBCustomResource
+    DependsOn:
+      - InitDBCustomResource
+      - GenerateJWTResource
     CreationPolicy:
       ResourceSignal:
         Timeout: PT15M
@@ -519,7 +539,7 @@ Resources:
                       "httpHost": "0.0.0.0",
                       "httpPort": ${InstanceHttpPort},
                       "allowedOrigins": ${AllowedOrigins},
-                      "jwtCommonSecret": "{{resolve:secretsmanager:${JWTCommonSecretPath}}}"
+                      "jwtCommonSecret": ${GenerateJWTSecretResource.random_string}
                     }
                   }
                 - DBName:
