@@ -36,7 +36,7 @@ Parameters:
     Type: String
     Description: Override for the S3 key to source the DB Init function. Use this if you are hosting your own DB init function code.
     Default: ""
-    
+
   # Server(s)
   InstanceType:
     Type: String
@@ -77,6 +77,7 @@ Parameters:
     Description: Version of SQL LRS to download and install (public release versions on GitHub)
     Type: String
     Default: v0.5.5
+
   ASGMinSize:
     Type: Number
     Default: 1
@@ -156,7 +157,7 @@ Resources:
           - !Ref DBInitFnKeyOverride
           - !Sub "rds-db-init-v${DBInitFnVersion}.zip"
       Handler: index.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs14.x
       Timeout: 15
       Role: !GetAtt DBInitFnExecRole.Arn
       VpcConfig:
@@ -254,44 +255,6 @@ Resources:
       DBName:
         Fn::ImportValue:
           !Join [":", [!Ref "DBStackName", "DBName"]]
-
-  # Randomly generate shared JWT
-  GenerateJWTSecretRole:
-      Type: AWS::IAM::Role
-      Properties:
-        AssumeRolePolicyDocument:
-          Statement:
-            - Effect: Allow
-              Principal:
-                Service: [lambda.amazonaws.com]
-              Action: ["sts:AssumeRole"]
-        ManagedPolicyArns:
-          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-
-  GenerateJWTSecretFunction:
-    Type: 'AWS::Lambda::Function'
-    Properties:
-      Handler: 'index.handler'
-      Role: !GetAtt GenerateJWTSecretRole.Arn
-      Code:
-        ZipFile: |
-          import random
-          import string
-          import cfnresponse
-
-          def handler(event, context):
-            random_str = ''.join(random.choices(string.ascii_letters + string.digits, k=63))
-            resp_value = {'random_string': random_str}
-            cfnresponse.send(event, context, cfnresponse.SUCCESS, resp_value)
-      Runtime: 'python3.8'
-      Timeout: 10
-
-  # Run the lambda init fn as a custom resource          
-  GenerateJWTSecretResource:
-    Type: Custom::generateJWTSecretCustomResource
-    DependsOn: GenerateJWTSecretFunction
-    Properties:
-      ServiceToken: !GetAtt GenerateJWTSecretFunction.Arn
 
   # Servers
   LogGroup:
@@ -395,9 +358,7 @@ Resources:
 
   LrsInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
-    DependsOn:
-      - InitDBCustomResource
-      - GenerateJWTSecretResource
+    DependsOn: InitDBCustomResource
     CreationPolicy:
       ResourceSignal:
         Timeout: PT15M
@@ -554,8 +515,7 @@ Resources:
                     "webserver": {
                       "httpHost": "0.0.0.0",
                       "httpPort": ${InstanceHttpPort},
-                      "allowedOrigins": ${AllowedOrigins},
-                      "jwtCommonSecret": ${GenerateJWTSecretResource.random_string}
+                      "allowedOrigins": ${AllowedOrigins}
                     }
                   }
                 - DBName:
