@@ -228,6 +228,7 @@
                     ::jwt-no-val-role
                     ::jwt-no-val-role-key
                     ::jwt-no-val-logout-url
+                    ::jwt-common-secret
                     ::sec-head-hsts
                     ::sec-head-frame
                     ::sec-head-content-type
