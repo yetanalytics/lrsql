@@ -52,7 +52,6 @@ services:
       # If Postgres is too slow to start, increase this
       LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
       LRSQL_JWT_COMMON_SECRET: sandwich #in production, this should be between 32 and 64 chars for security
-    restart: always
 
   lrs_2:
     # build: ../.. # switch to this for active dev
@@ -82,7 +81,6 @@ services:
       # If Postgres is too slow to start, increase this
       LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
       LRSQL_JWT_COMMON_SECRET: sandwich #in production, this should be between 32 and 64 chars for security
-    restart: always
   lb:
     image: nginx:stable-alpine
     configs:
