@@ -31,6 +31,11 @@ services:
       - "8080:8080"
     depends_on:
       - db
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
       LRSQL_API_KEY_DEFAULT: my_key
       LRSQL_API_SECRET_DEFAULT: my_secret
@@ -53,7 +58,13 @@ services:
     ports:
       - "8081:8080"
     depends_on:
-      - db
+      lrs_1:
+        condition: service_healthy
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
       LRSQL_API_KEY_DEFAULT: my_key
       LRSQL_API_SECRET_DEFAULT: my_secret
@@ -75,5 +86,5 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - lrs_1
-      - lrs_2
+      lrs_2:
+        condition: service_healthy
