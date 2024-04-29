@@ -13,11 +13,14 @@ configs:
   lb_config:
     file: ./nginx.conf
 
+volumes:
+  db_data:
+
 services:
   db:
     image: postgres
     volumes:
-      - ./tmp/db:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: lrsql_user
       POSTGRES_PASSWORD: lrsql_password
