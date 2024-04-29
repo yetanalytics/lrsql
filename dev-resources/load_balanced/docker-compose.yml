@@ -3,10 +3,9 @@ version: "3.9"
 # Runs *two* SQL LRS containers next to each other behind a load balancer(nginx).
 
 # To run: 
-# 1.  Replace the main `lrsql/docker-compose.yml` file with this one
-# 2.  From the lrsql dir:  docker compose up
-# 3.  Access on port 8083 in your browser.
-# 4.  Comment in/out the `build` and `image` lines in lrs_1 and lrs_2 to switch between building from local source, or pulling the published lrsql image from the docker repository.
+# 1.  From the load_balanced dir:  docker compose up
+# 2.  Access on port 8083 in your browser.
+# 3.  Comment in/out the `build` and `image` lines in lrs_1 and lrs_2 to switch between building from local source, or pulling the published lrsql image from the docker repository.
 
 
 # See the Docker Compose docs for more info: https://docs.docker.com/compose/
