@@ -352,6 +352,44 @@ Resources:
           !Join [":", [!Ref "DBStackName", "DBPort"]]
       SourceSecurityGroupId: !Ref InstanceSG
 
+  # Randomly generate shared JWT
+  GenerateJWTSecretRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: [lambda.amazonaws.com]
+              Action: ["sts:AssumeRole"]
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  GenerateJWTSecretFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: 'index.handler'
+      Role: !GetAtt GenerateJWTSecretRole.Arn
+      Code:
+        ZipFile: |
+          import random
+          import string
+          import cfnresponse
+
+          def handler(event, context):
+            random_str = ''.join(random.choices(string.ascii_letters + string.digits, k=63))
+            resp_value = {'random_string': random_str}
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, resp_value)
+      Runtime: 'python3.8'
+      Timeout: 10
+
+  # Run the lambda init fn as a custom resource          
+  GenerateJWTSecretResource:
+    Type: Custom::generateJWTSecretCustomResource
+    DependsOn: GenerateJWTSecretFunction
+    Properties:
+      ServiceToken: !GetAtt GenerateJWTSecretFunction.Arn
+
   LrsInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
     CreationPolicy:
@@ -489,7 +527,8 @@ Resources:
                     "webserver": {
                       "httpHost": "0.0.0.0",
                       "httpPort": ${InstanceHttpPort},
-                      "allowedOrigins": ${AllowedOrigins}
+                      "allowedOrigins": ${AllowedOrigins},
+                      "jwtCommonSecret": "${GenerateJWTSecretResource.random_string}"
                     }
                   }
                 - DBName:
