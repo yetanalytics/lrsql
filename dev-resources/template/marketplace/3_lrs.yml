@@ -8,34 +8,10 @@ Parameters:
   DBStackName:
     Description: DB Stack Reference
     Type: String
-  DBAppUserName:
-    Description: Name of app db user
-    Type: String
-    Default: lrsqldbuser
-  SSMStackName:
+  SecretStackName:
     Description: SSM Stack Reference
     Type: String
-  # DBAppUserPasswordPath:
-  #   Description: SSM Path to the secret password
-  #   Type: String
-  #   Default: "/lrsql/demo/DB_APP_USER_PASSWORD"
-  # DBAppUserPasswordVersion:
-  #   Description: SSM version
-  #   Type: Number
-  #   Default: 1
   # Lambda DB Init Script
-  DBInitFnVersion:
-    Type: String
-    Description: Version of rds-db-init function code to use to initialize the DB application user.
-    Default: "0.0.2"
-  DBInitFnBucketOverride:
-    Type: String
-    Description: Override for the S3 bucket to source the DB Init function. Use this if you are hosting your own DB init function code.
-    Default: ""
-  DBInitFnKeyOverride:
-    Type: String
-    Description: Override for the S3 key to source the DB Init function. Use this if you are hosting your own DB init function code.
-    Default: ""
 
   # Server(s)
   InstanceType:
@@ -103,10 +79,7 @@ Parameters:
   ALBHostName:
     Type: String
     Description: The hostname to use for the Elastic Load Balancer.
-    Default: "sqllrs.yetanalytics.io"
-  ALBSubnets:
-    Description: Subnets that are used by the Elastic Load Balancer.
-    Type: List<AWS::EC2::Subnet::Id>
+    Default: "ami.yet.systems"
   ALBCertArn:
     Type: String
     Description: The ARN of an ACM cert to use on the ALB
@@ -128,90 +101,55 @@ Parameters:
     Description: Prefix for CloudWatch log group.
     Type: String
     Default: "/yet/lrsql/"
+  CreateUserBucketOverride:
+    Description: Override for s3 bucket containing RDSCreateUser Lambda code
+    Type: String
+    Default: ""
+  CreateUserFnKeyOverride:
+    Description: Override for s3 Key containing RDSCreateUser Lambda Code
+    Type: String
+    Default: ""
+  RDSCreateUserVersion:
+    Description: Version of function that creates users for RDS
+    Type: String
+    Default: "v0.0.8"
 
 Conditions:
   SetDNS: !Not [!Equals [!Ref ALBHostedZone, ""]]
   SetCORS: !Not [!Equals [!Join ["", !Ref CORSAllowedOrigins], ""]]
-  SetDBInitFnBucket: !Not [!Equals [!Ref DBInitFnBucketOverride, ""]]
-  SetDBInitFnKey: !Not [!Equals [!Ref DBInitFnKeyOverride, ""]]
   ASGCPUPolicyTargetValueProvided:
     !Not [!Equals [!Ref ASGCPUPolicyTargetValue, ""]]
   ASGALBRequestCountTargetValueProvided:
     !Not [!Equals [!Ref ASGALBRequestCountTargetValue, ""]]
   InstanceKeyNameProvided:
     !Not [!Equals [!Ref InstanceKeyName, ""]]
+  CreateUserBucket: !Not [!Equals [!Ref CreateUserBucketOverride, ""]]
+  CreateUserFnKey: !Not [!Equals [!Ref CreateUserFnKeyOverride, ""]]
 
 Resources:
-  # DB Initialization Function and custom resource to run it
 
-  DBInitFn:
-    Type: AWS::Lambda::Function
-    Properties:
-      Code:
-        S3Bucket: !If
-          - SetDBInitFnBucket
-          - !Ref DBInitFnBucketOverride
-          - !Sub "yet-rds-db-init-deploy-${AWS::Region}"
-        S3Key: !If
-          - SetDBInitFnKey
-          - !Ref DBInitFnKeyOverride
-          - !Sub "rds-db-init-v${DBInitFnVersion}.zip"
-      Handler: index.handler
-      Runtime: nodejs14.x
-      Timeout: 15
-      Role: !GetAtt DBInitFnExecRole.Arn
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref DBInitFnSG
-        SubnetIds:
-          - Fn::ImportValue: !Join [':', [!Ref 'DBStackName', 'DBSubnetOne']]
-          - Fn::ImportValue: !Join [':', [!Ref 'DBStackName', 'DBSubnetTwo']]
-  DBInitFnSG:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: SG For Lambda Init Fn
-      VpcId:
-        Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'VPCId']]
-
-  DBInstanceInitIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      Description: Ingress from the init fn to RDS instance
-      GroupId:
-        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
-      IpProtocol: tcp
-      FromPort:
-        Fn::ImportValue:
-          !Join [":", [!Ref "DBStackName", "DBPort"]]
-      ToPort:
-        Fn::ImportValue:
-          !Join [":", [!Ref "DBStackName", "DBPort"]]
-      SourceSecurityGroupId: !Ref DBInitFnSG
-
-  DBInitPolicy:
+  CreateUserPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      Description: IAM Policy for db init lambda access.
-      ManagedPolicyName: !Sub "${AWS::StackName}-${AWS::Region}-lambda-dbinit-policy"
+      Description: IAM Policy for rds-create-user lambda access.
+      ManagedPolicyName: !Sub "${AWS::StackName}-${AWS::Region}-create-user-policy"
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          # Allow access to SSM and VPC related networking
           - Effect: Allow
             Action:
-              - "ssm:GetParameter"
-              - "secretsmanager:GetSecretValue"
-            Resource:
+              - ssm:GetParameter
+            Resource: 
               - !Sub 
-                - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}"
-                - DBAppUserPasswordPath:
-                    Fn::ImportValue:
-                      !Join [":", [!Ref "SSMStackName", "DBAppUserPasswordPath"]]
-              - !Sub
-                - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBMasterUserPasswordPath}"
-                - DBMasterUserPasswordPath:
-                    Fn::ImportValue:
-                      !Join [":", [!Ref "SSMStackName", "DBMasterUserPasswordPath"]]
+                  - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${Path}"
+                  - Path:
+                      Fn::ImportValue:
+                        !Join [":", [!Ref "SecretStackName", "DBMasterUserPasswordPath"]]
+              - !Sub 
+                  - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${Path}"
+                  - Path:
+                      Fn::ImportValue:
+                        !Join [":", [!Ref "SecretStackName", "DBAppUserPasswordPath"]]
           - Effect: Allow
             Action:
               - ec2:DescribeNetworkInterfaces
@@ -220,8 +158,7 @@ Resources:
               - ec2:DescribeInstances
               - ec2:AttachNetworkInterface
             Resource: "*"
-
-  DBInitFnExecRole:
+  CreateUserRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -233,35 +170,81 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-        - !Ref DBInitPolicy
-
-  InitDBCustomResource:
-    # Run the lambda init fn as a custom resource
-    Type: Custom::initDBCustomResource
-    DependsOn: DBInitFn
+        - !Ref CreateUserPolicy
+  CreateUserSG:
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      ServiceToken: !GetAtt DBInitFn.Arn
-      DBMasterUsername:
-        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBMasterUserName"]]
-      DBMasterPasswordPath: 
-        Fn::ImportValue: !Join [":", [!Ref "SSMStackName", "DBMasterUserPasswordPath"]]
-      DBUsername: !Ref DBAppUserName
-      DBPasswordPath:
+      GroupDescription: SG For Lambda Init Fn
+      VpcId:
         Fn::ImportValue:
-          !Join [":", [!Ref "SSMStackName", "DBAppUserPasswordPath"]]
-      # DBPasswordPath: !Join
-      #   - ":"
-      #   - - !Ref DBAppUserPasswordPath
-      #     - !Ref DBAppUserPasswordVersion
-      DBHost:
+          !Join [":", [!Ref "VPCStackName", "VPCId"]]
+  CreateUserIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from the create user fn to RDS instance
+      GroupId:
         Fn::ImportValue:
-          !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
-      DBPort:
+          !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
+      IpProtocol: tcp
+      FromPort: 
         Fn::ImportValue:
           !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort: 
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      SourceSecurityGroupId: !Ref CreateUserSG
+  
+  CreateUserFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !If
+          - CreateUserBucket
+          - !Ref CreateUserBucketOverride
+          - !Sub "yet-rds-db-init-deploy-${AWS::Region}"
+        S3Key: !If
+          - CreateUserFnKey
+          - !Ref CreateUserFnKeyOverride
+          - !Sub "rds-create-user${RDSCreateUserVersion}.zip"
+      Runtime: nodejs16.x
+      Handler: index.handler
+      Role: !GetAtt CreateUserRole.Arn
+      Timeout: 15
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref CreateUserSG
+        SubnetIds:
+          - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetOne']]
+          - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetTwo']]
+  CreateAdminUser:
+    Type: Custom::CreateDBUser
+    Properties:
+      ServiceToken: !GetAtt CreateUserFn.Arn
+      MasterUsername: 
+        Fn::ImportValue: 
+          !Join [":", [!Ref "SecretStackName", "DBMasterUsername"]]
+      MasterPasswordPath:
+        Fn::ImportValue:
+          !Join [":", [!Ref "SecretStackName", "DBMasterUserPasswordPath"]]
       DBName:
         Fn::ImportValue:
           !Join [":", [!Ref "DBStackName", "DBName"]]
+      Host:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
+      Port: 
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      User:
+        Username:
+          Fn::ImportValue:
+            !Join [":", [!Ref "SecretStackName", "DBAppUsername"]]
+        PasswordPath:
+          Fn::ImportValue:
+            !Join [":", [!Ref "SecretStackName", "DBAppUserPasswordPath"]]
+        Permissions:
+          - pg_read_all_data
+          - pg_write_all_data
 
   # Servers
   LogGroup:
@@ -311,7 +294,7 @@ Resources:
                 - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}"
                 - DBAppUserPasswordPath:
                     Fn::ImportValue:
-                      !Join [":", [!Ref "SSMStackName", "DBAppUserPasswordPath"]]
+                      !Join [":", [!Ref "SecretStackName", "DBAppUserPasswordPath"]]
           # Allegedly needed for securestring...
           - Effect: Allow
             Action:
@@ -371,7 +354,6 @@ Resources:
 
   LrsInstances:
     Type: AWS::AutoScaling::LaunchConfiguration
-    DependsOn: InitDBCustomResource
     CreationPolicy:
       ResourceSignal:
         Timeout: PT15M
@@ -496,7 +478,7 @@ Resources:
                       "dbHost": "${DBHost}",
                       "dbPort": ${DBPort},
                       "dbName": "${DBName}",
-                      "dbUser": "${DBAppUserName}",
+                      "dbUser": "${DBAppUsername}",
                       "dbPassword": "${DBPass}"
                     },
                     "lrs" : {
@@ -514,8 +496,8 @@ Resources:
                     Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBName"]]
                   DBHost:
                     Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
-                  DBAppUserName: !Ref DBAppUserName
-                  DBPass: !GetAtt InitDBCustomResource.dbAppPass
+                  DBAppUsername: !GetAtt CreateAdminUser.dbAppUser 
+                  DBPass: !GetAtt CreateAdminUser.dbAppPass 
                   DefaultAdminUser: !Ref DefaultAdminUser
                   DefaultAdminPass: !Ref DefaultAdminPass
                   InstanceHttpPort: !Ref InstanceHttpPort
@@ -660,7 +642,11 @@ Resources:
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
           Value: "30"
-      Subnets: !Ref ALBSubnets
+      Subnets:
+        - Fn::ImportValue:
+            !Join [':', [!Ref 'VPCStackName', 'PublicSubnetOne']]
+        - Fn::ImportValue:
+            !Join [':', [!Ref 'VPCStackName', 'PublicSubnetTwo']]
       SecurityGroups:
         - !Ref LoadBalancerSG
 

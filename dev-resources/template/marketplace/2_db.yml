@@ -4,8 +4,8 @@ Parameters:
   VPCStackName:
     Description: "Name of VPC Stack"
     Type: String
-  SSMStackName:
-    Description: "Name of SSM Stack"
+  SecretStackName:
+    Description: "Name of Secrets Manager Stack"
     Type: String
 
   # Postgres
@@ -50,10 +50,6 @@ Parameters:
     Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
     Type: String
     Default: "lrsql_marketplace"
-  DBMasterUserName:
-    Description: Name of admin user
-    Type: String
-    Default: yetadmin
   # DBMasterUserPasswordPath:
   #  Description: SSM Path to the secret password
     #  Type: String
@@ -99,8 +95,10 @@ Resources:
       # Description: Subnet group to allow instance access to db
       DBSubnetGroupDescription: SQL LRS App Instance Subnet Group
       SubnetIds:
-        - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetOne']]
-        - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetTwo']]
+        - Fn::ImportValue: 
+            !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetOne']]
+        - Fn::ImportValue: 
+            !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetTwo']]
 
   DBInstanceSG:
     Type: AWS::EC2::SecurityGroup
@@ -124,7 +122,8 @@ Resources:
       MasterUsername: !If
         - DBSnapshotIdentifierProvided
         - !Ref AWS::NoValue
-        - !Ref DBMasterUserName
+        - Fn::ImportValue:
+            !Join [":", [!Ref "SecretStackName", "DBMasterUsername"]]
       MasterUserPassword: !If
         - DBSnapshotIdentifierProvided
         - !Ref AWS::NoValue
@@ -132,7 +131,7 @@ Resources:
           - "{{resolve:ssm-secure:${DBMasterUserPasswordPath}}}"
           - DBMasterUserPasswordPath:
               Fn::ImportValue: 
-                !Join [":", [!Ref "SSMStackName", "DBMasterUserPasswordPath"]]
+                !Join [":", [!Ref "SecretStackName", "DBMasterUserPasswordPath"]]
       BackupRetentionPeriod: !If
         - DBSnapshotIdentifierProvided
         - !Ref AWS::NoValue
@@ -141,7 +140,8 @@ Resources:
       VpcSecurityGroupIds:
         - !Ref DBInstanceSG
       DBSubnetGroupName: !Ref DBSubnetGroup
-      DBClusterParameterGroupName: !FindInMap [DBClusterParameterGroupMap, !Ref "DBEngineVersion", Name]
+      DBClusterParameterGroupName: 
+        !FindInMap [DBClusterParameterGroupMap, !Ref "DBEngineVersion", Name]
       EnableCloudwatchLogsExports: !If
         - DBProvisioned
         - [postgresql]
@@ -193,11 +193,6 @@ Outputs:
     Value: !Ref DBName
     Export:
       Name: !Sub "${AWS::StackName}:DBName"
-  DBMasterUserName:
-    Description: DB Master username
-    Value: !Ref DBMasterUserName
-    Export:
-      Name: !Sub "${AWS::StackName}:DBMasterUserName"
   DBClusterArn:
     Description: Arn of DB Cluster
     Value: !GetAtt DBCluster.DBClusterArn
@@ -212,7 +207,7 @@ Outputs:
   #   Description: Path to the DB Master password
   #   Value: 
   #     Fn::ImportValue: 
-  #       !Join [":", [!Ref "SSMStackName", "DBMasterUserPasswordPath"]]
+  #       !Join [":", [!Ref "SecretStackName", "DBMasterUserPasswordPath"]]
   #   Export:
   #     Name: !Sub "${AWS::StackName}:DBMasterUserPasswordPath"
   # DBMasterUserPasswordVersion:
