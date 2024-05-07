@@ -149,6 +149,7 @@ _NOTE:_ `LRSQL_STMT_RETRY_LIMIT` and `LRSQL_STMT_RETRY_BUDGET` are used to mitig
 | `LRSQL_JWT_NO_VAL_ROLE_KEY`       | `jwtNoValRoleKey`        | (**DANGEROUS!** See `LRSQL_JWT_NO_VAL`) This variable configures which claim key to look in for the role when token validation is turned off.    | Not Set |
 | `LRSQL_JWT_NO_VAL_ROLE`           | `jwtNoValRole`           | (**DANGEROUS!** See `LRSQL_JWT_NO_VAL`) This variable configures what role must be present in the key above when token validation is turned off.    | Not Set |
 | `LRSQL_JWT_NO_VAL_LOGOUT_URL`     | `jwtNoValLogoutUrl`      | (**DANGEROUS!** See `LRSQL_JWT_NO_VAL`) This variable specifies a logout URL that the client will redirect to on user logout when token validation is turned off. | Not Set |
+| `LRSQL_JWT_COMMON_SECRET    `     | `jwtCommonSecret`        |  This variable serves as a secret key with which JWTs are signed. If this is unspecified, sql-lrs generates its own key, but when running multiple instances of sql-lrs behind load balancer, they need to accept each others' JWTs, meaning they need to be working from a common key.  This is a secret and should be secured as such.  It should be between 32 and 64 characters.| Not Set |
 
 #### OIDC
 

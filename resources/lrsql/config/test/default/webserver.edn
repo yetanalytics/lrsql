@@ -10,6 +10,7 @@
  :jwt-no-val-role-key       nil
  :jwt-no-val-role           nil
  :jwt-no-val-logout-url     nil
+ :jwt-common-secret         nil
  :enable-http               true
  :enable-http2              true
  :ssl-port                  8443

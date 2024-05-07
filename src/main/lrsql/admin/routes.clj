@@ -197,6 +197,7 @@
            enable-admin-ui
            enable-admin-status
            admin-language-code
+           stmt-get-max
            proxy-path
            enable-account-routes
            enable-reaction-routes
@@ -229,6 +230,7 @@
                     :no-val?                   no-val?
                     :no-val-logout-url         no-val-logout-url
                     :proxy-path                proxy-path
+                    :stmt-get-max              stmt-get-max
                     :enable-admin-delete-actor enable-admin-delete-actor
                     :admin-language-code       admin-language-code}))
                 (when enable-admin-status

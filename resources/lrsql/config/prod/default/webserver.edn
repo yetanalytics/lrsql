@@ -12,6 +12,7 @@
  :jwt-no-val-role-key       #or [#env LRSQL_JWT_NO_VAL_ROLE_KEY nil]
  :jwt-no-val-role           #or [#env LRSQL_JWT_NO_VAL_ROLE nil]
  :jwt-no-val-logout-url     #or [#env LRSQL_JWT_NO_VAL_LOGOUT_URL nil]
+ :jwt-common-secret         #or [#env LRSQL_JWT_COMMON_SECRET nil]
  :sec-head-hsts             #or [#env LRSQL_SEC_HEAD_HSTS nil]
  :sec-head-frame            #or [#env LRSQL_SEC_HEAD_FRAME nil]
  :sec-head-content-type     #or [#env LRSQL_SEC_HEAD_CONTENT_TYPE nil]
