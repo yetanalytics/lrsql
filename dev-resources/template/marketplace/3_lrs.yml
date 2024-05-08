@@ -391,7 +391,7 @@ Resources:
       ServiceToken: !GetAtt GenerateJWTSecretFunction.Arn
 
   LrsInstances:
-    Type: AWS::AutoScaling::LaunchConfiguration
+    Type: AWS::EC2::LaunchTemplate
     CreationPolicy:
       ResourceSignal:
         Timeout: PT15M
@@ -568,23 +568,28 @@ Resources:
               command: |
                 systemctl restart lrsql.service
     Properties:
-      ImageId: !Ref InstanceAmiId
-      InstanceType: !Ref InstanceType
-      KeyName: !If
-        - InstanceKeyNameProvided
-        - !Ref InstanceKeyName
-        - !Ref AWS::NoValue
-      SecurityGroups:
-        - !Ref InstanceSG
-      IamInstanceProfile: !Ref InstanceProfile
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash -xe
-          echo 'Yet SQL LRS ${LrsVersion}'
-          # run configsets
-          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets default
-          # signal CF
-          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
+      LaunchTemplateName: !Sub ${AWS::StackName}-lrsql-launch-template
+      LaunchTemplateData:
+        ImageId: !Ref InstanceAmiId
+        InstanceType: !Ref InstanceType
+        KeyName: !If
+          - InstanceKeyNameProvided
+          - !Ref InstanceKeyName
+          - !Ref AWS::NoValue
+        SecurityGroups:
+          - !Ref InstanceSG
+        IamInstanceProfile:
+          Arn: !GetAtt 
+            - InstanceProfile
+            - Arn
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash -xe
+            echo 'Yet SQL LRS ${LrsVersion}'
+            # run configsets
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets default
+            # signal CF
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
 
   # Autoscaling Policies
 
@@ -624,7 +629,9 @@ Resources:
       VPCZoneIdentifier:
         - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetOne']]
         - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetTwo']]
-      LaunchConfigurationName: !Ref LrsInstances
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LrsInstances
+        Version: !GetAtt LrsInstances.LatestVersionNumber
       MinSize: !Ref ASGMinSize
       MaxSize: !Ref ASGMaxSize
       DesiredCapacity: !Ref ASGDesiredSize
