@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # TODO: ADD this to GH Actions and get version dynamically when new LRSQL release is cut
-VERSION="0.7.11"
+VERSION="0.7.13"
 COMPONENT_ARN=$(aws imagebuilder list-components | jq -r '.componentVersionList[] | select(.name == "InstallLRSQL").arn')
 PIPELINE_ARN=$(aws imagebuilder list-image-pipelines | jq -r '.imagePipelineList[] | select(.name == "lrsql-ami-pipeline").arn')
 INFRA_ARN=$(aws imagebuilder list-image-pipelines | jq -r '.imagePipelineList[] | select(.name == "lrsql-ami-pipeline").infrastructureConfigurationArn')
