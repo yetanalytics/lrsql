@@ -576,8 +576,8 @@ Resources:
           - InstanceKeyNameProvided
           - !Ref InstanceKeyName
           - !Ref AWS::NoValue
-        SecurityGroups:
-          - !Ref InstanceSG
+        SecurityGroupIds:
+          - !GetAtt [ "InstanceSG", "GroupId" ]
         IamInstanceProfile:
           Arn: !GetAtt 
             - InstanceProfile
@@ -781,3 +781,8 @@ Outputs:
         - !Ref ALBHostName
     Export:
       Name: !Sub "${AWS::StackName}:LrsAddress"
+  InstanceSG:
+    Description: LRSQLApp instance security group
+    Value: !Ref InstanceSG
+    Export:
+      Name: !Sub "${AWS::StackName}:InstanceSG"
