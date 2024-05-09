@@ -1,11 +1,14 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "RDS SSM Connect for LRSQL"
+Description: "RDS SSM Connect for LRSQL App"
 Parameters:
   VPCStackName:
     Description: Name of our VPC Stack
     Type: String
+  AppStackName:
+    Description: LRSQL App Stack Reference
+    Type: String
   DBStackName:
-    Description: DB Stack Reference
+    Description: LRSQL DB Stack Reference
     Type: String
   SSMInstanceAMI:
     Description: AMI ID
@@ -37,7 +40,18 @@ Resources:
       VpcId:
         Fn::ImportValue:
           !Join [":", [!Ref "VPCStackName", "VPCId"]] 
-  SSMInstanceIngress:
+  AppSSMInstanceIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      Description: Ingress from SSMInstance
+      GroupId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "AppStackName", "InstanceSG"]]
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !Ref SSMInstanceSG
+  DBSSMInstanceIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
       Description: Ingress from SSMInstance
