@@ -23,10 +23,6 @@ Parameters:
       - c5.xlarge
       - c5.2xlarge
       - c5.4xlarge
-  InstanceAmiId:
-    Description: Reference to LRSQL AMI 
-    Type: AWS::EC2::Image::Id 
-    Default: "ami-0931e78e25ca6ceea"
   InstanceKeyName:
     Description: Name of an EC2 key pair that can be used to connect to the server (optional)
     Type: String
@@ -34,9 +30,6 @@ Parameters:
     Description: CIDR Range for SSH Access to instances (Typically VPC CIDR Range)
     Type: String
     Default: "172.147.0.0/16"
-  # InstanceSubnets:
-  #   Description: Subnet on which to run the lrsql server
-  #   Type: List<AWS::EC2::Subnet::Id>
   InstanceHttpPort:
     Description: Port on which the server runs HTTP
     Type: String
@@ -52,6 +45,8 @@ Parameters:
   LrsVersion:
     Description: Version of SQL LRS to pull from Mapping of AMIs
     Type: String
+    AllowedValues:
+      - v0713
     Default: v0713
 
   ASGMinSize:
