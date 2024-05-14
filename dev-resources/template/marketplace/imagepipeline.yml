@@ -129,7 +129,7 @@ Resources:
         - Region: us-west-1
           AmiDistributionConfiguration:
             Name: lrsql-ami-us-west-1-{{ imagebuilder:buildDate }}
-        - Region: us-west-1
+        - Region: us-west-2
           AmiDistributionConfiguration:
             Name: lrsql-ami-us-west-2-{{ imagebuilder:buildDate }}
   LRSQLImagePipeline:
