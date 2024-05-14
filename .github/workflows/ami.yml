@@ -27,7 +27,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          role-to-assume: ${{ secrets.DEPLOY_AMI_ROLE }}
+          role-to-assume: arn:aws:iam::376099832799:role/lrsql-imagebuilder-ghacti-BuildAMIGithubActionsRole-IHZUC98qYzfG
           role-duration-seconds: 900 # 15 min; minimal duration possible
           # aws-region: us-east-1
 
