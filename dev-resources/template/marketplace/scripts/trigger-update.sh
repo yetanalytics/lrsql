@@ -1,7 +1,6 @@
 #!/bin/bash
 
 trigger_ami_build() {
-  REGION=$1
   VERSION=$2
   
   COMPONENT_ARN=$(aws imagebuilder list-components | jq -r '.componentVersionList[] | select(.name == "InstallLRSQL").arn')
@@ -27,9 +26,9 @@ trigger_ami_build() {
   
   # create new recipe
   IMAGE_RECIPE_ARN=$(aws imagebuilder create-image-recipe \
-                       --name "lrsql-ami-$REGION" \
+                       --name "lrsql-ami" \
                        --semantic-version $VERSION \
-                       --parent-image "arn:aws:imagebuilder:$REGION:aws:image/amazon-linux-2023-x86/x.x.x" \
+                       --parent-image "arn:aws:imagebuilder:us-east-1:aws:image/amazon-linux-2023-x86/x.x.x" \
                        --components "$COMPONENTS" | jq -r '.imageRecipeArn')
   
   
@@ -49,11 +48,10 @@ trigger_ami_build() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     while getopts "r:v:" opt; do
         case $opt in
-            r) REGION="$OPTARG";;
             v) VERSION="$OPTARG";;
             *) echo "Usage: $0 [-r region] [-v version]"; exit 1;;
         esac
     done
 
-    trigger_ami_build $REGION $VERSION
+    trigger_ami_build $VERSION
 fi

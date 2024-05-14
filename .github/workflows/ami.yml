@@ -15,7 +15,7 @@ jobs:
       contents: read  # required to checkout the code from the repo
     steps:
       - name: Install JQ
-        run: apt install -y jq
+        run: apt update && install -y jq
 
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -31,22 +31,5 @@ jobs:
           role-duration-seconds: 900 # 15 min; minimal duration possible
           # aws-region: us-east-1
 
-      - name: Trigger AMI Build us-east-1 
-        run: ./dev-resources/template/marketplace/trigger-update.sh -v ${{ github.event.inputs.region }} -r $DEPLOY_REGION 
-        env:
-          DEPLOY_REGION: us-east-1
-      
-      - name: Trigger AMI Build us-east-2 
-        run: ./dev-resources/template/marketplace/trigger-update.sh -v ${{ github.event.inputs.region }} -r $DEPLOY_REGION 
-        env:
-          DEPLOY_REGION: us-east-2
-
-      - name: Trigger AMI Build us-west-1 
-        run: ./dev-resources/template/marketplace/trigger-update.sh -v ${{ github.event.inputs.region }} -r $DEPLOY_REGION 
-        env:
-          DEPLOY_REGION: us-west-1
-
-      - name: Trigger AMI Build us-west-2 
-        run: ./dev-resources/template/marketplace/trigger-update.sh -v ${{ github.event.inputs.region }} -r $DEPLOY_REGION 
-        env:
-          DEPLOY_REGION: us-west-2
+      - name: Trigger AMI Build 
+        run: ./dev-resources/template/marketplace/trigger-update.sh -v ${{ github.event.inputs.version }} 
