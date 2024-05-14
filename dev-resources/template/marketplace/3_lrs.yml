@@ -50,9 +50,9 @@ Parameters:
     NoEcho: true
     Type: String
   LrsVersion:
-    Description: Version of SQL LRS to download and install (public release versions on GitHub)
+    Description: Version of SQL LRS to pull from Mapping of AMIs
     Type: String
-    Default: v0.5.5
+    Default: v0713
 
   ASGMinSize:
     Type: Number
@@ -126,8 +126,18 @@ Conditions:
   CreateUserBucket: !Not [!Equals [!Ref CreateUserBucketOverride, ""]]
   CreateUserFnKey: !Not [!Equals [!Ref CreateUserFnKeyOverride, ""]]
 
-Resources:
+Mappings: 
+  RegionMap:
+    us-east-1: 
+      v0713: ami-0c0a2116961256952 
+    us-east-2: 
+      v0713: ami-09fdf42d9ac1aa739 
+    us-west-1: 
+      v0713: ami-091ca105306c22a4a
+    us-west-2: 
+      v0713: ami-00517438cdb5f4fda
 
+Resources:
   CreateUserPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -570,7 +580,10 @@ Resources:
     Properties:
       LaunchTemplateName: !Sub ${AWS::StackName}-lrsql-launch-template
       LaunchTemplateData:
-        ImageId: !Ref InstanceAmiId
+        ImageId: !FindInMap
+          - RegionMap
+          - !Ref "AWS::Region"
+          - !Ref LrsVersion
         InstanceType: !Ref InstanceType
         KeyName: !If
           - InstanceKeyNameProvided
