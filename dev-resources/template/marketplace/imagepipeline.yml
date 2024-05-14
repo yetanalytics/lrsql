@@ -7,7 +7,7 @@ Parameters:
   LRSQLVersion:
     Description: "Semantic version ID for LRSQL"
     Type: String
-    Default: "0.7.9"
+    Default: "0.7.13"
 Resources:
   AMIPipelineSG:
     Type: AWS::EC2::SecurityGroup
@@ -112,9 +112,26 @@ Resources:
     Properties:
       Name: lrsql-ami
       Version: !Ref LRSQLVersion 
-      ParentImage: arn:aws:imagebuilder:us-east-1:aws:image/amazon-linux-2023-x86/x.x.x
+      ParentImage: !Sub "arn:aws:imagebuilder:${AWS::Region}:aws:image/amazon-linux-2023-x86/x.x.x"
       Components:
         - ComponentArn: !Ref LRSQLInstallComponent
+  LRSQLDistributionConfiguration:
+    Type: AWS::ImageBuilder::DistributionConfiguration
+    Properties:
+      Name: lrsql-distribution-configuration
+      Distributions:
+        - Region: us-east-1
+          AmiDistributionConfiguration:
+            Name: lrsql-ami-us-east-1-{{ imagebuilder:buildDate }}
+        - Region: us-east-2
+          AmiDistributionConfiguration:
+            Name: lrsql-ami-us-east-2-{{ imagebuilder:buildDate }}
+        - Region: us-west-1
+          AmiDistributionConfiguration:
+            Name: lrsql-ami-us-west-1-{{ imagebuilder:buildDate }}
+        - Region: us-west-1
+          AmiDistributionConfiguration:
+            Name: lrsql-ami-us-west-2-{{ imagebuilder:buildDate }}
   LRSQLImagePipeline:
     Type: AWS::ImageBuilder::ImagePipeline
     Properties:
@@ -122,3 +139,4 @@ Resources:
       Description: "Pipeline for generating the LRSQL Ami"
       ImageRecipeArn: !Ref LRSQLImageRecipe
       InfrastructureConfigurationArn: !Ref LRSQLImageInfrastructure
+      DistributionConfigurationArn: !Ref LRSQLDistributionConfiguration
