@@ -50,16 +50,6 @@ Parameters:
     Description: PG Database name. Ignored if DBSnapshotIdentifier is provided
     Type: String
     Default: "lrsql_marketplace"
-  # DBMasterUserPasswordPath:
-  #  Description: SSM Path to the secret password
-    #  Type: String
-    #  Default: "/lrsql/marketplace/DB_MASTER_USER_PASSWORD"
-  # automatically defaults to latest based on the following docs:
-  # https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-versions.html
-  # DBMasterUserPasswordVersion:
-  #  Description: SSM version
-  #  Type: Number
-  #  Default: 1
   DBBackupRetentionPeriod:
     Description: Retention period for PG backups
     Type: Number
@@ -203,15 +193,3 @@ Outputs:
     Value: !Ref DBCluster
     Export:
       Name: !Sub "${AWS::StackName}:DBClusterIdentifier"
-  # DBMasterUserPasswordPath:
-  #   Description: Path to the DB Master password
-  #   Value: 
-  #     Fn::ImportValue: 
-  #       !Join [":", [!Ref "SecretStackName", "DBMasterUserPasswordPath"]]
-  #   Export:
-  #     Name: !Sub "${AWS::StackName}:DBMasterUserPasswordPath"
-  # DBMasterUserPasswordVersion:
-  #   Description: Path to the DB Master password
-  #   Value: !Ref DBMasterUserPasswordVersion
-  #   Export:
-  #     Name: !Sub "${AWS::StackName}:DBMasterUserPasswordVersion"
