@@ -15,7 +15,7 @@ jobs:
       contents: read  # required to checkout the code from the repo
     steps:
       - name: Install JQ
-        run: apt update && install -y jq
+        run: apt update && apt install -y jq
 
       - name: Checkout repository
         uses: actions/checkout@v3
