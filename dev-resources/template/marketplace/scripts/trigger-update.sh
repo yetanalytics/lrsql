@@ -46,10 +46,10 @@ trigger_ami_build() {
 
 # Check if script is being run directly and handle command line arguments
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    while getopts "r:v:" opt; do
+    while getopts "v:" opt; do
         case $opt in
             v) VERSION="$OPTARG";;
-            *) echo "Usage: $0 [-r region] [-v version]"; exit 1;;
+            *) echo "Usage: $0 [-v version]"; exit 1;;
         esac
     done
 
