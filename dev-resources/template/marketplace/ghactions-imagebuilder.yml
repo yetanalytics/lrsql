@@ -35,6 +35,7 @@ Resources:
               - "imagebuilder:StartImagePipelineExecution"
               - "imagebuilder:TagResource"
               - "imagebuilder:GetImage"
+              - "imagebuilder:GetImageRecipe"
             Resource: "*"
 
 Outputs:
