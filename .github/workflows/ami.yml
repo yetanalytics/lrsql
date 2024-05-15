@@ -5,7 +5,11 @@ name: Build AMI
 #    tags:
 #      - 'v*.*.*' # Enforce Semantic Versioning
 on:
-  pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version of LRSQL to build"
+        required: true
 
 jobs:
   upload_dbfn:
@@ -22,10 +26,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Extract version
-        id: version
-        run: echo version="v0.7.11" >> $GITHUB_OUTPUT
-        # run: echo version=${GITHUB_REF#refs\/tags\/} >> $GITHUB_OUTPUT
+      # - name: Extract version
+      # id: version
+      # run: echo version="v0.7.11" >> $GITHUB_OUTPUT
+      # run: echo version=${GITHUB_REF#refs\/tags\/} >> $GITHUB_OUTPUT
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
