@@ -4,6 +4,7 @@ trigger_ami_build() {
   set -e
 
   VERSION=$1
+  SEMANTIC_VERSION="${VERSION#v}" # removes trailing v for AWS
   
   COMPONENT_ARN=$(aws imagebuilder list-components | jq -r '.componentVersionList[] | select(.name == "InstallLRSQL").arn')
   PIPELINE_ARN=$(aws imagebuilder list-image-pipelines | jq -r '.imagePipelineList[] | select(.name == "lrsql-ami-pipeline").arn')
@@ -11,7 +12,7 @@ trigger_ami_build() {
   
   COMPONENTS=$(jq -n \
       --arg arn "$COMPONENT_ARN" \
-      --arg version "v$VERSION" \
+      --arg version "$VERSION" \
   '[
     {
       "componentArn": $arn,
@@ -29,7 +30,7 @@ trigger_ami_build() {
   # create new recipe
   IMAGE_RECIPE_ARN=$(aws imagebuilder create-image-recipe \
                        --name "lrsql-ami" \
-                       --semantic-version $VERSION \
+                       --semantic-version $SEMANTIC_VERSION \
                        --parent-image "arn:aws:imagebuilder:us-east-1:aws:image/amazon-linux-2023-x86/x.x.x" \
                        --components "$COMPONENTS" | jq -r '.imageRecipeArn')
   
