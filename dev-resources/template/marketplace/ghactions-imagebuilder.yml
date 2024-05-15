@@ -27,15 +27,7 @@ Resources:
         Statement:
           - Effect: "Allow"
             Action:
-              - "imagebuilder:ListComponents"
-              - "imagebuilder:GetComponent"
-              - "imagebuilder:ListImagePipelines"
-              - "imagebuilder:CreateImageRecipe"
-              - "imagebuilder:UpdateImagePipeline"
-              - "imagebuilder:StartImagePipelineExecution"
-              - "imagebuilder:TagResource"
-              - "imagebuilder:GetImage"
-              - "imagebuilder:GetImageRecipe"
+              - "imagebuilder:*"
             Resource: "*"
 
 Outputs:
