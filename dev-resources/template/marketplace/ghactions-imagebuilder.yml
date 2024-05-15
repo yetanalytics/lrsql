@@ -33,6 +33,7 @@ Resources:
               - "imagebuilder:UpdateImagePipeline"
               - "imagebuilder:StartImagePipelineExecution"
               - "imagebuilder:TagResource"
+              - "imagebuilder:GetImage"
             Resource: "*"
 
 Outputs:
