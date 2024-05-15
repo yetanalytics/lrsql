@@ -1,7 +1,9 @@
 #!/bin/bash
 
 trigger_ami_build() {
-  VERSION=$2
+  set -e
+
+  VERSION=$1
   
   COMPONENT_ARN=$(aws imagebuilder list-components | jq -r '.componentVersionList[] | select(.name == "InstallLRSQL").arn')
   PIPELINE_ARN=$(aws imagebuilder list-image-pipelines | jq -r '.imagePipelineList[] | select(.name == "lrsql-ami-pipeline").arn')
@@ -52,6 +54,11 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
             *) echo "Usage: $0 [-v version]"; exit 1;;
         esac
     done
+
+    if [ -z "$VERSION" ]; then
+        echo "Error: Version is not set. Use the -v option to specify the version of LRSQL."
+        exit 1
+    fi
 
     trigger_ami_build $VERSION
 fi
