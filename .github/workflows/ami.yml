@@ -1,18 +1,12 @@
 name: Build AMI
 
-# on:
-#  push:
-#    tags:
-#      - 'v*.*.*' # Enforce Semantic Versioning
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Version of LRSQL to build"
-        required: true
+  push:
+    tags:
+      - 'v*.*.*' # Enforce Semantic Versioning
 
 jobs:
-  upload_dbfn:
+  build_ami:
     runs-on: ubuntu-latest
     # These permissions are needed by configure-aws-credentials in order
     # to interact with GitHub's OIDC Token endpoint.
@@ -25,13 +19,10 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ami-build
 
-      # - name: Extract version
-      # id: version
-      # run: echo version="v0.7.11" >> $GITHUB_OUTPUT
-      # run: echo version=${GITHUB_REF#refs\/tags\/} >> $GITHUB_OUTPUT
+      - name: Extract version
+        id: version
+        run: echo version=${GITHUB_REF#refs\/tags\/} >> $GITHUB_OUTPUT
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
