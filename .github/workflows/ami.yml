@@ -36,7 +36,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::376099832799:role/lrsql-imagebuilder-ghacti-BuildAMIGithubActionsRole-IHZUC98qYzfG
           role-duration-seconds: 900 # 15 min; minimal duration possible
-          # aws-region: us-east-1
+          aws-region: us-east-1
 
       - name: Trigger AMI Build 
         run: ./dev-resources/template/marketplace/trigger-update.sh -v ${{ github.event.inputs.version }} 
