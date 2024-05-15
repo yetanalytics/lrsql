@@ -41,4 +41,4 @@ jobs:
           aws-region: us-east-1
 
       - name: Trigger AMI Build 
-        run: ./dev-resources/template/marketplace/trigger-update.sh -v ${{ github.event.inputs.version }} 
+        run: $GITHUB_WORKSPACE/dev-resources/template/marketplace/trigger-update.sh -v ${{ github.event.inputs.version }}
