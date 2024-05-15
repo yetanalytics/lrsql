@@ -28,6 +28,7 @@ Resources:
           - Effect: "Allow"
             Action:
               - "imagebuilder:ListComponents"
+              - "imagebuilder:GetComponent"
               - "imagebuilder:ListImagePipelines"
               - "imagebuilder:CreateImageRecipe"
               - "imagebuilder:UpdateImagePipeline"
