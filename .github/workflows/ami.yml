@@ -1,9 +1,11 @@
 name: Build AMI
 
+# on:
+#  push:
+#    tags:
+#      - 'v*.*.*' # Enforce Semantic Versioning
 on:
-  push:
-    tags:
-      - 'v*.*.*' # Enforce Semantic Versioning
+  pull_request:
 
 jobs:
   upload_dbfn:
@@ -22,7 +24,8 @@ jobs:
 
       - name: Extract version
         id: version
-        run: echo version=${GITHUB_REF#refs\/tags\/} >> $GITHUB_OUTPUT
+        run: echo version="v0.7.11" >> $GITHUB_OUTPUT
+        # run: echo version=${GITHUB_REF#refs\/tags\/} >> $GITHUB_OUTPUT
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
