@@ -17,14 +17,23 @@
 ;; suggested by the spec:
 ;; https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#requirements-14
 
+(def ^:private dissocable-keys
+  "xAPI Statement properties that can be dissoc'd if the map value is empty.
+   The first three are for Verb, Activity, and Attachment lang maps.
+   The latter three are for top-level Statement or Activity properties.
+   We need to specify in order to allow other maps, e.g. extensions,
+   to remain empty."
+  #{"display" "name" "description" "context" "result" "definition"})
+
 (defn- dissoc-empty-maps
   "Remove all empty maps from `statement`, at all nesting levels."
   [statement]
   (w/postwalk
    (fn [x]
      (if (map-entry? x)
-       (let [v (second x)]
-         (when-not (and (map? v) (empty? v))
+       (let [k (first x)
+             v (second x)]
+         (when-not (and (dissocable-keys k) (empty? v))
            x))
        x))
    statement))
