@@ -10,6 +10,7 @@
 
 ;; If a Statement lacks a version, the version MUST be set to 1.0.0
 ;; TODO: Change for version 2.0.0
+;; FIXME: Why is this not version 1.0.3?
 (def xapi-version "1.0.0")
 
 ;; NOTE: SQL LRS overwrites any pre-existing authority object in a statement, as
@@ -17,7 +18,8 @@
 ;; https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#requirements-14
 
 (defn- dissoc-empty-maps
-  [m]
+  "Remove all empty maps from `statement`, at all nesting levels."
+  [statement]
   (w/postwalk
    (fn [x]
      (if (map-entry? x)
@@ -25,7 +27,17 @@
          (when-not (and (map? v) (empty? v))
            x))
        x))
-   m))
+   statement))
+
+(defn- assoc-to-statement
+  "Assoc while also changing the meta of `statement`."
+  [statement k v]
+  (-> statement
+      (assoc k v)
+      (vary-meta update
+                 :assigned-vals
+                 conj
+                 (keyword k))))
 
 (defn prepare-statement
   "Prepare `statement` for LRS storage by coll-ifying context activities
@@ -40,33 +52,23 @@
          squuid-ts   :timestamp
          squuid-base :base-uuid}
         (u/generate-squuid*)
-        assoc-to-stmt (fn [stmt k v] ; Assoc while also changing the meta
-                        (-> stmt
-                            (assoc k v)
-                            (vary-meta update
-                                       :assigned-vals
-                                       conj
-                                       (keyword k))))
-        squuid-ts-str (u/time->str squuid-ts)]
-    (cond-> statement
-      true
-      dissoc-empty-maps
-      true
-      ss/fix-statement-context-activities
-      true
-      (vary-meta assoc :assigned-vals #{})
-      true
-      (vary-meta assoc :primary-key squuid)
-      true
-      (assoc-to-stmt "stored" squuid-ts-str)
-      true
-      (assoc-to-stmt "authority" authority)
+        squuid-ts-str
+        (u/time->str squuid-ts)
+        statement*
+        (-> statement
+            dissoc-empty-maps
+            ss/fix-statement-context-activities
+            (vary-meta assoc :assigned-vals #{})
+            (vary-meta assoc :primary-key squuid)
+            (assoc-to-statement "stored" squuid-ts-str)
+            (assoc-to-statement "authority" authority))]
+    (cond-> statement*
       (not ?id)
-      (assoc-to-stmt "id" (u/uuid->str squuid-base))
+      (assoc-to-statement "id" (u/uuid->str squuid-base))
       (not ?timestamp)
-      (assoc-to-stmt "timestamp" squuid-ts-str)
+      (assoc-to-statement "timestamp" squuid-ts-str)
       (not ?version)
-      (assoc-to-stmt "version" xapi-version))))
+      (assoc-to-statement "version" xapi-version))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Equality
