@@ -68,7 +68,7 @@
         (u/generate-squuid*)
         squuid-ts-str
         (u/time->str squuid-ts)
-        {{activity-def* "description"} "object"
+        {{activity-def* "definition"} "object"
          context* "context"
          result*  "result"
          :as statement*}
