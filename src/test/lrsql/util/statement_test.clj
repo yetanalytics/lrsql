@@ -80,7 +80,19 @@
                      "object"      (assoc sample-activity
                                           "definition"
                                           {"name"        {}
-                                           "description" {}})
+                                           "description" {}
+                                           ;; Doesn't form a valid statement but
+                                           ;; we need to test these lang maps
+                                           "choices"     [{"name"        {}
+                                                           "description" {}}]
+                                           "scale"       [{"name"        {}
+                                                           "description" {}}]
+                                           "source"      [{"name"        {}
+                                                           "description" {}}]
+                                           "target"      [{"name"        {}
+                                                           "description" {}}]
+                                           "steps"       [{"name"        {}
+                                                           "description" {}}]})
                      "attachments" [(-> sample-attachment
                                         (assoc "display" {})
                                         (assoc "description" {}))]

@@ -1,6 +1,5 @@
 (ns lrsql.util.statement
-  (:require [clojure.walk :as w]
-            [ring.util.codec :refer [form-encode]]
+  (:require [ring.util.codec :refer [form-encode]]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.util :as u]))
 
@@ -17,26 +16,32 @@
 ;; suggested by the spec:
 ;; https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#requirements-14
 
-(def ^:private dissocable-keys
-  "xAPI Statement properties that can be dissoc'd if the map value is empty.
-   The first three are for Verb, Activity, and Attachment lang maps.
-   The latter three are for top-level Statement or Activity properties.
-   We need to specify in order to allow other maps, e.g. extensions,
-   to remain empty."
-  #{"display" "name" "description" "context" "result" "definition"})
+(defn- dissoc-empty-lang-maps*
+  [{:strs [display name description] :as m}]
+  (cond-> m
+    (empty? display)     (dissoc "display")
+    (empty? name)        (dissoc "name")
+    (empty? description) (dissoc "description")))
 
-(defn- dissoc-empty-maps
-  "Remove all empty maps from `statement`, at all nesting levels."
+(defn- dissoc-empty-lang-maps
   [statement]
-  (w/postwalk
-   (fn [x]
-     (if (map-entry? x)
-       (let [k (first x)
-             v (second x)]
-         (when-not (and (dissocable-keys k) (empty? v))
-           x))
-       x))
-   statement))
+  (cond-> statement
+    ;; Dissoc empty verb display
+    true
+    (update "verb" dissoc-empty-lang-maps*)
+    ;; Dissoc empty object activity name + description
+    (= "Activity" (get-in statement ["object" "objectType"]))
+    (update "object"
+            (fn [{:strs [choices scale sources target steps] :as object}]
+              (cond-> (dissoc-empty-lang-maps* object)
+                choices (update "choices" #(mapv dissoc-empty-lang-maps* %))
+                scale   (update "scale" #(mapv dissoc-empty-lang-maps* %))
+                sources (update "sources" #(mapv dissoc-empty-lang-maps* %))
+                target  (update "target" #(mapv dissoc-empty-lang-maps* %))
+                steps   (update "steps" #(mapv dissoc-empty-lang-maps* %)))))
+    ;; Dissoc empty attachemnt name + description
+    (contains? statement "attachments")
+    (update "attachments" #(mapv dissoc-empty-lang-maps* %))))
 
 (defn- assoc-to-statement
   "Assoc while also changing the meta of `statement`."
@@ -63,15 +68,26 @@
         (u/generate-squuid*)
         squuid-ts-str
         (u/time->str squuid-ts)
-        statement*
+        {{activity-def* "description"} "object"
+         context* "context"
+         result*  "result"
+         :as statement*}
         (-> statement
-            dissoc-empty-maps
+            dissoc-empty-lang-maps
             ss/fix-statement-context-activities
             (vary-meta assoc :assigned-vals #{})
             (vary-meta assoc :primary-key squuid)
             (assoc-to-statement "stored" squuid-ts-str)
             (assoc-to-statement "authority" authority))]
     (cond-> statement*
+      ;; Dissoc empty properties
+      (empty? activity-def*)
+      (update "object" dissoc "definition")
+      (empty? context*)
+      (dissoc "context")
+      (empty? result*)
+      (dissoc "result")
+      ;; Assoc missing properties
       (not ?id)
       (assoc-to-statement "id" (u/uuid->str squuid-base))
       (not ?timestamp)
