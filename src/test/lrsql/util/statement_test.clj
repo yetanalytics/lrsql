@@ -80,24 +80,29 @@
                      "object"      (assoc sample-activity
                                           "definition"
                                           {"name"        {}
-                                           "description" {}
-                                           ;; Doesn't form a valid statement but
-                                           ;; we need to test these lang maps
-                                           "choices"     [{"name"        {}
-                                                           "description" {}}]
-                                           "scale"       [{"name"        {}
-                                                           "description" {}}]
-                                           "source"      [{"name"        {}
-                                                           "description" {}}]
-                                           "target"      [{"name"        {}
-                                                           "description" {}}]
-                                           "steps"       [{"name"        {}
-                                                           "description" {}}]})
+                                           "description" {}})
                      "attachments" [(-> sample-attachment
                                         (assoc "display" {})
                                         (assoc "description" {}))]
                      "context"     {}
-                     "result"      {}}]
+                     "result"      {}}
+        statement-4  {"id"     sample-id
+                      "actor"  sample-group
+                      "verb"   sample-verb
+                      "object" (assoc sample-activity
+                                      "definition"
+                                      {;; Doesn't form a valid statement but
+                                       ;; we need to test these lang maps
+                                       "choices" [{"id"          "Choice"
+                                                   "description" {}}]
+                                       "scale"   [{"id"          "Scale"
+                                                   "description" {}}]
+                                       "source"  [{"id"          "Source"
+                                                   "description" {}}]
+                                       "target"  [{"id"          "Target"
+                                                   "description" {}}]
+                                       "steps"   [{"id"          "Step"
+                                                   "description" {}}]})}]
     (testing "adds timestamp, stored, version, and authority"
       (let [statement* (su/prepare-statement lrs-authority statement-1)]
         (is (inst? (u/str->time (get statement* "timestamp"))))
@@ -117,6 +122,18 @@
                                      "display"
                                      "description")]}
              (-> (su/prepare-statement lrs-authority statement-3)
+                 (dissoc "timestamp" "stored" "authority" "version"))))
+      (is (= {"id"     sample-id
+              "actor"  sample-group
+              "verb"   sample-verb
+              "object" (assoc sample-activity
+                              "definition"
+                              {"choices" [{"id" "Choice"}]
+                               "scale"   [{"id" "Scale"}]
+                               "source"  [{"id" "Source"}]
+                               "target"  [{"id" "Target"}]
+                               "steps"   [{"id" "Step"}]})}
+             (-> (su/prepare-statement lrs-authority statement-4)
                  (dissoc "timestamp" "stored" "authority" "version")))))))
 
 (deftest statements-equal-test

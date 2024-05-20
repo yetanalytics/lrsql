@@ -31,12 +31,12 @@
     (update "verb" dissoc-empty-lang-maps*)
     ;; Dissoc empty object activity name + description
     (= "Activity" (get-in statement ["object" "objectType"]))
-    (update "object"
-            (fn [{:strs [choices scale sources target steps] :as object}]
-              (cond-> (dissoc-empty-lang-maps* object)
+    (update-in ["object" "definition"]
+            (fn [{:strs [choices scale source target steps] :as obj-def}]
+              (cond-> (dissoc-empty-lang-maps* obj-def)
                 choices (update "choices" #(mapv dissoc-empty-lang-maps* %))
                 scale   (update "scale" #(mapv dissoc-empty-lang-maps* %))
-                sources (update "sources" #(mapv dissoc-empty-lang-maps* %))
+                source  (update "source" #(mapv dissoc-empty-lang-maps* %))
                 target  (update "target" #(mapv dissoc-empty-lang-maps* %))
                 steps   (update "steps" #(mapv dissoc-empty-lang-maps* %)))))
     ;; Dissoc empty attachemnt name + description
