@@ -1,5 +1,6 @@
 (ns lrsql.util.statement
-  (:require [ring.util.codec :refer [form-encode]]
+  (:require [clojure.walk :as w]
+            [ring.util.codec :refer [form-encode]]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.util :as u]))
 
@@ -15,10 +16,21 @@
 ;; suggested by the spec:
 ;; https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#requirements-14
 
+(defn- dissoc-empty-maps
+  [m]
+  (w/postwalk
+   (fn [x]
+     (if (map-entry? x)
+       (let [v (second x)]
+         (when-not (and (map? v) (empty? v))
+           x))
+       x))
+   m))
+
 (defn prepare-statement
   "Prepare `statement` for LRS storage by coll-ifying context activities
    and setting missing id, timestamp, authority, version, and stored
-   properties."
+   properties. In addition, removes empty maps from `statement`."
   [authority statement]
   (let [{?id        "id"
          ?timestamp "timestamp"
@@ -37,6 +49,8 @@
                                        (keyword k))))
         squuid-ts-str (u/time->str squuid-ts)]
     (cond-> statement
+      true
+      dissoc-empty-maps
       true
       ss/fix-statement-context-activities
       true
