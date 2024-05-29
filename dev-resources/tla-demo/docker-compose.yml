@@ -85,6 +85,8 @@ services:
       POSTGRES_USER: lrsql_user
       POSTGRES_PASSWORD: lrsql_password
       POSTGRES_DB: lrsql_db
+    ports:
+      - "5431:5432"
   # - Transactional LRS: App
   txn_lrs:
     image: yetanalytics/lrsql:v0.7.13
