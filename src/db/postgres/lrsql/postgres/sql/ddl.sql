@@ -441,3 +441,44 @@ AND pg_get_constraintdef(oid) LIKE '%ON DELETE CASCADE%'
 -- :doc Adds a cascading delete to delete st2actor entries when corresponding statements are deleted
 ALTER TABLE statement_to_actor DROP CONSTRAINT statement_fk;
 ALTER TABLE statement_to_actor ADD CONSTRAINT statement_fk FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id) ON DELETE CASCADE;
+
+/* Migration 2024-05-29 - Universally Convert VARCHAR to TEXT */
+
+-- :name query-varchar-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if varchar->text conversion has not happened yet.
+SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'verb_iri' and data_type = 'character varying';
+
+-- :name convert-varchars-to-text!
+-- :command :execute
+-- :doc Converts all known VARCHAR(255) fields into TEXT fields. Order of execution is critical for ifi constraints
+ALTER TABLE xapi_statement ALTER COLUMN verb_iri TYPE TEXT;
+
+-- Must drop constraints containing ifi (and rebuild after conversion) because conversion in place does not work for actor_fk or actor_idx composites
+ALTER TABLE statement_to_actor DROP CONSTRAINT actor_fk;
+ALTER TABLE actor DROP CONSTRAINT actor_idx;
+ALTER TABLE actor ALTER COLUMN actor_ifi TYPE TEXT;
+ALTER TABLE actor ADD CONSTRAINT actor_idx UNIQUE (actor_ifi, actor_type);
+ALTER TABLE statement_to_actor ALTER COLUMN actor_ifi TYPE TEXT;
+ALTER TABLE statement_to_actor ADD CONSTRAINT actor_fk FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type);
+
+ALTER TABLE activity ALTER COLUMN activity_iri TYPE TEXT;
+ALTER TABLE attachment ALTER COLUMN attachment_sha TYPE TEXT;
+ALTER TABLE attachment ALTER COLUMN content_type TYPE TEXT;
+ALTER TABLE statement_to_activity ALTER COLUMN activity_iri TYPE TEXT;
+ALTER TABLE state_document ALTER COLUMN state_id TYPE TEXT;
+ALTER TABLE state_document ALTER COLUMN activity_iri TYPE TEXT;
+ALTER TABLE state_document ALTER COLUMN agent_ifi TYPE TEXT;
+ALTER TABLE state_document ALTER COLUMN content_type TYPE TEXT;
+ALTER TABLE activity_profile_document ALTER COLUMN profile_id TYPE TEXT;
+ALTER TABLE activity_profile_document ALTER COLUMN activity_iri TYPE TEXT;
+ALTER TABLE activity_profile_document ALTER COLUMN content_type TYPE TEXT;
+ALTER TABLE admin_account ALTER COLUMN username TYPE TEXT;
+ALTER TABLE admin_account ALTER COLUMN passhash TYPE TEXT;
+ALTER TABLE admin_account ALTER COLUMN oidc_issuer TYPE TEXT;
+ALTER TABLE lrs_credential ALTER COLUMN api_key TYPE TEXT;
+ALTER TABLE lrs_credential ALTER COLUMN secret_key TYPE TEXT;
+ALTER TABLE credential_to_scope ALTER COLUMN api_key TYPE TEXT;
+ALTER TABLE credential_to_scope ALTER COLUMN secret_key TYPE TEXT;
+ALTER TABLE reaction ALTER COLUMN title TYPE TEXT;
