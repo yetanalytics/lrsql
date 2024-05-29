@@ -454,12 +454,15 @@ SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND
 -- :command :execute
 -- :doc Converts all known VARCHAR(255) fields into TEXT fields. Order of execution is critical for ifi constraints
 ALTER TABLE xapi_statement ALTER COLUMN verb_iri TYPE TEXT;
+
+-- Must drop constraints containing ifi (and rebuild after conversion) because conversion in place does not work for actor_fk or actor_idx composites
 ALTER TABLE statement_to_actor DROP CONSTRAINT actor_fk;
 ALTER TABLE actor DROP CONSTRAINT actor_idx;
 ALTER TABLE actor ALTER COLUMN actor_ifi TYPE TEXT;
 ALTER TABLE actor ADD CONSTRAINT actor_idx UNIQUE (actor_ifi, actor_type);
 ALTER TABLE statement_to_actor ALTER COLUMN actor_ifi TYPE TEXT;
 ALTER TABLE statement_to_actor ADD CONSTRAINT actor_fk FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type);
+
 ALTER TABLE activity ALTER COLUMN activity_iri TYPE TEXT;
 ALTER TABLE attachment ALTER COLUMN attachment_sha TYPE TEXT;
 ALTER TABLE attachment ALTER COLUMN content_type TYPE TEXT;
