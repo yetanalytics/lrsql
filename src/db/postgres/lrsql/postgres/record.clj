@@ -73,7 +73,9 @@
       (migrate-to-jsonb! tx)
       (migrate-to-json! tx))
     (when (nil? (check-statement-to-actor-cascading-delete tx))
-      (add-statement-to-actor-cascading-delete! tx)))
+      (add-statement-to-actor-cascading-delete! tx))
+    (when (some? (query-varchar-exists tx))
+      (convert-varchars-to-text! tx)))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
