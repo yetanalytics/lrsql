@@ -114,5 +114,29 @@
        (map (fn [x] (get x (keyword "QUERY PLAN"))))
        (run! println))
 
+  ;; Inserting 1.2 million API keys
+
+  (def account-id
+    (-> (adp/-get-accounts lrs) first :account-id))
+
+  (run! (fn [idx]
+          (when (zero? (mod idx 1000))
+            (println (str "On iteration: " idx)))
+          (adp/-create-api-keys lrs account-id ["all"])
+          (adp/-create-api-keys lrs account-id ["all/read"])
+          (adp/-create-api-keys lrs account-id ["statements/read"])
+          (adp/-create-api-keys lrs account-id ["statements/read/mine"])
+          (adp/-create-api-keys lrs account-id ["statements/write"])
+          (adp/-create-api-keys lrs account-id ["define"])
+          (adp/-create-api-keys lrs account-id ["state"])
+          (adp/-create-api-keys lrs account-id ["state/read"])
+          (adp/-create-api-keys lrs account-id ["activities_profile"])
+          (adp/-create-api-keys lrs account-id ["activities_profile/read"])
+          (adp/-create-api-keys lrs account-id ["agents_profile"])
+          (adp/-create-api-keys lrs account-id ["agents_profile/read"]))
+        (range 0 100000))
+
+  ;; Stop system
+
   (component/stop sys')
   )
