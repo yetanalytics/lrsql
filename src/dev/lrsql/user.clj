@@ -135,6 +135,28 @@
           (adp/-create-api-keys lrs account-id ["agents_profile"])
           (adp/-create-api-keys lrs account-id ["agents_profile/read"]))
         (range 0 100000))
+  
+  ;; Query enums
+
+  (jdbc/execute!
+   ds
+   [
+"SELECT enum_range(NULL::scope_enum)::TEXT[]
+  = ARRAY[
+    'statements/write',
+    'statements/read',
+    'statements/read/mine',
+    'all/read',
+    'all',
+    'state',
+    'state/read',
+    'define',
+    'activities_profile',
+    'activities_profile/read',
+    'agents_profile',
+    'agents_profile/read',
+  ] AS scope_enum_equal;
+"])
 
   ;; Stop system
 

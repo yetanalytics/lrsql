@@ -289,6 +289,26 @@ ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USI
    respectively. Since profile and profile/read have always been unused, we
    are safe to remove them as enums. */
 
+-- :name query-scope-enum-updated
+-- :command :query
+-- :result :one
+-- :doc Query to see if the DB's current value of `scope_enum` is equal to the one in `alter-scope-enum-type!`. The order of enum values is considered. Returns a map of `:scope_enum_updated`.
+SELECT enum_range(NULL::scope_enum)::TEXT[]
+  = ARRAY[
+    'statements/write',
+    'statements/read',
+    'statements/read/mine',
+    'all/read',
+    'all',
+    'state',
+    'state/read',
+    'define',
+    'activities_profile',
+    'activities_profile/read',
+    'agents_profile',
+    'agents_profile/read'
+  ] AS scope_enum_updated;
+
 -- :name alter-scope-enum-type-v2!
 -- :command :execute
 -- :doc Add `activity_profile`, `activity_profile/read`, `agent_profile`, and `agent_profile/read` to `credential-to-scope.scope` enum. Supersedes `alter-scope-enum-type!`
