@@ -160,6 +160,9 @@ FROM (
           (adp/-create-api-keys lrs account-id ["agents_profile/read"]))
         (range 0 100000))
   
+  ;; Note: deletes initial username + password API keys
+  (jdbc/execute! ds ["DELETE FROM credential_to_scope"])
+  
   ;; Query enums
 
   (jdbc/execute!
