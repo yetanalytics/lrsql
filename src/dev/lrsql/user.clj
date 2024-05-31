@@ -67,6 +67,30 @@
                  "DROP TABLE IF EXISTS xapi_statement"]]
       (jdbc/execute! ds [cmd]))
 
+    (jdbc/execute!
+     ds
+     ["
+SELECT sub_query.sql GLOB (
+      '*(''statements/write'','
+    || '*''statements/read'','
+    || '*''statements/read/mine'','
+    || '*''all/read'','
+    || '*''all'','
+    || '*''define'','
+    || '*''state'','
+    || '*''state/read'','
+    || '*''activities_profile'','
+    || '*''activities_profile/read'','
+    || '*''agents_profile'','
+    || '*''agents_profile/read'')*'
+  ) AS scope_enum_updated
+FROM (
+  SELECT sql
+  FROM sqlite_master
+  WHERE type='table' AND name='credential_to_scope'
+) AS sub_query
+    "])
+
     (component/stop sys')))
 
 ;; PostgreSQL

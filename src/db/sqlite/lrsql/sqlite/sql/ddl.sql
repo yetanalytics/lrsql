@@ -335,6 +335,30 @@ WHERE type = 'table' AND name = 'credential_to_scope'
    the reserved OIDC profile scope. Since they have always remained unused, we
    are safe to remove them from the enum table. */
 
+-- :name query-credential-to-scope-scope-datatype-updated
+-- :command :query
+-- :result :one
+-- :doc Query to see if the CHECk constraint of the `credential_to_scope.scope` column has been updated to the latest allowed values. Returns a map of `:scope_enum_updated`.
+SELECT sub_query.sql GLOB (
+      '*(''statements/write'','
+    || '*''statements/read'','
+    || '*''statements/read/mine'','
+    || '*''all/read'','
+    || '*''all'','
+    || '*''define'','
+    || '*''state'','
+    || '*''state/read'','
+    || '*''activities_profile'','
+    || '*''activities_profile/read'','
+    || '*''agents_profile'','
+    || '*''agents_profile/read'')*'
+  ) AS scope_enum_updated
+FROM (
+  SELECT sql
+  FROM sqlite_master
+  WHERE type='table' AND name='credential_to_scope'
+) AS sub_query
+
 -- :name alter-credential-to-scope-scope-datatype-v2!
 -- :command :execute
 -- :doc Change the enum datatype of the `credential_to_scope.scope` column. Supersedes `alter-credential-to-scope-scope-datatype!`
