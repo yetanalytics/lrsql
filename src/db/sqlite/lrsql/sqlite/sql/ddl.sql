@@ -301,35 +301,15 @@ SELECT 1 FROM pragma_table_info('admin_account') WHERE name = 'oidc_issuer'
 -- :doc Add `admin_account.oidc_issuer` to record OIDC identity source.
 ALTER TABLE admin_account ADD COLUMN oidc_issuer TEXT
 
-/* Migration 2022-08-18-00 - Add statements/read/mine to credential_to_scope.scope enum */
-
--- :name alter-credential-to-scope-scope-datatype!
--- :command :execute
--- :doc DEPRECATED. Change the enum datatype of the `credential_to_scope.scope` column.
-UPDATE sqlite_schema
-SET sql = 'CREATE TABLE credential_to_scope (
-  id         TEXT NOT NULL PRIMARY KEY,
-  api_key    TEXT NOT NULL,
-  secret_key TEXT NOT NULL,
-  scope      TEXT CHECK (
-               scope IN (''statements/write'',
-                         ''statements/read'',
-                         ''statements/read/mine'',
-                         ''all/read'',
-                         ''all'',
-                         ''define'',
-                         ''profile'',
-                         ''profile/read'',
-                         ''state'',
-                         ''state/read'')
-             ),
-  FOREIGN KEY (api_key, secret_key)
-    REFERENCES lrs_credential(api_key, secret_key)
-    ON DELETE CASCADE
-)'
-WHERE type = 'table' AND name = 'credential_to_scope'
-
 /* Migration 2024-01-24 - Add document/profile and document/profile/read scopes */
+
+/*
+ * Other changes:
+ * 1. 2022-08-18 - Add statements/read/mine to credential_to_scope.scope enum
+ * 2. 2024-05-31 - Add query-scope-enum-updated guard query
+ * (The initial version of this function, for change 1, was first deprecated,
+ * then removed.)
+ */
 
 /* The suggested scope name would simply be profile, but that would clash with
    the reserved OIDC profile scope. Since they have always remained unused, we
@@ -342,16 +322,16 @@ WHERE type = 'table' AND name = 'credential_to_scope'
 SELECT sub_query.sql GLOB (
       '*(''statements/write'','
     || '*''statements/read'','
-    || '*''statements/read/mine'','
+    || '*''statements/read/mine'','    -- Added 2022-08-18
     || '*''all/read'','
     || '*''all'','
-    || '*''define'','
-    || '*''state'','
-    || '*''state/read'','
-    || '*''activities_profile'','
-    || '*''activities_profile/read'','
-    || '*''agents_profile'','
-    || '*''agents_profile/read'')*'
+    || '*''define'','                  -- Added 2022-08-18
+    || '*''state'','                   -- ""
+    || '*''state/read'','              -- ""
+    || '*''activities_profile'','      -- Added 2024-01-24
+    || '*''activities_profile/read'',' -- ""
+    || '*''agents_profile'','          -- ""
+    || '*''agents_profile/read'')*'    -- ""
   ) AS scope_enum_updated
 FROM (
   SELECT sql
@@ -359,7 +339,7 @@ FROM (
   WHERE type='table' AND name='credential_to_scope'
 ) AS sub_query
 
--- :name alter-credential-to-scope-scope-datatype-v2!
+-- :name alter-credential-to-scope-scope-datatype!
 -- :command :execute
 -- :doc Change the enum datatype of the `credential_to_scope.scope` column. Supersedes `alter-credential-to-scope-scope-datatype!`
 UPDATE sqlite_schema
