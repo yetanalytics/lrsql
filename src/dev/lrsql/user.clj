@@ -181,7 +181,7 @@ FROM (
     'activities_profile',
     'activities_profile/read',
     'agents_profile',
-    'agents_profile/read',
+    'agents_profile/read'
   ] AS scope_enum_equal;
 "])
 
