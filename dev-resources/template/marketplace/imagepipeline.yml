@@ -104,6 +104,31 @@ Resources:
                 inputs:
                   commands:
                     - systemctl enable lrsql.service
+              - name: DefineLRSQLEphemeralService
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - |
+                      cat << EOF > /lib/systemd/system/lrsql-ephemeral.service
+                      [Unit]
+                      Description=SQL LRS Ephemeral Service
+                      [Service]
+                      User=root
+                      Environment="LC_ALL=en_US.UTF-8"
+                      WorkingDirectory=/opt/lrsql
+                      ExecStart=/opt/lrsql/bin/run_sqlite_ephemeral.sh
+                      SuccessExitStatus=143
+                      TimeoutStopSec=10
+                      Restart=on-failure
+                      RestartSec=5
+                      [Install]
+                      WantedBy=multi-user.target
+                      EOF
+              - name: EnableLRSQLEphemeralService
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - systemctl enable lrsql-ephemeral.service
       SupportedOsVersions:
         - "Amazon Linux 2"
         - "Amazon Linux 2023"
