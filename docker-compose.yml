@@ -12,6 +12,8 @@ services:
       POSTGRES_USER: lrsql_user
       POSTGRES_PASSWORD: lrsql_password
       POSTGRES_DB: lrsql_db
+    ports:
+      - "5432:5432" # Useful if we only want to run the DB w/o other services
   clamav:
     image: clamav/clamav:1.2.1
   lrs:
