@@ -36,6 +36,8 @@ services:
       LRSQL_DB_PASSWORD: lrsql_password
       # If Postgres is too slow to start, increase this
       LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
+      # Set to true if using dev UI, domain name, proxy server, etc.
+      LRSQL_ALLOW_ALL_ORIGINS: false
       # Enable ClamAV Scanning
       LRSQL_ENABLE_CLAMAV: true
       LRSQL_CLAMAV_HOST: clamav
