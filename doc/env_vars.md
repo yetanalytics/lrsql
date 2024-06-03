@@ -186,7 +186,7 @@ These config vars enable and configure browser security response headers from th
 
 | Env Var  | Config | Header Name  | `[default]` value  |
 | --------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `LRSQL_SEC_HEAD_HSTS`   | `secHeadHsts`   | `Strict-Transport-Security` |`max-age=31536000; includeSubdomains`
+| `LRSQL_SEC_HEAD_HSTS`   | `secHeadHsts`   | `Strict-Transport-Security` | `max-age=31536000; includeSubdomains` |
 | `LRSQL_SEC_HEAD_FRAME`   | `secHeadFrame`   |  `X-Frame-Options` |`DENY` |
 | `LRSQL_SEC_HEAD_CONTENT_TYPE`   | `secHeadContentType`   |  `X-Content-Type-Options` | `nosniff` |
 | `LRSQL_SEC_HEAD_XSS`   | `secHeadXss`   |  `X-Xss-Protection` | `1; mode=block` |
