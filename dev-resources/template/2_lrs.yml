@@ -65,6 +65,11 @@ Parameters:
     Description: Port on which the server runs HTTP
     Type: String
     Default: 8080
+  InstanceCreationPolicyResourceSignalTimeout:
+    Description: How long to wait for a resource signal on the deployment of an instance.
+    Type: String
+    Default: PT15M
+
   DefaultAdminUser:
     Description: Username of seed lrs admin
     Type: String
@@ -405,7 +410,7 @@ Resources:
       - GenerateJWTSecretResource
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: !Ref InstanceCreationPolicyResourceSignalTimeout
     Metadata:
       AWS::CloudFormation::Init:
         configSets:
