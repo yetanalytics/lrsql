@@ -98,6 +98,10 @@ Parameters:
     Type: String # according to docs a Double
     Description: Target requests per instance. Leave blank to disable request count autoscaling.
     Default: "" # "10000.0"
+  ASGHealthCheckGracePeriod:
+    Type: Number
+    Default: 120
+    Description: Time (in seconds) to wait before deciding a new instance is unhealthy.
 
   # Front-end (ALB) specific settings
   ALBHostName:
@@ -683,7 +687,7 @@ Resources:
       TargetGroupARNs:
         - !Ref TargetGroup
       HealthCheckType: ELB
-      HealthCheckGracePeriod: 120
+      HealthCheckGracePeriod: !Ref ASGHealthCheckGracePeriod
       # Enable Group Metrics Collection
       MetricsCollection:
         - Granularity: "1Minute"
