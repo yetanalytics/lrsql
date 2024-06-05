@@ -107,6 +107,10 @@ Parameters:
     Type: Number
     Default: 120
     Description: Time (in seconds) to wait before deciding a new instance is unhealthy.
+  ASGCreationPolicyResourceSignalTimeout:
+    Type: String
+    Description: How long to wait for instances before declaring failed creation.
+    Default: PT15M
 
   # Front-end (ALB) specific settings
   ALBHostName:
@@ -698,7 +702,7 @@ Resources:
         - Granularity: "1Minute"
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: !Ref ASGCreationPolicyResourceSignalTimeout
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MinInstancesInService: "1"
