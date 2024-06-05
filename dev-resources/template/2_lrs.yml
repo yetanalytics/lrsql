@@ -111,6 +111,10 @@ Parameters:
     Type: String
     Description: How long to wait for instances before declaring failed creation.
     Default: PT15M
+  ASGUpdatePolicyAutoScalingRollingUpdatePauseTime:
+    Type: String
+    Description: The amount of time that CloudFormation should wait for the Auto Scaling group to receive the required number of valid signals from added or replaced instances.
+    Default: PT15M
 
   # Front-end (ALB) specific settings
   ALBHostName:
@@ -707,7 +711,7 @@ Resources:
       AutoScalingRollingUpdate:
         MinInstancesInService: "1"
         MaxBatchSize: "1"
-        PauseTime: PT15M
+        PauseTime: !Ref ASGUpdatePolicyAutoScalingRollingUpdatePauseTime
         WaitOnResourceSignals: "true"
         SuspendProcesses:
           - HealthCheck
