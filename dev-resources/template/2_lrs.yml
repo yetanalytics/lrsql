@@ -137,6 +137,18 @@ Parameters:
     Description: A comma-separated list of origins to allow. If not provided ALBHostName will be used if present, otherwise no origins will be allowed.
 
   # Logging Settings
+  LogLevel:
+    Description: Detail of SQL LRS Logging level.
+    Type: String
+    AllowedValues:
+      - ALL
+      - TRACE
+      - DEBUG
+      - INFO
+      - WARN
+      - ERROR
+      - OFF
+    Default: INFO
   LogRetentionInDays:
     Description: How long to retain CloudWatch Logs from the LRSQL Instance
     Type: Number
@@ -304,7 +316,7 @@ Resources:
       Runtime: 'python3.8'
       Timeout: 10
 
-  # Run the lambda init fn as a custom resource          
+  # Run the lambda init fn as a custom resource
   GenerateJWTSecretResource:
     Type: Custom::generateJWTSecretCustomResource
     DependsOn: GenerateJWTSecretFunction
@@ -574,6 +586,9 @@ Resources:
                       "httpPort": ${InstanceHttpPort},
                       "allowedOrigins": ${AllowedOrigins},
                       "jwtCommonSecret": "${GenerateJWTSecretResource.random_string}"
+                    },
+                    "logger": {
+                      "logLevel":"${LogLevel}"
                     }
                   }
                 - DBName:
