@@ -24,6 +24,10 @@ Parameters:
       - c5.xlarge
       - c5.2xlarge
       - c5.4xlarge
+      - c5.9xlarge
+      - c5.12xlarge
+      - c5.18xlarge
+      - c5.24xlarge
   InstanceKeyName:
     Description: Name of an EC2 key pair that can be used to connect to the server (optional)
     Type: String
