@@ -39,10 +39,14 @@ Parameters:
     Description: Port on which the server runs HTTP
     Type: String
     Default: 8080
-  DefaultAdminUser:
-    Description: Username of seed lrs admin
+  InstanceCreationPolicyResourceSignalTimeout:
+    Description: How long to wait for a resource signal on the deployment of an instance.  
     Type: String
+    Default: PT15M
+  DefaultAdminUser:
     Default: lrsqladmin
+    Type: String
+    Description: Username of seed lrs admin
   DefaultAdminPass:
     Description: Initial seed password for lrs admin
     NoEcho: true
@@ -75,6 +79,18 @@ Parameters:
     Type: String # according to docs a Double
     Description: Target requests per instance. Leave blank to disable request count autoscaling.
     Default: "" # "10000.0"
+  ASGHealthCheckGracePeriod:
+    Type: Number
+    Default: 120
+    Description: Time (in seconds) to wait before deciding a new instance is unhealthy.
+  ASGCreationPolicyResourceSignalTimeout:
+    Type: String
+    Description: How long to wait for instances before declaring failed creation.
+    Default: PT15M
+  ASGUpdatePolicyAutoScalingRollingUpdatePauseTime:
+    Type: String
+    Description: The amount of time that CloudFormation should wait for the Auto Scaling group to receive the required number of valid signals from added or replaced instances.
+    Default: PT15M
 
   # Front-end (ALB) specific settings
   ALBHostName:
@@ -239,7 +255,7 @@ Resources:
           - CreateUserFnKey
           - !Ref CreateUserFnKeyOverride
           - !Sub "rds-create-user${RDSCreateUserVersion}.zip"
-      Runtime: nodejs16.x
+      Runtime: nodejs20.x
       Handler: index.handler
       Role: !GetAtt CreateUserRole.Arn
       Timeout: 15
@@ -429,7 +445,7 @@ Resources:
     Type: AWS::EC2::LaunchTemplate
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: !Ref ASGCreationPolicyResourceSignalTimeout 
     Metadata:
       AWS::CloudFormation::Init:
         configSets:
@@ -754,18 +770,18 @@ Resources:
       TargetGroupARNs:
         - !Ref TargetGroup
       HealthCheckType: ELB
-      HealthCheckGracePeriod: 120
+      HealthCheckGracePeriod: !Ref ASGHealthCheckGracePeriod
       # Enable Group Metrics Collection
       MetricsCollection:
         - Granularity: "1Minute"
     CreationPolicy:
       ResourceSignal:
-        Timeout: PT15M
+        Timeout: !Ref InstanceCreationPolicyResourceSignalTimeout
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MinInstancesInService: "1"
         MaxBatchSize: "1"
-        PauseTime: PT15M
+        PauseTime: !Ref ASGUpdatePolicyAutoScalingRollingUpdatePauseTime
         WaitOnResourceSignals: "true"
         SuspendProcesses:
           - HealthCheck
