@@ -273,7 +273,6 @@ run-jar-sqlite: target/bundle
 	LRSQL_ADMIN_PASS_DEFAULT=password \
 	LRSQL_API_KEY_DEFAULT=username \
 	LRSQL_API_SECRET_DEFAULT=password \
-	LRSQL_ENABLE_STMT_HTML=false \
 	bin/run_sqlite.sh
 
 # NOTE: Requires a running Postgres instance!
