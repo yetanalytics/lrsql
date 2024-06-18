@@ -278,8 +278,9 @@ ALTER TABLE IF EXISTS admin_account ADD COLUMN IF NOT EXISTS oidc_issuer VARCHAR
 -- :name query-scope-enum-updated
 -- :command :query
 -- :result :one
--- :doc Query to see if the DB's current value of `scope_enum` is equal to the one in `alter-scope-enum-type!`. The order of enum values is considered. Returns a map of `:scope_enum_updated`.
-SELECT enum_range(NULL::scope_enum)::TEXT[]
+-- :doc Query to see if the DB's current value of `scope_enum` is equal to the one in `alter-scope-enum-type!`. The order of enum values is considered. Returns `nil` if the enum is not updated.
+SELECT 1
+WHERE enum_range(NULL::scope_enum)::TEXT[]
   = ARRAY[
     'statements/write',
     'statements/read',
@@ -293,7 +294,7 @@ SELECT enum_range(NULL::scope_enum)::TEXT[]
     'activities_profile/read', -- ""
     'agents_profile',          -- ""
     'agents_profile/read'      -- ""
-  ] AS scope_enum_updated;
+  ];
 
 -- :name alter-scope-enum-type!
 -- :command :execute
