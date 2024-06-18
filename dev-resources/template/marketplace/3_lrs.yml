@@ -114,6 +114,18 @@ Parameters:
     Description: How long to retain CloudWatch Logs from the LRSQL Instance
     Type: Number
     Default: 7
+  LogLevel:
+    Description: Detail of SQL LRS Logging level.
+    Type: String
+    AllowedValues:
+      - ALL
+      - TRACE
+      - DEBUG
+      - INFO
+      - WARN
+      - ERROR
+      - OFF
+    Default: INFO
   LogGroupPrefix:
     Description: Prefix for CloudWatch log group.
     Type: String
@@ -595,6 +607,9 @@ Resources:
                       "httpPort": ${InstanceHttpPort},
                       "allowedOrigins": ${AllowedOrigins},
                       "jwtCommonSecret": "${GenerateJWTSecretResource.random_string}"
+                    },
+                    "logger": {
+                      "logLevel":"${LogLevel}"
                     }
                   }
                 - DBName:
@@ -668,6 +683,9 @@ Resources:
                       "httpPort": ${InstanceHttpPort},
                       "allowedOrigins": ${AllowedOrigins},
                       "jwtCommonSecret": "${GenerateJWTSecretResource.random_string}"
+                    },
+                    "logger": {
+                      "logLevel":"${LogLevel}"
                     }
                   }
                 - DefaultAdminUser: !Ref DefaultAdminUser
