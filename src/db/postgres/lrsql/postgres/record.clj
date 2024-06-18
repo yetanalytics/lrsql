@@ -53,7 +53,8 @@
   (-update-all! [_ tx]
     (alter-admin-account-passhash-optional! tx)
     (alter-admin-account-add-openid-issuer! tx)
-    (alter-scope-enum-type-v2! tx)
+    (when-not (some? (query-scope-enum-updated tx))
+      (alter-scope-enum-type! tx))
     (when-not (some? (query-xapi-statement-timestamp-exists tx))
       (alter-xapi-statement-add-timestamp! tx)
       (migrate-xapi-statement-timestamps! tx))

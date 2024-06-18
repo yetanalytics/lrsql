@@ -67,6 +67,29 @@
                  "DROP TABLE IF EXISTS xapi_statement"]]
       (jdbc/execute! ds [cmd]))
 
+    (jdbc/execute!
+     ds
+     ["SELECT 1
+       FROM (
+         SELECT sql
+         FROM sqlite_master
+         WHERE type='table' AND name='credential_to_scope'
+       ) AS sub_query
+       WHERE sub_query.sql GLOB (
+      '*(''statements/write'','
+    || '*''statements/read'','
+    || '*''statements/read/mine'','
+    || '*''all/read'','
+    || '*''all'','
+    || '*''define'','
+    || '*''state'','
+    || '*''state/read'','
+    || '*''activities_profile'','
+    || '*''activities_profile/read'','
+    || '*''agents_profile'','
+    || '*''agents_profile/read'')*'
+  )"])
+
     (component/stop sys')))
 
 ;; PostgreSQL
@@ -113,6 +136,56 @@
        (jdbc/execute! ds)
        (map (fn [x] (get x (keyword "QUERY PLAN"))))
        (run! println))
+
+  ;; Inserting 1.2 million API keys
+
+  (def account-id
+    (-> (adp/-get-accounts lrs) first :account-id))
+
+  (run! (fn [idx]
+          (when (zero? (mod idx 1000))
+            (println (str "On iteration: " idx)))
+          (adp/-create-api-keys lrs account-id ["all"])
+          (adp/-create-api-keys lrs account-id ["all/read"])
+          (adp/-create-api-keys lrs account-id ["statements/read"])
+          (adp/-create-api-keys lrs account-id ["statements/read/mine"])
+          (adp/-create-api-keys lrs account-id ["statements/write"])
+          (adp/-create-api-keys lrs account-id ["define"])
+          (adp/-create-api-keys lrs account-id ["state"])
+          (adp/-create-api-keys lrs account-id ["state/read"])
+          (adp/-create-api-keys lrs account-id ["activities_profile"])
+          (adp/-create-api-keys lrs account-id ["activities_profile/read"])
+          (adp/-create-api-keys lrs account-id ["agents_profile"])
+          (adp/-create-api-keys lrs account-id ["agents_profile/read"]))
+        (range 0 100000))
+  
+  ;; Note: deletes initial username + password API keys
+  (jdbc/execute! ds ["DELETE FROM credential_to_scope"])
+  
+  ;; Query enums
+
+  (jdbc/execute!
+   ds
+   [
+"SELECT 1
+ WHERE enum_range(NULL::scope_enum)::TEXT[]
+  = ARRAY[
+    'statements/write',
+    'statements/read',
+    'statements/read/mine',
+    'all/read',
+    'all',
+    'state',
+    'state/read',
+    'define',
+    'activities_profile',
+    'activities_profile/read',
+    'agents_profile',
+    'agents_profile/read'
+  ];
+"])
+
+  ;; Stop system
 
   (component/stop sys')
   )
