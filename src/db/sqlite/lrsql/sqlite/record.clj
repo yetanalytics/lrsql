@@ -81,7 +81,7 @@
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx))
   (-update-all! [_ tx]
-    (when (= 1 (:notnull (query-admin-account-passhash-notnull tx)))
+    (when (some? (query-admin-account-passhash-notnull tx))
       (update-schema-simple! tx alter-admin-account-passhash-optional!))
     (when-not (some? (query-admin-account-oidc-issuer-exists tx))
       (alter-admin-account-add-openid-issuer! tx))
@@ -110,7 +110,7 @@
     (when-not (some? (query-xapi-statement-reaction-id-exists tx))
       (xapi-statement-add-reaction-id! tx)
       (xapi-statement-add-trigger-id! tx))
-    (when-not (= "CASCADE" (:on-delete (first (query-statement-to-actor-has-cascade-delete? tx))))
+    (when-not (some? (query-statement-to-actor-has-cascade-delete tx))
       (update-schema-simple! tx alter-statement-to-actor-add-cascade-delete!))
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))

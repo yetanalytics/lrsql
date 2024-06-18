@@ -70,6 +70,21 @@
     (jdbc/execute!
      ds
      ["SELECT 1
+       FROM pragma_table_info('admin_account')
+       WHERE name = 'passhash'
+       AND \"notnull\" = 1"])
+    
+    (jdbc/execute!
+     ds
+     ["SELECT 1
+       FROM pragma_foreign_key_list('statement_to_actor')
+       WHERE \"table\" = 'xapi_statement'
+       AND on_delete = 'CASCADE'
+      "])
+    
+    (jdbc/execute!
+     ds
+     ["SELECT 1
        FROM (
          SELECT sql
          FROM sqlite_master
