@@ -2,7 +2,7 @@
 
 # Version of LRS Admin UI to use
 
-LRS_ADMIN_UI_VERSION ?= v0.1.20
+LRS_ADMIN_UI_VERSION ?= v0.1.21
 LRS_ADMIN_UI_LOCATION ?= https://github.com/yetanalytics/lrs-admin-ui/releases/download/${LRS_ADMIN_UI_VERSION}/lrs-admin-ui.zip
 LRS_ADMIN_ZIPFILE ?= lrs-admin-ui-${LRS_ADMIN_UI_VERSION}.zip
 
@@ -273,6 +273,7 @@ run-jar-sqlite: target/bundle
 	LRSQL_ADMIN_PASS_DEFAULT=password \
 	LRSQL_API_KEY_DEFAULT=username \
 	LRSQL_API_SECRET_DEFAULT=password \
+	LRSQL_ENABLE_STMT_HTML=false \
 	bin/run_sqlite.sh
 
 # NOTE: Requires a running Postgres instance!
