@@ -500,8 +500,14 @@ ALTER TABLE xapi_statement ADD COLUMN reaction_id TEXT REFERENCES reaction(id);
 -- :doc Adds `xapi_statement.trigger_id`
 ALTER TABLE xapi_statement ADD COLUMN trigger_id TEXT REFERENCES xapi_statement(statement_id);
 
---:name query-statement-to-actor-has-cascade-delete?
-SELECT on_delete FROM pragma_foreign_key_list("statement_to_actor") WHERE "table" = "xapi_statement"
+-- :name query-statement-to-actor-has-cascade-delete
+-- :command :query
+-- :result :one
+-- :doc Query to see whether the `statement_to_actor` foreign key in the table `xapi_statement` does CASCADE when its referenced row is deleted.
+SELECT 1
+FROM pragma_foreign_key_list('statement_to_actor')
+WHERE "table" = 'xapi_statement'
+AND on_delete = 'CASCADE';
 
 -- :name alter-statement-to-actor-add-cascade-delete!
 -- :command :execute

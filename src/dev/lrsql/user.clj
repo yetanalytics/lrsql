@@ -77,6 +77,14 @@
     (jdbc/execute!
      ds
      ["SELECT 1
+       FROM pragma_foreign_key_list('statement_to_actor')
+       WHERE \"table\" = 'xapi_statement'
+       AND on_delete = 'CASCADE'
+      "])
+    
+    (jdbc/execute!
+     ds
+     ["SELECT 1
        FROM (
          SELECT sql
          FROM sqlite_master
