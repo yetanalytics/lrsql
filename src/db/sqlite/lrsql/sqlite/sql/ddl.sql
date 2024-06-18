@@ -323,7 +323,7 @@ SELECT 1
 FROM (
   SELECT sql
   FROM sqlite_master
-  WHERE type='table' AND name='credential_to_scope'
+  WHERE type = 'table' AND name = 'credential_to_scope'
 ) AS sub_query
 WHERE sub_query.sql GLOB (
     '*(''statements/write'','
