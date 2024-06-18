@@ -104,8 +104,7 @@
       (migrate-timestamps-activity-profile-02! tx)
       (migrate-timestamps-activity-profile-03! tx)
       (migrate-timestamps-activity-profile-04! tx))
-    (when-not (= 1 (:scope_enum_updated
-                    (query-credential-to-scope-scope-datatype-updated tx)))
+    (when-not (some? (query-credential-to-scope-scope-datatype-updated tx))
       (update-schema-simple! tx alter-credential-to-scope-scope-datatype!))
     (create-reaction-table! tx)
     (when-not (some? (query-xapi-statement-reaction-id-exists tx))

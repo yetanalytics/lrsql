@@ -69,8 +69,13 @@
 
     (jdbc/execute!
      ds
-     ["
-SELECT sub_query.sql GLOB (
+     ["SELECT 1
+       FROM (
+         SELECT sql
+         FROM sqlite_master
+         WHERE type='table' AND name='credential_to_scope'
+       ) AS sub_query
+       WHERE sub_query.sql GLOB (
       '*(''statements/write'','
     || '*''statements/read'','
     || '*''statements/read/mine'','
@@ -83,13 +88,7 @@ SELECT sub_query.sql GLOB (
     || '*''activities_profile/read'','
     || '*''agents_profile'','
     || '*''agents_profile/read'')*'
-  ) AS scope_enum_updated
-FROM (
-  SELECT sql
-  FROM sqlite_master
-  WHERE type='table' AND name='credential_to_scope'
-) AS sub_query
-    "])
+  )"])
 
     (component/stop sys')))
 

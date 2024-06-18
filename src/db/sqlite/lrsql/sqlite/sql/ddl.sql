@@ -319,25 +319,26 @@ ALTER TABLE admin_account ADD COLUMN oidc_issuer TEXT
 -- :command :query
 -- :result :one
 -- :doc Query to see if the CHECk constraint of the `credential_to_scope.scope` column has been updated to the latest allowed values. Returns a map of `:scope_enum_updated`.
-SELECT sub_query.sql GLOB (
-      '*(''statements/write'','
-    || '*''statements/read'','
-    || '*''statements/read/mine'','    -- Added 2022-08-18
-    || '*''all/read'','
-    || '*''all'','
-    || '*''define'','                  -- Added 2022-08-18
-    || '*''state'','                   -- ""
-    || '*''state/read'','              -- ""
-    || '*''activities_profile'','      -- Added 2024-01-24
-    || '*''activities_profile/read'',' -- ""
-    || '*''agents_profile'','          -- ""
-    || '*''agents_profile/read'')*'    -- ""
-  ) AS scope_enum_updated
+SELECT 1
 FROM (
   SELECT sql
   FROM sqlite_master
   WHERE type='table' AND name='credential_to_scope'
 ) AS sub_query
+WHERE sub_query.sql GLOB (
+    '*(''statements/write'','
+  || '*''statements/read'','
+  || '*''statements/read/mine'','    -- Added 2022-08-18
+  || '*''all/read'','
+  || '*''all'','
+  || '*''define'','                  -- Added 2022-08-18
+  || '*''state'','                   -- ""
+  || '*''state/read'','              -- ""
+  || '*''activities_profile'','      -- Added 2024-01-24
+  || '*''activities_profile/read'',' -- ""
+  || '*''agents_profile'','          -- ""
+  || '*''agents_profile/read'')*'    -- ""
+);
 
 -- :name alter-credential-to-scope-scope-datatype!
 -- :command :execute
