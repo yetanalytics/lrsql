@@ -275,8 +275,11 @@ PRAGMA schema_version = :sql:schema_version
 -- :name query-admin-account-passhash-notnull
 -- :command :query
 -- :result :one
--- :doc Query to see if admin_account passhash is required.
-SELECT "notnull" FROM pragma_table_info('admin_account') WHERE name = 'passhash'
+-- :doc Query to see if admin_account passhash is required. Returns 1 if the passhash is not nullable (i.e. not optional).
+SELECT 1
+FROM pragma_table_info('admin_account')
+WHERE name = 'passhash'
+AND "notnull" = 1 -- non-nullable is true
 
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
