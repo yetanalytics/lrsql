@@ -276,10 +276,8 @@ PRAGMA schema_version = :sql:schema_version
 -- :command :query
 -- :result :one
 -- :doc Query to see if admin_account passhash is required. Returns 1 if the passhash is not nullable (i.e. not optional).
-SELECT 1
-FROM pragma_table_info('admin_account')
-WHERE name = 'passhash'
-AND "notnull" = 1 -- non-nullable is true
+SELECT 1 FROM pragma_table_info('admin_account')
+WHERE name = 'passhash' AND "notnull" = 1 -- non-nullable is true
 
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
@@ -409,7 +407,6 @@ ALTER TABLE xapi_statement ADD COLUMN stored TIMESTAMP
 UPDATE xapi_statement SET stored = strftime('%Y-%m-%dT%H:%M:%f000000Z', json_extract(payload, '$.stored'))
 WHERE stored IS NULL;
 
-
 /* Migration 2023-05-11-00 - Convert timestamps for consistency */
 
 -- :name query-state-document-last-modified-is-timestamp
@@ -504,10 +501,8 @@ ALTER TABLE xapi_statement ADD COLUMN trigger_id TEXT REFERENCES xapi_statement(
 -- :command :query
 -- :result :one
 -- :doc Query to see whether the `statement_to_actor` foreign key in the table `xapi_statement` does CASCADE when its referenced row is deleted.
-SELECT 1
-FROM pragma_foreign_key_list('statement_to_actor')
-WHERE "table" = 'xapi_statement'
-AND on_delete = 'CASCADE';
+SELECT 1 FROM pragma_foreign_key_list('statement_to_actor')
+WHERE "table" = 'xapi_statement' AND on_delete = 'CASCADE';
 
 -- :name alter-statement-to-actor-add-cascade-delete!
 -- :command :execute
