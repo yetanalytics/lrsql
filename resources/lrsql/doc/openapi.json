@@ -1,0 +1,1669 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "LRSQL",
+    "version": "0.7.2"
+  },
+  "externalDocs": {
+    "url": "https://github.com/yetanalytics/lrsql/blob/main/doc/endpoints.md"
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "responses": {
+      "error-400": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "error-401": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Group": {
+        "oneOf": [
+          {
+            "properties": {
+              "objectType": {
+                "type": "string",
+                "pattern": "Group"
+              },
+              "name": {
+                "type": "string"
+              },
+              "member": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Agent"
+                }
+              }
+            },
+            "required": [
+              "objectType",
+              "member"
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "properties": {
+                  "objectType": {
+                    "type": "string",
+                    "pattern": "Group"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "member": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Agent"
+                    }
+                  }
+                },
+                "required": [
+                  "objectType"
+                ]
+              },
+              {
+                "$ref": "#/components/schemas/IFI"
+              }
+            ]
+          }
+        ]
+      },
+      "IRI": {
+        "type": "string",
+        "format": "iri"
+      },
+      "statementId": {
+        "type": "string"
+      },
+      "ScopedKeyPair": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/KeyPair"
+          },
+          {
+            "$ref": "#/components/schemas/Scopes"
+          }
+        ]
+      },
+      "IRL": {
+        "type": "string"
+      },
+      "KeyPair": {
+        "type": "object",
+        "properties": {
+          "api-key": {
+            "type": "string"
+          },
+          "secret-key": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "api-key",
+          "secret-key"
+        ]
+      },
+      "StatementResult": {
+        "type": "object",
+        "required": [
+          "statements"
+        ],
+        "properties": {
+          "statements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Statement"
+            }
+          },
+          "more": {
+            "$ref": "#/components/schemas/IRL"
+          }
+        }
+      },
+      "IFI": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "mbox": {
+                "$ref": "#/components/schemas/MailToIRI"
+              }
+            },
+            "required": [
+              "mbox"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "mbox_sha1sum": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mbox_sha1sum"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "openid": {
+                "$ref": "#/components/schemas/URI"
+              }
+            },
+            "required": [
+              "openid"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "account": {
+                "$ref": "#/components/schemas/Account"
+              }
+            },
+            "required": [
+              "account"
+            ]
+          }
+        ]
+      },
+      "Scopes": {
+        "type": "object",
+        "properties": {
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "scopes"
+        ]
+      },
+      "URI": {
+        "type": "string",
+        "format": "uri"
+      },
+      "Actor": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Group"
+          },
+          {
+            "$ref": "#/components/schemas/Agent"
+          }
+        ]
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "homePage": {
+            "$ref": "#/components/schemas/IRL"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "homePage",
+          "name"
+        ]
+      },
+      "Timestamp": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "UUID": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "Person": {
+        "type": "object",
+        "properties": {
+          "objectType": {
+            "type": "string",
+            "pattern": "Person"
+          },
+          "name": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mbox": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MailToIRI"
+            }
+          },
+          "mbox_sha1sum": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "openid*": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/URI"
+            }
+          },
+          "account*": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Account"
+            }
+          }
+        },
+        "required": [
+          "objectType"
+        ]
+      },
+      "Statement": {
+        "type": "object",
+        "description": "https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#20-statements"
+      },
+      "Activity": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "objectType": {
+            "type": "string",
+            "pattern": "String"
+          },
+          "id": {
+            "$ref": "#/components/schemas/IRI"
+          },
+          "definition": {
+            "type": "object",
+            "properties": {
+              "name": {},
+              "description": {},
+              "type": {},
+              "moreinfo": {},
+              "extensions": {}
+            }
+          }
+        }
+      },
+      "Agent": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "objectType": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mbox"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/IFI"
+          }
+        ]
+      },
+      "MailToIRI": {
+        "type": "string",
+        "format": "email"
+      }
+    }
+  },
+  "paths": {
+    "/admin/account": {
+      "delete": {
+        "description": "Delete account (and associated credentials)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "account-id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "account-id"
+                ]
+              }
+            }
+          }
+        },
+        "operationId": "delete-admin-account",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ID of deleted account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account-id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "account-id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/error-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/error-401"
+          }
+        }
+      },
+      "get": {
+        "description": "Get all accounts",
+        "operationId": "get-admin-accounts",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of account objects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "account-id": {
+                        "type": "string"
+                      },
+                      "username": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "account-id",
+                      "username"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/error-401"
+          }
+        }
+      }
+    },
+    "/admin/account/create": {
+      "post": {
+        "description": "Create new account",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "operationId": "create-account",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ID of new account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account-id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "account-id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/error-401"
+          },
+          "401": {
+            "$ref": "#/components/responses/error-401"
+          }
+        }
+      }
+    },
+    "/admin/account/login": {
+      "post": {
+        "description": "Log into an existing account",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "operationId": "login",
+        "responses": {
+          "200": {
+            "description": "Account ID and JWT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account-id": {
+                      "type": "string"
+                    },
+                    "json-web-token": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "account-id",
+                    "json-web-token"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/error-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/error-401"
+          }
+        }
+      }
+    },
+    "/admin/account/password": {
+      "put": {
+        "description": "Update account password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "old-password": {
+                    "type": "string"
+                  },
+                  "new-password": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "old-password",
+                  "new-password"
+                ]
+              }
+            }
+          }
+        },
+        "operationId": "update-password",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ID of updated account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account-id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "account-id"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/error-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/error-401"
+          }
+        }
+      }
+    },
+    "/admin/creds": {
+      "put": {
+        "description": "Create or update new keys w/scope set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopedKeyPair"
+              }
+            }
+          }
+        },
+        "operationId": "update-api-keys",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key, secret key, and scopes of updated account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopedKeyPair"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/error-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/error-401"
+          }
+        }
+      },
+      "post": {
+        "description": "Create new API key pair w/scope set",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Scopes"
+              }
+            }
+          }
+        },
+        "operationId": "create-api-keys",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Object containing key, secret key, and array of scopes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopedKeyPair"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/error-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/error-401"
+          }
+        }
+      },
+      "get": {
+        "description": "Get current keys + scopes associated w/account",
+        "operationId": "get-api-keys",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of scoped key pairs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScopedKeyPair"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/error-401"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete API key pair and associated scopes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeyPair"
+              }
+            }
+          }
+        },
+        "operationId": "delete-api-key",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empty body",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/error-400"
+          },
+          "401": {
+            "$ref": "#/components/responses/error-401"
+          }
+        }
+      }
+    },
+    "/admin/me": {
+      "get": {
+        "description": "Get account of querying account",
+        "operationId": "get-own-account",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account object referring to own account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "account-id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "account-id",
+                    "username"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/error-401"
+          }
+        }
+      }
+    },
+    "/xapi/about": {
+      "get": {
+        "operationId": "get-about",
+        "description": "About info",
+        "responses": {
+          "200": {
+            "description": "Object containing body text and optional etag",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "body": {
+                      "type": "string"
+                    },
+                    "etag": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "body"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/xapi/activities": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "The requested Activity object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Activity"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-activity",
+        "description": "Gets the Activity with the specified activityId",
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/xapi/activities/profile": {
+      "put": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "put-activity-profile",
+        "description": "Stores or changes the specified Profile document in the context of the specified Activity.",
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          },
+          {
+            "name": "profileId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "post-activity-profile",
+        "description": "Stores or changes the specified Profile document in the context of the specified Activity.",
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          },
+          {
+            "name": "profileId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "The requested Profile document",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-activity-profile",
+        "description": "Fetches the specified Profile document in the context of the specified Activity.  The semantics of the request are driven by the \"profileId\" parameter. If it is included, the GET method will act upon a single defined document identified by \"profileId\". Otherwise, GET will return the available ids.",
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          },
+          {
+            "name": "profileId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "?since",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Timestamp"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "delete-activity-profile",
+        "description": "Deletes the specified Profile document in the context of the specified Activity.",
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          },
+          {
+            "name": "profileId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/xapi/activities/state": {
+      "put": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "put-state",
+        "description": "Stores or changes the document specified by the given stateId that exists in the context of the specified Activity, Agent, and registration (if specified).",
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          },
+          {
+            "name": "agent",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          },
+          {
+            "name": "registration",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "stateId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "post-state",
+        "description": "Stores or changes the document specified by the given  stateId that exists in the context of the specified Activity, Agent, and registration (if specified).",
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          },
+          {
+            "name": "agent",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          },
+          {
+            "name": "registration",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "stateId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "The requested state document, or an array of stateId(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-state",
+        "description": "Fetches the document specified by the given  stateId that exists in the context of the specified Activity, Agent, and registration (if specified), or an array of stateIds.",
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          },
+          {
+            "name": "agent",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          },
+          {
+            "name": "registration",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "stateId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Timestamp"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "delete-state",
+        "description": "Deletes all documents associated with the specified Activity, Agent, and registration (if specified), or just the document specified by stateId",
+        "parameters": [
+          {
+            "name": "activityId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          },
+          {
+            "name": "agent",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          },
+          {
+            "name": "registration",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "stateId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/xapi/agents": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Return a special, Person Object for a specified Agent. The Person Object is very similar to an Agent Object, but instead of each attribute having a single value, each attribute has an array value, and it is legal to include multiple identifying properties.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-agent",
+        "description": "Gets a specified agent",
+        "parameters": [
+          {
+            "name": "agent",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/xapi/agents/profile": {
+      "put": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "put-agents-profile",
+        "description": "Stores or changes the specified Profile document in the context of the specified Agent.",
+        "parameters": [
+          {
+            "name": "agent",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          },
+          {
+            "name": "profileId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "post-agents-profile",
+        "description": "Stores or changes the specified Profile document in the context of the specified Agent.",
+        "parameters": [
+          {
+            "name": "agent",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          },
+          {
+            "name": "profileId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "If profileId is included in the request, the specified document.  Otherwise, an array of profileId for the specified Agent."
+          }
+        },
+        "operationId": "get-agents-profile",
+        "description": "Fetches the specified Profile document in the context of the specified Agent.  The semantics of the request are driven by the \"profileId\" parameter. If it is included, the GET method will act upon a single defined document identified by \"profileId\". Otherwise, GET will return the available ids.",
+        "parameters": [
+          {
+            "name": "agent",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          },
+          {
+            "name": "profileId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Timestamp"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "delete-agents-profile",
+        "description": "Deletes the specified Profile document in the context of the specified Agent.",
+        "parameters": [
+          {
+            "name": "agent",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          },
+          {
+            "name": "profileId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/xapi/health": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Empty body---a 200 indicates server is alive"
+          }
+        },
+        "description": "Simple heartbeat"
+      }
+    },
+    "/xapi/statements": {
+      "put": {
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "put-statement",
+        "description": "",
+        "parameters": [
+          {
+            "name": "statementId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Statement"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Array of Statement id(s) (UUID) in the same order as the corresponding stored Statements.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/statementId"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "post-statement",
+        "description": "Stores a Statement, or a set of Statements.",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/statementId"
+                    }
+                  },
+                  {
+                    "$ref": "#/components/schemas/statementId"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Requested Statement or Results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/Statement"
+                    },
+                    {
+                      "$ref": "#/components/schemas/StatementResult"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-statement",
+        "description": "https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#21-statement-resource",
+        "parameters": [
+          {
+            "name": "statementId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "voidedStatementId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "agent",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Actor"
+            }
+          },
+          {
+            "name": "verb",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          },
+          {
+            "name": "activity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IRI"
+            }
+          },
+          {
+            "name": "registration",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "related_activities",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "related_agents",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Timestamp"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attachments",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "ascending",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  }
+}
