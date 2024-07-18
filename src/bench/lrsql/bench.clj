@@ -9,7 +9,8 @@
             [babashka.curl :as curl]
             [com.yetanalytics.datasim.sim :as sim]
             [com.yetanalytics.datasim.input :as sim-input]
-            [lrsql.util :as u]))
+            [lrsql.util :as u])
+  (:gen-class))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Defs

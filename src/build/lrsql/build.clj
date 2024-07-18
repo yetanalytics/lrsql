@@ -49,3 +49,32 @@
      {:basis     basis
       :class-dir class-dir
       :uber-file uberjar-file})))
+
+;; Alternate Jar for just bencher
+(def src-dirs-bench
+  ["src/bench"])
+
+(def uberjar-file-bench
+  "target/bundle/bench.jar")
+
+(defn- create-basis-bench []
+  (b/create-basis
+   {:project "deps.edn"
+    :aliases [:bench]}))
+
+(defn uber-bench
+  "Create Benchmark uberjar."
+  [_]
+  (let [basis (create-basis-bench)]
+    (b/copy-dir
+     {:src-dirs   src-dirs-bench
+      :target-dir class-dir
+      :ignores    ignored-file-regexes})
+    (b/compile-clj
+     {:basis     basis
+      :src-dirs  src-dirs-bench
+      :class-dir class-dir})
+    (b/uber
+     {:basis     basis
+      :class-dir class-dir
+      :uber-file uberjar-file-bench})))
