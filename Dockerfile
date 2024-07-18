@@ -3,6 +3,7 @@ FROM alpine:3.19.1
 ADD target/bundle /lrsql
 ADD .java_modules /lrsql/.java_modules
 
+
 # replace the linux runtime via jlink
 RUN apk update \
         && apk upgrade \
@@ -13,6 +14,9 @@ RUN apk update \
         && jlink --output /lrsql/runtimes/linux/ --add-modules $(cat /lrsql/.java_modules) \
         && apk del openjdk11 \
         && rm -rf /var/cache/apk/*
+
+# delete bench utils for leaner container
+RUN rm -rf /lrsql/bench*
 
 WORKDIR /lrsql
 EXPOSE 8080
