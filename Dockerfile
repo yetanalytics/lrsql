@@ -3,7 +3,6 @@ FROM alpine:3.19.1
 ADD target/bundle /lrsql
 ADD .java_modules /lrsql/.java_modules
 
-
 # replace the linux runtime via jlink
 RUN apk update \
         && apk upgrade \
