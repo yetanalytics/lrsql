@@ -23,7 +23,7 @@ jobs:
 
   build_jre:
     needs: get_modules
-    uses: yetanalytics/runtimer/.github/workflows/runtimer.yml@0.1.2-java-11-temurin
+    uses: yetanalytics/runtimer/.github/workflows/runtimer.yml@0.1.3-java-11-temurin
     with:
       java-version: '11'
       java-distribution: 'temurin'
@@ -52,7 +52,7 @@ jobs:
     - name: Download macOS-latest Artifact
       uses: actions/download-artifact@v3
       with:
-        name: macos-11-jre
+        name: macos-12-jre
 
     - name: Download windows-latest Artifact
       uses: actions/download-artifact@v3
@@ -65,8 +65,8 @@ jobs:
         mkdir -p target/bundle/runtimes
         unzip ubuntu-20.04-jre.zip -d target/bundle/runtimes
         mv target/bundle/runtimes/ubuntu-20.04 target/bundle/runtimes/linux
-        unzip macos-11-jre.zip -d target/bundle/runtimes
-        mv target/bundle/runtimes/macos-11 target/bundle/runtimes/macos
+        unzip macos-12-jre.zip -d target/bundle/runtimes
+        mv target/bundle/runtimes/macos-12 target/bundle/runtimes/macos
         unzip windows-2022-jre.zip -d target/bundle/runtimes
         mv target/bundle/runtimes/windows-2022 target/bundle/runtimes/windows
 
