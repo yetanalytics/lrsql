@@ -67,9 +67,8 @@
   {:mvn/version "0.0.1"
    :exclusions [org.clojure/clojure]}
 
-  gen-openapi/gen-openapi {:local/root "../lrsql"}
-  #_#_com.yetanalytics/gen-openapi
-  {:mvn/version "0.0.1"
+  com.yetanalytics/gen-openapi
+  {:mvn/version "0.0.4"
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript
                  cheshire/cheshire
