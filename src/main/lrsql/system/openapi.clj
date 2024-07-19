@@ -1,12 +1,7 @@
 (ns lrsql.system.openapi
-  (:require [cheshire.core :as json]
-            [clj-yaml.core :as yaml]
-            [clojure.string :refer [lower-case upper-case]]
-            [xapi-schema.spec.resources :as xr]
-            [spec-tools.openapi.core :as openapi]
-            [clojure.spec.alpha :as s]
-            [com.yetanalytics.gen-openapi.generate.schema :as gs]
-            [com.yetanalytics.lrs.pedestal.openapi :as lrsoa]))
+  (:require 
+   [com.yetanalytics.gen-openapi.generate.schema :as gs]
+   [com.yetanalytics.lrs.pedestal.openapi :as lrsoa]))
 
 (def oa-routes (atom nil))
 (def general-map {:openapi "3.0.0"
