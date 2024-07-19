@@ -13,12 +13,8 @@
             [lrsql.admin.interceptors.reaction :as ri]
             [lrsql.util.interceptor :as util-i]
             [lrsql.util.headers :as h]
-            [lrsql.system.openapi :as oa]
-
             [com.yetanalytics.gen-openapi.core :as gc]
-            [com.yetanalytics.gen-openapi.splice :as splice]
             [com.yetanalytics.gen-openapi.generate :as g]
-
             [com.yetanalytics.gen-openapi.generate.schema :as gs]))
 
 (defn- make-common-interceptors
