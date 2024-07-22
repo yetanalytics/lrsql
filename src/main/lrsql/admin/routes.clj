@@ -267,9 +267,7 @@
                                    (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
                                    ji/validate-jwt-account
                                    lm/delete-actor)
-     :route-name :lrsql.lrs-management/delete-actor]
-    ["/admin/openapi" :get (conj common-interceptors
-                                 lm/openapi)]})
+     :route-name :lrsql.lrs-management/delete-actor]})
 
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
@@ -334,3 +332,8 @@
                 (when enable-admin-delete-actor
                   (admin-lrs-management-routes
                    common-interceptors-oidc secret leeway no-val-opts)))))
+
+(defn add-openapi-route [routes {:keys [lrs head-opts]}]
+  (let [common-interceptors (make-common-interceptors lrs head-opts)]
+    (conj routes ["/admin/openapi" :get (conj common-interceptors
+                                              (lm/openapi routes))])))

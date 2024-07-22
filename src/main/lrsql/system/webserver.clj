@@ -5,11 +5,10 @@
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
-            [lrsql.admin.routes :refer [add-admin-routes]]
+            [lrsql.admin.routes :refer [add-admin-routes add-openapi-route]]
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
             [lrsql.spec.config :as cs]
-            [lrsql.system.openapi :as openapi]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
             [lrsql.util.interceptor :refer [handle-json-parse-exn]]))
@@ -110,6 +109,17 @@
                 :sec-head-download     sec-head-download
                 :sec-head-cross-domain sec-head-cross-domain
                 :sec-head-content      sec-head-content}}))
+        routes (add-openapi-route
+                routes
+                {:lrs lrs
+                 :head-opts {:sec-head-hsts         sec-head-hsts
+                             :sec-head-frame        sec-head-frame
+                             :sec-head-content-type sec-head-content-type
+                             :sec-head-xss          sec-head-xss
+                             :sec-head-download     sec-head-download
+                             :sec-head-cross-domain sec-head-cross-domain
+                             :sec-head-content      sec-head-content}})
+        
         ;; Build allowed-origins list. Add without ports as well for
         ;; default ports
         allowed-list
@@ -163,8 +173,6 @@
                           i/xapi-default-interceptors
                           http/create-server
                           http/start)]
-          (reset! openapi/oa-routes (::http/routes service))
-          
           ;; Logging
           (let [{{ssl-port :ssl-port} ::http/container-options
                  http-port            ::http/port
