@@ -21,7 +21,9 @@
 
 (defn- to-last-version [git-data]
   (or (to-version git-data)
-      (first (clojure.string/split (get git-data "last_tag" "") #"\-" ))))
+      (-> git-data (get "last_tag" "")
+          (clojure.string/split #"\-")
+          first)))
 
 (defn read-last-version []
   (to-last-version (read-git)))
