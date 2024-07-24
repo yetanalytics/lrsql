@@ -6,6 +6,12 @@ LRS_ADMIN_UI_VERSION ?= v0.1.22
 LRS_ADMIN_UI_LOCATION ?= https://github.com/yetanalytics/lrs-admin-ui/releases/download/${LRS_ADMIN_UI_VERSION}/lrs-admin-ui.zip
 LRS_ADMIN_ZIPFILE ?= lrs-admin-ui-${LRS_ADMIN_UI_VERSION}.zip
 
+# Git vars
+
+GIT_HASH ?= $(shell git rev-parse HEAD)
+GIT_TAG ?= $(shell git describe --exact-match --tags || true)
+GIT_LAST_TAG ?=  $(shell git describe --tags)
+
 # Get the admin UI SPA release from GitHub
 resources/public/admin:
 	curl -L ${LRS_ADMIN_UI_LOCATION} -o ${LRS_ADMIN_ZIPFILE}
@@ -23,7 +29,10 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, git-details.json
+
+git-details.json:
+	printf "{\"hash\":\"$(GIT_HASH)\",\"tag\":\"$(GIT_TAG)\",\"last_tag\":\"$(GIT_LAST_TAG)\"}" > git-details.json
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp target/nvd
@@ -206,6 +215,12 @@ target/bundle/lrsql_pg.exe: exe/lrsql_pg.exe
 target/bundle/admin: resources/public/admin
 	mkdir -p target/bundle
 	cp -r resources/public/admin target/bundle/admin
+
+# Include version file
+target/bundle/version:
+	mkdir -p target/bundle
+	make git-details.json
+	mv git-details.json target/bundle/git-details.json
 
 # Create entire bundle
 
