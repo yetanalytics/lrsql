@@ -70,6 +70,13 @@
         (:config lrs)
         ;; Make routes - the lrs error interceptor is appended to the
         ;; start to all lrs routes
+        head-opts {:sec-head-hsts         sec-head-hsts
+                   :sec-head-frame        sec-head-frame
+                   :sec-head-content-type sec-head-content-type
+                   :sec-head-xss          sec-head-xss
+                   :sec-head-download     sec-head-download
+                   :sec-head-cross-domain sec-head-cross-domain
+                   :sec-head-content      sec-head-content}
         routes
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
@@ -102,24 +109,11 @@
                :enable-reaction-routes    enable-reactions
                :oidc-interceptors         oidc-admin-interceptors
                :oidc-ui-interceptors      oidc-admin-ui-interceptors
-               :head-opts
-               {:sec-head-hsts         sec-head-hsts
-                :sec-head-frame        sec-head-frame
-                :sec-head-content-type sec-head-content-type
-                :sec-head-xss          sec-head-xss
-                :sec-head-download     sec-head-download
-                :sec-head-cross-domain sec-head-cross-domain
-                :sec-head-content      sec-head-content}}))
+               :head-opts head-opts}))
         routes (add-openapi-route
                 routes
                 {:lrs lrs
-                 :head-opts {:sec-head-hsts         sec-head-hsts
-                             :sec-head-frame        sec-head-frame
-                             :sec-head-content-type sec-head-content-type
-                             :sec-head-xss          sec-head-xss
-                             :sec-head-download     sec-head-download
-                             :sec-head-cross-domain sec-head-cross-domain
-                             :sec-head-content      sec-head-content}
+                 :head-opts head-opts
                  :version (read-last-version)})
         
         ;; Build allowed-origins list. Add without ports as well for

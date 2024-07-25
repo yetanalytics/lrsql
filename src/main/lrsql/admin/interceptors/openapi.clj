@@ -16,16 +16,16 @@
                                             :bearerFormat :JWT}})))
 
 (defn openapi [routes version]
-  (interceptor
-   {:name ::openapi
-    :enter (fn openapi [ctx]
-             (assoc ctx :response
-                    {:status 200
-                     :body (oa-core/make-oa-map
-                            {:openapi "3.0.0"
-                             :info {:title "LRSQL"
-                                    :version version}
-                             :externalDocs {:url "https://github.com/yetanalytics/lrsql/blob/main/doc/endpoints.md"}
-                             :components (gs/dsl (add-lrsql-specifics
-                                                  lrs-oa/components))}
-                            routes)}))}))
+  (let [m {:status 200
+           :body (oa-core/make-oa-map
+                  {:openapi "3.0.0"
+                   :info {:title "LRSQL"
+                          :version version}
+                   :externalDocs {:url "https://github.com/yetanalytics/lrsql/blob/main/doc/endpoints.md"}
+                   :components (gs/dsl (add-lrsql-specifics
+                                        lrs-oa/components))}
+                  routes)}]
+    (interceptor
+     {:name ::openapi
+      :enter (fn openapi [ctx]
+               (assoc ctx :response m))})))
