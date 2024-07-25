@@ -35,7 +35,7 @@
                       :response {:status 200
                                  :body params})))}))
 
-(def add-lrsql-specifics [lrs-oa-spec]
+(defn add-lrsql-specifics [lrs-oa-spec]
   (-> lrs-oa-spec
       (update :schemas merge {:KeyPair (gs/o {:api-key :t#string
                                               :secret-key :t#string})
