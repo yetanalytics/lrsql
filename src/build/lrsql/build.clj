@@ -30,6 +30,11 @@
    {:project "deps.edn"
     :aliases [:db-sqlite :db-postgres]}))
 
+(defn write-git-data! []
+  (when-let [version (b/git-process {:git-args "describe --exact-match --tags"})]
+    (b/write-file {:path "resources/lrsql/config/git-details.edn"
+                   :content version})))
+
 ;; We create a single JAR for all DB backends in order to minimize artifact
 ;; download size, since all backends share most of the app code
 (defn uber
@@ -37,6 +42,7 @@
    run the SQL LRS app, for any DB backend."
   [_]
   (let [basis (create-basis)]
+    (write-git-data!)
     (b/copy-dir
      {:src-dirs   src-dirs
       :target-dir class-dir
@@ -78,3 +84,6 @@
      {:basis     basis
       :class-dir class-dir
       :uber-file uberjar-file-bench})))
+
+
+

@@ -8,7 +8,7 @@
             [lrsql.admin.routes :refer [add-admin-routes add-openapi-route]]
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
-            [lrsql.init.git-data :refer [read-last-version]]
+            [lrsql.init.git-data :refer [read-version]]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
@@ -114,7 +114,7 @@
                 routes
                 {:lrs lrs
                  :head-opts head-opts
-                 :version (read-last-version)})
+                 :version (read-version)})
         
         ;; Build allowed-origins list. Add without ports as well for
         ;; default ports
