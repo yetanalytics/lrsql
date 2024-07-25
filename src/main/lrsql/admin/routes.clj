@@ -7,6 +7,7 @@
             [lrsql.admin.interceptors.account :as ai]
             [lrsql.admin.interceptors.credentials :as ci]
             [lrsql.admin.interceptors.lrs-management :as lm]
+            [lrsql.admin.interceptors.openapi :as openapi]
             [lrsql.admin.interceptors.ui :as ui]
             [lrsql.admin.interceptors.jwt :as ji]
             [lrsql.admin.interceptors.status :as si]
@@ -336,4 +337,4 @@
 (defn add-openapi-route [routes {:keys [lrs head-opts version]}]
   (let [common-interceptors (make-common-interceptors lrs head-opts)]
     (conj routes ["/admin/openapi" :get (conj common-interceptors
-                                              (lm/openapi routes version))])))
+                                              (openapi/openapi routes version))])))
