@@ -1,12 +1,13 @@
 (ns lrsql.init.git-data
-  (:require [cheshire.core :as json]))
+  (:require [cheshire.core :as json]
+            [clojure.string]))
 
 (defn read-git []
   (let [read-text (or (try (slurp "target/bundle/git-details.json")
-                           (catch Exception e
+                           (catch Exception _
                              nil))
                       (try (slurp "dev-resources/git-details.json")
-                           (catch Exception e
+                           (catch Exception _
                              nil)))]
     (json/parse-string read-text)))
 
