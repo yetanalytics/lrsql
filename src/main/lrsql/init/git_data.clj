@@ -1,10 +1,11 @@
 (ns lrsql.init.git-data
   (:require [clojure.edn :as edn]
-            [clojure.string]
-            [clojure.java.shell :refer [sh]]))
+            [clojure.java.io :as io]
+            [clojure.java.shell :refer [sh]]
+            [clojure.string]))
 
 (defn read-version []
-  (try (edn/read-string (slurp "lrsql/config/git-details.edn"))
+  (try (edn/read-string (slurp (io/resource "lrsql/config/git-details.edn")))
        (catch Exception _
          (try
            (let [hash (:out (sh "git" "rev-parse" "HEAD"))]
