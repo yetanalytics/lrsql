@@ -334,7 +334,7 @@
                   (admin-lrs-management-routes
                    common-interceptors-oidc secret leeway no-val-opts)))))
 
-(defn add-openapi-route [routes {:keys [lrs head-opts version]}]
+(defn add-openapi-route [{:keys [lrs head-opts version]} routes]
   (let [common-interceptors (make-common-interceptors lrs head-opts)]
     (conj routes ["/admin/openapi" :get (conj common-interceptors
                                               (openapi/openapi routes version))])))
