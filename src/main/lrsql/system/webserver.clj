@@ -109,12 +109,11 @@
                :enable-reaction-routes    enable-reactions
                :oidc-interceptors         oidc-admin-interceptors
                :oidc-ui-interceptors      oidc-admin-ui-interceptors
-               :head-opts head-opts}))
-        routes (add-openapi-route
-                routes
-                {:lrs lrs
-                 :head-opts head-opts
-                 :version (read-version)})
+               :head-opts head-opts})
+             (add-openapi-route
+              {:lrs lrs
+               :head-opts head-opts
+               :version (read-version)}))
         
         ;; Build allowed-origins list. Add without ports as well for
         ;; default ports

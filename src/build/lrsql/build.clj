@@ -32,7 +32,7 @@
 
 (defn write-git-data! []
   (when-let [version (b/git-process {:git-args "describe --exact-match --tags"})]
-    (b/write-file {:path "resources/lrsql/config/git-details.edn"
+    (b/write-file {:path "target/classes/lrsql/config/git-details.edn"
                    :content version})))
 
 ;; We create a single JAR for all DB backends in order to minimize artifact
@@ -42,11 +42,11 @@
    run the SQL LRS app, for any DB backend."
   [_]
   (let [basis (create-basis)]
-    (write-git-data!)
     (b/copy-dir
      {:src-dirs   src-dirs
       :target-dir class-dir
       :ignores    ignored-file-regexes})
+    (write-git-data!)
     (b/compile-clj
      {:basis     basis
       :src-dirs  src-dirs
