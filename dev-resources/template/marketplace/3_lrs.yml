@@ -55,9 +55,9 @@ Parameters:
     Description: Version of SQL LRS to pull from Mapping of AMIs
     Type: String
     AllowedValues:
-      - v0713
-      - v0714
-    Default: v0714
+      - 0.7.14
+      - 0.7.19
+    Default: 0.7.19
 
   ASGMinSize:
     Type: Number
@@ -168,21 +168,6 @@ Conditions:
     !Equals [!Ref DBMode, "Ephemeral"]
   IsNotEphemeral:
     !Not [!Equals [!Ref DBMode, "Ephemeral"]]
-
-Mappings: 
-  RegionMap:
-    us-east-1: 
-      v0713: ami-0c0a2116961256952
-      v0714: ami-0e984b25a2bfe94ec
-    us-east-2: 
-      v0713: ami-09fdf42d9ac1aa739
-      v0714: ami-019c8337274c05c4a
-    us-west-1: 
-      v0713: ami-091ca105306c22a4a
-      v0714: ami-0b97e69fa1eafc8f8
-    us-west-2: 
-      v0713: ami-00517438cdb5f4fda
-      v0714: ami-0c67b645c0b2382d1
 
 Resources:
   CreateUserPolicy:
@@ -716,10 +701,7 @@ Resources:
     Properties:
       LaunchTemplateName: !Sub ${AWS::StackName}-lrsql-launch-template
       LaunchTemplateData:
-        ImageId: !FindInMap
-          - RegionMap
-          - !Ref "AWS::Region"
-          - !Ref LrsVersion
+        ImageId: !Sub "{{resolve:ssm:/lrsql-ami/${AWS::Region}/${LrsVersion}/latest}}"
         InstanceType: !Ref InstanceType
         KeyName: !If
           - InstanceKeyNameProvided
