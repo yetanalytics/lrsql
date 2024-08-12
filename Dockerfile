@@ -14,6 +14,9 @@ RUN apk update \
         && apk del openjdk11 \
         && rm -rf /var/cache/apk/*
 
+# delete bench utils for leaner container
+RUN rm -rf /lrsql/bench*
+
 WORKDIR /lrsql
 EXPOSE 8080
 EXPOSE 8443

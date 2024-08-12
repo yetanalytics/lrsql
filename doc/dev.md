@@ -107,4 +107,14 @@ After the bench has run, you should see results that look something like this:
 | {"verb" "https://w3id.org/xapi/video/verbs/seeked"} |    20 |   3 |   33 |   18 |    604 |
 ```
 
+#### 6. Compiled Benchmark Utility
+
+A version of the benchmark utility is included with the release distribution bundle. The arguments are the same, running it is just slightly different:
+
+```
+java -cp bench.jar lrsql.bench [arguments]
+```
+
+Sample insert and query inputs can be found in the distribution at `bench/`
+
 [<- Back to Index](index.md)

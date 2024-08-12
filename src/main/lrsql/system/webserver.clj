@@ -5,9 +5,10 @@
             [io.pedestal.http :as http]
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
-            [lrsql.admin.routes :refer [add-admin-routes]]
+            [lrsql.admin.routes :refer [add-admin-routes add-openapi-route]]
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
+            [lrsql.init.git-data :refer [read-version]]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
@@ -69,6 +70,13 @@
         (:config lrs)
         ;; Make routes - the lrs error interceptor is appended to the
         ;; start to all lrs routes
+        head-opts {:sec-head-hsts         sec-head-hsts
+                   :sec-head-frame        sec-head-frame
+                   :sec-head-content-type sec-head-content-type
+                   :sec-head-xss          sec-head-xss
+                   :sec-head-download     sec-head-download
+                   :sec-head-cross-domain sec-head-cross-domain
+                   :sec-head-content      sec-head-content}
         routes
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
@@ -101,14 +109,12 @@
                :enable-reaction-routes    enable-reactions
                :oidc-interceptors         oidc-admin-interceptors
                :oidc-ui-interceptors      oidc-admin-ui-interceptors
-               :head-opts
-               {:sec-head-hsts         sec-head-hsts
-                :sec-head-frame        sec-head-frame
-                :sec-head-content-type sec-head-content-type
-                :sec-head-xss          sec-head-xss
-                :sec-head-download     sec-head-download
-                :sec-head-cross-domain sec-head-cross-domain
-                :sec-head-content      sec-head-content}}))
+               :head-opts head-opts})
+             (add-openapi-route
+              {:lrs lrs
+               :head-opts head-opts
+               :version (read-version)}))
+        
         ;; Build allowed-origins list. Add without ports as well for
         ;; default ports
         allowed-list

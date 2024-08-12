@@ -2,7 +2,7 @@
 
 # Version of LRS Admin UI to use
 
-LRS_ADMIN_UI_VERSION ?= v0.1.20
+LRS_ADMIN_UI_VERSION ?= v0.1.22
 LRS_ADMIN_UI_LOCATION ?= https://github.com/yetanalytics/lrs-admin-ui/releases/download/${LRS_ADMIN_UI_VERSION}/lrs-admin-ui.zip
 LRS_ADMIN_ZIPFILE ?= lrs-admin-ui-${LRS_ADMIN_UI_VERSION}.zip
 
@@ -137,6 +137,9 @@ clean-non-dl:
 target/bundle/lrsql.jar: resources/public/admin
 	clojure -X:build uber
 
+target/bundle/bench.jar:
+	clojure -X:build uber-bench
+
 # Copy build scripts
 
 target/bundle/bin:
@@ -148,6 +151,10 @@ target/bundle/bin:
 
 target/bundle/doc:
 	clojure -X:doc
+
+target/bundle/bench:
+	mkdir -p target/bundle/bench
+	cp -r dev-resources/default/. target/bundle/bench
 
 # Copy LICENSE and NOTICE
 
@@ -205,9 +212,9 @@ target/bundle/admin: resources/public/admin
 BUNDLE_RUNTIMES ?= true
 
 ifeq ($(BUNDLE_RUNTIMES),true)
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/runtimes
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes 
 else
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench
 endif
 
 bundle: target/bundle
