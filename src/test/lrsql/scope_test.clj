@@ -48,6 +48,8 @@
 (def stmt-body-1
   (u/write-json-str stmt-1))
 
+(def empty-stmt-body
+  (u/write-json-str []))
 ;; /agents
 
 (def agent-endpoint
@@ -489,7 +491,9 @@
         (is (= 200
                (try-post stmt-endpoint creds-1 {:body stmt-body-0})))
         (is (= 200
-               (try-post stmt-endpoint creds-2 {:body stmt-body-1}))))
+               (try-post stmt-endpoint creds-2 {:body stmt-body-1})))
+        (is (= 200
+               (try-post stmt-endpoint creds-1 {:body empty-stmt-body}))))
       (testing "/statements GET with correct authority"
         (is (= 200
                (try-get stmt-endpoint
