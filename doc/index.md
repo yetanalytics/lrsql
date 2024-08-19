@@ -29,6 +29,7 @@
 - [HTTP Endpoints](endpoints.md)
 - [Developer Documentation](dev.md)
 - [Example AWS Deployment](aws.md)
+- [Marketplace AWS Deployment](aws_marketplace.md)
 - [Reactions](reactions.md)
 - [Sending xAPI statement(s) with Postman](postman.md)
 
