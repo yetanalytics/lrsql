@@ -905,9 +905,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Taken from lrs and third lib tests
+;; We reuse bench resources for tests here.
 
 (def test-statements
-  (->> "dev-resources/default/insert_input.json"
+  (->> "dev-resources/bench/insert_input.json"
        (sim-input/from-location :input :json)
        sim/sim-seq
        (take 50)

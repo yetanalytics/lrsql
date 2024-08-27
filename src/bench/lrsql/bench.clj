@@ -367,7 +367,7 @@
   ;; Perform benching from the repl
   (-main
    "-e" "http://localhost:8080/xapi/statements"
-   "-i" "dev-resources/default/insert_input.json"
-   "-q" "dev-resources/default/query_input.json"
+   "-i" "dev-resources/bench/insert_input.json"
+   "-q" "dev-resources/bench/query_input.json"
    "-a" "true" "-c" "20"
    "-u" "username" "-p" "password"))
