@@ -91,7 +91,7 @@
                  org.clojure/math.numeric-tower {:mvn/version "0.0.5"}
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
                  com.yetanalytics/datasim
-                 {:mvn/version "0.3.1"
+                 {:mvn/version "0.4.4"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema]}}}
   :test

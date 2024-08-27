@@ -7,8 +7,7 @@
             [clojure.pprint :as pprint]
             [java-time :as jt]
             [babashka.curl :as curl]
-            [com.yetanalytics.datasim.sim :as sim]
-            [com.yetanalytics.datasim.input :as sim-input]
+            [com.yetanalytics.datasim :as ds]
             [lrsql.util :as u])
   (:gen-class))
 
@@ -77,7 +76,7 @@
 
 (defn read-insert-input
   [input-path]
-  (-> (sim-input/from-location :input :json input-path)
+  (-> (ds/read-input input-path)
       (assoc-in [:parameters :seed] (rand-int 1000000000))))
 
 (defn read-query-input
@@ -145,18 +144,18 @@
 
 (defmethod generate-statements :none
   [inputs size _]
-  (take size (sim/sim-seq inputs)))
+  (take size (ds/generate-seq inputs)))
 
 (defmethod generate-statements :half
   [inputs size _]
-  (let [stmt-seq    (take size (sim/sim-seq inputs))
+  (let [stmt-seq    (take size (ds/generate-seq inputs))
         [tgts refs] (split-at (quot size 2) stmt-seq)
         refs'       (assoc-stmt-refs tgts refs)]
     (concat tgts refs')))
 
 (defmethod generate-statements :all
   [inputs size _]
-  (let [tgts  (take size (sim/sim-seq inputs))
+  (let [tgts  (take size (ds/generate-seq inputs))
         refs  (drop 1 tgts)
         refs' (assoc-stmt-refs tgts refs)]
     (cons (first tgts) refs')))
