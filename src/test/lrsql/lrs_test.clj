@@ -2,8 +2,7 @@
   (:require [clojure.test   :refer [deftest testing is use-fixtures]]
             [clojure.string :as cstr]
             [com.stuartsierra.component     :as component]
-            [com.yetanalytics.datasim.input :as sim-input]
-            [com.yetanalytics.datasim.sim   :as sim]
+            [com.yetanalytics.datasim       :as ds]
             [com.yetanalytics.lrs.protocol  :as lrsp]
             [lrsql.admin.protocol           :as adp]
             [lrsql.test-support             :as support]
@@ -909,8 +908,8 @@
 
 (def test-statements
   (->> "dev-resources/bench/insert_input.json"
-       (sim-input/from-location :input :json)
-       sim/sim-seq
+       ds/read-input
+       ds/generate-seq
        (take 50)
        (into [])))
 

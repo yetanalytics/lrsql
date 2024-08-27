@@ -119,7 +119,7 @@
                   :git/sha    "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
                   :exclusions [org.clojure/data.json]}
                  com.yetanalytics/datasim
-                 {:mvn/version "0.3.0"
+                 {:mvn/version "0.4.4"
                   :exclusions [org.clojure/clojure
                                com.yetanalytics/xapi-schema]}}}
   ;; Build alias invoked like clojure -Xbuild uber
