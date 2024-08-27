@@ -1,14 +1,14 @@
 (ns lrsql.bench
-  (:require [clojure.core.async :as a]
-            [clojure.string :refer [join]]
+  (:require [clojure.core.async         :as a]
             [clojure.math.numeric-tower :as math]
-            [clojure.tools.cli :as cli]
-            [clojure.tools.logging :as log]
-            [clojure.pprint :as pprint]
-            [java-time.api :as jt]
-            [babashka.curl :as curl]
-            [com.yetanalytics.datasim :as ds]
-            [lrsql.util :as u])
+            [clojure.pprint             :as pprint]
+            [clojure.string             :as cstr]
+            [clojure.tools.cli          :as cli]
+            [clojure.tools.logging      :as log]
+            [babashka.curl              :as curl]
+            [java-time.api              :as jt]
+            [com.yetanalytics.datasim   :as ds]
+            [lrsql.util                 :as u])
   (:gen-class))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -327,7 +327,7 @@
         (cli/parse-opts args cli-options)]
     ;; Check for errors
     (when (not-empty errors)
-      (log/errorf "CLI Parse Errors:\n%s" (join "\n" errors))
+      (log/errorf "CLI Parse Errors:\n%s" (cstr/join "\n" errors))
       (throw (ex-info "CLI Parse Errors!"
                       {:type   ::cli-parse-error
                        :errors errors})))
