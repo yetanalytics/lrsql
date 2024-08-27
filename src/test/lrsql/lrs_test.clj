@@ -213,9 +213,15 @@
         act-1 (get-in stmt-1 ["object" "id"])
         act-4 (get-in stmt-4 ["object" "id"])]
 
-    (testing "statement insertions"
+    (testing "empty statement insertions"
       (is (= {:statement-ids []}
              (lrsp/-store-statements lrs auth-ident [] [])))
+      (is (= {:statement-result {:statements []
+                                 :more       ""}
+              :attachments      []}
+             (get-ss lrs auth-ident {:limit 50} #{}))))
+    
+    (testing "statement insertions"  
       (is (= {:statement-ids [id-0]}
              (lrsp/-store-statements lrs auth-ident [stmt-0] [])))
       (is (= {:statement-ids [id-1 id-2 id-3]}
