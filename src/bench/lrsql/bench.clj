@@ -37,11 +37,10 @@
     :parse-fn #(Long/parseLong %)
     :default  10
     :desc     "The batch size to use for inserting statements. Ignored if `-i` is not given."]
-   ["-a" "--async? BOOLEAN" "Run asynchronously?"
-    :id       :async?
-    :parse-fn #(Boolean/parseBoolean %)
-    :default  false
-    :desc     "Whether to insert asynchronously or not."]
+   ["-a" "--async" "Run asynchronously?"
+    :id      :async?
+    :default false
+    :desc    "Whether to insert asynchronously or not."]
    ["-c" "--concurrency LONG" "Number of threads"
     :id       :concurrency
     :parse-fn #(Long/parseLong %)
