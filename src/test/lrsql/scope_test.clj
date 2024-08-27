@@ -48,8 +48,14 @@
 (def stmt-body-1
   (u/write-json-str stmt-1))
 
-(def empty-stmt-body
+;; This test constant is to test the case where an empty statement batch is
+;; POST'd to the LRS.
+;; For some reason, this is not a test case in the conformance tests, and adding
+;; a new namespace just for this one POST request would be overkill, so we just
+;; put it here.
+(def stmt-body-empty
   (u/write-json-str []))
+
 ;; /agents
 
 (def agent-endpoint
@@ -230,7 +236,11 @@
                (is (= ~(if statement-write? 200 403)
                       (try-post ~stmt-endpoint
                                 ~'creds
-                                {:body ~stmt-body-0}))))
+                                {:body ~stmt-body-0})))
+               (is (= ~(if statement-write? 200 403)
+                      (try-post ~stmt-endpoint
+                                ~'creds
+                                {:body ~stmt-body-empty}))))
              (testing "PUT"
                (is (= ~(if statement-write? 204 403)
                       (try-put ~stmt-endpoint
@@ -493,7 +503,7 @@
         (is (= 200
                (try-post stmt-endpoint creds-2 {:body stmt-body-1})))
         (is (= 200
-               (try-post stmt-endpoint creds-1 {:body empty-stmt-body}))))
+               (try-post stmt-endpoint creds-1 {:body stmt-body-empty}))))
       (testing "/statements GET with correct authority"
         (is (= 200
                (try-get stmt-endpoint
