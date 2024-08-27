@@ -5,7 +5,7 @@
             [clojure.tools.cli :as cli]
             [clojure.tools.logging :as log]
             [clojure.pprint :as pprint]
-            [java-time :as jt]
+            [java-time.api :as jt]
             [babashka.curl :as curl]
             [com.yetanalytics.datasim :as ds]
             [lrsql.util :as u])
