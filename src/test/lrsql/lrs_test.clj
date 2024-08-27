@@ -214,6 +214,8 @@
         act-4 (get-in stmt-4 ["object" "id"])]
 
     (testing "statement insertions"
+      (is (= {:statement-ids []}
+             (lrsp/-store-statements lrs auth-ident [] [])))
       (is (= {:statement-ids [id-0]}
              (lrsp/-store-statements lrs auth-ident [stmt-0] [])))
       (is (= {:statement-ids [id-1 id-2 id-3]}
