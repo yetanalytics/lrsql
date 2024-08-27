@@ -53,8 +53,6 @@
 ;; For some reason, this is not a test case in the conformance tests, and adding
 ;; a new namespace just for this one POST request would be overkill, so we just
 ;; put it here.
-;; TODO: Add this test case to a proper "expanded conformance test suite" along
-;; with other cases not covered by the ADL conformance tests.
 (def stmt-body-empty
   (u/write-json-str []))
 
