@@ -328,16 +328,16 @@
       (System/exit 0))
     ;; Store statements
     (when insert-input
-      (let [_          (log/info "Starting statement generation...")
-            inputs     (read-insert-input insert-input)
-            statements (generate-statements inputs insert-size statement-ref-type)
-            _          (count statements) ; realize statements
-            _          (log/info "Statement generation finished.")
-            _          (log/info "Starting statement insertion...")
-            results    (if async?
-                         (store-statements-async! statements opts)
-                         (store-statements-sync! statements opts))
-            _          (log/info "Statement insertion finished.")]
+      (let [_       (log/info "Starting statement generation...")
+            inputs  (read-insert-input insert-input)
+            stmts*  (generate-statements inputs insert-size statement-ref-type)
+            stmts   (into [] stmts*) ; realize statements
+            _       (log/info "Statement generation finished.")
+            _       (log/info "Starting statement insertion...")
+            results (if async?
+                      (store-statements-async! stmts opts)
+                      (store-statements-sync! stmts opts))
+            _       (log/info "Statement insertion finished.")]
         (printf "\n%s Insert benchmark results for n = %d (in ms) %s\n"
                 "**********"
                 (quot insert-size batch-size)
