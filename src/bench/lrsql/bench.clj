@@ -168,44 +168,36 @@
     (jt/as dur :millis)))
 
 (defn store-statements-sync!
-  [{endpoint   :lrs-endpoint
-    input-uri  :insert-input
-    size       :insert-size
+  [statements
+   {endpoint   :lrs-endpoint
     batch-size :batch-size
     user       :user
-    pass       :pass
-    sref-type  :statement-ref-type}]
-  (let [inputs  (read-insert-input input-uri)
-        stmts   (generate-statements inputs size sref-type)]
-    (loop [batches (partition-all batch-size stmts)
-           timings (transient [])]
-      (if-some [batch (first batches)]
-        (recur (rest batches)
-               (conj! timings
-                      (perform-insert
-                       endpoint
-                       {:headers    headers
-                        :body       (u/write-json-str (vec batch))
-                        :basic-auth [user pass]})))
-        (let [timings-ret (persistent! timings)]
-          (calc-statistics timings-ret (count timings-ret)))))))
+    pass       :pass}]
+  (loop [batches (partition-all batch-size statements)
+         timings (transient [])]
+    (if-some [batch (first batches)]
+      (recur (rest batches)
+             (conj! timings
+                    (perform-insert
+                     endpoint
+                     {:headers    headers
+                      :body       (u/write-json-str (vec batch))
+                      :basic-auth [user pass]})))
+      (let [timings-ret (persistent! timings)]
+        (calc-statistics timings-ret (count timings-ret))))))
 
 (defn store-statements-async!
-  [{endpoint    :lrs-endpoint
-    input-uri   :insert-input
-    size        :insert-size
+  [statements
+   {endpoint    :lrs-endpoint
     batch-size  :batch-size
     user        :user
     pass        :pass
-    sref-type   :statement-ref-type
     concurrency :concurrency}]
-  (let [inputs   (read-insert-input input-uri)
-        stmts    (generate-statements inputs size sref-type)
-        requests (mapv (fn [batch]
+  (let [requests (mapv (fn [batch]
                          {:headers    headers
                           :body       (u/write-json-str (vec batch))
                           :basic-auth [user pass]})
-                       (partition-all batch-size stmts))
+                       (partition-all batch-size statements))
         timings  (perform-async-op! perform-insert
                                     endpoint
                                     requests
@@ -309,16 +301,16 @@
   [& args]
   (let [{:keys [summary errors]
          :as _parsed-opts
-         {:keys [insert-input
-                 async?
-                 query-number
-                 help
+         {:keys [help
+                 insert-input
                  insert-size
+                 statement-ref-type
+                 async?
                  batch-size
+                 query-number
                  ;; Options that aren't used in `-main` but are later on
                  _lrs-endpoint
                  _query-input
-                 _statement-ref-type
                  _concurrency
                  _user
                  _pass]
@@ -336,12 +328,16 @@
       (System/exit 0))
     ;; Store statements
     (when insert-input
-      (log/info "Starting statement insertion...")
-      (let [store-statements! (if async?
-                                store-statements-async!
-                                store-statements-sync!)
-            results           (store-statements! opts)
-            _                 (log/info "Statement insertion finished.")]
+      (let [_          (log/info "Starting statement generation...")
+            inputs     (read-insert-input insert-input)
+            statements (generate-statements inputs insert-size statement-ref-type)
+            _          (count statements) ; realize statements
+            _          (log/info "Statement generation finished.")
+            _          (log/info "Starting statement insertion...")
+            results    (if async?
+                         (store-statements-async! statements opts)
+                         (store-statements-sync! statements opts))
+            _          (log/info "Statement insertion finished.")]
         (printf "\n%s Insert benchmark results for n = %d (in ms) %s\n"
                 "**********"
                 (quot insert-size batch-size)
@@ -350,12 +346,11 @@
                                      :batch-size   batch-size}
                                     results)])))
     ;; Query statements
-    (log/info "Starting statement query benching...")
-    (let [query-statements (if async?
-                             query-statements-async
-                             query-statements-sync)
-          results          (query-statements opts)]
-      (log/info "Statement query benching finished.")
+    (let [_       (log/info "Starting statement query benching...")
+          results (if async?
+                    (query-statements-async opts)
+                    (query-statements-sync opts))
+          _       (log/info "Statement query benching finished.")]
       (printf "\n%s Query benchmark results for n = %d (in ms) %s\n"
               "**********"
               query-number
