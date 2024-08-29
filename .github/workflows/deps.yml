@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup CI Environment
         uses: yetanalytics/action-setup-env@v1
