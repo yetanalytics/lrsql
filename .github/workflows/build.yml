@@ -34,7 +34,7 @@ jobs:
     needs: build_jre
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup CI Environment
       uses: yetanalytics/action-setup-env@v1
@@ -78,14 +78,14 @@ jobs:
 
     - name: Archive Bundle (Branch Pushes)
       if: ${{ github.ref_type == 'branch' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: lrsql-artifact-${{ github.sha }}
         path: lrsql.zip
 
     - name: Archive Bundle (Tag Pushes)
       if: ${{ github.ref_type == 'tag' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: lrsql-artifact-${{ github.ref_name }}
         path: lrsql.zip
@@ -96,10 +96,10 @@ jobs:
     if: ${{ github.ref_type == 'tag' }}
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Download Bundle Artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: lrsql-artifact-${{ github.ref_name }}
 
