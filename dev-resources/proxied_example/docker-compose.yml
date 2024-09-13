@@ -1,16 +1,14 @@
 version: "3.9"
 # README:
-# Runs *two* SQL LRS containers next to each other behind a load balancer(nginx).
+# Runs a SQL LRS container and a proxy (nginx) which serves the LRS on a special path (/foo).
 
 # To run: 
 # 1.  From the load_balanced dir:  docker compose up
 # 2.  Access on port 8083 in your browser.
-# 3.  Comment in/out the `build` and `image` lines in lrs_1 and lrs_2 to switch between building from local source, or pulling the published lrsql image from the docker repository.
-
 
 # See the Docker Compose docs for more info: https://docs.docker.com/compose/
 configs:
-  lb_config:
+  px_config:
     file: ./nginx.conf
 
 volumes:
@@ -45,6 +43,7 @@ services:
       LRSQL_ADMIN_USER_DEFAULT: my_username
       LRSQL_ADMIN_PASS_DEFAULT: my_password
       LRSQL_ALLOW_ALL_ORIGINS: "true"
+      #NOTE: this path var is needed to inform the frontend behavior once the app is proxied
       LRSQL_PROXY_PATH: /foo
       LRSQL_DB_HOST: db
       LRSQL_DB_NAME: lrsql_db
@@ -56,7 +55,7 @@ services:
   proxy:
     image: nginx:stable-alpine
     configs:
-      - source: lb_config
+      - source: px_config
         target: /etc/nginx/conf.d/default.conf
     ports:
       - "8083:8083"
