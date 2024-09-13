@@ -1,0 +1,65 @@
+version: "3.9"
+# README:
+# Runs *two* SQL LRS containers next to each other behind a load balancer(nginx).
+
+# To run: 
+# 1.  From the load_balanced dir:  docker compose up
+# 2.  Access on port 8083 in your browser.
+# 3.  Comment in/out the `build` and `image` lines in lrs_1 and lrs_2 to switch between building from local source, or pulling the published lrsql image from the docker repository.
+
+
+# See the Docker Compose docs for more info: https://docs.docker.com/compose/
+configs:
+  lb_config:
+    file: ./nginx.conf
+
+volumes:
+  db_data:
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: lrsql_user
+      POSTGRES_PASSWORD: lrsql_password
+      POSTGRES_DB: lrsql_db
+  lrs:
+    # build: ../.. # switch to this for active dev
+    image: yetanalytics/lrsql:latest
+    command:
+      - /lrsql/bin/run_postgres.sh
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      LRSQL_API_KEY_DEFAULT: my_key
+      LRSQL_API_SECRET_DEFAULT: my_secret
+      LRSQL_ADMIN_USER_DEFAULT: my_username
+      LRSQL_ADMIN_PASS_DEFAULT: my_password
+      LRSQL_ALLOW_ALL_ORIGINS: "true"
+      LRSQL_PROXY_PATH: /foo
+      LRSQL_DB_HOST: db
+      LRSQL_DB_NAME: lrsql_db
+      LRSQL_DB_USER: lrsql_user
+      LRSQL_DB_PASSWORD: lrsql_password
+      # If Postgres is too slow to start, increase this
+      LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
+      LRSQL_JWT_COMMON_SECRET: sandwich #in production, this should be between 32 and 64 chars for security
+  proxy:
+    image: nginx:stable-alpine
+    configs:
+      - source: lb_config
+        target: /etc/nginx/conf.d/default.conf
+    ports:
+      - "8083:8083"
+    depends_on:
+      lrs:
+        condition: service_healthy
