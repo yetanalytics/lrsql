@@ -83,15 +83,15 @@ postgres: resources/public/admin # Requires a running Postgres instance
 bench:
 	clojure -M:bench -m lrsql.bench \
 	    -e http://0.0.0.0:8080/xapi/statements \
-		-i dev-resources/default/insert_input.json \
-		-q dev-resources/default/query_input.json \
+		-i dev-resources/bench/insert_input.json \
+		-q dev-resources/bench/query_input.json \
 		-u username -p password
 
 bench-async:
 	clojure -M:bench -m lrsql.bench \
 	    -e http://0.0.0.0:8080/xapi/statements \
-		-i dev-resources/default/insert_input.json \
-		-q dev-resources/default/query_input.json \
+		-i dev-resources/bench/insert_input.json \
+		-q dev-resources/bench/query_input.json \
 		-a true \
 		-u username -p password
 
@@ -154,7 +154,7 @@ target/bundle/doc:
 
 target/bundle/bench:
 	mkdir -p target/bundle/bench
-	cp -r dev-resources/default/. target/bundle/bench
+	cp -r dev-resources/bench/. target/bundle/bench
 
 # Copy LICENSE and NOTICE
 
