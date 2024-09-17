@@ -22,16 +22,18 @@
 ;; Helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; We reuse bench inputs for tests here.
+
 (defn test-statements
   [num-stmts]
-  (->> "dev-resources/default/insert_input.json"
+  (->> "dev-resources/bench/insert_input.json"
        (sim-input/from-location :input :json)
        sim/sim-seq
        (take num-stmts)
        (into [])))
 
 (def test-queries
-  (-> "dev-resources/default/query_input.json"
+  (-> "dev-resources/bench/query_input.json"
       slurp
       (u/parse-json :object? false)))
 
