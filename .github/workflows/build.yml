@@ -23,7 +23,7 @@ jobs:
 
   build_jre:
     needs: get_modules
-    uses: yetanalytics/runtimer/.github/workflows/runtimer.yml@0.2.0-java-11-temurin-SNAPSHOT
+    uses: yetanalytics/workflow-runtimer/.github/workflows/runtimer.yml@1
     with:
       java-version: '11'
       java-distribution: 'temurin'
