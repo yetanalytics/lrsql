@@ -4,7 +4,7 @@ on: push
 
 jobs:
   nvd_scan:
-    uses: yetanalytics/workflow-nvd/.github/workflows/nvd-scan.yml@v1
+    uses: yetanalytics/workflow-nvd/.github/workflows/nvd-scan.yml@v2
     with:
       nvd-clojure-version: "3.3.0"
       classpath-command: "clojure -Spath -Adb-sqlite:db-postgres"
