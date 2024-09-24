@@ -29,6 +29,11 @@ services:
       - "8081:8080"
     depends_on:
       - nsy_lrs_1_db
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
       LRSQL_API_KEY_DEFAULT: my_key
       LRSQL_API_SECRET_DEFAULT: my_secret
@@ -62,6 +67,11 @@ services:
       - "8082:8080"
     depends_on:
       - nsy_lrs_2_db
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
       LRSQL_API_KEY_DEFAULT: my_key
       LRSQL_API_SECRET_DEFAULT: my_secret
@@ -95,6 +105,11 @@ services:
       - "8083:8080"
     depends_on:
       - nsy_lrs_3_db
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
       LRSQL_API_KEY_DEFAULT: my_key
       LRSQL_API_SECRET_DEFAULT: my_secret
@@ -130,6 +145,11 @@ services:
       - "8090:8080"
     depends_on:
       - txn_lrs_db
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
     environment:
       LRSQL_API_KEY_DEFAULT: my_key
       LRSQL_API_SECRET_DEFAULT: my_secret
@@ -156,9 +176,12 @@ services:
   lrspipe1:
     image: yetanalytics/xapipe:latest
     depends_on:
-      - nsy_lrs_1
-      - txn_lrs
-      - redis
+      nsy_lrs_1:
+        condition: service_healthy
+      txn_lrs:
+        condition: service_healthy
+      redis:
+        condition: service_started
     command: |
       -s redis
       --job-id nsy_lrs_1_sync
@@ -175,9 +198,12 @@ services:
   lrspipe2:
     image: yetanalytics/xapipe:latest
     depends_on:
-      - nsy_lrs_2
-      - txn_lrs
-      - redis
+      nsy_lrs_2:
+        condition: service_healthy
+      txn_lrs:
+        condition: service_healthy
+      redis:
+        condition: service_started
     command: |
       -s redis
       --job-id nsy_lrs_2_sync
@@ -194,9 +220,12 @@ services:
   lrspipe3:
     image: yetanalytics/xapipe:latest
     depends_on:
-      - nsy_lrs_3
-      - txn_lrs
-      - redis
+      nsy_lrs_3:
+        condition: service_healthy
+      txn_lrs:
+        condition: service_healthy
+      redis:
+        condition: service_started
     command: |
       -s redis
       --job-id nsy_lrs_3_sync
