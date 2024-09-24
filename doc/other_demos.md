@@ -1,6 +1,6 @@
 [<- Back to Index](index.md)
 
-# Assorted Deployment Configuration Examples
+# Additional Deployment Configuration Examples
 
 ## Load Balanced LRS Demo
 
