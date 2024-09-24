@@ -5,6 +5,7 @@ version: "3.9"
 volumes:
   nsy_lrs_1_db_data:
   nsy_lrs_2_db_data:
+  nsy_lrs_3_db_data:
   txn_lrs_db_data:
   lrspipe_storage:
 
@@ -21,7 +22,7 @@ services:
       POSTGRES_DB: lrsql_db
   # - Noisy LRS 1: App
   nsy_lrs_1:
-    image: yetanalytics/lrsql:v0.7.13
+    image: yetanalytics/lrsql:v0.7.20
     command:
       - /lrsql/bin/run_postgres.sh
     ports:
@@ -54,7 +55,7 @@ services:
       POSTGRES_DB: lrsql_db
   # - Noisy LRS 2: App
   nsy_lrs_2:
-    image: yetanalytics/lrsql:v0.7.13
+    image: yetanalytics/lrsql:v0.7.20
     command:
       - /lrsql/bin/run_postgres.sh
     ports:
@@ -67,6 +68,39 @@ services:
       LRSQL_ADMIN_USER_DEFAULT: my_username
       LRSQL_ADMIN_PASS_DEFAULT: my_password
       LRSQL_DB_HOST: nsy_lrs_2_db
+      LRSQL_DB_NAME: lrsql_db
+      LRSQL_DB_USER: lrsql_user
+      LRSQL_DB_PASSWORD: lrsql_password
+      LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
+      LRSQL_ENABLE_REACTIONS: true
+      LRSQL_ALLOW_ALL_ORIGINS: true
+    restart: always
+
+  # Noisy LRS 3
+  # - Noisy LRS 3: DB
+  nsy_lrs_3_db:
+    image: postgres:14
+    volumes:
+      - nsy_lrs_3_db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: lrsql_user
+      POSTGRES_PASSWORD: lrsql_password
+      POSTGRES_DB: lrsql_db
+  # - Noisy LRS 3: App
+  nsy_lrs_3:
+    image: yetanalytics/lrsql:v0.7.20
+    command:
+      - /lrsql/bin/run_postgres.sh
+    ports:
+      - "8083:8080"
+    depends_on:
+      - nsy_lrs_3_db
+    environment:
+      LRSQL_API_KEY_DEFAULT: my_key
+      LRSQL_API_SECRET_DEFAULT: my_secret
+      LRSQL_ADMIN_USER_DEFAULT: my_username
+      LRSQL_ADMIN_PASS_DEFAULT: my_password
+      LRSQL_DB_HOST: nsy_lrs_3_db
       LRSQL_DB_NAME: lrsql_db
       LRSQL_DB_USER: lrsql_user
       LRSQL_DB_PASSWORD: lrsql_password
@@ -89,7 +123,7 @@ services:
       - "5431:5432"
   # - Transactional LRS: App
   txn_lrs:
-    image: yetanalytics/lrsql:v0.7.13
+    image: yetanalytics/lrsql:v0.7.20
     command:
       - /lrsql/bin/run_postgres.sh
     ports:
@@ -150,6 +184,25 @@ services:
       -f
       --redis-uri redis://redis:6379?db=nsy_lrs_2_sync
       --source-url http://nsy_lrs_2:8080/xapi
+      --source-username my_key
+      --source-password my_secret
+      --target-url http://txn_lrs:8080/xapi
+      --target-username my_key
+      --target-password my_secret
+    restart: always
+  # - LRSPipe: Sync from Noisy LRS 3 to Transactional LRS
+  lrspipe3:
+    image: yetanalytics/xapipe:latest
+    depends_on:
+      - nsy_lrs_3
+      - txn_lrs
+      - redis
+    command: |
+      -s redis
+      --job-id nsy_lrs_3_sync
+      -f
+      --redis-uri redis://redis:6379?db=nsy_lrs_3_sync
+      --source-url http://nsy_lrs_3:8080/xapi
       --source-username my_key
       --source-password my_secret
       --target-url http://txn_lrs:8080/xapi
