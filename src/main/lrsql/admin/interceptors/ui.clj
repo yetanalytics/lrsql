@@ -33,7 +33,6 @@
     :enter
     (fn get-env [ctx]
       (let [{url-prefix       ::i/path-prefix
-             enable-stmt-html ::i/statement-html?
              oidc-env         ::oidc-i/admin-env} ctx]
         (assoc ctx
                :response
@@ -42,7 +41,6 @@
                 (merge
                  (cond-> {:url-prefix                url-prefix
                           :proxy-path                proxy-path
-                          :enable-stmt-html          (some? enable-stmt-html)
                           :enable-admin-delete-actor enable-admin-delete-actor
                           :enable-admin-status       enable-admin-status
                           :enable-reactions          enable-reactions

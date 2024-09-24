@@ -2,8 +2,7 @@
   (:require [clojure.test   :refer [deftest testing is use-fixtures]]
             [clojure.string :as cstr]
             [com.stuartsierra.component     :as component]
-            [com.yetanalytics.datasim.input :as sim-input]
-            [com.yetanalytics.datasim.sim   :as sim]
+            [com.yetanalytics.datasim       :as ds]
             [com.yetanalytics.lrs.protocol  :as lrsp]
             [lrsql.admin.protocol           :as adp]
             [lrsql.test-support             :as support]
@@ -183,6 +182,16 @@
    :length      33
    :sha2        "7063d0a4cfa93373753ad2f5a6ffcf684559fb1df3c2f0473a14ece7d4edb06a"})
 
+;; Extremely long IRIs
+(def stmt-7
+  {"id"     "00000000-0000-4000-8000-000000000127"
+   "actor"  {"account"    {"homePage" "https://www.example.com/users/h894hf8934hf8934h8934hf8934h89h89f3h894hf8934hf8943gh8f34h89fh8934h8f934h8f943h89f34h89f34h89f34h89f34h89fh348fh3489fh438fh8934hf880234hg89234gh8934gh8349gh8349gh8349gh8943hg8934gh8934hg8493hg843hg8934h89g34hg8943h8934h8g943h89g34h89g34h8934h89g34h89g34h89g34h89g34h89g34h89g34h8g34h89g34h89g34h89g34h8g43h89gh3489gh3489g934h89fh3489fh8349fh8934h89f34h89f34h89fh43834h89fh4893fh8349fh8934fh8934hf8934hf8934h89f34h89f34h89f34h89f34h89f34h89fh3489f",
+                           "name"     "NothingToSeeHere"}
+             "objectType" "Agent"}
+   "verb"   {"id"         "http://example.com/verbs/24g890gh348h8934gh8349h89g34hg8934hg8934h3489gh8934hg3489h8g34h89g34h4389g34gh83h89gh8934hg894hgfuifbgnusrbgjrjkgbneruiognhuio34bnhuobgh4389gh48gh34g8493ghu34wenhgberuiohegr89h3458ghjerihertyuioernhjkogernguioh89gh348gh84ibhgiohsdrioghb349uih3489ghbu934hgi9erhjgiheru9gh943h89gh3894hu9ghu89werhguibhdsfuijgbnerjinuigernhuighjeriohjgioehuirgh4ioghjioerhg34uiogh349hgf3489gh34u89gh3489hg8943hg8934h89gh23489g34h89g34h89g34hg8934hg3489h4389gh3489hyg3489hg8934hg893h489gh3489gh89",
+             "display"    {"en-US" "Very Normal Verb"}}
+   "object" {"id"         "http://www.example.com/activities/38902fh23890fh2389fh238hf8923fh8239hf8923h829hf8923hf87923h89hf8h2389fh8239h238fh2389fh8923fh2389fh2389fh823fh3892fh8923hf2389hf8239fh8239fh8923h8392h823f9hf823h89f32hf8932h89f23h89f23h89f23h89f32h8923fh8f23hf23h823fh89f23h3892hf2389fh2389hf8932hf8923h89f3h8932hf893hf8923hf8932h238hf328hf8923h23f8ifh23uifh23uibfh23ubf23ifb23yi23bfyuifui23b23fuib3fui2b23fuifb23bfu32bfui23bui32bf23uibfui23bfui23bfui23bfui32bfui23bgh23uifbui23bfuib23uibf2ui3bfui23buifb23uibfu32b3uifbui"}})
+
 (deftest test-statement-fns
   (let [sys   (support/test-system)
         sys'  (component/start sys)
@@ -193,6 +202,7 @@
         id-2  (get stmt-2 "id")
         id-3  (get stmt-3 "id")
         id-4  (get stmt-4 "id")
+        id-7  (get stmt-7 "id")
         ts    "3000-01-01T01:00:00Z" ; Date far into the future
         agt-0 (-> stmt-0 (get "actor"))
         agt-1 (-> stmt-1 (get "actor") (dissoc "name"))
@@ -411,6 +421,10 @@
                              "description" {"en-US" "Multi Part Activity Description"
                                             "zh-CN" "多元部分Activity的简述"}}}}
              (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
+    
+    (testing "Extremely long IRIs"
+      (is (= {:statement-ids [id-7]}
+             (lrsp/-store-statements lrs auth-ident [stmt-7] []))))
 
     (component/stop sys')
     (support/unstrument-lrsql)))
@@ -890,11 +904,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Taken from lrs and third lib tests
+;; We reuse bench resources for tests here.
 
 (def test-statements
-  (->> "dev-resources/default/insert_input.json"
-       (sim-input/from-location :input :json)
-       sim/sim-seq
+  (->> "dev-resources/bench/insert_input.json"
+       ds/read-input
+       ds/generate-seq
        (take 50)
        (into [])))
 

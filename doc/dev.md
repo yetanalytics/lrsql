@@ -82,17 +82,17 @@ The following is the full list of arguments (which can also be accessed by passi
 | Argument | Value | Default | Description |
 | --- | --- | --- | --- |
 | `-e`, `--lrs-endpoint` | URI | <details>`http://0.0.0.0:8080/xapi/statements`<summary>(URI)</summary></details> | The HTTP(S) endpoint of the (SQL) LRS webserver for Statement POSTs and GETs. |
-| `-i`, `--insert-input` | Filepath | None | The location of a JSON file containing a DATASIM input spec. If given, this input is used to insert statements into the DB. |
-| `-s`, `--input-size` | Integer | `1000` | The total number of statements to insert. Ignored if `-i` is not given. |
-| `-b`, `--batch-size` | Integer | `10` | The batch size to use for inserting statements. Ignored if `-i` is not given. |
-| `-a`, `--async?` | Boolean | `false` | Whether to insert asynchronously or not. |
-| `-c`, `--concurrency` | Integer | `10` | The number of parallel threads to run during statement insertion and querying. Ignored if `-a` is `false`. |
+| `-i`, `--insert-input` | Filepath | None | The location of a JSON file containing a DATASIM input spec. If present, this input is used to insert statements into the DB. |
+| `-s`, `--input-size` | Integer | `1000` | The total number of statements to insert. Ignored if `-i` is not present. |
+| `-b`, `--batch-size` | Integer | `10` | The batch size to use for inserting statements. Ignored if `-i` is not present. |
+| `-a`, `--async` | No args | N/A | If provided, insert statements asynchronously. |
+| `-c`, `--concurrency` | Integer | `10` | The number of parallel threads to run during statement insertion and querying. Ignored if `-a` is not present. |
 | `-r`, `--statement-refs` | Keyword | `none` | How Statement References should be generated and inserted. Valid options are `none` (no Statement References), `half` (half of the Statements have StatementRef objects), and `all` (all Statements have StatementRef objects). |
-| `-q`, `--query-input` | Filepath | None | The location of a JSON file containing an array of statement query params. If not given, the benchmark does a single query with no params. |
+| `-q`, `--query-input` | Filepath | None | The location of a JSON file containing an array of statement query params. If not present, the benchmark does a single query with no params. |
 | `-n`, `--query-number` | Integer | `30` | The number of times each query is performed. |
 | `-u`, `--user` | String | None | HTTP Basic Auth user. |
 | `-p`, `--pass` | String | None | HTTP Basic Auth password. |
-| `-h`, `--help` | No args | None | Help menu. |
+| `-h`, `--help` | No args | N/A | Help menu. |
 
 #### 5. Wait for results
 
@@ -106,5 +106,15 @@ After the bench has run, you should see results that look something like this:
 |                                                  {} |    24 |  14 |   96 |   19 |    722 |
 | {"verb" "https://w3id.org/xapi/video/verbs/seeked"} |    20 |   3 |   33 |   18 |    604 |
 ```
+
+#### 6. Compiled Benchmark Utility
+
+A version of the benchmark utility is included with the release distribution bundle. The arguments are the same, running it is just slightly different:
+
+```
+java -cp bench.jar lrsql.bench [arguments]
+```
+
+Sample insert and query inputs can be found in the distribution at `bench/`
 
 [<- Back to Index](index.md)

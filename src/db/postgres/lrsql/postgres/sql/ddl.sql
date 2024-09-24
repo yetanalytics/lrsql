@@ -254,33 +254,19 @@ ALTER TABLE IF EXISTS admin_account ALTER COLUMN passhash DROP NOT NULL;
 -- :doc Add `admin_account.oidc_issuer` to record OIDC identity source.
 ALTER TABLE IF EXISTS admin_account ADD COLUMN IF NOT EXISTS oidc_issuer VARCHAR(255);
 
-/* Migration 2022-08-18-00 - Add statements/read/mine to credential_to_scope.scope enum */
+/* Migration 2024-01-24 - Add profile and profile/read scopes */
+
+/*
+ * Other changes:
+ * 1. 2022-08-18 - Add statements/read/mine to credential_to_scope.scope enum
+ * 2. 2024-05-31 - Add query-scope-enum-updated guard query
+ * (The initial version of this function, for change 1, was first deprecated,
+ * then removed.)
+ */
 
 /* The obvious way would be to execute ALTER TYPE ... ADD VALUE but that will
    fail inside a transaction. Therefore we have to use this circuitous route:
    https://stackoverflow.com/a/56376907 */
-
--- :name alter-scope-enum-type!
--- :command :execute
--- :doc DEPRECATED. Add `statements/read/mine` to `credential-to-scope.scope` enum.
-ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE VARCHAR(255);
-DROP TYPE IF EXISTS scope_enum;
-CREATE TYPE scope_enum AS ENUM (
-  'statements/write',
-  'statements/read',
-  'statements/read/mine', -- new
-  'all/read',
-  'all',
-   -- unimplemented, but added for future-proofing
-   -- state/read and profile/read are not listed in spec, but make logical sense
-  'define',
-  'state',
-  'state/read',
-  'profile',
-  'profile/read');
-ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USING (scope::scope_enum);
-
-/* Migration 2024-01-24 - Add profile and profile/read scopes */
 
 /* Simply adding the profile scope will cause a name clash with the reserved
    OIDC profile scope. As a result, we add prefixes to create activity_profile
@@ -289,7 +275,28 @@ ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USI
    respectively. Since profile and profile/read have always been unused, we
    are safe to remove them as enums. */
 
--- :name alter-scope-enum-type-v2!
+-- :name query-scope-enum-updated
+-- :command :query
+-- :result :one
+-- :doc Query to see if the DB's current value of `scope_enum` is equal to the one in `alter-scope-enum-type!`. The order of enum values is considered. Returns `nil` if the enum is not updated.
+SELECT 1
+WHERE enum_range(NULL::scope_enum)::TEXT[]
+  = ARRAY[
+    'statements/write',
+    'statements/read',
+    'statements/read/mine',    -- Added 2022-08-18
+    'all/read',
+    'all',
+    'state',                   -- Added 2022-08-18
+    'state/read',              -- ""
+    'define',                  -- ""
+    'activities_profile',      -- Added 2024-01-24
+    'activities_profile/read', -- ""
+    'agents_profile',          -- ""
+    'agents_profile/read'      -- ""
+  ];
+
+-- :name alter-scope-enum-type!
 -- :command :execute
 -- :doc Add `activity_profile`, `activity_profile/read`, `agent_profile`, and `agent_profile/read` to `credential-to-scope.scope` enum. Supersedes `alter-scope-enum-type!`
 ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE VARCHAR(255);
@@ -297,17 +304,16 @@ DROP TYPE IF EXISTS scope_enum;
 CREATE TYPE scope_enum AS ENUM (
   'statements/write',
   'statements/read',
-  'statements/read/mine', -- new
+  'statements/read/mine',    -- Added 2022-08-18
   'all/read',
   'all',
-  'state',
-  'state/read',
-  'define',
-  -- NEW: add `activities_profile` + `agents_profile` scopes and remove unused `profile` scope
-  'activities_profile',
-  'activities_profile/read',
-  'agents_profile',
-  'agents_profile/read');
+  'state',                   -- Added 2022-08-18
+  'state/read',              -- ""
+  'define',                  -- ""
+  'activities_profile',      -- Added 2024-01-24
+  'activities_profile/read', -- ""
+  'agents_profile',          -- ""
+  'agents_profile/read');    -- ""
 ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USING (scope::scope_enum);
 
 /* Migration 2023-05-08-00 - Add timestamp to xapi_statement */
@@ -441,3 +447,44 @@ AND pg_get_constraintdef(oid) LIKE '%ON DELETE CASCADE%'
 -- :doc Adds a cascading delete to delete st2actor entries when corresponding statements are deleted
 ALTER TABLE statement_to_actor DROP CONSTRAINT statement_fk;
 ALTER TABLE statement_to_actor ADD CONSTRAINT statement_fk FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id) ON DELETE CASCADE;
+
+/* Migration 2024-05-29 - Universally Convert VARCHAR to TEXT */
+
+-- :name query-varchar-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if varchar->text conversion has not happened yet.
+SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'verb_iri' and data_type = 'character varying';
+
+-- :name convert-varchars-to-text!
+-- :command :execute
+-- :doc Converts all known VARCHAR(255) fields into TEXT fields. Order of execution is critical for ifi constraints
+ALTER TABLE xapi_statement ALTER COLUMN verb_iri TYPE TEXT;
+
+-- Must drop constraints containing ifi (and rebuild after conversion) because conversion in place does not work for actor_fk or actor_idx composites
+ALTER TABLE statement_to_actor DROP CONSTRAINT actor_fk;
+ALTER TABLE actor DROP CONSTRAINT actor_idx;
+ALTER TABLE actor ALTER COLUMN actor_ifi TYPE TEXT;
+ALTER TABLE actor ADD CONSTRAINT actor_idx UNIQUE (actor_ifi, actor_type);
+ALTER TABLE statement_to_actor ALTER COLUMN actor_ifi TYPE TEXT;
+ALTER TABLE statement_to_actor ADD CONSTRAINT actor_fk FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type);
+
+ALTER TABLE activity ALTER COLUMN activity_iri TYPE TEXT;
+ALTER TABLE attachment ALTER COLUMN attachment_sha TYPE TEXT;
+ALTER TABLE attachment ALTER COLUMN content_type TYPE TEXT;
+ALTER TABLE statement_to_activity ALTER COLUMN activity_iri TYPE TEXT;
+ALTER TABLE state_document ALTER COLUMN state_id TYPE TEXT;
+ALTER TABLE state_document ALTER COLUMN activity_iri TYPE TEXT;
+ALTER TABLE state_document ALTER COLUMN agent_ifi TYPE TEXT;
+ALTER TABLE state_document ALTER COLUMN content_type TYPE TEXT;
+ALTER TABLE activity_profile_document ALTER COLUMN profile_id TYPE TEXT;
+ALTER TABLE activity_profile_document ALTER COLUMN activity_iri TYPE TEXT;
+ALTER TABLE activity_profile_document ALTER COLUMN content_type TYPE TEXT;
+ALTER TABLE admin_account ALTER COLUMN username TYPE TEXT;
+ALTER TABLE admin_account ALTER COLUMN passhash TYPE TEXT;
+ALTER TABLE admin_account ALTER COLUMN oidc_issuer TYPE TEXT;
+ALTER TABLE lrs_credential ALTER COLUMN api_key TYPE TEXT;
+ALTER TABLE lrs_credential ALTER COLUMN secret_key TYPE TEXT;
+ALTER TABLE credential_to_scope ALTER COLUMN api_key TYPE TEXT;
+ALTER TABLE credential_to_scope ALTER COLUMN secret_key TYPE TEXT;
+ALTER TABLE reaction ALTER COLUMN title TYPE TEXT;

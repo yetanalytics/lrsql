@@ -30,6 +30,11 @@
    {:project "deps.edn"
     :aliases [:db-sqlite :db-postgres]}))
 
+(defn write-git-data! []
+  (when-let [version (b/git-process {:git-args "describe --exact-match --tags"})]
+    (b/write-file {:path "target/classes/lrsql/config/git-details.edn"
+                   :content version})))
+
 ;; We create a single JAR for all DB backends in order to minimize artifact
 ;; download size, since all backends share most of the app code
 (defn uber
@@ -41,6 +46,7 @@
      {:src-dirs   src-dirs
       :target-dir class-dir
       :ignores    ignored-file-regexes})
+    (write-git-data!)
     (b/compile-clj
      {:basis     basis
       :src-dirs  src-dirs
@@ -49,3 +55,35 @@
      {:basis     basis
       :class-dir class-dir
       :uber-file uberjar-file})))
+
+;; Alternate Jar for just bencher
+(def src-dirs-bench
+  ["src/bench"])
+
+(def uberjar-file-bench
+  "target/bundle/bench.jar")
+
+(defn- create-basis-bench []
+  (b/create-basis
+   {:project "deps.edn"
+    :aliases [:bench]}))
+
+(defn uber-bench
+  "Create Benchmark uberjar."
+  [_]
+  (let [basis (create-basis-bench)]
+    (b/copy-dir
+     {:src-dirs   src-dirs-bench
+      :target-dir class-dir
+      :ignores    ignored-file-regexes})
+    (b/compile-clj
+     {:basis     basis
+      :src-dirs  src-dirs-bench
+      :class-dir class-dir})
+    (b/uber
+     {:basis     basis
+      :class-dir class-dir
+      :uber-file uberjar-file-bench})))
+
+
+

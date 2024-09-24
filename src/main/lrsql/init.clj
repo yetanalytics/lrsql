@@ -1,6 +1,7 @@
 (ns lrsql.init
   "Initialize HugSql functions and state."
-  (:require [hugsql.core :as hugsql]
+  (:require [clojure.tools.logging :as log]
+            [hugsql.core :as hugsql]
             [hugsql.adapter.next-jdbc :as next-adapter]
             [lrsql.backend.protocol :as bp]
             [lrsql.input.admin :as admin-input]
@@ -23,8 +24,11 @@
   (bp/-set-read! backend)
   (bp/-set-write! backend)
   ;; Init DDL
+  (log/debug "Ensuring Tables...")
   (bp/-create-all! backend tx)
-  (bp/-update-all! backend tx))
+  (log/debug "Running Migrations...")
+  (bp/-update-all! backend tx)
+  (log/debug "SQL backend initialization complete!"))
 
 (defn insert-default-creds!
   "Seed the credential table with the default API key and secret, as well as

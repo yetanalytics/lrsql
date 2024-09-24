@@ -275,8 +275,9 @@ PRAGMA schema_version = :sql:schema_version
 -- :name query-admin-account-passhash-notnull
 -- :command :query
 -- :result :one
--- :doc Query to see if admin_account passhash is required.
-SELECT "notnull" FROM pragma_table_info('admin_account') WHERE name = 'passhash'
+-- :doc Query to see if admin_account passhash is required. Returns 1 if the passhash is not nullable (i.e. not optional).
+SELECT 1 FROM pragma_table_info('admin_account')
+WHERE name = 'passhash' AND "notnull" = 1 -- non-nullable is true
 
 -- :name alter-admin-account-passhash-optional!
 -- :command :execute
@@ -301,41 +302,46 @@ SELECT 1 FROM pragma_table_info('admin_account') WHERE name = 'oidc_issuer'
 -- :doc Add `admin_account.oidc_issuer` to record OIDC identity source.
 ALTER TABLE admin_account ADD COLUMN oidc_issuer TEXT
 
-/* Migration 2022-08-18-00 - Add statements/read/mine to credential_to_scope.scope enum */
-
--- :name alter-credential-to-scope-scope-datatype!
--- :command :execute
--- :doc DEPRECATED. Change the enum datatype of the `credential_to_scope.scope` column.
-UPDATE sqlite_schema
-SET sql = 'CREATE TABLE credential_to_scope (
-  id         TEXT NOT NULL PRIMARY KEY,
-  api_key    TEXT NOT NULL,
-  secret_key TEXT NOT NULL,
-  scope      TEXT CHECK (
-               scope IN (''statements/write'',
-                         ''statements/read'',
-                         ''statements/read/mine'',
-                         ''all/read'',
-                         ''all'',
-                         ''define'',
-                         ''profile'',
-                         ''profile/read'',
-                         ''state'',
-                         ''state/read'')
-             ),
-  FOREIGN KEY (api_key, secret_key)
-    REFERENCES lrs_credential(api_key, secret_key)
-    ON DELETE CASCADE
-)'
-WHERE type = 'table' AND name = 'credential_to_scope'
-
 /* Migration 2024-01-24 - Add document/profile and document/profile/read scopes */
+
+/*
+ * Other changes:
+ * 1. 2022-08-18 - Add statements/read/mine to credential_to_scope.scope enum
+ * 2. 2024-05-31 - Add query-scope-enum-updated guard query
+ * (The initial version of this function, for change 1, was first deprecated,
+ * then removed.)
+ */
 
 /* The suggested scope name would simply be profile, but that would clash with
    the reserved OIDC profile scope. Since they have always remained unused, we
    are safe to remove them from the enum table. */
 
--- :name alter-credential-to-scope-scope-datatype-v2!
+-- :name query-credential-to-scope-scope-datatype-updated
+-- :command :query
+-- :result :one
+-- :doc Query to see if the CHECk constraint of the `credential_to_scope.scope` column has been updated to the latest allowed values. Returns a map of `:scope_enum_updated`.
+SELECT 1
+FROM (
+  SELECT sql
+  FROM sqlite_master
+  WHERE type = 'table' AND name = 'credential_to_scope'
+) AS sub_query
+WHERE sub_query.sql GLOB (
+    '*(''statements/write'','
+  || '*''statements/read'','
+  || '*''statements/read/mine'','    -- Added 2022-08-18
+  || '*''all/read'','
+  || '*''all'','
+  || '*''define'','                  -- Added 2022-08-18
+  || '*''state'','                   -- ""
+  || '*''state/read'','              -- ""
+  || '*''activities_profile'','      -- Added 2024-01-24
+  || '*''activities_profile/read'',' -- ""
+  || '*''agents_profile'','          -- ""
+  || '*''agents_profile/read'')*'    -- ""
+);
+
+-- :name alter-credential-to-scope-scope-datatype!
 -- :command :execute
 -- :doc Change the enum datatype of the `credential_to_scope.scope` column. Supersedes `alter-credential-to-scope-scope-datatype!`
 UPDATE sqlite_schema
@@ -400,7 +406,6 @@ ALTER TABLE xapi_statement ADD COLUMN stored TIMESTAMP
 -- :doc Backfill `xapi_statement.stored` with the values from the payload
 UPDATE xapi_statement SET stored = strftime('%Y-%m-%dT%H:%M:%f000000Z', json_extract(payload, '$.stored'))
 WHERE stored IS NULL;
-
 
 /* Migration 2023-05-11-00 - Convert timestamps for consistency */
 
@@ -492,8 +497,12 @@ ALTER TABLE xapi_statement ADD COLUMN reaction_id TEXT REFERENCES reaction(id);
 -- :doc Adds `xapi_statement.trigger_id`
 ALTER TABLE xapi_statement ADD COLUMN trigger_id TEXT REFERENCES xapi_statement(statement_id);
 
---:name query-statement-to-actor-has-cascade-delete?
-SELECT on_delete FROM pragma_foreign_key_list("statement_to_actor") WHERE "table" = "xapi_statement"
+-- :name query-statement-to-actor-has-cascade-delete
+-- :command :query
+-- :result :one
+-- :doc Query to see whether the `statement_to_actor` foreign key in the table `xapi_statement` does CASCADE when its referenced row is deleted.
+SELECT 1 FROM pragma_foreign_key_list('statement_to_actor')
+WHERE "table" = 'xapi_statement' AND on_delete = 'CASCADE';
 
 -- :name alter-statement-to-actor-add-cascade-delete!
 -- :command :execute
