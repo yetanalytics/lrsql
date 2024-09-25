@@ -1,7 +1,5 @@
 # Example Architecture with Two Noisy LRS' and one Transactional LRS
 
-version: "3.9"
-
 volumes:
   nsy_lrs_1_db_data:
   nsy_lrs_2_db_data:
