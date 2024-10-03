@@ -16,7 +16,7 @@ Each condition has a title, active status, and ruleset. Each ruleset in turn con
 
 Each condition is a set of rules for finding significant statements. Each condition has a unique name followed by its rules, which can be composed with boolean logic.
 
-In the example given, statement `a` must have an object `id` equal to `https://example.com/activities/a`, a verb `id` equal to `https://example.com/verbs/completed`, and its result `success` property equal to `true`. Statement `b` must have the same verb and result success but an object `id` equal to `https://example.com/activities/b` and a timestamp greater than that of `a`.
+In the example given, statement `alpha` must have an object `id` equal to `https://example.com/activities/alpha`, a verb `id` equal to `https://example.com/verbs/completed`, and its result `success` property equal to `true`. Statement `beta` must have the same verb and result success but an object `id` equal to `https://example.com/activities/beta` and a timestamp greater than that of `alpha`.
 
 #### Rules
 
@@ -47,7 +47,7 @@ Booleans compose multiple rules together. Booleans are objects with a single key
 
 ### Template
 
-The template describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with `$templatePath`. This is a path that points to a value in a statement matched by `conditions`, using a JSON array of xAPI statement properties. In the above example, the `$templatePath` points to the actor `mbox` for the actor matched by condition `a`.
+The template describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with `$templatePath`. This is a path that points to a value in a statement matched by `conditions`, using a JSON array of xAPI statement properties. In the above example, the `$templatePath` points to the actor `mbox` for the actor matched by condition `alpha`.
 
 <!-- TODO: Screenshot of how to create template path/dynamic variable -->
 <!-- TODO: Screenshot of how to edit template JSON -->
@@ -74,7 +74,7 @@ Given the reaction specified above, if the following statements are posted to th
       "id": "https://example.com/verbs/completed"
     },
     "object": {
-      "id": "https://example.com/activities/a",
+      "id": "https://example.com/activities/alpha",
       "objectType": "Activity"
     },
     "result": {
@@ -90,7 +90,7 @@ Given the reaction specified above, if the following statements are posted to th
       "id": "https://example.com/verbs/completed"
     },
     "object": {
-      "id": "https://example.com/activities/b",
+      "id": "https://example.com/activities/beta",
       "objectType": "Activity"
     },
     "result": {
@@ -112,7 +112,7 @@ Then the following statement will be added subsequently (note that some unrelate
     "id": "https://example.com/verbs/completed"
   },
   "object": {
-    "id": "https://example.com/activities/a-and-b",
+    "id": "https://example.com/activities/alpha-and-beta",
     "objectType": "Activity"
   }
 }

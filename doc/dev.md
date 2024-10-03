@@ -132,12 +132,12 @@ The following is an example reaction ruleset:
     [ "actor", "account", "name" ]
   ],
   "conditions": {
-    "a": {
+    "condition_alpha": {
       "and": [
         {
           "path": [ "object", "id" ],
           "op": "eq",
-          "val": "https://example.com/activities/a"
+          "val": "https://example.com/activities/alpha"
         },
         {
           "path": [ "verb", "id" ],
@@ -151,12 +151,12 @@ The following is an example reaction ruleset:
         }
       ]
     },
-    "b": {
+    "condition_beta": {
       "and": [
         {
           "path": [ "object", "id" ],
           "op": "eq",
-          "val": "https://example.com/activities/b"
+          "val": "https://example.com/activities/beta"
         },
         {
           "path": [ "verb", "id" ],
@@ -172,7 +172,7 @@ The following is an example reaction ruleset:
           "path": [ "timestamp" ],
           "op": "gt",
           "ref": {
-            "condition": "a",
+            "condition": "condition_alpha",
             "path": [ "timestamp" ]
           }
         }
@@ -182,14 +182,14 @@ The following is an example reaction ruleset:
   "template": {
     "actor": {
       "mbox": {
-        "$templatePath": [ "a", "actor", "mbox" ]
+        "$templatePath": [ "condition_alpha", "actor", "mbox" ]
       }
     },
     "verb": {
       "id": "https://example.com/verbs/completed"
     },
     "object": {
-      "id": "https://example.com/activities/a-and-b",
+      "id": "https://example.com/activities/alpha-and-beta",
       "objectType": "Activity"
     }
   }
