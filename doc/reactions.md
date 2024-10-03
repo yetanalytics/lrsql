@@ -10,12 +10,6 @@ To use Reactions the `LRSQL_ENABLE_REACTIONS` environment variable or the `enabl
 
 Each condition has a title, active status, and ruleset. Each ruleset in turn contains the following properties: conditions, template, and identity paths.
 
-### Identity Paths
-
-Identity Paths (`identityPaths` in the ruleset JSON) are a method of grouping statements for which you are attempting to match conditions. Typically, Reactions may revolve around actor Inverse Functional Identifiers (IFIs), e.g. `["actor", "mbox"]` or `["actor", "account", "name"]` which is equivalent to saying "For a given Actor, look for statements that share IFI values".
-
-Alternative approaches to Identity Path may be used by modifying `identityPaths`, for instance `["context", "registration"]` to group statements by learning session.
-
 ### Conditions
 
 `conditions` is a mapping of names to rules for finding significant statements. Rules can be composed with boolean logic.
@@ -48,6 +42,13 @@ Booleans compose multiple rules together. Booleans are objects with a single key
 ### Template
 
 `template` describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with `$templatePath`. This is a path that points to a value in a statement matched by `conditions`, using the same syntax as an `identityPaths` path. In the above example, the `$templatePath` points to the actor `mbox` for the actor matched by condition `a`.
+
+### Identity Paths
+
+Identity Paths (`identityPaths` in the ruleset JSON) are a method of grouping statements for which you are attempting to match conditions. Typically, Reactions may revolve around actor Inverse Functional Identifiers (IFIs), e.g. `["actor", "mbox"]` or `["actor", "account", "name"]` which is equivalent to saying "For a given Actor, look for statements that share IFI values".
+
+Alternative approaches to Identity Path may be used by modifying `identityPaths`, for instance `["context", "registration"]` to group statements by learning session.
+
 
 ## Example
 
