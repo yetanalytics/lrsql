@@ -10,45 +10,55 @@ To use Reactions the `LRSQL_ENABLE_REACTIONS` environment variable or the `enabl
 
 Each condition has a title, active status, and ruleset. Each ruleset in turn contains the following properties: conditions, template, and identity paths.
 
+<!-- TODO: Screenshot of example condition -->
+
 ### Conditions
 
-`conditions` is a mapping of names to rules for finding significant statements. Rules can be composed with boolean logic.
+Each condition is a set of rules for finding significant statements. Each condition has a unique name followed by its rules, which can be composed with boolean logic.
 
-In the example given above statement `a` must have an object id equal to `https://example.com/activities/a`, a verb id equal to `https://example.com/verbs/completed`, and a result success equal to `true`. Statement `b` must have the same verb and result success but an object id equal to `https://example.com/activities/b` and a timestamp greater than that of `a`.
+In the example given, statement `a` must have an object `id` equal to `https://example.com/activities/a`, a verb `id` equal to `https://example.com/verbs/completed`, and its result `success` property equal to `true`. Statement `b` must have the same verb and result success but an object `id` equal to `https://example.com/activities/b` and a timestamp greater than that of `a`.
 
 #### Rules
 
-All rules have a `path` array that indicates a path in an xAPI statement and an `op` that is one of the following operators:
+All rules have a path array that indicates a path in an xAPI statement and an operator that is one of the following:
 
-* `gt` - Greater than
-* `lt` - Less than
-* `gte` - Greater than or equal
-* `lte` - Less than or equal
-* `eq` - Equal
-* `noteq` - Not equal
-* `like` - Fuzzy match using SQL `%` syntax. For example, `bo%` matches `bob` and `boz`.
-* `contains` - Array contains
+* Greater than
+* Less than
+* Greater than or equal
+* Less than or equal
+* Equal
+* Not equal
+* Like (fuzzy match using SQL `%` syntax; for example, `bo%` matches `bob` and `boz`.)
+* Array contains
 
 Rules either have a `val` literal value or a `ref` which is a path into a statement found for another condition.
+
+<!-- TODO: Screenshot of how to add/edit statement criteria -->
 
 #### Booleans
 
 Booleans compose multiple rules together. Booleans are objects with a single key:
 
-* `and` - Array of rules which must all be true
-* `or` - Array of rules of which one must be true
-* `not` - Rule to nullify
+* AND: Array of rules which must all be true
+* OR: Array of rules of which one must be true
+* NOT: Rule to nullify
+
+<!-- TODO: Screenshot of how to change condition to boolean -->
 
 ### Template
 
-`template` describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with `$templatePath`. This is a path that points to a value in a statement matched by `conditions`, using the same syntax as an `identityPaths` path. In the above example, the `$templatePath` points to the actor `mbox` for the actor matched by condition `a`.
+The template describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with `$templatePath`. This is a path that points to a value in a statement matched by `conditions`, using a JSON array of xAPI statement properties. In the above example, the `$templatePath` points to the actor `mbox` for the actor matched by condition `a`.
+
+<!-- TODO: Screenshot of how to create template path/dynamic variable -->
+<!-- TODO: Screenshot of how to edit template JSON -->
 
 ### Identity Paths
 
-Identity Paths (`identityPaths` in the ruleset JSON) are a method of grouping statements for which you are attempting to match conditions. Typically, Reactions may revolve around actor Inverse Functional Identifiers (IFIs), e.g. `["actor", "mbox"]` or `["actor", "account", "name"]` which is equivalent to saying "For a given Actor, look for statements that share IFI values".
+Identity Paths are a method of grouping statements for which you are attempting to match conditions. Typically, Reactions may revolve around actor Inverse Functional Identifiers (IFIs), e.g. actor `mbox` or account `name` strings. This is equivalent to saying "For a given Actor, look for statements that share IFI values".
 
-Alternative approaches to Identity Path may be used by modifying `identityPaths`, for instance `["context", "registration"]` to group statements by learning session.
+Alternative approaches to Identity Path may be used by modifying `identityPaths`, for instance using the `registration` context property to group statements by learning session.
 
+<!-- TODO: Screenshot of how to edit identity paths -->
 
 ## Example
 
@@ -89,7 +99,6 @@ Given the reaction specified above, if the following statements are posted to th
     "timestamp": "2024-01-23T02:00:00.000Z"
   }
 ]
-
 ```
 
 Then the following statement will be added subsequently (note that some unrelated fields are removed for clarity):
@@ -107,7 +116,6 @@ Then the following statement will be added subsequently (note that some unrelate
     "objectType": "Activity"
   }
 }
-
 ```
 
 [<- Back to Index](index.md)
