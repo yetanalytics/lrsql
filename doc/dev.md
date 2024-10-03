@@ -117,4 +117,84 @@ java -cp bench.jar lrsql.bench [arguments]
 
 Sample insert and query inputs can be found in the distribution at `bench/`
 
+### Reactions Spec
+
+Reactions are stored in SQL LRS as JSON object. Each reaction contains an `id`, `title`, `active`, `created`, `modified`, and `ruleset` property. Each `ruleset` is a JSON object that in turn contains the properties `conditions`, `template`, and `identityPaths`.
+
+The following is an example reaction ruleset:
+```json
+{
+  "identityPaths": [
+    [ "actor", "mbox" ],
+    [ "actor", "mbox_sha1sum" ],
+    [ "actor", "openid" ],
+    [ "actor", "account", "homePage" ],
+    [ "actor", "account", "name" ]
+  ],
+  "conditions": {
+    "a": {
+      "and": [
+        {
+          "path": [ "object", "id" ],
+          "op": "eq",
+          "val": "https://example.com/activities/a"
+        },
+        {
+          "path": [ "verb", "id" ],
+          "op": "eq",
+          "val": "https://example.com/verbs/completed"
+        },
+        {
+          "path": [ "result", "success" ],
+          "op": "eq",
+          "val": true
+        }
+      ]
+    },
+    "b": {
+      "and": [
+        {
+          "path": [ "object", "id" ],
+          "op": "eq",
+          "val": "https://example.com/activities/b"
+        },
+        {
+          "path": [ "verb", "id" ],
+          "op": "eq",
+          "val": "https://example.com/verbs/completed"
+        },
+        {
+          "path": [ "result", "success" ],
+          "op": "eq",
+          "val": true
+        },
+        {
+          "path": [ "timestamp" ],
+          "op": "gt",
+          "ref": {
+            "condition": "a",
+            "path": [ "timestamp" ]
+          }
+        }
+      ]
+    }
+  },
+  "template": {
+    "actor": {
+      "mbox": {
+        "$templatePath": [ "a", "actor", "mbox" ]
+      }
+    },
+    "verb": {
+      "id": "https://example.com/verbs/completed"
+    },
+    "object": {
+      "id": "https://example.com/activities/a-and-b",
+      "objectType": "Activity"
+    }
+  }
+}
+
+```
+
 [<- Back to Index](index.md)
