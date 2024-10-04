@@ -117,84 +117,90 @@ java -cp bench.jar lrsql.bench [arguments]
 
 Sample insert and query inputs can be found in the distribution at `bench/`
 
-### Reactions Spec
+### Reaction JSON
 
-Reactions are stored in SQL LRS as JSON object. Each reaction contains an `id`, `title`, `active`, `created`, `modified`, and `ruleset` property. Each `ruleset` is a JSON object that in turn contains the properties `conditions`, `template`, and `identityPaths`.
+Reactions are internally stored in SQL LRS as JSON object. Each reaction contains an `id`, `title`, `active`, `created`, `modified`, and `ruleset` property. Each `ruleset` is a JSON object that in turn contains the properties `conditions`, `template`, and `identityPaths`.
 
-The following is an example reaction ruleset:
+The following is an example reaction JSON object:
 ```json
 {
-  "identityPaths": [
-    [ "actor", "mbox" ],
-    [ "actor", "mbox_sha1sum" ],
-    [ "actor", "openid" ],
-    [ "actor", "account", "homePage" ],
-    [ "actor", "account", "name" ]
-  ],
-  "conditions": {
-    "condition_alpha": {
-      "and": [
-        {
-          "path": [ "object", "id" ],
-          "op": "eq",
-          "val": "https://example.com/activities/alpha"
+    "id": "019257f4-d533-8c0b-8730-28b82f383982",
+    "created": "2024-10-04T14:35:16Z",
+    "modified": "2024-10-04T14:35:16Z",
+    "title": "reaction_example",
+    "active": true,
+    "ruleset": {
+        "conditions": {
+            "condition_alpha": {
+                "and": [
+                    {
+                        "path": [ "object", "id" ],
+                        "op": "eq",
+                        "val": "https://example.com/activities/alpha"
+                    },
+                    {
+                        "path": [ "verb", "id" ],
+                        "op": "eq",
+                        "val": "https://example.com/verbs/completed"
+                    },
+                    {
+                        "path": [ "result", "success" ],
+                        "op": "eq",
+                        "val": true
+                    }
+                ]
+            },
+            "condition_beta": {
+                "and": [
+                    {
+                        "path": [ "object", "id" ],
+                        "op": "eq",
+                        "val": "https://example.com/activities/beta"
+                    },
+                    {
+                        "path": [ "verb", "id" ],
+                        "op": "eq",
+                        "val": "https://example.com/verbs/completed"
+                    },
+                    {
+                        "path": [ "result", "success" ],
+                        "op": "eq",
+                        "val": true
+                    },
+                    {
+                        "path": [ "timestamp" ],
+                        "op": "gt",
+                        "ref": {
+                            "condition": "condition_alpha",
+                            "path": [ "timestamp" ]
+                        }
+                    }
+                ]
+            }
         },
-        {
-          "path": [ "verb", "id" ],
-          "op": "eq",
-          "val": "https://example.com/verbs/completed"
+        "template": {
+            "actor": {
+                "mbox": {
+                    "$templatePath": [ "condition_alpha", "actor", "mbox" ]
+                }
+            },
+            "verb": {
+                "id": "https://example.com/verbs/completed"
+            },
+            "object": {
+                "id": "https://example.com/activities/alpha-and-beta",
+                "objectType": "Activity"
+            }
         },
-        {
-          "path": [ "result", "success" ],
-          "op": "eq",
-          "val": true
-        }
-      ]
-    },
-    "condition_beta": {
-      "and": [
-        {
-          "path": [ "object", "id" ],
-          "op": "eq",
-          "val": "https://example.com/activities/beta"
-        },
-        {
-          "path": [ "verb", "id" ],
-          "op": "eq",
-          "val": "https://example.com/verbs/completed"
-        },
-        {
-          "path": [ "result", "success" ],
-          "op": "eq",
-          "val": true
-        },
-        {
-          "path": [ "timestamp" ],
-          "op": "gt",
-          "ref": {
-            "condition": "condition_alpha",
-            "path": [ "timestamp" ]
-          }
-        }
-      ]
+        "identityPaths": [
+            [ "actor", "mbox" ],
+            [ "actor", "mbox_sha1sum" ],
+            [ "actor", "openid" ],
+            [ "actor", "account", "homePage" ],
+            [ "actor", "account", "name" ]
+        ]
     }
-  },
-  "template": {
-    "actor": {
-      "mbox": {
-        "$templatePath": [ "condition_alpha", "actor", "mbox" ]
-      }
-    },
-    "verb": {
-      "id": "https://example.com/verbs/completed"
-    },
-    "object": {
-      "id": "https://example.com/activities/alpha-and-beta",
-      "objectType": "Activity"
-    }
-  }
 }
-
 ```
 
 [<- Back to Index](index.md)
