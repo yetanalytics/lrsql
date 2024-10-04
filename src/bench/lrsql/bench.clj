@@ -1,15 +1,14 @@
 (ns lrsql.bench
-  (:require [clojure.core.async :as a]
-            [clojure.string :refer [join]]
+  (:require [clojure.core.async         :as a]
             [clojure.math.numeric-tower :as math]
-            [clojure.tools.cli :as cli]
-            [clojure.tools.logging :as log]
-            [clojure.pprint :as pprint]
-            [java-time :as jt]
-            [babashka.curl :as curl]
-            [com.yetanalytics.datasim.sim :as sim]
-            [com.yetanalytics.datasim.input :as sim-input]
-            [lrsql.util :as u])
+            [clojure.pprint             :as pprint]
+            [clojure.string             :as cstr]
+            [clojure.tools.cli          :as cli]
+            [clojure.tools.logging      :as log]
+            [babashka.curl              :as curl]
+            [java-time.api              :as jt]
+            [com.yetanalytics.datasim   :as ds]
+            [lrsql.util                 :as u])
   (:gen-class))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -27,27 +26,26 @@
     :desc    "The HTTP(S) endpoint of the (SQL) LRS webserver for Statement POSTs and GETs."]
    ["-i" "--insert-input URI" "DATASIM input source"
     :id   :insert-input
-    :desc "The location of a JSON file containing a DATASIM input spec. If given, this input is used to insert statements into the DB."]
+    :desc "The location of a JSON file containing a DATASIM input spec. If present, this input is used to insert statements into the DB."]
    ["-s" "--input-size LONG" "Size"
     :id       :insert-size
     :parse-fn #(Long/parseLong %)
     :default  1000
-    :desc     "The total number of statements to insert. Ignored if `-i` is not given."]
+    :desc     "The total number of statements to insert. Ignored if `-i` is not present."]
    ["-b" "--batch-size LONG" "Statements per batch"
     :id       :batch-size
     :parse-fn #(Long/parseLong %)
     :default  10
-    :desc     "The batch size to use for inserting statements. Ignored if `-i` is not given."]
-   ["-a" "--async? BOOLEAN" "Run asynchronously?"
-    :id       :async?
-    :parse-fn #(Boolean/parseBoolean %)
-    :default  false
-    :desc     "Whether to insert asynchronously or not."]
+    :desc     "The batch size to use for inserting statements. Ignored if `-i` is not present."]
+   ["-a" "--async" "Run asynchronously?"
+    :id      :async?
+    :default false
+    :desc    "If provided, insert statements asynchronously."]
    ["-c" "--concurrency LONG" "Number of threads"
     :id       :concurrency
     :parse-fn #(Long/parseLong %)
     :default  10
-    :desc     "The number of parallel threads to run during statement insertion. Ignored if `-a` is `false`."]
+    :desc     "The number of parallel threads to run during statement insertion. Ignored if `-a` is not present."]
    ["-r" "--statement-refs STRING" "Statement Ref Insertion Type"
     :id       :statement-ref-type
     :parse-fn keyword
@@ -56,7 +54,7 @@
     :desc     "How Statement References should be generated and inserted. Valid options are none (no Statement References), half (half of the Statements have StatementRef objects), and all (all Statements have StatementRef objects)."]
    ["-q" "--query-input URI" "Query input source"
     :id   :query-input
-    :desc "The location of a JSON file containing an array of statement query params. If not given, the benchmark does a single query with no params."]
+    :desc "The location of a JSON file containing an array of statement query params. If not present, the benchmark does a single query with no params."]
    ["-n" "--query-number LONG" "Query execution number"
     :id       :query-number
     :parse-fn #(Long/parseLong %)
@@ -77,7 +75,7 @@
 
 (defn read-insert-input
   [input-path]
-  (-> (sim-input/from-location :input :json input-path)
+  (-> (ds/read-input input-path)
       (assoc-in [:parameters :seed] (rand-int 1000000000))))
 
 (defn read-query-input
@@ -145,18 +143,18 @@
 
 (defmethod generate-statements :none
   [inputs size _]
-  (take size (sim/sim-seq inputs)))
+  (take size (ds/generate-seq inputs)))
 
 (defmethod generate-statements :half
   [inputs size _]
-  (let [stmt-seq    (take size (sim/sim-seq inputs))
+  (let [stmt-seq    (take size (ds/generate-seq inputs))
         [tgts refs] (split-at (quot size 2) stmt-seq)
         refs'       (assoc-stmt-refs tgts refs)]
     (concat tgts refs')))
 
 (defmethod generate-statements :all
   [inputs size _]
-  (let [tgts  (take size (sim/sim-seq inputs))
+  (let [tgts  (take size (ds/generate-seq inputs))
         refs  (drop 1 tgts)
         refs' (assoc-stmt-refs tgts refs)]
     (cons (first tgts) refs')))
@@ -170,44 +168,36 @@
     (jt/as dur :millis)))
 
 (defn store-statements-sync!
-  [{endpoint   :lrs-endpoint
-    input-uri  :insert-input
-    size       :insert-size
+  [statements
+   {endpoint   :lrs-endpoint
     batch-size :batch-size
     user       :user
-    pass       :pass
-    sref-type  :statement-ref-type}]
-  (let [inputs  (read-insert-input input-uri)
-        stmts   (generate-statements inputs size sref-type)]
-    (loop [batches (partition-all batch-size stmts)
-           timings (transient [])]
-      (if-some [batch (first batches)]
-        (recur (rest batches)
-               (conj! timings
-                      (perform-insert
-                       endpoint
-                       {:headers    headers
-                        :body       (u/write-json-str (vec batch))
-                        :basic-auth [user pass]})))
-        (let [timings-ret (persistent! timings)]
-          (calc-statistics timings-ret (count timings-ret)))))))
+    pass       :pass}]
+  (loop [batches (partition-all batch-size statements)
+         timings (transient [])]
+    (if-some [batch (first batches)]
+      (recur (rest batches)
+             (conj! timings
+                    (perform-insert
+                     endpoint
+                     {:headers    headers
+                      :body       (u/write-json-str (vec batch))
+                      :basic-auth [user pass]})))
+      (let [timings-ret (persistent! timings)]
+        (calc-statistics timings-ret (count timings-ret))))))
 
 (defn store-statements-async!
-  [{endpoint    :lrs-endpoint
-    input-uri   :insert-input
-    size        :insert-size
+  [statements
+   {endpoint    :lrs-endpoint
     batch-size  :batch-size
     user        :user
     pass        :pass
-    sref-type   :statement-ref-type
     concurrency :concurrency}]
-  (let [inputs   (read-insert-input input-uri)
-        stmts    (generate-statements inputs size sref-type)
-        requests (mapv (fn [batch]
+  (let [requests (mapv (fn [batch]
                          {:headers    headers
                           :body       (u/write-json-str (vec batch))
                           :basic-auth [user pass]})
-                       (partition-all batch-size stmts))
+                       (partition-all batch-size statements))
         timings  (perform-async-op! perform-insert
                                     endpoint
                                     requests
@@ -311,16 +301,16 @@
   [& args]
   (let [{:keys [summary errors]
          :as _parsed-opts
-         {:keys [insert-input
-                 async?
-                 query-number
-                 help
+         {:keys [help
+                 insert-input
                  insert-size
+                 statement-ref-type
+                 async?
                  batch-size
+                 query-number
                  ;; Options that aren't used in `-main` but are later on
                  _lrs-endpoint
                  _query-input
-                 _statement-ref-type
                  _concurrency
                  _user
                  _pass]
@@ -328,7 +318,7 @@
         (cli/parse-opts args cli-options)]
     ;; Check for errors
     (when (not-empty errors)
-      (log/errorf "CLI Parse Errors:\n%s" (join "\n" errors))
+      (log/errorf "CLI Parse Errors:\n%s" (cstr/join "\n" errors))
       (throw (ex-info "CLI Parse Errors!"
                       {:type   ::cli-parse-error
                        :errors errors})))
@@ -338,12 +328,16 @@
       (System/exit 0))
     ;; Store statements
     (when insert-input
-      (log/info "Starting statement insertion...")
-      (let [store-statements! (if async?
-                                store-statements-async!
-                                store-statements-sync!)
-            results           (store-statements! opts)
-            _                 (log/info "Statement insertion finished.")]
+      (let [_       (log/info "Starting statement generation...")
+            inputs  (read-insert-input insert-input)
+            stmts*  (generate-statements inputs insert-size statement-ref-type)
+            stmts   (into [] stmts*) ; realize statements
+            _       (log/info "Statement generation finished.")
+            _       (log/info "Starting statement insertion...")
+            results (if async?
+                      (store-statements-async! stmts opts)
+                      (store-statements-sync! stmts opts))
+            _       (log/info "Statement insertion finished.")]
         (printf "\n%s Insert benchmark results for n = %d (in ms) %s\n"
                 "**********"
                 (quot insert-size batch-size)
@@ -352,12 +346,11 @@
                                      :batch-size   batch-size}
                                     results)])))
     ;; Query statements
-    (log/info "Starting statement query benching...")
-    (let [query-statements (if async?
-                             query-statements-async
-                             query-statements-sync)
-          results          (query-statements opts)]
-      (log/info "Statement query benching finished.")
+    (let [_       (log/info "Starting statement query benching...")
+          results (if async?
+                    (query-statements-async opts)
+                    (query-statements-sync opts))
+          _       (log/info "Statement query benching finished.")]
       (printf "\n%s Query benchmark results for n = %d (in ms) %s\n"
               "**********"
               query-number
@@ -369,7 +362,7 @@
   ;; Perform benching from the repl
   (-main
    "-e" "http://localhost:8080/xapi/statements"
-   "-i" "dev-resources/default/insert_input.json"
-   "-q" "dev-resources/default/query_input.json"
+   "-i" "dev-resources/bench/insert_input.json"
+   "-q" "dev-resources/bench/query_input.json"
    "-a" "true" "-c" "20"
    "-u" "username" "-p" "password"))
