@@ -8,15 +8,32 @@ Reactions allow SQL LRS to watch for patterns in submitted xAPI data and dynamic
 
 To use Reactions the `LRSQL_ENABLE_REACTIONS` environment variable or the `enableReactions` LRS configuration property must be set to `true`. Reactions are disabled by default.
 
-Each condition has a title, active status, and ruleset. Each ruleset in turn contains the following properties: conditions, template, and identity paths.
 
-<!-- TODO: Screenshot of example condition -->
+![reactions table](images/reactions/table.png)
+To view a reaction, click on the reaction in the table above. This will display a reaction view page.
+
+![reaction view 1](images/reactions/view_1.png)
+![reaction view 2](images/reactions/view_2.png)
+![reaction view 3](images/reactions/view_3.png)
+Each reaction has a title, ID, and created/modified timestamps. It also has an active vs. inactive status; a reaction can either be manually toggled as inactive, or it may be automatically set as inactive if an error is encountered when a reaction is triggered.
+
+The most important part of a reaction is its ruleset. Each ruleset in turn contains the following properties: conditions, template, and identity paths. Each ruleset component is explained in the sections below.
+
+To create a new reaction, click on "Add New Reactions" on the main Reactions page. Likewise, to edit a current reaction, click on "Edit".
+
+![reaction edit](images/reactions/edit_intro.png)
+Creating a new reaction will display an edit page, where the user can modify the reaction title, active status, and ruleset.
 
 ### Conditions
 
 Each condition is a set of rules for finding significant statements. Each condition has a unique name followed by its rules, which can be composed with boolean logic.
 
-In the example given, statement `alpha` must have an object `id` equal to `https://example.com/activities/alpha`, a verb `id` equal to `https://example.com/verbs/completed`, and its result `success` property equal to `true`. Statement `beta` must have the same verb and result success but an object `id` equal to `https://example.com/activities/beta` and a timestamp greater than that of `alpha`.
+![reaction edit alpha](images/reactions/edit_condition_alpha.png)
+In the example given, statement "alpha" must have an object `id` equal to `https://example.com/activities/alpha`, a verb `id` equal to `https://example.com/verbs/completed`, and its result `success` property equal to `true`.
+
+![reaction edit beta](images/reactions/edit_condition_beta.png)
+![reaction edit beta ref](images/reactions/edit_condition_beta_ref.png)
+Statement "beta" must have the same verb and result success but an object `id` equal to `https://example.com/activities/beta` and a timestamp greater than that of statement "alpha."
 
 #### Rules
 
@@ -33,32 +50,34 @@ All rules have a path array that indicates a path in an xAPI statement and an op
 
 Rules either have a `val` literal value or a `ref` which is a path into a statement found for another condition.
 
-<!-- TODO: Screenshot of how to add/edit statement criteria -->
-
 #### Booleans
 
 Booleans compose multiple rules together. Booleans are objects with a single key:
 
 * AND: Array of rules which must all be true
 * OR: Array of rules of which one must be true
-* NOT: Rule to nullify
+* NOT: Rule that must _not_ be true
 
-<!-- TODO: Screenshot of how to change condition to boolean -->
+Rule types (either "Statement Criteria" or a boolean) can be selected using the topmost select input, or via the "Add sub-clause" button.
 
 ### Template
 
-The template describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with `$templatePath`. This is a path that points to a value in a statement matched by `conditions`, using a JSON array of xAPI statement properties. In the above example, the `$templatePath` points to the actor `mbox` for the actor matched by condition `alpha`.
+The template describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with `$templatePath`. This is a path that points to a value in a statement matched by `conditions`, using a JSON array of xAPI statement properties.
 
-<!-- TODO: Screenshot of how to create template path/dynamic variable -->
-<!-- TODO: Screenshot of how to edit template JSON -->
+![edit dynamic vars](images/reactions/edit_dynamic_vars.png)
+To help with creating template paths, the above panel can be opened, which guides the user on how to create paths. In this example, we create a template path to the actor `mbox` for the actor matched by `condition_alpha`.
+
+![edit template](images/reactions/edit_template.png)
+We can then copy-paste the template path into our statement template.
 
 ### Identity Paths
 
-Identity Paths are a method of grouping statements for which you are attempting to match conditions. Typically, Reactions may revolve around actor Inverse Functional Identifiers (IFIs), e.g. actor `mbox` or account `name` strings. This is equivalent to saying "For a given Actor, look for statements that share IFI values".
+Identity Paths are a method of grouping statements for which you are attempting to match conditions on. Typically, reactions may revolve around actor Inverse Functional Identifiers (IFIs), e.g. actor `mbox` or account `name` strings. Any statements with the same IFI properties will be considered a "group" to match conditions on. This is equivalent to saying "For a given Actor, look for statements that share IFI values."
 
 Alternative approaches to Identity Path may be used by modifying `identityPaths`, for instance using the `registration` context property to group statements by learning session.
 
-<!-- TODO: Screenshot of how to edit identity paths -->
+![edit identity paths](images/reactions/edit_identity_path.png)
+In the above example (the default set of identity paths), say we have Statements A and B that share an IFI and match `condition_alpha` and `condition_beta`, respectively. This will trigger the reaction. Conversely, if Statements A and B have _different_ IFIs, then the reaction _will not trigger_.
 
 ## Example
 
