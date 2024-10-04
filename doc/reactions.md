@@ -8,7 +8,6 @@ Reactions allow SQL LRS to watch for patterns in submitted xAPI data and dynamic
 
 To use Reactions the `LRSQL_ENABLE_REACTIONS` environment variable or the `enableReactions` LRS configuration property must be set to `true`. Reactions are disabled by default.
 
-
 ![reactions table](images/reactions/table.png)
 To view a reaction, click on the reaction in the table above. This will display a reaction view page.
 
@@ -136,5 +135,9 @@ Then the following statement will be added subsequently (note that some unrelate
   }
 }
 ```
+
+### JSON Format
+
+Reactions are stored internally in JSON format. For an example, see the [developer documentation](dev.md#reaction-json).
 
 [<- Back to Index](index.md)

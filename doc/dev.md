@@ -121,7 +121,7 @@ Sample insert and query inputs can be found in the distribution at `bench/`
 
 Reactions are internally stored in SQL LRS as JSON object. Each reaction contains an `id`, `title`, `active`, `created`, `modified`, and `ruleset` property. Each `ruleset` is a JSON object that in turn contains the properties `conditions`, `template`, and `identityPaths`.
 
-The following is an example reaction JSON object:
+The following is the example reaction from [the tutorial](reactions.md), in JSON format:
 ```json
 {
     "id": "019257f4-d533-8c0b-8730-28b82f383982",
