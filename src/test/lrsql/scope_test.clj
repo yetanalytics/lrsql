@@ -36,17 +36,33 @@
 (def stmt-1
   (assoc stmt-0 "id" "00000000-0000-4000-8000-000000000001"))
 
+(def stmt-2
+  (assoc stmt-0 "id" "00000000-0000-4000-8000-000000000002"))
+
 (def stmt-id-0
   (get stmt-0 "id"))
 
 (def stmt-id-1
   (get stmt-1 "id"))
 
+(def stmt-id-2
+  (get stmt-2 "id"))
+
 (def stmt-body-0
   (u/write-json-str stmt-0))
 
 (def stmt-body-1
   (u/write-json-str stmt-1))
+
+;; These test constants are to test when statement arrays are POST'd to the LRS.
+;; For some reason, these are not test cases in the ADL conformance tests, and
+;; adding a new namespace just for a couple POST requests would be overkill,
+;; so we just put them here.
+(def stmt-body-empty-array
+  (u/write-json-str []))
+
+(def stmt-body-array
+  (u/write-json-str [stmt-2]))
 
 ;; /agents
 
@@ -228,7 +244,15 @@
                (is (= ~(if statement-write? 200 403)
                       (try-post ~stmt-endpoint
                                 ~'creds
-                                {:body ~stmt-body-0}))))
+                                {:body ~stmt-body-0})))
+               (is (= ~(if statement-write? 200 403)
+                      (try-post ~stmt-endpoint
+                                ~'creds
+                                {:body ~stmt-body-empty-array})))
+               (is (= ~(if statement-write? 200 403)
+                      (try-post ~stmt-endpoint
+                                ~'creds
+                                {:body ~stmt-body-array}))))
              (testing "PUT"
                (is (= ~(if statement-write? 204 403)
                       (try-put ~stmt-endpoint
@@ -489,7 +513,11 @@
         (is (= 200
                (try-post stmt-endpoint creds-1 {:body stmt-body-0})))
         (is (= 200
-               (try-post stmt-endpoint creds-2 {:body stmt-body-1}))))
+               (try-post stmt-endpoint creds-2 {:body stmt-body-1})))
+        (is (= 200
+               (try-post stmt-endpoint creds-1 {:body stmt-body-empty-array})))
+        (is (= 200
+               (try-post stmt-endpoint creds-2 {:body stmt-body-array}))))
       (testing "/statements GET with correct authority"
         (is (= 200
                (try-get stmt-endpoint
@@ -498,7 +526,11 @@
         (is (= 200
                (try-get stmt-endpoint
                         creds-2
-                        {:params {:statementId stmt-id-1}}))))
+                        {:params {:statementId stmt-id-1}})))
+        (is (= 200
+               (try-get stmt-endpoint
+                        creds-2
+                        {:params {:statementId stmt-id-2}}))))
       (testing "/statements HEAD with correct authority"
         (is (= 200
                (try-head stmt-endpoint
@@ -507,7 +539,11 @@
         (is (= 200
                (try-head stmt-endpoint
                          creds-2
-                         {:params {:statementId stmt-id-1}}))))
+                         {:params {:statementId stmt-id-1}})))
+        (is (= 200
+               (try-head stmt-endpoint
+                         creds-2
+                         {:params {:statementId stmt-id-2}}))))
       ;; Treated as 404 Not Found as the statement does not exist within the
       ;; scope of the authority, rather than a blanket 403 Forbidden.
       (testing "/statements GET with wrong authority"
@@ -517,6 +553,10 @@
                         {:params {:statementId stmt-id-1}})))
         (is (= 404
                (try-get stmt-endpoint
+                        creds-1
+                        {:params {:statementId stmt-id-2}})))
+        (is (= 404
+               (try-get stmt-endpoint
                         creds-2
                         {:params {:statementId stmt-id-0}}))))
       (testing "/statements HEAD with wrong authority"
@@ -524,6 +564,10 @@
                (try-head stmt-endpoint
                          creds-1
                          {:params {:statementId stmt-id-1}})))
+        (is (= 404
+               (try-head stmt-endpoint
+                         creds-1
+                         {:params {:statementId stmt-id-2}})))
         (is (= 404
                (try-head stmt-endpoint
                          creds-2
