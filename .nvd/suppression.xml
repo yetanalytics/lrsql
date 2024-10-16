@@ -18,4 +18,11 @@
         <cpe>cpe:/a:clojure:clojure</cpe>
         <cve>CVE-2017-20189</cve>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: jetty-http-11.0.20.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty/jetty\-http@.*$</packageUrl>
+        <vulnerabilityName>CVE-2024-6763</vulnerabilityName>
+    </suppress>
 </suppressions>
