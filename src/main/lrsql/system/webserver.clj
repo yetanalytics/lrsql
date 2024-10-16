@@ -20,6 +20,7 @@
   (let [;; Destructure webserver config
         {:keys [enable-http
                 enable-http2
+                enable-sni
                 http-host
                 http-port
                 ssl-port
@@ -141,12 +142,13 @@
                          (or allow-all-origins
                              (some #(= origin %) allowed-list)))}
      ::http/container-options
-     {:h2c?         (and enable-http enable-http2)
-      :h2?          enable-http2
-      :ssl?         true
-      :ssl-port     ssl-port
-      :keystore     keystore
-      :key-password key-password}}))
+     {:h2c?          (and enable-http enable-http2)
+      :h2?           enable-http2
+      :ssl?          true
+      :insecure-ssl? (not enable-sni)
+      :ssl-port      ssl-port
+      :keystore      keystore
+      :key-password  key-password}}))
 
 (defrecord Webserver [service
                       server
