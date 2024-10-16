@@ -18,6 +18,7 @@
         <cpe>cpe:/a:clojure:clojure</cpe>
         <cve>CVE-2017-20189</cve>
     </suppress>
+    <!-- TODO: Remove suppression once we update to Jetty 12 -->
     <suppress>
         <notes><![CDATA[
         file name: jetty-http-9.4.54.v20240208.jar
