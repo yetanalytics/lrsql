@@ -22,6 +22,7 @@
  :sec-head-content          #or [#env LRSQL_SEC_HEAD_CONTENT nil]
  :enable-http               #boolean #or [#env LRSQL_ENABLE_HTTP true]
  :enable-http2              #boolean #or [#env LRSQL_ENABLE_HTTP2 true]
+ :enable-sni                #boolean #or [#env LRSQL_CHECK_SNI false]
  :http-host                 #or [#env LRSQL_HTTP_HOST "0.0.0.0"]
  :http-port                 #long #or [#env LRSQL_HTTP_PORT 8080]
  :allow-all-origins         #boolean #or [#env LRSQL_ALLOW_ALL_ORIGINS false]
