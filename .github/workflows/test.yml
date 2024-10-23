@@ -4,14 +4,14 @@ on: push
 
 jobs:
   nvd_scan:
-    uses: yetanalytics/workflow-nvd/.github/workflows/nvd-scan.yml@v1
+    uses: yetanalytics/workflow-nvd/.github/workflows/nvd-scan.yml@v2
     with:
       nvd-clojure-version: "3.3.0"
       classpath-command: "clojure -Spath -Adb-sqlite:db-postgres"
       nvd-config-filename: ".nvd/config.json"
 
   lint:
-    uses: yetanalytics/workflow-linter/.github/workflows/linter.yml@v2023.01.20
+    uses: yetanalytics/workflow-linter/.github/workflows/linter.yml@v2024.08.01
     with:
       lint-directories: "src/bench src/build src/db src/main src/test"
 
@@ -31,10 +31,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup CI Environment
-        uses: yetanalytics/actions/setup-env@v0.0.4
+        uses: yetanalytics/action-setup-env@v2
 
       - name: Run Makefile Target ${{ matrix.target }}
         run: make ${{ matrix.target }}

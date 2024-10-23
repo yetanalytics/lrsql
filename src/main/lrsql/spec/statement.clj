@@ -158,7 +158,7 @@
 
 (def stmt-input-attachments-spec*
   (s/cat :statement-inputs
-         (s/coll-of insert-statement-input-spec :min-count 1 :gen-max 5)
+         (s/coll-of insert-statement-input-spec :gen-max 5)
          :attachments
          (s/coll-of ::ss/attachment :gen-max 2)))
 
