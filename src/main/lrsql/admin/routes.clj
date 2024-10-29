@@ -122,11 +122,11 @@
                                  (ji/validate-jwt
                                   jwt-secret jwt-leeway no-val-opts)
                                  ji/validate-jwt-account
-                                 ai/bodyless)]
+                                 ai/no-content)]
      {:description "Verify that querying account is logged in"
       :operationId :verify-own-account
       :security [{:bearerAuth []}]
-      :responses {204 (g/response "No body")
+      :responses {204 (g/response "No content body")
                   401 (g/rref :error-401)}})
     ;; Delete account (and associated credentials)
     (gc/annotate

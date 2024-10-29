@@ -250,10 +250,10 @@
                :response
                {:status 200 :body result})))}))
 
-(def bodyless
-  "Return a 204 OK response without a body."
+(def no-content
+  "Return a 204 No Content response, without a body."
   (interceptor
-   {:name ::get-bodyless
+   {:name ::get-no-content
     :enter
     (fn get-account [ctx]
       (assoc ctx :response {:status 204}))}))
