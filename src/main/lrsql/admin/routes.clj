@@ -101,7 +101,7 @@
                                   (gs/a (gs/o {:account-id :t#string 
                                                :username :t#string})))
                   401 (g/rref :error-401)}})
-    ;; Get my accounts
+    ;; Get my account
     (gc/annotate
      ["/admin/me" :get (conj common-interceptors
                              (ji/validate-jwt
@@ -115,6 +115,18 @@
       :responses {200 (g/response  "Account object referring to own account"
                                    (gs/o {:account-id :t#string
                                           :username :t#string}) )
+                  401 (g/rref :error-401)}})
+    ;; Check that I am logged in
+    (gc/annotate
+     ["/admin/verify" :get (conj common-interceptors
+                                 (ji/validate-jwt
+                                  jwt-secret jwt-leeway no-val-opts)
+                                 ji/validate-jwt-account
+                                 ai/bodyless)]
+     {:description "Verify that querying account is logged in"
+      :operationId :verify-own-account
+      :security [{:bearerAuth []}]
+      :responses {204 (g/response "No body")
                   401 (g/rref :error-401)}})
     ;; Delete account (and associated credentials)
     (gc/annotate

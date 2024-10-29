@@ -250,6 +250,14 @@
                :response
                {:status 200 :body result})))}))
 
+(def bodyless
+  "Return a 204 OK response without a body."
+  (interceptor
+   {:name ::get-bodyless
+    :enter
+    (fn get-account [ctx]
+      (assoc ctx :response {:status 204}))}))
+
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
   [secret exp]
