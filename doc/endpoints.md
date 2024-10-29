@@ -43,6 +43,7 @@ The response body contains a newly generated JSON Web Token (JWT) on success. A 
 #### Misc Admin Routes
 
 - `GET http://example.org/admin/env`: Get select environment variables about the configuration which may aid in client-side operations.
+- `GET http://example.org/admin/openapi`: Get an OpenAPI JSON spec of the endpoint API, which can then be visualized using an OpenAPI viewer like Swagger.
 - `DELETE http://example.org/admin/agents`: Runs a *hard delete* of all records of an actor, and associated records (statements, attachments, etc).  Intended for privacy purposes like GDPR.  Body should be a JSON object of form `{"actor-ifi":<actor-ifi>}`.  Disabled unless the configuration variable enableAdminDeleteActor to be set to `true`.
 
 ### Reaction Management Routes
