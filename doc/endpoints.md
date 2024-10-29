@@ -31,6 +31,7 @@ The response body contains a newly generated JSON Web Token (JWT) on success. A 
 - `DELETE http://example.org/admin/account`: Delete an existing account. The JSON request body must contain a UUID `account-id` value. The endpoint returns a JSON object with the ID of the deleted account on success and returns a `404 NOT FOUND` error if the account does not exist.
 - `GET http://example.org/admin/account`: Return an array of all admin accounts in the system on success.
 - `GET http://example.org/admin/me`: Returns the currently authenticated admin accounts on success.
+- `GET http://example.org/admin/verify`: Returns a `204 OK` response, without a body, on success (the success conditions are the same as the `/admin/me` endpoint).
 
 #### Admin Credential Routes
 
