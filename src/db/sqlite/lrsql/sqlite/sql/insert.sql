@@ -159,3 +159,15 @@ INSERT INTO reaction (
 ) VALUES (
   :primary-key, :title, :ruleset, :active, :created, :modified
 );
+
+/* JWT Blocklist */
+
+-- :ame insert-blocked-jwt!
+-- :command :insert
+-- :result :affected
+-- :doc Given a JWT-extracted `:account-id` and `:expiration`, insert a new blocked JWT.
+INSERT INTO blocked_jwt (
+  account_id, expiration
+) VALUES (
+  :account-id, :expiration
+);

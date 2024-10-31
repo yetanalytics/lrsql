@@ -149,8 +149,6 @@ CREATE INDEX IF NOT EXISTS sts_ancestor_id_idx ON statement_to_statement(ancesto
 -- :doc Create an index on the `statement_to_statement.descendant_id` column.
 CREATE INDEX IF NOT EXISTS sts_descendant_id_idx ON statement_to_statement(descendant_id)
 
-
-
 /* Document Tables */
 
 -- :name create-state-document-table!
@@ -524,3 +522,25 @@ SET sql = 'CREATE TABLE statement_to_actor (
   FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 )'
 WHERE type = 'table' AND name = 'statement_to_actor'
+;
+
+/* Migration 2024-10-31 - Add JWT Blocklist Table */
+
+-- :name create-blocked-jwt-table!
+-- :command :execute
+-- :doc Create the `blocked_jwt` table if it does not exist yet.
+CREATE TABLE IF NOT EXISTS blocked_jwt (
+  account_id TEXT NOT NULL REFERENCES admin_account(id) ON DELETE CASCADE,
+  expiration TIMESTAMP,
+  PRIMARY KEY (account_id, expiration)
+);
+
+-- :name create-blocked-jwt-account-id-idx!
+-- :command :execute
+-- :doc Create the `blocked_jwt_account_id_idx` table if it does not exist yet.
+CREATE INDEX IF NOT EXISTS blocked_jwt_account_id_idx ON blocked_jwt(account_id);
+
+-- :name create-blocked-jwt-expiration-idx!
+-- :command :execute
+-- :doc Create the `blocked_jwt_expiration_idx` table if it does not exist yet.
+CREATE INDEX IF NOT EXISTS blocked_jwt_expiration_idx ON blocked_jwt(expiration);

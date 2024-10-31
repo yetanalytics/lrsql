@@ -123,3 +123,19 @@ DELETE FROM state_document WHERE agent_ifi = :actor-ifi
 -- :command :execute
 -- :result :affected
 DELETE FROM actor WHERE actor_ifi = :actor-ifi
+
+/* JWT Blocklist */
+
+-- :name delete-blocked-jwt-by-account!
+-- :command :execute
+-- :result :affected
+-- :doc Delete all blocked JWTs associated with a given `:account-id`.
+DELETE FROM blocked_jwt
+WHERE account_id = :account-id;
+
+-- :name :delete-blocked-jwt-by-time!
+-- :command :execute
+-- :result :affected
+-- :doc Delete all blocked JWTs where `:current-time` is past the expiration time.
+DELETE FROM blocked_jwt
+WHERE expiration <= :current-time;
