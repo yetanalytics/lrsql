@@ -118,7 +118,7 @@ DELETE FROM actor WHERE actor_ifi = :actor-ifi;
 DELETE FROM blocked_jwt
 WHERE account_id = :account-id;
 
--- :name :delete-blocked-jwt-by-time!
+-- :name delete-blocked-jwt-by-time!
 -- :command :execute
 -- :result :affected
 -- :doc Delete all blocked JWTs where `:current-time` is past the expiration time.
