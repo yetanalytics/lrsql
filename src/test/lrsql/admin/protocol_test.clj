@@ -121,6 +121,22 @@
           (is (adp/-existing-account? lrs account-id)))
         (let [bad-account-id #uuid "00000000-0000-4000-8000-000000000000"]
           (is (not (adp/-existing-account? lrs bad-account-id)))))
+      (testing "Admin JWTs"
+        (let [expiration (u/current-time)
+              account-id (:result
+                          (adp/-authenticate-account lrs
+                                                     test-username
+                                                     test-password))]
+          (testing "- block"
+            (is (= account-id
+                   (:result (adp/-block-jwt lrs account-id expiration))))
+            (is (true?
+                 (adp/-jwt-blocked? lrs account-id))))
+          (testing "- unblock"
+            (is (= account-id
+                   (:result (adp/-unblock-jwts lrs account-id))))
+            (is (false?
+                 (adp/-jwt-blocked? lrs account-id))))))
       (testing "Admin password update"
         (let [account-id   (-> (adp/-authenticate-account lrs
                                                           test-username
