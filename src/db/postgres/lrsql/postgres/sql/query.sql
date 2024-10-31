@@ -427,3 +427,13 @@ WITH RECURSIVE trigger_history (statement_id, reaction_id, trigger_id) AS (
 SELECT reaction_id
 FROM trigger_history
 WHERE reaction_id IS NOT NULL;
+
+/* JWT Blocklist */
+
+-- :name query-blocked-jwt-exists
+-- :command :query
+-- :result :one
+-- :doc Query that at least one blocked JWT with `:username` and whose expiration is after `:current-time` exists.
+SELECT 1 FROM blocked_jwt
+WHERE account_id = :account-id
+AND :current-time < expiration;

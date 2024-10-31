@@ -488,3 +488,16 @@ ALTER TABLE lrs_credential ALTER COLUMN secret_key TYPE TEXT;
 ALTER TABLE credential_to_scope ALTER COLUMN api_key TYPE TEXT;
 ALTER TABLE credential_to_scope ALTER COLUMN secret_key TYPE TEXT;
 ALTER TABLE reaction ALTER COLUMN title TYPE TEXT;
+
+/* Migration 2024-10-31 - Add JWT Blocklist Table */
+
+-- :name create-blocked-jwt-table!
+-- :command :execute
+-- :doc Create the `blocked_jwt` table and associated indexes if they do not exist yet.
+CREATE TABLE IF NOT EXISTS blocked_jwt (
+  account_id TEXT NOT NULL REFERENCES admin_account(id) ON DELETE CASCADE,
+  expiration TIMESTAMP,
+  PRIMARY KEY (account_id, expiration)
+);
+CREATE INDEX IF NOT EXISTS blocked_jwt_account_id_idx ON blocked_jwt(account_id);
+CREATE INDEX IF NOT EXISTS blocked_jwt_expiration_idx ON blocked_jwt(expiration);
