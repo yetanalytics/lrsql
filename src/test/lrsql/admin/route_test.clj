@@ -497,13 +497,15 @@
         sys  (support/test-system
               :conf-overrides hdr-conf)
         sys' (component/start sys)]
-    (testing "Custom Sec Headers"
-      ;; Run a basic admin routes call and verify success
-      (let [{:keys [headers]} (get-env content-type)]
-        ;; equals the same combination of custom and default hdr values
-        (is (= custom-sec-header-expected
-               (select-keys headers sec-header-names)))))
-    (component/stop sys')))
+    (try
+      (testing "Custom Sec Headers"
+        ;; Run a basic admin routes call and verify success
+        (let [{:keys [headers]} (get-env content-type)]
+          ;; equals the same combination of custom and default hdr values
+          (is (= custom-sec-header-expected
+                 (select-keys headers sec-header-names)))))
+      (finally
+        (component/stop sys')))))
 
 (def proxy-jwt-body
   {"usercertificate" "unique.user.1234"
@@ -529,24 +531,27 @@
         sys' (component/start sys)
         ;; proxy jwt auth
         proxy-auth {"Authorization" (str "Bearer " (proxy-jwt proxy-jwt-body))}
-        headers  (merge content-type proxy-auth)]
-    (testing "Proxy JWT authentication"
-      ;; Run a basic admin routes call and verify success
-      (let [{:keys [status body]} (get-account headers)
-            edn-body (u/parse-json body :object? false)]
-        ;; 200 response
-        (is (= status 200))
-        ;; not only is there a body but it should now contain our jwt user
-        (is (some #(= (get % "username") (get proxy-jwt-body "usercertificate"))
-                  edn-body))))
-    (testing "Bad Proxy JWT role"
-      ;; Remove the matching role from jwt role-key field and rerun admin call
-      (let [bad-jwt-bdy (assoc proxy-jwt-body "group-full" ["NOTADMIN"])
-            bad-auth {"Authorization" (str "Bearer " (proxy-jwt bad-jwt-bdy))}
-            bad-headers (merge content-type bad-auth)]
-        ;; Bad Auth because nonmatching role
-        (is-err-code (get-account bad-headers) 401)))
-    (component/stop sys')))
+        headers    (merge content-type proxy-auth)]
+    (try
+      (testing "Proxy JWT authentication"
+        ;; Run a basic admin routes call and verify success
+        (let [{:keys [status body]} (get-account headers)
+              edn-body (u/parse-json body :object? false)]
+          ;; 200 response
+          (is (= status 200))
+          ;; not only is there a body but it should now contain our jwt user
+          (is (some #(= (get % "username")
+                        (get proxy-jwt-body "usercertificate"))
+                    edn-body))))
+      (testing "Bad Proxy JWT role"
+        ;; Remove the matching role from jwt role-key field and rerun admin call
+        (let [bad-jwt-bdy (assoc proxy-jwt-body "group-full" ["NOTADMIN"])
+              bad-auth {"Authorization" (str "Bearer " (proxy-jwt bad-jwt-bdy))}
+              bad-headers (merge content-type bad-auth)]
+          ;; Bad Auth because nonmatching role
+          (is-err-code (get-account bad-headers) 401)))
+      (finally
+        (component/stop sys')))))
 
 (deftest auth-routes-test
   (let [sys  (support/test-system)
@@ -561,107 +566,109 @@
                  (get "json-web-token"))
         auth {"Authorization" (str "Bearer " jwt)}
         hdr  (merge content-type auth)]
-    (testing "credential creation"
-      (let [{:keys [status body]}
-            (curl/post "http://0.0.0.0:8080/admin/creds"
-                       {:headers hdr
-                        :body (u/write-json-str
-                               {"scopes" ["all" "all/read"]})})
-            {:strs [api-key secret-key scopes]}
-            (u/parse-json body)]
-        (is (= 200 status))
-        (is (re-matches Base64RegEx api-key))
-        (is (re-matches Base64RegEx secret-key))
-        (is (= #{"all" "all/read"} (set scopes)))
-        (testing "and reading"
-          (let [{:keys [status body]}
-                (curl/get
-                 "http://0.0.0.0:8080/admin/creds"
-                 {:headers hdr})]
-            (is (= 200 status))
-            (is (= {"api-key"    api-key
-                    "secret-key" secret-key
-                    "scopes"     scopes}
-                   (-> body
-                       (u/parse-json :object? false)
-                       (#(filter (fn [cred] (= (get cred "api-key") api-key))
-                                 %))
-                       first)))))
-        (testing "and updating"
-          (let [req-scopes
-                ["all/read" "statements/read" "statements/read/mine"]
-                {:keys [status body]}
-                (curl/put
-                 "http://0.0.0.0:8080/admin/creds"
-                 {:headers hdr
-                  :body    (u/write-json-str {"api-key"    api-key
-                                              "secret-key" secret-key
-                                              "scopes"     req-scopes})})
-                {:strs [scopes]}
-                (u/parse-json body)]
-            (is (= 200 status))
-            (is (= #{"all/read" "statements/read" "statements/read/mine"}
-                   (set scopes)))))
-        (testing "and reading after updating"
-          (let [{:keys [status body]}
-                (curl/get
-                 "http://0.0.0.0:8080/admin/creds"
-                 {:headers hdr})
-                {api-key'    "api-key"
-                 secret-key' "secret-key"
-                 scopes'     "scopes"}
-                (-> body
-                    (u/parse-json :object? false)
-                    (#(filter (fn [cred] (= (get cred "api-key") api-key)) %))
-                    first)]
-            (is (= 200 status))
-            (is (= api-key api-key'))
-            (is (= secret-key secret-key'))
-            (is (= #{"all/read" "statements/read" "statements/read/mine"}
-                   (set scopes')))))
-        (testing "and no-op scope update"
-          (let [req-scopes
-                ["all/read" "statements/read" "statements/read/mine"]
-                {:keys [status body]}
-                (curl/put
-                 "http://0.0.0.0:8080/admin/creds"
-                 {:headers hdr
-                  :body   (u/write-json-str {"api-key"    api-key
-                                             "secret-key" secret-key
-                                             "scopes"     req-scopes})})
-                {:strs [scopes]}
-                (u/parse-json body)]
-            (is (= 200 status))
-            (is (= #{"all/read" "statements/read" "statements/read/mine"}
-                   (set scopes)))))
-        (testing "and deleting all scopes"
-          (let [{:keys [status body]}
-                (curl/put
-                 "http://0.0.0.0:8080/admin/creds"
-                 {:headers hdr
-                  :body   (u/write-json-str {"api-key"    api-key
-                                             "secret-key" secret-key
-                                             "scopes"     []})})
-                {:strs [scopes]}
-                (u/parse-json body)]
-            (is (= 200 status))
-            (is (= #{} (set scopes)))))
-        (testing "and deletion"
-          (let [{:keys [status]}
-                (curl/delete
-                 "http://0.0.0.0:8080/admin/creds"
-                 {:headers hdr
-                  :body    (u/write-json-str {"api-key"    api-key
-                                              "secret-key" secret-key})})]
-            (is (= 200 status))))
-        (testing "and reading after deletion"
-          (let [{:keys [status body]}
-                (curl/get
-                 "http://0.0.0.0:8080/admin/creds"
-                 {:headers hdr})
-                edn-res
-                (u/parse-json body :object? false)]
-            (is (= 200 status))
-            (is (not (some (fn [cred] (= (get cred "api-key") api-key))
-                           edn-res)))))))
-    (component/stop sys')))
+    (try
+      (testing "credential creation"
+        (let [{:keys [status body]}
+              (curl/post "http://0.0.0.0:8080/admin/creds"
+                         {:headers hdr
+                          :body (u/write-json-str
+                                 {"scopes" ["all" "all/read"]})})
+              {:strs [api-key secret-key scopes]}
+              (u/parse-json body)]
+          (is (= 200 status))
+          (is (re-matches Base64RegEx api-key))
+          (is (re-matches Base64RegEx secret-key))
+          (is (= #{"all" "all/read"} (set scopes)))
+          (testing "and reading"
+            (let [{:keys [status body]}
+                  (curl/get
+                   "http://0.0.0.0:8080/admin/creds"
+                   {:headers hdr})]
+              (is (= 200 status))
+              (is (= {"api-key"    api-key
+                      "secret-key" secret-key
+                      "scopes"     scopes}
+                     (-> body
+                         (u/parse-json :object? false)
+                         (#(filter (fn [cred] (= (get cred "api-key") api-key))
+                                   %))
+                         first)))))
+          (testing "and updating"
+            (let [req-scopes
+                  ["all/read" "statements/read" "statements/read/mine"]
+                  {:keys [status body]}
+                  (curl/put
+                   "http://0.0.0.0:8080/admin/creds"
+                   {:headers hdr
+                    :body    (u/write-json-str {"api-key"    api-key
+                                                "secret-key" secret-key
+                                                "scopes"     req-scopes})})
+                  {:strs [scopes]}
+                  (u/parse-json body)]
+              (is (= 200 status))
+              (is (= #{"all/read" "statements/read" "statements/read/mine"}
+                     (set scopes)))))
+          (testing "and reading after updating"
+            (let [{:keys [status body]}
+                  (curl/get
+                   "http://0.0.0.0:8080/admin/creds"
+                   {:headers hdr})
+                  {api-key'    "api-key"
+                   secret-key' "secret-key"
+                   scopes'     "scopes"}
+                  (-> body
+                      (u/parse-json :object? false)
+                      (#(filter (fn [cred] (= (get cred "api-key") api-key)) %))
+                      first)]
+              (is (= 200 status))
+              (is (= api-key api-key'))
+              (is (= secret-key secret-key'))
+              (is (= #{"all/read" "statements/read" "statements/read/mine"}
+                     (set scopes')))))
+          (testing "and no-op scope update"
+            (let [req-scopes
+                  ["all/read" "statements/read" "statements/read/mine"]
+                  {:keys [status body]}
+                  (curl/put
+                   "http://0.0.0.0:8080/admin/creds"
+                   {:headers hdr
+                    :body   (u/write-json-str {"api-key"    api-key
+                                               "secret-key" secret-key
+                                               "scopes"     req-scopes})})
+                  {:strs [scopes]}
+                  (u/parse-json body)]
+              (is (= 200 status))
+              (is (= #{"all/read" "statements/read" "statements/read/mine"}
+                     (set scopes)))))
+          (testing "and deleting all scopes"
+            (let [{:keys [status body]}
+                  (curl/put
+                   "http://0.0.0.0:8080/admin/creds"
+                   {:headers hdr
+                    :body   (u/write-json-str {"api-key"    api-key
+                                               "secret-key" secret-key
+                                               "scopes"     []})})
+                  {:strs [scopes]}
+                  (u/parse-json body)]
+              (is (= 200 status))
+              (is (= #{} (set scopes)))))
+          (testing "and deletion"
+            (let [{:keys [status]}
+                  (curl/delete
+                   "http://0.0.0.0:8080/admin/creds"
+                   {:headers hdr
+                    :body    (u/write-json-str {"api-key"    api-key
+                                                "secret-key" secret-key})})]
+              (is (= 200 status))))
+          (testing "and reading after deletion"
+            (let [{:keys [status body]}
+                  (curl/get
+                   "http://0.0.0.0:8080/admin/creds"
+                   {:headers hdr})
+                  edn-res
+                  (u/parse-json body :object? false)]
+              (is (= 200 status))
+              (is (not (some (fn [cred] (= (get cred "api-key") api-key))
+                             edn-res)))))))
+      (finally
+        (component/stop sys')))))
