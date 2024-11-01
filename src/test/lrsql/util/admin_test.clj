@@ -16,16 +16,16 @@
       (is (= test-id
              (-> test-id
                  (ua/account-id->jwt "secret" 3600)
-                 (ua/jwt->payload "secret" 1))))
+                 (ua/jwt->account-id "secret" 1))))
       (is (= :lrsql.admin/unauthorized-token-error
-             (ua/jwt->payload nil "secret" 3600)))
+             (ua/jwt->account-id nil "secret" 3600)))
       (is (= :lrsql.admin/unauthorized-token-error
-             (ua/jwt->payload "not-a-jwt" "secret" 3600)))
+             (ua/jwt->account-id "not-a-jwt" "secret" 3600)))
       (is (= :lrsql.admin/unauthorized-token-error
              (-> test-id
                  (ua/account-id->jwt "secret" 3600)
-                 (ua/jwt->payload "different-secret" 1))))
+                 (ua/jwt->account-id "different-secret" 1))))
       (is (= :lrsql.admin/unauthorized-token-error
              (let [tok (ua/account-id->jwt test-id "secret" 1)
                    _   (Thread/sleep 1001)]
-               (ua/jwt->payload tok "secret" 0)))))))
+               (ua/jwt->account-id tok "secret" 0)))))))
