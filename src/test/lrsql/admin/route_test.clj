@@ -57,6 +57,11 @@
   (curl/post "http://0.0.0.0:8080/admin/account/logout"
              {:headers headers}))
 
+(defn- renew-login
+  [headers]
+  (curl/get "http://0.0.0.0:8080/admin/account/renew"
+            {:headers headers}))
+
 (defn- create-account
   [headers body & {:keys [throw]
                    :or {throw true}}]
@@ -215,6 +220,14 @@
           (is (= 200 status))
           ;; is the created user
           (is (= (get edn-body "username") admin-user-default))))
+      (testing "renew my admin account's JWT"
+        (let [{:keys [status body]} (renew-login headers)
+              edn-body (u/parse-json body)
+              new-jwt  (get edn-body "json-web-token")]
+          ;; success
+          (is (= 200 status))
+          ;; body is a JWT (TODO: Check/test the actual contents of the JWT)
+          (is (string? new-jwt))))
       (testing "log into the `myname` account"
         (let [{:keys [status body]}
               (login-account content-type req-body)

@@ -66,6 +66,18 @@
                                   (gs/o {:account-id :t#string}))
                   400 (g/rref :error-400)
                   401 (g/rref :error-401)}})
+    ;; Renew current account JWT to maintain login
+    (gc/annotate
+     ["/admin/account/renew" :get (conj common-interceptors
+                                        (ji/validate-jwt
+                                         jwt-secret jwt-leeway no-val-opts)
+                                        ji/validate-jwt-account
+                                        (ai/generate-jwt jwt-secret jwt-exp))
+      :route-name :lrsql.admin.account/renew]
+     {:description "Renew current account login"
+      :operationId :renew
+      :responses {200 (g/response "Account ID and JWT")
+                  401 (g/rref :error-401)}})
     ;; Create new account
     (gc/annotate
      ["/admin/account/create" :post (conj common-interceptors
