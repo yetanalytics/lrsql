@@ -52,6 +52,11 @@
              {:headers headers
               :body    body}))
 
+(defn- logout-account
+  [headers]
+  (curl/post "http://0.0.0.0:8080/admin/account/logout"
+             {:headers headers}))
+
 (defn- create-account
   [headers body & {:keys [throw]
                    :or {throw true}}]
@@ -470,6 +475,22 @@
           (delete-actor headers
                         (u/write-json-str  {"actor-ifi" ifi}))
           (is (zero? (count-by-id (stmt-0 "id"))))))
+      ;; Need to do this last since this overrides `headers`
+      (testing "log out then log back into the admin account"
+        ;; Logout
+        (let [{:keys [status]} (logout-account headers)]
+          (is (= 200 status)))
+        (let [{:keys [status]} (get-me headers)]
+          (is (= 401 status)))
+        ;; Login
+        (let [{:keys [status body]} (login-account content-type seed-body)
+              new-jwt  (-> body
+                           u/parse-json
+                           (get "json-web-token"))
+              new-auth {"Authorization" (str "Bearer " new-jwt)}
+              headers  (merge content-type new-auth)]
+          (is (= 200 status))
+          (is (= 200 (:status (get-me headers))))))
       (finally
         (component/stop sys')))))
 
@@ -542,7 +563,11 @@
           ;; not only is there a body but it should now contain our jwt user
           (is (some #(= (get % "username")
                         (get proxy-jwt-body "usercertificate"))
-                    edn-body))))
+                    edn-body))
+          ;; get-me route still works
+          (is (= 200 (:status (get-me headers))))
+          ;; logout fails in this mode
+          (is-err-code (logout-account headers) 400)))
       (testing "Bad Proxy JWT role"
         ;; Remove the matching role from jwt role-key field and rerun admin call
         (let [bad-jwt-bdy (assoc proxy-jwt-body "group-full" ["NOTADMIN"])
