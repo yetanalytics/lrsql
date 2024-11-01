@@ -72,7 +72,7 @@
                                         (ji/validate-jwt
                                          jwt-secret jwt-leeway no-val-opts)
                                         ji/validate-jwt-account
-                                        (ai/generate-jwt jwt-secret jwt-exp jwt-ult))
+                                        (ai/renew-admin-jwt jwt-secret jwt-exp))
       :route-name :lrsql.admin.account/renew]
      {:description "Renew current account login"
       :operationId :renew
