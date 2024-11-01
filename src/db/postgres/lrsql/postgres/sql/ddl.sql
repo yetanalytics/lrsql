@@ -495,7 +495,7 @@ ALTER TABLE reaction ALTER COLUMN title TYPE TEXT;
 -- :command :execute
 -- :doc Create the `blocked_jwt` table and associated indexes if they do not exist yet.
 CREATE TABLE IF NOT EXISTS blocked_jwt (
-  account_id TEXT NOT NULL REFERENCES admin_account(id) ON DELETE CASCADE,
+  account_id UUID NOT NULL REFERENCES admin_account(id) ON DELETE CASCADE,
   expiration TIMESTAMP,
   PRIMARY KEY (account_id, expiration)
 );
