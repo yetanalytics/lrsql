@@ -50,8 +50,9 @@
                 enable-clamav
                 clamav-host
                 clamav-port]
-         jwt-exp           :jwt-exp-time
-         jwt-lwy           :jwt-exp-leeway}
+         jwt-exp :jwt-exp-time
+         jwt-lwy :jwt-exp-leeway
+         jwt-ult :jwt-ultimate-exp-time}
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
@@ -91,6 +92,7 @@
              (add-admin-routes
               {:lrs                       lrs
                :exp                       jwt-exp
+               :ult                       jwt-ult
                :leeway                    jwt-lwy
                :no-val?                   jwt-no-val
                :no-val-issuer             jwt-no-val-issuer
@@ -109,7 +111,7 @@
                :enable-reaction-routes    enable-reactions
                :oidc-interceptors         oidc-admin-interceptors
                :oidc-ui-interceptors      oidc-admin-ui-interceptors
-               :head-opts head-opts})
+               :head-opts                 head-opts})
              (add-openapi-route
               {:lrs lrs
                :head-opts head-opts

@@ -4,6 +4,7 @@
  :key-enable-selfie         true
  :jwt-exp-time              3600
  :jwt-exp-leeway            1
+ :jwt-ultimate-exp-time     86400
  :jwt-no-val                false
  :jwt-no-val-uname          nil
  :jwt-no-val-issuer         nil

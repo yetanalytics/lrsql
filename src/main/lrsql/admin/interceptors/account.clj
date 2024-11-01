@@ -265,7 +265,7 @@
 
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
-  [secret exp]
+  [secret exp ult]
   (interceptor
    {:name ::generate-jwt
     :enter
@@ -273,7 +273,7 @@
       (let [{{:keys [account-id]} ::data}
             ctx
             json-web-token
-            (admin-u/account-id->jwt account-id secret exp)]
+            (admin-u/account-id->jwt account-id secret exp ult)]
         (assoc ctx
                :response
                {:status 200
@@ -305,3 +305,19 @@
                :response
                {:status 400
                 :body   {:error block-admin-jwt-error-msg}})))}))
+
+(defn renew-admin-jwt
+  [secret exp]
+  (interceptor
+   {:name ::renew-jwt
+    :enter
+    (fn renew-jwt [ctx]
+      (let [{{:keys [account-id]} ::data}
+            ctx
+            json-web-token
+            (admin-u/account-id->jwt account-id secret exp 86400)]
+        (assoc ctx
+               :response
+               {:status 200
+                :body   {:account-id     account-id
+                         :json-web-token json-web-token}})))}))
