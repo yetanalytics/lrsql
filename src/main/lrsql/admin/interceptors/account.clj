@@ -293,7 +293,9 @@
     (fn add-jwt-to-blocklist [ctx]
       (if-not no-val?
         (let [{lrs :com.yetanalytics/lrs
-               {:keys [account-id expiration]} ::data} ctx]
+               {:keys [account-id expiration]}
+               :lrsql.admin.interceptors.jwt/data}
+              ctx]
           (adp/-block-jwt lrs account-id expiration)
           (assoc (chain/terminate ctx)
                  :response

@@ -480,8 +480,7 @@
         ;; Logout
         (let [{:keys [status]} (logout-account headers)]
           (is (= 200 status)))
-        (let [{:keys [status]} (get-me headers)]
-          (is (= 401 status)))
+        (is-err-code (get-me headers) 401)
         ;; Login
         (let [{:keys [status body]} (login-account content-type seed-body)
               new-jwt  (-> body

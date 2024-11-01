@@ -14,12 +14,17 @@
                      no-val-role]}]
   (try
     (let [{:keys [issuer username] :as result}
-          (admin-u/proxy-jwt->username-and-issuer
-           token no-val-uname no-val-issuer no-val-role-key
-           no-val-role)]
-      (if (some? username)
-        (:result (adp/-ensure-account-oidc lrs username issuer))
-        result))
+          (admin-u/proxy-jwt->payload token
+                                      no-val-uname
+                                      no-val-issuer
+                                      no-val-role-key
+                                      no-val-role)]
+      (if (keyword? result)
+        result
+        (let [{result* :result} (adp/-ensure-account-oidc lrs username issuer)]
+          (if (keyword? result*)
+            result*
+            (assoc result :account-id result*)))))
     (catch Exception ex
       ;; We want any error here to return a 401, but we log
       (log/warnf ex "No-val JWT Error: %s" (ex-message ex))
@@ -29,12 +34,13 @@
   "Normal JWT, normal signature verification and blocklist check."
   [lrs token secret leeway]
   (try
-    (let [account-id-or-err (admin-u/jwt->account-id token secret leeway)]
-      (if (uuid? account-id-or-err)
-        (if-not (adp/-jwt-blocked? lrs account-id-or-err)
-          account-id-or-err
-          :lrsql.admin/unauthorized-token-error)
-        account-id-or-err))
+    (let [{:keys [account-id] :as result}
+          (admin-u/jwt->payload token secret leeway)]
+      (if (keyword? result)
+        result
+        (if-not (adp/-jwt-blocked? lrs account-id)
+          result
+          :lrsql.admin/unauthorized-token-error)))
     (catch Exception ex
       ;; We want any error here to return a 401, but we log
       (log/warnf ex "Unexpected JWT Error: %s" (ex-message ex))
@@ -58,10 +64,10 @@
                      (validate-jwt* lrs token secret leeway))]
         (cond
           ;; Success - assoc the account ID as an intermediate value
-          (uuid? result)
+          (map? result)
           (-> ctx
-              (assoc-in [::data :account-id] result)
-              (assoc-in [:request :session ::data :account-id] result))
+              (assoc-in [::data] result)
+              (assoc-in [:request :session ::data] result))
           ;; Problem with the non-validated account ensure
           (= :lrsql.admin/oidc-issuer-mismatch-error result)
           (assoc (chain/terminate ctx)
