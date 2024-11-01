@@ -28,6 +28,7 @@ The following examples use `http://example.org` as the URL body. All methods ret
 
 The response body contains a newly generated JSON Web Token (JWT) on success. A `401 UNAUTHORIZED` status code is returned if the credentials are incorrect.
 - `POST http://example.org/admin/account/logout`: Log out of the current account. This will revoke any unexpired JWTs associated with the user. (NOTE: This endpoint will return a `400 BAD REQUEST` error if `LRSQL_JWT_NO_VAL` is set to `true`.)
+- `GET http://example.org/admin/account/renew`: Renew the current account's login session by issuing a new JWT. For a given JWT, the renewal is only granted if the current time is less than the `ult` timestamp (which is determined by `LRSQL_JWT_ULTIMATE_EXP_TIME`).
 - `POST http://example.org/admin/account/create`: Create a new admin account. The request body must be a JSON object that contains `username` and `password` strings. The endpoint returns a JSON object with the ID (UUID) of the newly created user on success, and returns a `409 CONFLICT` if the account already exists.
 - `DELETE http://example.org/admin/account`: Delete an existing account. The JSON request body must contain a UUID `account-id` value. The endpoint returns a JSON object with the ID of the deleted account on success and returns a `404 NOT FOUND` error if the account does not exist.
 - `GET http://example.org/admin/account`: Return an array of all admin accounts in the system on success.
