@@ -52,6 +52,7 @@
                                          :json-web-token :t#string}))
                   400 (g/rref :error-400)
                   401 (g/rref :error-401)}})
+    ;; Log out of current account
     (gc/annotate
      ["/admin/account/logout" :post (conj common-interceptors
                                           (ji/validate-jwt
