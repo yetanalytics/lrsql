@@ -23,6 +23,29 @@
 ;; JSON Web Tokens
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn- jwt-claim
+  "Create the JWT claim, i.e. payload, containing the account ID `:acc`, the
+   issued-at time `:iat`, the expiration time `:exp`, and the ultimate
+   expiration time `:ult`.
+
+   Time values MUST be a number containing a NumericDate value ie. a JSON
+   numeric value representing the number of seconds (not milliseconds!) from
+   the 1970 UTC start."
+  [account-id ctime etime utime]
+  {:acc account-id
+   :iat (quot (u/time->millis ctime) 1000)
+   :exp (quot (u/time->millis etime) 1000)
+   :ult (quot (u/time->millis utime) 1000)})
+
+(defn account-id->jwt*
+  "Same as `account-id->jwt`, but uses a pre-existing `utime` timestamp instead
+   of an `ult` offset."
+  [account-id secret exp utime]
+  (let [ctime (u/current-time)
+        etime (u/offset-time ctime exp :seconds)
+        claim (jwt-claim account-id ctime etime utime)]
+    (bj/sign claim secret)))
+
 (defn account-id->jwt
   "Generate a new signed JSON Web Token with `account-id` in the claim
    as a custom `:acc` field. The issued-at, expiration, and ultimate expiration
@@ -33,13 +56,7 @@
   (let [ctime (u/current-time)
         etime (u/offset-time ctime exp :seconds)
         utime (u/offset-time ctime ult :seconds)
-        claim {:acc account-id
-               ;; Time values MUST be a number containing a NumericDate value
-               ;; ie. a JSON numeric value representing the number of seconds
-               ;; (not milliseconds!) from the 1970 UTC start.
-               :iat (quot (u/time->millis ctime) 1000)
-               :exp (quot (u/time->millis etime) 1000)
-               :ult (quot (u/time->millis utime) 1000)}]
+        claim (jwt-claim account-id ctime etime utime)]
     (bj/sign claim secret)))
 
 (defn header->jwt
