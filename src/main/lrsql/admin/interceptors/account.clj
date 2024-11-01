@@ -123,6 +123,17 @@
                  {:status 401
                   :body   {:error "Invalid Account Credentials"}}))))}))
 
+(def unblock-admin-jwts
+  "Remove all JWTs associated with the user account from the blocklist."
+  (interceptor
+   {:name ::remove-jwt-from-blocklist
+    :enter
+    (fn remove-jwt-from-blocklist [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [account-id]} ::data} ctx]
+        (adp/-unblock-jwts lrs account-id)
+        ctx))}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Terminal Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -250,6 +261,8 @@
                :response
                {:status 200 :body result})))}))
 
+;; JWT interceptors for admin
+
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
   [secret exp]
@@ -266,3 +279,27 @@
                {:status 200
                 :body   {:account-id     account-id
                          :json-web-token json-web-token}})))}))
+
+(def ^:private block-admin-jwt-error-msg
+  "This operation is unsupported when `LRSQL_JWT_NO_VAL` is set to `true`.")
+
+(defn block-admin-jwt
+  "Add the current JWT to the blocklist. Return an error if we are in
+   no-val mode."
+  [no-val?]
+  (interceptor
+   {:name ::add-jwt-to-blocklist
+    :enter
+    (fn add-jwt-to-blocklist [ctx]
+      (if-not no-val?
+        (let [{lrs :com.yetanalytics/lrs
+               {:keys [account-id expiration]} ::data} ctx]
+          (adp/-block-jwt lrs account-id expiration)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 200
+                  :body   {:account-id account-id}}))
+        (assoc (chain/terminate ctx)
+               :response
+               {:status 400
+                :body   {:error block-admin-jwt-error-msg}})))}))

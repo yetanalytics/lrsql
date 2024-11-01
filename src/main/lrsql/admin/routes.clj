@@ -40,6 +40,7 @@
                                          (ai/validate-params
                                           :strict? false)
                                          ai/authenticate-admin
+                                         ai/unblock-admin-jwts
                                          (ai/generate-jwt jwt-secret jwt-exp))
       :route-name :lrsql.admin.account/login]
      {:description "Log into an existing account"
@@ -49,6 +50,19 @@
       :responses {200 (g/response "Account ID and JWT"
                                   (gs/o {:account-id :t#string
                                          :json-web-token :t#string}))
+                  400 (g/rref :error-400)
+                  401 (g/rref :error-401)}})
+    (gc/annotate
+     ["/admin/account/logout" :post (conj common-interceptors
+                                          (ji/validate-jwt
+                                           jwt-secret jwt-leeway no-val-opts)
+                                          ji/validate-jwt-account
+                                          (ai/block-admin-jwt (:no-val? no-val-opts)))
+      :route-name :lrsql.admin.account/logout]
+     {:description "Log out of this account"
+      :operationId :logout
+      :responses {200 (g/response "Account ID"
+                                  (gs/o {:account-id :t#string}))
                   400 (g/rref :error-400)
                   401 (g/rref :error-401)}})
     ;; Create new account
