@@ -26,6 +26,8 @@
 
 (def test-username "DonaldChamberlin123") ; co-inventor of SQL
 
+(def test-username-2 "MichaelBJones456") ; co-inventor of JWTs
+
 (def test-password "iLoveSqlS0!")
 
 ;; Some statement data for status test
@@ -98,7 +100,10 @@
                 uuid?))
         (is (-> (adp/-create-account lrs test-username test-password)
                 :result
-                (= :lrsql.admin/existing-account-error))))
+                (= :lrsql.admin/existing-account-error)))
+        (is (-> (adp/-create-account lrs test-username-2 test-password)
+                :result
+                uuid?)))
       (testing "Admin account get"
         (let [accounts (adp/-get-accounts lrs)]
           (is (vector? accounts))
@@ -122,21 +127,36 @@
         (let [bad-account-id #uuid "00000000-0000-4000-8000-000000000000"]
           (is (not (adp/-existing-account? lrs bad-account-id)))))
       (testing "Admin JWTs"
-        (let [expiration (.plusSeconds (u/current-time) 3600)
-              account-id (:result
-                          (adp/-authenticate-account lrs
-                                                     test-username
-                                                     test-password))]
+        (let [expiration-2 (u/current-time)
+              expiration   (u/offset-time expiration-2 3600 :seconds)
+              account-id   (:result
+                            (adp/-authenticate-account lrs
+                                                       test-username
+                                                       test-password))
+              account-id-2 (:result
+                            (adp/-authenticate-account lrs
+                                                       test-username-2
+                                                       test-password))]
           (testing "- block"
-            (is (= account-id
+            (is (= account-id   ; Current JWT
                    (:result (adp/-block-jwt lrs account-id expiration))))
+            (is (= account-id-2 ; Expired JWT (need to add after to avoid purge)
+                   (:result (adp/-block-jwt lrs account-id-2 expiration-2))))
             (is (true?
-                 (adp/-jwt-blocked? lrs account-id))))
+                 (adp/-jwt-blocked? lrs account-id)))
+            (is (false? ; Expired JWT doesn't count as blocked
+                 (adp/-jwt-blocked? lrs account-id-2))))
           (testing "- unblock"
             (is (= account-id
                    (:result (adp/-unblock-jwts lrs account-id))))
             (is (false?
-                 (adp/-jwt-blocked? lrs account-id))))))
+                 (adp/-jwt-blocked? lrs account-id)))
+            (is (false?
+                 (adp/-jwt-blocked? lrs account-id-2)))
+            (is (= account-id-2
+                   (:result (adp/-unblock-jwts lrs account-id-2))))
+            (is (false?
+                 (adp/-jwt-blocked? lrs account-id-2))))))
       (testing "Admin password update"
         (let [account-id   (-> (adp/-authenticate-account lrs
                                                           test-username
@@ -159,15 +179,23 @@
           (adp/-update-admin-password
            lrs account-id new-password test-password)))
       (testing "Admin account deletion"
-        (let [account-id (-> (adp/-authenticate-account lrs
-                                                        test-username
-                                                        test-password)
-                             :result)]
+        (let [account-id   (-> (adp/-authenticate-account lrs
+                                                          test-username
+                                                          test-password)
+                               :result)
+              account-id-2 (-> (adp/-authenticate-account lrs
+                                                          test-username-2
+                                                          test-password)
+                               :result)]
           (testing "When OIDC is off"
             (let [oidc-enabled? false]
               (testing "Succeeds if there is more than one account"
                 (adp/-delete-account lrs account-id oidc-enabled?)
+                (adp/-delete-account lrs account-id-2 oidc-enabled?)
                 (is (-> (adp/-authenticate-account lrs test-username test-password)
+                        :result
+                        (= :lrsql.admin/missing-account-error)))
+                (is (-> (adp/-authenticate-account lrs test-username-2 test-password)
                         :result
                         (= :lrsql.admin/missing-account-error))))
               (testing "Fails if there is only one account"
