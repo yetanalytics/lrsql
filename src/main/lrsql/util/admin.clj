@@ -25,18 +25,21 @@
 
 (defn account-id->jwt
   "Generate a new signed JSON Web Token with `account-id` in the claim
-   as a custom `:acc` field. The issued-at and expiration time are given as
-   `:iat` and `:exp`, respectively; the expiration time offset is given by
-   `exp` in seconds."
-  [account-id secret exp]
+   as a custom `:acc` field. The issued-at, expiration, and ultimate expiration
+   times are given as `:iat`, `:exp`, and `:ult`, respectively. The expiration
+   and ultimate expiration time offsets are given by `exp` and `ult`,
+   respectively, in seconds."
+  [account-id secret exp ult]
   (let [ctime (u/current-time)
         etime (u/offset-time ctime exp :seconds)
+        utime (u/offset-time ctime ult :seconds)
         claim {:acc account-id
                ;; Time values MUST be a number containing a NumericDate value
                ;; ie. a JSON numeric value representing the number of seconds
                ;; (not milliseconds!) from the 1970 UTC start.
                :iat (quot (u/time->millis ctime) 1000)
-               :exp (quot (u/time->millis etime) 1000)}]
+               :exp (quot (u/time->millis etime) 1000)
+               :ult (quot (u/time->millis utime) 1000)}]
     (bj/sign claim secret)))
 
 (defn header->jwt
@@ -48,16 +51,17 @@
 
 (defn jwt->payload
   "Given the JSON Web Token `tok`, unsign and verify the token using `secret`.
-   Return a map of `:account-id` and `:expiration` if valid, otherwise return
-   `:lrsql.admin/unauthorized-token-error`.
+   Return a map of `:account-id`, `:expiration`, and `:ultimate` if valid,
+   otherwise return `:lrsql.admin/unauthorized-token-error`.
    `leeway` is a time amount (in seconds) provided to compensate for
    clock drift."
   [tok secret leeway]
   (if tok ; Avoid encountering a null pointer exception
     (try
-      (let [{:keys [acc exp]} (bj/unsign tok secret {:leeway leeway})]
+      (let [{:keys [acc exp ult]} (bj/unsign tok secret {:leeway leeway})]
         {:account-id (u/str->uuid acc)
-         :expiration (u/millis->time (* 1000 exp))})
+         :expiration (u/millis->time (* 1000 exp))
+         :ultimate   (u/millis->time (* 1000 ult))})
       (catch clojure.lang.ExceptionInfo _
         :lrsql.admin/unauthorized-token-error))
     :lrsql.admin/unauthorized-token-error))
