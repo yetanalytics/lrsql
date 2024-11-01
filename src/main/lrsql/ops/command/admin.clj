@@ -131,8 +131,7 @@
 (defn insert-blocked-jwt!
   "Insert a new JWT `:account-id` and `:expiration` to the blocklist table."
   [bk tx input]
-  (println input)
-  (println (bp/-insert-blocked-jwt! bk tx input))
+  (bp/-insert-blocked-jwt! bk tx input)
   {:result (:account-id input)})
 
 (s/fdef delete-blocked-jwts!

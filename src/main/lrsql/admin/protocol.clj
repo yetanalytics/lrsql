@@ -20,9 +20,9 @@
 
 (defprotocol AdminJWTManager
   (-block-jwt [this account-id expiration]
-    "Block the JWT with this account and expiration time. Purge the cache if necessary.")
+    "Block the JWT with this account and expiration time. Purge expired JWTs from the blocklist if necessary.")
   (-unblock-jwts [this account-id]
-    "Unblock the JWTs associated with this account.")
+    "Unblock the JWTs associated with this account. Purge expired JWTs from the blocklist if necessary.")
   (-jwt-blocked? [this account-id]
     "Is an unexpired JWT with this account on the blocklist?"))
 

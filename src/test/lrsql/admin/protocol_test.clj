@@ -122,7 +122,7 @@
         (let [bad-account-id #uuid "00000000-0000-4000-8000-000000000000"]
           (is (not (adp/-existing-account? lrs bad-account-id)))))
       (testing "Admin JWTs"
-        (let [expiration (u/current-time)
+        (let [expiration (.plusSeconds (u/current-time) 3600)
               account-id (:result
                           (adp/-authenticate-account lrs
                                                      test-username
