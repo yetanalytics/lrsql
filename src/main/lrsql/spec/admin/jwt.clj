@@ -1,7 +1,8 @@
 (ns lrsql.spec.admin.jwt
   (:require [clojure.spec.alpha :as s]
             [lrsql.backend.protocol :as bp]
-            [lrsql.spec.common :as c]))
+            [lrsql.spec.common :as c]
+            [lrsql.spec.config :as config]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interface
@@ -18,6 +19,7 @@
 (s/def ::account-id :lrsql.spec.admin/account-id)
 (s/def ::current-time c/instant-spec)
 (s/def ::expiration c/instant-spec)
+(s/def ::leeway ::config/jwt-exp-leeway)
 
 (def query-blocked-jwt-input-spec
   (s/keys :req-un [::account-id
