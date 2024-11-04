@@ -24,7 +24,7 @@
         (let [{result* :result} (adp/-ensure-account-oidc lrs username issuer)]
           (if (keyword? result*)
             result*
-            (assoc result :account-id result*)))))
+            (assoc result :account-id result* :jwt token)))))
     (catch Exception ex
       ;; We want any error here to return a 401, but we log
       (log/warnf ex "No-val JWT Error: %s" (ex-message ex))
@@ -34,12 +34,11 @@
   "Normal JWT, normal signature verification and blocklist check."
   [lrs token secret leeway]
   (try
-    (let [{:keys [account-id] :as result}
-          (admin-u/jwt->payload token secret leeway)]
+    (let [result (admin-u/jwt->payload token secret leeway)]
       (if (keyword? result)
         result
-        (if-not (adp/-jwt-blocked? lrs account-id leeway)
-          result
+        (if-not (adp/-jwt-blocked? lrs token)
+          (assoc result :jwt token)
           :lrsql.admin/unauthorized-token-error)))
     (catch Exception ex
       ;; We want any error here to return a 401, but we log

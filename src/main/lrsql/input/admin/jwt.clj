@@ -3,44 +3,28 @@
             [lrsql.spec.admin.jwt :as jwts]
             [lrsql.util :as u]))
 
-(defn- current-time
-  "Generate the current time, offset by `leeway` number of seconds earlier.
-   
-   See: `buddy.sign.jwt/validate-claims`"
-  [leeway]
+(defn- eviction-time
+  "Generate the current time, offset by `exp` number of seconds later."
+  [exp]
   (-> (u/current-time)
-      (u/offset-time (* -1 leeway) :seconds)))
+      (u/offset-time exp :seconds)))
 
 (s/fdef query-blocked-jwt-input
-  :args (s/cat :account-id ::jwts/account-id
-               :leeway ::jwts/leeway)
+  :args (s/cat :jwt ::jwts/jwt)
   :ret jwts/query-blocked-jwt-input-spec)
 
 (defn query-blocked-jwt-input
-  [account-id leeway]
-  {:account-id   account-id
-   :current-time (current-time leeway)})
+  [jwt]
+  {:jwt jwt})
 
 (s/fdef insert-blocked-jwt-input
-  :args (s/cat :account-id ::jwts/account-id
-               :expiration ::jwts/expiration
-               :leeway ::jwts/leeway)
+  :args (s/cat :jwt ::jwts/jwt
+               :exp ::jwts/exp)
   :ret (s/and jwts/insert-blocked-jwt-input-spec
-              jwts/delete-blocked-jwt-time-input-spec))
+              #_jwts/delete-blocked-jwt-time-input-spec))
 
 (defn insert-blocked-jwt-input
-  [account-id expiration leeway]
-  {:account-id   account-id
-   :expiration   expiration
-   :current-time (current-time leeway)})
-
-(s/fdef delete-blocked-jwts-input
-  :args (s/cat :account-id ::jwts/account-id
-               :leeway ::jwts/leeway)
-  :ret (s/and jwts/delete-blocked-jwt-account-input-spec
-              jwts/delete-blocked-jwt-time-input-spec))
-
-(defn delete-blocked-jwts-input
-  [account-id leeway]
-  {:account-id   account-id
-   :current-time (current-time leeway)})
+  [jwt exp]
+  {:jwt           jwt
+   :eviction-time (eviction-time exp)
+   :current-time  (u/current-time)})

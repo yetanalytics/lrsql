@@ -123,18 +123,6 @@
                  {:status 401
                   :body   {:error "Invalid Account Credentials"}}))))}))
 
-(defn unblock-admin-jwts
-  "Remove all JWTs associated with the user account from the blocklist."
-  [leeway]
-  (interceptor
-   {:name ::remove-jwt-from-blocklist
-    :enter
-    (fn remove-jwt-from-blocklist [ctx]
-      (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id]} ::data} ctx]
-        (adp/-unblock-jwts lrs account-id leeway)
-        ctx))}))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Terminal Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -287,17 +275,16 @@
 (defn block-admin-jwt
   "Add the current JWT to the blocklist. Return an error if we are in
    no-val mode."
-  [leeway no-val?]
+  [exp no-val?]
   (interceptor
    {:name ::add-jwt-to-blocklist
     :enter
     (fn add-jwt-to-blocklist [ctx]
       (if-not no-val?
         (let [{lrs :com.yetanalytics/lrs
-               {:keys [account-id expiration]}
-               :lrsql.admin.interceptors.jwt/data}
+               {:keys [jwt account-id]} :lrsql.admin.interceptors.jwt/data}
               ctx]
-          (adp/-block-jwt lrs account-id expiration leeway)
+          (adp/-block-jwt lrs jwt exp)
           (assoc (chain/terminate ctx)
                  :response
                  {:status 200

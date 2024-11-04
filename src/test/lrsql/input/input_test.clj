@@ -61,8 +61,7 @@
 (deftest test-admin-jwt
   (testing "admin JWT inputs"
     (is (nil? (check-validate `i-adm-jwt/query-blocked-jwt-input)))
-    (is (nil? (check-validate `i-adm-jwt/insert-blocked-jwt-input)))
-    (is (nil? (check-validate `i-adm-jwt/delete-blocked-jwts-input)))))
+    (is (nil? (check-validate `i-adm-jwt/insert-blocked-jwt-input)))))
 
 (deftest test-admin-status
   (testing "admin status inputs"

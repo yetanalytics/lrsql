@@ -127,40 +127,18 @@
         (let [bad-account-id #uuid "00000000-0000-4000-8000-000000000000"]
           (is (not (adp/-existing-account? lrs bad-account-id)))))
       (testing "Admin JWTs"
-        (let [expiration-2 (u/current-time)
-              expiration   (u/offset-time expiration-2 3600 :seconds)
-              account-id   (:result
-                            (adp/-authenticate-account lrs
-                                                       test-username
-                                                       test-password))
-              account-id-2 (:result
-                            (adp/-authenticate-account lrs
-                                                       test-username-2
-                                                       test-password))
-              leeway       2]
+        (let [expiration 1000
+              jwt-1      "Foo"
+              jwt-2      "Bar"]
           (testing "- block"
-            (is (= account-id   ; Current JWT
-                   (:result (adp/-block-jwt lrs account-id expiration leeway))))
-            (is (= account-id-2 ; Expired JWT (need to add after to avoid purge)
-                   (:result (adp/-block-jwt lrs account-id-2 expiration-2 leeway))))
+            (is (= jwt-1 ; Current JWT
+                   (:result (adp/-block-jwt lrs jwt-1 expiration))))
+            (is (= jwt-2 ; Expired JWT (need to add after to avoid purge)
+                   (:result (adp/-block-jwt lrs jwt-2 expiration))))
             (is (true?
-                 (adp/-jwt-blocked? lrs account-id leeway)))
-            (is (true? ; Not expired thanks to leeway
-                 (adp/-jwt-blocked? lrs account-id leeway)))
-            (Thread/sleep 2000) ; Wait 2 seconds to accommodate leeway
+                 (adp/-jwt-blocked? lrs jwt-1)))
             (is (false? ; Expired JWT doesn't count as blocked
-                 (adp/-jwt-blocked? lrs account-id-2 leeway))))
-          (testing "- unblock"
-            (is (= account-id
-                   (:result (adp/-unblock-jwts lrs account-id leeway))))
-            (is (false?
-                 (adp/-jwt-blocked? lrs account-id leeway)))
-            (is (false?
-                 (adp/-jwt-blocked? lrs account-id-2 leeway)))
-            (is (= account-id-2
-                   (:result (adp/-unblock-jwts lrs account-id-2 leeway))))
-            (is (false?
-                 (adp/-jwt-blocked? lrs account-id-2 leeway))))))
+                 (adp/-jwt-blocked? lrs jwt-2))))))
       (testing "Admin password update"
         (let [account-id   (-> (adp/-authenticate-account lrs
                                                           test-username

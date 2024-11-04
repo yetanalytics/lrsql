@@ -16,30 +16,24 @@
 ;; Inputs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/def ::account-id :lrsql.spec.admin/account-id)
-(s/def ::current-time c/instant-spec)
-(s/def ::expiration c/instant-spec)
-(s/def ::leeway ::config/jwt-exp-leeway)
+(s/def ::jwt string?)
+(s/def ::exp ::config/jwt-exp-time)
+(s/def ::eviction-time c/instant-spec)
 
 (def query-blocked-jwt-input-spec
-  (s/keys :req-un [::account-id
-                   ::current-time]))
+  (s/keys :req-un [::jwt]))
 
 (def insert-blocked-jwt-input-spec
-  (s/keys :req-un [::account-id
-                   ::expiration]))
+  (s/keys :req-un [::jwt ::eviction-time]))
 
-(def delete-blocked-jwt-account-input-spec
-  (s/keys :req-un [::account-id]))
-
-(def delete-blocked-jwt-time-input-spec
+#_(def delete-blocked-jwt-time-input-spec
   (s/keys :req-un [::current-time]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Results
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/def :lrsql.spec.admin.jwt.command/result ::account-id)
+(s/def :lrsql.spec.admin.jwt.command/result any? #_::account-id)
 
 (def blocked-jwt-op-result-spec
   (s/keys :req-un [:lrsql.spec.admin.jwt.command/result]))

@@ -114,7 +114,7 @@
 (s/fdef purge-blocklist!
   :args (s/cat :bk jwts/admin-jwt-backend?
                :tx transaction?
-               :input jwts/delete-blocked-jwt-time-input-spec))
+               :input any? #_jwts/delete-blocked-jwt-time-input-spec))
 
 (defn purge-blocklist!
   "Delete all JWTs from the blocklist that have expired, i.e. whose expirations
@@ -132,16 +132,4 @@
   "Insert a new JWT `:account-id` and `:expiration` to the blocklist table."
   [bk tx input]
   (bp/-insert-blocked-jwt! bk tx input)
-  {:result (:account-id input)})
-
-(s/fdef delete-blocked-jwts!
-  :args (s/cat :bk jwts/admin-jwt-backend?
-               :tx transaction?
-               :input jwts/delete-blocked-jwt-account-input-spec)
-  :ret jwts/blocked-jwt-op-result-spec)
-
-(defn delete-blocked-jwts!
-  "Delete all JWTs associated with `:account-id` from the blocklist."
-  [bk tx input]
-  (bp/-delete-blocked-jwt-by-account! bk tx input)
-  {:result (:account-id input)})
+  {:result (:jwt input)})
