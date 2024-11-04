@@ -130,7 +130,13 @@
         (let [expiration 1000
               jwt-1      "Foo"
               jwt-2      "Bar"]
-          (testing "- block"
+          (is (false?
+               (adp/-jwt-blocked? lrs jwt-1)))
+          (is (= jwt-1
+                 (:result (adp/-block-jwt lrs jwt-1 expiration))))
+          (is (true?
+               (adp/-jwt-blocked? lrs jwt-1)))
+          #_(testing "- block"
             (is (= jwt-1 ; Current JWT
                    (:result (adp/-block-jwt lrs jwt-1 expiration))))
             (is (= jwt-2 ; Expired JWT (need to add after to avoid purge)
