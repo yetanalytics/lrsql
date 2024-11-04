@@ -152,7 +152,7 @@
 (s/def ::allowed-origins (s/nilable (s/coll-of string?)))
 
 (s/def ::jwt-exp-time pos-int?)
-(s/def ::jwt-ultimate-exp-time pos-int?)
+(s/def ::jwt-refresh-exp-time pos-int?)
 (s/def ::jwt-exp-leeway nat-int?)
 (s/def ::jwt-no-val boolean?)
 (s/def ::jwt-no-val-uname (s/nilable string?))
@@ -210,7 +210,7 @@
                     ::key-password
                     ::key-enable-selfie
                     ::jwt-exp-time
-                    ::jwt-ultimate-exp-time
+                    ::jwt-refresh-exp-time
                     ::jwt-exp-leeway
                     ::jwt-no-val
                     ::enable-admin-ui

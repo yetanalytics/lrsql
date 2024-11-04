@@ -546,7 +546,7 @@
   (let [sys  (support/test-system
               :conf-overrides
               {[:webserver :jwt-exp-time] 3
-               [:webserver :jwt-ultimate-exp-time] 4})
+               [:webserver :jwt-refresh-exp-time] 4})
         sys' (component/start sys)
         ;; Seed info
         {:keys [admin-user-default
@@ -574,7 +574,7 @@
           (Thread/sleep 2000)
           (is-err-code (get-me headers) 401)
           (is (= 200 (:status (get-me headers*)))))
-        (testing "JWT can no longer refresh after ultimate expiration"
+        (testing "JWT can no longer refresh after refresh expiration"
           (Thread/sleep 1000)
           (is-err-code (renew-login headers) 401))
         (testing "JWT no longer works after expiration"

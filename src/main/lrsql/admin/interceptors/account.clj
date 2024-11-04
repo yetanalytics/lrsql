@@ -267,7 +267,7 @@
 
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
-  [secret exp ult]
+  [secret exp ref]
   (interceptor
    {:name ::generate-jwt
     :enter
@@ -275,7 +275,7 @@
       (let [{{:keys [account-id]} ::data}
             ctx
             json-web-token
-            (admin-u/account-id->jwt account-id secret exp ult)]
+            (admin-u/account-id->jwt account-id secret exp ref)]
         (assoc ctx
                :response
                {:status 200
@@ -288,13 +288,13 @@
    {:name ::renew-jwt
     :enter
     (fn renew-jwt [ctx]
-      (let [{{:keys [account-id ultimate]} ::jwt/data} ctx
+      (let [{{:keys [account-id refresh-exp]} ::jwt/data} ctx
             curr-time (u/current-time)]
-        (if (jt/before? curr-time ultimate)
+        (if (jt/before? curr-time refresh-exp)
           (let [json-web-token (admin-u/account-id->jwt* account-id
                                                          secret
                                                          exp
-                                                         ultimate)]
+                                                         refresh-exp)]
             (assoc ctx
                    :response
                    {:status 200
@@ -303,7 +303,7 @@
           (assoc (chain/terminate ctx)
                  :response
                  {:status 401
-                  :body   {:error "Attempting JWT login after ultimate expiry."}}))))}))
+                  :body   {:error "Attempting JWT login after refresh expiry."}}))))}))
 
 (def ^:private block-admin-jwt-error-msg
   "This operation is unsupported when `LRSQL_JWT_NO_VAL` is set to `true`.")

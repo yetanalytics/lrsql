@@ -33,7 +33,7 @@
    (i/lrs-interceptor lrs)])
 
 (defn admin-account-routes
-  [common-interceptors jwt-secret jwt-exp jwt-ult jwt-leeway {:keys [no-val?] :as no-val-opts}]
+  [common-interceptors jwt-secret jwt-exp jwt-ref jwt-leeway {:keys [no-val?] :as no-val-opts}]
   #{;; Log into an existing account
     (gc/annotate
      ["/admin/account/login" :post (conj common-interceptors
@@ -41,7 +41,7 @@
                                           :strict? false)
                                          ai/authenticate-admin
                                          (ai/unblock-admin-jwts jwt-leeway)
-                                         (ai/generate-jwt jwt-secret jwt-exp jwt-ult))
+                                         (ai/generate-jwt jwt-secret jwt-exp jwt-ref))
       :route-name :lrsql.admin.account/login]
      {:description "Log into an existing account"
       :requestBody (g/request (gs/o {:username :t#string
@@ -303,7 +303,7 @@
    accounts."
   [{:keys [lrs
            exp
-           ult
+           ref
            leeway
            secret
            no-val?
@@ -337,7 +337,7 @@
     (cset/union routes
                 (when enable-account-routes
                   (admin-account-routes
-                   common-interceptors-oidc secret exp ult leeway no-val-opts))
+                   common-interceptors-oidc secret exp ref leeway no-val-opts))
                 (admin-cred-routes
                  common-interceptors-oidc secret leeway no-val-opts)
                 (when enable-admin-ui

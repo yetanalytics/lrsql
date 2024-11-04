@@ -14,8 +14,8 @@
   (ua/account-id->jwt test-id "secret" 3600 86400))
 
 (defn- account-id->jwt*
-  [test-id ult-time]
-  (ua/account-id->jwt* test-id "secret" 3600 ult-time))
+  [test-id ref-time]
+  (ua/account-id->jwt* test-id "secret" 3600 ref-time))
 
 (defn- jwt->payload
   [jwt]
@@ -39,15 +39,15 @@
            (-> test-id
                account-id->jwt
                jwt->payload
-               :ultimate)))
+               :refresh-exp)))
       (let [utime (-> test-id
                       account-id->jwt
                       jwt->payload
-                      :ultimate)]
+                      :refresh-exp)]
         (is (= utime
                (-> (account-id->jwt* test-id utime)
                    jwt->payload
-                   :ultimate))))
+                   :refresh-exp))))
       (is (= :lrsql.admin/unauthorized-token-error
              (jwt->payload nil)))
       (is (= :lrsql.admin/unauthorized-token-error

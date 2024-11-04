@@ -6,7 +6,7 @@
  :key-enable-selfie         #boolean #or [#env LRSQL_KEY_ENABLE_SELFIE true]
  :jwt-exp-time              #long #or [#env LRSQL_JWT_EXP_TIME 3600]
  :jwt-exp-leeway            #long #or [#env LRSQL_JWT_EXP_LEEWAY 1]
- :jwt-ultimate-exp-time     #long #or [#env LRSQL_JWT_ULTIMATE_EXP_TIME 86400]
+ :jwt-refresh-exp-time      #long #or [#env LRSQL_JWT_REFRESH_EXP_TIME 86400]
  :jwt-no-val                #boolean #or [#env LRSQL_JWT_NO_VAL false]
  :jwt-no-val-uname          #or [#env LRSQL_JWT_NO_VAL_UNAME nil]
  :jwt-no-val-issuer         #or [#env LRSQL_JWT_NO_VAL_ISSUER nil]

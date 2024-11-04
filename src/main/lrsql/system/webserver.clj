@@ -52,7 +52,7 @@
                 clamav-port]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway
-         jwt-ult :jwt-ultimate-exp-time}
+         jwt-ref :jwt-refresh-exp-time}
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
@@ -92,7 +92,7 @@
              (add-admin-routes
               {:lrs                       lrs
                :exp                       jwt-exp
-               :ult                       jwt-ult
+               :ref                       jwt-ref
                :leeway                    jwt-lwy
                :no-val?                   jwt-no-val
                :no-val-issuer             jwt-no-val-issuer
