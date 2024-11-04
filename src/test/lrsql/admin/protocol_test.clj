@@ -151,7 +151,9 @@
             (is (false?
                  (adp/-jwt-blocked? lrs jwt-1)))
             (is (true?
-                 (adp/-jwt-blocked? lrs jwt-2))))))
+                 (adp/-jwt-blocked? lrs jwt-2))))
+          (testing "- cannot insert duplicates into blocklist"
+            (is (some? (:error (adp/-block-jwt lrs jwt-2 expiration)))))))
       (testing "Admin password update"
         (let [account-id   (-> (adp/-authenticate-account lrs
                                                           test-username

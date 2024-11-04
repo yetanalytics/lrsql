@@ -22,7 +22,7 @@
   (-purge-blocklist [this]
     "Purge the blocklist of any JWTs that have expired since they were added.")
   (-block-jwt [this jwt expiration]
-    "Block `jwt` and apply an associated `expiration` number of seconds.")
+    "Block `jwt` and apply an associated `expiration` number of seconds. Returns an error if `jwt` is already in the blocklist.")
   (-jwt-blocked? [this jwt]
     "Is `jwt` on the blocklist?"))
 
