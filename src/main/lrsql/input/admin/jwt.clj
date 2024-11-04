@@ -9,6 +9,14 @@
   (-> (u/current-time)
       (u/offset-time exp :seconds)))
 
+(defn- current-time
+  "Generate the current time, offset by `leeway` number of seconds earlier.
+   
+   See: `buddy.sign.jwt/validate-claims`"
+  [leeway]
+  (-> (u/current-time)
+      (u/offset-time (* -1 leeway) :seconds)))
+
 (s/fdef query-blocked-jwt-input
   :args (s/cat :jwt ::jwts/jwt)
   :ret jwts/query-blocked-jwt-input-spec)
@@ -28,9 +36,9 @@
    :eviction-time (eviction-time exp)})
 
 (s/fdef purge-blocklist-input
-  :args (s/cat)
+  :args (s/cat :leeway ::jwts/leeway)
   :ret jwts/purge-blocklist-input-spec)
 
 (defn purge-blocklist-input
-  []
-  {:current-time (u/current-time)})
+  [leeway]
+  {:current-time (current-time leeway)})

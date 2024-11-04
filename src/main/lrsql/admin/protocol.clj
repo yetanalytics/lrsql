@@ -19,7 +19,7 @@
     "Update the password for an admin account given old and new passwords."))
 
 (defprotocol AdminJWTManager
-  (-purge-blocklist [this]
+  (-purge-blocklist [this leeway]
     "Purge the blocklist of any JWTs that have expired since they were added.")
   (-block-jwt [this jwt expiration]
     "Block `jwt` and apply an associated `expiration` number of seconds. Returns an error if `jwt` is already in the blocklist.")

@@ -308,9 +308,9 @@
   
   adp/AdminJWTManager
   (-purge-blocklist
-   [this]
-   (let [conn (lrs-conn this)
-         input (admin-jwt-input/purge-blocklist-input)]
+   [this leeway]
+   (let [conn  (lrs-conn this)
+         input (admin-jwt-input/purge-blocklist-input leeway)]
      (jdbc/with-transaction [tx conn]
        (admin-cmd/purge-blocklist! backend tx input))))
   (-block-jwt

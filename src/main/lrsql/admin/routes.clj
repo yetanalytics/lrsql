@@ -40,7 +40,8 @@
                                          (ai/validate-params
                                           :strict? false)
                                          ai/authenticate-admin
-                                         (ai/generate-jwt jwt-secret jwt-exp))
+                                         (ai/generate-jwt
+                                          jwt-secret jwt-exp jwt-leeway))
       :route-name :lrsql.admin.account/login]
      {:description "Log into an existing account"
       :requestBody (g/request (gs/o {:username :t#string
@@ -57,7 +58,8 @@
                                           (ji/validate-jwt
                                            jwt-secret jwt-leeway no-val-opts)
                                           ji/validate-jwt-account
-                                          (ai/block-admin-jwt jwt-exp no-val?))
+                                          (ai/block-admin-jwt
+                                           jwt-exp jwt-leeway no-val?))
       :route-name :lrsql.admin.account/logout]
      {:description "Log out of this account"
       :operationId :logout

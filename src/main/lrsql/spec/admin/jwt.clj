@@ -18,6 +18,7 @@
 
 (s/def ::jwt string?)
 (s/def ::exp ::config/jwt-exp-time)
+(s/def ::leeway ::config/jwt-exp-leeway)
 (s/def ::eviction-time c/instant-spec)
 (s/def ::current-time c/instant-spec)
 
