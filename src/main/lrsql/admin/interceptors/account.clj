@@ -259,10 +259,12 @@
    {:name ::generate-jwt
     :enter
     (fn generate-jwt [ctx]
-      (let [{{:keys [account-id]} ::data}
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [account-id]} ::data}
             ctx
             json-web-token
             (admin-u/account-id->jwt account-id secret exp)]
+        (adp/-purge-blocklist lrs) ; Update blocklist upon login
         (assoc ctx
                :response
                {:status 200
@@ -284,6 +286,7 @@
         (let [{lrs :com.yetanalytics/lrs
                {:keys [jwt account-id]} :lrsql.admin.interceptors.jwt/data}
               ctx]
+          (adp/-purge-blocklist lrs) ; Update blocklist upon logout
           (adp/-block-jwt lrs jwt exp)
           (assoc (chain/terminate ctx)
                  :response

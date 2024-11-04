@@ -127,23 +127,30 @@
         (let [bad-account-id #uuid "00000000-0000-4000-8000-000000000000"]
           (is (not (adp/-existing-account? lrs bad-account-id)))))
       (testing "Admin JWTs"
-        (let [expiration 1000
+        (let [expiration 2
               jwt-1      "Foo"
               jwt-2      "Bar"]
-          (is (false?
-               (adp/-jwt-blocked? lrs jwt-1)))
-          (is (= jwt-1
-                 (:result (adp/-block-jwt lrs jwt-1 expiration))))
-          (is (true?
-               (adp/-jwt-blocked? lrs jwt-1)))
-          #_(testing "- block"
-            (is (= jwt-1 ; Current JWT
+          (testing "- are unblocked by default"
+            (is (false?
+                 (adp/-jwt-blocked? lrs jwt-1)))
+            (is (false?
+                 (adp/-jwt-blocked? lrs jwt-2))))
+          (testing "- can be blocked"
+            (is (= jwt-1
                    (:result (adp/-block-jwt lrs jwt-1 expiration))))
-            (is (= jwt-2 ; Expired JWT (need to add after to avoid purge)
+            (Thread/sleep 2000)
+            (is (= jwt-2
                    (:result (adp/-block-jwt lrs jwt-2 expiration))))
             (is (true?
                  (adp/-jwt-blocked? lrs jwt-1)))
-            (is (false? ; Expired JWT doesn't count as blocked
+            (is (true?
+                 (adp/-jwt-blocked? lrs jwt-2))))
+          (testing "- can be purged from blocklist only when expired"
+            (is (= nil
+                   (adp/-purge-blocklist lrs)))
+            (is (false?
+                 (adp/-jwt-blocked? lrs jwt-1)))
+            (is (true?
                  (adp/-jwt-blocked? lrs jwt-2))))))
       (testing "Admin password update"
         (let [account-id   (-> (adp/-authenticate-account lrs

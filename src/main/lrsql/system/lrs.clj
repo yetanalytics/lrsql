@@ -307,12 +307,17 @@
             {:result result})))))
   
   adp/AdminJWTManager
+  (-purge-blocklist
+   [this]
+   (let [conn (lrs-conn this)
+         input (admin-jwt-input/purge-blocklist-input)]
+     (jdbc/with-transaction [tx conn]
+       (admin-cmd/purge-blocklist! backend tx input))))
   (-block-jwt
    [this jwt exp]
    (let [conn      (lrs-conn this)
          jwt-input (admin-jwt-input/insert-blocked-jwt-input jwt exp)]
      (jdbc/with-transaction [tx conn]
-       (admin-cmd/purge-blocklist! backend tx jwt-input)
        (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
   (-jwt-blocked?
    [this jwt]

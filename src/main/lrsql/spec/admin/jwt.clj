@@ -19,6 +19,7 @@
 (s/def ::jwt string?)
 (s/def ::exp ::config/jwt-exp-time)
 (s/def ::eviction-time c/instant-spec)
+(s/def ::current-time c/instant-spec)
 
 (def query-blocked-jwt-input-spec
   (s/keys :req-un [::jwt]))
@@ -26,14 +27,14 @@
 (def insert-blocked-jwt-input-spec
   (s/keys :req-un [::jwt ::eviction-time]))
 
-#_(def delete-blocked-jwt-time-input-spec
+(def purge-blocklist-input-spec
   (s/keys :req-un [::current-time]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Results
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/def :lrsql.spec.admin.jwt.command/result any? #_::account-id)
+(s/def :lrsql.spec.admin.jwt.command/result ::jwt)
 
 (def blocked-jwt-op-result-spec
   (s/keys :req-un [:lrsql.spec.admin.jwt.command/result]))

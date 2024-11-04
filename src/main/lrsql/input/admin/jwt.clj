@@ -20,11 +20,17 @@
 (s/fdef insert-blocked-jwt-input
   :args (s/cat :jwt ::jwts/jwt
                :exp ::jwts/exp)
-  :ret (s/and jwts/insert-blocked-jwt-input-spec
-              #_jwts/delete-blocked-jwt-time-input-spec))
+  :ret jwts/insert-blocked-jwt-input-spec)
 
 (defn insert-blocked-jwt-input
   [jwt exp]
   {:jwt           jwt
-   :eviction-time (eviction-time exp)
-   :current-time  (u/current-time)})
+   :eviction-time (eviction-time exp)})
+
+(s/fdef purge-blocklist-input
+  :args (s/cat)
+  :ret jwts/purge-blocklist-input-spec)
+
+(defn purge-blocklist-input
+  []
+  {:current-time (u/current-time)})

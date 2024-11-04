@@ -114,13 +114,15 @@
 (s/fdef purge-blocklist!
   :args (s/cat :bk jwts/admin-jwt-backend?
                :tx transaction?
-               :input any? #_jwts/delete-blocked-jwt-time-input-spec))
+               :input jwts/purge-blocklist-input-spec)
+  :ret nil?)
 
 (defn purge-blocklist!
   "Delete all JWTs from the blocklist that have expired, i.e. whose expirations
    are before the `:current-time` in `input`."
   [bk tx input]
-  (bp/-delete-blocked-jwt-by-time! bk tx input))
+  (bp/-delete-blocked-jwt-by-time! bk tx input)
+  nil)
 
 (s/fdef insert-blocked-jwt!
   :args (s/cat :bk jwts/admin-jwt-backend?
