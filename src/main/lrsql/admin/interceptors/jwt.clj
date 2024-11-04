@@ -38,7 +38,7 @@
           (admin-u/jwt->payload token secret leeway)]
       (if (keyword? result)
         result
-        (if-not (adp/-jwt-blocked? lrs account-id)
+        (if-not (adp/-jwt-blocked? lrs account-id leeway)
           result
           :lrsql.admin/unauthorized-token-error)))
     (catch Exception ex

@@ -33,14 +33,14 @@
    (i/lrs-interceptor lrs)])
 
 (defn admin-account-routes
-  [common-interceptors jwt-secret jwt-exp jwt-leeway no-val-opts]
+  [common-interceptors jwt-secret jwt-exp jwt-leeway {:keys [no-val?] :as no-val-opts}]
   #{;; Log into an existing account
     (gc/annotate
      ["/admin/account/login" :post (conj common-interceptors
                                          (ai/validate-params
                                           :strict? false)
                                          ai/authenticate-admin
-                                         ai/unblock-admin-jwts
+                                         (ai/unblock-admin-jwts jwt-leeway)
                                          (ai/generate-jwt jwt-secret jwt-exp))
       :route-name :lrsql.admin.account/login]
      {:description "Log into an existing account"
@@ -58,7 +58,7 @@
                                           (ji/validate-jwt
                                            jwt-secret jwt-leeway no-val-opts)
                                           ji/validate-jwt-account
-                                          (ai/block-admin-jwt (:no-val? no-val-opts)))
+                                          (ai/block-admin-jwt jwt-leeway no-val?))
       :route-name :lrsql.admin.account/logout]
      {:description "Log out of this account"
       :operationId :logout

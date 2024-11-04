@@ -308,24 +308,27 @@
   
   adp/AdminJWTManager
   (-block-jwt
-   [this account-id expiration]
+   [this account-id expiration leeway]
    (let [conn      (lrs-conn this)
          jwt-input (admin-jwt-input/insert-blocked-jwt-input account-id
-                                                             expiration)]
+                                                             expiration
+                                                             leeway)]
      (jdbc/with-transaction [tx conn]
        (admin-cmd/purge-blocklist! backend tx jwt-input)
        (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
   (-unblock-jwts
-   [this account-id]
+   [this account-id leeway]
    (let [conn      (lrs-conn this)
-         jwt-input (admin-jwt-input/delete-blocked-jwts-input account-id)]
+         jwt-input (admin-jwt-input/delete-blocked-jwts-input account-id
+                                                              leeway)]
      (jdbc/with-transaction [tx conn]
        (admin-cmd/purge-blocklist! backend tx jwt-input)
        (admin-cmd/delete-blocked-jwts! backend tx jwt-input))))
   (-jwt-blocked?
-   [this account-id]
+   [this account-id leeway]
    (let [conn      (lrs-conn this)
-         jwt-input (admin-jwt-input/query-blocked-jwt-input account-id)]
+         jwt-input (admin-jwt-input/query-blocked-jwt-input account-id
+                                                            leeway)]
      (jdbc/with-transaction [tx conn]
        (admin-q/query-blocked-jwt-exists backend tx jwt-input))))
 
