@@ -344,7 +344,8 @@
                   (admin-ui-routes
                    (into common-interceptors
                          oidc-ui-interceptors)
-                   {:enable-admin-status       enable-admin-status
+                   {:jwt-exp-time              exp
+                    :enable-admin-status       enable-admin-status
                     :enable-reactions          enable-reaction-routes
                     :no-val?                   no-val?
                     :no-val-logout-url         no-val-logout-url
