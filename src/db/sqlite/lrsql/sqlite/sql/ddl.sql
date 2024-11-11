@@ -530,17 +530,11 @@ WHERE type = 'table' AND name = 'statement_to_actor'
 -- :command :execute
 -- :doc Create the `blocked_jwt` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS blocked_jwt (
-  account_id TEXT NOT NULL REFERENCES admin_account(id) ON DELETE CASCADE,
-  expiration TIMESTAMP,
-  PRIMARY KEY (account_id, expiration)
+  jwt        TEXT PRIMARY KEY,
+  evict_time TIMESTAMP
 );
 
--- :name create-blocked-jwt-account-id-idx!
+-- :name create-blocked-jwt-evict-time-idx!
 -- :command :execute
--- :doc Create the `blocked_jwt_account_id_idx` table if it does not exist yet.
-CREATE INDEX IF NOT EXISTS blocked_jwt_account_id_idx ON blocked_jwt(account_id);
-
--- :name create-blocked-jwt-expiration-idx!
--- :command :execute
--- :doc Create the `blocked_jwt_expiration_idx` table if it does not exist yet.
-CREATE INDEX IF NOT EXISTS blocked_jwt_expiration_idx ON blocked_jwt(expiration);
+-- :doc Create the `blocked_jwt_evict_time_idx` table if it does not exist yet.
+CREATE INDEX IF NOT EXISTS blocked_jwt_evict_time_idx ON blocked_jwt(evict_time);

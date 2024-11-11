@@ -19,12 +19,12 @@
     "Update the password for an admin account given old and new passwords."))
 
 (defprotocol AdminJWTManager
-  (-block-jwt [this account-id expiration leeway]
-    "Block the JWT with this account, expiration time, and leeway. Purge expired JWTs from the blocklist if necessary.")
-  (-unblock-jwts [this account-id leeway]
-    "Unblock the JWTs associated with this account. Purge expired JWTs from the blocklist if necessary.")
-  (-jwt-blocked? [this account-id leeway]
-    "Is an unexpired JWT with this account on the blocklist?"))
+  (-purge-blocklist [this leeway]
+    "Purge the blocklist of any JWTs that have expired since they were added.")
+  (-block-jwt [this jwt expiration]
+    "Block `jwt` and apply an associated `expiration` number of seconds. Returns an error if `jwt` is already in the blocklist.")
+  (-jwt-blocked? [this jwt]
+    "Is `jwt` on the blocklist?"))
 
 (defprotocol APIKeyManager
   (-create-api-keys [this account-id scopes]

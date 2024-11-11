@@ -124,18 +124,6 @@
                  {:status 401
                   :body   {:error "Invalid Account Credentials"}}))))}))
 
-(defn unblock-admin-jwts
-  "Remove all JWTs associated with the user account from the blocklist."
-  [leeway]
-  (interceptor
-   {:name ::remove-jwt-from-blocklist
-    :enter
-    (fn remove-jwt-from-blocklist [ctx]
-      (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id]} ::data} ctx]
-        (adp/-unblock-jwts lrs account-id leeway)
-        ctx))}))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Terminal Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -267,15 +255,17 @@
 
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
-  [secret exp ref]
+  [secret exp ref leeway]
   (interceptor
    {:name ::generate-jwt
     :enter
     (fn generate-jwt [ctx]
-      (let [{{:keys [account-id]} ::data}
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [account-id]} ::data}
             ctx
             json-web-token
             (admin-u/account-id->jwt account-id secret exp ref)]
+        (adp/-purge-blocklist lrs leeway) ; Update blocklist upon login
         (assoc ctx
                :response
                {:status 200
@@ -311,21 +301,26 @@
 (defn block-admin-jwt
   "Add the current JWT to the blocklist. Return an error if we are in
    no-val mode."
-  [leeway no-val?]
+  [exp leeway no-val?]
   (interceptor
    {:name ::add-jwt-to-blocklist
     :enter
     (fn add-jwt-to-blocklist [ctx]
       (if-not no-val?
         (let [{lrs :com.yetanalytics/lrs
-               {:keys [account-id expiration]}
-               :lrsql.admin.interceptors.jwt/data}
+               {:keys [jwt account-id]} :lrsql.admin.interceptors.jwt/data}
               ctx]
-          (adp/-block-jwt lrs account-id expiration leeway)
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 200
-                  :body   {:account-id account-id}}))
+          (adp/-purge-blocklist lrs leeway) ; Update blocklist upon logout
+          (let [result (adp/-block-jwt lrs jwt exp)]
+            (if-not (contains? result :error)
+              (assoc (chain/terminate ctx)
+                     :response
+                     {:status 200
+                      :body   {:account-id account-id}})
+              (assoc (chain/terminate ctx)
+                     :response
+                     {:status 409
+                      :body   {:error "JWT has already been revoked."}}))))
         (assoc (chain/terminate ctx)
                :response
                {:status 400

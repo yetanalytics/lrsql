@@ -401,7 +401,6 @@ WHERE reaction_id IS NOT NULL;
 -- :name query-blocked-jwt-exists
 -- :command :query
 -- :result :one
--- :doc Query that at least one blocked JWT with `:account_id` and whose expiration is after `:current-time` exists.
+-- :doc Query that `:jwt` is in the blocklist.
 SELECT 1 FROM blocked_jwt
-WHERE account_id = :account-id
-AND :current-time < expiration;
+WHERE jwt = :jwt

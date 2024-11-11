@@ -165,9 +165,9 @@ INSERT INTO reaction (
 -- :name insert-blocked-jwt!
 -- :command :insert
 -- :result :affected
--- :doc Given a JWT-extracted `:account-id` and `:expiration`, insert a new blocked JWT.
+-- :doc Insert a `:jwt` and a `:eviction-time` into the blocklist.
 INSERT INTO blocked_jwt (
-  account_id, expiration
+  jwt, evict_time
 ) VALUES (
-  :account-id, :expiration
+  :jwt, :eviction-time
 );

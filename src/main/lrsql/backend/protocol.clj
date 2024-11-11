@@ -104,7 +104,6 @@
 (defprotocol JWTBlocklistBackend
   ;; Commands
   (-insert-blocked-jwt! [this tx input])
-  (-delete-blocked-jwt-by-account! [this tx input])
   (-delete-blocked-jwt-by-time! [this tx input])
   ;; Queries
   (-query-blocked-jwt [this tx input]))
