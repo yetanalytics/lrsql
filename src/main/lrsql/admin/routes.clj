@@ -312,6 +312,8 @@
            no-val-role-key
            no-val-role
            no-val-logout-url
+           refresh-interval
+           interaction-window
            enable-admin-delete-actor
            enable-admin-ui
            enable-admin-status
@@ -344,7 +346,8 @@
                   (admin-ui-routes
                    (into common-interceptors
                          oidc-ui-interceptors)
-                   {:jwt-exp-time              exp
+                   {:jwt-refresh-interval      refresh-interval
+                    :jwt-interaction-window    interaction-window
                     :enable-admin-status       enable-admin-status
                     :enable-reactions          enable-reaction-routes
                     :no-val?                   no-val?

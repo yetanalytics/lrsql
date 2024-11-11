@@ -40,6 +40,8 @@
                 sec-head-content
                 allow-all-origins
                 allowed-origins
+                jwt-refresh-interval
+                jwt-interaction-window
                 jwt-no-val
                 jwt-no-val-uname
                 jwt-no-val-issuer
@@ -94,6 +96,8 @@
                :exp                       jwt-exp
                :ref                       jwt-ref
                :leeway                    jwt-lwy
+               :refresh-interval          jwt-refresh-interval
+               :interaction-window        jwt-interaction-window
                :no-val?                   jwt-no-val
                :no-val-issuer             jwt-no-val-issuer
                :no-val-uname              jwt-no-val-uname
