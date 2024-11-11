@@ -153,6 +153,9 @@
 
 (s/def ::jwt-exp-time pos-int?)
 (s/def ::jwt-exp-leeway nat-int?)
+(s/def ::jwt-refresh-exp-time pos-int?)
+(s/def ::jwt-refresh-interval pos-int?)
+(s/def ::jwt-interaction-window pos-int?)
 (s/def ::jwt-no-val boolean?)
 (s/def ::jwt-no-val-uname (s/nilable string?))
 (s/def ::jwt-no-val-issuer (s/nilable string?))
@@ -210,6 +213,9 @@
                     ::key-enable-selfie
                     ::jwt-exp-time
                     ::jwt-exp-leeway
+                    ::jwt-refresh-exp-time
+                    ::jwt-refresh-interval
+                    ::jwt-interaction-window
                     ::jwt-no-val
                     ::enable-admin-ui
                     ::enable-admin-status
@@ -246,7 +252,11 @@
      (if jwt-no-val
        (and jwt-no-val-uname jwt-no-val-issuer jwt-no-val-role-key
             jwt-no-val-role)
-       true))))
+       true))
+   ;; validation for JWT temporal intervals
+   (fn [{:keys [jwt-exp-time jwt-refresh-interval jwt-interaction-window]}]
+     (and (<= jwt-interaction-window jwt-refresh-interval)
+          (< jwt-refresh-interval jwt-exp-time)))))
 
 (s/def ::tuning
   (s/keys :opt-un [::enable-jsonb]))
