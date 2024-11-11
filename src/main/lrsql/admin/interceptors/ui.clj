@@ -16,8 +16,7 @@
   config to inject:
     :enable-admin-status - boolean, determines if the admin status endpoint is
       enabled."
-  [{:keys [jwt-exp-time
-           jwt-refresh-interval
+  [{:keys [jwt-refresh-interval
            jwt-interaction-window
            enable-admin-delete-actor
            enable-admin-status
@@ -42,8 +41,7 @@
                {:status 200
                 :body
                 (merge
-                 (cond-> {:jwt-exp-time              jwt-exp-time
-                          :jwt-refresh-interval      jwt-refresh-interval
+                 (cond-> {:jwt-refresh-interval      jwt-refresh-interval
                           :jwt-interaction-window    jwt-interaction-window
                           :url-prefix                url-prefix
                           :proxy-path                proxy-path
