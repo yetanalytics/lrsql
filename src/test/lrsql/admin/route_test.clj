@@ -546,7 +546,9 @@
   (let [sys  (support/test-system
               :conf-overrides
               {[:webserver :jwt-exp-time] 3
-               [:webserver :jwt-refresh-exp-time] 4})
+               [:webserver :jwt-refresh-exp-time] 4
+               [:webserver :jwt-refresh-interval] 2
+               [:webserver :jwt-interaction-window] 2})
         sys' (component/start sys)
         ;; Seed info
         {:keys [admin-user-default
