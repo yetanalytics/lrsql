@@ -21,9 +21,9 @@
     <!-- TODO: Remove suppression once we update to Jetty 12 -->
     <suppress>
         <notes><![CDATA[
-        file name: jetty-http-9.4.54.v20240208.jar
+        file names: [jetty-http|http2-common|http2-server|jetty-io|jetty-server|websocket-client|websocket-server]-9.4.54.v20240208.jar
         ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty/jetty\-http@.*$</packageUrl>
+        <packageUrl regex="true">^pkg:maven/org\.eclipse\.jetty.*$</packageUrl>
         <vulnerabilityName>CVE-2024-6763</vulnerabilityName>
     </suppress>
 </suppressions>
