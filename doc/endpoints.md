@@ -32,6 +32,7 @@ The response body contains a newly generated JSON Web Token (JWT) on success. A 
 - `DELETE http://example.org/admin/account`: Delete an existing account. The JSON request body must contain a UUID `account-id` value. The endpoint returns a JSON object with the ID of the deleted account on success and returns a `404 NOT FOUND` error if the account does not exist.
 - `GET http://example.org/admin/account`: Return an array of all admin accounts in the system on success.
 - `GET http://example.org/admin/me`: Returns the currently authenticated admin accounts on success.
+- `GET http://example.org/admin/verify`: Returns a `204 No Content` response, without a body, on success (the success conditions are the same as the `/admin/me` endpoint).
 
 #### Admin Credential Routes
 
@@ -43,6 +44,8 @@ The response body contains a newly generated JSON Web Token (JWT) on success. A 
 #### Misc Admin Routes
 
 - `GET http://example.org/admin/env`: Get select environment variables about the configuration which may aid in client-side operations.
+- `GET http://example.org/admin/openapi`: Get an OpenAPI JSON spec of the endpoint API, which can then be visualized using an OpenAPI viewer like Swagger.
+- `GET http://example.org/admin/status`: Get LRS status information, such as the number of statements in the LRS.
 - `DELETE http://example.org/admin/agents`: Runs a *hard delete* of all records of an actor, and associated records (statements, attachments, etc).  Intended for privacy purposes like GDPR.  Body should be a JSON object of form `{"actor-ifi":<actor-ifi>}`.  Disabled unless the configuration variable enableAdminDeleteActor to be set to `true`.
 
 ### Reaction Management Routes
