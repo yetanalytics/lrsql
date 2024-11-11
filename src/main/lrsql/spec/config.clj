@@ -255,7 +255,8 @@
        true))
    ;; validation for JWT temporal intervals
    (fn [{:keys [jwt-exp-time jwt-refresh-interval jwt-interaction-window]}]
-     (< jwt-interaction-window jwt-refresh-interval jwt-exp-time))))
+     (and (<= jwt-interaction-window jwt-refresh-interval)
+          (< jwt-refresh-interval jwt-exp-time)))))
 
 (s/def ::tuning
   (s/keys :opt-un [::enable-jsonb]))
