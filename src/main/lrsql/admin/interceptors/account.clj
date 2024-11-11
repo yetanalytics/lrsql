@@ -251,6 +251,14 @@
                :response
                {:status 200 :body result})))}))
 
+(def no-content
+  "Return a 204 No Content response, without a body."
+  (interceptor
+   {:name ::get-no-content
+    :enter
+    (fn get-account [ctx]
+      (assoc ctx :response {:status 204}))}))
+
 ;; JWT interceptors for admin
 
 (defn generate-jwt
