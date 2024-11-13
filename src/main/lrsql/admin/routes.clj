@@ -41,7 +41,7 @@
                                           :strict? false)
                                          ai/authenticate-admin
                                          (ai/generate-jwt
-                                          jwt-secret jwt-exp jwt-leeway))
+                                          jwt-secret jwt-exp))
       :route-name :lrsql.admin.account/login]
      {:description "Log into an existing account"
       :requestBody (g/request (gs/o {:username :t#string

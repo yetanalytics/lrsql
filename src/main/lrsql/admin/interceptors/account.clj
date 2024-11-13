@@ -262,17 +262,15 @@
 
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
-  [secret exp leeway]
+  [secret exp]
   (interceptor
    {:name ::generate-jwt
     :enter
     (fn generate-jwt [ctx]
-      (let [{lrs :com.yetanalytics/lrs
-             {:keys [account-id]} ::data}
+      (let [{{:keys [account-id]} ::data}
             ctx
             json-web-token
             (admin-u/account-id->jwt account-id secret exp)]
-        (adp/-purge-blocklist lrs leeway) ; Update blocklist upon login
         (assoc ctx
                :response
                {:status 200
