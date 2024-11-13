@@ -46,38 +46,42 @@
   (when auth-header
     (second (re-matches #"Bearer\s+(.*)" auth-header))))
 
-(defn jwt->account-id
-  "Given the JSON Web Token `tok`, return the account ID if valid.
-   Otherwise return `:lrsql.admin/unauthorized-token-error`.
+(defn jwt->payload
+  "Given the JSON Web Token `tok`, unsign and verify the token using `secret`.
+   Return a map of `:account-id` and `:expiration` if valid, otherwise return
+   `:lrsql.admin/unauthorized-token-error`.
    `leeway` is a time amount (in seconds) provided to compensate for
    clock drift."
   [tok secret leeway]
   (if tok ; Avoid encountering a null pointer exception
     (try
-      (-> tok (bj/unsign secret {:leeway leeway}) :acc u/str->uuid)
+      (let [{:keys [acc exp]} (bj/unsign tok secret {:leeway leeway})]
+        {:account-id (u/str->uuid acc)
+         :expiration (u/millis->time (* 1000 exp))})
       (catch clojure.lang.ExceptionInfo _
         :lrsql.admin/unauthorized-token-error))
     :lrsql.admin/unauthorized-token-error))
 
-(defn proxy-jwt->username-and-issuer
-  "Decode (without validating!) a JWT claim and get the username, issuer, 
-   and verify that the role-key on the claim contains the expected role."
+(defn proxy-jwt->payload
+  "Decode (without validating!) a JWT claim and verify that the role-key on
+   the claim contains the expected role. Return a map containing `:username`
+   and `:issuer` iv valid, otherwise return
+   `:lrsql.admin/unauthorized-token-error`."
   [tok uname-key issuer-key role-key role]
   (if tok
     (try
-      (let [body
-            (-> tok
-                (split #"\.")
-                second
-                u/base64encoded-str->str
-                u/parse-json)
-            roles     (get body role-key)
+      (let [payload   (-> tok
+                          (split #"\.")
+                          second
+                          u/base64encoded-str->str
+                          u/parse-json)
+            roles     (get payload role-key)
             has-role? (if (coll? roles)
                         (some? ((set roles) role))
                         (= roles role))]
         (if has-role?
-          {:username (get body uname-key)
-           :issuer   (get body issuer-key)}
+          {:username (get payload uname-key)
+           :issuer   (get payload issuer-key)}
           :lrsql.admin/unauthorized-token-error))
       (catch clojure.lang.ExceptionInfo _
         :lrsql.admin/unauthorized-token-error))

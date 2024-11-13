@@ -159,3 +159,15 @@ INSERT INTO reaction (
 ) VALUES (
   :primary-key, :title, :ruleset, :active, :created, :modified
 );
+
+/* JWT Blocklist */
+
+-- :name insert-blocked-jwt!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a `:jwt` and a `:eviction-time` into the blocklist.
+INSERT INTO blocked_jwt (
+  jwt, evict_time
+) VALUES (
+  :jwt, :eviction-time
+);

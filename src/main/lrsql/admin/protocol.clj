@@ -18,6 +18,14 @@
   (-update-admin-password [this account-id old-password new-password]
     "Update the password for an admin account given old and new passwords."))
 
+(defprotocol AdminJWTManager
+  (-purge-blocklist [this leeway]
+    "Purge the blocklist of any JWTs that have expired since they were added.")
+  (-block-jwt [this jwt expiration]
+    "Block `jwt` and apply an associated `expiration` number of seconds. Returns an error if `jwt` is already in the blocklist.")
+  (-jwt-blocked? [this jwt]
+    "Is `jwt` on the blocklist?"))
+
 (defprotocol APIKeyManager
   (-create-api-keys [this account-id scopes]
     "Create a new API key pair with the associated scopes.")

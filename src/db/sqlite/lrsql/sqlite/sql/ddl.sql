@@ -149,8 +149,6 @@ CREATE INDEX IF NOT EXISTS sts_ancestor_id_idx ON statement_to_statement(ancesto
 -- :doc Create an index on the `statement_to_statement.descendant_id` column.
 CREATE INDEX IF NOT EXISTS sts_descendant_id_idx ON statement_to_statement(descendant_id)
 
-
-
 /* Document Tables */
 
 -- :name create-state-document-table!
@@ -524,3 +522,19 @@ SET sql = 'CREATE TABLE statement_to_actor (
   FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 )'
 WHERE type = 'table' AND name = 'statement_to_actor'
+;
+
+/* Migration 2024-10-31 - Add JWT Blocklist Table */
+
+-- :name create-blocked-jwt-table!
+-- :command :execute
+-- :doc Create the `blocked_jwt` table if it does not exist yet.
+CREATE TABLE IF NOT EXISTS blocked_jwt (
+  jwt        TEXT PRIMARY KEY,
+  evict_time TIMESTAMP
+);
+
+-- :name create-blocked-jwt-evict-time-idx!
+-- :command :execute
+-- :doc Create the `blocked_jwt_evict_time_idx` table if it does not exist yet.
+CREATE INDEX IF NOT EXISTS blocked_jwt_evict_time_idx ON blocked_jwt(evict_time);
