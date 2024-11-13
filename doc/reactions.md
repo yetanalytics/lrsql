@@ -25,7 +25,7 @@ Creating a new reaction will display an edit page, where the user can modify the
 
 ### Conditions
 
-Each condition is a set of rules for finding significant statements. Each condition has a unique name followed by its rules, which can be composed with boolean logic.
+Each condition is a set of rules for finding relevant statements. Each condition has a unique name followed by its rules, which can be composed with boolean logic.
 
 ![reaction edit alpha](images/reactions/edit_condition_alpha.png)
 In the example given, statement "alpha" must have an object `id` equal to `https://example.com/activities/alpha`, a verb `id` equal to `https://example.com/verbs/completed`, and its result `success` property equal to `true`.
