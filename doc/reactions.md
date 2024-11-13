@@ -28,7 +28,7 @@ Creating a new reaction will display an edit page, where the user can modify the
 Each condition is a set of rules for finding relevant statements. Each condition has a unique name followed by its rules, which can be composed with boolean logic.
 
 ![reaction edit alpha](images/reactions/edit_condition_alpha.png)
-In the example given, statement "alpha" must have an object `id` equal to `https://example.com/activities/alpha`, a verb `id` equal to `https://example.com/verbs/completed`, and its result `success` property equal to `true`.
+In the example given, statement "alpha" must have `object.id` equal to `https://example.com/activities/alpha` AND `verb.id` equal to `https://example.com/verbs/completed` AND `result.success` property equal to `true`.
 
 ![reaction edit beta](images/reactions/edit_condition_beta.png)
 ![reaction edit beta ref](images/reactions/edit_condition_beta_ref.png)
