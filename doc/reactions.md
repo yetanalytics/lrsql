@@ -57,7 +57,7 @@ Booleans compose multiple rules together. Booleans are objects with a single key
 * OR: Array of rules of which one must be true
 * NOT: Rule that must _not_ be true
 
-Rule types (either "Statement Criteria" or a boolean) can be selected using the topmost select input, or via the "Add sub-clause" button.
+Rule types (either "Statement Criteria" or a boolean) can be selected using the topmost select input, or via the "Add sub-clause" button. Booleans can be nested arbitrarily, e.g. an AND clause can have multiple OR subclauses, which can each have a NOT clause, and so on and so forth.
 
 ### Template
 
