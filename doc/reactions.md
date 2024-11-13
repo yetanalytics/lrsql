@@ -138,6 +138,6 @@ Then the following statement will be added subsequently (note that some unrelate
 
 ### JSON Format
 
-Reaction data is stored internally in JSON format. For an example, see the [developer documentation](dev.md#reaction-json).
+Reaction data is stored internally in JSON format. The Reactions spec, including a JSON example, can be found [here](reactions/spec.md).
 
 [<- Back to Index](index.md)
