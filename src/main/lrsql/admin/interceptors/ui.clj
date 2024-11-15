@@ -15,7 +15,7 @@
   "Handler function to redirect to the admin ui"
   [path-prefix]
   (fn [_]
-    (resp/redirect (str path-prefix "/admin"))))
+    (resp/redirect (str path-prefix "/admin/ui"))))
 
 (defn get-env
   "Provide select config data to client upon request. Takes a map with static
