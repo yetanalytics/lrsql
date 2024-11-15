@@ -215,18 +215,29 @@
 
 (defn admin-ui-routes
   [common-interceptors {:keys [proxy-path] :as inject-config}]
-  #{;; Redirect root to admin UI
+  #{["/admin/env" :get (conj common-interceptors
+                             (ui/get-env inject-config))
+     :route-name :lrsql.admin.ui/get-env]
+    ;; SPA index.html retirevals + redirects
+    ["/admin" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/path-redirect]
     ["/" :get (ui/admin-ui-redirect proxy-path)
      :route-name :lrsql.admin.ui/root-redirect]
-    ;; Redirect admin w/o slash to admin UI
-    ["/admin" :get (ui/admin-ui-redirect proxy-path)
-     :route-name :lrsql.admin.ui/path-redirect]
-    ;; Redirect admin with slash to admin UI
     ["/admin/" :get (ui/admin-ui-redirect proxy-path)
      :route-name :lrsql.admin.ui/slash-redirect]
-    ["/admin/env" :get (conj common-interceptors
-                             (ui/get-env inject-config))
-     :route-name :lrsql.admin.ui/get-env]})
+    ;; re-route routes
+    ["/admin/credentials" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/admin-credentials-redirect]
+    ["/admin/accounts" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/admin-accounts-redirect]
+    ["/admin/accounts/password" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/admin-accounts-password-redirect]
+    ["/admin/data-management" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/admin-data-management-redirect]
+    ["/admin/status" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/admin-status-redirect]
+    ["/admin/reactions" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/reactions-redirect]})
 
 (defn admin-reaction-routes
   [common-interceptors jwt-secret jwt-leeway no-val-opts]

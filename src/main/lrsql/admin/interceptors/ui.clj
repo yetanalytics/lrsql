@@ -5,11 +5,17 @@
             [lrsql.admin.interceptors.oidc :as oidc-i]
             [lrsql.init.localization :refer [custom-language-map]]))
 
+(defn get-spa
+  [path-prefix]
+  (fn [_]
+    (-> (resp/resource-response (str path-prefix "public/admin/index.html"))
+        (assoc-in [:headers "Content-Type"] "text/html"))))
+
 (defn admin-ui-redirect
   "Handler function to redirect to the admin ui"
   [path-prefix]
   (fn [_]
-    (resp/redirect (str path-prefix "/admin/index.html"))))
+    (resp/redirect (str path-prefix "/admin"))))
 
 (defn get-env
   "Provide select config data to client upon request. Takes a map with static
