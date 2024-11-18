@@ -84,7 +84,8 @@
                         "zh-CN" "回答了"}}
    "object" {"id"         "http://www.example.com/tincan/activities/multipart"
              "objectType" "Activity"
-             "definition" {"name"        {"en-US" "Multi Part Activity"
+             "definition" {"type"        "http://www.example.com/activity-types/test"
+                           "name"        {"en-US" "Multi Part Activity"
                                           "zh-CN" "多元部分Activity"}
                            "description" {"en-US" "Multi Part Activity Description"
                                           "zh-CN" "多元部分Activity的简述"}}}})
@@ -211,231 +212,258 @@
         vrb-1 (get-in stmt-1 ["verb" "id"])
         act-1 (get-in stmt-1 ["object" "id"])
         act-4 (get-in stmt-4 ["object" "id"])]
-
-    (testing "empty statement insertions"
-      (is (= {:statement-ids []}
-             (lrsp/-store-statements lrs auth-ident [] [])))
-      (is (= {:statement-result {:statements []
-                                 :more       ""}
-              :attachments      []}
-             (get-ss lrs auth-ident {:limit 50} #{}))))
-    
-    (testing "statement insertions"  
-      (is (= {:statement-ids [id-0]}
-             (lrsp/-store-statements lrs auth-ident [stmt-0] [])))
-      (is (= {:statement-ids [id-1 id-2 id-3]}
-             (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-2 stmt-3] [])))
-      (is (= {:statement-ids [id-4]}
-             (lrsp/-store-statements lrs auth-ident [stmt-4] [stmt-4-attach]))))
-
-    (testing "statement conflicts"
-      (is (= {:statement-ids []}
-             (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-1] [])))
-      (testing "(verb display not part of Statement Immutability)"
-        (let [stmt-1' (assoc-in stmt-1 ["verb" "display" "en-US"] "ANSWERED")]
-          (is (= {:statement-ids []}
-                 (lrsp/-store-statements lrs auth-ident [stmt-1'] [])))))
-      (testing "(actor IFI is part of Statement Immutability)"
-        ;; Neither statement should be inserted due to batch rollback, even
-        ;; though stmt-b could be inserted by itself.
-        (let [stmt-a (assoc-in stmt-1
-                               ["actor" "mbox"]
-                               "mailto:sample.agent.boo@example.com")
-              stmt-b (assoc stmt-a
-                            "id"
-                            "00000000-0000-4000-8000-000000000010")]
-          (is (= ::lrsp/statement-conflict
-                 (-> (lrsp/-store-statements lrs auth-ident [stmt-b stmt-a] [])
-                     :error
-                     ex-data
-                     :type))))))
-
-    (testing "statement ID queries"
-      (is (= {:statement stmt-0}
-             (get-ss lrs auth-ident {:voidedStatementId id-0} #{})))
-      (is (= {:statement (update-in stmt-0 ["verb" "display"] dissoc "zh-CN")}
-             (get-ss lrs
-                     auth-ident
-                     {:voidedStatementId id-0 :format "canonical"}
-                     #{"en-US"})))
-      (is (= {:statement
-              {"id"     id-1
-               "actor"  {"objectType" "Agent"
-                         "mbox"       "mailto:sample.agent@example.com"}
-               "verb"   {"id" "http://adlnet.gov/expapi/verbs/answered"}
-               "object" {"id" "http://www.example.com/tincan/activities/multipart"}}}
-             (get-ss lrs auth-ident {:statementId id-1 :format "ids"} #{})))
-      (is (= {:statement stmt-2}
-             (get-ss lrs auth-ident {:statementId id-2} #{})))
-      (is (= {:statement stmt-3}
-             (get-ss lrs auth-ident {:statementId id-3} #{}))))
-
-    (testing "statement property queries"
-      ;; Also checks that no extra stmts were inserted on rolled-back inserts
-      (is (= {:statement-result {:statements [stmt-4 stmt-3 stmt-2 stmt-1]
-                                 :more       ""}
-              :attachments      []}
-             (get-ss lrs auth-ident {} #{})))
-      (is (= {:statement-result {:statements [] :more ""}
-              :attachments      []}
-             (get-ss lrs auth-ident {:since ts} #{})))
-      (is (= {:statement-result {:statements [stmt-4 stmt-3 stmt-2 stmt-1]
-                                 :more       ""}
-              :attachments      []}
-             (get-ss lrs auth-ident {:until ts} #{})))
-      (is (= {:statement-result {:statements [stmt-1 stmt-2 stmt-3 stmt-4]
-                                 :more       ""}
-              :attachments      []}
-             (get-ss lrs auth-ident {:until ts :ascending true} #{})))
-      (is (= {:statement-result {:statements [stmt-1] :more ""}
-              :attachments      []}
-             (get-ss lrs auth-ident {:agent agt-1} #{})))
-      (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
-              :attachments      []}
-             (get-ss lrs auth-ident {:agent agt-1 :related_agents true} #{})))
-      (is (= {:statement-result {:statements [stmt-4] :more ""}
-              :attachments      []}
-             (get-ss lrs auth-ident {:agent grp-4} #{})))
-      (is (= {:statement-result {:statements [stmt-4] :more ""}
-              :attachments      []}
-             (get-ss lrs auth-ident {:agent mem-4} #{})))
-
-      ;; XAPI-00162 - stmt-2 shows up because it refers to a statement, stmt-0,
-      ;; that meets the query criteria, even though stmt-0 was voided.
-      (testing "apply voiding"
-        ;; stmt-0 itself cannot be directly queried, since it was voided.
-        ;; However, stmt-2 is returned since it was not voided.
-        (is (= {:statement-result {:statements [stmt-2] :more ""}
+    (try
+      (testing "empty statement insertions"
+        (is (= {:statement-ids []}
+               (lrsp/-store-statements lrs auth-ident [] [])))
+        (is (= {:statement-result {:statements []
+                                   :more       ""}
                 :attachments      []}
-               (get-ss lrs auth-ident {:agent agt-0} #{})))
-        (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
-                :attachments      []}
-               (get-ss lrs auth-ident {:verb vrb-1} #{})))
-        (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
-                :attachments      []}
-               (get-ss lrs auth-ident {:activity act-1} #{})))
-        (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
-                :attachments      []}
+               (get-ss lrs auth-ident {:limit 50} #{}))))
+
+      (testing "statement insertions"
+        (is (= {:statement-ids [id-0]}
+               (lrsp/-store-statements lrs auth-ident [stmt-0] [])))
+        (is (= {:statement-ids [id-1 id-2 id-3]}
+               (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-2 stmt-3] [])))
+        (is (= {:statement-ids [id-4]}
+               (lrsp/-store-statements lrs auth-ident [stmt-4] [stmt-4-attach]))))
+
+      (testing "statement conflicts"
+        (is (= {:statement-ids []}
+               (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-1] [])))
+        (testing "(verb display not part of Statement Immutability)"
+          (let [stmt-1' (assoc-in stmt-1 ["verb" "display" "en-US"] "ANSWERED")]
+            (is (= {:statement-ids []}
+                   (lrsp/-store-statements lrs auth-ident [stmt-1'] [])))))
+        (testing "(actor IFI is part of Statement Immutability)"
+          ;; Neither statement should be inserted due to batch rollback, even
+          ;; though stmt-b could be inserted by itself.
+          (let [stmt-a (assoc-in stmt-1
+                                 ["actor" "mbox"]
+                                 "mailto:sample.agent.boo@example.com")
+                stmt-b (assoc stmt-a
+                              "id"
+                              "00000000-0000-4000-8000-000000000010")]
+            (is (= ::lrsp/statement-conflict
+                   (-> (lrsp/-store-statements lrs auth-ident [stmt-b stmt-a] [])
+                       :error
+                       ex-data
+                       :type))))))
+
+      (testing "statement ID queries"
+        (is (= {:statement stmt-0}
+               (get-ss lrs auth-ident {:voidedStatementId id-0} #{})))
+        (is (= {:statement (update-in stmt-0 ["verb" "display"] dissoc "zh-CN")}
                (get-ss lrs
                        auth-ident
-                       {:activity act-1 :related_activities true}
-                       #{})))))
+                       {:voidedStatementId id-0 :format "canonical"}
+                       #{"en-US"})))
+        (is (= {:statement
+                {"id"     id-1
+                 "actor"  {"objectType" "Agent"
+                           "mbox"       "mailto:sample.agent@example.com"}
+                 "verb"   {"id" "http://adlnet.gov/expapi/verbs/answered"}
+                 "object" {"id" "http://www.example.com/tincan/activities/multipart"}}}
+               (get-ss lrs auth-ident {:statementId id-1 :format "ids"} #{})))
+        (is (= {:statement stmt-2}
+               (get-ss lrs auth-ident {:statementId id-2} #{})))
+        (is (= {:statement stmt-3}
+               (get-ss lrs auth-ident {:statementId id-3} #{}))))
 
-    (testing "with both activities and agents"
-      (is (= {:statement-result {:statements [stmt-1] :more ""}
-              :attachments      []}
-             (get-ss lrs auth-ident {:activity act-1 :agent agt-1} #{})))
-      (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
-              :attachments      []}
-             (get-ss lrs
-                     auth-ident
-                     {:activity           act-1
-                      :agent              agt-1
-                      :related_activities true
-                      :related_agents     true}
-                     #{}))))
-
-    (testing "querying with limits"
-      (testing "(descending)"
-        (is (= {:statement-result
-                {:statements [stmt-4 stmt-3]
-                 :more       (format "%s/statements?limit=2&from=" pre)}
-                :attachments []}
-               (-> (get-ss lrs auth-ident {:limit 2} #{})
-                   (update-in [:statement-result :more]
-                              #(->> % (re-matches #"(.*from=).*") second)))))
-        (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
+      (testing "statement property queries"
+        ;; Also checks that no extra stmts were inserted on rolled-back inserts
+        (is (= {:statement-result {:statements [stmt-4 stmt-3 stmt-2 stmt-1]
+                                   :more       ""}
                 :attachments      []}
-               (let [more (-> (get-ss lrs auth-ident {:limit 2} #{})
-                              (get-in [:statement-result :more]))
-                     from (->> more (re-matches #".*from=(.*)") second)]
-                 (get-ss lrs auth-ident {:limit 2 :from from} #{}))))))
-    (testing "(ascending)"
-      (is (= {:statement-result
-              {:statements [stmt-1 stmt-2]
-               :more       (format "%s/statements?limit=2&ascending=true&from="
-                                   pre)}
-              :attachments []}
-             (-> (get-ss lrs auth-ident {:limit 2 :ascending true} #{})
-                 (update-in [:statement-result :more]
-                            #(->> % (re-matches #"(.*from=).*") second)))))
-      (is (= {:statement-result {:statements [stmt-3 stmt-4] :more ""}
-              :attachments      []}
-             (let [more (-> (get-ss lrs auth-ident {:limit 2 :ascending true} #{})
-                            (get-in [:statement-result :more]))
-                   from (->> more (re-matches #".*from=(.*)") second)]
-               (get-ss lrs
-                       auth-ident
-                       {:limit 2 :ascending true :from from}
-                       #{})))))
-
-    (testing "(with actor)"
-      (let [params {:limit 1
-                    :agent {"name" "Sample Agent 1"
-                            "mbox" "mailto:sample.agent@example.com"}
-                    :related_agents true}]
-        (is (= {:statement-result
-                {:statements [stmt-3]
-                 :more       (str pre
-                                  "/statements"
-                                  "?" "limit=1"
-                                  "&" "agent=%7B%22name%22%3A%22Sample+Agent+1%22%2C%22mbox%22%3A%22mailto%3Asample.agent%40example.com%22%7D"
-                                  "&" "related_agents=true"
-                                  "&" "from=")}
-                :attachments []}
-               (-> (get-ss lrs auth-ident params #{})
-                   (update-in [:statement-result :more]
-                              #(->> % (re-matches #"(.*from=).*") second)))))
+               (get-ss lrs auth-ident {} #{})))
+        (is (= {:statement-result {:statements [] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident {:since ts} #{})))
+        (is (= {:statement-result {:statements [stmt-4 stmt-3 stmt-2 stmt-1]
+                                   :more       ""}
+                :attachments      []}
+               (get-ss lrs auth-ident {:until ts} #{})))
+        (is (= {:statement-result {:statements [stmt-1 stmt-2 stmt-3 stmt-4]
+                                   :more       ""}
+                :attachments      []}
+               (get-ss lrs auth-ident {:until ts :ascending true} #{})))
         (is (= {:statement-result {:statements [stmt-1] :more ""}
                 :attachments      []}
-               (let [more (-> (get-ss lrs auth-ident params #{})
+               (get-ss lrs auth-ident {:agent agt-1} #{})))
+        (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident {:agent agt-1 :related_agents true} #{})))
+        (is (= {:statement-result {:statements [stmt-4] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident {:agent grp-4} #{})))
+        (is (= {:statement-result {:statements [stmt-4] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident {:agent mem-4} #{})))
+
+        ;; XAPI-00162 - stmt-2 shows up because it refers to a statement, stmt-0,
+        ;; that meets the query criteria, even though stmt-0 was voided.
+        (testing "apply voiding"
+          ;; stmt-0 itself cannot be directly queried, since it was voided.
+          ;; However, stmt-2 is returned since it was not voided.
+          (is (= {:statement-result {:statements [stmt-2] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:agent agt-0} #{})))
+          (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:verb vrb-1} #{})))
+          (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:activity act-1} #{})))
+          (is (= {:statement-result {:statements [stmt-3 stmt-2 stmt-1] :more ""}
+                  :attachments      []}
+                 (get-ss lrs
+                         auth-ident
+                         {:activity act-1 :related_activities true}
+                         #{})))))
+
+      (testing "with both activities and agents"
+        (is (= {:statement-result {:statements [stmt-1] :more ""}
+                :attachments      []}
+               (get-ss lrs auth-ident {:activity act-1 :agent agt-1} #{})))
+        (is (= {:statement-result {:statements [stmt-3 stmt-1] :more ""}
+                :attachments      []}
+               (get-ss lrs
+                       auth-ident
+                       {:activity           act-1
+                        :agent              agt-1
+                        :related_activities true
+                        :related_agents     true}
+                       #{}))))
+
+      (testing "querying with limits"
+        (testing "(descending)"
+          (is (= {:statement-result
+                  {:statements [stmt-4 stmt-3]
+                   :more       (format "%s/statements?limit=2&from=" pre)}
+                  :attachments []}
+                 (-> (get-ss lrs auth-ident {:limit 2} #{})
+                     (update-in [:statement-result :more]
+                                #(->> % (re-matches #"(.*from=).*") second)))))
+          (is (= {:statement-result {:statements [stmt-2 stmt-1] :more ""}
+                  :attachments      []}
+                 (let [more (-> (get-ss lrs auth-ident {:limit 2} #{})
+                                (get-in [:statement-result :more]))
+                       from (->> more (re-matches #".*from=(.*)") second)]
+                   (get-ss lrs auth-ident {:limit 2 :from from} #{}))))))
+      (testing "(ascending)"
+        (is (= {:statement-result
+                {:statements [stmt-1 stmt-2]
+                 :more       (format "%s/statements?limit=2&ascending=true&from="
+                                     pre)}
+                :attachments []}
+               (-> (get-ss lrs auth-ident {:limit 2 :ascending true} #{})
+                   (update-in [:statement-result :more]
+                              #(->> % (re-matches #"(.*from=).*") second)))))
+        (is (= {:statement-result {:statements [stmt-3 stmt-4] :more ""}
+                :attachments      []}
+               (let [more (-> (get-ss lrs auth-ident {:limit 2 :ascending true} #{})
                               (get-in [:statement-result :more]))
                      from (->> more (re-matches #".*from=(.*)") second)]
-                 (get-ss lrs auth-ident (assoc params :from from) #{}))))))
+                 (get-ss lrs
+                         auth-ident
+                         {:limit 2 :ascending true :from from}
+                         #{})))))
 
-    (testing "querying with attachments"
-      (testing "(multiple)"
-        (is (= {:statement-result {:statements [stmt-4] :more ""}
-                :attachments      [(update-attachment-content stmt-4-attach)]}
-               (-> (get-ss lrs
-                           auth-ident
-                           {:activity act-4 :attachments true}
-                           #{})
-                   string-result-attachment-content))))
+      (testing "(with actor)"
+        (let [params {:limit 1
+                      :agent {"name" "Sample Agent 1"
+                              "mbox" "mailto:sample.agent@example.com"}
+                      :related_agents true}]
+          (is (= {:statement-result
+                  {:statements [stmt-3]
+                   :more       (str pre
+                                    "/statements"
+                                    "?" "limit=1"
+                                    "&" "agent=%7B%22name%22%3A%22Sample+Agent+1%22%2C%22mbox%22%3A%22mailto%3Asample.agent%40example.com%22%7D"
+                                    "&" "related_agents=true"
+                                    "&" "from=")}
+                  :attachments []}
+                 (-> (get-ss lrs auth-ident params #{})
+                     (update-in [:statement-result :more]
+                                #(->> % (re-matches #"(.*from=).*") second)))))
+          (is (= {:statement-result {:statements [stmt-1] :more ""}
+                  :attachments      []}
+                 (let [more (-> (get-ss lrs auth-ident params #{})
+                                (get-in [:statement-result :more]))
+                       from (->> more (re-matches #".*from=(.*)") second)]
+                   (get-ss lrs auth-ident (assoc params :from from) #{}))))))
 
-      (testing "(single)"
-        (is (= {:statement    stmt-4
-                :attachments  [(update-attachment-content stmt-4-attach)]}
-               (-> (get-ss lrs
-                           auth-ident
-                           {:statementId (get stmt-4 "id") :attachments true}
-                           #{})
-                   string-result-attachment-content)))))
+      (testing "querying with attachments"
+        (testing "(multiple)"
+          (is (= {:statement-result {:statements [stmt-4] :more ""}
+                  :attachments      [(update-attachment-content stmt-4-attach)]}
+                 (-> (get-ss lrs
+                             auth-ident
+                             {:activity act-4 :attachments true}
+                             #{})
+                     string-result-attachment-content))))
 
-    (testing "agent query"
-      (is (= {:person
-              {"objectType" "Person"
-               "name" ["Sample Agent 1"]
-               "mbox" ["mailto:sample.agent@example.com"]}}
-             (lrsp/-get-person lrs auth-ident {:agent agt-1}))))
+        (testing "(single)"
+          (is (= {:statement    stmt-4
+                  :attachments  [(update-attachment-content stmt-4-attach)]}
+                 (-> (get-ss lrs
+                             auth-ident
+                             {:statementId (get stmt-4 "id") :attachments true}
+                             #{})
+                     string-result-attachment-content)))))
 
-    (testing "activity query"
-      ;; Activity was updated between stmt-0 and stmt-1
-      (is (= {:activity
-              {"id"         "http://www.example.com/tincan/activities/multipart"
-               "objectType" "Activity"
-               "definition" {"name"        {"en-US" "Multi Part Activity"
-                                            "zh-CN" "多元部分Activity"}
-                             "description" {"en-US" "Multi Part Activity Description"
-                                            "zh-CN" "多元部分Activity的简述"}}}}
-             (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
-    
-    (testing "Extremely long IRIs"
-      (is (= {:statement-ids [id-7]}
-             (lrsp/-store-statements lrs auth-ident [stmt-7] []))))
+      (testing "agent query"
+        (is (= {:person
+                {"objectType" "Person"
+                 "name" ["Sample Agent 1"]
+                 "mbox" ["mailto:sample.agent@example.com"]}}
+               (lrsp/-get-person lrs auth-ident {:agent agt-1}))))
 
-    (component/stop sys')
-    (support/unstrument-lrsql)))
+      (testing "activity query"
+        ;; Activity was updated between stmt-0 and stmt-1
+        ;; Result should contain full definition.
+        (is (= {:activity
+                {"id"         "http://www.example.com/tincan/activities/multipart"
+                 "objectType" "Activity"
+                 "definition" {"type"        "http://www.example.com/activity-types/test"
+                               "name"        {"en-US" "Multi Part Activity"
+                                              "zh-CN" "多元部分Activity"}
+                               "description" {"en-US" "Multi Part Activity Description"
+                                              "zh-CN" "多元部分Activity的简述"}}}}
+               (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
+
+      (testing "Extremely long IRIs"
+        (is (= {:statement-ids [id-7]}
+               (lrsp/-store-statements lrs auth-ident [stmt-7] []))))
+      (finally
+        (component/stop sys')
+        (support/unstrument-lrsql)))))
+
+(deftest reverse-activity-query-test
+  (let [sys   (support/test-system)
+        sys'  (component/start sys)
+        lrs   (-> sys' :lrs)
+        pre   (-> sys' :webserver :config :url-prefix)
+        act-1 (get-in stmt-1 ["object" "id"])]
+    (try
+      (testing "activity query (reverse)"
+        (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+        (lrsp/-store-statements lrs auth-ident [stmt-0] [])
+        ;; Activity was updated between stmt-1 and stmt-0
+        (is (= {:activity
+                {"id"         "http://www.example.com/tincan/activities/multipart"
+                 "objectType" "Activity"
+                 "definition" {"type"        "http://www.example.com/activity-types/test"
+                               "name"        {"en-US" "Multi Part Activity"
+                                              "zh-CN" "多元部分Activity"}
+                               "description" {"en-US" "Multi Part Activity Description"
+                                              "zh-CN" "多元部分Activity的简述"}}}}
+               (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
+
+      (finally
+        (component/stop sys')
+        (support/unstrument-lrsql)))))
 
 (deftest attachment-normalization-test
   (let [sys   (support/test-system)
