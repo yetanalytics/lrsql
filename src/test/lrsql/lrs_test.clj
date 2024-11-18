@@ -444,7 +444,6 @@
   (let [sys   (support/test-system)
         sys'  (component/start sys)
         lrs   (-> sys' :lrs)
-        pre   (-> sys' :webserver :config :url-prefix)
         act-1 (get-in stmt-1 ["object" "id"])]
     (try
       (testing "activity query (reverse)"
