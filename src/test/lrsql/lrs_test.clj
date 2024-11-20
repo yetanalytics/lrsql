@@ -416,21 +416,15 @@
       (testing "agent query"
         (is (= {:person
                 {"objectType" "Person"
-                 "name" ["Sample Agent 1"]
-                 "mbox" ["mailto:sample.agent@example.com"]}}
+                 "name"       ["Sample Agent 1"]
+                 "mbox"       ["mailto:sample.agent@example.com"]}}
                (lrsp/-get-person lrs auth-ident {:agent agt-1}))))
 
       (testing "activity query"
         ;; Activity was updated between stmt-0 and stmt-1
         ;; Result should contain full definition.
         (is (= {:activity
-                {"id"         "http://www.example.com/tincan/activities/multipart"
-                 "objectType" "Activity"
-                 "definition" {"type"        "http://www.example.com/activity-types/test"
-                               "name"        {"en-US" "Multi Part Activity"
-                                              "zh-CN" "多元部分Activity"}
-                               "description" {"en-US" "Multi Part Activity Description"
-                                              "zh-CN" "多元部分Activity的简述"}}}}
+                (get stmt-1 "object")}
                (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
 
       (testing "Extremely long IRIs"
@@ -451,13 +445,7 @@
         (lrsp/-store-statements lrs auth-ident [stmt-0] [])
         ;; Activity was updated between stmt-1 and stmt-0
         (is (= {:activity
-                {"id"         "http://www.example.com/tincan/activities/multipart"
-                 "objectType" "Activity"
-                 "definition" {"type"        "http://www.example.com/activity-types/test"
-                               "name"        {"en-US" "Multi Part Activity"
-                                              "zh-CN" "多元部分Activity"}
-                               "description" {"en-US" "Multi Part Activity Description"
-                                              "zh-CN" "多元部分Activity的简述"}}}}
+                (get stmt-1 "object")}
                (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
 
       (finally
