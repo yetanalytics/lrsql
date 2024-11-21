@@ -6,13 +6,13 @@
             [lrsql.init.localization :refer [custom-language-map]]))
 
 (defn get-spa
-  [path-prefix]
-  (fn [_]
-    (-> (resp/resource-response (str path-prefix "public/admin/index.html"))
-        (assoc-in [:headers "Content-Type"] "text/html"))))
+  "Handler function that returns the index.html file."
+  [_]
+  (-> (resp/resource-response "public/admin/index.html")
+      (assoc-in [:headers "Content-Type"] "text/html")))
 
 (defn admin-ui-redirect
-  "Handler function to redirect to the admin ui"
+  "Handler function to redirect to the admin UI."
   [path-prefix]
   (fn [_]
     (resp/redirect (str path-prefix "/admin/ui"))))
