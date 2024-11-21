@@ -219,11 +219,11 @@
                              (ui/get-env inject-config))
      :route-name :lrsql.admin.ui/get-env]
     ;; SPA routes
-    ["/admin/ui" :get ui/get-spa
+    ["/admin/ui" :get (ui/get-spa proxy-path)
      :route-name :lrsql.admin.ui/main-path]
-    ["/admin/ui/" :get ui/get-spa
+    ["/admin/ui/" :get (ui/get-spa proxy-path)
      :route-name :lrsql.admin.ui/slash-path]
-    ["/admin/ui/*path" :get ui/get-spa
+    ["/admin/ui/*path" :get (ui/get-spa proxy-path)
      :route-name :lrsql.admin.ui/sub-paths]
     ;; SPA redirects
     ["/" :get (ui/admin-ui-redirect proxy-path)

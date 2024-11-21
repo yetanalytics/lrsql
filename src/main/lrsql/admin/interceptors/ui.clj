@@ -1,5 +1,6 @@
 (ns lrsql.admin.interceptors.ui
   (:require [ring.util.response :as resp]
+            [selmer.parser :as selm-parser]
             [io.pedestal.interceptor :refer [interceptor]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors.oidc :as oidc-i]
@@ -7,9 +8,12 @@
 
 (defn get-spa
   "Handler function that returns the index.html file."
-  [_]
-  (-> (resp/resource-response "public/admin/index.html")
-      (assoc-in [:headers "Content-Type"] "text/html")))
+  [path-prefix]
+  (fn [_]
+    (-> (selm-parser/render-file "public/admin/index.html"
+                                 {:prefix path-prefix})
+        resp/response
+        (resp/content-type "text/html"))))
 
 (defn admin-ui-redirect
   "Handler function to redirect to the admin UI."
