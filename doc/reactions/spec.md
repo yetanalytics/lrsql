@@ -55,12 +55,12 @@ The following is the example reaction from [the tutorial](reactions.md), in JSON
                     {
                         "path": [ "object", "id" ],
                         "op": "eq",
-                        "val": "https://example.com/activities/alpha"
+                        "val": "https://example.com/alpha"
                     },
                     {
                         "path": [ "verb", "id" ],
                         "op": "eq",
-                        "val": "https://example.com/verbs/completed"
+                        "val": "https://example.com/completed"
                     },
                     {
                         "path": [ "result", "success" ],
@@ -74,12 +74,12 @@ The following is the example reaction from [the tutorial](reactions.md), in JSON
                     {
                         "path": [ "object", "id" ],
                         "op": "eq",
-                        "val": "https://example.com/activities/beta"
+                        "val": "https://example.com/beta"
                     },
                     {
                         "path": [ "verb", "id" ],
                         "op": "eq",
-                        "val": "https://example.com/verbs/completed"
+                        "val": "https://example.com/completed"
                     },
                     {
                         "path": [ "result", "success" ],
@@ -104,10 +104,10 @@ The following is the example reaction from [the tutorial](reactions.md), in JSON
                 }
             },
             "verb": {
-                "id": "https://example.com/verbs/completed"
+                "id": "https://example.com/completed"
             },
             "object": {
-                "id": "https://example.com/activities/alpha-and-beta",
+                "id": "https://example.com/alpha-and-beta",
                 "objectType": "Activity"
             }
         },

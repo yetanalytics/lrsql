@@ -30,11 +30,11 @@ Creating a new reaction will display an edit page, where the user can modify the
 
 Each condition is a set of rules for finding relevant statements. Each condition has a unique name followed by its rules, which can be composed with boolean logic.
 
-In the example given, statement "alpha" must have `object.id` equal to `https://example.com/activities/alpha` AND `verb.id` equal to `https://example.com/verbs/completed` AND `result.success` property equal to `true`:
+In the example given, statement "alpha" must have `object.id` equal to `https://example.com/alpha` AND `verb.id` equal to `https://example.com/completed` AND `result.success` property equal to `true`:
 
 ![reaction edit alpha](images/reactions/edit_condition_alpha.png)
 
-Statement "beta" must have `verb.id` equal to `https://example.com/verbs/completed` AND `result.success` equal to `true` (just like statement "alpha") AND `object.id` equal to `https://example.com/activities/beta` AND `timestamp` greater than that of statement "alpha":
+Statement "beta" must have `verb.id` equal to `https://example.com/completed` AND `result.success` equal to `true` (just like statement "alpha") AND `object.id` equal to `https://example.com/beta` AND `timestamp` greater than that of statement "alpha":
 
 ![reaction edit beta](images/reactions/edit_condition_beta.png)
 ![reaction edit beta ref](images/reactions/edit_condition_beta_ref.png)
@@ -97,10 +97,10 @@ Given the reaction specified above, if the following statements are posted to th
       "mbox": "mailto:bob@example.com"
     },
     "verb": {
-      "id": "https://example.com/verbs/completed"
+      "id": "https://example.com/completed"
     },
     "object": {
-      "id": "https://example.com/activities/alpha",
+      "id": "https://example.com/alpha",
       "objectType": "Activity"
     },
     "result": {
@@ -113,10 +113,10 @@ Given the reaction specified above, if the following statements are posted to th
       "mbox": "mailto:bob@example.com"
     },
     "verb": {
-      "id": "https://example.com/verbs/completed"
+      "id": "https://example.com/completed"
     },
     "object": {
-      "id": "https://example.com/activities/beta",
+      "id": "https://example.com/beta",
       "objectType": "Activity"
     },
     "result": {
@@ -135,10 +135,10 @@ Then the following statement will be added subsequently (note that some unrelate
     "mbox": "mailto:bob@example.com"
   },
   "verb": {
-    "id": "https://example.com/verbs/completed"
+    "id": "https://example.com/completed"
   },
   "object": {
-    "id": "https://example.com/activities/alpha-and-beta",
+    "id": "https://example.com/alpha-and-beta",
     "objectType": "Activity"
   }
 }
