@@ -49,6 +49,7 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 - [Developer Documentation](doc/dev.md)
 - [Example AWS Deployment](doc/aws.md)
 - [Reactions](doc/reactions.md)
+  - [JSON Spec](doc/reactions/spec.md)
 - [Sending xAPI statement(s) with Postman](doc/postman.md)
 
 ### Demos
