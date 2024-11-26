@@ -124,133 +124,16 @@ span.build {
             <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
           </div>
         </div>
-        <p><a href='index.html'><- Back to Index</a></p><h1 id="reactions">Reactions</h1><p>Reactions allow SQL LRS to watch for patterns in submitted xAPI data and dynamically generate new statements in response.</p><h2 id="usage">Usage</h2><p>To use Reactions the <code>LRSQL&#95;ENABLE&#95;REACTIONS</code> environment variable or the <code>enableReactions</code> LRS configuration property must be set to <code>true</code>. Reactions are disabled by default.</p><p>Reaction "rulesets" are defined in JSON:</p><pre><code class="json">
-{
-  &quot;identityPaths&quot;: &#91;
-    &#91;
-      &quot;actor&quot;,
-      &quot;mbox&quot;
-    &#93;,
-    &#91;
-      &quot;actor&quot;,
-      &quot;mbox&#95;sha1sum&quot;
-    &#93;,
-    &#91;
-      &quot;actor&quot;,
-      &quot;openid&quot;
-    &#93;,
-    &#91;
-      &quot;actor&quot;,
-      &quot;account&quot;,
-      &quot;homePage&quot;
-    &#93;,
-    &#91;
-      &quot;actor&quot;,
-      &quot;account&quot;,
-      &quot;name&quot;
-    &#93;
-  &#93;,
-  &quot;conditions&quot;: {
-    &quot;a&quot;: {
-      &quot;and&quot;: &#91;
-        {
-          &quot;path&quot;: &#91;
-            &quot;object&quot;,
-            &quot;id&quot;
-          &#93;,
-          &quot;op&quot;: &quot;eq&quot;,
-          &quot;val&quot;: &quot;https://example.com/activities/a&quot;
-        },
-        {
-          &quot;path&quot;: &#91;
-            &quot;verb&quot;,
-            &quot;id&quot;
-          &#93;,
-          &quot;op&quot;: &quot;eq&quot;,
-          &quot;val&quot;: &quot;https://example.com/verbs/completed&quot;
-        },
-        {
-          &quot;path&quot;: &#91;
-            &quot;result&quot;,
-            &quot;success&quot;
-          &#93;,
-          &quot;op&quot;: &quot;eq&quot;,
-          &quot;val&quot;: true
-        }
-      &#93;
-    },
-    &quot;b&quot;: {
-      &quot;and&quot;: &#91;
-        {
-          &quot;path&quot;: &#91;
-            &quot;object&quot;,
-            &quot;id&quot;
-          &#93;,
-          &quot;op&quot;: &quot;eq&quot;,
-          &quot;val&quot;: &quot;https://example.com/activities/b&quot;
-        },
-        {
-          &quot;path&quot;: &#91;
-            &quot;verb&quot;,
-            &quot;id&quot;
-          &#93;,
-          &quot;op&quot;: &quot;eq&quot;,
-          &quot;val&quot;: &quot;https://example.com/verbs/completed&quot;
-        },
-        {
-          &quot;path&quot;: &#91;
-            &quot;result&quot;,
-            &quot;success&quot;
-          &#93;,
-          &quot;op&quot;: &quot;eq&quot;,
-          &quot;val&quot;: true
-        },
-        {
-          &quot;path&quot;: &#91;
-            &quot;timestamp&quot;
-          &#93;,
-          &quot;op&quot;: &quot;gt&quot;,
-          &quot;ref&quot;: {
-            &quot;condition&quot;: &quot;a&quot;,
-            &quot;path&quot;: &#91;
-              &quot;timestamp&quot;
-            &#93;
-          }
-        }
-      &#93;
-    }
-  },
-  &quot;template&quot;: {
-    &quot;actor&quot;: {
-      &quot;mbox&quot;: {
-        &quot;$templatePath&quot;: &#91;
-          &quot;a&quot;,
-          &quot;actor&quot;,
-          &quot;mbox&quot;
-        &#93;
-      }
-    },
-    &quot;verb&quot;: {
-      &quot;id&quot;: &quot;https://example.com/verbs/completed&quot;
-    },
-    &quot;object&quot;: {
-      &quot;id&quot;: &quot;https://example.com/activities/a-and-b&quot;,
-      &quot;objectType&quot;: &quot;Activity&quot;
-    }
-  }
-}
-
-
-</code></pre><h3 id="identity&#95;paths">Identity Paths</h3><p>Identity Paths (<code>identityPaths</code> in the ruleset JSON) are a method of grouping statements for which you are attempting to match conditions. Typically, Reactions may revolve around actor Inverse Functional Identifiers (IFIs), e.g. <code>&#91;&quot;actor&quot;, &quot;mbox&quot;&#93;</code> or <code>&#91;&quot;actor&quot;, &quot;account&quot;, &quot;name&quot;&#93;</code> which is equivalent to saying "For a given Actor, look for statements that share IFI values".</p><p>Alternative approaches to Identity Path may be used by modifying <code>identityPaths</code>, for instance <code>&#91;&quot;context&quot;, &quot;registration&quot;&#93;</code> to group statements by learning session.</p><h3 id="conditions">Conditions</h3><p><code>conditions</code> is a mapping of names to rules for finding significant statements. Rules can be composed with boolean logic.</p><p>In the example given above statement <code>a</code> must have an object id equal to <code>https://example.com/activities/a</code>, a verb id equal to <code>https://example.com/verbs/completed</code>, and a result success equal to <code>true</code>. Statement <code>b</code> must have the same verb and result success but an object id equal to <code>https://example.com/activities/b</code> and a timestamp greater than that of <code>a</code>.</p><h4 id="rules">Rules</h4><p>All rules have a <code>path</code> array that indicates a path in an xAPI statement and an <code>op</code> that is one of the following operators:</p><ul><li><code>gt</code> - Greater than</li><li><code>lt</code> - Less than</li><li><code>gte</code> - Greater than or equal</li><li><code>lte</code> - Less than or equal</li><li><code>eq</code> - Equal</li><li><code>noteq</code> - Not equal</li><li><code>like</code> - Fuzzy match using SQL <code>%</code> syntax. For example, <code>bo%</code> matches <code>bob</code> and <code>boz</code>.</li><li><code>contains</code> - Array contains</li></ul><p>Rules either have a <code>val</code> literal value or a <code>ref</code> which is a path into a statement found for another condition.</p><h4 id="booleans">Booleans</h4><p>Booleans compose multiple rules together. Booleans are objects with a single key:</p><ul><li><code>and</code> - Array of rules which must all be true</li><li><code>or</code> - Array of rules of which one must be true</li><li><code>not</code> - Rule to nullify</li></ul><h3 id="template">Template</h3><p><code>template</code> describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with <code>$templatePath</code>. This is a path that points to a value in a statement matched by <code>conditions</code>, using the same syntax as an <code>identityPaths</code> path. In the above example, the <code>$templatePath</code> points to the actor <code>mbox</code> for the actor matched by condition <code>a</code>.</p><h2 id="example">Example</h2><p>Given the reaction specified above, if the following statements are posted to the LRS:</p><pre><code class="json">&#91;
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="reactions">Reactions</h1><p>Reactions is a new feature that allows SQL LRS to watch for patterns in submitted xAPI data and dynamically generate new statements in response.</p><h2 id="usage">Usage</h2><p>To use Reactions the <code>LRSQL&#95;ENABLE&#95;REACTIONS</code> environment variable or the <code>enableReactions</code> LRS configuration property must be set to <code>true</code>. Reactions is disabled by default.</p><p>To view a reaction, click on the reaction in the table above. This will display a reaction view page:</p><p><img src="images/reactions/table.png" alt="reactions table" /></p><p>Each reaction has a title, ID, and created/modified timestamps. It also has an active vs. inactive status; a reaction can either be manually toggled as inactive, or it may be automatically set as inactive if an error is encountered when a reaction is triggered.</p><p><img src="images/reactions/view_1.png" alt="reaction view 1" /> <img src="images/reactions/view_2.png" alt="reaction view 2" /> <img src="images/reactions/view_3.png" alt="reaction view 3" /></p><p>The most important part of a reaction is its ruleset. Each ruleset in turn contains the following properties: conditions, template, and identity paths. Each ruleset component is explained in the sections below.</p><p>To create a new reaction, click on "Add New Reactions" on the main Reactions page. Likewise, to edit a current reaction, click on "Edit".</p><p>Creating a new reaction will display an edit page, where the user can modify the reaction title, active status, and ruleset:</p><p><img src="images/reactions/edit_intro.png" alt="reaction edit" /></p><h3 id="conditions">Conditions</h3><p>Each condition is a set of rules for finding relevant statements. Each condition has a unique name followed by its rules, which can be composed with boolean logic.</p><p>In the example given, statement "alpha" must have <code>object.id</code> equal to <code>https://example.com/alpha</code> AND <code>verb.id</code> equal to <code>https://example.com/completed</code> AND <code>result.success</code> property equal to <code>true</code>:</p><p><img src="images/reactions/edit_condition_alpha.png" alt="reaction edit alpha" /></p><p>Statement "beta" must have <code>verb.id</code> equal to <code>https://example.com/completed</code> AND <code>result.success</code> equal to <code>true</code> (just like statement "alpha") AND <code>object.id</code> equal to <code>https://example.com/beta</code> AND <code>timestamp</code> greater than that of statement "alpha":</p><p><img src="images/reactions/edit_condition_beta.png" alt="reaction edit beta" /> <img src="images/reactions/edit_condition_beta_ref.png" alt="reaction edit beta ref" /></p><h4 id="rules">Rules</h4><p>All rules have a path array that indicates a path in an xAPI statement and an operator that is one of the following:</p><ul><li>Greater than</li><li>Less than</li><li>Greater than or equal</li><li>Less than or equal</li><li>Equal</li><li>Not equal</li><li>Like (fuzzy match using SQL <code>%</code> syntax; for example, <code>bo%</code> matches <code>bob</code> and <code>boz</code>.)</li><li>Array contains</li></ul><p>Rules either have a <code>val</code> literal value or a <code>ref</code> which is a path into a statement found for another condition.</p><h4 id="booleans">Booleans</h4><p>Booleans compose multiple rules together. Booleans are objects with a single key:</p><ul><li>AND: Array of rules which must all be true</li><li>OR: Array of rules of which one must be true</li><li>NOT: Rule that must <i>not</i> be true</li></ul><p>Rule types (either "Statement Criteria" or a boolean) can be selected using the topmost select input, or via the "Add sub-clause" button. Booleans can be nested arbitrarily, e.g. an AND clause can have multiple OR subclauses, which can each have a NOT clause, and so on and so forth.</p><h3 id="template">Template</h3><p>The template describes the xAPI statement the reaction will produce. It is identical to an xAPI statement, except that object properties may be substituted with <code>$templatePath</code>. This is a path that points to a value in a statement matched by <code>conditions</code>, using a JSON array of xAPI statement properties.</p><p>To help with creating template paths, the above panel can be opened, which guides the user on how to create paths. In this example, we create a template path to the actor <code>mbox</code> for the actor matched by <code>condition&#95;alpha</code>:</p><p><img src="images/reactions/edit_dynamic_vars.png" alt="edit dynamic vars" /></p><p>We can then copy-paste the template path into our statement template:</p><p><img src="images/reactions/edit_template.png" alt="edit template" /></p><h3 id="identity&#95;paths">Identity Paths</h3><p>Identity Paths are a method of grouping statements for which you are attempting to match conditions on. Typically, reactions may revolve around actor Inverse Functional Identifiers (IFIs), e.g. actor <code>mbox</code> or account <code>name</code> strings. Any statements with the same IFI properties will be considered a "group" to match conditions on. This is equivalent to saying "For a given Actor, look for statements that share IFI values."</p><p>Alternative approaches to Identity Path may be used by modifying <code>identityPaths</code>, for instance using the <code>registration</code> context property to group statements by learning session.</p><p>In this example (the default set of identity paths), say we have Statements A and B that share an IFI and match <code>condition&#95;alpha</code> and <code>condition&#95;beta</code>, respectively. This will trigger the reaction. Conversely, if Statements A and B have <i>different</i> IFIs, then the reaction <i>will not trigger</i>:</p><p><img src="images/reactions/edit_identity_path.png" alt="edit identity paths" /></p><h2 id="example">Example</h2><p>Given the reaction specified above, if the following statements are posted to the LRS:</p><pre><code class="json">&#91;
   {
     &quot;actor&quot;: {
       &quot;mbox&quot;: &quot;mailto:bob@example.com&quot;
     },
     &quot;verb&quot;: {
-      &quot;id&quot;: &quot;https://example.com/verbs/completed&quot;
+      &quot;id&quot;: &quot;https://example.com/completed&quot;
     },
     &quot;object&quot;: {
-      &quot;id&quot;: &quot;https://example.com/activities/a&quot;,
+      &quot;id&quot;: &quot;https://example.com/alpha&quot;,
       &quot;objectType&quot;: &quot;Activity&quot;
     },
     &quot;result&quot;: {
@@ -263,10 +146,10 @@ span.build {
       &quot;mbox&quot;: &quot;mailto:bob@example.com&quot;
     },
     &quot;verb&quot;: {
-      &quot;id&quot;: &quot;https://example.com/verbs/completed&quot;
+      &quot;id&quot;: &quot;https://example.com/completed&quot;
     },
     &quot;object&quot;: {
-      &quot;id&quot;: &quot;https://example.com/activities/b&quot;,
+      &quot;id&quot;: &quot;https://example.com/beta&quot;,
       &quot;objectType&quot;: &quot;Activity&quot;
     },
     &quot;result&quot;: {
@@ -275,26 +158,24 @@ span.build {
     &quot;timestamp&quot;: &quot;2024-01-23T02:00:00.000Z&quot;
   }
 &#93;
-
 </code></pre><p>Then the following statement will be added subsequently (note that some unrelated fields are removed for clarity):</p><pre><code class="json">{
   &quot;actor&quot;: {
     &quot;mbox&quot;: &quot;mailto:bob@example.com&quot;
   },
   &quot;verb&quot;: {
-    &quot;id&quot;: &quot;https://example.com/verbs/completed&quot;
+    &quot;id&quot;: &quot;https://example.com/completed&quot;
   },
   &quot;object&quot;: {
-    &quot;id&quot;: &quot;https://example.com/activities/a-and-b&quot;,
+    &quot;id&quot;: &quot;https://example.com/alpha-and-beta&quot;,
     &quot;objectType&quot;: &quot;Activity&quot;
   }
 }
-
-</code></pre><p><a href='index.html'><- Back to Index</a></p>
+</code></pre><h3 id="json&#95;format">JSON Format</h3><p>Reaction data is stored internally in JSON format. The Reactions spec, including a JSON example, can be found <a href='reactions/spec.html'>here</a>.</p><p><a href='index.html'><- Back to Index</a></p>
         <div class="footer">
          &copy; 2021-2024 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
-         <span class="build">Build: 11f496e7388b6d3db45d657d7eaeb7960f6acd69</span>
+         <span class="build">Build: 28d6e097fb24297ce141fdb03d63dc705ccbd856</span>
         </div>
       </div>
     </body>
