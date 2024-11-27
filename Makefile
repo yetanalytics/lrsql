@@ -26,7 +26,7 @@ resources/public/admin:
 .phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
 
 clean-dev:
-	rm -rf *.db *.log resources/public tmp target/nvd
+	rm -rf *.db *.log resources/public tmp
 
 # Tests
 
