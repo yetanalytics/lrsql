@@ -8,25 +8,10 @@ The SQL LRS is a Clojure Web Application built on the Pedestal Framework.
 
 Development is primary test-driven, which an exhaustive suite of unit tests. To run them locally, run a `make test-[database]` command. In addition, all tests are run for all versions in GitHub Actions CI.
 
-However, in some situations, mainly UI development, relying on the unit tests may be inadequate. In these cases, there are multiple scenarios that SQL LRS can be used in that should be tested:
-
-#### Regular login
-
-This is by far the most common scenario. The user logs into the admin console, which then keeps the user logged in via JWTs.
-
-#### OIDC login
-
-The user logs in via OIDC using a Keycloak server. Steps to set up a Keycloak server and activate OIDC login can be found [here](oidc.md#keycloak-demo).
-
-#### Proxy JWT override
-
-The browser overrides SQL LRS's usual JWT issuing flow with an external JWT, which they can inject into request headers using tools such as the [Header Editor](https://chromewebstore.google.com/detail/header-editor/eningockdidmgiojffjmkdblpjocbhgh) Chrome extension.
-
-#### Proxy paths
-
-Users using a proxy server may prepend all HTTP endpoints using a prefix, e.g. append `/foo` to get `/foo/admin/account/login`. Steps to set up a proxy path demo can be found [here](other_demos.md#proxied-lrs-demo).
-
-Going through all the above scenarios is not necessary if the changes purely affect frontend features. However, they will be necessary if the changes affect login or the interface between the frontend and backend.
+However, in some situations, such as UI development, relying on the unit tests may be inadequate. In these cases, in addition to performing visual tests on the UI, one may need to test these specific scenarios:
+- Login with OIDC ([demo](oidc.md#keycloak-demo))
+- Proxy paths ([demo](other_demos.md#proxied-lrs-demo))
+- JWT override ([JWT config vars](env_vars.md#jwt-config))
 
 ### Build
 
