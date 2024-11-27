@@ -23,7 +23,6 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 | `bundle`           | Build a complete distribution of the SQL LRS including the user interface and native runtimes for multiple operating systems.                                                                                |
 | `bench`            | Run a load test and benchmark performance, returning performance metrics on predefined test data. Requires a running SQL LRS instance to test against. This test sends requests synchronously on one thread. |
 | `bench-async`      | Same as `bench` but it runs with concurrent requests on multiple threads.                                                                                                                                    |
-| `check-vuln`       | Run the [nvd-clojure](https://github.com/rm-hull/nvd-clojure) tool, which checks for vulnerabilities against the [National Vulnerability Database](https://nvd.nist.gov/).                                   |
 
 #### Run Targets
 
@@ -118,4 +117,3 @@ java -cp bench.jar lrsql.bench [arguments]
 Sample insert and query inputs can be found in the distribution at `bench/`
 
 [<- Back to Index](index.md)
-
