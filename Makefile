@@ -23,7 +23,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, check-vuln, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp target/nvd
@@ -94,13 +94,6 @@ bench-async:
 		-q dev-resources/bench/query_input.json \
 		-a true \
 		-u username -p password
-
-# Vulnerability check
-
-target/nvd:
-	clojure -Xnvd check :classpath '"'"$$(clojure -Spath -A:db-sqlite:db-postgres)"'"' :config-filename '".nvd/config.json"'
-
-check-vuln: target/nvd
 
 # Demo instance of Keycloak used for interactive development
 
@@ -298,3 +291,7 @@ run-jar-postgres: target/bundle
 
 pom.xml:
 	clojure -Adb-sqlite:db-postgres -Spom
+
+# TODO: Add a local vulnerability checker.
+# Note that we removed our previous one that used nvd-clojure as that app was
+# becoming too unreliable; perhaps look into clj-watson?
