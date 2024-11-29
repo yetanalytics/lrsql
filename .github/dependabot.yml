@@ -9,4 +9,6 @@ updates:
     directory: "/" # Location of package manifests
     target-branch: "dependabot-dev"
     schedule:
-      interval: "weekly"
+      interval: "daily"
+      time: "13:15"
+      timezone: "America/New_York"
