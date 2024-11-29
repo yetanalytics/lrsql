@@ -13,6 +13,7 @@
  :jwt-common-secret         nil
  :enable-http               true
  :enable-http2              true
+ :enable-sni                false
  :ssl-port                  8443
  :http-host                 "0.0.0.0"
  :http-port                 8080
