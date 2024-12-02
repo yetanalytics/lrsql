@@ -30,3 +30,7 @@ jobs:
 
       - name: Submit Dependency Snapshot
         uses: advanced-security/maven-dependency-submission-action@v4
+
+      - name: Review Dependencies
+        uses: actions/dependency-review-action@v4
+
