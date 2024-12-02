@@ -33,4 +33,7 @@ jobs:
 
       - name: Review Dependencies
         uses: actions/dependency-review-action@v4
+        with:
+          base-ref: 'refs/heads/main'
+          head-ref: ${{ github.ref }}
 
