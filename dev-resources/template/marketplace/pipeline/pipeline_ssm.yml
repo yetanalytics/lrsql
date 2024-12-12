@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SSMAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy 
+    Properties:
+      ManagedPolicyName: !Sub "${AWS::StackName}-${AWS::Region}-ssm-access-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "ssm:PutParameter"
+              - "ssm:GetParameter"
+              - "ssm:GetParameters"
+              - "ssm:DeleteParameter"
+              - "ssm:DescribeParameters"
+            Resource: 
+              - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/*"
+  ImageBuilderAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${AWS::StackName}-${AWS::Region}-image-builder-access-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - "imagebuilder:GetImage"
+            Resource:
+              - !Sub "arn:aws:imagebuilder:${AWS::Region}:${AWS::AccountId}:image/*"
+  UpdateSSMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - !Ref SSMAccessPolicy
+        - !Ref ImageBuilderAccessPolicy
+  UpdateAmiParameterFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.lambda_handler
+      Role: !GetAtt UpdateSSMRole.Arn 
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import botocore
+
+          def lambda_handler(event, context):
+              ssm = boto3.client('ssm')
+              imagebuilder = boto3.client('imagebuilder')
+
+              # Extract the image ARN from the event
+              image_arn = event['resources'][0]
+
+              # Retrieve image details
+              response = imagebuilder.get_image(
+                  imageBuildVersionArn=image_arn
+              )
+              
+              image_version = response['image']['imageRecipe']['version']
+              amis = response['image']['outputResources']['amis']
+
+              # Parameter name
+              for ami in amis:
+                latest_ami_id = ami['image']
+                region = ami['region']
+                parameter_name = f'/lrsql-ami/{region}/{image_version}/latest'
+
+                # Check if the parameter already exists
+                try:
+                  ssm.get_parameter(Name=parameter_name)
+                  print(f"Parameter {parameter_name} already exists. Updating...")
+
+                  ssm.put_parameter(
+                    Name=parameter_name,
+                    Value=latest_ami_id,
+                    Type='String',
+                    Overwrite=True
+                  )
+                except ssm.exceptions.ParameterNotFound:
+                  # Parameter does not exist, create it
+                  ssm.put_parameter(
+                    Name=parameter_name,
+                    Value=latest_ami_id,
+                    Type='String'
+                  )
+                  print(f"Parameter {parameter_name} created successfully.")
+
+              return {
+                  'statusCode': 200,
+                  'body': 'Parameter handling completed successfully'
+              }
+      Runtime: python3.8
+      Timeout: 30
+
+  ImageBuilderEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - "aws.imagebuilder"
+        detail-type:
+          - "EC2 Image Builder Image State Change"
+        detail:
+          state:
+            status:
+              - "AVAILABLE"
+      Targets:
+        - Arn: !GetAtt UpdateAmiParameterFunction.Arn
+          Id: "UpdateAmiParameterFunction"
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UpdateAmiParameterFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
