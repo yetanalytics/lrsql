@@ -83,6 +83,12 @@ Parameters:
     Type: String
     Default: v0.5.5
 
+  EnableReactions:
+    Description: Whether or not to enable xAPI Reactions
+    Default: false
+    Type: String
+    AllowedValues: [true, false]
+
   ASGMinSize:
     Type: Number
     Default: 1
@@ -579,7 +585,8 @@ Resources:
                     "lrs" : {
                       "adminUserDefault": "${DefaultAdminUser}",
                       "adminPassDefault": "${DefaultAdminPass}",
-                      "authorityUrl": "http://mydomain.com"
+                      "authorityUrl": "http://mydomain.com",
+                      "enableReactions": ${EnableReactions}
                     },
                     "webserver": {
                       "httpHost": "0.0.0.0",
