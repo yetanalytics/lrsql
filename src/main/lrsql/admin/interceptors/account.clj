@@ -250,6 +250,14 @@
                :response
                {:status 200 :body result})))}))
 
+(def no-content
+  "Return a 204 No Content response, without a body."
+  (interceptor
+   {:name ::get-no-content
+    :enter
+    (fn get-account [ctx]
+      (assoc ctx :response {:status 204}))}))
+
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
   [secret exp]

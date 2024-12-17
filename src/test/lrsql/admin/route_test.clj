@@ -75,6 +75,11 @@
   (curl/get "http://0.0.0.0:8080/admin/me"
             {:headers headers}))
 
+(defn- verify-me
+  [headers]
+  (curl/get "http://0.0.0.0:8080/admin/verify"
+            {:headers headers}))
+
 (defn- update-account-password
   [headers
    body]
@@ -133,7 +138,11 @@
         headers   (merge content-type seed-auth)
         orig-pass "Swordfish100?"
         req-body  (u/write-json-str {"username" "mylongname"
-                                     "password" orig-pass})]
+                                     "password" orig-pass})
+        ;; Corrupted JWT
+        bad-jwt   (apply str (butlast seed-jwt))
+        bad-auth  {"Authorization" (str "Bearer " bad-jwt)}
+        bad-head  (merge content-type bad-auth)]
     (try
       (testing "seed jwt retrieved"
         ;; Sanity check that the test credentials are in place
@@ -210,6 +219,13 @@
           (is (= 200 status))
           ;; is the created user
           (is (= (get edn-body "username") admin-user-default))))
+      (testing "verify my admin account"
+        (let [{:keys [status]} (verify-me headers)]
+          ;; success
+          (is (= 204 status))))
+      (testing "ensure corrupted JWTs do not pass"
+        (is-err-code (get-me bad-head) 401)
+        (is-err-code (verify-me bad-head) 401))
       (testing "log into the `myname` account"
         (let [{:keys [status body]}
               (login-account content-type req-body)
