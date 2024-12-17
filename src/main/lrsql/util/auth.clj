@@ -168,6 +168,34 @@
     (log/errorf "Scope set included unimplemented or non-existent scopes.\nErrors:\n%s"
                 (with-out-str (s/explain-out err)))))
 
+(defn- authorized-scopes?*
+  "Return `true` if any one of the `scopes` is in `permitted-scope-set`."
+  [permitted-scope-set scopes]
+  (or (boolean
+       (some (fn [scope] (contains? permitted-scope-set scope))
+             scopes))
+      (do (log-scope-error scopes)
+          false)))
+
+(defn- authorized-scopes?
+  "Return `true` if any one of the `scopes` is authorized with the given
+   `read-scopes` or `write-scopes`. Which scope set is chosen depends
+   on `request-method` (and `allow-delete?`)."
+  [read-scopes write-scopes request-method scopes
+   & {:keys [allow-delete?]
+      :or {allow-delete? true}}]
+  (cond
+    (#{:get :head} request-method)
+    (authorized-scopes?* read-scopes scopes)
+    (#{:put :post} request-method)
+    (authorized-scopes?* write-scopes scopes)
+    (and allow-delete?
+         (#{:delete} request-method))
+    (authorized-scopes?* write-scopes scopes)
+    :else
+    (do (log-scope-error scopes)
+        false)))
+
 (s/fdef authorized-action?
   :args (s/cat :ctx           (s/keys :req-un [::request])
                :auth-identity (s/keys :req-un [::scopes]))
@@ -183,46 +211,32 @@
            scopes
            _auth
            _agent]
-    :as auth-identity}]
+    :as _auth-identity}]
   (let [path (or path-info "")]
-    (cond
-      ;; /statements path
-      (cstr/ends-with? path "statements")
-      (cond
-        (#{:get :head} request-method)
-        (some? (most-permissive-statement-read-scope auth-identity))
-        (#{:put :post} request-method) ; No statement delete for /statements resource
-        (some? (most-permissive-statement-write-scope auth-identity))
-        :else
-        (do (log-scope-error scopes)
-            false))
-
-      ;; activities/state
-      (and
-       (cstr/ends-with? path "activities/state")
-       (contains? scopes :scope/state))
-      true
-
-      ;; activities/profile
-      (and
-       (cstr/ends-with? path "activities/profile")
-       (contains? scopes :scope/activities_profile))
-      true
-
-      ;; agents/profile
-      (and
-       (cstr/ends-with? path "agents/profile")
-       (contains? scopes :scope/agents_profile))
-      true
-
+    (condp (fn [suffix path] (cstr/ends-with? path suffix)) path
+      "statements"
+      (authorized-scopes? statement-read-scopes
+                          statement-write-scopes
+                          request-method
+                          scopes
+                          :allow-delete? false)
+      "activities/state"
+      (authorized-scopes? state-read-scopes
+                          state-write-scopes
+                          request-method
+                          scopes)
+      "activities/profile"
+      (authorized-scopes? activities-profile-read-scopes
+                          activities-profile-write-scopes
+                          request-method
+                          scopes)
+      "agents/profile"
+      (authorized-scopes? agents-profile-read-scopes
+                          agents-profile-write-scopes
+                          request-method
+                          scopes)
       ;; all other paths (e.g. /about, /activities)
-      :else
-      (cond
-        (#{:get :head} request-method)
-        (or (contains? scopes :scope/all)
-            (contains? scopes :scope/all.read))
-        (#{:put :post :delete} request-method)
-        (contains? scopes :scope/all)
-        :else
-        (do (log-scope-error scopes)
-            false)))))
+      (authorized-scopes? read-scopes
+                          write-scopes
+                          request-method
+                          scopes))))
