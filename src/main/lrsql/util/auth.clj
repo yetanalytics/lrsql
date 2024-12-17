@@ -35,6 +35,60 @@
   [scope-kw]
   (get scope-kw-str-map scope-kw))
 
+(def read-scope-hierarchy
+  "The hierarchy of read scopes for GET and HEAD operations."
+  (-> (make-hierarchy)
+      (derive :scope/statements.read.mine :scope/statements.read)
+      (derive :scope/statements.read :scope/all.read)
+      (derive :scope/state :scope/all.read)
+      (derive :scope/activities_profile :scope/all.read)
+      (derive :scope/agents_profile :scope/all.read)
+      (derive :scope/all.read :scope/all)))
+
+(def write-scope-hierarchy
+  "The hierarchy of write scopes for PUT, POST, and DELETE operations."
+  (-> (make-hierarchy)
+      (derive :scope/statements.write :scope/all)
+      (derive :scope/state :scope/all)
+      (derive :scope/activities_profile :scope/all)
+      (derive :scope/agents_profile :scope/all)))
+
+(defn- get-scopes
+  "Return a set of valid scopes for the operation associated with `scope`,
+   with `scope` being the lowest-ranking scope in `hierarchy`."
+  [hierarchy scope]
+  (cset/union #{scope} (ancestors hierarchy scope)))
+
+(def statement-read-scopes
+  (get-scopes read-scope-hierarchy :scope/statements.read.mine))
+
+(def statement-write-scopes
+  (get-scopes write-scope-hierarchy :scope/statements.write))
+
+(def state-read-scopes
+  (get-scopes read-scope-hierarchy :scope/state))
+
+(def state-write-scopes
+  (get-scopes write-scope-hierarchy :scope/state))
+
+(def activities-profile-read-scopes
+  (get-scopes read-scope-hierarchy :scope/activities_profile))
+
+(def activities-profile-write-scopes
+  (get-scopes write-scope-hierarchy :scope/activities_profile))
+
+(def agents-profile-read-scopes
+  (get-scopes read-scope-hierarchy :scope/agents_profile))
+
+(def agents-profile-write-scopes
+  (get-scopes write-scope-hierarchy :scope/agents_profile))
+
+(def read-scopes
+  (get-scopes read-scope-hierarchy :scope/all.read))
+
+(def write-scopes
+  (get-scopes write-scope-hierarchy :scope/all))
+
 (s/fdef header->key-pair
   :args (s/cat :auth-header (s/nilable string?))
   :ret (s/nilable as/key-pair-spec))
