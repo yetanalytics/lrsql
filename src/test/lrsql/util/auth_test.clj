@@ -207,7 +207,20 @@
              :scopes         #{}}
       false {:request-method :delete
              :path-info      "xapi/activities/state"
-             :scopes         #{}}))
+             :scopes         #{}}
+      ;; Non-specified endpoints (e.g. /activities)
+      true  {:request-method :get
+             :path-info      "/activities"
+             :scopes         #{:scope/all}}
+      true  {:request-method :head
+             :path-info      "/activities"
+             :scopes         #{:scope/all.read}}
+      true  {:request-method :put
+             :path-info      "/activities"
+             :scopes         #{:scope/all}}
+      false {:request-method :post
+             :path-info      "/activities"
+             :scopes         #{:scope/all.read}}))
   (testing "authorization fn gentest"
     (is (nil? (check-validate `au/most-permissive-statement-read-scope)))
     (is (nil? (check-validate `au/most-permissive-statement-write-scope)))
