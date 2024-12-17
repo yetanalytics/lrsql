@@ -8,6 +8,10 @@
             [lrsql.spec.auth :as as]
             [lrsql.util :as u]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Scopes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; NOTE: Additional scopes may be implemented in the future.
 
 (def scope-str-kw-map
@@ -59,6 +63,15 @@
   [hierarchy scope]
   (cset/union #{scope} (ancestors hierarchy scope)))
 
+(defn- get-most-permissive-scope
+  "Return the most permissive scope in `scopes` for `hierarchy`, or
+   `nil` when `scopes` is empty."
+  [hierarchy scopes]
+  (let [count-ancestors (fn [scope]
+                          (count (ancestors hierarchy scope)))]
+    (when (not-empty scopes)
+      (apply min-key count-ancestors scopes))))
+
 (def statement-read-scopes
   (get-scopes read-scope-hierarchy :scope/statements.read.mine))
 
@@ -88,6 +101,10 @@
 
 (def write-scopes
   (get-scopes write-scope-hierarchy :scope/all))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Key Pairs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef header->key-pair
   :args (s/cat :auth-header (s/nilable string?))
@@ -120,6 +137,10 @@
   {:api-key    (-> 32 random-bytes bytes->hex)
    :secret-key (-> 32 random-bytes bytes->hex)})
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Authorization
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Mostly copied from the third LRS:
 ;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc
 
@@ -131,34 +152,6 @@
 (s/def ::scopes (s/coll-of ::scope :kind set?))
 
 (s/def ::result boolean?)
-
-(s/fdef most-permissive-statement-read-scope
-  :args (s/cat :auth-identity (s/keys :req-un [::scopes]))
-  :ret (s/nilable as/keyword-scopes))
-
-(defn most-permissive-statement-read-scope
-  "Given a read action on statements, return the most permissive scope
-   contained in `scopes`. Returns `nil` if no scopes are available."
-  [{:keys [scopes] :as _auth-identity}]
-  (condp #(contains? %2 %1) scopes
-    :scope/all :scope/all
-    :scope/all.read :scope/all.read
-    :scope/statements.read :scope/statements.read
-    :scope/statements.read.mine :scope/statements.read.mine
-    nil))
-
-(s/fdef most-permissive-statement-write-scope
-  :args (s/cat :auth-identity (s/keys :req-un [::scopes]))
-  :ret (s/nilable as/keyword-scopes))
-
-(defn most-permissive-statement-write-scope
-  "Given a write action on statements, return the most permissive scope
-   contained in `scopes`. Returns `nil` if no scopes are available."
-  [{:keys [scopes] :as _auth-identity}]
-  (condp #(contains? %2 %1) scopes
-    :scope/all :scope/all
-    :scope/statements.write :scope/statements.write
-    nil))
 
 (defn- log-scope-error
   "Log an error if the scope fail happened due to non-existent scopes (as
@@ -240,3 +233,21 @@
                           write-scopes
                           request-method
                           scopes))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; statement/read/mine special handling
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef statement-read-mine-authorization?
+  :args (s/cat :auth-identity (s/keys :req-un [::scopes]))
+  :ret boolean?)
+
+(defn statement-read-mine-authorization?
+  "Return `true` if the most permissive scope for Statement reading is
+   `:scope/statements.read.mine`, false if there are more permissive scopes
+   (which would override that scope) or if it's not present."
+  [{:keys [scopes] :as _auth-identity}]
+  (->> scopes
+       (filter #(contains? statement-read-scopes %))
+       (get-most-permissive-scope read-scope-hierarchy)
+       (= :scope/statements.read.mine)))

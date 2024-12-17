@@ -222,6 +222,40 @@
              :path-info      "/activities"
              :scopes         #{:scope/all.read}}))
   (testing "authorization fn gentest"
-    (is (nil? (check-validate `au/most-permissive-statement-read-scope)))
-    (is (nil? (check-validate `au/most-permissive-statement-write-scope)))
+    #_(is (nil? (check-validate `au/most-permissive-statement-read-scope)))
+    #_(is (nil? (check-validate `au/most-permissive-statement-write-scope)))
     (is (nil? (check-validate `au/authorized-action?)))))
+
+(deftest statement-read-mine-authorization-test
+  (testing "statement-read-mine-authorization? function"
+    (is (true?
+         (au/statement-read-mine-authorization?
+          {:scopes #{:scope/statements.read.mine}})))
+    (is (false?
+         (au/statement-read-mine-authorization?
+          {:scopes #{:scope/statements.read.mine
+                     :scope/statements.read}})))
+    (is (false?
+         (au/statement-read-mine-authorization?
+          {:scopes #{:scope/statements.read.mine
+                     :scope/statements.read
+                     :scope/all.read}})))
+    (is (false?
+         (au/statement-read-mine-authorization?
+          {:scopes #{:scope/statements.read.mine
+                     :scope/statements.read
+                     :scope/all.read
+                     :scope/all}})))
+    (is (false?
+         (au/statement-read-mine-authorization?
+          {:scopes #{:scope/statements.read
+                     :scope/all.read
+                     :scope/all}})))
+    (is (false?
+         (au/statement-read-mine-authorization?
+          {:scopes #{:scope/state}})))
+    (is (false?
+         (au/statement-read-mine-authorization?
+          {:scopes #{}}))))
+  (testing "statement-read-mine-authorization? gentest"
+    (is (nil? (check-validate `au/statement-read-mine-authorization?)))))
