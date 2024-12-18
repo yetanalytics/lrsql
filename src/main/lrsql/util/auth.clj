@@ -138,11 +138,12 @@
    :secret-key (-> 32 random-bytes bytes->hex)})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Authorization
+;; Specs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Mostly copied from the third LRS:
-;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc
+;; These specs are also used in `lrsql.util.oidc`
+;; We define them here since they are request-specific and we want to avoid
+;; clashes with the `lrsql.spec.auth` namespace.
 
 (s/def ::request-method #{:get :head :put :post :delete})
 (s/def ::path-info string?)
@@ -151,7 +152,12 @@
 (s/def ::scope as/keyword-scopes)
 (s/def ::scopes (s/coll-of ::scope :kind set?))
 
-(s/def ::result boolean?)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Authorization
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Inspired by the third LRS:
+;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc
 
 (defn- log-scope-error
   "Log an error if the scope fail happened due to non-existent scopes (as
