@@ -63,6 +63,7 @@
   [hierarchy scope]
   (cset/union #{scope} (ancestors hierarchy scope)))
 
+;; Reference to `apply min-key` solution: https://stackoverflow.com/a/34934286
 (defn- get-most-permissive-scope
   "Return the most permissive scope in `scopes` for `hierarchy`, or
    `nil` when `scopes` is empty."
