@@ -8,6 +8,10 @@
             [lrsql.spec.auth :as as]
             [lrsql.util :as u]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Scopes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; NOTE: Additional scopes may be implemented in the future.
 
 (def scope-str-kw-map
@@ -34,6 +38,74 @@
    becomes `all`."
   [scope-kw]
   (get scope-kw-str-map scope-kw))
+
+(def read-scope-hierarchy
+  "The hierarchy of read scopes for GET and HEAD operations."
+  (-> (make-hierarchy)
+      (derive :scope/statements.read.mine :scope/statements.read)
+      (derive :scope/statements.read :scope/all.read)
+      (derive :scope/state :scope/all.read)
+      (derive :scope/activities_profile :scope/all.read)
+      (derive :scope/agents_profile :scope/all.read)
+      (derive :scope/all.read :scope/all)))
+
+(def write-scope-hierarchy
+  "The hierarchy of write scopes for PUT, POST, and DELETE operations."
+  (-> (make-hierarchy)
+      (derive :scope/statements.write :scope/all)
+      (derive :scope/state :scope/all)
+      (derive :scope/activities_profile :scope/all)
+      (derive :scope/agents_profile :scope/all)))
+
+(defn- get-scopes
+  "Return a set of valid scopes for the operation associated with `scope`,
+   with `scope` being the lowest-ranking scope in `hierarchy`."
+  [hierarchy scope]
+  (cset/union #{scope} (ancestors hierarchy scope)))
+
+;; Reference to `apply min-key` solution: https://stackoverflow.com/a/34934286
+(defn- get-most-permissive-scope
+  "Return the most permissive scope in `scopes` for `hierarchy`, or
+   `nil` when `scopes` is empty."
+  [hierarchy scopes]
+  (let [count-ancestors (fn [scope]
+                          (count (ancestors hierarchy scope)))]
+    (when (not-empty scopes)
+      (apply min-key count-ancestors scopes))))
+
+(def statement-read-scopes
+  (get-scopes read-scope-hierarchy :scope/statements.read.mine))
+
+(def statement-write-scopes
+  (get-scopes write-scope-hierarchy :scope/statements.write))
+
+(def state-read-scopes
+  (get-scopes read-scope-hierarchy :scope/state))
+
+(def state-write-scopes
+  (get-scopes write-scope-hierarchy :scope/state))
+
+(def activities-profile-read-scopes
+  (get-scopes read-scope-hierarchy :scope/activities_profile))
+
+(def activities-profile-write-scopes
+  (get-scopes write-scope-hierarchy :scope/activities_profile))
+
+(def agents-profile-read-scopes
+  (get-scopes read-scope-hierarchy :scope/agents_profile))
+
+(def agents-profile-write-scopes
+  (get-scopes write-scope-hierarchy :scope/agents_profile))
+
+(def read-scopes
+  (get-scopes read-scope-hierarchy :scope/all.read))
+
+(def write-scopes
+  (get-scopes write-scope-hierarchy :scope/all))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Key Pairs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (s/fdef header->key-pair
   :args (s/cat :auth-header (s/nilable string?))
@@ -66,8 +138,13 @@
   {:api-key    (-> 32 random-bytes bytes->hex)
    :secret-key (-> 32 random-bytes bytes->hex)})
 
-;; Mostly copied from the third LRS:
-;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Specs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; These specs are also used in `lrsql.util.oidc`
+;; We define them here since they are request-specific and we want to avoid
+;; clashes with the `lrsql.spec.auth` namespace.
 
 (s/def ::request-method #{:get :head :put :post :delete})
 (s/def ::path-info string?)
@@ -76,35 +153,12 @@
 (s/def ::scope as/keyword-scopes)
 (s/def ::scopes (s/coll-of ::scope :kind set?))
 
-(s/def ::result boolean?)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Authorization
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(s/fdef most-permissive-statement-read-scope
-  :args (s/cat :auth-identity (s/keys :req-un [::scopes]))
-  :ret (s/nilable as/keyword-scopes))
-
-(defn most-permissive-statement-read-scope
-  "Given a read action on statements, return the most permissive scope
-   contained in `scopes`. Returns `nil` if no scopes are available."
-  [{:keys [scopes] :as _auth-identity}]
-  (condp #(contains? %2 %1) scopes
-    :scope/all :scope/all
-    :scope/all.read :scope/all.read
-    :scope/statements.read :scope/statements.read
-    :scope/statements.read.mine :scope/statements.read.mine
-    nil))
-
-(s/fdef most-permissive-statement-write-scope
-  :args (s/cat :auth-identity (s/keys :req-un [::scopes]))
-  :ret (s/nilable as/keyword-scopes))
-
-(defn most-permissive-statement-write-scope
-  "Given a write action on statements, return the most permissive scope
-   contained in `scopes`. Returns `nil` if no scopes are available."
-  [{:keys [scopes] :as _auth-identity}]
-  (condp #(contains? %2 %1) scopes
-    :scope/all :scope/all
-    :scope/statements.write :scope/statements.write
-    nil))
+;; Inspired by the third LRS:
+;; https://github.com/yetanalytics/third/blob/master/src/main/cloud_lrs/impl/auth.cljc
 
 (defn- log-scope-error
   "Log an error if the scope fail happened due to non-existent scopes (as
@@ -113,6 +167,34 @@
   (when-some [err (s/explain-data ::scopes scopes)]
     (log/errorf "Scope set included unimplemented or non-existent scopes.\nErrors:\n%s"
                 (with-out-str (s/explain-out err)))))
+
+(defn- authorized-scopes?*
+  "Return `true` if any one of the `scopes` is in `permitted-scope-set`."
+  [permitted-scope-set scopes]
+  (or (boolean
+       (some (fn [scope] (contains? permitted-scope-set scope))
+             scopes))
+      (do (log-scope-error scopes)
+          false)))
+
+(defn- authorized-scopes?
+  "Return `true` if any one of the `scopes` is authorized with the given
+   `read-scopes` or `write-scopes`. Which scope set is chosen depends
+   on `request-method` (and `allow-delete?`)."
+  [read-scopes write-scopes request-method scopes
+   & {:keys [allow-delete?]
+      :or {allow-delete? true}}]
+  (cond
+    (#{:get :head} request-method)
+    (authorized-scopes?* read-scopes scopes)
+    (#{:put :post} request-method)
+    (authorized-scopes?* write-scopes scopes)
+    (and allow-delete?
+         (#{:delete} request-method))
+    (authorized-scopes?* write-scopes scopes)
+    :else
+    (do (log-scope-error scopes)
+        false)))
 
 (s/fdef authorized-action?
   :args (s/cat :ctx           (s/keys :req-un [::request])
@@ -129,46 +211,50 @@
            scopes
            _auth
            _agent]
-    :as auth-identity}]
+    :as _auth-identity}]
   (let [path (or path-info "")]
-    (cond
-      ;; /statements path
-      (cstr/ends-with? path "statements")
-      (cond
-        (#{:get :head} request-method)
-        (some? (most-permissive-statement-read-scope auth-identity))
-        (#{:put :post} request-method) ; No statement delete for /statements resource
-        (some? (most-permissive-statement-write-scope auth-identity))
-        :else
-        (do (log-scope-error scopes)
-            false))
-
-      ;; activities/state
-      (and
-       (cstr/ends-with? path "activities/state")
-       (contains? scopes :scope/state))
-      true
-
-      ;; activities/profile
-      (and
-       (cstr/ends-with? path "activities/profile")
-       (contains? scopes :scope/activities_profile))
-      true
-
-      ;; agents/profile
-      (and
-       (cstr/ends-with? path "agents/profile")
-       (contains? scopes :scope/agents_profile))
-      true
-
+    (condp (fn [suffix path] (cstr/ends-with? path suffix)) path
+      "statements"
+      (authorized-scopes? statement-read-scopes
+                          statement-write-scopes
+                          request-method
+                          scopes
+                          :allow-delete? false)
+      "activities/state"
+      (authorized-scopes? state-read-scopes
+                          state-write-scopes
+                          request-method
+                          scopes)
+      "activities/profile"
+      (authorized-scopes? activities-profile-read-scopes
+                          activities-profile-write-scopes
+                          request-method
+                          scopes)
+      "agents/profile"
+      (authorized-scopes? agents-profile-read-scopes
+                          agents-profile-write-scopes
+                          request-method
+                          scopes)
       ;; all other paths (e.g. /about, /activities)
-      :else
-      (cond
-        (#{:get :head} request-method)
-        (or (contains? scopes :scope/all)
-            (contains? scopes :scope/all.read))
-        (#{:put :post :delete} request-method)
-        (contains? scopes :scope/all)
-        :else
-        (do (log-scope-error scopes)
-            false)))))
+      (authorized-scopes? read-scopes
+                          write-scopes
+                          request-method
+                          scopes))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; statement/read/mine special handling
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef statement-read-mine-authorization?
+  :args (s/cat :auth-identity (s/keys :req-un [::scopes]))
+  :ret boolean?)
+
+(defn statement-read-mine-authorization?
+  "Return `true` if the most permissive scope for Statement reading is
+   `:scope/statements.read.mine`, false if there are more permissive scopes
+   (which would override that scope) or if it's not present."
+  [{:keys [scopes] :as _auth-identity}]
+  (->> scopes
+       (filter #(contains? statement-read-scopes %))
+       (get-most-permissive-scope read-scope-hierarchy)
+       (= :scope/statements.read.mine)))

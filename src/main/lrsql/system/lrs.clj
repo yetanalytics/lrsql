@@ -158,8 +158,7 @@
           config (:config lrs)
           prefix (:stmt-url-prefix config)
           auth?  (-> auth-identity
-                     auth-util/most-permissive-statement-read-scope
-                     #{:scope/statements.read.mine})
+                     auth-util/statement-read-mine-authorization?)
           ?auth  (if auth? (:agent auth-identity) nil)
           inputs (-> params
                      (stmt-util/ensure-default-max-limit config)
