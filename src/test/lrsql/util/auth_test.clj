@@ -222,8 +222,6 @@
              :path-info      "/activities"
              :scopes         #{:scope/all.read}}))
   (testing "authorization fn gentest"
-    #_(is (nil? (check-validate `au/most-permissive-statement-read-scope)))
-    #_(is (nil? (check-validate `au/most-permissive-statement-write-scope)))
     (is (nil? (check-validate `au/authorized-action?)))))
 
 (deftest statement-read-mine-authorization-test
