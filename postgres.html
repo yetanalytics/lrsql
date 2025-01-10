@@ -159,10 +159,10 @@ postgres=# CREATE USER &#91;username&#93; WITH CREATEDB WITH PASSWORD '&#91;pass
 }
 </code></pre><p>The <code>connection</code>, <code>lrs</code>, and <code>webserver</code> sections of the config can then be set with whatever properties you see fit, like the example on the <a href='startup.html'>Getting Started</a> page.</p><h3 id="supported&#95;versions">Supported Versions</h3><p>SQL LRS supports PostgreSQL versions 11 through 15. It is tested against the <a href='https://www.postgresql.org/support/versioning/'>current minor point release</a> of each version.</p><h3 id="unix&#95;socket&#95;support">Unix Socket Support</h3><p>SQL LRS includes <a href='https://github.com/kohlschutter/junixsocket'>junixsocket</a> which allows unix socket connections to Postgres.</p><p>To connect via a unix socket use a JDBC URL like <code>jdbc:postgresql://localhost/test-postgres-db?socketFactory=org.newsclub.net.unix.AFUNIXSocketFactory%24FactoryArg&amp;socketFactoryArg=/var/run/postgresql/.s.PGSQL.5432&amp;user=test-postgres-user</code> where <code>socketFactoryArg</code> is the path to your Postgres socket file and <code>user</code> is your DB user. See the entry for <code>LRSQL&#95;DB&#95;JDBC&#95;URL</code> <a href='env_vars.html'>here</a> for information on setting the JDBC URL.</p><p><a href='index.html'><- Back to Index</a></p>
         <div class="footer">
-         &copy; 2021-2024 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
+         &copy; 2021-2025 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
          Contribute on <a href="https://github.com/yetanalytics/lrsql" target="_blank">GitHub</a>
-         <span class="build">Build: b5942df61554d58661a71c515cf46d13b5715d3e</span>
+         <span class="build">Build: e2a7c158ba29183f9c912c868bb9e50a5fb833c0</span>
         </div>
       </div>
     </body>
