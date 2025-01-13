@@ -37,12 +37,11 @@ docker run -v "$(pwd)"/dev-resources:/dev-resources  \
            -it \
            --rm \
            yetanalytics/datasim:latest \
+           generate post \
            -i /dev-resources/input/simple.json \
            -E http://host.docker.internal:8080/xapi \
            -U my_key \
-           -P my_secret \
-           generate post
-
+           -P my_secret
 ```
 
 ### Log In to Superset
@@ -89,6 +88,13 @@ Click "FINISH" and the database is ready to explore with Superset.
 Explore SQL LRS in SQL Lab:
 
 ![SQL lab](images/superset/6_sql_explorer.png)
+
+``` sql
+SELECT payload->'actor'->>'name' as actor_name,
+COUNT(DISTINCT id)
+FROM xapi_statement
+GROUP BY payload->'actor'->>'name'
+```
 
 Create a chart:
 
