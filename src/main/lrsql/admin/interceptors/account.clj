@@ -258,6 +258,8 @@
     (fn get-account [ctx]
       (assoc ctx :response {:status 204}))}))
 
+;; JWT interceptors for admin
+
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
   [secret exp]
@@ -274,3 +276,29 @@
                {:status 200
                 :body   {:account-id     account-id
                          :json-web-token json-web-token}})))}))
+
+(def ^:private block-admin-jwt-error-msg
+  "This operation is unsupported when `LRSQL_JWT_NO_VAL` is set to `true`.")
+
+(defn block-admin-jwt
+  "Add the current JWT to the blocklist. Return an error if we are in
+   no-val mode."
+  [exp leeway no-val?]
+  (interceptor
+   {:name ::add-jwt-to-blocklist
+    :enter
+    (fn add-jwt-to-blocklist [ctx]
+      (if-not no-val?
+        (let [{lrs :com.yetanalytics/lrs
+               {:keys [jwt account-id]} :lrsql.admin.interceptors.jwt/data}
+              ctx]
+          (adp/-purge-blocklist lrs leeway) ; Update blocklist upon logout
+          (adp/-block-jwt lrs jwt exp)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 200
+                  :body   {:account-id account-id}}))
+        (assoc (chain/terminate ctx)
+               :response
+               {:status 400
+                :body   {:error block-admin-jwt-error-msg}})))}))

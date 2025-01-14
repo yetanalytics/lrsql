@@ -33,14 +33,15 @@
    (i/lrs-interceptor lrs)])
 
 (defn admin-account-routes
-  [common-interceptors jwt-secret jwt-exp jwt-leeway no-val-opts]
+  [common-interceptors jwt-secret jwt-exp jwt-leeway {:keys [no-val?] :as no-val-opts}]
   #{;; Log into an existing account
     (gc/annotate
      ["/admin/account/login" :post (conj common-interceptors
                                          (ai/validate-params
                                           :strict? false)
                                          ai/authenticate-admin
-                                         (ai/generate-jwt jwt-secret jwt-exp))
+                                         (ai/generate-jwt
+                                          jwt-secret jwt-exp))
       :route-name :lrsql.admin.account/login]
      {:description "Log into an existing account"
       :requestBody (g/request (gs/o {:username :t#string
@@ -49,6 +50,21 @@
       :responses {200 (g/response "Account ID and JWT"
                                   (gs/o {:account-id :t#string
                                          :json-web-token :t#string}))
+                  400 (g/rref :error-400)
+                  401 (g/rref :error-401)}})
+    ;; Log out of current account
+    (gc/annotate
+     ["/admin/account/logout" :post (conj common-interceptors
+                                          (ji/validate-jwt
+                                           jwt-secret jwt-leeway no-val-opts)
+                                          ji/validate-jwt-account
+                                          (ai/block-admin-jwt
+                                           jwt-exp jwt-leeway no-val?))
+      :route-name :lrsql.admin.account/logout]
+     {:description "Log out of this account"
+      :operationId :logout
+      :responses {200 (g/response "Account ID"
+                                  (gs/o {:account-id :t#string}))
                   400 (g/rref :error-400)
                   401 (g/rref :error-401)}})
     ;; Create new account
