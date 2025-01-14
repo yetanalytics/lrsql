@@ -33,7 +33,7 @@
    (i/lrs-interceptor lrs)])
 
 (defn admin-account-routes
-  [common-interceptors jwt-secret jwt-exp jwt-leeway {:keys [no-val?] :as no-val-opts}]
+  [common-interceptors jwt-secret jwt-exp jwt-ref jwt-leeway {:keys [no-val?] :as no-val-opts}]
   #{;; Log into an existing account
     (gc/annotate
      ["/admin/account/login" :post (conj common-interceptors
@@ -41,7 +41,7 @@
                                           :strict? false)
                                          ai/authenticate-admin
                                          (ai/generate-jwt
-                                          jwt-secret jwt-exp))
+                                          jwt-secret jwt-exp jwt-ref jwt-leeway))
       :route-name :lrsql.admin.account/login]
      {:description "Log into an existing account"
       :requestBody (g/request (gs/o {:username :t#string
@@ -66,6 +66,18 @@
       :responses {200 (g/response "Account ID"
                                   (gs/o {:account-id :t#string}))
                   400 (g/rref :error-400)
+                  401 (g/rref :error-401)}})
+    ;; Renew current account JWT to maintain login
+    (gc/annotate
+     ["/admin/account/renew" :get (conj common-interceptors
+                                        (ji/validate-jwt
+                                         jwt-secret jwt-leeway no-val-opts)
+                                        ji/validate-jwt-account
+                                        (ai/renew-admin-jwt jwt-secret jwt-exp))
+      :route-name :lrsql.admin.account/renew]
+     {:description "Renew current account login"
+      :operationId :renew
+      :responses {200 (g/response "Account ID and JWT")
                   401 (g/rref :error-401)}})
     ;; Create new account
     (gc/annotate
@@ -304,6 +316,7 @@
    accounts."
   [{:keys [lrs
            exp
+           ref
            leeway
            secret
            no-val?
@@ -312,6 +325,8 @@
            no-val-role-key
            no-val-role
            no-val-logout-url
+           refresh-interval
+           interaction-window
            enable-admin-delete-actor
            enable-admin-ui
            enable-admin-status
@@ -337,14 +352,16 @@
     (cset/union routes
                 (when enable-account-routes
                   (admin-account-routes
-                   common-interceptors-oidc secret exp leeway no-val-opts))
+                   common-interceptors-oidc secret exp ref leeway no-val-opts))
                 (admin-cred-routes
                  common-interceptors-oidc secret leeway no-val-opts)
                 (when enable-admin-ui
                   (admin-ui-routes
                    (into common-interceptors
                          oidc-ui-interceptors)
-                   {:enable-admin-status       enable-admin-status
+                   {:jwt-refresh-interval      refresh-interval
+                    :jwt-interaction-window    interaction-window
+                    :enable-admin-status       enable-admin-status
                     :enable-reactions          enable-reaction-routes
                     :no-val?                   no-val?
                     :no-val-logout-url         no-val-logout-url

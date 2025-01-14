@@ -1,5 +1,6 @@
 (ns lrsql.admin.interceptors.account
   (:require [clojure.spec.alpha :as s]
+            [java-time.api :as jt]
             [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
@@ -262,20 +263,45 @@
 
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
-  [secret exp]
+  [secret exp ref leeway]
   (interceptor
    {:name ::generate-jwt
     :enter
     (fn generate-jwt [ctx]
-      (let [{{:keys [account-id]} ::data}
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [account-id]} ::data}
             ctx
             json-web-token
-            (admin-u/account-id->jwt account-id secret exp)]
+            (admin-u/account-id->jwt account-id secret exp ref)]
+        (adp/-purge-blocklist lrs leeway) ; Update blocklist upon login
         (assoc ctx
                :response
                {:status 200
                 :body   {:account-id     account-id
                          :json-web-token json-web-token}})))}))
+
+(defn renew-admin-jwt
+  [secret exp]
+  (interceptor
+   {:name ::renew-jwt
+    :enter
+    (fn renew-jwt [ctx]
+      (let [{{:keys [account-id refresh-exp]} ::jwt/data} ctx
+            curr-time (u/current-time)]
+        (if (jt/before? curr-time refresh-exp)
+          (let [json-web-token (admin-u/account-id->jwt* account-id
+                                                         secret
+                                                         exp
+                                                         refresh-exp)]
+            (assoc ctx
+                   :response
+                   {:status 200
+                    :body   {:account-id     account-id
+                             :json-web-token json-web-token}}))
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 401
+                  :body   {:error "Attempting JWT login after refresh expiry."}}))))}))
 
 (def ^:private block-admin-jwt-error-msg
   "This operation is unsupported when `LRSQL_JWT_NO_VAL` is set to `true`.")

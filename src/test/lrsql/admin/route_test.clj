@@ -57,6 +57,11 @@
   (curl/post "http://0.0.0.0:8080/admin/account/logout"
              {:headers headers}))
 
+(defn- renew-login
+  [headers]
+  (curl/get "http://0.0.0.0:8080/admin/account/renew"
+            {:headers headers}))
+
 (defn- create-account
   [headers body & {:keys [throw]
                    :or {throw true}}]
@@ -226,11 +231,21 @@
           (is (= (get edn-body "username") admin-user-default))))
       (testing "verify my admin account"
         (let [{:keys [status]} (verify-me headers)]
-          ;; success
+                ;; success
           (is (= 204 status))))
       (testing "ensure corrupted JWTs do not pass"
         (is-err-code (get-me bad-head) 401)
         (is-err-code (verify-me bad-head) 401))
+      (testing "renew my admin account's JWT"
+        ;; NOTE: More JWT renewal tests in `jwt-expiry` below
+        (let [{:keys [status body]} (renew-login headers)
+              edn-body (u/parse-json body)
+              new-jwt  (get edn-body "json-web-token")]
+          ;; success
+          (is (= 200 status))
+          ;; body is a new JWT
+          (is (string? new-jwt))
+          (is (not= seed-jwt new-jwt))))
       (testing "log into the `myname` account"
         (let [{:keys [status body]}
               (login-account content-type req-body)
@@ -542,6 +557,49 @@
           ;; equals the same combination of custom and default hdr values
           (is (= custom-sec-header-expected
                  (select-keys headers sec-header-names)))))
+      (finally
+        (component/stop sys')))))
+
+(deftest jwt-expiry
+  (let [sys  (support/test-system
+              :conf-overrides
+              {[:webserver :jwt-exp-time] 3
+               [:webserver :jwt-refresh-exp-time] 4
+               [:webserver :jwt-refresh-interval] 2
+               [:webserver :jwt-interaction-window] 2})
+        sys' (component/start sys)
+        ;; Seed info
+        {:keys [admin-user-default
+                admin-pass-default]}
+        (get-in sys' [:lrs :config])
+        seed-body (u/write-json-str
+                   {"username" admin-user-default
+                    "password" admin-pass-default})
+        seed-jwt  (-> (login-account content-type seed-body)
+                      :body
+                      u/parse-json
+                      (get "json-web-token"))
+        seed-auth {"Authorization" (str "Bearer " seed-jwt)}
+        headers   (merge content-type seed-auth)]
+    (try
+      (testing "Original JWT works"
+        (is (= 200 (:status (get-me headers)))))
+      ;; Refresh JWT
+      (Thread/sleep 2000)
+      (let [{:keys [body]} (renew-login headers)
+            new-jwt  (-> body u/parse-json (get "json-web-token"))
+            new-auth {"Authorization" (str "Bearer " new-jwt)}
+            headers* (merge content-type new-auth)]
+        (testing "Only new JWT no longer works after expiration"
+          (Thread/sleep 2000)
+          (is-err-code (get-me headers) 401)
+          (is (= 200 (:status (get-me headers*)))))
+        (testing "JWT can no longer refresh after refresh expiration"
+          (Thread/sleep 1000)
+          (is-err-code (renew-login headers) 401))
+        (testing "JWT no longer works after expiration"
+          (Thread/sleep 1500)
+          (is-err-code (get-me headers*) 401)))
       (finally
         (component/stop sys')))))
 
