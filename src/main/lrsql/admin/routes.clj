@@ -255,18 +255,23 @@
 
 (defn admin-ui-routes
   [common-interceptors {:keys [proxy-path] :as inject-config}]
-  #{;; Redirect root to admin UI
+  #{["/admin/env" :get (conj common-interceptors
+                             (ui/get-env inject-config))
+     :route-name :lrsql.admin.ui/get-env]
+    ;; SPA routes
+    ["/admin/ui" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/main-path]
+    ["/admin/ui/" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/slash-path]
+    ["/admin/ui/*path" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/sub-paths]
+    ;; SPA redirects
     ["/" :get (ui/admin-ui-redirect proxy-path)
      :route-name :lrsql.admin.ui/root-redirect]
-    ;; Redirect admin w/o slash to admin UI
     ["/admin" :get (ui/admin-ui-redirect proxy-path)
-     :route-name :lrsql.admin.ui/path-redirect]
-    ;; Redirect admin with slash to admin UI
-    ["/admin/" :get (ui/admin-ui-redirect proxy-path)
      :route-name :lrsql.admin.ui/slash-redirect]
-    ["/admin/env" :get (conj common-interceptors
-                             (ui/get-env inject-config))
-     :route-name :lrsql.admin.ui/get-env]})
+    ["/admin/" :get (ui/admin-ui-redirect proxy-path)
+     :route-name :lrsql.admin.ui/slash-redirect-2]})
 
 (defn admin-reaction-routes
   [common-interceptors jwt-secret jwt-leeway no-val-opts]
