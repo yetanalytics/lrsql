@@ -33,14 +33,15 @@
    (i/lrs-interceptor lrs)])
 
 (defn admin-account-routes
-  [common-interceptors jwt-secret jwt-exp jwt-leeway no-val-opts]
+  [common-interceptors jwt-secret jwt-exp jwt-ref jwt-leeway {:keys [no-val?] :as no-val-opts}]
   #{;; Log into an existing account
     (gc/annotate
      ["/admin/account/login" :post (conj common-interceptors
                                          (ai/validate-params
                                           :strict? false)
                                          ai/authenticate-admin
-                                         (ai/generate-jwt jwt-secret jwt-exp))
+                                         (ai/generate-jwt
+                                          jwt-secret jwt-exp jwt-ref jwt-leeway))
       :route-name :lrsql.admin.account/login]
      {:description "Log into an existing account"
       :requestBody (g/request (gs/o {:username :t#string
@@ -50,6 +51,33 @@
                                   (gs/o {:account-id :t#string
                                          :json-web-token :t#string}))
                   400 (g/rref :error-400)
+                  401 (g/rref :error-401)}})
+    ;; Log out of current account
+    (gc/annotate
+     ["/admin/account/logout" :post (conj common-interceptors
+                                          (ji/validate-jwt
+                                           jwt-secret jwt-leeway no-val-opts)
+                                          ji/validate-jwt-account
+                                          (ai/block-admin-jwt
+                                           jwt-exp jwt-leeway no-val?))
+      :route-name :lrsql.admin.account/logout]
+     {:description "Log out of this account"
+      :operationId :logout
+      :responses {200 (g/response "Account ID"
+                                  (gs/o {:account-id :t#string}))
+                  400 (g/rref :error-400)
+                  401 (g/rref :error-401)}})
+    ;; Renew current account JWT to maintain login
+    (gc/annotate
+     ["/admin/account/renew" :get (conj common-interceptors
+                                        (ji/validate-jwt
+                                         jwt-secret jwt-leeway no-val-opts)
+                                        ji/validate-jwt-account
+                                        (ai/renew-admin-jwt jwt-secret jwt-exp))
+      :route-name :lrsql.admin.account/renew]
+     {:description "Renew current account login"
+      :operationId :renew
+      :responses {200 (g/response "Account ID and JWT")
                   401 (g/rref :error-401)}})
     ;; Create new account
     (gc/annotate
@@ -101,7 +129,7 @@
                                   (gs/a (gs/o {:account-id :t#string 
                                                :username :t#string})))
                   401 (g/rref :error-401)}})
-    ;; Get my accounts
+    ;; Get my account
     (gc/annotate
      ["/admin/me" :get (conj common-interceptors
                              (ji/validate-jwt
@@ -115,6 +143,18 @@
       :responses {200 (g/response  "Account object referring to own account"
                                    (gs/o {:account-id :t#string
                                           :username :t#string}) )
+                  401 (g/rref :error-401)}})
+    ;; Check that I am logged in
+    (gc/annotate
+     ["/admin/verify" :get (conj common-interceptors
+                                 (ji/validate-jwt
+                                  jwt-secret jwt-leeway no-val-opts)
+                                 ji/validate-jwt-account
+                                 ai/no-content)]
+     {:description "Verify that querying account is logged in"
+      :operationId :verify-own-account
+      :security [{:bearerAuth []}]
+      :responses {204 (g/response "No content body")
                   401 (g/rref :error-401)}})
     ;; Delete account (and associated credentials)
     (gc/annotate
@@ -215,18 +255,23 @@
 
 (defn admin-ui-routes
   [common-interceptors {:keys [proxy-path] :as inject-config}]
-  #{;; Redirect root to admin UI
+  #{["/admin/env" :get (conj common-interceptors
+                             (ui/get-env inject-config))
+     :route-name :lrsql.admin.ui/get-env]
+    ;; SPA routes
+    ["/admin/ui" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/main-path]
+    ["/admin/ui/" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/slash-path]
+    ["/admin/ui/*path" :get (ui/get-spa proxy-path)
+     :route-name :lrsql.admin.ui/sub-paths]
+    ;; SPA redirects
     ["/" :get (ui/admin-ui-redirect proxy-path)
      :route-name :lrsql.admin.ui/root-redirect]
-    ;; Redirect admin w/o slash to admin UI
     ["/admin" :get (ui/admin-ui-redirect proxy-path)
-     :route-name :lrsql.admin.ui/path-redirect]
-    ;; Redirect admin with slash to admin UI
-    ["/admin/" :get (ui/admin-ui-redirect proxy-path)
      :route-name :lrsql.admin.ui/slash-redirect]
-    ["/admin/env" :get (conj common-interceptors
-                             (ui/get-env inject-config))
-     :route-name :lrsql.admin.ui/get-env]})
+    ["/admin/" :get (ui/admin-ui-redirect proxy-path)
+     :route-name :lrsql.admin.ui/slash-redirect-2]})
 
 (defn admin-reaction-routes
   [common-interceptors jwt-secret jwt-leeway no-val-opts]
@@ -276,6 +321,7 @@
    accounts."
   [{:keys [lrs
            exp
+           ref
            leeway
            secret
            no-val?
@@ -284,6 +330,8 @@
            no-val-role-key
            no-val-role
            no-val-logout-url
+           refresh-interval
+           interaction-window
            enable-admin-delete-actor
            enable-admin-ui
            enable-admin-status
@@ -309,14 +357,16 @@
     (cset/union routes
                 (when enable-account-routes
                   (admin-account-routes
-                   common-interceptors-oidc secret exp leeway no-val-opts))
+                   common-interceptors-oidc secret exp ref leeway no-val-opts))
                 (admin-cred-routes
                  common-interceptors-oidc secret leeway no-val-opts)
                 (when enable-admin-ui
                   (admin-ui-routes
                    (into common-interceptors
                          oidc-ui-interceptors)
-                   {:enable-admin-status       enable-admin-status
+                   {:jwt-refresh-interval      refresh-interval
+                    :jwt-interaction-window    interaction-window
+                    :enable-admin-status       enable-admin-status
                     :enable-reactions          enable-reaction-routes
                     :no-val?                   no-val?
                     :no-val-logout-url         no-val-logout-url

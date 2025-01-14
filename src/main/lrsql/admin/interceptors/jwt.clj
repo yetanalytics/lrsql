@@ -8,12 +8,48 @@
 ;; NOTE: These interceptors are specifically for JWT validation.
 ;; For JWT generation see `account/generate-jwt`.
 
+(defn- validate-no-val-jwt
+  "Proxy JWT, decode JWT without validation and ensure the account is valid."
+  [lrs token {:keys [no-val-uname no-val-issuer no-val-role-key
+                     no-val-role]}]
+  (try
+    (let [{:keys [issuer username] :as result}
+          (admin-u/proxy-jwt->payload token
+                                      no-val-uname
+                                      no-val-issuer
+                                      no-val-role-key
+                                      no-val-role)]
+      (if (keyword? result)
+        result
+        (let [{result* :result} (adp/-ensure-account-oidc lrs username issuer)]
+          (if (keyword? result*)
+            result*
+            (assoc result :account-id result* :jwt token)))))
+    (catch Exception ex
+      ;; We want any error here to return a 401, but we log
+      (log/warnf ex "No-val JWT Error: %s" (ex-message ex))
+      :lrsql.admin/unauthorized-token-error)))
+
+(defn- validate-jwt*
+  "Normal JWT, normal signature verification and blocklist check."
+  [lrs token secret leeway]
+  (try
+    (let [result (admin-u/jwt->payload token secret leeway)]
+      (if (keyword? result)
+        result
+        (if-not (adp/-jwt-blocked? lrs token)
+          (assoc result :jwt token)
+          :lrsql.admin/unauthorized-token-error)))
+    (catch Exception ex
+      ;; We want any error here to return a 401, but we log
+      (log/warnf ex "Unexpected JWT Error: %s" (ex-message ex))
+      :lrsql.admin/unauthorized-token-error)))
+
 (defn validate-jwt
   "Validate that the header JWT is valid (e.g. not expired and signed properly).
    If no-val? is true run an entirely separate decoding that gets the username
    and issuer claims, verifies a role and ensures the account if necessary."
-  [secret leeway {:keys [no-val? no-val-uname no-val-issuer no-val-role-key
-                         no-val-role]}]
+  [secret leeway {:keys [no-val?] :as no-val-opts}]
   (interceptor
    {:name ::validate-jwt
     :enter
@@ -23,27 +59,14 @@
                        (get-in [:request :headers "authorization"])
                        admin-u/header->jwt)
             result (if no-val?
-                     ;; decode jwt w/o validation and ensure account
-                     (try
-                       (let [{:keys [issuer username] :as result}
-                             (admin-u/proxy-jwt->username-and-issuer
-                              token no-val-uname no-val-issuer no-val-role-key
-                              no-val-role)]
-                         (if (some? username)
-                           (:result (adp/-ensure-account-oidc lrs username issuer))
-                           result))
-                       (catch Exception ex
-                         ;; We want any error here to return a 401, but we log
-                         (log/warnf ex "No-val JWT Error: %s" (ex-message ex))
-                         :lrsql.admin/unauthorized-token-error))
-                     ;; normal jwt, check signature etc
-                     (admin-u/jwt->account-id token secret leeway))]
+                     (validate-no-val-jwt lrs token no-val-opts)
+                     (validate-jwt* lrs token secret leeway))]
         (cond
           ;; Success - assoc the account ID as an intermediate value
-          (uuid? result)
+          (map? result)
           (-> ctx
-              (assoc-in [::data :account-id] result)
-              (assoc-in [:request :session ::data :account-id] result))
+              (assoc-in [::data] result)
+              (assoc-in [:request :session ::data] result))
           ;; Problem with the non-validated account ensure
           (= :lrsql.admin/oidc-issuer-mismatch-error result)
           (assoc (chain/terminate ctx)

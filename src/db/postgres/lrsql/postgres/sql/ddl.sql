@@ -488,3 +488,14 @@ ALTER TABLE lrs_credential ALTER COLUMN secret_key TYPE TEXT;
 ALTER TABLE credential_to_scope ALTER COLUMN api_key TYPE TEXT;
 ALTER TABLE credential_to_scope ALTER COLUMN secret_key TYPE TEXT;
 ALTER TABLE reaction ALTER COLUMN title TYPE TEXT;
+
+/* Migration 2024-10-31 - Add JWT Blocklist Table */
+
+-- :name create-blocked-jwt-table!
+-- :command :execute
+-- :doc Create the `blocked_jwt` table and associated indexes if they do not exist yet.
+CREATE TABLE IF NOT EXISTS blocked_jwt (
+  jwt        TEXT PRIMARY KEY,
+  evict_time TIMESTAMP WITH TIME ZONE
+);
+CREATE INDEX IF NOT EXISTS blocked_jwt_evict_time_idx ON blocked_jwt(evict_time);

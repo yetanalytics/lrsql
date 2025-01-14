@@ -1,5 +1,6 @@
 (ns lrsql.admin.interceptors.account
   (:require [clojure.spec.alpha :as s]
+            [java-time.api :as jt]
             [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
@@ -250,19 +251,80 @@
                :response
                {:status 200 :body result})))}))
 
+(def no-content
+  "Return a 204 No Content response, without a body."
+  (interceptor
+   {:name ::get-no-content
+    :enter
+    (fn get-account [ctx]
+      (assoc ctx :response {:status 204}))}))
+
+;; JWT interceptors for admin
+
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
-  [secret exp]
+  [secret exp ref leeway]
   (interceptor
    {:name ::generate-jwt
     :enter
     (fn generate-jwt [ctx]
-      (let [{{:keys [account-id]} ::data}
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [account-id]} ::data}
             ctx
             json-web-token
-            (admin-u/account-id->jwt account-id secret exp)]
+            (admin-u/account-id->jwt account-id secret exp ref)]
+        (adp/-purge-blocklist lrs leeway) ; Update blocklist upon login
         (assoc ctx
                :response
                {:status 200
                 :body   {:account-id     account-id
                          :json-web-token json-web-token}})))}))
+
+(defn renew-admin-jwt
+  [secret exp]
+  (interceptor
+   {:name ::renew-jwt
+    :enter
+    (fn renew-jwt [ctx]
+      (let [{{:keys [account-id refresh-exp]} ::jwt/data} ctx
+            curr-time (u/current-time)]
+        (if (jt/before? curr-time refresh-exp)
+          (let [json-web-token (admin-u/account-id->jwt* account-id
+                                                         secret
+                                                         exp
+                                                         refresh-exp)]
+            (assoc ctx
+                   :response
+                   {:status 200
+                    :body   {:account-id     account-id
+                             :json-web-token json-web-token}}))
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 401
+                  :body   {:error "Attempting JWT login after refresh expiry."}}))))}))
+
+(def ^:private block-admin-jwt-error-msg
+  "This operation is unsupported when `LRSQL_JWT_NO_VAL` is set to `true`.")
+
+(defn block-admin-jwt
+  "Add the current JWT to the blocklist. Return an error if we are in
+   no-val mode."
+  [exp leeway no-val?]
+  (interceptor
+   {:name ::add-jwt-to-blocklist
+    :enter
+    (fn add-jwt-to-blocklist [ctx]
+      (if-not no-val?
+        (let [{lrs :com.yetanalytics/lrs
+               {:keys [jwt account-id]} :lrsql.admin.interceptors.jwt/data}
+              ctx]
+          (adp/-purge-blocklist lrs leeway) ; Update blocklist upon logout
+          (adp/-block-jwt lrs jwt exp)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 200
+                  :body   {:account-id account-id}}))
+        (assoc (chain/terminate ctx)
+               :response
+               {:status 400
+                :body   {:error block-admin-jwt-error-msg}})))}))

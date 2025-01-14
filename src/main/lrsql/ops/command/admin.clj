@@ -2,8 +2,9 @@
   (:require [clojure.spec.alpha :as s]
             [lrsql.backend.protocol :as bp]
             [lrsql.input.admin :as admin-i]
-            [lrsql.spec.common :refer [transaction?]]
-            [lrsql.spec.admin :as ads]))
+            [lrsql.spec.common :as cs :refer [transaction?]]
+            [lrsql.spec.admin :as ads]
+            [lrsql.spec.admin.jwt :as jwts]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Admin Account Insertion
@@ -105,3 +106,38 @@
                                 ensure-input)]
       (bp/-insert-admin-account-oidc! bk tx insert-input)
       {:result primary-key})))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Admin JWTs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef purge-blocklist!
+  :args (s/cat :bk jwts/admin-jwt-backend?
+               :tx transaction?
+               :input jwts/purge-blocklist-input-spec)
+  :ret nil?)
+
+(defn purge-blocklist!
+  "Delete all JWTs from the blocklist that have expired, i.e. whose expirations
+   are before the `:current-time` in `input`."
+  [bk tx input]
+  (bp/-delete-blocked-jwt-by-time! bk tx input)
+  nil)
+
+(s/fdef insert-blocked-jwt!
+  :args (s/cat :bk jwts/admin-jwt-backend?
+               :tx transaction?
+               :input jwts/insert-blocked-jwt-input-spec)
+  :ret (s/or :success jwts/blocked-jwt-op-result-spec
+             :error (s/keys :req-un [::cs/error])))
+
+(defn insert-blocked-jwt!
+  "Insert a new JWT `:account-id` and `:expiration` to the blocklist table."
+  [bk tx input]
+  (if (some? (bp/-query-blocked-jwt bk tx input))
+    {:error (ex-info "Cannot have identical JWTs in the blocklist"
+                     {:type ::jwt-conflict-error
+                      :jwt  (:jwt input)})}
+    (do
+      (bp/-insert-blocked-jwt! bk tx input)
+      {:result (:jwt input)})))

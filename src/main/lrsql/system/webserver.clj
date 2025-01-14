@@ -40,6 +40,8 @@
                 sec-head-content
                 allow-all-origins
                 allowed-origins
+                jwt-refresh-interval
+                jwt-interaction-window
                 jwt-no-val
                 jwt-no-val-uname
                 jwt-no-val-issuer
@@ -50,8 +52,9 @@
                 enable-clamav
                 clamav-host
                 clamav-port]
-         jwt-exp           :jwt-exp-time
-         jwt-lwy           :jwt-exp-leeway}
+         jwt-exp :jwt-exp-time
+         jwt-lwy :jwt-exp-leeway
+         jwt-ref :jwt-refresh-exp-time}
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
@@ -91,7 +94,10 @@
              (add-admin-routes
               {:lrs                       lrs
                :exp                       jwt-exp
+               :ref                       jwt-ref
                :leeway                    jwt-lwy
+               :refresh-interval          jwt-refresh-interval
+               :interaction-window        jwt-interaction-window
                :no-val?                   jwt-no-val
                :no-val-issuer             jwt-no-val-issuer
                :no-val-uname              jwt-no-val-uname
@@ -109,7 +115,7 @@
                :enable-reaction-routes    enable-reactions
                :oidc-interceptors         oidc-admin-interceptors
                :oidc-ui-interceptors      oidc-admin-ui-interceptors
-               :head-opts head-opts})
+               :head-opts                 head-opts})
              (add-openapi-route
               {:lrs lrs
                :head-opts head-opts

@@ -4,6 +4,15 @@
 
 The SQL LRS is a Clojure Web Application built on the Pedestal Framework.
 
+### Testing
+
+Development is primarily test-driven, which uses an exhaustive suite of unit tests. To run them locally, run a `make test-[database]` command. In addition, all tests are run for all versions in GitHub Actions CI.
+
+However, in some situations, such as UI development, relying on the unit tests may be inadequate. In these cases, in addition to performing visual tests on the UI, one may need to test these specific scenarios:
+- Login with OIDC ([demo](oidc.md#keycloak-demo))
+- Proxy paths ([demo](other_demos.md#proxied-lrs-demo))
+- JWT override ([JWT config vars](env_vars.md#jwt-config))
+
 ### Build
 
 The SQL LRS can be built or run with the following Makefile targets. They can be executed with `make [target]`.
