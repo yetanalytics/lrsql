@@ -512,6 +512,8 @@
         (let [{:keys [status]} (logout-account headers)]
           (is (= 200 status)))
         (is-err-code (get-me headers) 401)
+        ;; Logout again, should be unauthenticated
+        (is-err-code (logout-account headers) 401)
         ;; Login
         (let [{:keys [status body]} (login-account content-type seed-body)
               new-jwt  (-> body

@@ -319,16 +319,11 @@
                {:keys [jwt account-id]} :lrsql.admin.interceptors.jwt/data}
               ctx]
           (adp/-purge-blocklist lrs leeway) ; Update blocklist upon logout
-          (let [result (adp/-block-jwt lrs jwt exp)]
-            (if-not (contains? result :error)
-              (assoc (chain/terminate ctx)
-                     :response
-                     {:status 200
-                      :body   {:account-id account-id}})
-              (assoc (chain/terminate ctx)
-                     :response
-                     {:status 409
-                      :body   {:error "JWT has already been revoked."}}))))
+          (adp/-block-jwt lrs jwt exp)
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 200
+                  :body   {:account-id account-id}}))
         (assoc (chain/terminate ctx)
                :response
                {:status 400
