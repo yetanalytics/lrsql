@@ -488,3 +488,10 @@ ALTER TABLE lrs_credential ALTER COLUMN secret_key TYPE TEXT;
 ALTER TABLE credential_to_scope ALTER COLUMN api_key TYPE TEXT;
 ALTER TABLE credential_to_scope ALTER COLUMN secret_key TYPE TEXT;
 ALTER TABLE reaction ALTER COLUMN title TYPE TEXT;
+
+/* Migration 2025-02-03 - Add label column to lrs_credential table */
+
+-- :name alter-lrs-credential-add-label!
+-- :command :execute
+-- :doc Add the `label` column to the `lrs_credential` table if it does not exist.
+ALTER TABLE lrs_credential ADD COLUMN IF NOT EXISTS label TEXT;

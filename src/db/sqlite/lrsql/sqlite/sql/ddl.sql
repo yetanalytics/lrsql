@@ -523,4 +523,17 @@ SET sql = 'CREATE TABLE statement_to_actor (
     ON DELETE CASCADE,
   FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 )'
-WHERE type = 'table' AND name = 'statement_to_actor'
+WHERE type = 'table' AND name = 'statement_to_actor';
+
+/* Migration 2025-02-03 - Add label column to lrs_credential table */
+
+-- :name query-lrs-credential-label-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `lrs_credential.label` exists.
+SELECT 1 FROM pragma_table_info('lrs_column') WHERE name = 'label'
+
+-- :name alter-lrs-credential-add-label!
+-- :command :execute
+-- :doc Add the `label` column to the `lrs_credential` table.
+ALTER TABLE lrs_credential ADD COLUMN label TEXT;

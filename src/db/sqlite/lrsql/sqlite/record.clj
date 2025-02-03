@@ -112,6 +112,8 @@
       (xapi-statement-add-trigger-id! tx))
     (when-not (some? (query-statement-to-actor-has-cascade-delete tx))
       (update-schema-simple! tx alter-statement-to-actor-add-cascade-delete!))
+    (when-not (some? (query-lrs-credential-label-exists tx))
+      (alter-lrs-credential-add-label! tx))
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
 

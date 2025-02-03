@@ -76,7 +76,8 @@
     (when (nil? (check-statement-to-actor-cascading-delete tx))
       (add-statement-to-actor-cascading-delete! tx))
     (when (some? (query-varchar-exists tx))
-      (convert-varchars-to-text! tx)))
+      (convert-varchars-to-text! tx))
+    (alter-lrs-credential-add-label! tx))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
