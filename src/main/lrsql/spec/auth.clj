@@ -65,6 +65,8 @@
 (s/def ::api-key string?)
 (s/def ::secret-key string?)
 
+(s/def ::label (s/nilable string?))
+
 (s/def ::scope string-scopes)
 
 (s/def ::ids
@@ -110,6 +112,7 @@
   (s/keys :req-un [::c/primary-key
                    ::api-key
                    ::secret-key
+                   ::label
                    ::ads/account-id]))
 
 (def insert-cred-scope-input-spec
@@ -120,6 +123,15 @@
 
 (def insert-cred-scopes-input-spec
   (s/coll-of insert-cred-scope-input-spec :gen-max 5))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Update
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def update-cred-label-input-spec
+  (s/keys :req-un [::api-key
+                   ::secret-key
+                   ::label]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Delete

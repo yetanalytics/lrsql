@@ -48,11 +48,12 @@
     (fn create-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
              {:keys [account-id]} ::jwt/data
-             {:keys [scopes]} ::data}
+             {:keys [label scopes]} ::data}
             ctx
             api-key-res
             (adp/-create-api-keys lrs
                                   account-id
+                                  label
                                   (set scopes))]
         (assoc ctx
                :response
@@ -82,13 +83,14 @@
     (fn update-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
              {:keys [account-id]} ::jwt/data
-             {:keys [api-key secret-key scopes]} ::data}
+             {:keys [api-key secret-key label scopes]} ::data}
             ctx
             api-key-res
             (adp/-update-api-keys lrs
                                   account-id
                                   api-key
                                   secret-key
+                                  label
                                   (set scopes))]
         (assoc ctx
                :response

@@ -274,7 +274,7 @@
     (try
       (testing "Credential creation"
         (let [{:keys [api-key secret-key] :as key-pair}
-              (adp/-create-api-keys lrs acc-id #{"all" "all/read"})]
+              (adp/-create-api-keys lrs acc-id nil #{"all" "all/read"})]
           (is (re-matches Base64RegEx api-key))
           (is (re-matches Base64RegEx secret-key))
           (is (= {:api-key    api-key
@@ -289,6 +289,7 @@
           (testing "and credential update"
             (is (= {:api-key    api-key
                     :secret-key secret-key
+                    :label      "My Label"
                     :scopes     #{"all/read"
                                   "statements/read"
                                   "statements/read/mine"}}
@@ -297,6 +298,7 @@
                     acc-id
                     api-key
                     secret-key
+                    "My Label"
                     #{"all/read" "statements/read" "statements/read/mine"})))
             (is (= [{:api-key    api-key
                      :secret-key secret-key

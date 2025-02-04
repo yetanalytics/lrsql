@@ -10,21 +10,24 @@
 
 (s/fdef insert-credential-input
   :args (s/cat :account-id ::ads/account-id
+               :label      ::as/label
                :key-pair   as/key-pair-args-spec)
   :ret as/insert-cred-input-spec)
 
 (defn insert-credential-input
   "Given `account-id` and either a `key-pair` map or separate `api-key` and
    `secret-key` args, construct the input param map for `insert-credential!`"
-  ([account-id key-pair]
+  ([account-id label key-pair]
    (assoc key-pair
           :primary-key (u/generate-squuid)
-          :account-id  account-id))
-  ([account-id api-key secret-key]
+          :account-id  account-id
+          :label       label))
+  ([account-id label api-key secret-key]
    {:primary-key (u/generate-squuid)
     :api-key     api-key
     :secret-key  secret-key
-    :account-id  account-id}))
+    :account-id  account-id
+    :label       label}))
 
 (s/fdef insert-credential-scopes-input
   :args (s/cat :key-pair as/key-pair-args-spec
@@ -43,6 +46,25 @@
    (let [key-pair {:api-key    api-key
                    :secret-key secret-key}]
      (insert-credential-scopes-input key-pair scopes))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Credentials Update
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef update-credential-label-input
+  :args (s/cat :label    ::as/label
+               :key-pair as/key-pair-args-spec))
+
+(defn update-credential-label-input
+  "Given a `label` and either a `key-pair` map or seperate `api-key` and
+   `secret-key` args, construct the input param map for
+   `update-credential-label!`"
+  ([label key-pair]
+   (assoc key-pair :label label))
+  ([label api-key secret-key]
+   {:api-key    api-key
+    :secret-key secret-key
+    :label      label}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credentials Deletion
