@@ -85,6 +85,9 @@
 (def scopes-spec
   (s/keys :req-un [::scopes]))
 
+(def label-spec
+  (s/keys :req-un [::label]))
+
 (def scoped-key-pair-spec
   (s/keys :req-un [::api-key
                    ::secret-key

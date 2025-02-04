@@ -21,7 +21,9 @@
        (if-some [err (or (when key-pair?
                            (s/explain-data as/key-pair-spec params))
                          (when scopes?
-                           (s/explain-data as/scopes-spec params)))]
+                           (s/explain-data as/scopes-spec params))
+                         (when (:label params)
+                           (s/explain-data as/label-spec params)))]
          ;; Invalid parameters - Bad Request
          (assoc (chain/terminate ctx)
                 :response
@@ -31,6 +33,7 @@
          ;; Valid parameters - continue
          (let [cred-info (select-keys params [:api-key
                                               :secret-key
+                                              :label
                                               :scopes])]
            (-> ctx
                (assoc ::data cred-info)
