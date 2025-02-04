@@ -284,6 +284,7 @@
           (testing "and credential retrieval"
             (is (= [{:api-key    api-key
                      :secret-key secret-key
+                     :label      nil
                      :scopes     #{"all" "all/read"}}]
                    (adp/-get-api-keys lrs acc-id))))
           (testing "and credential update"
@@ -302,6 +303,7 @@
                     #{"all/read" "statements/read" "statements/read/mine"})))
             (is (= [{:api-key    api-key
                      :secret-key secret-key
+                     :label      "My Label"
                      :scopes     #{"all/read"
                                    "statements/read"
                                    "statements/read/mine"}}]

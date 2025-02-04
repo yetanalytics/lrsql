@@ -79,8 +79,10 @@
   [bk tx input]
   (let [creds  (->> input
                     (bp/-query-credentials bk tx)
-                    (map (fn [{ak :api_key sk :secret_key}]
-                           {:api-key ak :secret-key sk})))
+                    (map (fn [{ak    :api_key
+                               sk    :secret_key
+                               label :label}]
+                           {:api-key ak :secret-key sk :label label})))
         scopes (doall (map (fn [cred]
                              (->> cred
                                   (bp/-query-credential-scopes bk tx)
