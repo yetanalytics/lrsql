@@ -252,6 +252,8 @@
     (query-credential-ids tx input))
   (-query-credential-scopes [_ tx input]
     (query-credential-scopes tx input))
+  (-query-credential-by-id [_ tx input]
+    (query-credential-by-id tx input))
 
   bp/BackendIOSetter
   (-set-read! [_]

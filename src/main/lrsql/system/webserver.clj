@@ -81,7 +81,9 @@
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
                      :wrap-interceptors (into
-                                         [i/error-interceptor
+                                         [:mythical-interceptor
+
+                                          i/error-interceptor
                                           (handle-json-parse-exn)]
                                          oidc-resource-interceptors)
                      :file-scanner      (when enable-clamav

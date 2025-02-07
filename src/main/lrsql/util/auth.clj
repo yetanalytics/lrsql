@@ -6,7 +6,9 @@
             [buddy.core.codecs :refer [bytes->hex]]
             [buddy.core.nonce  :refer [random-bytes]]
             [lrsql.spec.auth :as as]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [lrsql.input.auth :as auth-i]
+            [io.pedestal.interceptor :as i]))
 
 ;; NOTE: Additional scopes may be implemented in the future.
 

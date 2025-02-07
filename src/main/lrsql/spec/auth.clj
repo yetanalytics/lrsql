@@ -154,3 +154,6 @@
                    ::secret-key
                    ::ats/authority-url
                    ::ats/authority-fn]))
+
+(def query-cred-by-id-input-spec
+  (s/keys :req-un [::id]))

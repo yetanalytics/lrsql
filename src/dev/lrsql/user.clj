@@ -8,7 +8,6 @@
             [lrsql.util :as u]
             [lrsql.util.actor :as a-util]))
 
-
 ;; SQLite
 (comment
   (require
@@ -204,3 +203,28 @@
 
   (component/stop sys')
   )
+
+
+(defn splice-into-statements-route [routes]
+  (let [f (fn [idx [path :as route]]
+            (if (= "statements"
+                   (last (clojure.string/split path #"/")))
+              idx))
+        idx (some (keep-indexed f routes))]
+    (update-in routes [idx 2] conj
+               {:name :auth-by-cred-id-interceptor
+                :enter (fn [ctx]
+                         (let [last-of-path (last (get-in ctx [:request :path-info]))
+                               cred-id (get-in ctx [:request :params :credentialID])]
+                           (if (and (= "statements" last-of-path)
+                                    cred-id)
+                             (let [cred-q-input (auth-input/query-credential-by-id-input cred-id)
+                                   {:keys [api-key secret-key]} (auth-q/query-credential-by-id cred-q-input)
+
+                                   base64 (util/str->base64encoded-str (str api-key ":" secret-key))]
+                               (-> ctx
+                                   (update-in [:request :params] dissoc :credentialID)
+                                        ;next spoof basic auth
+                                   (assoc-in [:request :headers "authorization"]
+                                             (str "Basic " base64))))
+                             ctx)))})))

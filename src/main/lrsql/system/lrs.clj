@@ -45,6 +45,8 @@
       :connection
       :conn-pool))
 
+(def holder (atom nil))
+
 (defrecord LearningRecordStore [connection
                                 backend
                                 config
@@ -55,7 +57,7 @@
   (start
     [lrs]
     (assert-config ::cs/lrs "LRS" config)
-    (let [;; Destructuring
+    (let [ ;; Destructuring
           {conn :conn-pool}
           connection
           {uname        :admin-user-default
@@ -223,26 +225,45 @@
   lrsp/LRSAuth
   (-authenticate
     [lrs ctx]
-    (or
-     ;; Token Authentication
-     (let [{:keys [oidc-scope-prefix]} config]
-       (oidc-util/token-auth-identity
-        ctx
-        oidc-authority-fn
-        oidc-scope-prefix))
-     ;; Basic Authentication
-     (let [conn   (lrs-conn lrs)
-           header (get-in ctx [:request :headers "authorization"])]
-       (if-some [key-pair (auth-util/header->key-pair header)]
-         (let [{:keys [authority-url]} config
-               input (auth-input/query-credential-scopes-input
-                      authority-fn
-                      authority-url
-                      key-pair)]
-           (jdbc/with-transaction [tx conn]
-             (auth-q/query-credential-scopes backend tx input)))
-         ;; No authorization header = no entry
-         {:result :com.yetanalytics.lrs.auth/unauthorized}))))
+    (let [transform-from-url-auth
+          (fn [ctx]
+            (let [last-of-path (last (get-in ctx [:request :path-info]))
+                  cred-id (get-in ctx [:request :params :credentialID])]
+              (if (and (= "statements" last-of-path)
+                       cred-id)
+                (let [cred-q-input (auth-input/query-credential-by-id-input cred-id)
+                      {:keys [api-key secret-key]} (auth-q/query-credential-by-id cred-q-input)
+
+                      base64 (util/str->base64encoded-str (str api-key ":" secret-key))]
+                  (-> ctx
+                      (update-in [:request :params] dissoc :credentialID)
+                                        ;next spoof basic auth
+                      (assoc-in [:request :headers "authorization"]
+                                (str "Basic " base64))))
+                ctx)))
+          ctx (transform-from-url-auth ctx)]
+      (or
+       ;; Token Authentication
+       (let [{:keys [oidc-scope-prefix]} config]
+         (oidc-util/token-auth-identity
+          ctx
+          oidc-authority-fn
+          oidc-scope-prefix))
+       ;; Basic Authentication
+       (let [conn   (lrs-conn lrs)
+             header (get-in ctx [:request :headers "authorization"])
+             credential-id (get-in ctx [:request :params :credentialID ])
+             _ (reset! holder ctx)]
+         (if-some [key-pair (auth-util/header->key-pair header)]
+           (let [{:keys [authority-url]} config
+                 input (auth-input/query-credential-scopes-input
+                        authority-fn
+                        authority-url
+                        key-pair)]
+             (jdbc/with-transaction [tx conn]
+               (auth-q/query-credential-scopes backend tx input)))
+           ;; No authorization header = no entry
+           {:result :com.yetanalytics.lrs.auth/unauthorized})))))
   (-authorize
     [_lrs ctx auth-identity]
     ;; We need to wrap the boolean in a map or else the LRS lib will get
