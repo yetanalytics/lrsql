@@ -6,6 +6,7 @@
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes add-openapi-route]]
+            [lrsql.auth.interceptor :as auth-interceptor]
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
             [lrsql.init.git-data :refer [read-version]]
@@ -51,10 +52,12 @@
                 jwt-common-secret
                 enable-clamav
                 clamav-host
-                clamav-port]
+                clamav-port
+                auth-by-cred-id]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway
          jwt-ref :jwt-refresh-exp-time}
+
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
@@ -83,10 +86,12 @@
         routes
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
-                     :wrap-interceptors (into
-                                         [i/error-interceptor
-                                          (handle-json-parse-exn)]
-                                         oidc-resource-interceptors)
+                     :wrap-interceptors
+                     (vec (apply concat
+                                (when auth-by-cred-id [(auth-interceptor/auth-by-cred-id-interceptor lrs)])
+                                [i/error-interceptor
+                                 (handle-json-parse-exn)]
+                                oidc-resource-interceptors))
                      :file-scanner      (when enable-clamav
                                           (clamav/init-file-scanner
                                            {:clamav-host clamav-host
@@ -115,7 +120,9 @@
                :enable-reaction-routes    enable-reactions
                :oidc-interceptors         oidc-admin-interceptors
                :oidc-ui-interceptors      oidc-admin-ui-interceptors
-               :head-opts                 head-opts})
+               :head-opts                 head-opts
+               :auth-by-cred-id           auth-by-cred-id})
+
              (add-openapi-route
               {:lrs lrs
                :head-opts head-opts

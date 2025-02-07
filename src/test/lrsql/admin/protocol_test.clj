@@ -326,10 +326,11 @@
                   :scopes     #{"all" "all/read"}}
                  key-pair))
           (testing "and credential retrieval"
-            (is (= [{:api-key    api-key
-                     :secret-key secret-key
-                     :scopes     #{"all" "all/read"}}]
-                   (adp/-get-api-keys lrs acc-id))))
+            (is (let [[result] (adp/-get-api-keys lrs acc-id)]
+                  (= {:api-key api-key
+                      :secret-key secret-key
+                      :scopes #{"all" "all/read"}}
+                     (dissoc result :id)))))
           (testing "and credential update"
             (is (= {:api-key    api-key
                     :secret-key secret-key
@@ -342,12 +343,13 @@
                     api-key
                     secret-key
                     #{"all/read" "statements/read" "statements/read/mine"})))
-            (is (= [{:api-key    api-key
-                     :secret-key secret-key
-                     :scopes     #{"all/read"
-                                   "statements/read"
-                                   "statements/read/mine"}}]
-                   (adp/-get-api-keys lrs acc-id))))
+            (is (let [[result] (adp/-get-api-keys lrs acc-id)]
+                  (= {:api-key api-key
+                      :secret-key secret-key
+                      :scopes #{"all/read"
+                                "statements/read"
+                                "statements/read/mine"}}
+                     (dissoc result :id)))))
           (testing "and credential deletion"
             (adp/-delete-api-keys lrs acc-id api-key secret-key)
             (is (= []

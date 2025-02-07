@@ -5,7 +5,6 @@
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.admin.protocol :as adp]
-            [lrsql.util :as u]
             [lrsql.util.actor :as a-util]))
 
 

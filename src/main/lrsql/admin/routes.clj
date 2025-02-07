@@ -342,7 +342,8 @@
            enable-reaction-routes
            oidc-interceptors
            oidc-ui-interceptors
-           head-opts]
+           head-opts
+           auth-by-cred-id]
     :or   {oidc-interceptors     []
            oidc-ui-interceptors  []
            enable-account-routes true}}
@@ -373,7 +374,9 @@
                     :proxy-path                proxy-path
                     :stmt-get-max              stmt-get-max
                     :enable-admin-delete-actor enable-admin-delete-actor
-                    :admin-language-code       admin-language-code}))
+                    :admin-language-code       admin-language-code
+                    :auth-by-cred-id           auth-by-cred-id
+                    }))
                 (when enable-admin-status
                   (admin-status-routes
                    common-interceptors-oidc secret leeway no-val-opts))
