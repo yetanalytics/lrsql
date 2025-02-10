@@ -531,7 +531,7 @@ WHERE type = 'table' AND name = 'statement_to_actor';
 -- :command :query
 -- :result :one
 -- :doc Query to see if `lrs_credential.label` exists.
-SELECT 1 FROM pragma_table_info('lrs_column') WHERE name = 'label'
+SELECT 1 FROM pragma_table_info('lrs_credential') WHERE name = 'label'
 
 -- :name alter-lrs-credential-add-label!
 -- :command :execute
