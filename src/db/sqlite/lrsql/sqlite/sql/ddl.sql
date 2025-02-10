@@ -547,4 +547,4 @@ SELECT 1 FROM pragma_table_info('lrs_credential') WHERE name = 'is_seed'
 -- :name alter-lrs-credential-add-is-seed!
 -- :command :execute
 -- :doc Add the `is_seed` column to the `lrs_credential` table.
-ALTER TABLE lrs_credential ADD COLUMN is_seed BOOLEAN;
+ALTER TABLE lrs_credential ADD COLUMN is_seed INTEGER; -- boolean type

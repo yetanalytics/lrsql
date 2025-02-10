@@ -282,7 +282,8 @@
        "created"
        "modified"})
     (sd/set-read-int->bool!
-     #{"active"}))
+     #{"active"
+       "is_seed"}))
   (-set-write! [_]
     (bd/set-write-json->bytes!)
     (sd/set-write-uuid->str!)
