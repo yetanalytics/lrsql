@@ -53,7 +53,7 @@
                           :secret-key ?secret-key}
                 acc-id   (:primary-key admin-in)
                 cred-in  (auth-input/insert-credential-input
-                          acc-id nil key-pair)
+                          acc-id key-pair nil)
                 scope-in (auth-input/insert-credential-scopes-input
                           key-pair #{"all"})]
             ;; Don't insert creds if reconnecting to a DB previously seeded
