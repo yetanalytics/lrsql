@@ -80,3 +80,16 @@
   [bk tx input]
   (bp/-update-credential-label! bk tx input)
   nil)
+
+(s/fdef update-credential-is-seed!
+  :args (s/cat :bk as/credential-backend?
+               :tx transaction?
+               :input as/update-cred-is-seed-input-spec)
+  :ret nil?)
+
+(defn update-credential-is-seed!
+  "Update the `is_seed` flag for the credential, i.e. is the credential a
+   seed credential? Returns `nil`."
+  [bk tx input]
+  (bp/-update-credential-is-seed! bk tx input)
+  nil)

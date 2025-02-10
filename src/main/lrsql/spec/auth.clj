@@ -67,6 +67,8 @@
 
 (s/def ::label (s/nilable string?))
 
+(s/def ::seed? boolean?)
+
 (s/def ::scope string-scopes)
 
 (s/def ::ids
@@ -136,6 +138,11 @@
   (s/keys :req-un [::api-key
                    ::secret-key
                    ::label]))
+
+(def update-cred-is-seed-input-spec
+  (s/keys :req-un [::api-key
+                   ::secret-key
+                   ::seed?]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Delete

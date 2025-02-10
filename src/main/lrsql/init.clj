@@ -55,9 +55,12 @@
                 cred-in  (auth-input/insert-credential-input
                           acc-id nil key-pair)
                 scope-in (auth-input/insert-credential-scopes-input
-                          key-pair #{"all"})]
+                          key-pair #{"all"})
+                seed-in  (auth-input/update-credential-is-seed-input
+                          key-pair true)]
             ;; Don't insert creds if reconnecting to a DB previously seeded
             ;; with a cred
             (when-not (auth-q/query-credential-scopes* backend tx cred-in)
               (auth-cmd/insert-credential! backend tx cred-in)
-              (auth-cmd/insert-credential-scopes! backend tx scope-in))))))))
+              (auth-cmd/insert-credential-scopes! backend tx scope-in)
+              (auth-cmd/update-credential-is-seed! backend tx seed-in))))))))
