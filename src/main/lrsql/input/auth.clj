@@ -67,6 +67,19 @@
     :secret-key secret-key
     :label      label}))
 
+(s/fdef update-credential-is-seed-input
+  :args (s/cat :key-pair as/key-pair-args-spec
+               :seed?    ::as/seed?)
+  :ret as/update-cred-is-seed-input-spec)
+
+(defn update-credential-is-seed-input
+  ([key-pair seed?]
+   (assoc key-pair :seed? seed?))
+  ([api-key secret-key seed?]
+   {:api-key    api-key
+    :secret-key secret-key
+    :seed?      seed?}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Credentials Deletion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -77,7 +77,8 @@
       (add-statement-to-actor-cascading-delete! tx))
     (when (some? (query-varchar-exists tx))
       (convert-varchars-to-text! tx))
-    (alter-lrs-credential-add-label! tx))
+    (alter-lrs-credential-add-label! tx)
+    (alter-lrs-credential-add-is-seed! tx))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
@@ -205,6 +206,8 @@
     (insert-credential-scope! tx input))
   (-update-credential-label! [_ tx input]
     (update-credential-label! tx input))
+  (-update-credential-is-seed! [_ tx input]
+    (update-credential-is-seed! tx input))
   (-delete-credential! [_ tx input]
     (delete-credential! tx input))
   (-delete-credential-scope! [_ tx input]
