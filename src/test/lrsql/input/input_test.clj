@@ -43,6 +43,7 @@
   (testing "authentication inputs"
     (is (nil? (check-validate `i-auth/insert-credential-input)))
     (is (nil? (check-validate `i-auth/insert-credential-scopes-input)))
+    (is (nil? (check-validate `i-auth/update-credential-label-input)))
     (is (nil? (check-validate `i-auth/delete-credentials-input)))
     (is (nil? (check-validate `i-auth/delete-credential-scopes-input)))
     (is (nil? (check-validate `i-auth/query-credentials-input)))

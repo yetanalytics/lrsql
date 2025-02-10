@@ -135,9 +135,9 @@ INSERT INTO admin_account (
 -- :result :affected
 -- :doc Given API keys and `:account-id`, insert the credentials into the credential table.
 INSERT INTO lrs_credential (
-  id, api_key, secret_key, account_id
+  id, api_key, secret_key, account_id, label
 ) VALUES (
-  :primary-key, :api-key, :secret-key, :account-id
+  :primary-key, :api-key, :secret-key, :account-id, :label
 )
 
 -- :name insert-credential-scope!

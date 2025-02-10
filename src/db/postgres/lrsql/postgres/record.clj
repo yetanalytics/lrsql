@@ -76,7 +76,8 @@
     (when (nil? (check-statement-to-actor-cascading-delete tx))
       (add-statement-to-actor-cascading-delete! tx))
     (when (some? (query-varchar-exists tx))
-      (convert-varchars-to-text! tx)))
+      (convert-varchars-to-text! tx))
+    (alter-lrs-credential-add-label! tx))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
@@ -202,6 +203,8 @@
     (insert-credential! tx input))
   (-insert-credential-scope! [_ tx input]
     (insert-credential-scope! tx input))
+  (-update-credential-label! [_ tx input]
+    (update-credential-label! tx input))
   (-delete-credential! [_ tx input]
     (delete-credential! tx input))
   (-delete-credential-scope! [_ tx input]
