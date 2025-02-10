@@ -312,8 +312,8 @@
           key-pair (auth-util/generate-key-pair)
           cred-in  (auth-input/insert-credential-input
                     account-id
-                    label
-                    key-pair)
+                    key-pair
+                    label)
           scope-in (auth-input/insert-credential-scopes-input
                     key-pair
                     scopes)]
@@ -348,9 +348,9 @@
                           secret-key
                           del-scopes)
               lab-inputs (auth-input/update-credential-label-input
-                          label
                           api-key
-                          secret-key)]
+                          secret-key
+                          label)]
           (auth-cmd/update-credential-label! backend tx lab-inputs)
           (auth-cmd/insert-credential-scopes! backend tx add-inputs)
           (auth-cmd/delete-credential-scopes! backend tx del-inputs)
