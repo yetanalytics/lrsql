@@ -53,7 +53,8 @@
 
 (s/fdef update-credential-label-input
   :args (s/cat :label    ::as/label
-               :key-pair as/key-pair-args-spec))
+               :key-pair as/key-pair-args-spec)
+  :ret as/update-cred-label-input-spec)
 
 (defn update-credential-label-input
   "Given a `label` and either a `key-pair` map or seperate `api-key` and
