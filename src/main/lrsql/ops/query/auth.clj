@@ -81,8 +81,13 @@
                     (bp/-query-credentials bk tx)
                     (map (fn [{ak    :api_key
                                sk    :secret_key
-                               label :label}]
-                           {:api-key ak :secret-key sk :label label})))
+                               label :label
+                               seed? :is_seed}]
+                           (cond-> {:api-key    ak
+                                    :secret-key sk
+                                    :label      label}
+                             (true? seed?)
+                             (assoc :seed? seed?)))))
         scopes (doall (map (fn [cred]
                              (->> cred
                                   (bp/-query-credential-scopes bk tx)
