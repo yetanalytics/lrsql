@@ -40,19 +40,25 @@
    :contentType content-type
    :content     contents})
 
+(defn- query-statement-attachments
+  "Query all attachments associated with the ID of the `statement`."
+  [bk tx statement]
+  (->> (get statement "id")
+       u/str->uuid
+       (assoc {} :statement-id)
+       (bp/-query-attachments bk tx)))
+
 (defn- query-one-statement
   "Query a single statement from the DB, using the `:statement-id` parameter."
   [bk tx input ltags]
   (let [{:keys [format attachments?]} input
         query-result (bp/-query-statement bk tx input)
-        statement   (when query-result
-                      (query-res->statement format ltags query-result))
-        attachments (when (and statement attachments?)
-                      (->> (get statement "id")
-                           u/str->uuid
-                           (assoc {} :statement-id)
-                           (bp/-query-attachments bk tx)
-                           (mapv conform-attachment-res)))]
+        statement    (when query-result
+                       (query-res->statement format ltags query-result))
+        attachments  (when (and statement attachments?)
+                       (->> statement
+                            (query-statement-attachments bk tx)
+                            (mapv conform-attachment-res)))]
     (cond-> {}
       statement   (assoc :statement statement)
       attachments (assoc :attachments attachments))))
@@ -62,15 +68,18 @@
    statement."
   [bk tx input ltags]
   (let [{:keys [format limit]} input
-        input'        (if limit (update input :limit inc) input)
-        query-results (bp/-query-statements bk tx input')
-        ?next-cursor  (when (and limit
-                                 (= (inc limit) (count query-results)))
-                        (-> query-results last :id u/uuid->str))
-        stmt-results  (map (partial query-res->statement format ltags)
-                           (if (not-empty ?next-cursor)
-                             (butlast query-results)
-                             query-results))]
+        input*         (cond-> input
+                         (some? limit)
+                         (update :limit inc))
+        query-results  (bp/-query-statements bk tx input*)
+        ?next-cursor   (when (and limit
+                                  (= (inc limit) (count query-results)))
+                         (-> query-results last :id u/uuid->str))
+        query-results* (if (not-empty ?next-cursor)
+                         (butlast query-results)
+                         query-results)
+        stmt-results   (map (partial query-res->statement format ltags)
+                            query-results*)]
     {:statement-results stmt-results
      :?next-cursor      ?next-cursor}))
 
@@ -83,15 +92,11 @@
         (query-many-statements* bk tx input ltags)
         attachment-results
         (if attachments?
-          (doall (->> (mapcat
-                       (fn [stmt]
-                         (->> (get stmt "id")
-                              u/str->uuid
-                              (assoc {} :statement-id)
-                              (bp/-query-attachments bk tx)))
-                       statement-results)
-                      dedupe-attachment-res
-                      (map conform-attachment-res)))
+          (vec (doall (->> (mapcat
+                            (partial query-statement-attachments bk tx)
+                            statement-results)
+                           dedupe-attachment-res
+                           (map conform-attachment-res))))
           [])]
     {:statement-result
      {:statements (vec statement-results)
