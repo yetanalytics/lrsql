@@ -91,7 +91,7 @@
           creds
           scopes)))
 
-(s/fdef query-credential-by-id
+#_(s/fdef query-credential-by-id
   :args (s/cat :bk as/credential-backend?
                :tx transaction?
                :input as/query-cred-by-id-input-spec)

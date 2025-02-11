@@ -46,6 +46,7 @@
       :conn-pool))
 
 (def holder (atom nil))
+(def after-transform (atom nil))
 
 (defrecord LearningRecordStore [connection
                                 backend
@@ -227,22 +228,22 @@
     [lrs ctx]
     (let [transform-from-url-auth
           (fn [ctx]
-            (let [last-of-path (last (get-in ctx [:request :path-info]))
-                  cred-id (get-in ctx [:request :com.yetanalytics.url-credential-ID])]
-              (if (and (= "statements" last-of-path)
-                       cred-id)
-                (let [conn (lrs-conn lrs)
-                      cred-q-input (auth-input/query-credential-by-id-input cred-id)
-                      {:keys [api-key secret-key]}
+            (let [cred-id (get-in ctx [:request :com.yetanalytics.url-credential-ID])]
+              (if cred-id
+                (let [_ (println "triggered in lrs auth")
+                      conn (lrs-conn lrs)
+                      input (auth-input/query-credential-by-id-input cred-id)
+                      _ (println "input:" input)
+                      {api-key :api_key secret-key :secret_key :as result}
                       (jdbc/with-transaction [tx conn]
-                        (auth-q/query-credential-by-id cred-q-input))
-
-
+                        (auth-q/query-credential-by-id backend tx input))
+                      _ (println "result:" result)
                       base64 (util/str->base64encoded-str (str api-key ":" secret-key))]
                   (assoc-in ctx [:request :headers "authorization"]
                             (str "Basic " base64)))
                 ctx)))
-          ctx (transform-from-url-auth ctx)]
+          ctx (transform-from-url-auth ctx)
+          _ (reset! after-transform ctx)]
       (or
        ;; Token Authentication
        (let [{:keys [oidc-scope-prefix]} config]
