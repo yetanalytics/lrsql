@@ -57,10 +57,11 @@
       statement   (assoc :statement statement)
       attachments (assoc :attachments attachments))))
 
-(defn- query-many-statements
-  "Query potentially multiple statements from the DB."
-  [bk tx input ltags prefix]
-  (let [{:keys [format limit attachments? query-params]} input
+(defn- query-many-statements*
+  "Query multiple statements and return the (nilable) cursor to the next
+   statement."
+  [bk tx input ltags]
+  (let [{:keys [format limit]} input
         input'        (if limit (update input :limit inc) input)
         query-results (bp/-query-statements bk tx input')
         ?next-cursor  (when (and limit
@@ -69,24 +70,35 @@
         stmt-results  (map (partial query-res->statement format ltags)
                            (if (not-empty ?next-cursor)
                              (butlast query-results)
-                             query-results))
-        att-results   (if attachments?
-                        (doall (->> (mapcat
-                                     (fn [stmt]
-                                       (->> (get stmt "id")
-                                            u/str->uuid
-                                            (assoc {} :statement-id)
-                                            (bp/-query-attachments bk tx)))
-                                     stmt-results)
-                                    dedupe-attachment-res
-                                    (map conform-attachment-res)))
-                        [])]
+                             query-results))]
+    {:statement-results stmt-results
+     :?next-cursor      ?next-cursor}))
+
+(defn- query-many-statements
+  "Query potentially multiple statements from the DB."
+  [bk tx input ltags prefix]
+  (let [{:keys [attachments? query-params]}
+        input
+        {:keys [statement-results ?next-cursor]}
+        (query-many-statements* bk tx input ltags)
+        attachment-results
+        (if attachments?
+          (doall (->> (mapcat
+                       (fn [stmt]
+                         (->> (get stmt "id")
+                              u/str->uuid
+                              (assoc {} :statement-id)
+                              (bp/-query-attachments bk tx)))
+                       statement-results)
+                      dedupe-attachment-res
+                      (map conform-attachment-res)))
+          [])]
     {:statement-result
-     {:statements (vec stmt-results)
+     {:statements (vec statement-results)
       :more       (if ?next-cursor
                     (us/make-more-url query-params prefix ?next-cursor)
                     "")}
-     :attachments att-results}))
+     :attachments attachment-results}))
 
 (s/fdef query-statements
   :args (s/cat :bk ss/statement-backend?
