@@ -127,6 +127,27 @@
       (query-one-statement bk tx input ltags)
       (query-many-statements bk tx input ltags prefix))))
 
+(s/fdef query-all-statements
+  :args (s/cat :bk ss/statement-backend?
+               :tx transaction?
+               :input ss/statement-query-many-spec
+               :ltags ss/lang-tags-spec))
+
+(defn query-all-statements
+  "Query a lazy seq of all the statements in the database, filtered by `input`.
+   The `:limit` parameter will dictate the size of each query batch, but will
+   not limit the total number of statements streamed. Ignores attachments."
+  [bk tx input ltags]
+  (let [{:keys [statement-results ?next-cursor]}
+        (query-many-statements* bk tx input ltags)]
+    (if ?next-cursor
+      (let [new-input (-> input
+                          (assoc :from ?next-cursor)
+                          (assoc-in [:query-params :from] ?next-cursor))]
+        (lazy-cat statement-results
+                  (query-all-statements bk tx new-input ltags)))
+      statement-results)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Descendant Querying
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
