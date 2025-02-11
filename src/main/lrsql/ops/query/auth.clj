@@ -103,4 +103,4 @@
 (defn query-credential-by-id
   "Given an input containing `:id`, return a map containing `:id`, `:api-key`, `:secret-key`, `:account-id`"
   [bk tx input]
-  (query-credential-by-id bk tx))
+  (bp/-query-credential-by-id bk tx input))

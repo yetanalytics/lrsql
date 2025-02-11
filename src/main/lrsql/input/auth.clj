@@ -127,7 +127,7 @@
     :authority-url authority-url}))
 
 (s/fdef query-credential-by-id-input
-  :args string?
+  :args (s/cat :id string?)
   :ret (s/keys :req-un [::id]))
 
 (defn query-credential-by-id-input [id]

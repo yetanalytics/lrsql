@@ -6,6 +6,7 @@
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes add-openapi-route]]
+            [lrsql.auth.interceptor :as auth-interceptor]
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
             [lrsql.init.git-data :refer [read-version]]
@@ -14,10 +15,12 @@
             [lrsql.util.cert :as cu]
             [lrsql.util.interceptor :refer [handle-json-parse-exn]]))
 
+(def holder (atom nil))
+
 (defn- service-map
   "Create a new service map for the webserver."
   [lrs config]
-  (let [;; Destructure webserver config
+  (let [ ;; Destructure webserver config
         {:keys [enable-http
                 enable-http2
                 http-host
@@ -81,9 +84,7 @@
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
                      :wrap-interceptors (into
-                                         [:mythical-interceptor
-
-                                          i/error-interceptor
+                                         [i/error-interceptor
                                           (handle-json-parse-exn)]
                                          oidc-resource-interceptors)
                      :file-scanner      (when enable-clamav
@@ -115,7 +116,8 @@
              (add-openapi-route
               {:lrs lrs
                :head-opts head-opts
-               :version (read-version)}))
+               :version (read-version)})
+             (auth-interceptor/insert-id-auth-interceptor))
         
         ;; Build allowed-origins list. Add without ports as well for
         ;; default ports
@@ -128,7 +130,8 @@
               (= http-port 80) (conj (format "http://%s" http-host))
               (= ssl-port 443) (conj (format "https://%s" http-host))))]
     {:env                      :prod
-     ::http/routes             routes
+     ::http/routes             (do (reset! holder routes)
+                                   routes)
      ;; only serve assets if the admin ui is enabled
      ::http/resource-path      (when enable-admin-ui "/public")
      ::http/type               :jetty

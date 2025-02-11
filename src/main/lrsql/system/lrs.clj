@@ -228,18 +228,19 @@
     (let [transform-from-url-auth
           (fn [ctx]
             (let [last-of-path (last (get-in ctx [:request :path-info]))
-                  cred-id (get-in ctx [:request :params :credentialID])]
+                  cred-id (get-in ctx [:request :com.yetanalytics.url-credential-ID])]
               (if (and (= "statements" last-of-path)
                        cred-id)
-                (let [cred-q-input (auth-input/query-credential-by-id-input cred-id)
-                      {:keys [api-key secret-key]} (auth-q/query-credential-by-id cred-q-input)
+                (let [conn (lrs-conn lrs)
+                      cred-q-input (auth-input/query-credential-by-id-input cred-id)
+                      {:keys [api-key secret-key]}
+                      (jdbc/with-transaction [tx conn]
+                        (auth-q/query-credential-by-id cred-q-input))
+
 
                       base64 (util/str->base64encoded-str (str api-key ":" secret-key))]
-                  (-> ctx
-                      (update-in [:request :params] dissoc :credentialID)
-                                        ;next spoof basic auth
-                      (assoc-in [:request :headers "authorization"]
-                                (str "Basic " base64))))
+                  (assoc-in ctx [:request :headers "authorization"]
+                            (str "Basic " base64)))
                 ctx)))
           ctx (transform-from-url-auth ctx)]
       (or
@@ -252,7 +253,6 @@
        ;; Basic Authentication
        (let [conn   (lrs-conn lrs)
              header (get-in ctx [:request :headers "authorization"])
-             credential-id (get-in ctx [:request :params :credentialID ])
              _ (reset! holder ctx)]
          (if-some [key-pair (auth-util/header->key-pair header)]
            (let [{:keys [authority-url]} config
