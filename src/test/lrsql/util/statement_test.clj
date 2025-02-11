@@ -1,6 +1,5 @@
 (ns lrsql.util.statement-test
   (:require [clojure.test :refer [deftest testing is]]
-            [clojure.java.io :as io]
             [lrsql.util.statement :as su]
             [lrsql.util :as u]))
 
