@@ -8,32 +8,6 @@
             [xapi-schema.spec :as xs]
             [buddy.core.codecs :as bc]))
 
-(s/fdef path->string
-  :args (s/cat :path ::rs/path
-               :qstring (s/? string?))
-  :ret string?)
-
-(defn path->string
-  "Given a vector of keys and/or indices, return a JSONPath string suitable for
-  SQL JSON access."
-  ([path]
-   (path->string path "$"))
-  ([[seg & rpath] s]
-   (if seg
-     (recur rpath
-            (cond
-              (string? seg)
-              (format "%s.\"%s\"" s seg)
-
-              (nat-int? seg)
-              (format "%s[%d]" s seg)
-
-              :else
-              (throw (ex-info "Invalid path segement"
-                              {:type ::invalid-path-segment
-                               :segment seg}))))
-     s)))
-
 (s/fdef statement-identity
   :args (s/cat :identityPaths ::rs/identityPaths
                :statement ::xs/statement)
