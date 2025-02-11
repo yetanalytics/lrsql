@@ -263,6 +263,45 @@
                 (is (empty? (arb-query ["select * from statement_to_activity where statement_id  = ?" stmt-id]))))))))
       (finally (component/stop sys')))))
 
+(deftest download-csv-test
+  (let [sys  (support/test-system)
+        sys' (component/start sys)
+        lrs  (:lrs sys')
+        hdrs [["id"] ["actor" "mbox"] ["verb" "id"] ["object" "id"]]]
+    (try
+      (lrsp/-store-statements lrs auth-ident [stmt-0 stmt-1] [])
+      (testing "CSV Seq - no params"
+        (let [stmt-seq (adp/-get-statements-csv lrs hdrs {})]
+          (is (not (realized? stmt-seq)))
+          (is (= ["id" "actor_mbox" "verb_id" "object_id"]
+                 (first stmt-seq)))
+          (is (= [(get stmt-1 "id")
+                  (get-in stmt-1 ["actor" "mbox"])
+                  (get-in stmt-1 ["verb" "id"])
+                  (get-in stmt-1 ["object" "id"])]
+                 (first (rest stmt-seq))))
+          (is (= [(get stmt-0 "id")
+                  (get-in stmt-0 ["actor" "mbox"])
+                  (get-in stmt-0 ["verb" "id"])
+                  (get-in stmt-0 ["object" "id"])]
+                 (first (rest (rest stmt-seq)))))))
+      (testing "CSV Seq - ascending set to true"
+        (let [stmt-seq (adp/-get-statements-csv lrs hdrs {:ascending true})]
+          (is (not (realized? stmt-seq)))
+          (is (= ["id" "actor_mbox" "verb_id" "object_id"]
+                 (first stmt-seq)))
+          (is (= [(get stmt-0 "id")
+                  (get-in stmt-0 ["actor" "mbox"])
+                  (get-in stmt-0 ["verb" "id"])
+                  (get-in stmt-0 ["object" "id"])]
+                 (first (rest stmt-seq))))
+          (is (= [(get stmt-1 "id")
+                  (get-in stmt-1 ["actor" "mbox"])
+                  (get-in stmt-1 ["verb" "id"])
+                  (get-in stmt-1 ["object" "id"])]
+                 (first (rest (rest stmt-seq)))))))
+      (finally (component/stop sys')))))
+
 ;; TODO: Add tests for creds with no explicit scopes, once
 ;; `statements/read/mine` is implemented
 

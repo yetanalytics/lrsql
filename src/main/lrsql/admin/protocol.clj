@@ -43,4 +43,5 @@
     "Soft-delete a reaction."))
 
 (defprotocol AdminLRSManager
-  (-delete-actor [this params]))
+  (-delete-actor [this params])
+  (-get-statements-csv [this csv-headers params]))
