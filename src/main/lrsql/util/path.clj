@@ -31,6 +31,18 @@
                                :segment seg}))))
      s)))
 
+(s/fdef path->jsonpath-vec
+  :args (s/cat :path ::rs/path)
+  :ret vector?)
+
+(defn path->jsonpath-vec
+  "Given a vector of keys and/or indices, return a vector that is one
+   entry of a Pathetic-parsed JSONPath vector of vectors.
+   Calling `(mapv path->jsonpath-vec [path1 path2])` is equivalent to
+   calling `(pathetic/parse-paths \"jsonpath1 | jsonpath2\")`."
+  [path]
+  (mapv (fn [seg] [seg]) path))
+
 (s/fdef path->csv-header
   :args (s/cat :path ::rs/path)
   :ret string?)
