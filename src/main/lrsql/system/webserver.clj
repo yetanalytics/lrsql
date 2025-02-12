@@ -20,7 +20,7 @@
 (defn- service-map
   "Create a new service map for the webserver."
   [lrs config]
-  (let [ ;; Destructure webserver config
+  (let [;; Destructure webserver config
         {:keys [enable-http
                 enable-http2
                 http-host
