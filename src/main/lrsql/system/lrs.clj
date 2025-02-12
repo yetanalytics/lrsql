@@ -398,7 +398,7 @@
           input (agent-input/delete-actor-input actor-ifi)]
       (jdbc/with-transaction [tx conn]
         (stmt-cmd/delete-actor! backend tx input))))
-  (-get-statements-csv [lrs headers params]
+  (-get-statements-csv [lrs property-paths params]
     (let [conn (lrs-conn lrs)]
       (jdbc/with-transaction [tx conn]
         (let [config   (:config lrs)
@@ -406,4 +406,4 @@
                            (stmt-util/ensure-default-max-limit config)
                            (stmt-input/query-statement-input nil))
               stmt-seq (stmt-q/query-all-statements backend tx input {})]
-          (stmt-util/statements->csv-seq headers stmt-seq))))))
+          (stmt-util/statements->csv-seq property-paths stmt-seq))))))

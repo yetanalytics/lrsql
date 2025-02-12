@@ -44,4 +44,4 @@
 
 (defprotocol AdminLRSManager
   (-delete-actor [this params])
-  (-get-statements-csv [this csv-headers params]))
+  (-get-statements-csv [this property-paths params]))
