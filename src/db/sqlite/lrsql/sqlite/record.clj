@@ -6,7 +6,7 @@
             [lrsql.backend.data :as bd]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.sqlite.data :as sd]
-            [lrsql.util.path :refer [path->jsonpath-string]])
+            [lrsql.util.path :refer [path->sqlpath-string]])
   (:import [org.sqlite SQLiteException SQLiteErrorCode]))
 
 ;; Init HugSql functions
@@ -313,7 +313,7 @@
   (-error-reaction! [_ tx params]
     (error-reaction! tx params))
   (-snip-json-extract [_ params]
-    (snip-json-extract (update params :path path->jsonpath-string)))
+    (snip-json-extract (update params :path path->sqlpath-string)))
   (-snip-val [_ params]
     (snip-val params))
   (-snip-col [_ params]
@@ -327,7 +327,7 @@
   (-snip-not [_ params]
     (snip-not params))
   (-snip-contains [_ params]
-    (snip-contains (update params :path path->jsonpath-string)))
+    (snip-contains (update params :path path->sqlpath-string)))
   (-snip-query-reaction [_ params]
     (snip-query-reaction params))
   (-query-reaction [_ tx params]

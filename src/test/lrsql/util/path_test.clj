@@ -6,22 +6,22 @@
 
 (use-fixtures :once support/instrumentation-fixture)
 
-(deftest path->jsonpath-string-test
-  (testing "Property path to JSONPath string"
+(deftest path->sqlpath-string-test
+  (testing "Property path to JSONPath-like string for SQL"
     (are [input output]
-         (= (p/path->jsonpath-string input)
+         (= (p/path->sqlpath-string input)
             output)
       []
       "$"
 
       ["object" "id"]
-      "$.\"object\".\"id\""
+      "$.object.id"
 
       ["context" "contextActivities" "parent" 0 "id"]
-      "$.\"context\".\"contextActivities\".\"parent\"[0].\"id\""
+      "$.context.contextActivities.parent[0].id"
 
       ["context" "extensions" "https://www.google.com/array"]
-      "$.\"context\".\"extensions\".\"https://www.google.com/array\"")))
+      "$.context.extensions.\"https://www.google.com/array\"")))
 
 (deftest path->jsonpath-vec-test
   (testing "Property path to parsed JSONPath vector"

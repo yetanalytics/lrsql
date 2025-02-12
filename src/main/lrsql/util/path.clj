@@ -5,21 +5,30 @@
             [clojure.string     :as cstr]
             [com.yetanalytics.lrs-reactions.spec :as rs]))
 
-(s/fdef path->jsonpath-string
+(defn- alpha-only?
+  [s]
+  (re-matches #"[A-Za-z]*" s))
+
+(s/fdef path->sqlpath-string
   :args (s/cat :path ::rs/path
                :qstring (s/? string?))
   :ret string?)
 
-(defn path->jsonpath-string
-  "Given a vector of keys and/or indices, return a JSONPath string suitable for
-  SQL JSON access."
+(defn path->sqlpath-string
+  "Given a vector of keys and/or indices, return a JSONPath-like string suitable
+   for SQL JSON access. Unlike JSONPath strings themselves, all string keys
+   require the dot syntax."
   ([path]
-   (path->jsonpath-string path "$"))
+   (path->sqlpath-string path "$"))
   ([[seg & rpath] s]
    (if seg
      (recur rpath
             (cond
-              (string? seg)
+              (and (string? seg)
+                   (alpha-only? seg))
+              (format "%s.%s" s seg)
+
+              (string? seg) ; URLs and other special-character containing strs
               (format "%s.\"%s\"" s seg)
 
               (nat-int? seg)
