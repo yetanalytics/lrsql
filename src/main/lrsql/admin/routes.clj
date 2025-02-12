@@ -262,13 +262,21 @@
                                      ri/delete-reaction)
      :route-name :lrsql.admin.reaction/delete]})
 
-(defn admin-lrs-management-routes [common-interceptors jwt-secret jwt-leeway no-val-opts]
+(defn admin-lrs-management-routes
+  [common-interceptors jwt-secret jwt-leeway no-val-opts]
   #{["/admin/agents" :delete (conj common-interceptors
                                    lm/validate-delete-actor-params
                                    (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
                                    ji/validate-jwt-account
                                    lm/delete-actor)
-     :route-name :lrsql.lrs-management/delete-actor]})
+     :route-name :lrsql.lrs-management/delete-actor]
+    ["/admin/csv" :get (conj common-interceptors
+                             lm/validate-property-paths
+                             lm/validate-query-params
+                             (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
+                             ji/validate-jwt-account
+                             lm/download-statement-csv)
+     :route-name :lrsql.lrs-management/download-csv]})
 
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,

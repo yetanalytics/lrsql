@@ -4,6 +4,7 @@
   (:require [clojure.test :refer [deftest testing is use-fixtures are]]
             [clojure.string :refer [lower-case]]
             [babashka.curl :as curl]
+            [ring.util.codec :refer [url-encode]]
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [com.yetanalytics.lrs.protocol :as lrsp]
@@ -284,6 +285,22 @@
                                    "new-password" orig-pass})
                     :status
                     (= 200))))))
+      (testing "download CSV data"
+        (let [property-paths-vec [["id"] ["actor" "mbox"]]
+              property-paths-str (url-encode (str property-paths-vec))
+              endpoint-url       (format "http://0.0.0.0:8080/admin/csv?property-paths=%s&ascending=true"
+                                         property-paths-str)
+              {:keys [status body]} (curl/get endpoint-url
+                                              {:headers headers
+                                               :as :stream})
+              csv-body (slurp body)]
+          (is (= 200 status))
+          (is (= "id,actor_mbox\r\n" csv-body)))
+        (let [bad-prop-path (->> ["zoo" "wee" "mama"] str url-encode)
+              bad-url (format "http://0.0.0.0:8080/admin/csv?property-paths=%s"
+                              bad-prop-path)]
+          (is-err-code (curl/get bad-url {:headers headers :as :stream})
+                       400)))
       (testing "delete the `myname` account using the seed account"
         (let [del-jwt  (-> (login-account content-type req-body)
                            :body
