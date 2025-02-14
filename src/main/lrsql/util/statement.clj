@@ -168,7 +168,7 @@
          "/statements?"
          (form-encode
           (cond-> query-params
-            true   (assoc :from next-cursor)
+            true   (assoc :from (u/uuid->str next-cursor))
             ?agent (assoc :agent (u/write-json-str ?agent)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -179,7 +179,15 @@
   {:return-missing?    true
    :return-duplicates? false})
 
-(defn- statement->csv-row
+(defn property-paths->json-paths
+  [property-paths]
+  (mapv up/path->jsonpath-vec property-paths))
+
+(defn property-paths->csv-headers
+  [property-paths]
+  (mapv up/path->csv-header property-paths))
+
+(defn statement->csv-row
   [json-paths statement]
   (pa/get-values* statement json-paths json-path-opts))
 

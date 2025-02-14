@@ -1,15 +1,17 @@
 (ns lrsql.admin.protocol-test
   "Test the protocol fns of `AdminAccountManager`, `APIKeyManager`, `AdminStatusProvider` directly."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [com.stuartsierra.component :as component]
+            [clojure.data.csv              :as csv]
+            [next.jdbc                     :as jdbc]
+            [com.stuartsierra.component    :as component]
+            [com.yetanalytics.squuid       :as squuid]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
-            [lrsql.lrs-test :as lrst]
+            [lrsql.lrs-test       :as lrst]
             [lrsql.test-support   :as support]
             [lrsql.util           :as u]
             [lrsql.test-constants :as tc]
-            [next.jdbc            :as jdbc]
             [lrsql.util.actor     :as ua]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -271,35 +273,49 @@
     (try
       (lrsp/-store-statements lrs auth-ident [stmt-0 stmt-1] [])
       (testing "CSV Seq - no params"
-        (let [stmt-seq (adp/-get-statements-csv lrs hdrs {})]
-          (is (not (realized? stmt-seq)))
-          (is (= ["id" "actor_mbox" "verb_id" "object_id"]
-                 (first stmt-seq)))
-          (is (= [(get stmt-1 "id")
-                  (get-in stmt-1 ["actor" "mbox"])
-                  (get-in stmt-1 ["verb" "id"])
-                  (get-in stmt-1 ["object" "id"])]
-                 (first (rest stmt-seq))))
-          (is (= [(get stmt-0 "id")
-                  (get-in stmt-0 ["actor" "mbox"])
-                  (get-in stmt-0 ["verb" "id"])
-                  (get-in stmt-0 ["object" "id"])]
-                 (first (rest (rest stmt-seq)))))))
+        (with-open [writer (java.io.StringWriter.)]
+          (adp/-get-statements-csv lrs writer hdrs {})
+          (let [stmt-str (str writer)
+                stmt-seq (csv/read-csv stmt-str)]
+            (is (= ["id" "actor_mbox" "verb_id" "object_id"]
+                   (first stmt-seq)))
+            (is (= [(get stmt-1 "id")
+                    (get-in stmt-1 ["actor" "mbox"])
+                    (get-in stmt-1 ["verb" "id"])
+                    (get-in stmt-1 ["object" "id"])]
+                   (first (rest stmt-seq))))
+            (is (= [(get stmt-0 "id")
+                    (get-in stmt-0 ["actor" "mbox"])
+                    (get-in stmt-0 ["verb" "id"])
+                    (get-in stmt-0 ["object" "id"])]
+                   (first (rest (rest stmt-seq))))))))
       (testing "CSV Seq - ascending set to true"
-        (let [stmt-seq (adp/-get-statements-csv lrs hdrs {:ascending true})]
-          (is (not (realized? stmt-seq)))
-          (is (= ["id" "actor_mbox" "verb_id" "object_id"]
-                 (first stmt-seq)))
-          (is (= [(get stmt-0 "id")
-                  (get-in stmt-0 ["actor" "mbox"])
-                  (get-in stmt-0 ["verb" "id"])
-                  (get-in stmt-0 ["object" "id"])]
-                 (first (rest stmt-seq))))
-          (is (= [(get stmt-1 "id")
-                  (get-in stmt-1 ["actor" "mbox"])
-                  (get-in stmt-1 ["verb" "id"])
-                  (get-in stmt-1 ["object" "id"])]
-                 (first (rest (rest stmt-seq)))))))
+        (with-open [writer (java.io.StringWriter.)]
+          (adp/-get-statements-csv lrs writer hdrs {:ascending true})
+          (let [stmt-str (str writer)
+                stmt-seq (csv/read-csv stmt-str)]
+            (is (not (realized? stmt-seq)))
+            (is (= ["id" "actor_mbox" "verb_id" "object_id"]
+                   (first stmt-seq)))
+            (is (= [(get stmt-0 "id")
+                    (get-in stmt-0 ["actor" "mbox"])
+                    (get-in stmt-0 ["verb" "id"])
+                    (get-in stmt-0 ["object" "id"])]
+                   (first (rest stmt-seq))))
+            (is (= [(get stmt-1 "id")
+                    (get-in stmt-1 ["actor" "mbox"])
+                    (get-in stmt-1 ["verb" "id"])
+                    (get-in stmt-1 ["object" "id"])]
+                   (first (rest (rest stmt-seq))))))))
+      (testing "CSV Seq - Entire database gets returned beyond `:limit`"
+        (let [statements (->> #(assoc stmt-0 "id" (str (squuid/generate-squuid)))
+                              (repeatedly 100))]
+          (lrsp/-store-statements lrs auth-ident statements []))
+        (with-open [writer (java.io.StringWriter.)]
+          (adp/-get-statements-csv lrs writer hdrs {})
+          (let [stmt-str (str writer)
+                stmt-seq (csv/read-csv stmt-str)]
+            (is (= 103 (count stmt-seq))))))
       (finally (component/stop sys')))))
 
 ;; TODO: Add tests for creds with no explicit scopes, once

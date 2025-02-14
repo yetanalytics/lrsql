@@ -2,6 +2,7 @@
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as cmp]
             [hugsql.core :as hug]
+            [next.jdbc :as jdbc]
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.data :as bd]
             [lrsql.init :refer [init-hugsql-adapter!]]
@@ -18,6 +19,8 @@
 (hug/def-db-fns "lrsql/sqlite/sql/query.sql")
 (hug/def-db-fns "lrsql/sqlite/sql/update.sql")
 (hug/def-db-fns "lrsql/sqlite/sql/delete.sql")
+
+(hug/def-sqlvec-fns "lrsql/sqlite/sql/query.sql")
 
 ;; Schema Update Helpers
 
@@ -135,6 +138,9 @@
     (query-statement-exists tx input))
   (-query-statement-descendants [_ tx input]
     (query-statement-descendants tx input))
+  (-query-statements-lazy [_ tx input]
+    (let [sqlvec (query-statements-sqlvec input)]
+      (jdbc/plan tx sqlvec)))
 
   bp/ActorBackend
   (-insert-actor! [_ tx input]
@@ -151,7 +157,6 @@
     (delete-actor-agent-profile tx input)
     (delete-actor-state-document tx input)
     (delete-actor-actor tx input))
-
   (-query-actor [_ tx input]
     (query-actor tx input))
 

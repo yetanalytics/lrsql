@@ -30,6 +30,7 @@
   ;; Queries
   (-query-statement [this tx input])
   (-query-statements [this tx input])
+  (-query-statements-lazy [this tx input])
   (-query-statement-exists [this tx input])
   (-query-statement-descendants [this tx input]))
 

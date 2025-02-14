@@ -1,5 +1,7 @@
 (ns lrsql.ops.query.statement
   (:require [clojure.spec.alpha :as s]
+            [clojure.java.io :as io]
+            [clojure.data.csv :as csv]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
@@ -74,8 +76,8 @@
         query-results  (bp/-query-statements bk tx input*)
         ?next-cursor   (when (and limit
                                   (= (inc limit) (count query-results)))
-                         (-> query-results last :id u/uuid->str))
-        query-results* (if (not-empty ?next-cursor)
+                         (-> query-results last :id))
+        query-results* (if (some? ?next-cursor)
                          (butlast query-results)
                          query-results)
         stmt-results   (map (partial query-res->statement format ltags)
@@ -127,25 +129,54 @@
       (query-one-statement bk tx input ltags)
       (query-many-statements bk tx input ltags prefix))))
 
-(s/fdef query-all-statements
+#_(s/fdef query-all-statements
   :args (s/cat :bk ss/statement-backend?
                :tx transaction?
                :input ss/statement-query-many-spec
-               :ltags ss/lang-tags-spec))
+               :ltags ss/lang-tags-spec
+               :property-paths vector?))
 
 (defn query-all-statements
   "Query a lazy seq of all the statements in the database, filtered by `input`.
    The `:limit` parameter will dictate the size of each query batch, but will
    not limit the total number of statements streamed. Ignores attachments."
-  [bk tx input ltags]
-  (let [{:keys [statement-results ?next-cursor]}
+  [bk tx input ltags property-paths writeable]
+  (let [format    (:format input)
+        input     (-> input
+                      (dissoc :from :query-params)
+                      (assoc :limit 1000000))
+        json-paths (us/property-paths->json-paths property-paths)
+        csv-headers (us/property-paths->csv-headers property-paths)]
+    (with-open [writer (io/writer writeable)]
+      (csv/write-csv writer [csv-headers] :newline :cr+lf)
+      (transduce (comp (map (fn [res]
+                              (query-res->statement format ltags res)))
+                       (map (fn [stmt]
+                              (us/statement->csv-row json-paths stmt))))
+                 (fn write-csv-reducer
+                   ([writer]
+                    writer)
+                   ([writer row]
+                    (csv/write-csv writer [row] :newline :cr+lf)
+                    writer))
+                 writer
+                 (bp/-query-statements-lazy bk tx input))
+      #_(->> (bp/-query-statements-lazy bk tx input)
+             #_(map format-fn result)
+             (into [])
+             #_(us/statements->csv-seq property-paths)
+             #_(reduce (fn [writer row]
+                         (csv/write-csv writer [row] :newline :cr+lf))
+                       writer))))
+  #_(let [{:keys [statement-results ?next-cursor]}
         (query-many-statements* bk tx input ltags)]
     (if ?next-cursor
-      (let [new-input (-> input
+      (let [next-str  (u/uuid->str ?next-cursor)
+            new-input (-> input
                           (assoc :from ?next-cursor)
-                          (assoc-in [:query-params :from] ?next-cursor))]
-        (lazy-cat statement-results
-                  (query-all-statements bk tx new-input ltags)))
+                          (assoc-in [:query-params :from] next-str))]
+        (concat statement-results
+                (lazy-seq (query-all-statements bk tx new-input ltags property-paths))))
       statement-results)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

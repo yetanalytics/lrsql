@@ -398,12 +398,17 @@
           input (agent-input/delete-actor-input actor-ifi)]
       (jdbc/with-transaction [tx conn]
         (stmt-cmd/delete-actor! backend tx input))))
-  (-get-statements-csv [lrs property-paths params]
-    (let [conn (lrs-conn lrs)]
-      (jdbc/with-transaction [tx conn]
-        (let [config   (:config lrs)
-              input    (-> params ; TODO: Higher limit for CSV stream?
-                           (stmt-util/ensure-default-max-limit config)
-                           (stmt-input/query-statement-input nil))
-              stmt-seq (stmt-q/query-all-statements backend tx input {})]
-          (stmt-util/statements->csv-seq property-paths stmt-seq))))))
+  (-get-statements-csv [lrs output-stream property-paths params]
+    (let [conn   (lrs-conn lrs)
+          config (:config lrs)
+          input  (-> params ; TODO: Higher limit for CSV stream?
+                     (stmt-util/ensure-default-max-limit config)
+                     (stmt-input/query-statement-input nil))]
+      (stmt-q/query-all-statements backend
+                                   conn
+                                   input
+                                   {}
+                                   property-paths
+                                   output-stream)
+      #_(jdbc/with-transaction [tx conn]
+        (stmt-q/query-all-statements backend tx input {} property-paths)))))

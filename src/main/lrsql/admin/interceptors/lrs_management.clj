@@ -77,12 +77,6 @@
   {"Content-Type"        "text/csv"
    "Content-Disposition" "attachment"})
 
-(defn- stream-csv
-  [csv-data-seq]
-  (fn [^ServletOutputStream os]
-    (with-open [writer (io/writer os)]
-      (csv/write-csv writer csv-data-seq :newline :cr+lf))))
-
 (def download-statement-csv
   (interceptor
    {:name ::download-statement-csv
@@ -92,11 +86,13 @@
              request :request}
             ctx
             {:keys [property-paths query-params]}
-            request
-            csv-data-seq (adp/-get-statements-csv lrs
-                                                  property-paths
-                                                  query-params)]
+            request]
         (assoc ctx
-               :response {:status  200
-                          :headers csv-response-header
-                          :body    (stream-csv csv-data-seq)})))}))
+               :response
+               {:status  200
+                :headers csv-response-header
+                :body    (fn [^ServletOutputStream os]
+                           (adp/-get-statements-csv lrs
+                                                    os
+                                                    property-paths
+                                                    query-params))})))}))

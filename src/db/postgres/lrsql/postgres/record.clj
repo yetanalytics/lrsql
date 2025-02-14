@@ -1,6 +1,7 @@
 (ns lrsql.postgres.record
   (:require [com.stuartsierra.component :as cmp]
             [hugsql.core :as hug]
+            [next.jdbc :as jdbc]
             [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
@@ -17,6 +18,8 @@
 (hug/def-db-fns "lrsql/postgres/sql/query.sql")
 (hug/def-db-fns "lrsql/postgres/sql/update.sql")
 (hug/def-db-fns "lrsql/postgres/sql/delete.sql")
+
+(hug/def-sqlvec-fns "lrsql/postgres/sql/query.sql")
 
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
@@ -102,6 +105,12 @@
     (query-statement-exists tx input))
   (-query-statement-descendants [_ tx input]
     (query-statement-descendants tx input))
+  (-query-statements-lazy [_ tx input]
+    (let [sqlvec (query-statements-sqlvec input)]
+      (jdbc/plan tx sqlvec {:fetch-size  4000
+                            :concurrency :read-only
+                            :cursors     :close
+                            :result-type :forward-only})))
 
   bp/ActorBackend
   (-insert-actor! [_ tx input]
