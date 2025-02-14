@@ -273,8 +273,8 @@
     ["/admin/csv" :get (conj common-interceptors
                              lm/validate-property-paths
                              lm/validate-query-params
-                             (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
-                             ji/validate-jwt-account
+                             #_(ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
+                             #_ji/validate-jwt-account
                              lm/download-statement-csv)
      :route-name :lrsql.lrs-management/download-csv]})
 
