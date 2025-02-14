@@ -1,8 +1,6 @@
 (ns lrsql.admin.interceptors.lrs-management
   (:require [clojure.spec.alpha :as s]
-            [clojure.data.csv   :as csv]
             [clojure.edn        :as edn]
-            [clojure.java.io    :as io]
             [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
