@@ -43,5 +43,11 @@
     "Soft-delete a reaction."))
 
 (defprotocol AdminLRSManager
-  (-delete-actor [this params])
-  (-get-statements-csv [this writer property-paths params]))
+  (-delete-actor [this params]
+    "Delete actor by `:actor-id`")
+  (-get-statements-csv [this writer property-paths params]
+    "Retrieve statements by CSV. Instead of returning a sequence of
+     statements, streams them to `writer` as a side effect, in order to
+     avoid storing them in memory. `property-paths` are defined in the
+     Reactions API, while `params` are the same query params for
+     `-get-statements`."))

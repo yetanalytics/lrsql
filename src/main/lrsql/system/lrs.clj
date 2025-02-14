@@ -404,7 +404,7 @@
           input  (-> params ; TODO: Higher limit for CSV stream?
                      (stmt-util/ensure-default-max-limit config)
                      (stmt-input/query-statement-input nil))]
-      (stmt-q/query-all-statements backend
+      (stmt-q/query-statements-stream backend
                                    conn
                                    input
                                    {}
