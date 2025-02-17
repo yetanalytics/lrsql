@@ -142,8 +142,7 @@
   [bk tx input ltags property-paths writer]
   (let [format      (:format input)
         input       (-> input ; TODO: Remove `:input` from query entirely.
-                        (dissoc :from :query-params)
-                        (assoc :limit 1000000))
+                        (dissoc :from :limit :query-params))
         json-paths  (us/property-paths->json-paths property-paths)
         csv-headers (us/property-paths->csv-headers property-paths)]
     (csv/write-csv writer [csv-headers] :newline :cr+lf)
