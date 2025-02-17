@@ -404,11 +404,10 @@
           input  (-> params ; TODO: Higher limit for CSV stream?
                      (stmt-util/ensure-default-max-limit config)
                      (stmt-input/query-statement-input nil))]
-      (stmt-q/query-statements-stream backend
-                                   conn
-                                   input
-                                   {}
-                                   property-paths
-                                   output-stream)
-      #_(jdbc/with-transaction [tx conn]
-        (stmt-q/query-all-statements backend tx input {} property-paths)))))
+      (jdbc/with-transaction [tx conn]
+        (stmt-q/query-statements-stream backend
+                                        tx
+                                        input
+                                        {}
+                                        property-paths
+                                        output-stream)))))
