@@ -1,6 +1,7 @@
 (ns lrsql.admin.interceptors.lrs-management
   (:require [clojure.spec.alpha :as s]
             [clojure.edn        :as edn]
+            [clojure.java.io    :as io]
             [io.pedestal.interceptor :refer [interceptor]]
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
@@ -90,7 +91,8 @@
                {:status  200
                 :headers csv-response-header
                 :body    (fn [^ServletOutputStream os]
-                           (adp/-get-statements-csv lrs
-                                                    os
-                                                    property-paths
-                                                    query-params))})))}))
+                           (with-open [writer (io/writer os)]
+                             (adp/-get-statements-csv lrs
+                                                      writer
+                                                      property-paths
+                                                      query-params)))})))}))
