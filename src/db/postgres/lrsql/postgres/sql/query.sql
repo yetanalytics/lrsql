@@ -67,7 +67,7 @@ WHERE stmt.is_voided = FALSE
 --~ (when (:registration params)   "AND stmt.registration = :registration")
 --~ (when (:authority-ifis params) "AND :frag:postgres-auth-subquery")
 --~ (if (:ascending? params)       "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
---~ (when (:limit params)           "LIMIT :limit")
+--~ (when (:limit params)          "LIMIT :limit")
 
 /* Note: We sort by both the PK and statement ID in order to force the query
    planner to avoid scanning on `stmt_a.id` first, which is much slower than
@@ -107,7 +107,7 @@ FROM (
   (:frag:postgres-stmt-ref-subquery-frag))
 AS all_stmt
 --~ (if (:ascending? params) "ORDER BY all_stmt.id ASC" "ORDER BY all_stmt.id DESC")
---~ (when (:limit params)    "LIMIT :limit");
+--~ (when (:limit params)    "LIMIT :limit")
 
 /* Statement Object Queries */
 
