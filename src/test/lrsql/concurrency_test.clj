@@ -1,4 +1,5 @@
 (ns lrsql.concurrency-test
+  "Tests for concurrent insertions and queries."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.spec.alpha :as s]
             [clojure.core.async :as a]
@@ -35,14 +36,17 @@
                          req-chan)
     (a/<!! (a/into [] res-chan))))
 
+(def headers
+  {"Content-Type"             "application/json"
+   "X-Experience-API-Version" "1.0.3"})
+
+(def basic-auth
+  ["username" "password"])
+
 (deftest concurrency-test
   (let [sys        (support/test-system)
         sys'       (component/start sys)
         url-prefix (-> sys' :webserver :config :url-prefix)
-        ;; Curl
-        headers    {"Content-Type"             "application/json"
-                    "X-Experience-API-Version" "1.0.3"}
-        basic-auth ["username" "password"]
         ;; Parameters
         endpoint    (format "http://localhost:8080%s/statements" url-prefix)
         num-stmts   100
