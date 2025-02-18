@@ -1,5 +1,6 @@
 (ns lrsql.auth.interceptor
   (:require
+   [io.pedestal.interceptor :as i]
    [lrsql.input.auth :as auth-input]
    [lrsql.ops.query.auth :as auth-q]
    [lrsql.util :as util]
@@ -9,14 +10,13 @@
 (def h2 (atom nil))
 (def h3 (atom nil))
 
-(def auth-by-cred-id-interceptor
-  {:name :auth-by-cred-id-interceptor
+(defn auth-by-cred-id-interceptor [lrs]
+  {:name ::auth-by-cred-id-interceptor
    :enter (fn auth-by-cred-id-interceptor [ctx]
             (reset! h3 ctx)
             (println "triggered")
             (if-let [cred-id (get-in ctx [:request :params :credentialID])]
-              (let [lrs (:com.yetanalytics/lrs ctx)
-                    conn (-> lrs :connection :conn-pool)
+              (let [conn (-> lrs :connection :conn-pool)
                     backend (:backend lrs)
                     input (auth-input/query-credential-by-id-input cred-id)
 
@@ -33,31 +33,3 @@
                     (assoc-in [:request :headers "authorization"]
                               (str "Basic " base64))))
               ctx))})
-
-(defn insert-after-lrs-interceptor [interceptors interceptor]
-  (reduce (fn [past {:keys [name] :as next}]
-            (cond-> past
-              true
-              (conj next)
-
-              (= name :com.yetanalytics.lrs.pedestal.interceptor/lrs)
-              (conj interceptor)))
-          [] interceptors))
-
-(defn insert-id-auth-interceptor [routes]
-  (reset! holder routes)
-  (let [statements? (fn [[path method]]
-                      (and 
-                       (= "statements"
-                          (last (clojure.string/split path #"/")))
-                       (= method :get)))
-        map-fn (fn [route]
-                 (if (statements? route)
-                   (update-in route [2] insert-after-lrs-interceptor auth-by-cred-id-interceptor)
-                   route))]
-    (reset! h2 (->> routes
-                    (map map-fn)
-                    (set)))))
-
-
-

@@ -204,9 +204,22 @@
   (component/stop sys')
   )
 
-(jdbc/execute! ds ["select * from lrs_credential"])
+(println (jdbc/execute! ds ["select * from lrs_credential"]))
 (require '[lrsql.ops.query.auth :as auth-q])
 (def conn (-> lrs :connection :conn-pool))
 
 (jdbc/with-transaction [tx conn]
   (auth-q/query-credential-by-id (:backend lrs) tx {:id "0194f6d2-a1fa-8779-821f-bc8d83fbb14f"}))
+
+(in-ns 'lrsql.system.webserver)
+(println (->
+          (filter
+           #(and
+             (= (first %) "/xapi/statements")
+             (= (second %) :get)
+             )
+           @holder)
+          first
+          (get-in [2])
+
+          ))

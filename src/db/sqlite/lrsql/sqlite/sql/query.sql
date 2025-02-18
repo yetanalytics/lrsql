@@ -262,7 +262,7 @@ WHERE oidc_issuer IS NULL
 -- :command :query
 -- :result :many
 -- :doc Query all credentials associated with `:account-id`.
-SELECT api_key, secret_key FROM lrs_credential
+SELECT id, api_key, secret_key FROM lrs_credential
 WHERE account_id = :account-id
 
 -- :name query-credential-ids

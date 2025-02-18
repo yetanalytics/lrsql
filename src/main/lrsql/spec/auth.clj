@@ -86,7 +86,8 @@
 (def scoped-key-pair-spec
   (s/keys :req-un [::api-key
                    ::secret-key
-                   ::scopes]))
+                   ::scopes
+                   ::id]))
 
 (def key-pair-args-spec
   (s/alt :map  key-pair-spec

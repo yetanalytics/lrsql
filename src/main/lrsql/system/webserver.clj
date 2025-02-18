@@ -84,7 +84,8 @@
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
                      :wrap-interceptors (into
-                                         [i/error-interceptor
+                                         [(auth-interceptor/auth-by-cred-id-interceptor lrs)
+                                          i/error-interceptor
                                           (handle-json-parse-exn)]
                                          oidc-resource-interceptors)
                      :file-scanner      (when enable-clamav
@@ -116,8 +117,7 @@
              (add-openapi-route
               {:lrs lrs
                :head-opts head-opts
-               :version (read-version)})
-             (auth-interceptor/insert-id-auth-interceptor))
+               :version (read-version)}))
         
         ;; Build allowed-origins list. Add without ports as well for
         ;; default ports
