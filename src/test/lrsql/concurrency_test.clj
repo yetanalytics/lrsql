@@ -4,8 +4,6 @@
             [clojure.core.async :as a]
             [com.stuartsierra.component :as component]
             [babashka.curl :as curl]
-            [com.yetanalytics.datasim.input :as sim-input]
-            [com.yetanalytics.datasim.sim   :as sim]
             [xapi-schema.spec :as xs]
             [lrsql.test-support :as support]
             [lrsql.util :as u]))
@@ -17,25 +15,6 @@
 (support/instrument-lrsql)
 
 (use-fixtures :each support/fresh-db-fixture)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Helpers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; We reuse bench inputs for tests here.
-
-(defn test-statements
-  [num-stmts]
-  (->> "dev-resources/bench/insert_input.json"
-       (sim-input/from-location :input :json)
-       sim/sim-seq
-       (take num-stmts)
-       (into [])))
-
-(def test-queries
-  (-> "dev-resources/bench/query_input.json"
-      slurp
-      (u/parse-json :object? false)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -71,7 +50,7 @@
         num-threads 5
         query-mult  5]
     (testing "concurrent insertions"
-      (let [insert-reqs (->> (test-statements num-stmts)
+      (let [insert-reqs (->> (support/bench-statements num-stmts)
                              (partition batch-size)
                              (map (fn [batch]
                                     {:headers    headers
@@ -104,7 +83,7 @@
                         false))
                     insert-res))))
     (testing "concurrent queries"
-      (let [query-reqs (->> test-queries
+      (let [query-reqs (->> support/bench-queries
                             (mapcat (partial repeat query-mult))
                             (map (fn [query]
                                    {:headers      headers
@@ -114,7 +93,7 @@
                                      endpoint
                                      query-reqs
                                      num-threads)]
-        (is (= (* query-mult (count test-queries))
+        (is (= (* query-mult (count support/bench-queries))
                (count query-res)))
         (is (every? (fn [res]
                       (cond ;; Queries should never deadlock
