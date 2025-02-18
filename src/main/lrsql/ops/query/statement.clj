@@ -137,12 +137,12 @@
                :writer #(instance? java.io.Writer %)))
 
 (defn query-statements-stream
-  "Stream all the statements in the database, filtered by `input`, to `writer`.
-   The `:limit` parameter will be ignored. Attachments are not included."
+  "Stream all the statements in the database, filtered by `input`, to `writer`
+   as CSV data. The `:limit` parameter will be ignored. Attachments are not
+   included."
   [bk tx input ltags property-paths writer]
   (let [format      (:format input)
-        input       (-> input ; TODO: Remove `:input` from query entirely.
-                        (dissoc :from :limit :query-params))
+        input       (dissoc input :from :limit :query-params)
         json-paths  (us/property-paths->json-paths property-paths)
         csv-headers (us/property-paths->csv-headers property-paths)]
     (csv/write-csv writer [csv-headers] :newline :cr+lf)
