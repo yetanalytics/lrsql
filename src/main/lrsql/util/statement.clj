@@ -1,7 +1,8 @@
 (ns lrsql.util.statement
-  (:require [ring.util.codec :refer [form-encode]]
+  (:require [com.yetanalytics.pathetic :as pa]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [lrsql.util.path :as up]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Preparation
@@ -164,7 +165,40 @@
   (let [{?agent :agent} query-params]
     (str prefix
          "/statements?"
-         (form-encode
+         (u/form-encode
           (cond-> query-params
-            true   (assoc :from next-cursor)
+            true   (assoc :from (u/uuid->str next-cursor))
             ?agent (assoc :agent (u/write-json-str ?agent)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement CSV
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def ^:private json-path-opts
+  {:return-missing?    true
+   :return-duplicates? false})
+
+(defn property-paths->json-paths
+  [property-paths]
+  (mapv up/path->jsonpath-vec property-paths))
+
+(defn property-paths->csv-headers
+  [property-paths]
+  (mapv up/path->csv-header property-paths))
+
+(defn statement->csv-row
+  [json-paths statement]
+  (pa/get-values* statement json-paths json-path-opts))
+
+(defn statements->csv-seq
+  "Converts a lazy `statement-seq` into a lazy seq of CSV data in the
+   form of vectors of vectors representing row data. The first vector
+   is the headers, parsed from `property-paths`."
+  [property-paths statements-seq]
+  (let [json-paths  (mapv up/path->jsonpath-vec property-paths)
+        csv-headers (mapv up/path->csv-header property-paths)
+        stmt->row   (partial statement->csv-row json-paths)]
+    (->> statements-seq
+         (map stmt->row)
+         (cons csv-headers)
+         lazy-seq)))

@@ -6,6 +6,7 @@
             [clojure.tools.logging   :as log]
             [clojure.java.io         :as io]
             [cheshire.core           :as cjson]
+            [ring.util.codec         :as ring-codec]
             [xapi-schema.spec        :as xs]
             [com.yetanalytics.squuid :as squuid]
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
@@ -361,3 +362,25 @@
         (io/copy in baos)
         (.flush baos)
         (.toByteArray baos)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Form + URL Encoding
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Wrappers for ring.util.codec functions so that we don't have to remember
+;; that particular util namespace.
+
+(defn form-encode
+  "Wrapper for `ring.util.codec/form-encode`."
+  [s]
+  (ring-codec/form-encode s))
+
+(defn form-decode
+  "Wrapper for `ring.util.codec/form-decode`."
+  [s]
+  (ring-codec/form-decode s))
+
+(defn url-encode
+  "Wrapper for `ring.util.codec/url-encode`."
+  [s]
+  (ring-codec/url-encode s))

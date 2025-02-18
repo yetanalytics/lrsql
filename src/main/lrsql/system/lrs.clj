@@ -151,7 +151,6 @@
                          stmt-res))))
             ;; No more statement inputs - return
             stmt-res)))))
-
   (-get-statements
     [lrs auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
@@ -395,7 +394,20 @@
 
   adp/AdminLRSManager
   (-delete-actor [this {:keys [actor-ifi]}]
-    (let [conn (lrs-conn this)
+    (let [conn  (lrs-conn this)
           input (agent-input/delete-actor-input actor-ifi)]
       (jdbc/with-transaction [tx conn]
-        (stmt-cmd/delete-actor! backend tx input)))))
+        (stmt-cmd/delete-actor! backend tx input))))
+  (-get-statements-csv [lrs output-stream property-paths params]
+    (let [conn   (lrs-conn lrs)
+          config (:config lrs)
+          input  (-> params ; TODO: Higher limit for CSV stream?
+                     (stmt-util/ensure-default-max-limit config)
+                     (stmt-input/query-statement-input nil))]
+      (jdbc/with-transaction [tx conn]
+        (stmt-q/query-statements-stream backend
+                                        tx
+                                        input
+                                        {}
+                                        property-paths
+                                        output-stream)))))

@@ -3,6 +3,7 @@
             [clojure.string :as cstr]
             [orchestra.spec.test :as otest]
             [next.jdbc.connection :refer [jdbc-url]]
+            [com.yetanalytics.datasim :as ds]
             [lrsql.init.config :refer [read-config]]
             [lrsql.system :as system]
             [lrsql.sqlite.record :as sr]
@@ -167,3 +168,26 @@
             %))
      code)
    tests))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Bench Inputs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; We can reuse bench inputs for tests
+
+(defn bench-statements*
+  [num-statements]
+  (->> "dev-resources/bench/insert_input.json"
+       ds/read-input
+       ds/generate-seq
+       (take num-statements)))
+
+(defn bench-statements
+  [num-statements]
+  (->> (bench-statements* num-statements)
+       (into [])))
+
+(def bench-queries
+  (-> "dev-resources/bench/query_input.json"
+      slurp
+      (u/parse-json :object? false)))

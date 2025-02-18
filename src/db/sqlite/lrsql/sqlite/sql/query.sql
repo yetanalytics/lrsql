@@ -89,8 +89,7 @@ TRUE
 --~ (when (:authority-ifis params) "AND :frag:sqlite-auth-ref-subquery")
 ))
 --~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
-LIMIT :limit
-
+--~ (when (:limit params)    "LIMIT :limit")
 
 /* Statement Object Queries */
 
