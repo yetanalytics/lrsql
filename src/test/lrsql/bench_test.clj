@@ -4,7 +4,6 @@
             [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
-            [ring.util.codec :refer [url-encode]]
             [com.stuartsierra.component :as component]
             [babashka.curl :as curl]
             [java-time.api :as jt]
@@ -41,7 +40,7 @@
         url-prefix    (-> sys' :webserver :config :url-prefix)
         stmt-endpoint (format "http://localhost:8080%s/statements" url-prefix)
         csv-endpoint  (format "http://localhost:8080/admin/csv?property-paths=%s"
-                              (url-encode [["id"] ["verb" "id"]]))
+                              (u/url-encode [["id"] ["verb" "id"]]))
         statements    (support/bench-statements* num-statements)]
     (testing "Inserting large amounts of data"
       (let [start (jt/instant)]

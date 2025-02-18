@@ -1,6 +1,5 @@
 (ns lrsql.util.statement
-  (:require [ring.util.codec :refer [form-encode]]
-            [com.yetanalytics.pathetic :as pa]
+  (:require [com.yetanalytics.pathetic :as pa]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.util :as u]
             [lrsql.util.path :as up]))
@@ -166,7 +165,7 @@
   (let [{?agent :agent} query-params]
     (str prefix
          "/statements?"
-         (form-encode
+         (u/form-encode
           (cond-> query-params
             true   (assoc :from (u/uuid->str next-cursor))
             ?agent (assoc :agent (u/write-json-str ?agent)))))))
