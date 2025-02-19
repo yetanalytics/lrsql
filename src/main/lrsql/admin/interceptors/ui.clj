@@ -27,7 +27,8 @@
     :or   {enable-admin-delete-actor false
            enable-admin-status false
            enable-reactions    false
-           no-val?             false}}]
+           no-val?             false
+           auth-by-cred-id     false}}]
   (interceptor
    {:name ::get-env
     :enter
