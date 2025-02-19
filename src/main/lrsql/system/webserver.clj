@@ -6,6 +6,7 @@
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes add-openapi-route]]
+            [lrsql.auth.interceptor :as auth-interceptor]
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
             [lrsql.init.git-data :refer [read-version]]
@@ -13,6 +14,8 @@
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
             [lrsql.util.interceptor :refer [handle-json-parse-exn]]))
+
+(def holder (atom nil))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -49,7 +52,8 @@
                 jwt-common-secret
                 enable-clamav
                 clamav-host
-                clamav-port]
+                clamav-port
+                auth-by-cred-id]
          jwt-exp           :jwt-exp-time
          jwt-lwy           :jwt-exp-leeway}
         config
@@ -80,10 +84,12 @@
         routes
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
-                     :wrap-interceptors (into
-                                         [i/error-interceptor
-                                          (handle-json-parse-exn)]
-                                         oidc-resource-interceptors)
+                     :wrap-interceptors
+                     (apply concat
+                            (if auth-by-cred-id [(auth-interceptor/auth-by-cred-id-interceptor lrs)])
+                            [i/error-interceptor
+                             (handle-json-parse-exn)]
+                            oidc-resource-interceptors)
                      :file-scanner      (when enable-clamav
                                           (clamav/init-file-scanner
                                            {:clamav-host clamav-host
@@ -109,7 +115,9 @@
                :enable-reaction-routes    enable-reactions
                :oidc-interceptors         oidc-admin-interceptors
                :oidc-ui-interceptors      oidc-admin-ui-interceptors
-               :head-opts head-opts})
+               :head-opts                 head-opts
+               :auth-by-cred-id           auth-by-cred-id
+               })
              (add-openapi-route
               {:lrs lrs
                :head-opts head-opts
@@ -126,7 +134,8 @@
               (= http-port 80) (conj (format "http://%s" http-host))
               (= ssl-port 443) (conj (format "https://%s" http-host))))]
     {:env                      :prod
-     ::http/routes             routes
+     ::http/routes             (do (reset! holder routes)
+                                   routes)
      ;; only serve assets if the admin ui is enabled
      ::http/resource-path      (when enable-admin-ui "/public")
      ::http/type               :jetty

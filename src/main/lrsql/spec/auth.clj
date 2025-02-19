@@ -86,7 +86,8 @@
 (def scoped-key-pair-spec
   (s/keys :req-un [::api-key
                    ::secret-key
-                   ::scopes]))
+                   ::scopes
+                   ::id]))
 
 (def key-pair-args-spec
   (s/alt :map  key-pair-spec
@@ -154,3 +155,6 @@
                    ::secret-key
                    ::ats/authority-url
                    ::ats/authority-fn]))
+
+(def query-cred-by-id-input-spec
+  (s/keys :req-un [::id]))

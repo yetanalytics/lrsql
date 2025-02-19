@@ -32,4 +32,6 @@
  :oidc-enable-local-admin   false
  :enable-clamav             false
  :clamav-host               "localhost"
- :clamav-port               3310}
+ :clamav-port               3310
+ :auth-by-cred-id           true ;needed by statement browser if lrsql behind proxy
+ }
