@@ -337,7 +337,7 @@
                    common-interceptors-oidc secret leeway no-val-opts))
                 (when enable-reaction-routes
                   (admin-reaction-routes
-                   common-interceptors secret leeway no-val-opts))
+                   common-interceptors-oidc secret leeway no-val-opts))
                 (when enable-admin-delete-actor
                   (admin-lrs-management-routes
                    common-interceptors-oidc secret leeway no-val-opts)))))
