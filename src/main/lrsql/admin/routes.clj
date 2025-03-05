@@ -150,7 +150,8 @@
                                  (ji/validate-jwt
                                   jwt-secret jwt-leeway no-val-opts)
                                  ji/validate-jwt-account
-                                 ai/no-content)]
+                                 ai/no-content)
+      :route-name :lrsql.admin.verify/get]
      {:description "Verify that querying account is logged in"
       :operationId :verify-own-account
       :security [{:bearerAuth []}]
