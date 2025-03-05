@@ -86,6 +86,16 @@
                                       jt/offset-date-time
                                       jt/instant)))
 
+(s/fdef millis->time
+  :args (s/cat :ts-millis nat-int?)
+  :ret instant-spec)
+
+(defn millis->time
+  "Convert a number representing the number of milliseconds since January 1,
+   1970 to a java.util.Instant timestamp."
+  [ts-millis]
+  (jt/instant ts-millis))
+
 (s/fdef time->str
   :args (s/cat :ts instant-spec)
   :ret ::xs/timestamp)

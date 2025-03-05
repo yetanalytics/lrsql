@@ -394,3 +394,12 @@ WITH RECURSIVE trigger_history (statement_id, reaction_id, trigger_id) AS (
 SELECT reaction_id
 FROM trigger_history
 WHERE reaction_id IS NOT NULL;
+
+/* JWT Blocklist */
+
+-- :name query-blocked-jwt-exists
+-- :command :query
+-- :result :one
+-- :doc Query that `:jwt` is in the blocklist.
+SELECT 1 FROM blocked_jwt
+WHERE jwt = :jwt

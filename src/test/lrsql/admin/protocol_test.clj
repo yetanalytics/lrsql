@@ -28,6 +28,8 @@
 
 (def test-username "DonaldChamberlin123") ; co-inventor of SQL
 
+(def test-username-2 "MichaelBJones456") ; co-inventor of JWTs
+
 (def test-password "iLoveSqlS0!")
 
 ;; Some statement data for status test
@@ -100,7 +102,10 @@
                 uuid?))
         (is (-> (adp/-create-account lrs test-username test-password)
                 :result
-                (= :lrsql.admin/existing-account-error))))
+                (= :lrsql.admin/existing-account-error)))
+        (is (-> (adp/-create-account lrs test-username-2 test-password)
+                :result
+                uuid?)))
       (testing "Admin account get"
         (let [accounts (adp/-get-accounts lrs)]
           (is (vector? accounts))
@@ -123,6 +128,37 @@
           (is (adp/-existing-account? lrs account-id)))
         (let [bad-account-id #uuid "00000000-0000-4000-8000-000000000000"]
           (is (not (adp/-existing-account? lrs bad-account-id)))))
+      (testing "Admin JWTs"
+        (let [exp    2
+              leeway 1
+              jwt    "Foo"]
+          (testing "- are unblocked by default"
+            (is (false?
+                 (adp/-jwt-blocked? lrs jwt))))
+          (testing "- can be blocked"
+            (is (= jwt
+                   (:result (adp/-block-jwt lrs jwt exp))))
+            (is (true?
+                 (adp/-jwt-blocked? lrs jwt))))
+          (testing "- cannot insert duplicates into blocklist"
+            (is (some? (:error (adp/-block-jwt lrs jwt exp)))))
+          (testing "- cannot be purged from blocklist if not expired"
+            (is (= nil
+                   (adp/-purge-blocklist lrs leeway)))
+            (is (true?
+                 (adp/-jwt-blocked? lrs jwt))))
+          (testing "- not counted as expired in blocklist due to leeway"
+            (Thread/sleep 2000)
+            (is (= nil
+                   (adp/-purge-blocklist lrs leeway)))
+            (is (true?
+                 (adp/-jwt-blocked? lrs jwt))))
+          (testing "- can be purged from blocklist when expired"
+            (Thread/sleep 1000)
+            (is (= nil
+                   (adp/-purge-blocklist lrs leeway)))
+            (is (false?
+                 (adp/-jwt-blocked? lrs jwt))))))
       (testing "Admin password update"
         (let [account-id   (-> (adp/-authenticate-account lrs
                                                           test-username
@@ -145,15 +181,23 @@
           (adp/-update-admin-password
            lrs account-id new-password test-password)))
       (testing "Admin account deletion"
-        (let [account-id (-> (adp/-authenticate-account lrs
-                                                        test-username
-                                                        test-password)
-                             :result)]
+        (let [account-id   (-> (adp/-authenticate-account lrs
+                                                          test-username
+                                                          test-password)
+                               :result)
+              account-id-2 (-> (adp/-authenticate-account lrs
+                                                          test-username-2
+                                                          test-password)
+                               :result)]
           (testing "When OIDC is off"
             (let [oidc-enabled? false]
               (testing "Succeeds if there is more than one account"
                 (adp/-delete-account lrs account-id oidc-enabled?)
+                (adp/-delete-account lrs account-id-2 oidc-enabled?)
                 (is (-> (adp/-authenticate-account lrs test-username test-password)
+                        :result
+                        (= :lrsql.admin/missing-account-error)))
+                (is (-> (adp/-authenticate-account lrs test-username-2 test-password)
                         :result
                         (= :lrsql.admin/missing-account-error))))
               (testing "Fails if there is only one account"

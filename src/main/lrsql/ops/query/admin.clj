@@ -3,6 +3,7 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.admin :as ads]
+            [lrsql.spec.admin.jwt :as jwts]
             [lrsql.spec.admin.status :as ss]
             [lrsql.util :as u]
             [lrsql.util.admin :as au]))
@@ -70,6 +71,10 @@
            :username username})
         (bp/-query-all-admin-accounts bk tx)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Admin LRS Status
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (s/fdef query-status
   :args (s/cat :bk ss/admin-status-backend?
                :tx transaction?
@@ -110,3 +115,18 @@
               {:stored (u/pad-time-str stored_time)
                :count  scount})
             (bp/-query-timeline bk tx (:timeline params))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Admin JWTs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef query-blocked-jwt-exists
+  :args (s/cat :bk jwts/admin-jwt-backend?
+               :tx transaction?
+               :input jwts/query-blocked-jwt-input-spec)
+  :ret jwts/blocked-jwt-query-result-spec)
+
+(defn query-blocked-jwt-exists
+  "Query whether an unexpired JWT for the account exists."
+  [bk tx input]
+  (boolean (bp/-query-blocked-jwt bk tx input)))
