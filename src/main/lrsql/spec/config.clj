@@ -1,5 +1,6 @@
 (ns lrsql.spec.config
   (:require [clojure.spec.alpha :as s]
+            [clojure.string :as cstr]
             [xapi-schema.spec :as xs]
             [lrsql.spec.util :as u]))
 
@@ -107,6 +108,14 @@
            [{:keys [pool-validation-timeout pool-connection-timeout]}]
            (< pool-validation-timeout pool-connection-timeout))))
 
+(defn- prefix? [s]
+  (cstr/starts-with? s "/"))
+
+(defn- not-admin-prefix? [s]
+  (not (cstr/starts-with? s "/admin")))
+
+(s/def ::stmt-url-prefix (s/and string? prefix? not-admin-prefix?))
+
 (s/def ::admin-user-default string?)
 (s/def ::admin-pass-default string?)
 
@@ -147,12 +156,16 @@
 (s/def ::http-host string?)
 (s/def ::http-port nat-int?)
 (s/def ::ssl-port nat-int?)
+(s/def ::url-prefix ::stmt-url-prefix)
 
 (s/def ::allow-all-origins boolean?)
 (s/def ::allowed-origins (s/nilable (s/coll-of string?)))
 
 (s/def ::jwt-exp-time pos-int?)
 (s/def ::jwt-exp-leeway nat-int?)
+(s/def ::jwt-refresh-exp-time pos-int?)
+(s/def ::jwt-refresh-interval pos-int?)
+(s/def ::jwt-interaction-window pos-int?)
 (s/def ::jwt-no-val boolean?)
 (s/def ::jwt-no-val-uname (s/nilable string?))
 (s/def ::jwt-no-val-issuer (s/nilable string?))
@@ -210,6 +223,9 @@
                     ::key-enable-selfie
                     ::jwt-exp-time
                     ::jwt-exp-leeway
+                    ::jwt-refresh-exp-time
+                    ::jwt-refresh-interval
+                    ::jwt-interaction-window
                     ::jwt-no-val
                     ::enable-admin-ui
                     ::enable-admin-status
@@ -246,7 +262,11 @@
      (if jwt-no-val
        (and jwt-no-val-uname jwt-no-val-issuer jwt-no-val-role-key
             jwt-no-val-role)
-       true))))
+       true))
+   ;; validation for JWT temporal intervals
+   (fn [{:keys [jwt-exp-time jwt-refresh-interval jwt-interaction-window]}]
+     (and (<= jwt-interaction-window jwt-refresh-interval)
+          (< jwt-refresh-interval jwt-exp-time)))))
 
 (s/def ::tuning
   (s/keys :opt-un [::enable-jsonb]))
