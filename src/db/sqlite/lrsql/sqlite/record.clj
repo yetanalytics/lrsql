@@ -117,6 +117,9 @@
       (update-schema-simple! tx alter-statement-to-actor-add-cascade-delete!))
     (create-blocked-jwt-table! tx)
     (create-blocked-jwt-evict-time-idx! tx)
+    (when-not (some? (query-blocked-jwt-one-time-id-exists tx))
+      (alter-blocked-jwt-add-one-time-id! tx)
+      (alter-blocked-jwt-add-one-time-id-idx! tx))
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
 
@@ -247,10 +250,16 @@
   bp/JWTBlocklistBackend
   (-insert-blocked-jwt! [_ tx input]
     (insert-blocked-jwt! tx input))
+  (-insert-one-time-jwt! [_ tx input]
+    (insert-one-time-jwt! tx input))
+  (-update-one-time-jwt! [_ tx input]
+    (update-one-time-jwt! tx input))
   (-delete-blocked-jwt-by-time! [_ tx input]
     (delete-blocked-jwt-by-time! tx input))
   (-query-blocked-jwt [_ tx input]
     (query-blocked-jwt-exists tx input))
+  (-query-one-time-jwt [_ tx input]
+    (query-one-time-jwt-exists tx input))
 
   bp/CredentialBackend
   (-insert-credential! [_ tx input]

@@ -77,6 +77,15 @@ SET
   passhash = :new-passhash
 WHERE id = :account-id;
 
+-- :name update-one-time-jwt!
+-- :command :execute
+-- :result :affected
+-- :doc Update `blocked_jwt.one_time_id` to be null, thus blocking the JWT.
+UPDATE blocked_jwt
+SET
+  one_time_id = NULL
+WHERE one_time_id = :one_time_id;
+
 -- :name update-reaction!
 -- :command :execute
 -- :result :affected
