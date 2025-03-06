@@ -47,7 +47,7 @@
 
 (defn validate-jwt
   "Validate that the header JWT is valid (e.g. not expired and signed properly).
-   If no-val? is true run an entirely separate decoding that gets the username
+   If `no-val?` is true run an entirely separate decoding that gets the username
    and issuer claims, verifies a role and ensures the account if necessary."
   [secret leeway {:keys [no-val?] :as no-val-opts}]
   (interceptor
@@ -81,6 +81,8 @@
                   :body   {:error "Unauthorized JSON Web Token!"}}))))}))
 
 (defn validate-one-time-jwt
+  "Validate one-time JWTs. Checks that they are not expired and are signed
+   properly just like regular JWTs, then automatically revoke them."
   [secret leeway]
   (interceptor
    {:name ::validate-one-time-jwt
