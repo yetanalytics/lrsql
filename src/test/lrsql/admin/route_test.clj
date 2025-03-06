@@ -692,7 +692,8 @@
                          (u/parse-json :object? false)
                          (#(filter (fn [cred] (= (get cred "api-key") api-key))
                                    %))
-                         first)))))
+                         first
+                         (dissoc "id") )))))
           (testing "and updating"
             (let [req-scopes
                   ["all/read" "statements/read" "statements/read/mine"]
@@ -772,3 +773,4 @@
                              edn-res)))))))
       (finally
         (component/stop sys')))))
+
