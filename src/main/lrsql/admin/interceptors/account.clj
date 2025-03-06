@@ -261,6 +261,7 @@
 
 ;; JWT interceptors for admin
 
+;; See also: `admin.interceptors.lrs-management/generate-one-time-jwt`
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
   [secret exp ref leeway]

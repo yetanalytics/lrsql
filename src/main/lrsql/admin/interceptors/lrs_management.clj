@@ -6,6 +6,8 @@
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
             [lrsql.spec.admin     :as ads]
+            [lrsql.util.admin     :as admin-u]
+            [lrsql.admin.interceptors.jwt :as jwt]
             [com.yetanalytics.lrs.pedestal.interceptor.xapi :as i-xapi]
             [com.yetanalytics.lrs-reactions.spec :as rs])
   (:import [javax.servlet ServletOutputStream]))
@@ -44,6 +46,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CSV Download
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; See also: `admin.interceptors.account/generate-jwt`
+(defn generate-one-time-jwt
+  [secret exp]
+  (interceptor
+   {:name ::convert-jwt
+    :enter
+    (fn convert-jwt [ctx]
+      (let [{lrs :com.yetanalytics/lrs
+             {:keys [account-id] :as jwt-claim} ::jwt/data}
+            ctx
+            {new-jwt :jwt exp :exp one-time-id :oti}
+            (admin-u/one-time-jwt jwt-claim secret exp)]
+        (adp/-create-one-time-jwt lrs new-jwt exp one-time-id)
+        (assoc (chain/terminate ctx)
+               :response
+               {:status 200
+                :body   {:account-id     account-id
+                         :json-web-token new-jwt}})))}))
 
 (def validate-property-paths
   (interceptor
