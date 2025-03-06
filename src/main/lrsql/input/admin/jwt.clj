@@ -42,3 +42,26 @@
 (defn purge-blocklist-input
   [leeway]
   {:current-time (current-time leeway)})
+
+;; One-time JWTs
+
+(s/fdef insert-one-time-jwt-input
+  :args (s/cat :jwt ::jwts/jwt
+               :exp ::jwts/exp
+               :oti ::jwts/one-time-id)
+  :ret jwts/insert-one-time-jwt-input-spec)
+
+(defn insert-one-time-jwt-input
+  [jwt exp oti]
+  {:jwt           jwt
+   :eviction-time (eviction-time exp)
+   :one-time-id   oti})
+
+(s/fdef update-one-time-jwt-input
+  :args (s/cat :jwt ::jwts/jwt
+               :oti ::jwts/one-time-id))
+
+(defn update-one-time-jwt-input
+  [jwt oti]
+  {:jwt         jwt
+   :one-time-id oti})

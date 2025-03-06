@@ -105,9 +105,12 @@
 (defprotocol JWTBlocklistBackend
   ;; Commands
   (-insert-blocked-jwt! [this tx input])
+  (-insert-one-time-jwt! [this tx input])
+  (-update-one-time-jwt! [this tx input])
   (-delete-blocked-jwt-by-time! [this tx input])
   ;; Queries
-  (-query-blocked-jwt [this tx input]))
+  (-query-blocked-jwt [this tx input])
+  (-query-one-time-jwt [this tx input]))
 
 (defprotocol CredentialBackend
   ;; Commands

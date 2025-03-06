@@ -1,5 +1,6 @@
 (ns lrsql.util.admin-test
   (:require [clojure.test :refer [deftest testing is]]
+            [java-time.api :as jt]
             [lrsql.util.admin :as ua]
             [lrsql.util :as u]))
 
@@ -16,6 +17,12 @@
 (defn- account-id->jwt*
   [test-id ref-time]
   (ua/account-id->jwt* test-id "secret" 3600 ref-time))
+
+(defn- one-time-jwt
+  ([]
+   (one-time-jwt {}))
+  ([claim]
+   (ua/one-time-jwt claim "secret" 3600)))
 
 (defn- jwt->payload
   [jwt]
@@ -59,4 +66,18 @@
       (is (= :lrsql.admin/unauthorized-token-error
              (let [tok (ua/account-id->jwt test-id "secret" 1 100)
                    _   (Thread/sleep 1001)]
-               (ua/jwt->payload tok "secret" 0)))))))
+               (ua/jwt->payload tok "secret" 0)))))
+    (testing "One-time JWTs"
+      (let [{:keys [jwt exp oti]} (one-time-jwt)]
+        (is (int? exp))
+        (is (uuid? oti))
+        (is (inst? (-> jwt jwt->payload :expiration)))
+        (is (uuid? (-> jwt jwt->payload :one-time-id)))
+        (is (= oti (-> jwt jwt->payload :one-time-id))))
+      (let [expiration (jt/truncate-to (u/current-time) :seconds)
+            {:keys [jwt exp oti]} (one-time-jwt {:account-id test-id
+                                                 :expiration expiration})]
+        (is (int? exp))
+        (is (uuid? oti))
+        (is (= expiration
+               (-> jwt jwt->payload :expiration)))))))

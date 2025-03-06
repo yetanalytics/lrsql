@@ -261,6 +261,7 @@
 
 ;; JWT interceptors for admin
 
+;; See also: `admin.interceptors.lrs-management/generate-one-time-jwt`
 (defn generate-jwt
   "Upon account login, generate a new JSON web token."
   [secret exp ref leeway]
@@ -316,7 +317,7 @@
     (fn add-jwt-to-blocklist [ctx]
       (if-not no-val?
         (let [{lrs :com.yetanalytics/lrs
-               {:keys [jwt account-id]} :lrsql.admin.interceptors.jwt/data}
+               {:keys [jwt account-id]} ::jwt/data}
               ctx]
           (adp/-purge-blocklist lrs leeway) ; Update blocklist upon logout
           (adp/-block-jwt lrs jwt exp)

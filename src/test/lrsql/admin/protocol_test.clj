@@ -12,7 +12,8 @@
             [lrsql.test-support   :as support]
             [lrsql.util           :as u]
             [lrsql.test-constants :as tc]
-            [lrsql.util.actor     :as ua]))
+            [lrsql.util.actor     :as ua]
+            [lrsql.util.admin     :as uadm]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -159,6 +160,15 @@
                    (adp/-purge-blocklist lrs leeway)))
             (is (false?
                  (adp/-jwt-blocked? lrs jwt))))))
+      (testing "Admin one-time JWTs"
+        (let [{:keys [jwt exp oti]}
+              (uadm/one-time-jwt {} "MySecret" 100)]
+          (testing "- can be added"
+            (is (adp/-create-one-time-jwt lrs jwt exp oti))
+            (is (false? (adp/-jwt-blocked? lrs jwt))))
+          (testing "- can be blocked"
+            (is (adp/-block-one-time-jwt lrs jwt oti))
+            (is (true? (adp/-jwt-blocked? lrs jwt))))))
       (testing "Admin password update"
         (let [account-id   (-> (adp/-authenticate-account lrs
                                                           test-username

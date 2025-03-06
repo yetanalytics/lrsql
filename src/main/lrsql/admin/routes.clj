@@ -150,7 +150,8 @@
                                  (ji/validate-jwt
                                   jwt-secret jwt-leeway no-val-opts)
                                  ji/validate-jwt-account
-                                 ai/no-content)]
+                                 ai/no-content)
+      :route-name :lrsql.admin.verify/get]
      {:description "Verify that querying account is logged in"
       :operationId :verify-own-account
       :security [{:bearerAuth []}]
@@ -308,18 +309,23 @@
      :route-name :lrsql.admin.reaction/delete]})
 
 (defn admin-lrs-management-routes
-  [common-interceptors jwt-secret jwt-leeway no-val-opts]
+  [common-interceptors jwt-secret jwt-exp jwt-leeway no-val-opts]
   #{["/admin/agents" :delete (conj common-interceptors
                                    lm/validate-delete-actor-params
                                    (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
                                    ji/validate-jwt-account
                                    lm/delete-actor)
      :route-name :lrsql.lrs-management/delete-actor]
+    ["/admin/csv/auth" :get (conj common-interceptors
+                                  (ji/validate-jwt
+                                   jwt-secret jwt-leeway no-val-opts)
+                                  ji/validate-jwt-account
+                                  (lm/generate-one-time-jwt jwt-secret jwt-exp))
+     :route-name :lrsql.lrs-management/download-csv-auth]
     ["/admin/csv" :get (conj common-interceptors
                              lm/validate-property-paths
                              lm/validate-query-params
-                             #_(ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
-                             #_ji/validate-jwt-account
+                             (ji/validate-one-time-jwt jwt-secret jwt-leeway)
                              lm/download-statement-csv)
      :route-name :lrsql.lrs-management/download-csv]})
 
@@ -390,7 +396,7 @@
                    common-interceptors-oidc secret leeway no-val-opts))
                 (when enable-admin-delete-actor
                   (admin-lrs-management-routes
-                   common-interceptors-oidc secret leeway no-val-opts)))))
+                   common-interceptors-oidc secret exp leeway no-val-opts)))))
 
 (defn add-openapi-route [{:keys [lrs head-opts version]} routes]
   (let [common-interceptors (make-common-interceptors lrs head-opts)]

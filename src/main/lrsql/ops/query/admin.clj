@@ -127,6 +127,6 @@
   :ret jwts/blocked-jwt-query-result-spec)
 
 (defn query-blocked-jwt-exists
-  "Query whether an unexpired JWT for the account exists."
+  "Query whether an unexpired but blocked JWT exists."
   [bk tx input]
   (boolean (bp/-query-blocked-jwt bk tx input)))

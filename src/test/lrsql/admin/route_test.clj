@@ -174,12 +174,12 @@
         (is-err-code (create-account nil req-body) 400))
       (testing "create accounts with invalid username and passwords"
         (are [input expected-status]
-            (let [{:keys [status]} (create-account
-                                    headers
-                                    (u/write-json-str
-                                     input)
-                                    :throw false)]
-              (= expected-status status))
+             (let [{:keys [status]} (create-account
+                                     headers
+                                     (u/write-json-str
+                                      input)
+                                     :throw false)]
+               (= expected-status status))
           ;; both empty
           {"username" ""
            "password" ""}                 400
@@ -309,10 +309,10 @@
                     (= 400))))
           (testing "with an invalid password"
             (are [password expected-status]
-                (-> (update-pass! {"old-password" new-pass
-                                   "new-password" password})
-                    :status
-                    (= expected-status))
+                 (-> (update-pass! {"old-password" new-pass
+                                    "new-password" password})
+                     :status
+                     (= expected-status))
               ""         400
               "password" 400))
           (testing "change it back"
@@ -320,22 +320,46 @@
                                    "new-password" orig-pass})
                     :status
                     (= 200))))))
-      (testing "download CSV data"
+      (testing "authenticate and download CSV data"
         (let [property-paths-vec [["id"] ["actor" "mbox"]]
               property-paths-str (u/url-encode (str property-paths-vec))
-              endpoint-url       (format "http://0.0.0.0:8080/admin/csv?property-paths=%s&ascending=true"
-                                         property-paths-str)
-              {:keys [status body]} (curl/get endpoint-url
-                                              {:headers headers
-                                               :as :stream})
-              csv-body (slurp body)]
+              bad-prop-paths-vec ["zoo" "wee" "mama"]
+              bad-prop-paths-str (u/url-encode (str bad-prop-paths-vec))
+              auth-endpoint-url  "http://0.0.0.0:8080/admin/csv/auth"
+              {:keys [status body]}
+              (curl/get auth-endpoint-url {:headers headers})
+              {:keys [account-id json-web-token]}
+              (u/parse-json body :keyword-keys? true)]
           (is (= 200 status))
-          (is (= "id,actor_mbox\r\n" csv-body)))
-        (let [bad-prop-path (->> ["zoo" "wee" "mama"] str u/url-encode)
-              bad-url (format "http://0.0.0.0:8080/admin/csv?property-paths=%s"
-                              bad-prop-path)]
-          (is-err-code (curl/get bad-url {:headers headers :as :stream})
-                       400)))
+          (is (string? account-id))
+          (is (string? json-web-token))
+          (let [endpoint-url
+                (format "http://0.0.0.0:8080/admin/csv?token=%s&property-paths=%s&ascending=true"
+                        json-web-token
+                        property-paths-str)
+                bad-endpoint-url-1
+                (format "http://0.0.0.0:8080/admin/csv?token=%s&property-paths=%s"
+                        seed-jwt
+                        property-paths-str)
+                bad-endpoint-url-2
+                (format "http://0.0.0.0:8080/admin/csv?token=%s&property-paths=%s"
+                        json-web-token
+                        bad-prop-paths-str)]
+            (testing "- valid download"
+              (let [{:keys [status body]}
+                    (curl/get endpoint-url {:headers headers :as :stream})
+                    csv-body (slurp body)]
+                (is (= 200 status))
+                (is (= "id,actor_mbox\r\n" csv-body))))
+            (testing "- expired one-time token does not authenticate"
+              (is-err-code (curl/get endpoint-url {:headers headers :as :stream})
+                           401))
+            (testing "- account JWT does not authenticate"
+              (is-err-code (curl/get bad-endpoint-url-1 {:headers headers :as :stream})
+                           401))
+            (testing "- invalid property path"
+              (is-err-code (curl/get bad-endpoint-url-2 {:headers headers :as :stream})
+                           400)))))
       (testing "delete the `myname` account using the seed account"
         (let [del-jwt  (-> (login-account content-type req-body)
                            :body

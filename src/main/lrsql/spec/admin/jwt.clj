@@ -21,6 +21,9 @@
 (s/def ::leeway ::config/jwt-exp-leeway)
 (s/def ::eviction-time c/instant-spec)
 (s/def ::current-time c/instant-spec)
+(s/def ::one-time-id uuid?)
+
+;; Blocked JWTs
 
 (def query-blocked-jwt-input-spec
   (s/keys :req-un [::jwt]))
@@ -30,6 +33,17 @@
 
 (def purge-blocklist-input-spec
   (s/keys :req-un [::current-time]))
+
+;; One-time JWTs
+
+(def query-one-time-jwt-input-spec
+  (s/keys :req-un [::jwt ::one-time-id]))
+
+(def insert-one-time-jwt-input-spec
+  (s/keys :req-un [::jwt ::eviction-time ::one-time-id]))
+
+(def update-one-time-jwt-input-spec
+  (s/keys :req-un [::jwt ::one-time-id]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Results

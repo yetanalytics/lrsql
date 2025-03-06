@@ -171,3 +171,13 @@ INSERT INTO blocked_jwt (
 ) VALUES (
   :jwt, :eviction-time
 );
+
+-- :name insert-one-time-jwt!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a `:jwt` and a `:eviction-time` with `:one-time-id` into the blocklist.
+INSERT INTO blocked_jwt (
+  jwt, evict_time, one_time_id
+) VALUES (
+  :jwt, :eviction-time, :one-time-id
+);

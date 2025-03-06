@@ -47,7 +47,7 @@
 
 (defn validate-jwt
   "Validate that the header JWT is valid (e.g. not expired and signed properly).
-   If no-val? is true run an entirely separate decoding that gets the username
+   If `no-val?` is true run an entirely separate decoding that gets the username
    and issuer claims, verifies a role and ensures the account if necessary."
   [secret leeway {:keys [no-val?] :as no-val-opts}]
   (interceptor
@@ -79,6 +79,41 @@
                  :response
                  {:status 401
                   :body   {:error "Unauthorized JSON Web Token!"}}))))}))
+
+(defn validate-one-time-jwt
+  "Validate one-time JWTs. Checks that they are not expired and are signed
+   properly just like regular JWTs, then automatically revoke them."
+  [secret leeway]
+  (interceptor
+   {:name ::validate-one-time-jwt
+    :enter
+    (fn validate-one-time-jwt [ctx]
+      (let [{lrs :com.yetanalytics/lrs} ctx
+            token  (get-in ctx [:request :params :token])
+            result (validate-jwt* lrs token secret leeway)]
+        (cond
+          (or (= :lrsql.admin/unauthorized-token-error result)
+              (nil? (:one-time-id result)))
+          (assoc (chain/terminate ctx)
+                 :response
+                 {:status 401
+                  :body   {:error "Unauthorized JSON Web Token!"}})
+          (map? result)
+          (let [{:keys [one-time-id]} result
+                block-result
+                (adp/-block-one-time-jwt lrs token one-time-id)]
+            (if-some [_ (:error block-result)]
+              (assoc (chain/terminate ctx)
+                     :response
+                     {:status 401
+                      :body   {:error "Unauthorized, JSON Web Token was not issued!"}})
+              ;; Success!
+              (-> ctx ; So far :form-params and :edn-params are not implemented
+                  (update-in [:request :params] dissoc :token)
+                  (update-in [:request :query-params] dissoc :token)
+                  (update-in [:request :json-params] dissoc :token)
+                  (assoc-in [::data] result)
+                  (assoc-in [:request :session ::data] result)))))))}))
 
 (def validate-jwt-account
   "Check that the account ID stored in the JWT exists in the account table.

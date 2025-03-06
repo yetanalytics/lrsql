@@ -80,7 +80,8 @@
       (add-statement-to-actor-cascading-delete! tx))
     (when (some? (query-varchar-exists tx))
       (convert-varchars-to-text! tx))
-    (create-blocked-jwt-table! tx))
+    (create-blocked-jwt-table! tx)
+    (alter-blocked-jwt-add-one-time-id! tx))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
@@ -210,10 +211,16 @@
   bp/JWTBlocklistBackend
   (-insert-blocked-jwt! [_ tx input]
     (insert-blocked-jwt! tx input))
+  (-insert-one-time-jwt! [_ tx input]
+    (insert-one-time-jwt! tx input))
+  (-update-one-time-jwt! [_ tx input]
+    (update-one-time-jwt! tx input))
   (-delete-blocked-jwt-by-time! [_ tx input]
     (delete-blocked-jwt-by-time! tx input))
   (-query-blocked-jwt [_ tx input]
     (query-blocked-jwt-exists tx input))
+  (-query-one-time-jwt [_ tx input]
+    (query-one-time-jwt-exists tx input))
 
   bp/CredentialBackend
   (-insert-credential! [_ tx input]
