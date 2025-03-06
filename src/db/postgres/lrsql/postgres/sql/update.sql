@@ -84,7 +84,7 @@ WHERE id = :account-id;
 UPDATE blocked_jwt
 SET
   one_time_id = NULL
-WHERE one_time_id = :one_time_id;
+WHERE one_time_id = :one-time-id;
 
 -- :name update-reaction!
 -- :command :execute
