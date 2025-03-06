@@ -110,7 +110,7 @@
             (format "http://localhost:8080/admin/csv?token=%s&property-paths=%s"
                     json-web-token*
                     (u/url-encode [["id"] ["verb" "id"]]))
-              ;; Download CSV
+            ;; Download CSV
             start
             (jt/instant)
             {:keys [status] input-stream :body}
@@ -123,4 +123,5 @@
                        num-statements
                        t-diff)
             (is (= 200 status))
-            (is (= (inc num-statements) res-count))))))))
+            (is (= (inc num-statements) res-count))))))
+    (component/stop sys')))
