@@ -31,7 +31,7 @@
   {"Content-Type"             "application/json"
    "X-Experience-API-Version" "1.0.3"})
 
-(def basic-auth
+(def api-keys
   ["username" "password"])
 
 (deftest bench-test
@@ -39,8 +39,6 @@
         sys'          (component/start sys)
         url-prefix    (-> sys' :webserver :config :url-prefix)
         stmt-endpoint (format "http://localhost:8080%s/statements" url-prefix)
-        csv-endpoint  (format "http://localhost:8080/admin/csv?property-paths=%s"
-                              (u/url-encode [["id"] ["verb" "id"]]))
         statements    (support/bench-statements* num-statements)]
     (testing "Inserting large amounts of data"
       (let [start (jt/instant)]
@@ -50,7 +48,7 @@
             (let [{:keys [status]}
                   (try (curl/post stmt-endpoint
                                   {:headers    headers
-                                   :basic-auth basic-auth
+                                   :basic-auth api-keys
                                    :body       (u/write-json-str (vec batch))})
                        (catch Exception e e))]
               (recur (rest batches)
@@ -69,7 +67,7 @@
           (let [{:keys [status body]}
                 (try (curl/get query-url
                                {:headers    headers
-                                :basic-auth basic-auth})
+                                :basic-auth api-keys})
                      (catch Exception e e))
                 {:keys [statements more]}
                 (some-> body (u/parse-json :keyword-keys? true))
@@ -90,7 +88,30 @@
                 (is (not fail?))
                 (is (= num-statements stmt-count*))))))))
     (testing "Downloading large amounts of data"
-      (let [start
+      (let [;; Log in and get the one-time JWT
+            json-web-token
+            (-> (curl/post "http://localhost:8080/admin/account/login"
+                           {:headers headers
+                            :body    (u/write-json-str
+                                      {"username" "username"
+                                       "password" "password"})})
+                :body
+                (u/parse-json :keyword-keys? true)
+                :json-web-token)
+            headers*
+            {"Authorization" (str "Bearer " json-web-token)}
+            json-web-token*
+            (-> (curl/get "http://localhost:8080/admin/csv/auth"
+                          {:headers headers*})
+                :body
+                (u/parse-json :keyword-keys? true)
+                :json-web-token)
+            csv-endpoint
+            (format "http://localhost:8080/admin/csv?token=%s&property-paths=%s"
+                    json-web-token*
+                    (u/url-encode [["id"] ["verb" "id"]]))
+              ;; Download CSV
+            start
             (jt/instant)
             {:keys [status] input-stream :body}
             (curl/get csv-endpoint {:as :stream})]
@@ -102,5 +123,4 @@
                        num-statements
                        t-diff)
             (is (= 200 status))
-            (is (= (inc num-statements) res-count))))))
-    (component/stop sys')))
+            (is (= (inc num-statements) res-count))))))))
