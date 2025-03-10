@@ -46,5 +46,4 @@
  :enable-clamav             #boolean #or [#env LRSQL_ENABLE_CLAMAV false]
  :clamav-host               #or [#env LRSQL_CLAMAV_HOST "localhost"]
  :clamav-port               #long #or [#env LRSQL_CLAMAV_PORT 3310]
- :auth-by-cred-id           #boolean #or [#env LRSQL_AUTH_BY_CRED_ID false]
- }
+ :auth-by-cred-id           #boolean #or [#env LRSQL_AUTH_BY_CRED_ID false]}
