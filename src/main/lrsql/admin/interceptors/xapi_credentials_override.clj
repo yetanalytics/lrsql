@@ -1,4 +1,4 @@
-(ns lrsql.auth.interceptor
+(ns lrsql.admin.interceptors.xapi-credentials-override
   (:require
    [lrsql.input.auth :as auth-input]
    [lrsql.ops.query.auth :as auth-q]

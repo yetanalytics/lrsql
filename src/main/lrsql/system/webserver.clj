@@ -6,7 +6,7 @@
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes add-openapi-route]]
-            [lrsql.auth.interceptor :as auth-interceptor]
+            [lrsql.admin.interceptors.xapi-credentials-override :as xo]
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
             [lrsql.init.git-data :refer [read-version]]
@@ -88,7 +88,7 @@
                      :path-prefix       url-prefix
                      :wrap-interceptors
                      (vec (apply concat
-                                (when auth-by-cred-id [(auth-interceptor/auth-by-cred-id-interceptor lrs)])
+                                (when auth-by-cred-id [(xo/auth-by-cred-id-interceptor lrs)])
                                 [i/error-interceptor
                                  (handle-json-parse-exn)]
                                 oidc-resource-interceptors))
