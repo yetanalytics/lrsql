@@ -28,7 +28,7 @@
       enabled."
   [{:keys [jwt-refresh-interval
            jwt-interaction-window
-           enable-admin-delete-actor
+           enable-admin-management
            enable-admin-status
            admin-language-code
            enable-reactions
@@ -36,10 +36,10 @@
            no-val-logout-url
            stmt-get-max
            proxy-path]
-    :or   {enable-admin-delete-actor false
-           enable-admin-status false
-           enable-reactions    false
-           no-val?             false}}]
+    :or   {enable-admin-management false
+           enable-admin-status     false
+           enable-reactions        false
+           no-val?                 false}}]
   (interceptor
    {:name ::get-env
     :enter
@@ -51,17 +51,17 @@
                {:status 200
                 :body
                 (merge
-                 (cond-> {:jwt-refresh-interval      jwt-refresh-interval
-                          :jwt-interaction-window    jwt-interaction-window
-                          :url-prefix                url-prefix
-                          :proxy-path                proxy-path
-                          :enable-admin-delete-actor enable-admin-delete-actor
-                          :enable-admin-status       enable-admin-status
-                          :enable-reactions          enable-reactions
-                          :no-val?                   no-val?
-                          :admin-language-code       admin-language-code
-                          :custom-language           (custom-language-map)
-                          :stmt-get-max              stmt-get-max}
+                 (cond-> {:jwt-refresh-interval    jwt-refresh-interval
+                          :jwt-interaction-window  jwt-interaction-window
+                          :url-prefix              url-prefix
+                          :proxy-path              proxy-path
+                          :enable-admin-management enable-admin-management
+                          :enable-admin-status     enable-admin-status
+                          :enable-reactions        enable-reactions
+                          :no-val?                 no-val?
+                          :admin-language-code     admin-language-code
+                          :custom-language         (custom-language-map)
+                          :stmt-get-max            stmt-get-max}
                    (and no-val?
                         (not-empty no-val-logout-url))
                    (assoc :no-val-logout-url no-val-logout-url))

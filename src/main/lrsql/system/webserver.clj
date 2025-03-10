@@ -26,7 +26,7 @@
                 url-prefix
                 proxy-path
                 key-password
-                enable-admin-delete-actor
+                enable-admin-management
                 enable-admin-ui
                 admin-language
                 enable-admin-status
@@ -92,30 +92,30 @@
                                            {:clamav-host clamav-host
                                             :clamav-port clamav-port}))})
              (add-admin-routes
-              {:lrs                       lrs
-               :exp                       jwt-exp
-               :ref                       jwt-ref
-               :leeway                    jwt-lwy
-               :refresh-interval          jwt-refresh-interval
-               :interaction-window        jwt-interaction-window
-               :no-val?                   jwt-no-val
-               :no-val-issuer             jwt-no-val-issuer
-               :no-val-uname              jwt-no-val-uname
-               :no-val-role-key           jwt-no-val-role-key
-               :no-val-role               jwt-no-val-role
-               :no-val-logout-url         jwt-no-val-logout-url
-               :secret                    (or jwt-common-secret private-key)
-               :enable-admin-delete-actor enable-admin-delete-actor
-               :enable-admin-ui           enable-admin-ui
-               :admin-language-code       admin-language
-               :stmt-get-max              stmt-get-max
-               :proxy-path                proxy-path
-               :enable-admin-status       enable-admin-status
-               :enable-account-routes     enable-local-admin
-               :enable-reaction-routes    enable-reactions
-               :oidc-interceptors         oidc-admin-interceptors
-               :oidc-ui-interceptors      oidc-admin-ui-interceptors
-               :head-opts                 head-opts})
+              {:lrs                     lrs
+               :exp                     jwt-exp
+               :ref                     jwt-ref
+               :leeway                  jwt-lwy
+               :refresh-interval        jwt-refresh-interval
+               :interaction-window      jwt-interaction-window
+               :no-val?                 jwt-no-val
+               :no-val-issuer           jwt-no-val-issuer
+               :no-val-uname            jwt-no-val-uname
+               :no-val-role-key         jwt-no-val-role-key
+               :no-val-role             jwt-no-val-role
+               :no-val-logout-url       jwt-no-val-logout-url
+               :secret                  (or jwt-common-secret private-key)
+               :enable-admin-management enable-admin-management
+               :enable-admin-ui         enable-admin-ui
+               :admin-language-code     admin-language
+               :stmt-get-max            stmt-get-max
+               :proxy-path              proxy-path
+               :enable-admin-status     enable-admin-status
+               :enable-account-routes   enable-local-admin
+               :enable-reaction-routes  enable-reactions
+               :oidc-interceptors       oidc-admin-interceptors
+               :oidc-ui-interceptors    oidc-admin-ui-interceptors
+               :head-opts               head-opts})
              (add-openapi-route
               {:lrs lrs
                :head-opts head-opts
