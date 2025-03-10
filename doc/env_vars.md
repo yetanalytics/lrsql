@@ -198,12 +198,6 @@ These config vars enable and configure browser security response headers from th
 | `LRSQL_SEC_HEAD_CROSS_DOMAIN` | `secHeadCrossDomain` | `X-Permitted-Cross-Domain-Policies` | `none`                                |
 | `LRSQL_SEC_HEAD_CONTENT`      | `secHeadContent`     | `Content-Security-Policy`           | `object-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'strict-dynamic' https: http:;` |
 
-#### Proxy Settings
-
-| Env Var                           | Config                   | Description                                                                                                                                                                                                      | Default |
-| --------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-
-
 #### Admin Features
 
 | Env Var                           | Config                   | Description                                                                                                                                                                                                      | Default |
