@@ -434,8 +434,8 @@
   (-get-statements-csv [lrs output-stream property-paths params]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
-          input  (-> params ; TODO: Higher limit for CSV stream?
-                     (stmt-util/ensure-default-max-limit config)
+          input  (-> params
+                     (stmt-util/ensure-default-max-limit-csv config)
                      (stmt-input/query-statement-input nil))]
       (jdbc/with-transaction [tx conn]
         (stmt-q/query-statements-stream backend

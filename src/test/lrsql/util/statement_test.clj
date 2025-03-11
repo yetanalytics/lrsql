@@ -113,6 +113,38 @@
 ;; Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Max Limit ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest max-limit-test
+  (testing "Ensure that query limit is itself limited by :statement-get-max"
+    (is (= {:limit 25}
+           (su/ensure-default-max-limit {:limit 25}
+                                        {:stmt-get-max     50
+                                         :stmt-get-default 10})))
+    (is (= {:limit 10}
+           (su/ensure-default-max-limit {}
+                                        {:stmt-get-max     50
+                                         :stmt-get-default 10})))
+    (is (= {:limit 50}
+           (su/ensure-default-max-limit {:limit 100}
+                                        {:stmt-get-max     50
+                                         :stmt-get-default 10}))))
+  (testing "Ensure query limit for CSV download via :statement-get-max-csv"
+    (is (= {:limit 25}
+           (su/ensure-default-max-limit-csv {:limit 25}
+                                            {})))
+    (is (= {}
+           (su/ensure-default-max-limit-csv {}
+                                            {})))
+    (is (= {:limit 100}
+           (su/ensure-default-max-limit-csv {:limit 100}
+                                            {:stmt-get-max-csv 1000000})))
+    (is (= {:limit 1000000}
+           (su/ensure-default-max-limit-csv {}
+                                            {:stmt-get-max-csv 1000000})))))
+
+;; Statement ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (deftest prepare-statement-test
   (testing "adds timestamp, stored, version, and authority"
     (let [statement* (su/prepare-statement lrs-authority statement-1)]
@@ -267,9 +299,7 @@
                                    "other"    [sample-activity
                                                sample-activity]}}}})))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; CSV
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; CSV ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest statements->csv-seq-test
   (testing "Turn statements seq into CSV seq"

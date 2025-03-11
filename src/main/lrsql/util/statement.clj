@@ -142,18 +142,38 @@
    {limit-max     :stmt-get-max
     limit-default :stmt-get-default
     :as _lrs-config}]
-  (assoc params
-         :limit
-         (cond
-           ;; Ensure limit is =< max
-           (pos-int? ?limit)
-           (min ?limit limit-max)
-           ;; If zero, spec says use max
-           (and ?limit (zero? ?limit))
-           limit-max
-           ;; Otherwise, apply default
-           :else
-           limit-default)))
+  (let [limit (cond
+                ;; Ensure limit is <= max
+                (pos-int? ?limit)
+                (min ?limit limit-max)
+                ;; If limit is zero, spec says use max
+                (and ?limit (zero? ?limit))
+                limit-max
+                ;; Otherwise, apply default
+                :else
+                limit-default)]
+    (assoc params :limit limit)))
+
+(defn ensure-default-max-limit-csv
+  "Similar to `ensure-default-max-limit`, but uses `:stmt-get-max-csv`.
+   Does not apply `:stmt-get-default`."
+  [{?limit :limit
+    :as    params}
+   {?limit-max :stmt-get-max-csv
+    :as _lrs-config}]
+  (let [limit (cond
+                ;; Ensure limit is <= max
+                (and (pos-int? ?limit)
+                     (pos-int? ?limit-max))
+                (min ?limit ?limit-max)
+                ;; If limit is zero or missing, default to max
+                (pos-int? ?limit-max)
+                ?limit-max
+                ;; Otherwise, no limit
+                :else
+                nil)]
+    (cond-> params
+      limit (assoc :limit limit))))
 
 ;; Post-query
 

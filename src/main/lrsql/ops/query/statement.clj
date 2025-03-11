@@ -142,7 +142,7 @@
    included."
   [bk tx input ltags property-paths writer]
   (let [format      (:format input)
-        input       (dissoc input :from :limit :query-params)
+        input       (dissoc input :from :query-params)
         json-paths  (us/property-paths->json-paths property-paths)
         csv-headers (us/property-paths->csv-headers property-paths)]
     (csv/write-csv writer [csv-headers] :newline :cr+lf)

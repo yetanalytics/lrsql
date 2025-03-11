@@ -4,6 +4,7 @@
  :api-secret-default      "password"
  :stmt-get-default        50
  :stmt-get-max            50
+ :stmt-get-max-csv        nil
  :stmt-url-prefix         "/xapi"
  :authority-template      "config/authority.json.template"
  :authority-url           "http://example.org"
