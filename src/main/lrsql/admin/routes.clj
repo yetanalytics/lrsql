@@ -243,6 +243,22 @@
                   400 (g/rref :error-400)
                   401 (g/rref :error-401)}})})
 
+(defn admin-csv-routes
+  [common-interceptors-no-auth
+   common-interceptors jwt-secret jwt-exp jwt-leeway no-val-opts]
+  #{["/admin/csv/auth" :get (conj common-interceptors
+                                   (ji/validate-jwt
+                                    jwt-secret jwt-leeway no-val-opts)
+                                   ji/validate-jwt-account
+                                   (lm/generate-one-time-jwt jwt-secret jwt-exp))
+      :route-name :lrsql.lrs-management/download-csv-auth]
+    ["/admin/csv" :get (conj common-interceptors-no-auth
+                             lm/validate-property-paths
+                             lm/validate-query-params
+                             (ji/validate-one-time-jwt jwt-secret jwt-leeway)
+                             lm/download-statement-csv)
+     :route-name :lrsql.lrs-management/download-csv]})
+
 (defn admin-status-routes
   [common-interceptors jwt-secret jwt-leeway no-val-opts]
   #{;; Return LRS Status information
@@ -309,26 +325,13 @@
      :route-name :lrsql.admin.reaction/delete]})
 
 (defn admin-lrs-management-routes
-  [common-interceptors-no-auth
-   common-interceptors jwt-secret jwt-exp jwt-leeway no-val-opts]
+  [common-interceptors jwt-secret jwt-leeway no-val-opts]
   #{["/admin/agents" :delete (conj common-interceptors
                                    lm/validate-delete-actor-params
                                    (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
                                    ji/validate-jwt-account
                                    lm/delete-actor)
-     :route-name :lrsql.lrs-management/delete-actor]
-    ["/admin/csv/auth" :get (conj common-interceptors
-                                  (ji/validate-jwt
-                                   jwt-secret jwt-leeway no-val-opts)
-                                  ji/validate-jwt-account
-                                  (lm/generate-one-time-jwt jwt-secret jwt-exp))
-     :route-name :lrsql.lrs-management/download-csv-auth]
-    ["/admin/csv" :get (conj common-interceptors-no-auth
-                             lm/validate-property-paths
-                             lm/validate-query-params
-                             (ji/validate-one-time-jwt jwt-secret jwt-leeway)
-                             lm/download-statement-csv)
-     :route-name :lrsql.lrs-management/download-csv]})
+     :route-name :lrsql.lrs-management/delete-actor]})
 
 (defn add-admin-routes
   "Given a set of routes `routes` for a default LRS implementation,
@@ -375,6 +378,8 @@
                    common-interceptors-oidc secret exp ref leeway no-val-opts))
                 (admin-cred-routes
                  common-interceptors-oidc secret leeway no-val-opts)
+                (admin-csv-routes
+                 common-interceptors common-interceptors-oidc secret exp leeway no-val-opts)
                 (when enable-admin-ui
                   (admin-ui-routes
                    (into common-interceptors
@@ -397,7 +402,7 @@
                    common-interceptors-oidc secret leeway no-val-opts))
                 (when enable-admin-delete-actor
                   (admin-lrs-management-routes
-                   common-interceptors common-interceptors-oidc secret exp leeway no-val-opts)))))
+                   common-interceptors-oidc secret leeway no-val-opts)))))
 
 (defn add-openapi-route [{:keys [lrs head-opts version]} routes]
   (let [common-interceptors (make-common-interceptors lrs head-opts)]
