@@ -347,7 +347,7 @@
            no-val-logout-url
            refresh-interval
            interaction-window
-           enable-admin-management
+           enable-admin-delete-actor
            enable-admin-ui
            enable-admin-status
            admin-language-code
@@ -387,7 +387,7 @@
                     :no-val-logout-url         no-val-logout-url
                     :proxy-path                proxy-path
                     :stmt-get-max              stmt-get-max
-                    :enable-admin-management   enable-admin-management
+                    :enable-admin-delete-actor enable-admin-delete-actor
                     :admin-language-code       admin-language-code}))
                 (when enable-admin-status
                   (admin-status-routes
@@ -395,7 +395,7 @@
                 (when enable-reaction-routes
                   (admin-reaction-routes
                    common-interceptors-oidc secret leeway no-val-opts))
-                (when enable-admin-management
+                (when enable-admin-delete-actor
                   (admin-lrs-management-routes
                    common-interceptors common-interceptors-oidc secret exp leeway no-val-opts)))))
 

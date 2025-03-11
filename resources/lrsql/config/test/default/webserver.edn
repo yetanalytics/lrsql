@@ -25,7 +25,7 @@
                              "http://localhost:9500"]
  :url-prefix                "/xapi"
  :proxy-path                nil
- :enable-admin-management   true
+ :enable-admin-delete-actor true
  :enable-admin-ui           true
  :enable-admin-status       true
  :admin-language            "en-US"
