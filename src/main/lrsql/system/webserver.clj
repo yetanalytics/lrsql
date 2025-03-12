@@ -52,12 +52,10 @@
                 jwt-common-secret
                 enable-clamav
                 clamav-host
-                clamav-port
-                auth-by-cred-id]
+                clamav-port]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway
          jwt-ref :jwt-refresh-exp-time}
-
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
@@ -86,10 +84,9 @@
         routes
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
-                     :wrap-interceptors
-                     (into [i/error-interceptor
-                            (handle-json-parse-exn)]
-                           oidc-resource-interceptors)
+                     :wrap-interceptors (into [i/error-interceptor
+                                               (handle-json-parse-exn)]
+                                              oidc-resource-interceptors)
                      :file-scanner      (when enable-clamav
                                           (clamav/init-file-scanner
                                            {:clamav-host clamav-host
