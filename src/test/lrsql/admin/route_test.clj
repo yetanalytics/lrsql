@@ -321,11 +321,13 @@
                     :status
                     (= 200))))))
       (testing "authenticate and download CSV data"
+        ;; TODO: Add tests with statements and applicable query params
         (let [property-paths-vec [["id"] ["actor" "mbox"]]
               property-paths-str (u/url-encode (str property-paths-vec))
               bad-prop-paths-vec ["zoo" "wee" "mama"]
               bad-prop-paths-str (u/url-encode (str bad-prop-paths-vec))
               auth-endpoint-url  "http://0.0.0.0:8080/admin/csv/auth"
+              agent-url-encoded  "%7B%22name%22%3A%22Fred+Ersatz%22%2C%22mbox%22%3A%22mailto%3Afrederstaz@example.org%22%7D"
               {:keys [status body]}
               (curl/get auth-endpoint-url {:headers headers})
               {:keys [account-id json-web-token]}
@@ -334,9 +336,10 @@
           (is (string? account-id))
           (is (string? json-web-token))
           (let [endpoint-url
-                (format "http://0.0.0.0:8080/admin/csv?token=%s&property-paths=%s&ascending=true"
+                (format "http://0.0.0.0:8080/admin/csv?token=%s&property-paths=%s&ascending=true&agent=%s"
                         json-web-token
-                        property-paths-str)
+                        property-paths-str
+                        agent-url-encoded)
                 bad-endpoint-url-1
                 (format "http://0.0.0.0:8080/admin/csv?token=%s&property-paths=%s"
                         seed-jwt

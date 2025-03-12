@@ -105,8 +105,10 @@
       (let [{lrs :com.yetanalytics/lrs
              request :request}
             ctx
-            {:keys [property-paths query-params]}
-            request]
+            {:keys [property-paths]}
+            request
+            query-params
+            (get-in ctx [:xapi :xapi.statements.GET.request/params])]
         (assoc ctx
                :response
                {:status  200
