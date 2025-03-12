@@ -2,7 +2,6 @@
   (:require
    [com.yetanalytics.lrs.pedestal.interceptor.auth :as ai]
    [io.pedestal.interceptor.chain :as chain]
-   [lrsql.admin.interceptors.jwt :as ji]
    [lrsql.input.auth :as auth-input]
    [lrsql.ops.query.auth :as auth-q]
    [lrsql.util :as util]
