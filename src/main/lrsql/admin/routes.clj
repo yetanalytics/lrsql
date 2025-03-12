@@ -12,6 +12,7 @@
             [lrsql.admin.interceptors.jwt :as ji]
             [lrsql.admin.interceptors.status :as si]
             [lrsql.admin.interceptors.reaction :as ri]
+            [lrsql.admin.interceptors.xapi-credentials-override :as xco]
             [lrsql.util.interceptor :as util-i]
             [lrsql.util.headers :as h]
             [com.yetanalytics.gen-openapi.core :as gc]
@@ -342,8 +343,7 @@
            enable-reaction-routes
            oidc-interceptors
            oidc-ui-interceptors
-           head-opts
-           auth-by-cred-id]
+           head-opts]
     :or   {oidc-interceptors     []
            oidc-ui-interceptors  []
            enable-account-routes true}}
@@ -354,38 +354,39 @@
                                   :no-val-uname    no-val-uname
                                   :no-val-issuer   no-val-issuer
                                   :no-val-role-key no-val-role-key
-                                  :no-val-role     no-val-role}]
-    (cset/union routes
-                (when enable-account-routes
-                  (admin-account-routes
-                   common-interceptors-oidc secret exp ref leeway no-val-opts))
-                (admin-cred-routes
-                 common-interceptors-oidc secret leeway no-val-opts)
-                (when enable-admin-ui
-                  (admin-ui-routes
-                   (into common-interceptors
-                         oidc-ui-interceptors)
-                   {:jwt-refresh-interval      refresh-interval
-                    :jwt-interaction-window    interaction-window
-                    :enable-admin-status       enable-admin-status
-                    :enable-reactions          enable-reaction-routes
-                    :no-val?                   no-val?
-                    :no-val-logout-url         no-val-logout-url
-                    :proxy-path                proxy-path
-                    :stmt-get-max              stmt-get-max
-                    :enable-admin-delete-actor enable-admin-delete-actor
-                    :admin-language-code       admin-language-code
-                    :auth-by-cred-id           auth-by-cred-id
-                    }))
-                (when enable-admin-status
-                  (admin-status-routes
-                   common-interceptors-oidc secret leeway no-val-opts))
-                (when enable-reaction-routes
-                  (admin-reaction-routes
-                   common-interceptors-oidc secret leeway no-val-opts))
-                (when enable-admin-delete-actor
-                  (admin-lrs-management-routes
-                   common-interceptors-oidc secret leeway no-val-opts)))))
+                                  :no-val-role     no-val-role}
+        routes-set (cset/union routes
+                               (when enable-account-routes
+                                 (admin-account-routes
+                                  common-interceptors-oidc secret exp ref leeway no-val-opts))
+                               (admin-cred-routes
+                                common-interceptors-oidc secret leeway no-val-opts)
+                               (when enable-admin-ui
+                                 (admin-ui-routes
+                                  (into common-interceptors
+                                        oidc-ui-interceptors)
+                                  {:jwt-refresh-interval      refresh-interval
+                                   :jwt-interaction-window    interaction-window
+                                   :enable-admin-status       enable-admin-status
+                                   :enable-reactions          enable-reaction-routes
+                                   :no-val?                   no-val?
+                                   :no-val-logout-url         no-val-logout-url
+                                   :proxy-path                proxy-path
+                                   :stmt-get-max              stmt-get-max
+                                   :enable-admin-delete-actor enable-admin-delete-actor
+                                   :admin-language-code       admin-language-code}))
+                               (when enable-admin-status
+                                 (admin-status-routes
+                                  common-interceptors-oidc secret leeway no-val-opts))
+                               (when enable-reaction-routes
+                                 (admin-reaction-routes
+                                  common-interceptors-oidc secret leeway no-val-opts))
+                               (when enable-admin-delete-actor
+                                 (admin-lrs-management-routes
+                                  common-interceptors-oidc secret leeway no-val-opts)))]
+    (cond-> routes-set
+      no-val? (xco/add-no-val-credentials-override (ji/validate-jwt
+                                                        secret leeway no-val-opts)))))
 
 (defn add-openapi-route [{:keys [lrs head-opts version]} routes]
   (let [common-interceptors (make-common-interceptors lrs head-opts)]

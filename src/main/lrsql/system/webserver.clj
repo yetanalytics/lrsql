@@ -87,11 +87,9 @@
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
                      :wrap-interceptors
-                     (vec (apply concat
-                                (when auth-by-cred-id [(xo/auth-by-cred-id-interceptor lrs)])
-                                [i/error-interceptor
-                                 (handle-json-parse-exn)]
-                                oidc-resource-interceptors))
+                     (into [i/error-interceptor
+                            (handle-json-parse-exn)]
+                           oidc-resource-interceptors)
                      :file-scanner      (when enable-clamav
                                           (clamav/init-file-scanner
                                            {:clamav-host clamav-host
@@ -120,9 +118,7 @@
                :enable-reaction-routes    enable-reactions
                :oidc-interceptors         oidc-admin-interceptors
                :oidc-ui-interceptors      oidc-admin-ui-interceptors
-               :head-opts                 head-opts
-               :auth-by-cred-id           auth-by-cred-id})
-
+               :head-opts                 head-opts})
              (add-openapi-route
               {:lrs lrs
                :head-opts head-opts

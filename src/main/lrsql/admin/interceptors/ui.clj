@@ -35,8 +35,7 @@
            no-val?
            no-val-logout-url
            stmt-get-max
-           proxy-path
-           auth-by-cred-id]
+           proxy-path]
     :or   {enable-admin-delete-actor false
            enable-admin-status false
            enable-reactions    false
@@ -62,8 +61,7 @@
                           :no-val?                   no-val?
                           :admin-language-code       admin-language-code
                           :custom-language           (custom-language-map)
-                          :stmt-get-max              stmt-get-max
-                          :auth-by-cred-id           auth-by-cred-id}
+                          :stmt-get-max              stmt-get-max}
                    (and no-val?
                         (not-empty no-val-logout-url))
                    (assoc :no-val-logout-url no-val-logout-url))

@@ -90,17 +90,3 @@
             (assoc cred :scopes (set cred-scopes)))
           creds
           scopes)))
-
-(s/fdef query-credential-by-id
-  :args (s/cat :bk as/credential-backend?
-               :tx transaction?
-               :input as/query-cred-by-id-input-spec)
-  :ret (s/keys :req-un [::id string?
-                        ::api_key string?
-                        ::secret_key string?
-                        ::account_id string?]))
-
-(defn query-credential-by-id
-  "Given an input containing `:id`, return a map containing `:id`, `:api-key`, `:secret-key`, `:account-id`"
-  [bk tx input]
-  (bp/-query-credential-by-id bk tx input))

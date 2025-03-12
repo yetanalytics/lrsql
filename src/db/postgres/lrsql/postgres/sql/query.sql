@@ -305,13 +305,6 @@ SELECT scope FROM credential_to_scope
 WHERE api_key = :api-key
 AND secret_key = :secret-key;
 
--- :name query-credential-by-id
--- :command :query
--- :result :one
--- :doc Get credential by id
-SELECT id, api_key, secret_key, account_id FROM lrs_credential
-WHERE id = :id;
-
 /* LRS Status */
 
 -- :name query-statement-count
