@@ -22,7 +22,9 @@
                   acct-credentials (jdbc/with-transaction [tx conn]
                                      (auth-q/query-credentials backend tx input))
 
-                  {api-key :api_key secret-key :secret_key} (some #(= (:id %) cred-id) acct-credentials)]
+                  {api-key :api_key secret-key :secret_key} (->> acct-credentials
+                                                                 (some #(when (= (:id %) cred-id)
+                                                                          %)))]
               (when (and api-key secret-key)
                 (let [base64 (util/str->base64encoded-str (str api-key ":" secret-key))]
                   (-> ctx (update-in [:request :params] dissoc :credentialID)
