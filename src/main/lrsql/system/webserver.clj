@@ -6,7 +6,6 @@
             [com.yetanalytics.lrs.pedestal.routes :refer [build]]
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.routes :refer [add-admin-routes add-openapi-route]]
-            [lrsql.admin.interceptors.xapi-credentials-override :as xo]
             [lrsql.init.oidc :as oidc]
             [lrsql.init.clamav :as clamav]
             [lrsql.init.git-data :refer [read-version]]
@@ -84,9 +83,10 @@
         routes
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
-                     :wrap-interceptors (into [i/error-interceptor
-                                               (handle-json-parse-exn)]
-                                              oidc-resource-interceptors)
+                     :wrap-interceptors (into
+                                         [i/error-interceptor
+                                          (handle-json-parse-exn)]
+                                         oidc-resource-interceptors)
                      :file-scanner      (when enable-clamav
                                           (clamav/init-file-scanner
                                            {:clamav-host clamav-host
