@@ -55,12 +55,16 @@
                 cred-in  (auth-input/insert-credential-input
                           acc-id key-pair nil)
                 scope-in (auth-input/insert-credential-scopes-input
-                          key-pair #{"all"})
-                seed-in  (auth-input/update-credential-is-seed-input
-                          key-pair true)]
+                          key-pair #{"all"})]
             ;; Don't insert creds if reconnecting to a DB previously seeded
             ;; with a cred
             (when-not (auth-q/query-credential-scopes* backend tx cred-in)
               (auth-cmd/insert-credential! backend tx cred-in)
-              (auth-cmd/insert-credential-scopes! backend tx scope-in)
-              (auth-cmd/update-credential-is-seed! backend tx seed-in))))))))
+              (auth-cmd/insert-credential-scopes! backend tx scope-in)))))))
+  ;; Migration: deonte seed creds as such if it exists in the DB
+  (when (and ?api-key ?secret-key)
+    (let [key-pair {:api-key    ?api-key
+                    :secret-key ?secret-key}
+          seed-in  (auth-input/update-credential-is-seed-input
+                    key-pair true)]
+      (auth-cmd/update-credential-is-seed! backend tx seed-in))))
