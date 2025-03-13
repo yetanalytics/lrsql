@@ -687,7 +687,8 @@
               (is (= 200 status))
               (is (= {"api-key"    api-key
                       "secret-key" secret-key
-                      "scopes"     scopes}
+                      "scopes"     scopes
+                      "label"      nil}
                      (-> body
                          (u/parse-json :object? false)
                          (#(filter (fn [cred] (= (get cred "api-key") api-key))
