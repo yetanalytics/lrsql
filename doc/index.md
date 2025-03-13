@@ -35,7 +35,7 @@
 ### Demos
 
 - [Visualization with Apache Superset](superset.md)
-- [Additional Configuration Demos](doc/other_demos.md)
+- [Additional Configuration Demos](other_demos.md)
 
 ### Releases
 
