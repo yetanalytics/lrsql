@@ -6,6 +6,7 @@
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors.account :as ai]
             [lrsql.admin.interceptors.credentials :as ci]
+            [lrsql.admin.interceptors.csv-download :as csvi]
             [lrsql.admin.interceptors.lrs-management :as lm]
             [lrsql.admin.interceptors.openapi :as openapi]
             [lrsql.admin.interceptors.ui :as ui]
@@ -250,13 +251,13 @@
                                    (ji/validate-jwt
                                     jwt-secret jwt-leeway no-val-opts)
                                    ji/validate-jwt-account
-                                   (lm/generate-one-time-jwt jwt-secret jwt-exp))
+                                   (csvi/generate-one-time-jwt jwt-secret jwt-exp))
       :route-name :lrsql.lrs-management/download-csv-auth]
     ["/admin/csv" :get (conj common-interceptors-no-auth
-                             lm/validate-property-paths
-                             lm/validate-query-params
+                             csvi/validate-property-paths
+                             csvi/validate-query-params
                              (ji/validate-one-time-jwt jwt-secret jwt-leeway)
-                             lm/download-statement-csv)
+                             csvi/download-statement-csv)
      :route-name :lrsql.lrs-management/download-csv]})
 
 (defn admin-status-routes
