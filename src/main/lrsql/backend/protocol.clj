@@ -101,6 +101,13 @@
   (-query-all-admin-accounts [this tx])
   (-query-account-count-local [this tx]))
 
+(defprotocol JWTBlocklistBackend
+  ;; Commands
+  (-insert-blocked-jwt! [this tx input])
+  (-delete-blocked-jwt-by-time! [this tx input])
+  ;; Queries
+  (-query-blocked-jwt [this tx input]))
+
 (defprotocol CredentialBackend
   ;; Commands
   (-insert-credential! [this tx input])
