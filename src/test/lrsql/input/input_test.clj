@@ -5,6 +5,7 @@
             [lrsql.input.activity     :as i-av]
             [lrsql.input.attachment   :as i-at]
             [lrsql.input.admin        :as i-admin]
+            [lrsql.input.admin.jwt    :as i-adm-jwt]
             [lrsql.input.admin.status :as i-adm-stat]
             [lrsql.input.auth         :as i-auth]
             [lrsql.input.statement    :as i-stmt]
@@ -57,6 +58,11 @@
     (is (nil? (check-validate `i-admin/query-validate-admin-input)))
     (is (nil? (check-validate `i-admin/query-admin-exists-input)))
     (is (nil? (check-validate `i-admin/delete-admin-input)))))
+
+(deftest test-admin-jwt
+  (testing "admin JWT inputs"
+    (is (nil? (check-validate `i-adm-jwt/query-blocked-jwt-input)))
+    (is (nil? (check-validate `i-adm-jwt/insert-blocked-jwt-input)))))
 
 (deftest test-admin-status
   (testing "admin status inputs"

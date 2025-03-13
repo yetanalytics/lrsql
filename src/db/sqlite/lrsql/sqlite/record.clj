@@ -112,6 +112,8 @@
       (xapi-statement-add-trigger-id! tx))
     (when-not (some? (query-statement-to-actor-has-cascade-delete tx))
       (update-schema-simple! tx alter-statement-to-actor-add-cascade-delete!))
+    (create-blocked-jwt-table! tx)
+    (create-blocked-jwt-evict-time-idx! tx)
     (when-not (some? (query-lrs-credential-label-exists tx))
       (alter-lrs-credential-add-label! tx))
     (log/infof "sqlite schema_version: %d"
@@ -238,6 +240,14 @@
     (query-account-exists tx input))
   (-query-account-count-local [_ tx]
     (query-account-count-local tx))
+
+  bp/JWTBlocklistBackend
+  (-insert-blocked-jwt! [_ tx input]
+    (insert-blocked-jwt! tx input))
+  (-delete-blocked-jwt-by-time! [_ tx input]
+    (delete-blocked-jwt-by-time! tx input))
+  (-query-blocked-jwt [_ tx input]
+    (query-blocked-jwt-exists tx input))
 
   bp/CredentialBackend
   (-insert-credential! [_ tx input]

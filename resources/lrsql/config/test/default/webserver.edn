@@ -4,6 +4,9 @@
  :key-enable-selfie         true
  :jwt-exp-time              3600
  :jwt-exp-leeway            1
+ :jwt-refresh-exp-time      86400
+ :jwt-refresh-interval      3540
+ :jwt-interaction-window    600
  :jwt-no-val                false
  :jwt-no-val-uname          nil
  :jwt-no-val-issuer         nil

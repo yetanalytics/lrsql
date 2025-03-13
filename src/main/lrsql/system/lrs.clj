@@ -12,6 +12,7 @@
             [lrsql.input.actor             :as agent-input]
             [lrsql.input.activity          :as activity-input]
             [lrsql.input.admin             :as admin-input]
+            [lrsql.input.admin.jwt         :as admin-jwt-input]
             [lrsql.input.admin.status      :as admin-stat-input]
             [lrsql.input.auth              :as auth-input]
             [lrsql.input.statement         :as stmt-input]
@@ -304,6 +305,26 @@
                          account-id new-password)]
               (admin-cmd/update-admin-password! backend tx input))
             {:result result})))))
+  
+  adp/AdminJWTManager
+  (-purge-blocklist
+   [this leeway]
+   (let [conn  (lrs-conn this)
+         input (admin-jwt-input/purge-blocklist-input leeway)]
+     (jdbc/with-transaction [tx conn]
+       (admin-cmd/purge-blocklist! backend tx input))))
+  (-block-jwt
+   [this jwt exp]
+   (let [conn      (lrs-conn this)
+         jwt-input (admin-jwt-input/insert-blocked-jwt-input jwt exp)]
+     (jdbc/with-transaction [tx conn]
+       (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
+  (-jwt-blocked?
+   [this jwt]
+   (let [conn      (lrs-conn this)
+         jwt-input (admin-jwt-input/query-blocked-jwt-input jwt)]
+     (jdbc/with-transaction [tx conn]
+       (admin-q/query-blocked-jwt-exists backend tx jwt-input))))
 
   adp/APIKeyManager
   (-create-api-keys
