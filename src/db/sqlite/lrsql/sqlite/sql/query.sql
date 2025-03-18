@@ -89,8 +89,7 @@ TRUE
 --~ (when (:authority-ifis params) "AND :frag:sqlite-auth-ref-subquery")
 ))
 --~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
-LIMIT :limit
-
+--~ (when (:limit params)    "LIMIT :limit")
 
 /* Statement Object Queries */
 
@@ -401,6 +400,15 @@ WHERE reaction_id IS NOT NULL;
 -- :name query-blocked-jwt-exists
 -- :command :query
 -- :result :one
--- :doc Query that `:jwt` is in the blocklist.
+-- :doc Query that `:jwt` is in the blocklist. Excludes JWTs where `one_time_id` is not null.
 SELECT 1 FROM blocked_jwt
 WHERE jwt = :jwt
+AND one_time_id IS NULL;
+
+-- :name query-one-time-jwt-exists
+-- :command :query
+-- :result :one
+-- :doc Query that `:jwt` with `:one-time-id` exists.
+SELECT 1 FROM blocked_jwt
+WHERE jwt = :jwt
+AND one_time_id = :one-time-id;

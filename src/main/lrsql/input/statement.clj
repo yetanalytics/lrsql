@@ -435,7 +435,7 @@
     ?since       :since
     ?until       :until
     ?asc?        :ascending
-    limit        :limit ; Ensured by `ensure-default-max-limit`
+    ?limit       :limit
     ?atts?       :attachments
     ?format      :format
     ?from        :from ; Not a stmt res param; added by lrsql for pagination
@@ -469,7 +469,6 @@
       ;; Multiple statement query
       (cond-> comm-params
         true       (assoc :ascending?      asc?
-                          :limit           limit
                           :query-params    params
                           :more-url-prefix url-prefix)
         ?actor-ifi (assoc :actor-ifi       ?actor-ifi
@@ -480,4 +479,5 @@
         ?reg       (assoc :registration ?reg)
         ?since     (assoc :since ?since)
         ?until     (assoc :until ?until)
-        ?from      (assoc :from ?from)))))
+        ?from      (assoc :from ?from)
+        ?limit     (assoc :limit ?limit)))))

@@ -152,7 +152,6 @@
                          stmt-res))))
             ;; No more statement inputs - return
             stmt-res)))))
-
   (-get-statements
     [lrs auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
@@ -313,12 +312,24 @@
          input (admin-jwt-input/purge-blocklist-input leeway)]
      (jdbc/with-transaction [tx conn]
        (admin-cmd/purge-blocklist! backend tx input))))
+  (-create-one-time-jwt
+   [this jwt exp one-time-id]
+   (let [conn  (lrs-conn this)
+         input (admin-jwt-input/insert-one-time-jwt-input jwt exp one-time-id)]
+     (jdbc/with-transaction [tx conn]
+       (admin-cmd/insert-one-time-jwt! backend tx input))))
   (-block-jwt
    [this jwt exp]
    (let [conn      (lrs-conn this)
          jwt-input (admin-jwt-input/insert-blocked-jwt-input jwt exp)]
      (jdbc/with-transaction [tx conn]
        (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
+  (-block-one-time-jwt
+   [this jwt one-time-id]
+   (let [conn      (lrs-conn this)
+         jwt-input (admin-jwt-input/update-one-time-jwt-input jwt one-time-id)]
+     (jdbc/with-transaction [tx conn]
+       (admin-cmd/update-one-time-jwt! backend tx jwt-input))))
   (-jwt-blocked?
    [this jwt]
    (let [conn      (lrs-conn this)
@@ -416,7 +427,20 @@
 
   adp/AdminLRSManager
   (-delete-actor [this {:keys [actor-ifi]}]
-    (let [conn (lrs-conn this)
+    (let [conn  (lrs-conn this)
           input (agent-input/delete-actor-input actor-ifi)]
       (jdbc/with-transaction [tx conn]
-        (stmt-cmd/delete-actor! backend tx input)))))
+        (stmt-cmd/delete-actor! backend tx input))))
+  (-get-statements-csv [lrs output-stream property-paths params]
+    (let [conn   (lrs-conn lrs)
+          config (:config lrs)
+          input  (-> params
+                     (stmt-util/ensure-default-max-limit-csv config)
+                     (stmt-input/query-statement-input nil))]
+      (jdbc/with-transaction [tx conn]
+        (stmt-q/query-statements-stream backend
+                                        tx
+                                        input
+                                        {}
+                                        property-paths
+                                        output-stream)))))
