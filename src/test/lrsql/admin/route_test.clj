@@ -174,12 +174,12 @@
         (is-err-code (create-account nil req-body) 400))
       (testing "create accounts with invalid username and passwords"
         (are [input expected-status]
-            (let [{:keys [status]} (create-account
-                                    headers
-                                    (u/write-json-str
-                                     input)
-                                    :throw false)]
-              (= expected-status status))
+             (let [{:keys [status]} (create-account
+                                     headers
+                                     (u/write-json-str
+                                      input)
+                                     :throw false)]
+               (= expected-status status))
           ;; both empty
           {"username" ""
            "password" ""}                 400
@@ -309,10 +309,10 @@
                     (= 400))))
           (testing "with an invalid password"
             (are [password expected-status]
-                (-> (update-pass! {"old-password" new-pass
-                                   "new-password" password})
-                    :status
-                    (= expected-status))
+                 (-> (update-pass! {"old-password" new-pass
+                                    "new-password" password})
+                     :status
+                     (= expected-status))
               ""         400
               "password" 400))
           (testing "change it back"
@@ -320,6 +320,49 @@
                                    "new-password" orig-pass})
                     :status
                     (= 200))))))
+      (testing "authenticate and download CSV data"
+        ;; TODO: Add tests with statements and applicable query params
+        (let [property-paths-vec [["id"] ["actor" "mbox"]]
+              property-paths-str (u/url-encode (str property-paths-vec))
+              bad-prop-paths-vec ["zoo" "wee" "mama"]
+              bad-prop-paths-str (u/url-encode (str bad-prop-paths-vec))
+              auth-endpoint-url  "http://0.0.0.0:8080/admin/csv/auth"
+              agent-url-encoded  "%7B%22name%22%3A%22Fred+Ersatz%22%2C%22mbox%22%3A%22mailto%3Afrederstaz@example.org%22%7D"
+              {:keys [status body]}
+              (curl/get auth-endpoint-url {:headers headers})
+              {:keys [account-id json-web-token]}
+              (u/parse-json body :keyword-keys? true)]
+          (is (= 200 status))
+          (is (string? account-id))
+          (is (string? json-web-token))
+          (let [endpoint-url
+                (format "http://0.0.0.0:8080/admin/csv?token=%s&property-paths=%s&ascending=true&agent=%s"
+                        json-web-token
+                        property-paths-str
+                        agent-url-encoded)
+                bad-endpoint-url-1
+                (format "http://0.0.0.0:8080/admin/csv?token=%s&property-paths=%s"
+                        seed-jwt
+                        property-paths-str)
+                bad-endpoint-url-2
+                (format "http://0.0.0.0:8080/admin/csv?token=%s&property-paths=%s"
+                        json-web-token
+                        bad-prop-paths-str)]
+            (testing "- valid download"
+              (let [{:keys [status body]}
+                    (curl/get endpoint-url {:headers headers :as :stream})
+                    csv-body (slurp body)]
+                (is (= 200 status))
+                (is (= "id,actor_mbox\r\n" csv-body))))
+            (testing "- expired one-time token does not authenticate"
+              (is-err-code (curl/get endpoint-url {:headers headers :as :stream})
+                           401))
+            (testing "- account JWT does not authenticate"
+              (is-err-code (curl/get bad-endpoint-url-1 {:headers headers :as :stream})
+                           401))
+            (testing "- invalid property path"
+              (is-err-code (curl/get bad-endpoint-url-2 {:headers headers :as :stream})
+                           400)))))
       (testing "delete the `myname` account using the seed account"
         (let [del-jwt  (-> (login-account content-type req-body)
                            :body

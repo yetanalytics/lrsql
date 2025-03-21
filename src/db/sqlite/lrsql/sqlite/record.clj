@@ -2,11 +2,12 @@
   (:require [clojure.tools.logging :as log]
             [com.stuartsierra.component :as cmp]
             [hugsql.core :as hug]
+            [next.jdbc :as jdbc]
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.data :as bd]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.sqlite.data :as sd]
-            [lrsql.util.reaction :as ru])
+            [lrsql.util.path :refer [path->sqlpath-string]])
   (:import [org.sqlite SQLiteException SQLiteErrorCode]))
 
 ;; Init HugSql functions
@@ -18,6 +19,8 @@
 (hug/def-db-fns "lrsql/sqlite/sql/query.sql")
 (hug/def-db-fns "lrsql/sqlite/sql/update.sql")
 (hug/def-db-fns "lrsql/sqlite/sql/delete.sql")
+
+(hug/def-sqlvec-fns "lrsql/sqlite/sql/query.sql")
 
 ;; Schema Update Helpers
 
@@ -114,6 +117,9 @@
       (update-schema-simple! tx alter-statement-to-actor-add-cascade-delete!))
     (create-blocked-jwt-table! tx)
     (create-blocked-jwt-evict-time-idx! tx)
+    (when-not (some? (query-blocked-jwt-one-time-id-exists tx))
+      (alter-blocked-jwt-add-one-time-id! tx)
+      (alter-blocked-jwt-add-one-time-id-idx! tx))
     (when-not (some? (query-lrs-credential-label-exists tx))
       (alter-lrs-credential-add-label! tx))
     (log/infof "sqlite schema_version: %d"
@@ -139,6 +145,9 @@
     (query-statement-exists tx input))
   (-query-statement-descendants [_ tx input]
     (query-statement-descendants tx input))
+  (-query-statements-lazy [_ tx input]
+    (let [sqlvec (query-statements-sqlvec input)]
+      (jdbc/plan tx sqlvec)))
 
   bp/ActorBackend
   (-insert-actor! [_ tx input]
@@ -155,7 +164,6 @@
     (delete-actor-agent-profile tx input)
     (delete-actor-state-document tx input)
     (delete-actor-actor tx input))
-
   (-query-actor [_ tx input]
     (query-actor tx input))
 
@@ -244,10 +252,16 @@
   bp/JWTBlocklistBackend
   (-insert-blocked-jwt! [_ tx input]
     (insert-blocked-jwt! tx input))
+  (-insert-one-time-jwt! [_ tx input]
+    (insert-one-time-jwt! tx input))
+  (-update-one-time-jwt! [_ tx input]
+    (update-one-time-jwt! tx input))
   (-delete-blocked-jwt-by-time! [_ tx input]
     (delete-blocked-jwt-by-time! tx input))
   (-query-blocked-jwt [_ tx input]
     (query-blocked-jwt-exists tx input))
+  (-query-one-time-jwt [_ tx input]
+    (query-one-time-jwt-exists tx input))
 
   bp/CredentialBackend
   (-insert-credential! [_ tx input]
@@ -327,7 +341,7 @@
   (-error-reaction! [_ tx params]
     (error-reaction! tx params))
   (-snip-json-extract [_ params]
-    (snip-json-extract (update params :path ru/path->string)))
+    (snip-json-extract (update params :path path->sqlpath-string)))
   (-snip-val [_ params]
     (snip-val params))
   (-snip-col [_ params]
@@ -341,7 +355,7 @@
   (-snip-not [_ params]
     (snip-not params))
   (-snip-contains [_ params]
-    (snip-contains (update params :path ru/path->string)))
+    (snip-contains (update params :path path->sqlpath-string)))
   (-snip-query-reaction [_ params]
     (snip-query-reaction params))
   (-query-reaction [_ tx params]

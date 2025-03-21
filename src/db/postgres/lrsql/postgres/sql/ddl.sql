@@ -500,7 +500,14 @@ CREATE TABLE IF NOT EXISTS blocked_jwt (
 );
 CREATE INDEX IF NOT EXISTS blocked_jwt_evict_time_idx ON blocked_jwt(evict_time);
 
-/* Migration 2025-02-03 - Add label column to lrs_credential table */
+/* Migration 2025-03-05 - Add One-Time ID to Blocklist Table */
+
+-- :name alter-blocked-jwt-add-one-time-id!
+-- :command :execute
+-- :doc Add the column `blocked_jwt.one_time_id` for one-time JWTs; JWTs with one-time IDs are not considered blocked yet.
+ALTER TABLE IF EXISTS blocked_jwt ADD COLUMN IF NOT EXISTS one_time_id UUID UNIQUE;
+
+/* Migration 2025-03-21 - Add label column to lrs_credential table */
 
 -- :name alter-lrs-credential-add-label!
 -- :command :execute

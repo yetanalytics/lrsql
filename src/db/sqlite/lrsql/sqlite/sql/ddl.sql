@@ -538,7 +538,27 @@ CREATE TABLE IF NOT EXISTS blocked_jwt (
 -- :doc Create the `blocked_jwt_evict_time_idx` table if it does not exist yet.
 CREATE INDEX IF NOT EXISTS blocked_jwt_evict_time_idx ON blocked_jwt(evict_time);
 
-/* Migration 2025-02-03 - Add label column to lrs_credential table */
+/* Migration 2025-03-05 - Add One-Time ID to Blocklist Table */
+
+-- :name query-blocked-jwt-one-time-id-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `blocked_jwt.one_time_id` exists.
+SELECT 1 FROM pragma_table_info('blocked_jwt') WHERE name = 'one_time_id';
+
+-- :name alter-blocked-jwt-add-one-time-id!
+-- :command :execute
+-- :result :one
+-- :doc Add the column `blocked_jwt.one_time_id` for one-time JWTs; JWTs with one-time IDs are not considered blocked yet.
+ALTER TABLE blocked_jwt ADD COLUMN one_time_id TEXT;
+
+-- :name alter-blocked-jwt-add-one-time-id-idx!
+-- :command :execute
+-- :result :one
+-- :doc Add a unique index on `blocked_jwt.one_time_id` (since SQLite does not allow directly adding unique columns).
+CREATE UNIQUE INDEX IF NOT EXISTS blocked_jwt_one_time_id_idx ON blocked_jwt(one_time_id);
+
+/* Migration 2025-03-21 - Add label column to lrs_credential table */
 
 -- :name query-lrs-credential-label-exists
 -- :command :query

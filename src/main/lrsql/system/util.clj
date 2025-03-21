@@ -4,7 +4,7 @@
             [clojure.walk :as w]
             [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
-            [ring.util.codec :refer [form-encode form-decode]]))
+            [lrsql.util :refer [form-encode form-decode]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers and Macros

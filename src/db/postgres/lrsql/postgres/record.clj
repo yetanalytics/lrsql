@@ -1,6 +1,7 @@
 (ns lrsql.postgres.record
   (:require [com.stuartsierra.component :as cmp]
             [hugsql.core :as hug]
+            [next.jdbc :as jdbc]
             [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
@@ -17,6 +18,8 @@
 (hug/def-db-fns "lrsql/postgres/sql/query.sql")
 (hug/def-db-fns "lrsql/postgres/sql/update.sql")
 (hug/def-db-fns "lrsql/postgres/sql/delete.sql")
+
+(hug/def-sqlvec-fns "lrsql/postgres/sql/query.sql")
 
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
@@ -78,6 +81,7 @@
     (when (some? (query-varchar-exists tx))
       (convert-varchars-to-text! tx))
     (create-blocked-jwt-table! tx)
+    (alter-blocked-jwt-add-one-time-id! tx)
     (alter-lrs-credential-add-label! tx))
 
   bp/BackendUtil
@@ -104,6 +108,12 @@
     (query-statement-exists tx input))
   (-query-statement-descendants [_ tx input]
     (query-statement-descendants tx input))
+  (-query-statements-lazy [_ tx input]
+    (let [sqlvec (query-statements-sqlvec input)]
+      (jdbc/plan tx sqlvec {:fetch-size  4000
+                            :concurrency :read-only
+                            :cursors     :close
+                            :result-type :forward-only})))
 
   bp/ActorBackend
   (-insert-actor! [_ tx input]
@@ -202,10 +212,16 @@
   bp/JWTBlocklistBackend
   (-insert-blocked-jwt! [_ tx input]
     (insert-blocked-jwt! tx input))
+  (-insert-one-time-jwt! [_ tx input]
+    (insert-one-time-jwt! tx input))
+  (-update-one-time-jwt! [_ tx input]
+    (update-one-time-jwt! tx input))
   (-delete-blocked-jwt-by-time! [_ tx input]
     (delete-blocked-jwt-by-time! tx input))
   (-query-blocked-jwt [_ tx input]
     (query-blocked-jwt-exists tx input))
+  (-query-one-time-jwt [_ tx input]
+    (query-one-time-jwt-exists tx input))
 
   bp/CredentialBackend
   (-insert-credential! [_ tx input]
