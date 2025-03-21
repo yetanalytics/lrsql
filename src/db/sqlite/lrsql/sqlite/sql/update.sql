@@ -63,6 +63,8 @@ SET
 WHERE profile_id = :profile-id
 AND activity_iri = :activity-iri
 
+/* Admin Accounts + Credentials */
+
 -- :name update-admin-password!
 -- :command :execute
 -- :result :affected
@@ -71,6 +73,16 @@ UPDATE admin_account
 SET
   passhash = :new-passhash
 WHERE id = :account-id
+
+-- :name update-credential-label!
+-- :command :execute
+-- :result :affected
+-- :doc Set the `label` column for the corresponding credential.
+UPDATE lrs_credential
+SET
+  label = :label
+WHERE api_key = :api-key
+AND secret_key = :secret-key
 
 -- :name update-one-time-jwt!
 -- :command :execute
@@ -81,6 +93,8 @@ SET
   one_time_id = NULL
 WHERE jwt = :jwt
 AND one_time_id = :one-time-id;
+
+/* Reactions */
 
 -- :name update-reaction!
 -- :command :execute

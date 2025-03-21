@@ -521,8 +521,7 @@ SET sql = 'CREATE TABLE statement_to_actor (
     ON DELETE CASCADE,
   FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 )'
-WHERE type = 'table' AND name = 'statement_to_actor'
-;
+WHERE type = 'table' AND name = 'statement_to_actor';
 
 /* Migration 2024-10-31 - Add JWT Blocklist Table */
 
@@ -558,3 +557,16 @@ ALTER TABLE blocked_jwt ADD COLUMN one_time_id TEXT;
 -- :result :one
 -- :doc Add a unique index on `blocked_jwt.one_time_id` (since SQLite does not allow directly adding unique columns).
 CREATE UNIQUE INDEX IF NOT EXISTS blocked_jwt_one_time_id_idx ON blocked_jwt(one_time_id);
+
+/* Migration 2025-03-21 - Add label column to lrs_credential table */
+
+-- :name query-lrs-credential-label-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `lrs_credential.label` exists.
+SELECT 1 FROM pragma_table_info('lrs_credential') WHERE name = 'label'
+
+-- :name alter-lrs-credential-add-label!
+-- :command :execute
+-- :doc Add the `label` column to the `lrs_credential` table.
+ALTER TABLE lrs_credential ADD COLUMN label TEXT;
