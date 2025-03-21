@@ -21,8 +21,12 @@
 (defprotocol AdminJWTManager
   (-purge-blocklist [this leeway]
     "Purge the blocklist of any JWTs that have expired since they were added.")
+  (-create-one-time-jwt [this jwt exp one-time-id]
+    "Add a one-time JWT that will be blocked after it is validated.")
   (-block-jwt [this jwt expiration]
     "Block `jwt` and apply an associated `expiration` number of seconds. Returns an error if `jwt` is already in the blocklist.")
+  (-block-one-time-jwt [this jwt one-time-id]
+    "Similar to `-block-jwt` but specific to blocking one-time JWTs. Returns an error if `jwt` and `one-time-id` cannot be found or updated.")
   (-jwt-blocked? [this jwt]
     "Is `jwt` on the blocklist?"))
 
@@ -51,4 +55,11 @@
     "Soft-delete a reaction."))
 
 (defprotocol AdminLRSManager
-  (-delete-actor [this params]))
+  (-delete-actor [this params]
+    "Delete actor by `:actor-id`")
+  (-get-statements-csv [this writer property-paths params]
+    "Retrieve statements by CSV. Instead of returning a sequence of
+     statements, streams them to `writer` as a side effect, in order to
+     avoid storing them in memory. `property-paths` are defined in the
+     Reactions API, while `params` are the same query params for
+     `-get-statements`."))

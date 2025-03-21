@@ -42,6 +42,12 @@ The response body contains a newly generated JSON Web Token (JWT) on success. A 
 - `GET http://example.org/admin/creds`: Read all credential pairs and their associated scopes for a particular account (denoted by the JWT).
 - `DELETE http://example.org/admin/creds`: Delete an existing credential pair, given by the `api-key` and `secret-key` properties in the request body, as well as any associated scopes.
 
+#### Statement CSV Download
+
+- `GET http://example.org/admin/csv/auth`: Return a one-time JWT for use for `/admin/csv`, used in order to use the latter endpoint as a `download`
+attribute for HTML anchor tags and authenticate without headers.
+- `GET http://example.org/admin/csv`: Download statements in the LRS as a CSV filestream. This endpoint accepts the statement query parameters defined in the [xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#213-get-statements), but allows two additional parameters: the one-time JWT `token` string and the URL-encoded `property-path` vector strings.
+
 #### Misc Admin Routes
 
 - `GET http://example.org/admin/env`: Get select environment variables about the configuration which may aid in client-side operations.

@@ -6,6 +6,7 @@
             [com.yetanalytics.lrs.pedestal.interceptor :as i]
             [lrsql.admin.interceptors.account :as ai]
             [lrsql.admin.interceptors.credentials :as ci]
+            [lrsql.admin.interceptors.csv-download :as csvi]
             [lrsql.admin.interceptors.lrs-management :as lm]
             [lrsql.admin.interceptors.openapi :as openapi]
             [lrsql.admin.interceptors.ui :as ui]
@@ -150,7 +151,8 @@
                                  (ji/validate-jwt
                                   jwt-secret jwt-leeway no-val-opts)
                                  ji/validate-jwt-account
-                                 ai/no-content)]
+                                 ai/no-content)
+      :route-name :lrsql.admin.verify/get]
      {:description "Verify that querying account is logged in"
       :operationId :verify-own-account
       :security [{:bearerAuth []}]
@@ -242,6 +244,22 @@
                   400 (g/rref :error-400)
                   401 (g/rref :error-401)}})})
 
+(defn admin-csv-routes
+  [common-interceptors-no-auth
+   common-interceptors jwt-secret jwt-exp jwt-leeway no-val-opts]
+  #{["/admin/csv/auth" :get (conj common-interceptors
+                                   (ji/validate-jwt
+                                    jwt-secret jwt-leeway no-val-opts)
+                                   ji/validate-jwt-account
+                                   (csvi/generate-one-time-jwt jwt-secret jwt-exp))
+      :route-name :lrsql.lrs-management/download-csv-auth]
+    ["/admin/csv" :get (conj common-interceptors-no-auth
+                             csvi/validate-property-paths
+                             csvi/validate-query-params
+                             (ji/validate-one-time-jwt jwt-secret jwt-leeway)
+                             csvi/download-statement-csv)
+     :route-name :lrsql.lrs-management/download-csv]})
+
 (defn admin-status-routes
   [common-interceptors jwt-secret jwt-leeway no-val-opts]
   #{;; Return LRS Status information
@@ -307,7 +325,8 @@
                                      ri/delete-reaction)
      :route-name :lrsql.admin.reaction/delete]})
 
-(defn admin-lrs-management-routes [common-interceptors jwt-secret jwt-leeway no-val-opts]
+(defn admin-lrs-management-routes
+  [common-interceptors jwt-secret jwt-leeway no-val-opts]
   #{["/admin/agents" :delete (conj common-interceptors
                                    lm/validate-delete-actor-params
                                    (ji/validate-jwt jwt-secret jwt-leeway no-val-opts)
@@ -360,6 +379,8 @@
                    common-interceptors-oidc secret exp ref leeway no-val-opts))
                 (admin-cred-routes
                  common-interceptors-oidc secret leeway no-val-opts)
+                (admin-csv-routes
+                 common-interceptors common-interceptors-oidc secret exp leeway no-val-opts)
                 (when enable-admin-ui
                   (admin-ui-routes
                    (into common-interceptors

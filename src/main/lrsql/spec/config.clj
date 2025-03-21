@@ -124,6 +124,7 @@
 
 (s/def ::stmt-get-default pos-int?)
 (s/def ::stmt-get-max pos-int?)
+(s/def ::stmt-get-max-csv pos-int?)
 
 (s/def ::authority-template string?)
 (s/def ::authority-url ::xs/irl)
@@ -148,7 +149,8 @@
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default
-                          ::api-secret-default])))
+                          ::api-secret-default
+                          ::stmt-get-max-csv])))
 
 (s/def ::enable-http boolean?)
 (s/def ::enable-http2 boolean?)

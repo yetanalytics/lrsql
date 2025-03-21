@@ -4,7 +4,7 @@
             [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Fixtures
+;; Test Constants
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def sample-id
@@ -55,86 +55,129 @@
    "length"      27
    "sha2"        "495395e777cd98da653df9615d09c0fd6bb2f8d4788394cd53c56a3bfdcd848a"})
 
+(def lrs-authority
+  {"mbox"       "mailto:a@example.com"
+   "objectType" "Agent"})
+
+(def foreign-authority
+  {"mbox"       "mailto:b@example.com"
+   "objectType" "Agent"})
+
+(def statement-1
+  {"id"     sample-id
+   "actor"  sample-group
+   "verb"   sample-verb
+   "object" sample-activity})
+
+(def statement-2
+  {"id"        sample-id
+   "actor"     sample-group
+   "verb"      sample-verb
+   "object"    sample-activity
+   "authority" foreign-authority})
+
+(def statement-3
+  {"id"          sample-id
+   "actor"       sample-group
+   "verb"        (assoc sample-verb "display" {})
+   "object"      (assoc sample-activity
+                        "definition"
+                        {"name"        {}
+                         "description" {}})
+   "attachments" [(-> sample-attachment
+                      (assoc "display" {})
+                      (assoc "description" {}))]
+   "context"     {}
+   "result"      {}})
+
+(def statement-4
+  {"id"     sample-id
+   "actor"  sample-group
+   "verb"   sample-verb
+   "object" (assoc sample-activity
+                   "definition"
+                   {;; Doesn't form a valid statement but
+                    ;; we need to test these lang maps
+                    "choices" [{"id"          "Choice"
+                                "description" {}}]
+                    "scale"   [{"id"          "Scale"
+                                "description" {}}]
+                    "source"  [{"id"          "Source"
+                                "description" {}}]
+                    "target"  [{"id"          "Target"
+                                "description" {}}]
+                    "steps"   [{"id"          "Step"
+                                "description" {}}]})})
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Max Limit ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest max-limit-test
+  (testing "Ensure that query limit is itself limited by :statement-get-max"
+    (is (= {:limit 25}
+           (su/ensure-default-max-limit {:limit 25}
+                                        {:stmt-get-max     50
+                                         :stmt-get-default 10})))
+    (is (= {:limit 10}
+           (su/ensure-default-max-limit {}
+                                        {:stmt-get-max     50
+                                         :stmt-get-default 10})))
+    (is (= {:limit 50}
+           (su/ensure-default-max-limit {:limit 100}
+                                        {:stmt-get-max     50
+                                         :stmt-get-default 10}))))
+  (testing "Ensure query limit for CSV download via :statement-get-max-csv"
+    (is (= {:limit 25}
+           (su/ensure-default-max-limit-csv {:limit 25}
+                                            {})))
+    (is (= {}
+           (su/ensure-default-max-limit-csv {}
+                                            {})))
+    (is (= {:limit 100}
+           (su/ensure-default-max-limit-csv {:limit 100}
+                                            {:stmt-get-max-csv 1000000})))
+    (is (= {:limit 1000000}
+           (su/ensure-default-max-limit-csv {}
+                                            {:stmt-get-max-csv 1000000})))))
+
+;; Statement ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (deftest prepare-statement-test
-  (let [lrs-authority     {"mbox"       "mailto:a@example.com"
-                           "objectType" "Agent"}
-        foreign-authority {"mbox"       "mailto:b@example.com"
-                           "objectType" "Agent"}
-        ;; Statements
-        statement-1 {"id"     sample-id
-                     "actor"  sample-group
-                     "verb"   sample-verb
-                     "object" sample-activity}
-        statement-2 {"id"        sample-id
-                     "actor"     sample-group
-                     "verb"      sample-verb
-                     "object"    sample-activity
-                     "authority" foreign-authority}
-        statement-3 {"id"          sample-id
-                     "actor"       sample-group
-                     "verb"        (assoc sample-verb "display" {})
-                     "object"      (assoc sample-activity
-                                          "definition"
-                                          {"name"        {}
-                                           "description" {}})
-                     "attachments" [(-> sample-attachment
-                                        (assoc "display" {})
-                                        (assoc "description" {}))]
-                     "context"     {}
-                     "result"      {}}
-        statement-4  {"id"     sample-id
-                      "actor"  sample-group
-                      "verb"   sample-verb
-                      "object" (assoc sample-activity
-                                      "definition"
-                                      {;; Doesn't form a valid statement but
-                                       ;; we need to test these lang maps
-                                       "choices" [{"id"          "Choice"
-                                                   "description" {}}]
-                                       "scale"   [{"id"          "Scale"
-                                                   "description" {}}]
-                                       "source"  [{"id"          "Source"
-                                                   "description" {}}]
-                                       "target"  [{"id"          "Target"
-                                                   "description" {}}]
-                                       "steps"   [{"id"          "Step"
-                                                   "description" {}}]})}]
-    (testing "adds timestamp, stored, version, and authority"
-      (let [statement* (su/prepare-statement lrs-authority statement-1)]
-        (is (inst? (u/str->time (get statement* "timestamp"))))
-        (is (inst? (u/str->time (get statement* "stored"))))
-        (is (= su/xapi-version (get statement* "version")))
-        (is (= lrs-authority (get statement* "authority")))))
-    (testing "overwrites authority"
-      (is (= lrs-authority
-             (-> (su/prepare-statement lrs-authority statement-2)
-                 (get "authority")))))
-    (testing "dissocs empty maps"
-      (is (= {"id"          sample-id
-              "actor"       sample-group
-              "verb"        sample-verb-dissoc
-              "object"      sample-activity-dissoc
-              "attachments" [(dissoc sample-attachment
-                                     "display"
-                                     "description")]}
-             (-> (su/prepare-statement lrs-authority statement-3)
-                 (dissoc "timestamp" "stored" "authority" "version"))))
-      (is (= {"id"     sample-id
-              "actor"  sample-group
-              "verb"   sample-verb
-              "object" (assoc sample-activity
-                              "definition"
-                              {"choices" [{"id" "Choice"}]
-                               "scale"   [{"id" "Scale"}]
-                               "source"  [{"id" "Source"}]
-                               "target"  [{"id" "Target"}]
-                               "steps"   [{"id" "Step"}]})}
-             (-> (su/prepare-statement lrs-authority statement-4)
-                 (dissoc "timestamp" "stored" "authority" "version")))))))
+  (testing "adds timestamp, stored, version, and authority"
+    (let [statement* (su/prepare-statement lrs-authority statement-1)]
+      (is (inst? (u/str->time (get statement* "timestamp"))))
+      (is (inst? (u/str->time (get statement* "stored"))))
+      (is (= su/xapi-version (get statement* "version")))
+      (is (= lrs-authority (get statement* "authority")))))
+  (testing "overwrites authority"
+    (is (= lrs-authority
+           (-> (su/prepare-statement lrs-authority statement-2)
+               (get "authority")))))
+  (testing "dissocs empty maps"
+    (is (= {"id"          sample-id
+            "actor"       sample-group
+            "verb"        sample-verb-dissoc
+            "object"      sample-activity-dissoc
+            "attachments" [(dissoc sample-attachment
+                                   "display"
+                                   "description")]}
+           (-> (su/prepare-statement lrs-authority statement-3)
+               (dissoc "timestamp" "stored" "authority" "version"))))
+    (is (= {"id"     sample-id
+            "actor"  sample-group
+            "verb"   sample-verb
+            "object" (assoc sample-activity
+                            "definition"
+                            {"choices" [{"id" "Choice"}]
+                             "scale"   [{"id" "Scale"}]
+                             "source"  [{"id" "Source"}]
+                             "target"  [{"id" "Target"}]
+                             "steps"   [{"id" "Step"}]})}
+           (-> (su/prepare-statement lrs-authority statement-4)
+               (dissoc "timestamp" "stored" "authority" "version"))))))
 
 (deftest statements-equal-test
   (testing "statement equality"
@@ -255,3 +298,30 @@
                                                sample-activity]
                                    "other"    [sample-activity
                                                sample-activity]}}}})))))
+
+;; CSV ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest statements->csv-seq-test
+  (testing "Turn statements seq into CSV seq"
+    (let [headers    [["id"]
+                      ["actor" "mbox"]
+                      ["verb" "id"]
+                      ["object" "id"]]
+          statements (lazy-cat [statement-1
+                                statement-2]
+                               [statement-3
+                                statement-4])
+          stream     (su/statements->csv-seq headers statements)]
+      (is (not (realized? stream)))
+      (is (= ["id" "actor_mbox" "verb_id" "object_id"]
+             (first stream)))
+      (is (= [sample-id
+              (get sample-group "mbox")
+              (get sample-verb "id")
+              (get sample-activity "id")]
+             (first (-> stream rest))
+             (first (-> stream rest rest))
+             (first (-> stream rest rest rest))
+             (first (-> stream rest rest rest rest))))
+      (is (nil? (first (-> stream rest rest rest rest rest))))
+      (is (realized? stream)))))

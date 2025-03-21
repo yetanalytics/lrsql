@@ -37,6 +37,32 @@
    :exp (quot (u/time->millis etime) 1000)
    :ref (quot (u/time->millis rtime) 1000)})
 
+(defn one-time-jwt
+  "Create a one-time JWT, with only `:iat`, `:exp` and a unique `:oti` property
+   (short for \"one time ID\") in the claim body. If `account-id` and
+   `expiration` does not exist (e.g. in a proxy JWT or OIDC login scenario),
+   we fall back to `exp` for the expiration. Returns a map containing
+   `:jwt` alongside `:exp` and `:oti`."
+  [{:keys [account-id expiration]} secret exp]
+  (when (or (nil? secret)
+            (nil? exp))
+    (throw (ex-info "Secret and expiration or JWTs required!"
+                    {:error ::cannot-make-jwts})))
+  (let [ctime (u/current-time)
+        etime (if (and (some? account-id)
+                       (some? expiration))
+                ;; Regular JWT
+                expiration
+                ;; Proxy JWT or OIDC
+                (u/offset-time ctime exp :seconds))
+        otid  (random-uuid)
+        claim {:iat (quot (u/time->millis ctime) 1000)
+               :exp (quot (u/time->millis etime) 1000)
+               :oti otid}]
+    {:jwt (bj/sign claim secret)
+     :exp (:exp claim)
+     :oti otid}))
+
 (defn account-id->jwt*
   "Same as `account-id->jwt`, but uses a pre-existing `rtime` timestamp instead
    of an `ref` offset."
@@ -68,17 +94,22 @@
 
 (defn jwt->payload
   "Given the JSON Web Token `tok`, unsign and verify the token using `secret`.
-   Return a map of `:account-id`, `:expiration`, and `:refresh-exp` if valid,
-   otherwise return `:lrsql.admin/unauthorized-token-error`.
+   Return a map of `:account-id`, `:expiration`, `:refresh-exp` and/or
+   `:one-time-id`, depending on the contents of `tok` (i.e. `:account-id`
+   and `:refresh-exp` are only present in regular account JWTs, while
+   `:one-time-id` is unique to one-time JWTs). Otherwise return
+   `:lrsql.admin/unauthorized-token-error`.
    `leeway` is a time amount (in seconds) provided to compensate for
    clock drift."
   [tok secret leeway]
   (if tok ; Avoid encountering a null pointer exception
     (try
-      (let [{:keys [acc exp ref]} (bj/unsign tok secret {:leeway leeway})]
-        {:account-id  (u/str->uuid acc)
-         :expiration  (u/millis->time (* 1000 exp))
-         :refresh-exp (u/millis->time (* 1000 ref))})
+      (let [{:keys [acc exp ref oti]} (bj/unsign tok secret {:leeway leeway})]
+        (cond-> {}
+          acc (assoc :account-id (u/str->uuid acc))
+          exp (assoc :expiration (u/millis->time (* 1000 exp)))
+          ref (assoc :refresh-exp (u/millis->time (* 1000 ref)))
+          oti (assoc :one-time-id (u/str->uuid oti))))
       (catch clojure.lang.ExceptionInfo _
         :lrsql.admin/unauthorized-token-error))
     :lrsql.admin/unauthorized-token-error))
@@ -86,7 +117,7 @@
 (defn proxy-jwt->payload
   "Decode (without validating!) a JWT claim and verify that the role-key on
    the claim contains the expected role. Return a map containing `:username`
-   and `:issuer` iv valid, otherwise return
+   and `:issuer` if valid, otherwise return
    `:lrsql.admin/unauthorized-token-error`."
   [tok uname-key issuer-key role-key role]
   (if tok

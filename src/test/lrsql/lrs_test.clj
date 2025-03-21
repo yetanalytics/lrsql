@@ -2,7 +2,6 @@
   (:require [clojure.test   :refer [deftest testing is use-fixtures]]
             [clojure.string :as cstr]
             [com.stuartsierra.component     :as component]
-            [com.yetanalytics.datasim       :as ds]
             [com.yetanalytics.lrs.protocol  :as lrsp]
             [lrsql.admin.protocol           :as adp]
             [lrsql.test-support             :as support]
@@ -930,11 +929,7 @@
 ;; We reuse bench resources for tests here.
 
 (def test-statements
-  (->> "dev-resources/bench/insert_input.json"
-       ds/read-input
-       ds/generate-seq
-       (take 50)
-       (into [])))
+  (support/bench-statements 50))
 
 (deftest datasim-tests
   (let [sys     (support/test-system)

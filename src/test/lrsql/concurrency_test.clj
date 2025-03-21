@@ -1,11 +1,10 @@
 (ns lrsql.concurrency-test
+  "Tests for concurrent insertions and queries."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.spec.alpha :as s]
             [clojure.core.async :as a]
             [com.stuartsierra.component :as component]
             [babashka.curl :as curl]
-            [com.yetanalytics.datasim.input :as sim-input]
-            [com.yetanalytics.datasim.sim   :as sim]
             [xapi-schema.spec :as xs]
             [lrsql.test-support :as support]
             [lrsql.util :as u]))
@@ -17,25 +16,6 @@
 (support/instrument-lrsql)
 
 (use-fixtures :each support/fresh-db-fixture)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Helpers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; We reuse bench inputs for tests here.
-
-(defn test-statements
-  [num-stmts]
-  (->> "dev-resources/bench/insert_input.json"
-       (sim-input/from-location :input :json)
-       sim/sim-seq
-       (take num-stmts)
-       (into [])))
-
-(def test-queries
-  (-> "dev-resources/bench/query_input.json"
-      slurp
-      (u/parse-json :object? false)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -56,14 +36,17 @@
                          req-chan)
     (a/<!! (a/into [] res-chan))))
 
+(def headers
+  {"Content-Type"             "application/json"
+   "X-Experience-API-Version" "1.0.3"})
+
+(def basic-auth
+  ["username" "password"])
+
 (deftest concurrency-test
   (let [sys        (support/test-system)
         sys'       (component/start sys)
         url-prefix (-> sys' :webserver :config :url-prefix)
-        ;; Curl
-        headers    {"Content-Type"             "application/json"
-                    "X-Experience-API-Version" "1.0.3"}
-        basic-auth ["username" "password"]
         ;; Parameters
         endpoint    (format "http://localhost:8080%s/statements" url-prefix)
         num-stmts   100
@@ -71,7 +54,7 @@
         num-threads 5
         query-mult  5]
     (testing "concurrent insertions"
-      (let [insert-reqs (->> (test-statements num-stmts)
+      (let [insert-reqs (->> (support/bench-statements num-stmts)
                              (partition batch-size)
                              (map (fn [batch]
                                     {:headers    headers
@@ -104,7 +87,7 @@
                         false))
                     insert-res))))
     (testing "concurrent queries"
-      (let [query-reqs (->> test-queries
+      (let [query-reqs (->> support/bench-queries
                             (mapcat (partial repeat query-mult))
                             (map (fn [query]
                                    {:headers      headers
@@ -114,7 +97,7 @@
                                      endpoint
                                      query-reqs
                                      num-threads)]
-        (is (= (* query-mult (count test-queries))
+        (is (= (* query-mult (count support/bench-queries))
                (count query-res)))
         (is (every? (fn [res]
                       (cond ;; Queries should never deadlock
