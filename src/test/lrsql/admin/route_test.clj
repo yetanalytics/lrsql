@@ -726,17 +726,26 @@
             (let [{:keys [status body]}
                   (curl/get
                    "http://0.0.0.0:8080/admin/creds"
-                   {:headers hdr})]
+                   {:headers hdr})
+                  body* (u/parse-json body :object? false)]
               (is (= 200 status))
+              ;; Seed cred
+              (is (= {"api-key"    "username"
+                      "secret-key" "password"
+                      "label"      nil
+                      "scopes"     ["all"]
+                      "seed?"      true}
+                     (first (filter (fn [cred]
+                                      (= "username" (get cred "api-key")))
+                                    body*))))
+              ;; New cred
               (is (= {"api-key"    api-key
                       "secret-key" secret-key
-                      "scopes"     scopes
-                      "label"      nil}
-                     (-> body
-                         (u/parse-json :object? false)
-                         (#(filter (fn [cred] (= (get cred "api-key") api-key))
-                                   %))
-                         first)))))
+                      "label"      nil
+                      "scopes"     scopes}
+                     (first (filter (fn [cred]
+                                      (= api-key (get cred "api-key")))
+                                    body*))))))
           (testing "and updating"
             (let [req-scopes
                   ["all/read" "statements/read" "statements/read/mine"]

@@ -570,3 +570,14 @@ SELECT 1 FROM pragma_table_info('lrs_credential') WHERE name = 'label'
 -- :command :execute
 -- :doc Add the `label` column to the `lrs_credential` table.
 ALTER TABLE lrs_credential ADD COLUMN label TEXT;
+
+-- :name query-lrs-credential-is-seed-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `lrs_credential.is_seed` exists.
+SELECT 1 FROM pragma_table_info('lrs_credential') WHERE name = 'is_seed'
+
+-- :name alter-lrs-credential-add-is-seed!
+-- :command :execute
+-- :doc Add the `is_seed` column to the `lrs_credential` table.
+ALTER TABLE lrs_credential ADD COLUMN is_seed INTEGER; -- boolean type

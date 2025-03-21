@@ -122,6 +122,8 @@
       (alter-blocked-jwt-add-one-time-id-idx! tx))
     (when-not (some? (query-lrs-credential-label-exists tx))
       (alter-lrs-credential-add-label! tx))
+    (when-not (some? (query-lrs-credential-is-seed-exists tx))
+      (alter-lrs-credential-add-is-seed! tx))
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
 
@@ -270,6 +272,8 @@
     (insert-credential-scope! tx input))
   (-update-credential-label! [_ tx input]
     (update-credential-label! tx input))
+  (-update-credential-is-seed! [_ tx input]
+    (update-credential-is-seed! tx input))
   (-delete-credential! [_ tx input]
     (delete-credential! tx input))
   (-delete-credential-scope! [_ tx input]
@@ -302,7 +306,8 @@
        "created"
        "modified"})
     (sd/set-read-int->bool!
-     #{"active"}))
+     #{"active"
+       "is_seed"}))
   (-set-write! [_]
     (bd/set-write-json->bytes!)
     (sd/set-write-uuid->str!)
