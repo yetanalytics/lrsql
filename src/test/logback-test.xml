@@ -10,4 +10,6 @@
   <!-- silence the selfie warnings -->
   <logger name="lrsql.util.cert" level="error" />
   <logger name="lrsql.ops.query.reaction" level="off" />
+  <!-- allow logs for bench tests -->
+  <logger name="lrsql.bench-test" level="info" />
 </configuration>
