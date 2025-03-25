@@ -84,6 +84,16 @@ SET
 WHERE api_key = :api-key
 AND secret_key = :secret-key
 
+-- :name update-credential-is-seed!
+-- :command :execute
+-- :result :affected
+-- :doc Set the `is_seed` column for the corresponding credential.
+UPDATE lrs_credential
+SET
+  is_seed = :seed?
+WHERE api_key = :api-key
+AND secret_key = :secret-key;
+
 -- :name update-one-time-jwt!
 -- :command :execute
 -- :result :affected

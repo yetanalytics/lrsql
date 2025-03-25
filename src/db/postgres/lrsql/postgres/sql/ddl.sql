@@ -513,3 +513,8 @@ ALTER TABLE IF EXISTS blocked_jwt ADD COLUMN IF NOT EXISTS one_time_id UUID UNIQ
 -- :command :execute
 -- :doc Add the `label` column to the `lrs_credential` table if it does not exist.
 ALTER TABLE lrs_credential ADD COLUMN IF NOT EXISTS label TEXT;
+
+-- :name alter-lrs-credential-add-is-seed!
+-- :command :execute
+-- :doc Add the `is_seed` column to the `lrs_credential` table if it does not exist.
+ALTER TABLE lrs_credential ADD COLUMN IF NOT EXISTS is_seed BOOLEAN;

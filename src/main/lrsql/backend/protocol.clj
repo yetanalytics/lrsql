@@ -117,6 +117,7 @@
   (-insert-credential! [this tx input])
   (-insert-credential-scope! [this tx input])
   (-update-credential-label! [this tx input])
+  (-update-credential-is-seed! [this tx input])
   (-delete-credential! [this tx input])
   (-delete-credential-scope! [this tx input])
   ;; Queries
