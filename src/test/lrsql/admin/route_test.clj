@@ -730,7 +730,8 @@
               (is (= 200 status))
               (is (= {"api-key"    api-key
                       "secret-key" secret-key
-                      "scopes"     scopes}
+                      "scopes"     scopes
+                      "label"      nil}
                      (-> body
                          (u/parse-json :object? false)
                          (#(filter (fn [cred] (= (get cred "api-key") api-key))
@@ -768,7 +769,7 @@
               (is (= secret-key secret-key'))
               (is (= #{"all/read" "statements/read" "statements/read/mine"}
                      (set scopes')))))
-          (testing "and no-op scope update"
+          (testing "and no-op label + scope update"
             (let [req-scopes
                   ["all/read" "statements/read" "statements/read/mine"]
                   {:keys [status body]}
@@ -777,23 +778,27 @@
                    {:headers hdr
                     :body   (u/write-json-str {"api-key"    api-key
                                                "secret-key" secret-key
+                                               "label"      "My Label"
                                                "scopes"     req-scopes})})
-                  {:strs [scopes]}
+                  {:strs [label scopes]}
                   (u/parse-json body)]
               (is (= 200 status))
+              (is (= "My Label" label))
               (is (= #{"all/read" "statements/read" "statements/read/mine"}
                      (set scopes)))))
-          (testing "and deleting all scopes"
+          (testing "and deleting label and all scopes"
             (let [{:keys [status body]}
                   (curl/put
                    "http://0.0.0.0:8080/admin/creds"
                    {:headers hdr
+                            ;; Not including label key = nil label
                     :body   (u/write-json-str {"api-key"    api-key
                                                "secret-key" secret-key
                                                "scopes"     []})})
-                  {:strs [scopes]}
+                  {:strs [label scopes]}
                   (u/parse-json body)]
               (is (= 200 status))
+              (is (= nil label))
               (is (= #{} (set scopes)))))
           (testing "and deletion"
             (let [{:keys [status]}

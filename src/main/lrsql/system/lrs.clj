@@ -338,12 +338,13 @@
 
   adp/APIKeyManager
   (-create-api-keys
-    [this account-id scopes]
+    [this account-id label scopes]
     (let [conn     (lrs-conn this)
           key-pair (auth-util/generate-key-pair)
           cred-in  (auth-input/insert-credential-input
                     account-id
-                    key-pair)
+                    key-pair
+                    label)
           scope-in (auth-input/insert-credential-scopes-input
                     key-pair
                     scopes)]
@@ -359,7 +360,7 @@
         (auth-q/query-credentials backend tx input))))
   (-update-api-keys
     ;; TODO: Verify the key pair is associated with the account ID
-    [this _account-id api-key secret-key scopes]
+    [this _account-id api-key secret-key label scopes]
     (let [conn  (lrs-conn this)
           input (auth-input/query-credential-scopes*-input api-key secret-key)]
       (jdbc/with-transaction [tx conn]
@@ -376,11 +377,17 @@
               del-inputs (auth-input/delete-credential-scopes-input
                           api-key
                           secret-key
-                          del-scopes)]
+                          del-scopes)
+              lab-inputs (auth-input/update-credential-label-input
+                          api-key
+                          secret-key
+                          label)]
+          (auth-cmd/update-credential-label! backend tx lab-inputs)
           (auth-cmd/insert-credential-scopes! backend tx add-inputs)
           (auth-cmd/delete-credential-scopes! backend tx del-inputs)
           {:api-key    api-key
            :secret-key secret-key
+           :label      label
            :scopes     scopes}))))
   (-delete-api-keys
     [this account-id api-key secret-key]

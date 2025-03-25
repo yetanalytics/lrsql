@@ -64,3 +64,19 @@
   [bk tx input]
   (bp/-delete-credential! bk tx input)
   nil)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Credential Label Update
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef update-credential-label!
+  :args (s/cat :bk as/credential-backend?
+               :tx transaction?
+               :input as/update-cred-label-input-spec)
+  :ret nil?)
+
+(defn update-credential-label!
+  "Update the credential label. Returns `nil`."
+  [bk tx input]
+  (bp/-update-credential-label! bk tx input)
+  nil)
