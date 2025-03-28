@@ -95,7 +95,8 @@
                    ::secret-key
                    ::label
                    ::scopes]
-          :opt-un [::seed?]))
+          :opt-un [::seed?
+                   ::id]))
 
 (def key-pair-args-spec
   (s/alt :map  key-pair-spec
