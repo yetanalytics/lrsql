@@ -7,12 +7,14 @@
             [com.stuartsierra.component :as component]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [com.yetanalytics.lrs.protocol :as lrsp]
+            [lrsql.backend.protocol :as bp]
             [lrsql.test-support :as support]
             [lrsql.test-constants :as tc]
             [lrsql.util :as u]
             [lrsql.util.headers :as h]
             [lrsql.util.reaction :as ru]
-            [lrsql.util.actor :as ua]))
+            [lrsql.util.actor :as ua]
+            [next.jdbc :as jdbc]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -699,6 +701,8 @@
 (deftest auth-routes-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
+        backend (:backend sys')
+        ds (get-in sys' [:lrs :connection :conn-pool])
         jwt  (-> (curl/post "http://0.0.0.0:8080/admin/account/login"
                             {:headers content-type
                              :body    (u/write-json-str
@@ -723,7 +727,16 @@
           (is (re-matches Base64RegEx secret-key))
           (is (= #{"all" "all/read"} (set scopes)))
           (testing "and reading"
-            (let [{:keys [status body]}
+            (let [{seed-credential-id :cred_id}
+                  (jdbc/with-transaction [tx ds]
+                    (bp/-query-credential-ids backend tx {:api-key "username"
+                                                          :secret-key "password"}))
+                  {new-credential-id :cred_id}
+                  (jdbc/with-transaction [tx ds]
+                    (bp/-query-credential-ids backend tx {:api-key api-key
+                                                          :secret-key secret-key}))
+                  
+                  {:keys [status body]}
                   (curl/get
                    "http://0.0.0.0:8080/admin/creds"
                    {:headers hdr})
@@ -734,7 +747,8 @@
                       "secret-key" "password"
                       "label"      nil
                       "scopes"     ["all"]
-                      "seed?"      true}
+                      "seed?"      true
+                      "id" (str seed-credential-id)}
                      (first (filter (fn [cred]
                                       (= "username" (get cred "api-key")))
                                     body*))))
@@ -742,10 +756,13 @@
               (is (= {"api-key"    api-key
                       "secret-key" secret-key
                       "label"      nil
-                      "scopes"     scopes}
-                     (first (filter (fn [cred]
-                                      (= api-key (get cred "api-key")))
-                                    body*))))))
+                      "scopes"     scopes
+                      "id"         (str new-credential-id)}
+                     (-> body*
+                         (#(filter (fn [cred] (= (get cred "api-key") api-key))
+                                   %))
+                         first)))))
+          
           (testing "and updating"
             (let [req-scopes
                   ["all/read" "statements/read" "statements/read/mine"]
@@ -829,3 +846,4 @@
                              edn-res)))))))
       (finally
         (component/stop sys')))))
+

@@ -51,7 +51,8 @@
                 jwt-common-secret
                 enable-clamav
                 clamav-host
-                clamav-port]
+                clamav-port
+                auth-by-cred-id]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway
          jwt-ref :jwt-refresh-exp-time}
@@ -115,7 +116,8 @@
                :enable-reaction-routes    enable-reactions
                :oidc-interceptors         oidc-admin-interceptors
                :oidc-ui-interceptors      oidc-admin-ui-interceptors
-               :head-opts                 head-opts})
+               :head-opts                 head-opts
+               :auth-by-cred-id           auth-by-cred-id})
              (add-openapi-route
               {:lrs lrs
                :head-opts head-opts
