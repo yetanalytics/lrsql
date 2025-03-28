@@ -758,10 +758,9 @@
                       "label"      nil
                       "scopes"     scopes
                       "id"         (str new-credential-id)}
-                     (-> body*
-                         (#(filter (fn [cred] (= (get cred "api-key") api-key))
-                                   %))
-                         first)))))
+                     (first (filter (fn [cred]
+                                      (= api-key (get cred "api-key")))
+                                    body*))))))
           
           (testing "and updating"
             (let [req-scopes
@@ -846,4 +845,3 @@
                              edn-res)))))))
       (finally
         (component/stop sys')))))
-
