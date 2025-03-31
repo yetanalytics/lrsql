@@ -676,7 +676,7 @@
                [:webserver :jwt-no-val-issuer]   "iss"
                [:webserver :jwt-no-val-role-key] "group-full"
                [:webserver :jwt-no-val-role]     "/domain/app/ADMIN"
-               [:webserver :auth-by-cred-id]     false})
+               [:webserver :auth-by-cred-id]     true})
         sys' (component/start sys)
         lrs (:lrs sys')
         ds (get-in sys' [:lrs :connection :conn-pool])
