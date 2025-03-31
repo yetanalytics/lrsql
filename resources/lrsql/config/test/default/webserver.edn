@@ -36,4 +36,4 @@
  :enable-clamav             false
  :clamav-host               "localhost"
  :clamav-port               3310
- :auth-by-cred-id           true}
+ :auth-by-cred-id           false}

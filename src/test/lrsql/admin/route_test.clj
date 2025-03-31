@@ -675,7 +675,8 @@
                [:webserver :jwt-no-val-uname]    "usercertificate"
                [:webserver :jwt-no-val-issuer]   "iss"
                [:webserver :jwt-no-val-role-key] "group-full"
-               [:webserver :jwt-no-val-role]     "/domain/app/ADMIN"})
+               [:webserver :jwt-no-val-role]     "/domain/app/ADMIN"
+               [:webserver :auth-by-cred-id]     false})
         sys' (component/start sys)
         lrs (:lrs sys')
         ds (get-in sys' [:lrs :connection :conn-pool])
@@ -707,12 +708,12 @@
           (is-err-code (get-account bad-headers) 401)))
 
       (testing "/statements route for admin when proxy JWT"
-        (let [{:keys [status body]}
+        (let [{:keys [body]}
               (curl/post "http://0.0.0.0:8080/admin/creds"
                          {:headers headers
                           :body (u/write-json-str
                                  {"scopes" ["all" "all/read"]})})
-              {:strs [api-key secret-key scopes]}
+              {:strs [api-key secret-key]}
               (u/parse-json body)
 
               {credential-id :cred_id}
@@ -723,7 +724,7 @@
               _ (lrsp/-store-statements lrs auth-ident [lt/stmt-0] [])
               {:keys [status body]} (get-statements-via-url-param headers credential-id)]
           (is (= status 200))
-          (is (not (empty? ((u/parse-json body) "statements"))))))
+          (is (seq ((u/parse-json body) "statements")))))
       
       (finally
         (component/stop sys')))))
