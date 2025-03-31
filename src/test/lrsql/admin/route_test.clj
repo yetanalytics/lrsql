@@ -9,6 +9,7 @@
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.backend.protocol :as bp]
             [lrsql.test-support :as support]
+            [lrsql.lrs-test :as lt]
             [lrsql.test-constants :as tc]
             [lrsql.util :as u]
             [lrsql.util.headers :as h]
@@ -115,6 +116,12 @@
   [headers body]
   (curl/delete "http://0.0.0.0:8080/admin/agents" {:headers headers
                                                    :body body}))
+
+(defn- get-statements-via-url-param [headers credential-id]
+  (curl/get (str "http://0.0.0.0:8080/xapi/statements?credentialID=" credential-id)
+            {:headers (merge headers
+                             {"Accept" "application/json"
+                              "X-Experience-API-Version" "1.0.3"})}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -670,6 +677,9 @@
                [:webserver :jwt-no-val-role-key] "group-full"
                [:webserver :jwt-no-val-role]     "/domain/app/ADMIN"})
         sys' (component/start sys)
+        lrs (:lrs sys')
+        ds (get-in sys' [:lrs :connection :conn-pool])
+        backend (:backend sys')
         ;; proxy jwt auth
         proxy-auth {"Authorization" (str "Bearer " (proxy-jwt proxy-jwt-body))}
         headers    (merge content-type proxy-auth)]
@@ -695,6 +705,26 @@
               bad-headers (merge content-type bad-auth)]
           ;; Bad Auth because nonmatching role
           (is-err-code (get-account bad-headers) 401)))
+
+      (testing "/statements route for admin when proxy JWT"
+        (let [{:keys [status body]}
+              (curl/post "http://0.0.0.0:8080/admin/creds"
+                         {:headers headers
+                          :body (u/write-json-str
+                                 {"scopes" ["all" "all/read"]})})
+              {:strs [api-key secret-key scopes]}
+              (u/parse-json body)
+
+              {credential-id :cred_id}
+              (jdbc/with-transaction [tx ds]
+                (bp/-query-credential-ids backend tx {:api-key api-key
+                                                      :secret-key secret-key}))
+
+              _ (lrsp/-store-statements lrs auth-ident [lt/stmt-0] [])
+              {:keys [status body]} (get-statements-via-url-param headers credential-id)]
+          (is (= status 200))
+          (is (not (empty? ((u/parse-json body) "statements"))))))
+      
       (finally
         (component/stop sys')))))
 
@@ -843,5 +873,6 @@
               (is (= 200 status))
               (is (not (some (fn [cred] (= (get cred "api-key") api-key))
                              edn-res)))))))
+
       (finally
         (component/stop sys')))))
