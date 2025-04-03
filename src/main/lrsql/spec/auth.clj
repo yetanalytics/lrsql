@@ -68,6 +68,7 @@
 (s/def ::label (s/nilable string?))
 
 (s/def ::seed? boolean?)
+(s/def ::id uuid?)
 
 (s/def ::scope string-scopes)
 

@@ -64,11 +64,10 @@
                                      [(last (string/split path #"/")) method])
                               r))))
         payload-interceptors (conj
-                              ;;oidc interceptors
+                              ;;oidc interceptors, minus _authorize
                               (filterv identity [decode
                                                  validate
-                                                 ;;_authorize ;;we're only authenticating; API key is authorizing
-                                                 ensure ;removes below validate-jwt interceptor
+                                                 ensure
                                                  req])
                               validate-jwt 
                               replace-auth)
