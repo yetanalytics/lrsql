@@ -9,6 +9,7 @@
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
             [lrsql.lrs-test       :as lrst]
+            [lrsql.backend.protocol :as bp]
             [lrsql.test-support   :as support]
             [lrsql.util           :as u]
             [lrsql.test-constants :as tc]
@@ -412,12 +413,16 @@
 (deftest auth-test
   (let [sys    (support/test-system)
         sys'   (component/start sys)
-        lrs    (:lrs sys')
+        {:keys [lrs backend]} sys'
+        ds (get-in lrs [:connection :conn-pool])
         acc-id (:result (adp/-create-account lrs test-username test-password))]
     (try
       (testing "Credential creation"
         (let [{:keys [api-key secret-key] :as key-pair}
-              (adp/-create-api-keys lrs acc-id nil #{"all" "all/read"})]
+              (adp/-create-api-keys lrs acc-id nil #{"all" "all/read"})
+              {credential-id :cred_id} (jdbc/with-transaction [tx ds]
+                                         (bp/-query-credential-ids backend tx {:api-key api-key
+                                                                               :secret-key secret-key}))]
           (is (re-matches Base64RegEx api-key))
           (is (re-matches Base64RegEx secret-key))
           (is (= {:api-key    api-key
@@ -425,10 +430,12 @@
                   :scopes     #{"all" "all/read"}}
                  key-pair))
           (testing "and credential retrieval"
-            (is (= [{:api-key    api-key
+            (is (= (adp/-get-api-keys lrs acc-id)
+                   [{:api-key api-key
                      :secret-key secret-key
                      :label      nil
-                     :scopes     #{"all" "all/read"}}]
+                     :scopes     #{"all" "all/read"}
+                     :id         credential-id}]
                    (adp/-get-api-keys lrs acc-id))))
           (testing "and credential update"
             (is (= {:api-key    api-key
@@ -444,12 +451,14 @@
                     secret-key
                     "My Label"
                     #{"all/read" "statements/read" "statements/read/mine"})))
-            (is (= [{:api-key    api-key
+            (is (= (adp/-get-api-keys lrs acc-id)
+                   [{:api-key api-key
                      :secret-key secret-key
                      :label      "My Label"
                      :scopes     #{"all/read"
                                    "statements/read"
-                                   "statements/read/mine"}}]
+                                   "statements/read/mine"}
+                     :id credential-id}]
                    (adp/-get-api-keys lrs acc-id))))
           (testing "and credential deletion"
             (adp/-delete-api-keys lrs acc-id api-key secret-key)

@@ -79,11 +79,13 @@
   [bk tx input]
   (let [creds  (->> input
                     (bp/-query-credentials bk tx)
-                    (map (fn [{ak    :api_key
+                    (map (fn [{id    :id
+                               ak    :api_key
                                sk    :secret_key
                                label :label
                                seed? :is_seed}]
                            (cond-> {:api-key    ak
+                                    :id         id
                                     :secret-key sk
                                     :label      label}
                              (true? seed?)

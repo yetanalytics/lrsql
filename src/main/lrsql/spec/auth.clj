@@ -68,6 +68,7 @@
 (s/def ::label (s/nilable string?))
 
 (s/def ::seed? boolean?)
+(s/def ::id uuid?)
 
 (s/def ::scope string-scopes)
 
@@ -95,7 +96,8 @@
                    ::secret-key
                    ::label
                    ::scopes]
-          :opt-un [::seed?]))
+          :opt-un [::seed?
+                   ::id]))
 
 (def key-pair-args-spec
   (s/alt :map  key-pair-spec

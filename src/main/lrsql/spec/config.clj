@@ -197,6 +197,8 @@
 (s/def ::oidc-verify-remote-issuer boolean?)
 (s/def ::oidc-enable-local-admin boolean?)
 
+(s/def ::auth-by-cred-id boolean?)
+
 (s/def ::sec-head-hsts (s/nilable string?))
 (s/def ::sec-head-frame (s/nilable string?))
 (s/def ::sec-head-content-type (s/nilable string?))
@@ -257,7 +259,8 @@
                     ::sec-head-content
                     ::oidc-issuer
                     ::oidc-audience
-                    ::oidc-client-id])
+                    ::oidc-client-id
+                    ::auth-by-cred-id])
    ;; conditional validation for presence of no-val supporting config
    (fn [{:keys [jwt-no-val jwt-no-val-uname jwt-no-val-issuer
                 jwt-no-val-role-key jwt-no-val-role]}]
