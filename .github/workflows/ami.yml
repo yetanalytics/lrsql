@@ -1,0 +1,35 @@
+name: Build AMI
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Enforce Semantic Versioning
+
+jobs:
+  build_ami:
+    runs-on: ubuntu-latest
+    # These permissions are needed by configure-aws-credentials in order
+    # to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write # required to use OIDC authentication
+      contents: read  # required to checkout the code from the repo
+    steps:
+      - name: Install JQ
+        run: sudo apt update && sudo apt install -y jq
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: echo version=${GITHUB_REF#refs\/tags\/} >> $GITHUB_OUTPUT
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: arn:aws:iam::376099832799:role/lrsql-imagebuilder-ghacti-BuildAMIGithubActionsRole-IHZUC98qYzfG
+          role-duration-seconds: 900 # 15 min; minimal duration possible
+          aws-region: us-east-1
+
+      - name: Trigger AMI Build 
+        run: $GITHUB_WORKSPACE/dev-resources/template/marketplace/scripts/trigger-update.sh -v ${{ github.event.inputs.version }}
