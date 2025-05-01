@@ -1,3 +1,4 @@
 itsdangerous==2.0.1
 flask-oidc
 flask_openid
+psycopg2-binary
