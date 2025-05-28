@@ -39,12 +39,6 @@ TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres
 test-postgres:
 	$(TEST_PG_COMMAND)
 
-test-postgres-11:
-	LRSQL_TEST_DB_VERSION=11 $(TEST_PG_COMMAND)
-
-test-postgres-12:
-	LRSQL_TEST_DB_VERSION=12 $(TEST_PG_COMMAND)
-
 test-postgres-13:
 	LRSQL_TEST_DB_VERSION=13 $(TEST_PG_COMMAND)
 
@@ -56,6 +50,9 @@ test-postgres-15:
 
 test-postgres-16:
 	LRSQL_TEST_DB_VERSION=16 $(TEST_PG_COMMAND)
+
+test-postgres-17:
+	LRSQL_TEST_DB_VERSION=17 $(TEST_PG_COMMAND)
 
 ci: test-sqlite test-postgres
 
@@ -205,7 +202,7 @@ target/bundle/admin: resources/public/admin
 BUNDLE_RUNTIMES ?= true
 
 ifeq ($(BUNDLE_RUNTIMES),true)
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes 
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes
 else
 target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench
 endif
