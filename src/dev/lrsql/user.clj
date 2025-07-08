@@ -21,6 +21,8 @@
   (def lrs (:lrs sys'))
   (def ds (-> sys' :lrs :connection :conn-pool))
 
+
+  
   (lrsp/-store-statements lrs auth-ident [stmt-1] [])
   (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
 
@@ -199,6 +201,58 @@
     'agents_profile/read'
   ];
 "])
+
+  ;; Stop system
+
+  (component/stop sys')
+  )
+
+;; MariaDB
+(comment
+  (require
+   '[lrsql.maria.record :as rm]
+   '[hugsql.core :as hug]
+   '[lrsql.init.log]
+   '[lrsql.test-support :as ts]
+   '[lrsql.lrs-test :refer [stmt-0 stmt-1 stmt-2 auth-ident auth-ident-oauth]]
+   '[lrsql.ops.command.statement :as stmt-cmd]
+   '[lrsql.backend.protocol :as bp]
+   '[clojure.data.json :as json])
+  
+
+  #_(lrsql.init.log/set-log-level! "DEBUG")
+  (def sys (system/system (rm/map->MariaBackend {}) :test-maria))
+  (def sys' (component/start sys))
+
+  (def lrs (:lrs sys'))
+  (def bk (:backend lrs))
+    
+  (def ds (-> sys' :lrs :connection :conn-pool))
+  @stmt-cmd/holder
+
+  (lrsp/-store-statements lrs auth-ident [stmt-0] [])
+  (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+  (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
+
+
+  (jdbc/with-transaction [tx ds]
+    (stmt-cmd/insert-statement!* bk tx (:statement-input @stmt-cmd/holder)))
+
+
+  (def sql (rm/insert-statement!-sqlvec (:statement-input @stmt-cmd/holder)))
+  
+  
+  (do (require '[lrsql.test-runner :as tr])
+      (tr/-main {"--database" "maria"}))
+  
+  ;; Sanity check queries
+  (jdbc/execute! ds
+                 ["SELECT stmt.payload FROM xapi_statement stmt LIMIT 1"])
+
+  (jdbc/execute! ds
+                 ["SELECT COUNT(*) FROM xapi_statement"])
+
+
 
   ;; Stop system
 

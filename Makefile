@@ -57,7 +57,11 @@ test-postgres-15:
 test-postgres-16:
 	LRSQL_TEST_DB_VERSION=16 $(TEST_PG_COMMAND)
 
-ci: test-sqlite test-postgres
+test-maria:
+	clojure -M:test -m lrsql.test-runner --database maria
+
+ci: test-sqlite test-postgres test-maria
+
 
 # Dev
 
@@ -77,6 +81,9 @@ sqlite: resources/public/admin
 
 postgres: resources/public/admin # Requires a running Postgres instance
 	clojure -X:db-postgres lrsql.postgres.main/run-test-postgres
+
+maria: resources/public/admin # Requires a running MariaDB instance
+	clojure -X:db-maria lrsql.maria.main/run-test-maria
 
 # Bench - requires a running lrsql instance
 

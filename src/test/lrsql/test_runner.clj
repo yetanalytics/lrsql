@@ -8,5 +8,6 @@
     (with-redefs [support/fresh-db-fixture
                   (case db
                     "sqlite"   support/fresh-sqlite-fixture
-                    "postgres" support/fresh-postgres-fixture)]
+                    "postgres" support/fresh-postgres-fixture
+                    "maria" support/fresh-maria-fixture)]
       (runner/test {:dirs ["src/test"]}))))

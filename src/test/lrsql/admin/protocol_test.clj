@@ -485,8 +485,10 @@
   (let [sys  (support/test-system)
         sys' (component/start sys)
         lrs  (:lrs sys')]
+    (println "sylvans")
     (try
       (testing "Get LRS status"
+        (println "b first check")
         (is (= {:statement-count       0
                 :actor-count           0
                 :last-statement-stored nil
@@ -494,9 +496,15 @@
                 :timeline              []}
                (adp/-get-status lrs {})))
         ;; add a statement
+        (println "b first add")
         (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-        (let [last-stored-0 (get-last-stored lrs auth-ident)
-              day-0         (snap-day last-stored-0)]
+        (println "b second check")
+        (let [_ (println "b gls")
+              last-stored-0 (get-last-stored lrs auth-ident)
+              _ (println "last stored:" last-stored-0)
+              _ (println "b sd")
+              day-0         (snap-day last-stored-0)
+              _ (println "a sd")]
           (is (= {:statement-count       1
                   :actor-count           1
                   :last-statement-stored last-stored-0
@@ -505,11 +513,13 @@
                                            :count  1}]}
                  (adp/-get-status lrs {})))
           ;; add another
+        (println "b second add")
           (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+        (println "b third check")
           (let [last-stored-1 (get-last-stored lrs auth-ident)
                 day-1         (snap-day last-stored-1)]
-            (is (= {:statement-count       2 ;; increments
-                    :actor-count           1 ;; same
+            (is (= {:statement-count       2             ;; increments
+                    :actor-count           1             ;; same
                     :last-statement-stored last-stored-1 ;; increments
                     :platform-frequency    {"example"         1
                                             ;; new platform

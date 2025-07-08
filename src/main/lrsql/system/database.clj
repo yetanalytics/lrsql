@@ -87,10 +87,12 @@
     ;; Make connection pool/datasource
     (HikariDataSource. conf)))
 
+(def holder (atom nil))
 (defrecord Connection [backend conn-pool config]
   component/Lifecycle
   (start
     [conn]
+    (reset! holder config)
     (let [{?conn-pool :conn-pool
            {{db-type :db-type} :database :as config} :config}
           conn]

@@ -14,6 +14,7 @@
                :tx transaction?)
   :ret rs/query-all-reactions-ret-spec)
 
+(def ruleset-holder (atom nil))
 (defn query-all-reactions
   "Return all reactions."
   [bk tx]
@@ -25,6 +26,7 @@
                 created
                 modified
                 error]}]
+  (reset! ruleset-holder ruleset)
      {:id       id
       :title    title
       :ruleset  (ru/stringify-template ruleset)

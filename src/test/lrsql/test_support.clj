@@ -8,7 +8,10 @@
             [lrsql.system :as system]
             [lrsql.sqlite.record :as sr]
             [lrsql.postgres.record :as pr]
-            [lrsql.util :as u]))
+            [lrsql.maria.record :as mr]
+            [lrsql.util :as u]
+            [next.jdbc :as jdbc]
+            ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; LRS test helpers
@@ -77,6 +80,53 @@
                                    :conf-overrides conf-overrides))]
       (f))))
 
+(def holder (atom nil))
+(def stratom (atom :persistent))
+(defn fresh-maria-fixture [f]
+  (let [{{{:keys [db-type
+                  db-host
+                  db-port
+                  test-db-version]}
+          :database} :connection :as raw-config}
+        (read-config :test-maria)
+        
+        jdbc-url {:persistent (-> {:dbtype db-type
+                                   :dbname "lrsql_db"
+                                   :host db-host
+                                   :port db-port
+                                   :allowMultiQueries true}
+                                  jdbc-url)
+                  :tc (-> {:dbtype db-type
+                           :dbname  (u/uuid->str (u/generate-uuid))
+                           :allowMultiQueries true}
+                          jdbc-url
+                          (cstr/replace #"mariadb:"
+                                        (format "tc:mariadb:%s:"
+                                                "11.7.2"
+                                                #_test-db-version))
+                          (cstr/replace #"//"
+                                        "///"))}
+
+        maria-config (assoc-in raw-config
+                               [:connection :database :db-jdbc-url]
+                               (jdbc-url @stratom))]
+
+
+    
+    (with-redefs
+      [read-config (constantly maria-config)
+       test-system (fn [& {:keys [conf-overrides]}]
+                     (println "new system!")
+                     (system/system (mr/map->MariaBackend {}) :test-maria
+                                    :conf-overrides conf-overrides))]
+      (when (= @stratom :persistent)
+        (let [ds  (jdbc/get-datasource {:jdbcUrl (clojure.string/replace (:persistent jdbc-url) "lrsql_db" "")
+                                        :user "root"
+                                        :password "pass"})]
+          (jdbc/execute! ds ["drop database if exists lrsql_db;"])
+          (jdbc/execute! ds ["create database lrsql_db;"])))
+      (f))))
+
 ;; Need to manually override db-type because next.jdbc does not support
 ;; `tc`-prefixed DB types.
 
@@ -99,11 +149,11 @@
                                     (format "tc:postgresql:%s:"
                                             test-db-version)))))]
     (with-redefs
-     [read-config (constantly pg-cfg)
-      test-system (fn [& {:keys [conf-overrides]}]
-                    (system/system (pr/map->PostgresBackend {})
-                                   :test-postgres
-                                   :conf-overrides conf-overrides))]
+      [read-config (constantly pg-cfg)
+       test-system (fn [& {:keys [conf-overrides]}]
+                     (system/system (pr/map->PostgresBackend {})
+                                    :test-postgres
+                                    :conf-overrides conf-overrides))]
       (f))))
 
 (def fresh-db-fixture fresh-sqlite-fixture)

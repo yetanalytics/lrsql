@@ -38,6 +38,7 @@
             [lrsql.init.authority          :refer [make-authority-fn]]
             [lrsql.system.util             :refer [assert-config]]
             [lrsql.util.concurrency        :refer [with-rerunable-txn]]))
+(def holder (atom nil))
 
 (defn- lrs-conn
   "Get the connection pool from the LRS instance."
@@ -270,6 +271,7 @@
     [this username password]
     (let [conn  (lrs-conn this)
           input (admin-input/query-validate-admin-input username password)]
+      (println input)
       (jdbc/with-transaction [tx conn]
         (admin-q/query-validate-admin backend tx input))))
   (-existing-account?

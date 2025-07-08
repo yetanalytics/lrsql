@@ -47,10 +47,14 @@
 
 (deftest cors-default-test
   (let [sys  (support/test-system)
+
         sys' (component/start sys)
+
+
         ;; Seed information
         {:keys [api-key-default
                 api-secret-default]} (get-in sys' [:lrs :config])
+
         seed-body (u/write-json-str
                    {"username" api-key-default
                     "password" api-secret-default})
