@@ -238,9 +238,12 @@
   (-set-read! [_]
     (bd/set-read-time->instant!)
     (md/set-read-experiment!
-     #{"payload"
-       "ruleset"
-       "error"}))
+     {:json-columns #{"ruleset"
+                      "error"
+                      "payload"}
+      :keyword-columns #{"ruleset"
+                            "error"}}
+))
 
   (-set-write! [_]
     ;; next.jdbc automatically sets the reading of Instants as java.sql.Dates

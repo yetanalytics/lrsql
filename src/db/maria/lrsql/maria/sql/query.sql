@@ -49,9 +49,7 @@ WHERE statement_id = :statement-id;
 INNER JOIN statement_to_actor stmt_actor
 ON stmt.statement_id = stmt_actor.statement_id
 AND stmt_actor.actor_ifi = :actor-ifi
---~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'"
-
-)
+--~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'")
 
 -- :frag maria-activities-join
 INNER JOIN statement_to_activity stmt_activ
@@ -110,9 +108,9 @@ WITH distinct_statements AS (
  SELECT all_stmt.id, all_stmt.payload,
   ROW_NUMBER() OVER (PARTITION BY all_stmt.id) AS rn
  FROM (
-  (:frag:maria-stmt-no-ref-subquery-frag)
-  UNION ALL
-  (:frag:maria-stmt-ref-subquery-frag))
+ (:frag:maria-stmt-no-ref-subquery-frag)
+ UNION ALL
+ (:frag:maria-stmt-ref-subquery-frag))
 AS all_stmt(id,	payload)
 --~ (if (:ascending? params) "ORDER BY all_stmt.id ASC" "ORDER BY all_stmt.id DESC")
 --~ (when (:limit params)    "LIMIT :limit")

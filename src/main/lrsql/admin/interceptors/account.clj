@@ -97,36 +97,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Intermediate Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(def holder (atom nil))
-(def ctx-holder (atom nil))
+
 (def authenticate-admin
   (interceptor
    {:name ::authenticate-admin
     :enter
     (fn authenticate-admin [ctx]
-      (reset! ctx-holder ctx)
       (let [{lrs :com.yetanalytics/lrs
              {:keys [username password]} ::data}
             ctx
             {:keys [result]}
-            #_(adp/-authenticate-account lrs username password)
-            (try
-              (adp/-authenticate-account lrs username password)
-              (catch Exception e
-                (println "caught exception!")
-                (reset! holder [lrs username password])))
-            ]
+            (adp/-authenticate-account lrs username password)]
 
         (cond
           ;; The result is the account ID - success!
           ;; Pass it along as an intermediate value
           (uuid? result)
-          (do
-            (println "auth success!")
-            (reset! holder [ctx result])
-            (-> ctx
-                (assoc-in [::data :account-id] result)
-                (assoc-in [:request :session ::data :account-id] result)))
+          (-> ctx
+              (assoc-in [::data :account-id] result)
+              (assoc-in [:request :session ::data :account-id] result))
 
           ;; The account is not in the table - Not Found
           (or (= :lrsql.admin/missing-account-error result)

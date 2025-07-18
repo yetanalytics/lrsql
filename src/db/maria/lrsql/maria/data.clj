@@ -28,27 +28,42 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def holder (atom nil))
 
-(defn set-read-experiment! [json-columns]
+(defn set-read-experiment! [{:keys [json-columns keyword-columns]}]
   (extend-protocol ReadableColumn
     String
     (read-column-by-label [^String s ^String label]
+      #_(println "read-column-by-label: " s " " label)
       (if (json-columns label)
-        (maria-read-json s)
+        (let [res (u/parse-json s :keyword-keys? (some? (keyword-columns label)))]
+          #_(println "before parse:" s)
+          #_(println "after parse:" res)
+          res)
         s))
     
     (read-column-by-index [^String s ^ResultSetMetaData rsmeta ^long i]
 
       (reset! holder rsmeta)
       (let [label (.getColumnLabel rsmeta i)
+            col-type (.getColumnType rsmeta i)
             col-type-name (.getColumnTypeName rsmeta i)
-            table-name (.getTableName rsmeta i)]
+            table-name (.getTableName rsmeta i)
+;            _ (println ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
+;            _ (println "col label" label)
+;            _ (println "col-type:" col-type)
+;            _ (println "col-type-name:" col-type-name)
+;            _ (println ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
+            ]
 
         (cond (and (= col-type-name "CHAR")
                    (= (count s) 36))
               (java.util.UUID/fromString s)
 
               (json-columns label)
-              (maria-read-json s)
+              (do #_(println "json detected!")
+                  #_(println "json:" s)
+                  (let [res (u/parse-json s :keyword-keys? (some? (keyword-columns label)))]
+                    #_(println "parsed:" res)
+                    res))
 
               :else
               s)))))

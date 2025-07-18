@@ -271,7 +271,6 @@
     [this username password]
     (let [conn  (lrs-conn this)
           input (admin-input/query-validate-admin-input username password)]
-      (println input)
       (jdbc/with-transaction [tx conn]
         (admin-q/query-validate-admin backend tx input))))
   (-existing-account?
