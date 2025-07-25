@@ -216,8 +216,9 @@
    '[lrsql.test-support :as ts]
    '[lrsql.lrs-test :refer [stmt-0 stmt-1 stmt-2 auth-ident auth-ident-oauth]]
    '[lrsql.ops.command.statement :as stmt-cmd]
-   '[lrsql.backend.protocol :as bp]
-   '[clojure.data.json :as json])
+   '[lrsql.backend.protocol :aps bp]
+   '[clojure.data.json :as json]
+   '[lrsql.maria.data :as md])
   
 
   #_(lrsql.init.log/set-log-level! "DEBUG")
@@ -230,16 +231,12 @@
   (def ds (-> sys' :lrs :connection :conn-pool))
   @stmt-cmd/holder
 
-  (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-  (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+  (lrsp/-store-statements lrs auth-ident [stmt-0 stmt-1 stmt-2] [])
+  (lrsp/-store-statements lrs auth-ident [stmt-2] [])
   (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
 
 
-  (jdbc/with-transaction [tx ds]
-    (stmt-cmd/insert-statement!* bk tx (:statement-input @stmt-cmd/holder)))
 
-
-  (def sql (rm/insert-statement!-sqlvec (:statement-input @stmt-cmd/holder)))
   
   
   (do (require '[lrsql.test-runner :as tr])
@@ -258,3 +255,76 @@
 
   (component/stop sys')
   )
+
+
+(with-open [writer (java.io.StringWriter.)]
+              (adp/-get-statements-csv lrs writer  [["id"] ["actor" "mbox"] ["verb" "id"] ["object" "id"]] {})
+              (str writer)
+)
+
+
+(do (def c (atom 0))
+    (jdbc/with-transaction [tx ds]
+      (let [reducible (jdbc/plan tx @rm/sqlvec-holder {:fetch-size  4000
+                                                       :concurrency :read-only
+                                                       :cursors     :close
+                                                       :result-type :forward-only})]
+        (def result (atom
+                     (reduce (fn [acc v]
+                               (swap! c inc)
+                               (def holder (atom v))
+                               (println (type v))
+                               (println
+                                {:rn (jrs/row-number v)
+                                 :cs (jrs/column-names v)
+                                 :ea (:payload v)
+                                 })
+                               (conj acc v))
+                             []
+                             reducible))))))
+
+(require '[next.jdbc.result-set :as jrs])
+
+(require '[lrsql.ops.query.statement :as qs])
+(require '[com.yetanalytics.pathetic :as pa])
+
+(println  (lrsp/-get-statements lrs auth-ident {} []))
+
+(def res  (lrsp/-get-statements lrs auth-ident {} []))
+
+
+
+(stmt-input/query-statement-input {:ascending true} auth-ident )
+
+
+
+ (get-ss lrs auth-ident {:limit 2 :ascending true} #{})
+
+
+;;;;single test harness
+(comment
+  (require
+   '[lrsql.test-support :as ts]
+   '[clojure.test :as test])
+
+  (def implementation
+    #_ts/fresh-sqlite-fixture
+    #_ts/fresh-postgres-fixture
+    ts/fresh-maria-fixture)
+
+(defn test-test [test]
+  (implementation #(test)))
+
+(defn test-ns [ns]
+  (do
+    (require ns)
+    (alter-meta! (find-ns ns)
+                 assoc
+                 ::test/each-fixtures
+                 [implementation])
+    (test/run-tests ns))))
+
+(defmacro with-fixtures [& forms]
+  `(implementation
+    (fn []
+      (do ~@forms))))

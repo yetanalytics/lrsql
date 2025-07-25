@@ -74,15 +74,16 @@
   (let [sl-cfg (-> (read-config :test-sqlite)
                    (assoc-in [:connection :database :db-name] ":memory:"))]
     (with-redefs
-     [read-config (constantly sl-cfg)
-      test-system (fn [& {:keys [conf-overrides]}]
-                    (system/system (sr/map->SQLiteBackend {}) :test-sqlite
-                                   :conf-overrides conf-overrides))]
+      [read-config (constantly sl-cfg)
+       test-system (fn [& {:keys [conf-overrides]}]
+                     (system/system (sr/map->SQLiteBackend {}) :test-sqlite
+                                    :conf-overrides conf-overrides))]
       (f))))
 
 (def holder (atom nil))
 (def stratom (atom :persistent))
 (defn fresh-maria-fixture [f]
+  (println "maria detected!")
   (let [{{{:keys [db-type
                   db-host
                   db-port
@@ -110,21 +111,19 @@
         maria-config (assoc-in raw-config
                                [:connection :database :db-jdbc-url]
                                (jdbc-url @stratom))]
-
-
-    
     (with-redefs
       [read-config (constantly maria-config)
        test-system (fn [& {:keys [conf-overrides]}]
                      (println "new system!")
-                     (system/system (mr/map->MariaBackend {}) :test-maria
-                                    :conf-overrides conf-overrides))]
-      (when (= @stratom :persistent)
-        (let [ds  (jdbc/get-datasource {:jdbcUrl (clojure.string/replace (:persistent jdbc-url) "lrsql_db" "")
-                                        :user "root"
-                                        :password "pass"})]
-          (jdbc/execute! ds ["drop database if exists lrsql_db;"])
-          (jdbc/execute! ds ["create database lrsql_db;"])))
+                     (let [sys (system/system (mr/map->MariaBackend {}) :test-maria
+                                              :conf-overrides conf-overrides)]
+                       (when (= @stratom :persistent)
+                         (let [ds (jdbc/get-datasource {:jdbcUrl (clojure.string/replace (:persistent jdbc-url) "lrsql_db" "")
+                                                        :user "root"
+                                                        :password "pass"})]
+                           (jdbc/execute! ds ["drop database if exists lrsql_db;"])
+                           (jdbc/execute! ds ["create database lrsql_db;"])))
+                       sys))]
       (f))))
 
 ;; Need to manually override db-type because next.jdbc does not support

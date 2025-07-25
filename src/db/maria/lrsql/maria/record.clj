@@ -91,6 +91,8 @@
   (-query-statement [_ tx input]
     (query-statement tx input))
   (-query-statements [_ tx input]
+    #_(println "input:" input)
+    #_(println "sqlvec:" (query-statements-sqlvec input))
     (query-statements tx input)
 )
   (-query-statement-exists [_ tx input]
