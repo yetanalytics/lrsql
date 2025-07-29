@@ -18,6 +18,7 @@
   selmer/selmer                            {:mvn/version "1.12.59"}
   ch.qos.logback/logback-classic           {:mvn/version "1.5.15"}
   commons-io/commons-io                    {:mvn/version "2.14.0"}
+  commons-fileupload/commons-fileupload    {:mvn/version "1.6.0"}
   ;; DB/JDBC deps
   ;; - HikariCP: Need to exclude slf4j to make logback work properly
   ;; - HugSql: Use custom version instead of the released version (0.5.1)
