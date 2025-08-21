@@ -1,7 +1,7 @@
 @description('Location for the server.')
-param location string = resourceGroup().location
+param location string
 
-@description('Name prefix for the server.')
+@description('Name prefix for postgres.')
 param namePrefix string = 'lrsqldev'
 
 @description('Admin username (not email).')
