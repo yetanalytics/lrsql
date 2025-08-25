@@ -11,11 +11,54 @@
             [lrsql.maria.record :as mr]
             [lrsql.util :as u]
             [next.jdbc :as jdbc]
-            ))
+            [clojure.test :as ct]
+))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; LRS test helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(comment
+  (in-ns 'clojure.test)
+  (require '[clojure.main :as m])
+
+  (defmacro try-expr [msg form]
+    (let [locals (keys &env)
+          ctx-map (into {} (map (fn [s] [`'~s s]) locals))]
+
+      `(try ~(assert-expr msg form)
+            (catch Throwable t#
+              (do-report {:type :error, :message ~msg,
+                          :expected '~form, :actual t#})
+              (let [__locals__# ~ctx-map]
+                (println "🔎 Entering debug eval REPL with locals:" (keys __locals__#))
+                (m/repl :eval (fn [form#]
+                                (eval
+                                 `(let [~@(mapcat (fn [[sym# val#]] [`~sym# val#])
+                                                  __locals__#)]
+                                    ~form#)))))))))
+
+                                        ;dynamic, so can probably do that rather than alter-var-root
+  (defn test-var [v]
+    (when-let [t (:test (meta v))]
+      (binding [*testing-vars* (conj *testing-vars* v)]
+        (do-report {:type :begin-test-var, :var v})
+        (inc-report-counter :test)
+        (try (t)
+             (catch Throwable e
+               (do-report {:type :error, :message "Uncaught exception, not in assertion."
+                           :expected nil, :actual e})
+               (m/repl)             ;no locals so we can do it like so
+               ))
+        (do-report {:type :end-test-var, :var v}))))
+
+  (comment
+    (println "💥 Test failure:" ~test-name)
+    (println "🧵 Message:" (.getMessage t#)))
+
+  (in-ns 'lrsql.test-support)
+  
+  )
+
 
 (defn- lrsql-syms
   []
@@ -48,7 +91,7 @@
        res))))
 
 (defmacro seq-is
-  "Apply `clojure.test/is` to each element of `exprs`, comapring each
+  "Apply `clojure.test/is` to each element of `exprs`, comparing each
    result to `expected`."
   [expected & exprs]
   (let [is-exprs# (map (fn [expr] `(clojure.test/is (= ~expected ~expr)))

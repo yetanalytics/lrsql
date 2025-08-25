@@ -380,6 +380,7 @@
                                                                  (dissoc "name"))})
             (let [stmt-str (str writer)
                   stmt-seq (csv/read-csv stmt-str)]
+              (println stmt-seq)
               (is (= 2 (count stmt-seq)))
               (is (= [(get stmt-2 "id")
                       (get-in stmt-2 ["actor" "mbox"] "") ; is nil

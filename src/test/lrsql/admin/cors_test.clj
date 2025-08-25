@@ -19,6 +19,9 @@
 ;; Test content
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#_(let [a 5]
+  (support/test-breakm))
+
 (def content-type {"Content-Type" "application/json"})
 
 (defn- login-account

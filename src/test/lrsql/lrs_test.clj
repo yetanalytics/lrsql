@@ -6,7 +6,8 @@
             [lrsql.admin.protocol           :as adp]
             [lrsql.test-support             :as support]
             [lrsql.test-constants           :as tc]
-            [lrsql.util                     :as u]))
+            [lrsql.util                     :as u]
+            [lrsql.debug-break :refer [debug-break]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init Test Config
@@ -1094,8 +1095,10 @@
             (Thread/sleep 100)
             (lrsp/-store-statements lrs tc/auth-ident [s] []))
           ;; Wait a little bit for the reactor
+            #_(debug-break)
           (Thread/sleep 300)
           (testing "New statement added"
+
             (is (= {:statement-result
                     {:statements
                      [tc/reaction-stmt-result
