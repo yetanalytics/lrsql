@@ -94,8 +94,7 @@
   lrsp/AboutResource
   (-get-about
     [_lrs _auth-identity]
-    ;; TODO: Add 2.X.X versions
-    {:body {:version ["1.0.0" "1.0.1" "1.0.2" "1.0.3"]}})
+    {:body {:version ["1.0.0" "1.0.1" "1.0.2" "1.0.3" "2.0.0"]}})
 
   lrsp/StatementsResource
   (-store-statements
@@ -303,7 +302,7 @@
                          account-id new-password)]
               (admin-cmd/update-admin-password! backend tx input))
             {:result result})))))
-  
+
   adp/AdminJWTManager
   (-purge-blocklist
    [this leeway]
