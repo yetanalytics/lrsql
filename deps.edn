@@ -52,12 +52,16 @@
   xyz.capybara/clamav-client      {:mvn/version "2.1.2"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
-  {:mvn/version "1.3.1"
+  {#_#_:mvn/version "1.3.1"
+   :git/url     "https://github.com/yetanalytics/lrs.git"
+   :git/sha     "0bad853c2a84c06b719840183ad38dccdbd06278"
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript
                  com.yetanalytics/xapi-schema]}
   com.yetanalytics/xapi-schema
-  {:mvn/version "1.4.0"
+  {#_#_:mvn/version "1.4.0"
+   :git/url     "https://github.com/yetanalytics/xapi-schema.git"
+   :git/sha     "ad78a2ba5fa55dba1fd6cc08005bd116cfa6f6c4"
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript]}
   com.yetanalytics/colossal-squuid
@@ -122,7 +126,7 @@
                   :git/sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
                  com.yetanalytics.lrs/test-runner
                  {:git/url    "https://github.com/yetanalytics/lrs-test-runner.git"
-                  :git/sha    "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
+                  :git/sha    "1891bb5c8802a397ffaee86d336ee95d71cc1a4d"
                   :exclusions [org.clojure/data.json]}
                  com.yetanalytics/datasim
                  {:mvn/version "0.4.4"
