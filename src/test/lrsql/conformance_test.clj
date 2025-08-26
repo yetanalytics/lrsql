@@ -1,5 +1,5 @@
 (ns lrsql.conformance-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is use-fixtures]]
             [com.stuartsierra.component :as component]
             [com.yetanalytics.lrs.test-runner :as conf]
             [lrsql.test-support :as support]))
@@ -8,7 +8,7 @@
 ;; Init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(support/instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 (t/use-fixtures :each support/fresh-db-fixture)
 

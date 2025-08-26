@@ -20,8 +20,7 @@
   (set (filter #(->> % namespace (re-matches #"lrsql\..*"))
                (stest/instrumentable-syms))))
 
-;; TODO: make these private, tests should use fixtures
-(defn instrument-lrsql
+(defn- instrument-lrsql
   "Instrument all instrumentable functions defined in lrsql."
   []
   (otest/instrument (lrsql-syms)))
