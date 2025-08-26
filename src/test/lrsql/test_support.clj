@@ -8,7 +8,8 @@
             [lrsql.system :as system]
             [lrsql.sqlite.record :as sr]
             [lrsql.postgres.record :as pr]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [xapi-schema.spec :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; LRS test helpers
@@ -19,6 +20,7 @@
   (set (filter #(->> % namespace (re-matches #"lrsql\..*"))
                (stest/instrumentable-syms))))
 
+;; TODO: make these private, tests should use fixtures
 (defn instrument-lrsql
   "Instrument all instrumentable functions defined in lrsql."
   []
@@ -115,6 +117,12 @@
   (try
     (f)
     (finally (unstrument-lrsql))))
+
+(defn xapi-version-fixture
+  "Set xAPI spec version for tests."
+  [f version]
+  (binding [xs/*xapi-version* version]
+    (f)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Conformance test helpers

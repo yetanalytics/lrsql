@@ -13,7 +13,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Instrument
-(support/instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 ;; New DB config
 (use-fixtures :each support/fresh-db-fixture)
@@ -430,8 +430,7 @@
         (is (= {:statement-ids [id-7]}
                (lrsp/-store-statements lrs auth-ident [stmt-7] []))))
       (finally
-        (component/stop sys')
-        (support/unstrument-lrsql)))))
+        (component/stop sys')))))
 
 (deftest reverse-activity-query-test
   (let [sys   (support/test-system)
@@ -448,8 +447,7 @@
                (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
 
       (finally
-        (component/stop sys')
-        (support/unstrument-lrsql)))))
+        (component/stop sys')))))
 
 (deftest attachment-normalization-test
   (let [sys   (support/test-system)
@@ -504,8 +502,7 @@
                            #{})
                    string-result-attachment-content
                    (update :attachments set))))))
-    (component/stop sys')
-    (support/unstrument-lrsql)))
+    (component/stop sys')))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Ref Tests

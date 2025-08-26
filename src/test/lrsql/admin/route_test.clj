@@ -21,7 +21,7 @@
 ;; Init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(support/instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 (use-fixtures :each support/fresh-db-fixture)
 
@@ -725,7 +725,7 @@
               {:keys [status body]} (get-statements-via-url-param headers credential-id)]
           (is (= status 200))
           (is (seq ((u/parse-json body) "statements")))))
-      
+
       (finally
         (component/stop sys')))))
 
@@ -766,7 +766,7 @@
                   (jdbc/with-transaction [tx ds]
                     (bp/-query-credential-ids backend tx {:api-key api-key
                                                           :secret-key secret-key}))
-                  
+
                   {:keys [status body]}
                   (curl/get
                    "http://0.0.0.0:8080/admin/creds"
@@ -792,7 +792,7 @@
                      (first (filter (fn [cred]
                                       (= api-key (get cred "api-key")))
                                     body*))))))
-          
+
           (testing "and updating"
             (let [req-scopes
                   ["all/read" "statements/read" "statements/read/mine"]

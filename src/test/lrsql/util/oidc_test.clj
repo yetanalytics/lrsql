@@ -1,17 +1,17 @@
 (ns lrsql.util.oidc-test
-  (:require [clojure.test    :refer [deftest is testing are]]
+  (:require [clojure.test    :refer [deftest is testing are use-fixtures]]
             [lrsql.util.oidc :as oidc :refer [parse-scope-claim
                                               token-auth-identity
                                               token-auth-admin-identity
                                               authorize-admin-action?]]
             [lrsql.init.oidc :refer [make-authority-fn]]
-            [lrsql.test-support :refer [check-validate instrument-lrsql]]))
+            [lrsql.test-support :as support :refer [check-validate]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
