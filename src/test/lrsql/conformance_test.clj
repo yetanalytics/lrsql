@@ -17,16 +17,26 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest conformance-test
-  (conf/with-test-suite
+  (conf/with-test-suite-args
+    {:branch "adding-back-compat"}
     (binding [conf/*print-logs* true]
       (testing "no regressions"
         (let [sys  (support/test-system)
               sys' (component/start sys)
               pre  (-> sys' :webserver :config :url-prefix)
               url  (str "http://localhost:8080" pre)]
-          (is (conf/conformant?
-               "-e" url "-b" "-z" "-a"
-               "-u" "username"
-               "-p" "password"
-               "-x" "1.0.3"))
-          (component/stop sys'))))))
+          (try
+            (testing "1.0.3"
+              (is (conf/conformant?
+                   "-e" url "-b" "-z" "-a"
+                   "-u" "username"
+                   "-p" "password"
+                   "-x" "1.0.3")))
+            (testing "2.0.0"
+              (is (conf/conformant?
+                   "-e" url "-b" "-z" "-a"
+                   "-u" "username"
+                   "-p" "password"
+                   "-x" "2.0.0")))
+            (finally
+              (component/stop sys'))))))))
