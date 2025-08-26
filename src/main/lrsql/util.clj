@@ -3,11 +3,13 @@
             [java-time.api           :as jt]
             [java-time.properties    :as jt-props]
             [clojure.spec.alpha      :as s]
+            [clojure.string          :as cstr]
             [clojure.tools.logging   :as log]
             [clojure.java.io         :as io]
             [cheshire.core           :as cjson]
             [ring.util.codec         :as ring-codec]
             [xapi-schema.spec        :as xs]
+            [xapi-schema.spec.regex  :as xsr]
             [com.yetanalytics.squuid :as squuid]
             [com.yetanalytics.lrs.xapi.document :refer [json-bytes-gen-fn]]
             [com.yetanalytics.lrs.xapi.statements.timestamp :refer [normalize]]
@@ -79,12 +81,19 @@
   "Parse an ISO 8601 timestamp string into a java.util.Instant timestamp. The
   two parse fns are to support the Z and the +00:00 offset timestamp formats"
   [ts-str]
-  (wrap-parse-fn jt/instant "timestamp" ts-str
-                 :retry-parse-fn #(-> %
-                                      ;; This step only needed for < JVM 11.
-                                      ;; Newer will parse offset right away.
-                                      jt/offset-date-time
-                                      jt/instant)))
+  (wrap-parse-fn
+   jt/instant
+   "timestamp"
+   ;; Handle 2.0.0 timestamps that break java-time.
+   (if (and (cstr/includes? ts-str " ")
+            (re-matches xsr/TimestampRegEx200 ts-str))
+     (cstr/replace-first ts-str " " "T")
+     ts-str)
+   :retry-parse-fn #(-> %
+                        ;; This step only needed for < JVM 11.
+                        ;; Newer will parse offset right away.
+                        jt/offset-date-time
+                        jt/instant)))
 
 (s/fdef millis->time
   :args (s/cat :ts-millis nat-int?)
