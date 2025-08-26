@@ -54,7 +54,7 @@
   com.yetanalytics/lrs
   {#_#_:mvn/version "1.3.1"
    :git/url     "https://github.com/yetanalytics/lrs.git"
-   :git/sha     "7ccf6fb6ca7aa97695c6312b53affbc6e3e8488b"
+   :git/sha     "0ee1864da1c2203ec4411b7e2c6dcfedb5636345"
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript
                  com.yetanalytics/xapi-schema]}
