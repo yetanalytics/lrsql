@@ -118,7 +118,7 @@ resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
   location: location
   kind: 'linux'
   sku: {
-    name: 'F1'
+    name: 'B1'
     capacity: 1
   }
   properties: {
