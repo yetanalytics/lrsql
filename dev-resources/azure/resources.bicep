@@ -43,6 +43,15 @@ param allowedClientIps string = '[]'
 // ---- Derived names/values ----
 var pgServerName = toLower('${namePrefix}-pg-${uniqueString(resourceGroup().id)}')
 
+// LRSQL params
+param appName string = 'lrsql-app'
+
+param lrsqlAdminUser string = 'admin'
+
+@secure()
+@description('(required) LRSQL Admin Password')
+param lrsqlAdminPassword string
+
 // Use a stable non-preview API where possible
 resource pgServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
   name: pgServerName
@@ -55,6 +64,8 @@ resource pgServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
     version: pgVersion
     administratorLogin: pgAdminUser
     administratorLoginPassword: pgAdminPassword
+    authConfig: {passwordAuth: 'Enabled'
+                 activeDirectoryAuth: 'Disabled'}
     storage: {
       storageSizeGB: pgStorageSizeGB
       autoGrow: 'Enabled'
@@ -99,6 +110,43 @@ resource firewallClients 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRule
   }
 }]
 
+// Load the docker-compose.yml into bicep at compile time
+var composeText = loadTextContent('docker-compose.yml')
+
+resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
+  name: '${appName}-plan'
+  location: location
+  kind: 'linux'
+  sku: {
+    name: 'F1'
+    capacity: 1
+  }
+  properties: {
+    reserved: true
+  }
+}
+
+resource app 'Microsoft.Web/sites@2023-12-01' = {
+  name: appName
+  location: location
+  kind: 'app,linux,container'
+  properties: {
+    serverFarmId: plan.id
+    httpsOnly: true
+    siteConfig: {
+      linuxFxVersion: 'COMPOSE|${base64(composeText)}'
+      appSettings: [
+        { name: 'LRSQL_DB_HOST', value: '${pgServer.name}.postgres.database.azure.com' }
+        { name: 'LRSQL_DB_USER', value: pgAdminUser }
+        { name: 'LRSQL_DB_PASSWORD', value: pgAdminPassword }
+        { name: 'LRSQL_DB_NAME', value: pgDatabaseName }
+        { name: 'LRSQL_ADMIN_USER_DEFAULT', value: lrsqlAdminUser }
+        { name: 'LRSQL_ADMIN_PASS_DEFAULT', value: lrsqlAdminPassword }
+      ]
+    }
+  }
+}
+
 // ---- Helpful outputs ----
 var pgHost = '${pgServer.name}.postgres.database.azure.com'
 var pgPort = '5432'
@@ -109,3 +157,6 @@ output adminUser string = pgUserFull
 output databaseName string = pgDatabaseName
 output psqlConnectionHint string = 'psql "host=${pgHost} port=${pgPort} dbname=${pgDatabaseName} user=${pgUserFull} sslmode=require"'
 output urlStyleConnExample string = 'postgres://${pgUserFull}:<PASSWORD>@${pgHost}:${pgPort}/${pgDatabaseName}?sslmode=require'
+
+// ---- LRSQL app outputs ----
+output appUrl string = 'https://${reference(app.id, '2023-12-01', 'full').defaultHostName}'

@@ -1,7 +1,7 @@
 targetScope = 'subscription'
 
 @description('Name of the resource group to create')
-param rgName string
+param rgName string = 'lrsql-infra-rg'
 
 @description('Azure region for the resource group and resources')
 @allowed([
@@ -18,12 +18,19 @@ param location string = 'eastus'
 @description('Name prefix for postgres.')
 param namePrefix string = 'lrsqldev'
 
-@description('Admin username (not email).')
+@description('Postgres Admin username (not email).')
 param pgAdminUser string = 'lrsqladmin'
 
 @secure()
-@description('Admin password.')
+@description('Postgres Admin password.')
 param pgAdminPassword string
+
+@description('LRSQL app admin username')
+param lrsqlAdminUser string = 'admin'
+
+@secure()
+@description('LRSQL app Admin password.')
+param lrsqlAdminPassword string
 
 @description('Postgres major version.')
 @allowed(['15','16','17'])
@@ -76,6 +83,8 @@ module resources './resources.bicep' = {
     publicNetworkAccess: publicNetworkAccess
     allowAzureServices: allowAzureServices
     allowedClientIps: allowedClientIps
+    lrsqlAdminPassword: lrsqlAdminPassword
+    lrsqlAdminUser: lrsqlAdminUser
   }
 }
 
