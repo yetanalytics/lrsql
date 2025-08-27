@@ -6,6 +6,7 @@ param purgeProtection bool = true
 param tags object = {}
 param readerObjectId string
 
+
 resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: kvName
   location: location
@@ -15,6 +16,7 @@ resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: enableRbac
     enablePurgeProtection: purgeProtection
     sku: { family: 'A', name: 'standard' }
+    enabledForTemplateDeployment: true
   }
 }
 
@@ -30,6 +32,7 @@ resource kvSecretsOfficerRole 'Microsoft.Authorization/roleAssignments@2022-04-0
     principalType: 'User'
   }
 }
+
 
 output keyVaultId string = kv.id
 output keyVaultUri string = 'https://${kv.name}.vault.azure.net/'
