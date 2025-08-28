@@ -12,15 +12,6 @@
     AND stmt_auth.usage = 'Authority'
 )
 
-/*
-(
-  SELECT COUNT(DISTINCT stmt_auth.actor_hash) = :authority-ifi-count
-     AND SUM(stmt_auth.actor_hash NOT IN (:v*:authority-ifis)) = 0
-  FROM statement_to_actor stmt_auth
-  WHERE stmt_auth.statement_id = stmt.statement_id
-    AND stmt_auth.usage = 'Authority'
-)
-*/
 
 /* /\ stmt_auth.usage was casted to actor_usage_enum*/
 /* can probably speed up above/below by changing actor_ifi in SUM clauses to actor_hash*/
@@ -33,14 +24,6 @@
     AND stmt_auth.usage = 'Authority'
 )
 
--- :name check-ns
--- :command :query
--- :result :one
-select 
---~ (str "'" *ns* "'")
-;
-
-/* /\ stmt_auth.usage was casted to actor_usage_enum*/
 
 /* Single-statement query */
 
@@ -130,41 +113,6 @@ FROM (
   (:frag:maria-stmt-ref-subquery-frag))
 AS all_stmt
 GROUP BY all_stmt.id
---~ (if (:ascending? params) "ORDER BY all_stmt.id ASC" "ORDER BY all_stmt.id DESC")
---~ (when (:limit params)    "LIMIT :limit")
-
-
--- :name query-statements-rolling
--- :command :query
--- :result :many
--- :doc Query for one or more statements using statement resource parameters.
-WITH distinct_statements AS (
- SELECT all_stmt.id, all_stmt.payload,
-  ROW_NUMBER() OVER (PARTITION BY all_stmt.id) AS rn
- FROM (
- (:frag:maria-stmt-no-ref-subquery-frag)
- UNION ALL
- (:frag:maria-stmt-ref-subquery-frag))
-AS all_stmt(id,	payload)
---~ (if (:ascending? params) "ORDER BY all_stmt.id ASC" "ORDER BY all_stmt.id DESC")
---~ (when (:limit params)    "LIMIT :limit")
-)
-SELECT id, payload
-FROM distinct_statements
-WHERE rn =1;
-
--- :name query-statements-postgres
--- :command :query
--- :result :many
--- :doc Query for one or more statements using statement resource parameters.
-SELECT DISTINCT ON (all_stmt.id)
-  all_stmt.id,
-  all_stmt.payload
-FROM (
-  (:frag:maria-stmt-no-ref-subquery-frag)
-  UNION ALL
-  (:frag:maria-stmt-ref-subquery-frag))
-AS all_stmt
 --~ (if (:ascending? params) "ORDER BY all_stmt.id ASC" "ORDER BY all_stmt.id DESC")
 --~ (when (:limit params)    "LIMIT :limit")
 
@@ -419,13 +367,7 @@ JSON_EXTRACT(:i:col,
       (into [\$] path)
       (clojure.string/join \. path)
       (clojure.string/replace path ":" "\\:")
-      (str "'" path "'"))
-~*/
-)
-
--- :snip snip-json-extract-one
-JSON_EXTRACT(:i:col,
---~(format "'%s'"  (clojure.string/join \. (into [\$] (:path params))))
+      (str "'" path "'")) ~*/
 )
 
 -- :snip snip-val
@@ -449,16 +391,12 @@ JSON_EXTRACT(:i:col,
 -- :snip snip-contains-json
 -- :doc Does the json at col and path contain the given value? A special case with differing structure across backends
 JSON_CONTAINS(:i:col, :snip:right,
-/*~
-(as-> (:path params) path
-     (into [\$] path)
-     (clojure.string/join \. path)
-     (clojure.string/replace path ":" "\\:")
-     (str "'" path "'"))
-~*/
+/*~ (as-> (:path params) path
+      (into [\$] path)
+      (clojure.string/join \. path)
+      (clojure.string/replace path ":" "\\:")
+      (str "'" path "'")) ~*/
 )
-
-/* (clojure.string/join \. (into [\$] (:path params)))*/
 
 -- :snip snip-query-reaction
 SELECT :i*:select

@@ -123,10 +123,9 @@
                                     :conf-overrides conf-overrides))]
       (f))))
 
-(def holder (atom nil))
+
 (def stratom (atom :persistent))
 (defn fresh-maria-fixture [f]
-  (println "maria detected!")
   (let [{{{:keys [db-type
                   db-host
                   db-port
@@ -157,7 +156,6 @@
     (with-redefs
       [read-config (constantly maria-config)
        test-system (fn [& {:keys [conf-overrides]}]
-                     (println "new system!")
                      (let [sys (system/system (mr/map->MariaBackend {}) :test-maria
                                               :conf-overrides conf-overrides)]
                        (when (= @stratom :persistent)
