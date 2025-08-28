@@ -38,7 +38,6 @@
             [lrsql.init.authority          :refer [make-authority-fn]]
             [lrsql.system.util             :refer [assert-config]]
             [lrsql.util.concurrency        :refer [with-rerunable-txn]]))
-(def holder (atom nil))
 
 (defn- lrs-conn
   "Get the connection pool from the LRS instance."

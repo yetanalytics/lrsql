@@ -3,23 +3,42 @@
 
 -- :frag maria-auth-subquery
 (
-  SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
-     AND SUM(stmt_auth.actor_ifi NOT IN (:v*:authority-ifis)) = 0
+  SELECT COUNT(DISTINCT stmt_auth.actor_hash) = :authority-ifi-count
+     AND SUM(stmt_auth.actor_hash NOT IN (
+--~ (lrsql.maria.record/emit-binary-hashes (:authority-ifis params))
+)) = 0
   FROM statement_to_actor stmt_auth
   WHERE stmt_auth.statement_id = stmt.statement_id
     AND stmt_auth.usage = 'Authority'
 )
 
-/* /\ stmt_auth.usage was casted to actor_usage_enum*/
+/*
+(
+  SELECT COUNT(DISTINCT stmt_auth.actor_hash) = :authority-ifi-count
+     AND SUM(stmt_auth.actor_hash NOT IN (:v*:authority-ifis)) = 0
+  FROM statement_to_actor stmt_auth
+  WHERE stmt_auth.statement_id = stmt.statement_id
+    AND stmt_auth.usage = 'Authority'
+)
+*/
 
+/* /\ stmt_auth.usage was casted to actor_usage_enum*/
+/* can probably speed up above/below by changing actor_ifi in SUM clauses to actor_hash*/
 -- :frag maria-auth-ans-subquery
 (
-  SELECT COUNT(DISTINCT stmt_auth.actor_ifi) = :authority-ifi-count
-     AND SUM(stmt_auth.actor_ifi NOT IN (:v*:authority-ifis)) = 0
+  SELECT COUNT(DISTINCT stmt_auth.actor_hash) = :authority-ifi-count
+     AND SUM(stmt_auth.actor_ifi NOT IN (:v*:authority-ifis)) = 0 
   FROM statement_to_actor stmt_auth
   WHERE stmt_auth.statement_id = stmt_a.statement_id
     AND stmt_auth.usage = 'Authority'
 )
+
+-- :name check-ns
+-- :command :query
+-- :result :one
+select 
+--~ (str "'" *ns* "'")
+;
 
 /* /\ stmt_auth.usage was casted to actor_usage_enum*/
 
@@ -48,13 +67,13 @@ WHERE statement_id = :statement-id;
 -- :frag maria-actors-join
 INNER JOIN statement_to_actor stmt_actor
 ON stmt.statement_id = stmt_actor.statement_id
-AND stmt_actor.actor_ifi = :actor-ifi
+AND stmt_actor.actor_hash = UNHEX(SHA2(:actor-ifi, 256))
 --~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'")
 
 -- :frag maria-activities-join
 INNER JOIN statement_to_activity stmt_activ
 ON stmt.statement_id = stmt_activ.statement_id
-AND stmt_activ.activity_iri = :activity-iri
+AND stmt_activ.activity_hash = UNHEX(SHA2(:activity-iri, 256))
 --~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'")
 
 -- :frag maria-stmt-no-ref-subquery-frag
@@ -67,11 +86,11 @@ WHERE stmt.is_voided = FALSE
      (if (:ascending? params)      "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
 --~ (when (:since params)          "AND stmt.id > :since")
 --~ (when (:until params)          "AND stmt.id <= :until")
---~ (when (:verb-iri params)       "AND stmt.verb_iri = :verb-iri")
+--~ (when (:verb-iri params)       "AND stmt.verb_hash = UNHEX(SHA2(:verb-iri, 256))")
 --~ (when (:registration params)   "AND stmt.registration = :registration")
 --~ (when (:authority-ifis params) "AND :frag:maria-auth-subquery")
 --~ (if (:ascending? params)       "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
---~ (when (:limit params)          "LIMIT :limit")
+/*  (when (:limit params)          "LIMIT :limit") */
 
 /* Note: We sort by both the PK and statement ID in order to force the query
    planner to avoid scanning on `stmt_a.id` first, which is much slower than
@@ -90,17 +109,32 @@ WHERE stmt_a.is_voided = FALSE
      (if (:ascending? params)      "AND stmt_a.id >= :from" "AND stmt_a.id <= :from"))  ~*/
 --~ (when (:since params)          "AND stmt_a.id > :since")
 --~ (when (:until params)          "AND stmt_a.id <= :until")
---~ (when (:verb-iri params)       "AND stmt.verb_iri = :verb-iri")
+--~ (when (:verb-iri params)       "AND stmt.verb_hash = UNHEX(SHA2(:verb-iri, 256))")
 --~ (when (:registration params)   "AND stmt.registration = :registration")
 --~ (when (:authority-ifis params) "AND :frag:maria-auth-ans-subquery")
 --~ (when (:authority-ifis params) "AND :frag:maria-auth-subquery")
 /*~ (if (:ascending? params)       "ORDER BY stmt_a.id ASC, stmt_a.statement_id ASC"
                                    "ORDER BY stmt_a.id DESC, stmt_a.statement_id DESC") ~*/
---~ (when (:limit params)          "LIMIT :limit")
+/* (when (:limit params)          "LIMIT :limit")*/
 
 
 
 -- :name query-statements
+-- :command :query
+-- :result :many
+-- :doc Query for one or more statements using statement resource parameters.
+SELECT all_stmt.id, all_stmt.payload
+FROM (
+  (:frag:maria-stmt-no-ref-subquery-frag)
+  UNION ALL
+  (:frag:maria-stmt-ref-subquery-frag))
+AS all_stmt
+GROUP BY all_stmt.id
+--~ (if (:ascending? params) "ORDER BY all_stmt.id ASC" "ORDER BY all_stmt.id DESC")
+--~ (when (:limit params)    "LIMIT :limit")
+
+
+-- :name query-statements-rolling
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
@@ -149,7 +183,7 @@ AND actor_type = :actor-type;
 -- :result :one
 -- :doc Query an activity with `:activity-iri`.
 SELECT payload FROM activity
-WHERE activity_iri = :activity-iri;
+WHERE activity_hash = UNHEX(SHA2(:activity-iri, 256));
 
 /* Statement Reference Queries */
 
@@ -177,8 +211,8 @@ WHERE statement_id = :statement-id;
 -- :doc Query for a single state document using resource params. If `:registration` is missing then `registration` must be NULL.
 SELECT contents, content_type, content_length, state_id, last_modified
 FROM state_document
-WHERE activity_iri = :activity-iri
-AND agent_ifi = :agent-ifi
+WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
+AND agent_hash =  UNHEX(SHA2(:agent-ifi,256))
 AND state_id = :state-id
 --~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
 ;
@@ -189,7 +223,7 @@ AND state_id = :state-id
 -- :doc Query for a single agent profile document using resource params.
 SELECT contents, content_type, content_length, profile_id, last_modified
 FROM agent_profile_document
-WHERE agent_ifi = :agent-ifi
+WHERE agent_hash = UNHEX(SHA2(:agent-ifi,256))
 AND profile_id = :profile-id;
 
 -- :name query-activity-profile-document
@@ -198,16 +232,15 @@ AND profile_id = :profile-id;
 -- :doc Query for a single activity profile document using resource params.
 SELECT contents, content_type, content_length, profile_id, last_modified
 FROM activity_profile_document
-WHERE activity_iri = :activity-iri
+WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
 AND profile_id = :profile-id;
-
 -- :name query-state-document-exists
 -- :command :query
 -- :result :one
 -- :doc Query whether a particular state document exists. If `:registration` is missing then `registration` must be NULL.
 SELECT 1 FROM state_document
-WHERE activity_iri = :activity-iri
-AND agent_ifi = :agent-ifi
+WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
+AND agent_hash = UNHEX(SHA2(:agent-ifi,256))
 AND state_id = :state-id
 --~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
 ;
@@ -217,7 +250,7 @@ AND state_id = :state-id
 -- :result :one
 -- :doc Query whether a particular agent profile document exists.
 SELECT 1 FROM agent_profile_document
-WHERE agent_ifi = :agent-ifi
+WHERE agent_hash = UNHEX(SHA2(:agent-ifi,256))
 AND profile_id = :profile-id;
 
 -- :name query-activity-profile-document-exists
@@ -225,7 +258,7 @@ AND profile_id = :profile-id;
 -- :result :one
 -- :doc Query whether a particular activity profile document exists.
 SELECT 1 FROM activity_profile_document
-WHERE activity_iri = :activity-iri
+WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
 AND profile_id = :profile-id;
 
 -- :name query-state-document-ids
@@ -233,8 +266,8 @@ AND profile_id = :profile-id;
 -- :result :many
 -- :doc Query for one or more state document IDs using resource params. If `:registration` is missing then `registration` must be NULL.
 SELECT state_id FROM state_document
-WHERE activity_iri = :activity-iri
-AND agent_ifi = :agent-ifi
+WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
+AND agent_hash = UNHEX(SHA2(:agent-ifi,256))
 --~ (when (:registration params) "AND registration = :registration" "AND registration IS NULL")
 --~ (when (:since params) "AND last_modified > :since")
 ;
@@ -244,7 +277,7 @@ AND agent_ifi = :agent-ifi
 -- :result :many
 -- :doc Query for one or more agent profile document profile IDs using resource params.
 SELECT profile_id FROM agent_profile_document
-WHERE agent_ifi = :agent-ifi
+WHERE agent_hash = UNHEX(SHA2(:agent-ifi,256))
 --~ (when (:since params) "AND last_modified > :since")
 ;
 
@@ -253,7 +286,7 @@ WHERE agent_ifi = :agent-ifi
 -- :result :many
 -- :doc Query for one or more activity profile document IDs using resource params.
 SELECT profile_id FROM activity_profile_document
-WHERE activity_iri = :activity-iri
+WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
 --~ (when (:since params) "AND last_modified > :since")
 ;
 
@@ -380,15 +413,20 @@ ORDER BY stored_time ASC;
 
 /* Statement Reactions */
 
-/*
 -- :snip snip-json-extract
-json_extract_path_text(:i:col, :v*:path):::sql:type
-*/
+JSON_EXTRACT(:i:col,
+/*~ (as-> (:path params) path
+      (into [\$] path)
+      (clojure.string/join \. path)
+      (clojure.string/replace path ":" "\\:")
+      (str "'" path "'"))
+~*/
+)
 
--- :snip snip-json-extract
-CAST(JSON_UNQUOTE(JSON_EXTRACT(:i:col,
---~ (clojure.string/join \. (into [\$] (:path params)))
-)) AS :sql:type)
+-- :snip snip-json-extract-one
+JSON_EXTRACT(:i:col,
+--~(format "'%s'"  (clojure.string/join \. (into [\$] (:path params))))
+)
 
 -- :snip snip-val
 :v:val
@@ -410,16 +448,17 @@ CAST(JSON_UNQUOTE(JSON_EXTRACT(:i:col,
 
 -- :snip snip-contains-json
 -- :doc Does the json at col and path contain the given value? A special case with differing structure across backends
-(SELECT TRUE FROM json_array_elements_text(
+JSON_CONTAINS(:i:col, :snip:right,
+/*~
+(as-> (:path params) path
+     (into [\$] path)
+     (clojure.string/join \. path)
+     (clojure.string/replace path ":" "\\:")
+     (str "'" path "'"))
+~*/
+)
 
-JSON_UNQUOTE(JSON_EXTRACT(:i:col,
---~(clojure.string/join \. (into [\$] (:path params)))
-:v
-
-))
-json_extract_path(:i:col, :v*:path)
-
-) WHERE CAST(value) AS :sql:type = :snip:right)
+/* (clojure.string/join \. (into [\$] (:path params)))*/
 
 -- :snip snip-query-reaction
 SELECT :i*:select

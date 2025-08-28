@@ -47,18 +47,19 @@
             col-type (.getColumnType rsmeta i)
             col-type-name (.getColumnTypeName rsmeta i)
             table-name (.getTableName rsmeta i)
-;            _ (println ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
-;            _ (println "col label" label)
-;            _ (println "col-type:" col-type)
-;            _ (println "col-type-name:" col-type-name)
-;            _ (println ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
+            #_#__ (println ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
+            #_#__ (println "col label" label)
+            #_#__ (println "col-type:" col-type)
+            #_#__ (println "col-type-name:" col-type-name)
+            #_#__ (println ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")
             ]
 
         (cond (and (= col-type-name "CHAR")
                    (= (count s) 36))
               (java.util.UUID/fromString s)
 
-              (json-columns label)
+              (or (json-columns label)
+                  (= col-type-name "JSON"))
               (do #_(println "json detected!")
                   #_(println "json:" s)
                   (let [res (u/parse-json s :keyword-keys? (some? (keyword-columns label)))]
@@ -95,5 +96,5 @@
   {:bool   "BOOLEAN"
    :int    "INTEGER"
    :dec    "DECIMAL"
-   :string "TEXT"
+   :string "CHAR"
    :json   "JSON"})

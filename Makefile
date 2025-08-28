@@ -33,7 +33,7 @@ clean-dev:
 test-sqlite:
 	clojure -M:test -m lrsql.test-runner --database sqlite
 
-TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres
+TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres $(if $(ns),--ns $(ns))
 
 # Without LRSQL_TEST_DB_VERSION, defaults to version 11
 test-postgres:
@@ -58,7 +58,7 @@ test-postgres-16:
 	LRSQL_TEST_DB_VERSION=16 $(TEST_PG_COMMAND)
 
 test-maria:
-	clojure -M:test -m lrsql.test-runner --database maria
+	clojure -M:test -m lrsql.test-runner --database maria $(if $(ns),--ns $(ns))
 
 ci: test-sqlite test-postgres test-maria
 

@@ -8,17 +8,18 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   statement_id CHAR(36) NOT NULL UNIQUE,
   registration CHAR(36),
   verb_iri     TEXT NOT NULL,
+  verb_hash    BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(verb_iri, 256))) STORED,
   is_voided    BOOLEAN DEFAULT FALSE NOT NULL,
   payload      JSON NOT NULL, -- faster read/write than JSONB
-  timestamp TIMESTAMP,
-  stored    TIMESTAMP,
+  timestamp TIMESTAMP(6),
+  stored    TIMESTAMP(6),
   reaction_id CHAR(36),
   trigger_id CHAR(36),
 CONSTRAINT stmt_reaction_id_fk FOREIGN KEY (reaction_id) REFERENCES reaction(id),
 CONSTRAINT stmt_trigger_id_fk FOREIGN KEY (trigger_id) REFERENCES xapi_statement(statement_id)
 );
 CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
-CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_iri);
+CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_hash);
 CREATE INDEX IF NOT EXISTS registration ON xapi_statement(registration);
 CREATE INDEX IF NOT EXISTS stmt_reaction_id_idx ON xapi_statement(reaction_id);
 CREATE INDEX IF NOT EXISTS stmt_trigger_id_idx ON xapi_statement(trigger_id);
@@ -28,11 +29,12 @@ CREATE INDEX IF NOT EXISTS stmt_trigger_id_idx ON xapi_statement(trigger_id);
 -- :command :execute
 -- :doc Create the `actor` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS actor (
-  id CHAR(36)    PRIMARY KEY,
-  actor_ifi  VARCHAR(191) NOT NULL,
+  id CHAR(36) PRIMARY KEY,
+  actor_ifi  TEXT NOT NULL,
+  actor_hash BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(actor_ifi, 256))) STORED,
   actor_type ENUM ('Agent', 'Group') NOT NULL,
   payload    JSON NOT NULL,
-  CONSTRAINT actor_idx UNIQUE (actor_ifi, actor_type)
+  CONSTRAINT actor_idx UNIQUE (actor_hash, actor_type)
 );
 
 -- :name create-activity-table!
@@ -40,7 +42,8 @@ CREATE TABLE IF NOT EXISTS actor (
 -- :doc Create the `activity` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS activity (
   id           CHAR(36) PRIMARY KEY,
-  activity_iri VARCHAR(191) NOT NULL UNIQUE,
+  activity_iri TEXT NOT NULL,
+  activity_hash BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(activity_iri, 256))) STORED UNIQUE,
   payload      JSON NOT NULL
 );
 
@@ -65,7 +68,7 @@ CREATE INDEX IF NOT EXISTS attachment_stmt_fk ON attachment(statement_id);
 CREATE TABLE IF NOT EXISTS statement_to_actor (
   id           CHAR(36) PRIMARY KEY,
   statement_id CHAR(36) NOT NULL,
-  `usage`        ENUM ('Actor',
+  `usage`      ENUM ('Actor',
   	       	     'Object',
 		     'Authority',
 		     'Instructor',
@@ -74,16 +77,17 @@ CREATE TABLE IF NOT EXISTS statement_to_actor (
 		     'SubObject',
 		     'SubInstructor',
 		     'SubTeam') NOT NULL,
-  actor_ifi    VARCHAR(191) NOT NULL,
+  actor_ifi    TEXT NOT NULL,
+  actor_hash   BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(actor_ifi, 256))) STORED,
   actor_type   ENUM ('Agent', 'Group') NOT NULL,
   CONSTRAINT statement_fk_stactor
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id) ON DELETE CASCADE,
   CONSTRAINT actor_fk
-    FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
+    FOREIGN KEY (actor_hash, actor_type) REFERENCES actor(actor_hash, actor_type)
 
 );
 CREATE INDEX IF NOT EXISTS stmt_actor_stmt_fk ON statement_to_actor(statement_id);
-CREATE INDEX IF NOT EXISTS stmt_actor_actor_fk ON statement_to_actor(actor_ifi, actor_type);
+CREATE INDEX IF NOT EXISTS stmt_actor_actor_fk ON statement_to_actor(actor_hash, actor_type);
 
 -- :name create-statement-to-activity-table!
 -- :command :execute
@@ -93,14 +97,15 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
   statement_id CHAR(36) NOT NULL,
   `usage`        ENUM ('Object', 'Category', 'Grouping', 'Parent', 'Other',
         'SubObject', 'SubCategory', 'SubGrouping', 'SubParent', 'SubOther') NOT NULL,
-  activity_iri VARCHAR(191) NOT NULL,
+  activity_iri TEXT NOT NULL,
+  activity_hash BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(activity_iri, 256))) STORED,
   CONSTRAINT statement_fk_stactivity
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
   CONSTRAINT activity_fk
-    FOREIGN KEY (activity_iri) REFERENCES activity(activity_iri)
+    FOREIGN KEY (activity_hash) REFERENCES activity(activity_hash)
 );
 CREATE INDEX IF NOT EXISTS stmt_activ_stmt_fk ON statement_to_activity(statement_id);
-CREATE INDEX IF NOT EXISTS stmt_activ_activ_fk ON statement_to_activity(activity_iri);
+CREATE INDEX IF NOT EXISTS stmt_activ_activ_fk ON statement_to_activity(activity_hash);
 
 -- :name create-statement-to-statement-table!
 -- :command :execute
@@ -125,15 +130,17 @@ CREATE INDEX IF NOT EXISTS stmt_stmt_desc_fk ON statement_to_statement(descendan
 CREATE TABLE IF NOT EXISTS state_document (
   id             CHAR(36) PRIMARY KEY,
   state_id       TEXT NOT NULL,
-  activity_iri   VARCHAR(191) NOT NULL,
+  activity_iri   TEXT NOT NULL,
+  activity_hash  BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(activity_iri, 256))) STORED,
   agent_ifi      TEXT NOT NULL,
+  agent_hash     BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(agent_ifi, 256))) STORED,
   registration   CHAR(36) DEFAULT NULL,
-  last_modified  TIMESTAMP NOT NULL, -- todo---mimics WITH TIME ZONE functionality?
+  last_modified  TIMESTAMP(6) NOT NULL, -- todo---mimics WITH TIME ZONE functionality?
   content_type   TEXT NOT NULL,
   content_length INTEGER NOT NULL,
   contents       LONGBLOB NOT NULL,
   CONSTRAINT state_doc_idx
-    UNIQUE (state_id, activity_iri, agent_ifi, registration)
+    UNIQUE (state_id, activity_hash, agent_hash, registration)
 );
 
 -- :name create-agent-profile-document-table!
@@ -142,13 +149,14 @@ CREATE TABLE IF NOT EXISTS state_document (
 CREATE TABLE IF NOT EXISTS agent_profile_document (
   id             CHAR(36) PRIMARY KEY,
   profile_id     VARCHAR(191) NOT NULL,
-  agent_ifi      VARCHAR(191) NOT NULL,
-  last_modified  TIMESTAMP NOT NULL, -- todo---mimics WITH TIME ZONE functionality?
+  agent_ifi      TEXT NOT NULL,
+  agent_hash     BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(agent_ifi, 256))) STORED,
+  last_modified  TIMESTAMP(6) NOT NULL, -- todo---mimics WITH TIME ZONE functionality?
   content_type   VARCHAR(191) NOT NULL,
   content_length INTEGER NOT NULL,
   contents       LONGBLOB NOT NULL,
   CONSTRAINT agent_profile_doc_idx
-    UNIQUE (profile_id, agent_ifi)
+  UNIQUE (profile_id, agent_hash)
 );
 
 -- :name create-activity-profile-document-table!
@@ -157,13 +165,14 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
 CREATE TABLE IF NOT EXISTS activity_profile_document (
   id             CHAR(36) PRIMARY KEY,
   profile_id     TEXT NOT NULL,
-  activity_iri   VARCHAR(191) NOT NULL,
-  last_modified  TIMESTAMP NOT NULL, -- todo---mimics WITH TIME ZONE functionality?
+  activity_iri   TEXT NOT NULL,
+  activity_hash  BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(activity_iri, 256))) STORED,
+  last_modified  TIMESTAMP(6) NOT NULL, -- todo---mimics WITH TIME ZONE functionality?
   content_type   TEXT NOT NULL,
   content_length INTEGER NOT NULL,
   contents       LONGBLOB NOT NULL,
   CONSTRAINT activity_profile_doc_idx
-    UNIQUE (profile_id, activity_iri)
+    UNIQUE (profile_id, activity_hash)
 );
 
 /* Admin Account Table */
@@ -235,8 +244,8 @@ CREATE TABLE IF NOT EXISTS reaction (
   id           CHAR(36) PRIMARY KEY,
   title        TEXT NOT NULL UNIQUE, -- string title
   ruleset      JSON NOT NULL,                -- serialized reaction spec
-  created      TIMESTAMP NOT NULL,           -- timestamp
-  modified     TIMESTAMP NOT NULL,           -- timestamp
+  created      TIMESTAMP(6) NOT NULL,           -- timestamp
+  modified     TIMESTAMP(6) NOT NULL,           -- timestamp
   active       BOOLEAN,                      -- true/false/null - active/inactive/soft delete
   error        JSON                          -- serialized error
 );
@@ -246,7 +255,7 @@ CREATE TABLE IF NOT EXISTS reaction (
 -- :doc Create the `blocked_jwt` table and associated indexes if they do not exist yet.
 CREATE TABLE IF NOT EXISTS blocked_jwt (
   jwt        CHAR(44) PRIMARY KEY,
-  evict_time TIMESTAMP NOT NULL,
+  evict_time TIMESTAMP(6) NOT NULL,
   one_time_id CHAR(36) UNIQUE
 );
 CREATE INDEX IF NOT EXISTS blocked_jwt_evict_time_idx ON blocked_jwt(evict_time);

@@ -9,7 +9,7 @@ VACUUM ANALYZE;
 UPDATE xapi_statement
 SET is_voided = TRUE
 WHERE statement_id = :statement-id
-AND verb_iri != 'http://adlnet.gov/expapi/verbs/voided';
+AND verb_hash != UNHEX(SHA2('http://adlnet.gov/expapi/verbs/voided', 256));
 -- ^ Any Statement that voids another cannot itself be voided.
 
 -- :name update-actor!
@@ -18,7 +18,7 @@ AND verb_iri != 'http://adlnet.gov/expapi/verbs/voided';
 -- :doc Update the payload of a pre-existing actor.
 UPDATE actor
 SET payload = :payload
-WHERE actor_ifi = :actor-ifi
+WHERE actor_hash = UNHEX(SHA2(:actor-ifi,256))
 AND actor_type = :actor-type;
 
 -- :name update-activity!
@@ -27,7 +27,7 @@ AND actor_type = :actor-type;
 -- :doc Update the payload of a pre-existing activity.
 UPDATE activity
 SET payload = :payload
-WHERE activity_iri = :activity-iri;
+WHERE activity_hash = UNHEX(SHA2(:activity-iri,256));
 
 -- :name update-state-document!
 -- :command :insert
@@ -39,8 +39,8 @@ SET
   contents = :contents,
   last_modified = :last-modified
 WHERE state_id = :state-id
-AND activity_iri = :activity-iri
-AND agent_ifi = :agent-ifi
+AND activity_hash = UNHEX(SHA2(:activity-iri,256))
+AND agent_hash = UNHEX(SHA2(:agent-ifi,256))
 --~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
 ;
 
@@ -54,7 +54,7 @@ SET
   contents = :contents,
   last_modified = :last-modified
 WHERE profile_id = :profile-id
-AND agent_ifi = :agent-ifi;
+AND agent_hash = UNHEX(SHA2(:agent-ifi,256));
 
 -- :name update-activity-profile-document!
 -- :command :insert
@@ -66,7 +66,7 @@ SET
   contents = :contents,
   last_modified = :last-modified
 WHERE profile_id = :profile-id
-AND activity_iri = :activity-iri;
+AND activity_hash = UNHEX(SHA2(:activity-iri,256));
 
 /* Admin Accounts + Credentials */
 

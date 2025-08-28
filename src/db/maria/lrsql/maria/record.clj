@@ -7,8 +7,29 @@
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.maria.data :as md]
             [clojure.string :refer [includes?]])
+  (:import [java.security MessageDigest]))
 
-  #_(:import [org.postgresql.util PSQLException]))
+
+(defn sha256-bytes [^String s]
+  (let [md (MessageDigest/getInstance "SHA-256")]
+    (.digest md (.getBytes s "UTF-8"))))
+
+(defn bytes->sql-hex [^bytes ba]
+  (str "X'" (apply str (map #(format "%02X" (bit-and % 0xFF)) ba)) "'"))
+
+(defn emit-binary-hashes [ifis]
+  (->> ifis
+       (map (comp bytes->sql-hex sha256-bytes))
+       (clojure.string/join ", "))) ;; emits: X'...', X'...', ...
+
+(defn json-extract [arg path]
+  (let [path (->> path
+                  (into [\$])
+                  (clojure.string/join \.)
+                  (format "'$%s'"))]
+  (str "JSON_EXTRACT(" arg "," path ")")))
+(defn json-unquote [arg] (str "JSON_UNQUOTE(" arg ")"))
+
 
 (def exception (atom nil))
 (def holder (atom nil))
@@ -23,20 +44,6 @@
 (hug/def-db-fns "lrsql/maria/sql/delete.sql")
 (hug/def-sqlvec-fns "lrsql/maria/sql/query.sql")
 
-(hug/def-sqlvec-fns "lrsql/maria/sql/ddl.sql")
-(hug/def-sqlvec-fns "lrsql/maria/sql/insert.sql")
-(hug/def-sqlvec-fns "lrsql/maria/sql/query.sql")
-(hug/def-sqlvec-fns "lrsql/maria/sql/update.sql")
-(hug/def-sqlvec-fns "lrsql/maria/sql/delete.sql")
-
-(defmacro do-print [& forms]
-  `(do
-     ~@(apply concat
-              (for [form forms]
-                [`(println ~(str form))
-                 form]))
-     (println "all done!")
-     ))
 
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
@@ -66,8 +73,7 @@
     (create-admin-account-table! tx)
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx)
-    (create-blocked-jwt-table! tx)
-    )
+    (create-blocked-jwt-table! tx))
   (-update-all! [_ tx])
 
   bp/BackendUtil
@@ -91,10 +97,7 @@
   (-query-statement [_ tx input]
     (query-statement tx input))
   (-query-statements [_ tx input]
-    #_(println "input:" input)
-    #_(println "sqlvec:" (query-statements-sqlvec input))
-    (query-statements tx input)
-)
+    (query-statements tx input))
   (-query-statement-exists [_ tx input]
     (query-statement-exists tx input))
   (-query-statement-descendants [_ tx input]
@@ -110,8 +113,6 @@
   (-insert-actor! [_ tx input]
     (insert-actor! tx input))
   (-insert-statement-to-actor! [_ tx input]
-    (reset! holder {:input input
-                    :sql (insert-statement-to-actor!-sqlvec input) })
     (insert-statement-to-actor! tx input))
   (-update-actor! [_ tx input]
     (update-actor! tx input))
@@ -244,8 +245,7 @@
                       "error"
                       "payload"}
       :keyword-columns #{"ruleset"
-                            "error"}}
-))
+                            "error"}}))
 
   (-set-write! [_]
     ;; next.jdbc automatically sets the reading of Instants as java.sql.Dates
@@ -284,7 +284,6 @@
     (error-reaction! tx params))
   (-snip-json-extract [_ {:keys [datatype] :as params}]
     (snip-json-extract (assoc params :type
-                              #_(pd/type->pg-type datatype)
                               datatype)))
   (-snip-val [_ params]
     (snip-val params))

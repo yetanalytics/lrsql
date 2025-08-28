@@ -6,7 +6,8 @@
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.admin.protocol :as adp]
             [lrsql.util :as u]
-            [lrsql.util.actor :as a-util]))
+            [lrsql.util.actor :as a-util]
+            [lrsql.maria.record :as rm]))
 
 
 ;; SQLite
@@ -221,6 +222,16 @@
    '[lrsql.maria.data :as md])
   
 
+  (do (require '[clojure.tools.namespace.repl :refer [refresh]])
+      (refresh)
+      (require '[clojure.tools.namespace.repl :refer [refresh]])
+      (do (component/stop sys')
+          (def sys (system/system (rm/map->MariaBackend {}) :test-maria))
+          (def sys' (component/start sys))
+          (def lrs (:lrs sys'))
+          (def bk (:backend lrs))
+          (def ds (-> sys' :lrs :connection :conn-pool))))
+  
   #_(lrsql.init.log/set-log-level! "DEBUG")
   (def sys (system/system (rm/map->MariaBackend {}) :test-maria))
   (def sys' (component/start sys))
@@ -231,6 +242,8 @@
   (def ds (-> sys' :lrs :connection :conn-pool))
   @stmt-cmd/holder
 
+
+  
   (lrsp/-store-statements lrs auth-ident [stmt-0 stmt-1 stmt-2] [])
   (lrsp/-store-statements lrs auth-ident [stmt-2] [])
   (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
@@ -263,26 +276,6 @@
 )
 
 
-(do (def c (atom 0))
-    (jdbc/with-transaction [tx ds]
-      (let [reducible (jdbc/plan tx @rm/sqlvec-holder {:fetch-size  4000
-                                                       :concurrency :read-only
-                                                       :cursors     :close
-                                                       :result-type :forward-only})]
-        (def result (atom
-                     (reduce (fn [acc v]
-                               (swap! c inc)
-                               (def holder (atom v))
-                               (println (type v))
-                               (println
-                                {:rn (jrs/row-number v)
-                                 :cs (jrs/column-names v)
-                                 :ea (:payload v)
-                                 })
-                               (conj acc v))
-                             []
-                             reducible))))))
-
 (require '[next.jdbc.result-set :as jrs])
 
 (require '[lrsql.ops.query.statement :as qs])
@@ -295,8 +288,6 @@
 
 
 (stmt-input/query-statement-input {:ascending true} auth-ident )
-
-
 
  (get-ss lrs auth-ident {:limit 2 :ascending true} #{})
 
@@ -322,9 +313,171 @@
                  assoc
                  ::test/each-fixtures
                  [implementation])
-    (test/run-tests ns))))
+    (test/run-tests ns)))
 
 (defmacro with-fixtures [& forms]
   `(implementation
     (fn []
-      (do ~@forms))))
+      (do ~@forms)))))
+
+(comment
+;using cognitect's test runner
+  (require '[cognitect.test-runner.api :as runner]
+           '[lrsql.test-support :as support])
+  
+  (with-redefs [support/fresh-db-fixture support/fresh-maria-fixture]
+    (runner/test {
+                  #_#_:patterns [#"lrsql.lrs-test"]
+                  :nses ['lrsql.lrs-test]
+                  :dirs ["src/test"]})))
+
+
+
+
+(require '[lrsql.util.statement :as us])
+
+
+
+
+(+ 2 2)
+(defn stdin-works? []
+  (try
+    ;; Try to read a line without blocking
+    (when (.ready *in*)
+      (.readLine (java.io.BufferedReader. *in*)))
+    true
+    (catch Exception _
+      false)))
+
+(defn safe-repl []
+  (if (stdin-works?)
+    (try
+      (println "🛠️  Starting fallback REPL. Ctrl-D to exit.")
+      (clojure.main/repl)
+      (catch Throwable e
+        (println "⚠️  Could not start fallback REPL:" (.getMessage e))))
+    (println "⚠️  Input stream is not available (probably CIDER). Skipping REPL.")))
+
+(safe-repl)
+
+
+
+
+
+
+
+(defmacro test-macro [& body]
+  `(do
+     (println "test-macro!")
+     ~@body))
+
+(alter-var-root #'test-macro
+                (fn [_]
+                  (fn [& form]
+                    `(do
+                       (println "rebound!")
+                       ~@(rest form)))))
+
+(alter-meta! #'test-macro assoc :macro true)
+
+(def v)
+
+(alter-meta! #'v assoc :macro true)
+
+(alter-var-root #'v (fn [_]
+                      (fn [_ & form]
+                        `(do
+                           (println "vvvvv!!")
+                           ~@form))))
+
+(def holder (atom nil))
+(defmacro env-macro [& form]
+  (reset! holder  &env)
+  `(do ~@form)
+  )
+
+
+  (require '[cognitect.test-runner.api :as runner]
+           '[lrsql.test-support :as support])
+(in-ns 'cognitect.test-runner)
+
+(def unfiltered (->>  ["src/test"] 
+                     (map io/file)
+                     (mapcat find/find-namespaces-in-dir)
+                     ))
+
+(filter (ns-filter {:namespace [#{'lrsql.lrs-test}] :namespace-regex [#"lrs-test"]}) unfiltered)
+
+((ns-filter {:namespace #{'lrsql.lrs-test} :namespace-regex [#"lrs-test"]}) 'lrsql.lrs-test)
+
+
+
+(in-ns 'cognitect.test-runner)
+
+(defn- ns-filter
+  [{:keys [namespace namespace-regex] :as opts}]
+  (println "opts:" opts)
+  (let [regexes (or namespace-regex [#".*\-test$"])]
+    (fn [ns]
+      (or
+       (get namespace ns)
+       (some #(re-matches % (name ns)) regexes)))))
+
+(require 'clojure.repl)
+(clojure.repl/source test)
+
+(defn test
+  [options]
+  (let [dirs (or (:dir options)
+                 #{"test"})
+        nses (->> dirs
+                  (map io/file)
+                  (mapcat find/find-namespaces-in-dir))
+        nses (filter (ns-filter options) nses)]
+    (println "nses:" nses)
+    (println (format "\nRunning tests in %s" dirs))
+    #_#_(dorun (map require nses))
+    (try
+      (filter-vars! nses (var-filter options))
+      (filter-fixtures! nses)
+      (apply test/run-tests nses)
+      (finally
+        (restore-vars! nses)
+        (restore-fixtures! nses)))))
+
+(in-ns 'lrsql.test-runner)
+
+(with-redefs [support/fresh-db-fixture support/fresh-maria-fixture]
+  (runner/test {:dirs ["src/test"]
+                :nses ['lrsql.lrs-test]
+                :patterns [#"nonsensestring"]
+                }))
+
+(def ds)
+
+
+(defmacro capture-args []
+                    (let [locals (keys &env)
+                          syms (mapv (comp symbol name) locals)
+                          vals (vec locals)]
+                      `(let [syms# '~syms
+                             vals# (vector ~@locals)]
+                      (def holder (atom (zipmap syms# vals#))))))
+
+(require '[clojure.walk :as walk])
+
+(defmacro with-holder [form]
+  (let [params (mapv (comp symbol gensym name) (keys @holder))
+        mapping (zipmap (keys @holder) params)
+        rewritten (walk/postwalk-replace mapping form)
+        fn-form (list 'fn params rewritten)]
+    `(apply (eval ~fn-form) (vals @holder))))
+
+
+(defmacro do-print [& forms]
+  `(do
+     ~@(apply concat
+              (for [form forms]
+                [`(println ~(str form))
+                 form]))
+     (println "all done!")))

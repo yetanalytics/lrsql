@@ -64,10 +64,12 @@
       statement   (assoc :statement statement)
       attachments (assoc :attachments attachments))))
 
+(def holder (atom nil))
 (defn- query-many-statements*
   "Query multiple statements and return the (nilable) cursor to the next
    statement."
   [bk tx input ltags]
+  (reset! holder [bk tx input ltags])
   (let [{:keys [format limit]} input
         input*         (cond-> input
                          (some? limit)
