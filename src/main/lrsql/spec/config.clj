@@ -134,6 +134,20 @@
 (s/def ::enable-reactions boolean?)
 (s/def ::reaction-buffer-size pos-int?)
 
+(s/def ::supported-versions
+  (s/and
+   (s/conformer
+    (fn [x]
+      (if (string? x)
+        (into #{}
+              (cstr/split x #","))
+        x)))
+   (s/coll-of
+    #{"1.0.3" "2.0.0"}
+    :kind set?
+    :into #{}
+    :min-count 1)))
+
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
          (s/conformer u/remove-neg-vals)
@@ -145,7 +159,8 @@
                           ::oidc-authority-template
                           ::oidc-scope-prefix
                           ::enable-reactions
-                          ::reaction-buffer-size]
+                          ::reaction-buffer-size
+                          ::supported-versions]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default

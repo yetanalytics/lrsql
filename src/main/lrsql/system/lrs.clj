@@ -1,5 +1,6 @@
 (ns lrsql.system.lrs
   (:require [clojure.set                   :as cset]
+            [clojure.spec.alpha            :as s]
             [clojure.tools.logging         :as log]
             [com.stuartsierra.component    :as cmp]
             [next.jdbc                     :as jdbc]
@@ -51,7 +52,8 @@
                                 config
                                 authority-fn
                                 oidc-authority-fn
-                                reaction-channel]
+                                reaction-channel
+                                supported-versions]
   cmp/Lifecycle
   (start
     [lrs]
@@ -64,7 +66,8 @@
            api-key      :api-key-default
            srt-key      :api-secret-default
            auth-tp      :authority-template
-           oidc-auth-tp :oidc-authority-template}
+           oidc-auth-tp :oidc-authority-template
+           sup-versions :supported-versions}
           config
           ;; Authority function
           auth-fn      (make-authority-fn auth-tp)
@@ -81,7 +84,9 @@
                :connection connection
                :authority-fn auth-fn
                :oidc-authority-fn oidc-auth-fn
-               :reaction-channel (react-init/reaction-channel config)))))
+               :reaction-channel (react-init/reaction-channel config)
+               :supported-versions (s/conform ::cs/supported-versions
+                                              sup-versions)))))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
@@ -89,12 +94,13 @@
            :connection nil
            :authority-fn nil
            :oidc-authority-fn nil
-           :reaction-channel nil))
+           :reaction-channel nil
+           :supported-versions nil))
 
   lrsp/AboutResource
   (-get-about
     [_lrs _auth-identity]
-    {:body {:version ["1.0.0" "1.0.1" "1.0.2" "1.0.3" "2.0.0"]}})
+    {:body {:version (into [] supported-versions)}})
 
   lrsp/StatementsResource
   (-store-statements
@@ -305,35 +311,35 @@
 
   adp/AdminJWTManager
   (-purge-blocklist
-   [this leeway]
-   (let [conn  (lrs-conn this)
-         input (admin-jwt-input/purge-blocklist-input leeway)]
-     (jdbc/with-transaction [tx conn]
-       (admin-cmd/purge-blocklist! backend tx input))))
+    [this leeway]
+    (let [conn  (lrs-conn this)
+          input (admin-jwt-input/purge-blocklist-input leeway)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/purge-blocklist! backend tx input))))
   (-create-one-time-jwt
-   [this jwt exp one-time-id]
-   (let [conn  (lrs-conn this)
-         input (admin-jwt-input/insert-one-time-jwt-input jwt exp one-time-id)]
-     (jdbc/with-transaction [tx conn]
-       (admin-cmd/insert-one-time-jwt! backend tx input))))
+    [this jwt exp one-time-id]
+    (let [conn  (lrs-conn this)
+          input (admin-jwt-input/insert-one-time-jwt-input jwt exp one-time-id)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/insert-one-time-jwt! backend tx input))))
   (-block-jwt
-   [this jwt exp]
-   (let [conn      (lrs-conn this)
-         jwt-input (admin-jwt-input/insert-blocked-jwt-input jwt exp)]
-     (jdbc/with-transaction [tx conn]
-       (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
+    [this jwt exp]
+    (let [conn      (lrs-conn this)
+          jwt-input (admin-jwt-input/insert-blocked-jwt-input jwt exp)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
   (-block-one-time-jwt
-   [this jwt one-time-id]
-   (let [conn      (lrs-conn this)
-         jwt-input (admin-jwt-input/update-one-time-jwt-input jwt one-time-id)]
-     (jdbc/with-transaction [tx conn]
-       (admin-cmd/update-one-time-jwt! backend tx jwt-input))))
+    [this jwt one-time-id]
+    (let [conn      (lrs-conn this)
+          jwt-input (admin-jwt-input/update-one-time-jwt-input jwt one-time-id)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/update-one-time-jwt! backend tx jwt-input))))
   (-jwt-blocked?
-   [this jwt]
-   (let [conn      (lrs-conn this)
-         jwt-input (admin-jwt-input/query-blocked-jwt-input jwt)]
-     (jdbc/with-transaction [tx conn]
-       (admin-q/query-blocked-jwt-exists backend tx jwt-input))))
+    [this jwt]
+    (let [conn      (lrs-conn this)
+          jwt-input (admin-jwt-input/query-blocked-jwt-input jwt)]
+      (jdbc/with-transaction [tx conn]
+        (admin-q/query-blocked-jwt-exists backend tx jwt-input))))
 
   adp/APIKeyManager
   (-create-api-keys

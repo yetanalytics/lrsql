@@ -12,7 +12,8 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
-            [lrsql.util.interceptor :refer [handle-json-parse-exn]]))
+            [lrsql.util.interceptor :refer [handle-json-parse-exn]]
+            [lrsql.util.statement :as su]))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -91,7 +92,8 @@
                      :file-scanner      (when enable-clamav
                                           (clamav/init-file-scanner
                                            {:clamav-host clamav-host
-                                            :clamav-port clamav-port}))})
+                                            :clamav-port clamav-port}))
+                     :supported-versions (:supported-versions lrs)})
              (add-admin-routes
               {:lrs                       lrs
                :exp                       jwt-exp
@@ -122,7 +124,7 @@
               {:lrs lrs
                :head-opts head-opts
                :version (read-version)}))
-        
+
         ;; Build allowed-origins list. Add without ports as well for
         ;; default ports
         allowed-list
