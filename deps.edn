@@ -130,7 +130,7 @@
                   :git/sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
                  com.yetanalytics.lrs/test-runner
                  {:git/url    "https://github.com/yetanalytics/lrs-test-runner.git"
-                  :git/sha    "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
+                  :git/sha    "3f288f1f16d167723ad87cc35b1dfee3c1681e10"
                   :exclusions [org.clojure/data.json]}
                  com.yetanalytics/datasim
                  {:mvn/version "0.4.4"
