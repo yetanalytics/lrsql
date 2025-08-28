@@ -38,7 +38,8 @@
             [lrsql.util                    :as util]
             [lrsql.init.authority          :refer [make-authority-fn]]
             [lrsql.system.util             :refer [assert-config]]
-            [lrsql.util.concurrency        :refer [with-rerunable-txn]]))
+            [lrsql.util.concurrency        :refer [with-rerunable-txn]]
+            [xapi-schema.spec              :as xs]))
 
 (defn- lrs-conn
   "Get the connection pool from the LRS instance."
@@ -109,8 +110,9 @@
           (lrs-conn lrs)
           authority
           (-> auth-identity :agent)
+          ;; TODO: get version explicitly from the implementation
           stmts
-          (map (partial stmt-util/prepare-statement authority)
+          (map (partial stmt-util/prepare-statement xs/*xapi-version* authority)
                statements)
           stmt-inputs
           (-> (map stmt-input/insert-statement-input stmts)

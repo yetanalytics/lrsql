@@ -8,11 +8,6 @@
 ;; Statement Preparation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; If a Statement lacks a version, the version MUST be set to 1.0.0
-;; TODO: Change for version 2.0.0
-;; FIXME: Why is this not version 1.0.3?
-(def xapi-version "1.0.0")
-
 ;; NOTE: SQL LRS overwrites any pre-existing authority object in a statement, as
 ;; suggested by the spec:
 ;; https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Data.md#requirements-14
@@ -58,7 +53,7 @@
   "Prepare `statement` for LRS storage by coll-ifying context activities
    and setting missing id, timestamp, authority, version, and stored
    properties. In addition, removes empty maps from `statement`."
-  [authority statement]
+  [version authority statement]
   (let [{?id        "id"
          ?timestamp "timestamp"
          ?version   "version"}
@@ -94,7 +89,9 @@
       (not ?timestamp)
       (assoc-to-statement "timestamp" squuid-ts-str)
       (not ?version)
-      (assoc-to-statement "version" xapi-version))))
+      (assoc-to-statement "version" (case version
+                                      "1.0.3" "1.0.0"
+                                      "2.0.0" "2.0.0")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Equality

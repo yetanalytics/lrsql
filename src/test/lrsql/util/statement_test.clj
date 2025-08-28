@@ -147,14 +147,14 @@
 
 (deftest prepare-statement-test
   (testing "adds timestamp, stored, version, and authority"
-    (let [statement* (su/prepare-statement lrs-authority statement-1)]
+    (let [statement* (su/prepare-statement "1.0.3" lrs-authority statement-1)]
       (is (inst? (u/str->time (get statement* "timestamp"))))
       (is (inst? (u/str->time (get statement* "stored"))))
-      (is (= su/xapi-version (get statement* "version")))
+      (is (= "1.0.0" (get statement* "version")))
       (is (= lrs-authority (get statement* "authority")))))
   (testing "overwrites authority"
     (is (= lrs-authority
-           (-> (su/prepare-statement lrs-authority statement-2)
+           (-> (su/prepare-statement "1.0.3" lrs-authority statement-2)
                (get "authority")))))
   (testing "dissocs empty maps"
     (is (= {"id"          sample-id
@@ -164,7 +164,7 @@
             "attachments" [(dissoc sample-attachment
                                    "display"
                                    "description")]}
-           (-> (su/prepare-statement lrs-authority statement-3)
+           (-> (su/prepare-statement "1.0.3" lrs-authority statement-3)
                (dissoc "timestamp" "stored" "authority" "version"))))
     (is (= {"id"     sample-id
             "actor"  sample-group
@@ -176,7 +176,7 @@
                              "source"  [{"id" "Source"}]
                              "target"  [{"id" "Target"}]
                              "steps"   [{"id" "Step"}]})}
-           (-> (su/prepare-statement lrs-authority statement-4)
+           (-> (su/prepare-statement "1.0.3" lrs-authority statement-4)
                (dissoc "timestamp" "stored" "authority" "version"))))))
 
 (deftest statements-equal-test
