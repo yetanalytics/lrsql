@@ -14,4 +14,5 @@
  :stmt-retry-budget       10000
  :enable-reactions        true
  :reaction-buffer-size    10000
- :supported-versions      "1.0.3,2.0.0"}
+ :supported-versions      "1.0.3,2.0.0"
+ :enable-strict-version   false}

@@ -159,7 +159,7 @@
             ;; No more statement inputs - return
             stmt-res)))))
   (-get-statements
-    [lrs _ctx auth-identity params ltags]
+    [lrs ctx auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
           prefix (:stmt-url-prefix config)
@@ -168,9 +168,16 @@
           ?auth  (if auth? (:agent auth-identity) nil)
           inputs (-> params
                      (stmt-util/ensure-default-max-limit config)
-                     (stmt-input/query-statement-input ?auth))]
+                     (stmt-input/query-statement-input ?auth))
+          version (:com.yetanalytics.lrs/version ctx)
+          strict-version?
+          (:enable-strict-version config)]
       (jdbc/with-transaction [tx conn]
-        (stmt-q/query-statements backend tx inputs ltags prefix))))
+        (cond-> (stmt-q/query-statements backend tx inputs ltags prefix)
+          (and
+           strict-version?
+           (= "1.0.3" version))
+          stmt-util/strict-version-result))))
   (-consistent-through
     [_lrs _ctx _auth-identity]
     (str (util/current-time)))

@@ -148,6 +148,8 @@
     :into #{}
     :min-count 1)))
 
+(s/def ::enable-strict-version boolean?)
+
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
          (s/conformer u/remove-neg-vals)
@@ -160,7 +162,8 @@
                           ::oidc-scope-prefix
                           ::enable-reactions
                           ::reaction-buffer-size
-                          ::supported-versions]
+                          ::supported-versions
+                          ::enable-strict-version]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default

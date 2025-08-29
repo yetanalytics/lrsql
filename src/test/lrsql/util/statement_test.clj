@@ -3,7 +3,8 @@
             [clojure.spec.alpha :as s]
             [lrsql.util.statement :as su]
             [lrsql.util :as u]
-            [xapi-schema.spec :as xs]))
+            [xapi-schema.spec :as xs]
+            [xapi-schema.spec.resources :as xsr]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Test Constants
@@ -353,3 +354,20 @@
                 statement-5)))
       (is (s/valid? ::xs/statement
                (su/convert-200-to-103 statement-5))))))
+
+(deftest strict-version-result-test
+  (testing "Convert statements get result to strict version"
+    (testing "single statement result"
+      (binding [xs/*xapi-version* "1.0.3"]
+        (is (s/valid? ::xs/statement
+               (get (su/strict-version-result
+                     {:statement statement-5})
+                    :statement)))))
+    (testing "multiple statement result"
+      (binding [xs/*xapi-version* "1.0.3"]
+        (is (s/valid? ::xs/statements
+               (get-in
+                (su/strict-version-result
+                 {:statement-result
+                  {:statements [statement-5]}})
+                [:statement-result :statements])))))))

@@ -244,3 +244,16 @@
         (cond-> (get statement "context")
           (update "context" dissoc "contextAgents" "contextGroups")))
     statement))
+
+(defn strict-version-result
+  "Process a get-statements result in strict version mode."
+  [{:keys [statement statement-result]
+    :as    get-statements-ret}]
+  (cond
+    statement
+    (update get-statements-ret :statement convert-200-to-103)
+    statement-result
+    (update-in get-statements-ret
+               [:statement-result :statements]
+               #(mapv convert-200-to-103 %))
+    :else get-statements-ret))
