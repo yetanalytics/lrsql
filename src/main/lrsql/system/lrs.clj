@@ -38,8 +38,7 @@
             [lrsql.util                    :as util]
             [lrsql.init.authority          :refer [make-authority-fn]]
             [lrsql.system.util             :refer [assert-config]]
-            [lrsql.util.concurrency        :refer [with-rerunable-txn]]
-            [xapi-schema.spec              :as xs]))
+            [lrsql.util.concurrency        :refer [with-rerunable-txn]]))
 
 (defn- lrs-conn
   "Get the connection pool from the LRS instance."
@@ -105,14 +104,14 @@
 
   lrsp/StatementsResource
   (-store-statements
-    [lrs _ctx auth-identity statements attachments]
+    [lrs ctx auth-identity statements attachments]
     (let [conn
           (lrs-conn lrs)
           authority
           (-> auth-identity :agent)
-          ;; TODO: get version explicitly from the implementation
+          version (:com.yetanalytics.lrs/version ctx)
           stmts
-          (map (partial stmt-util/prepare-statement xs/*xapi-version* authority)
+          (map (partial stmt-util/prepare-statement version authority)
                statements)
           stmt-inputs
           (-> (map stmt-input/insert-statement-input stmts)
