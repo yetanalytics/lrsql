@@ -1,22 +1,22 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "pgAdminPassword": {
-            "reference": {
-                "keyVault": {
-                    "id": "/subscriptions/<subId>/resourceGroups/lrsql-rg/providers/Microsoft.KeyVault/vaults/lrsqlkv"
-                },
-                "secretName": "pgAdminPassword"
-            }
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "pgAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/94d5bee5-0e35-45dd-b312-e2e8301097de/resourceGroups/lrsql-secrets-rg/providers/Microsoft.KeyVault/vaults/lrsql-secrets-kv"
         },
-        "allowedClientIps": {
-            "reference": {
-                "keyVault": {
-                    "id": "/subscriptions/<subId>/resourceGroups/lrsql-rg/providers/Microsoft.KeyVault/vaults/lrsqlkv"
-                },
-                "secretName": "allowedClientIps"
-            }
-        }
+        "secretName": "pgAdminPassword"
+      }
+    },
+    "lrsqlAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/94d5bee5-0e35-45dd-b312-e2e8301097de/resourceGroups/lrsql-secrets-rg/providers/Microsoft.KeyVault/vaults/lrsql-secrets-kv"
+        },
+        "secretName": "lrsqlAdminPassword"
+      }
     }
+  }
 }

@@ -30,16 +30,6 @@ param pgStorageType string = 'Premium_LRS'
 @allowed(['P1','P2','P3','P4','P6','P10','P15','P20','P30','P40','P50','P60','P70','P80'])
 param pgStorageTier string = 'P4'
 
-// ---- Simple public networking (dev) ----
-@description('Enable public network access to the server (dev/simple).')
-param publicNetworkAccess bool = true
-
-@description('(Optional) allow Azure services to connect (0.0.0.0 firewall rule).')
-param allowAzureServices bool = false
-
-@description('(Optional) client IPv4s to permit; each entry creates a firewall rule (start=end).')
-param allowedClientIps string = '[]'
-
 // ---- Derived names/values ----
 var pgServerName = toLower('${namePrefix}-pg-${uniqueString(resourceGroup().id)}')
 
@@ -51,6 +41,84 @@ param lrsqlAdminUser string = 'admin'
 @secure()
 @description('(required) LRSQL Admin Password')
 param lrsqlAdminPassword string
+
+// -------------------- Variables --------------------
+
+var vnetName       = '${namePrefix}-vnet'
+var appSubnetName  = 'appsvc-subnet'
+var pgSubnetName   = 'pg-subnet'
+var pgDnsZoneName  = 'privatelink.postgres.database.azure.com'
+
+// -------------------- Networking --------------------
+
+resource vnet 'Microsoft.Network/virtualNetworks@2024-03-01' = {
+  name: vnetName
+  location: location
+  properties: {
+    addressSpace: {
+      addressPrefixes: [
+        '10.20.0.0/16'
+      ]
+    }
+    subnets: [
+      // App Service Integration subnet (dedicated)
+      {
+        name: appSubnetName
+        properties: {
+          addressPrefix: '10.20.1.0/24'
+          delegations: [
+            {
+              name: 'appsvcDelegation'
+              properties: {
+                serviceName: 'Microsoft.Web/serverFarms'
+              }
+            }
+          ]
+        }
+      }
+      // PG Flexible Server delegated subnet
+      {
+        name: pgSubnetName
+        properties: {
+          addressPrefix: '10.20.2.0/24'
+          delegations: [
+            {
+              name: 'pgDelegation'
+              properties: {
+                serviceName: 'Microsoft.DBforPostgreSQL/flexibleServers'
+              }
+            }
+          ]
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
+        }
+      }
+    ]
+  }
+}
+
+var appSubnetId = '${vnet.id}/subnets/${appSubnetName}'
+var pgSubnetId  = '${vnet.id}/subnets/${pgSubnetName}'
+
+// Private DNS zone for Azure Database for PostgreSQL Flexible Server
+resource pgDns 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: pgDnsZoneName
+  location: 'global'
+}
+
+resource pgDnsVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  name: 'vnet-link'
+  location: 'global'
+  parent: pgDns
+  properties: {
+    virtualNetwork: {
+      id: vnet.id
+    }
+    registrationEnabled: false
+  }
+}
+
+// -------- Postgres ----------
 
 // Use a stable non-preview API where possible
 resource pgServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
@@ -74,13 +142,16 @@ resource pgServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
       // iops/throughput are not required for Premium_LRS; omit for cheapest
     }
     network: {
-      publicNetworkAccess: publicNetworkAccess ? 'Enabled' : 'Disabled'
+      delegatedSubnetResourceId: pgSubnetId
+      privateDnsZoneArmResourceId: pgDns.id
     }
     highAvailability: {
       mode: 'Disabled'
     }
     // Intentionally omitting "backup" block for simplest defaults (PITR defaults apply)
     createMode: 'Default'
+
+    
   }
 }
 
@@ -93,27 +164,7 @@ resource pgDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-01' =
   properties: {}
 }
 
-// Optional firewall rules if using public access
-resource firewallAzure 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2024-08-01' = if (publicNetworkAccess && allowAzureServices) {
-  name: '${pgServer.name}/AllowAllAzureIPs'
-  properties: {
-    startIpAddress: '0.0.0.0'
-    endIpAddress: '0.0.0.0'
-  }
-}
-
-resource firewallClients 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2024-08-01' = [for (ip, i) in (publicNetworkAccess ? json(allowedClientIps) : []): {
-  name: '${pgServer.name}/Client_${i}'
-  properties: {
-    startIpAddress: string(ip)
-    endIpAddress: string(ip)
-  }
-}]
-
-// Load the docker-compose.yml into bicep at compile time
-var composeText = loadTextContent('docker-compose.yml')
-
-resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
+resource plan 'Microsoft.Web/serverfarms@2024-11-01' = {
   name: '${appName}-plan'
   location: location
   kind: 'linux'
@@ -126,20 +177,36 @@ resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
   }
 }
 
-resource app 'Microsoft.Web/sites@2023-12-01' = {
+resource app 'Microsoft.Web/sites@2024-11-01' = {
   name: appName
   location: location
   kind: 'app,linux,container'
+  dependsOn: [
+    plan
+  ]
   properties: {
     serverFarmId: plan.id
     httpsOnly: true
     siteConfig: {
-      linuxFxVersion: 'COMPOSE|${base64(composeText)}'
+      linuxFxVersion: 'DOCKER|yetanalytics/lrsql:latest'
+      appCommandLine: '/lrsql/bin/run_postgres.sh'
+
+      // App settings: required platform + optional health + your env
       appSettings: [
+        // azure specific stuff
+        { name: 'WEBSITES_PORT', value: '8080' }
+        { name: 'WEBSITE_HEALTHCHECK_PATH', value: '/health' }
+        { name: 'WEBSITE_DNS_SERVER', value: '168.63.129.16' }
+        { name: 'WEBSITE_DNS_ALT_SERVER', value: '8.8.8.8'  }
+        { name: 'WEBSITE_VNET_ROUTE_ALL', value: '1' }
+        
+        // lrsql settings
         { name: 'LRSQL_DB_HOST', value: '${pgServer.name}.postgres.database.azure.com' }
         { name: 'LRSQL_DB_USER', value: pgAdminUser }
         { name: 'LRSQL_DB_PASSWORD', value: pgAdminPassword }
         { name: 'LRSQL_DB_NAME', value: pgDatabaseName }
+
+        // Credentials
         { name: 'LRSQL_ADMIN_USER_DEFAULT', value: lrsqlAdminUser }
         { name: 'LRSQL_ADMIN_PASS_DEFAULT', value: lrsqlAdminPassword }
       ]
@@ -147,7 +214,20 @@ resource app 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
-// ---- Helpful outputs ----
+// ---------- App Service VNet Integration (Swift) ----------
+
+resource appVnetIntegration 'Microsoft.Web/sites/networkConfig@2024-11-01' = {
+  name: 'virtualNetwork'
+  parent: app
+  properties: {
+    // must be a subnet delegated to Microsoft.Web/serverFarms
+    subnetResourceId: appSubnetId
+    // optional, leave out; platform sets this
+    // swiftSupported: true
+  }
+}
+
+// ---- Postgres outputs ----
 var pgHost = '${pgServer.name}.postgres.database.azure.com'
 var pgPort = '5432'
 var pgUserFull = '${pgAdminUser}@${pgServer.name}'
@@ -159,4 +239,6 @@ output psqlConnectionHint string = 'psql "host=${pgHost} port=${pgPort} dbname=$
 output urlStyleConnExample string = 'postgres://${pgUserFull}:<PASSWORD>@${pgHost}:${pgPort}/${pgDatabaseName}?sslmode=require'
 
 // ---- LRSQL app outputs ----
-output appUrl string = 'https://${reference(app.id, '2023-12-01', 'full').defaultHostName}'
+
+output appUrl string =  'https://${app.name}.azurewebsites.net'
+//output appUrl        string = 'https://${appDefaultHost}'

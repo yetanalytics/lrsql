@@ -13,7 +13,7 @@ param rgName string = 'lrsql-infra-rg'
   'westeurope'
   'northeurope'
 ])
-param location string = 'eastus'
+param location string = 'eastus2'
 
 @description('Name prefix for postgres.')
 param namePrefix string = 'lrsqldev'
@@ -80,9 +80,6 @@ module resources './resources.bicep' = {
     pgStorageSizeGB: pgStorageSizeGB
     pgStorageType: pgStorageType
     pgStorageTier: pgStorageTier
-    publicNetworkAccess: publicNetworkAccess
-    allowAzureServices: allowAzureServices
-    allowedClientIps: allowedClientIps
     lrsqlAdminPassword: lrsqlAdminPassword
     lrsqlAdminUser: lrsqlAdminUser
   }

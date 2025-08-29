@@ -9,6 +9,14 @@
                 },
                 "secretName": "pgAdminPassword"
             }
+        },
+        "lrsqlAdminPassword": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/<subId>/resourceGroups/lrsql-secrets-rg/providers/Microsoft.KeyVault/vaults/lrsql-secrets-kv"
+                },
+                "secretName": "lrsqlAdminPassword"
+            }
         }
     }
 }
