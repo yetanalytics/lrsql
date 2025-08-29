@@ -123,8 +123,6 @@
                                     :conf-overrides conf-overrides))]
       (f))))
 
-
-(def stratom (atom :tc))
 (defn fresh-maria-fixture [f]
   (let [{{{:keys [db-type
                   db-host
@@ -132,38 +130,24 @@
                   test-db-version]}
           :database} :connection :as raw-config}
         (read-config :test-maria)
-        
-        jdbc-url {:persistent (-> {:dbtype db-type
-                                   :dbname "lrsql_db"
-                                   :host db-host
-                                   :port db-port
-                                   :allowMultiQueries true}
-                                  jdbc-url)
-                  :tc (-> {:dbtype db-type
-                           :dbname  (u/uuid->str (u/generate-uuid))
-                           :allowMultiQueries true}
-                          jdbc-url
-                          (cstr/replace #"mariadb:"
-                                        (format "tc:mariadb:%s:"
-                                                "11.7.2"
-                                                #_test-db-version))
-                          (cstr/replace #"//"
-                                        "///"))}
-
         maria-config (assoc-in raw-config
                                [:connection :database :db-jdbc-url]
-                               (jdbc-url @stratom))]
+                               (-> {:dbtype db-type
+                                    :dbname  (u/uuid->str (u/generate-uuid))
+                                    :allowMultiQueries true}
+                                   jdbc-url
+                                   (cstr/replace #"mariadb:"
+                                                 (format "tc:mariadb:%s:"
+                                                         "11.7.2"
+                                                         #_test-db-version))
+                                   (cstr/replace #"//"
+                                                 "///")))]
     (with-redefs
       [read-config (constantly maria-config)
        test-system (fn [& {:keys [conf-overrides]}]
-                     (let [sys (system/system (mr/map->MariaBackend {}) :test-maria
+                     (let [sys (system/system (mr/map->MariaBackend {})
+                                              :test-maria
                                               :conf-overrides conf-overrides)]
-                       (when (= @stratom :persistent)
-                         (let [ds (jdbc/get-datasource {:jdbcUrl (clojure.string/replace (:persistent jdbc-url) "lrsql_db" "")
-                                                        :user "root"
-                                                        :password "pass"})]
-                           (jdbc/execute! ds ["drop database if exists lrsql_db;"])
-                           (jdbc/execute! ds ["create database lrsql_db;"])))
                        sys))]
       (f))))
 
