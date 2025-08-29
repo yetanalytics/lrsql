@@ -1,7 +1,9 @@
 (ns lrsql.util.statement-test
   (:require [clojure.test :refer [deftest testing is]]
+            [clojure.spec.alpha :as s]
             [lrsql.util.statement :as su]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [xapi-schema.spec :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Test Constants
@@ -108,6 +110,20 @@
                                 "description" {}}]
                     "steps"   [{"id"          "Step"
                                 "description" {}}]})})
+
+;; A version 2.0.0 version of statement-1
+(def statement-5
+  (-> statement-1
+      (assoc "version" "2.0.0")
+      (assoc "timestamp" "2025-08-29 15:16:24.816950Z")
+      (assoc-in ["context" "contextAgents"] [{"objectType" "ContextAgent"
+                                              "agent" {"mbox" "mailto:a@example.com"
+                                                       "objectType" "Agent"}}])
+      (assoc-in ["context" "contextGroups"] [{"objectType" "ContextGroup"
+                                                "group" {"mbox" "mailto:g@example.com"
+                                                          "objectType" "Group"
+                                                          "member" [{"mbox" "mailto:m@example.com"
+                                                                     "objectType" "Agent"}]}}])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -325,3 +341,15 @@
              (first (-> stream rest rest rest rest))))
       (is (nil? (first (-> stream rest rest rest rest rest))))
       (is (realized? stream)))))
+
+;; Versioning ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest convert-200-to-103-test
+  (testing "Convert 2.0.0 statement to 1.0.3"
+    (is (= statement-1
+           (su/convert-200-to-103 statement-1)))
+    (binding [xs/*xapi-version* "1.0.3"]
+      (is (not (s/valid? ::xs/statement
+                statement-5)))
+      (is (s/valid? ::xs/statement
+               (su/convert-200-to-103 statement-5))))))

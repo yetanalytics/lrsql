@@ -1,6 +1,8 @@
 (ns lrsql.util.statement
-  (:require [com.yetanalytics.pathetic :as pa]
+  (:require [clojure.string :as cs]
+            [com.yetanalytics.pathetic :as pa]
             [com.yetanalytics.lrs.xapi.statements :as ss]
+            [com.yetanalytics.lrs.xapi.statements.timestamp :as ts]
             [lrsql.util :as u]
             [lrsql.util.path :as up]))
 
@@ -28,13 +30,13 @@
     ;; Dissoc empty object activity name + description
     (= "Activity" (get-in statement ["object" "objectType"]))
     (update-in ["object" "definition"]
-            (fn [{:strs [choices scale source target steps] :as obj-def}]
-              (cond-> (dissoc-empty-lang-maps* obj-def)
-                choices (update "choices" #(mapv dissoc-empty-lang-maps* %))
-                scale   (update "scale" #(mapv dissoc-empty-lang-maps* %))
-                source  (update "source" #(mapv dissoc-empty-lang-maps* %))
-                target  (update "target" #(mapv dissoc-empty-lang-maps* %))
-                steps   (update "steps" #(mapv dissoc-empty-lang-maps* %)))))
+               (fn [{:strs [choices scale source target steps] :as obj-def}]
+                 (cond-> (dissoc-empty-lang-maps* obj-def)
+                   choices (update "choices" #(mapv dissoc-empty-lang-maps* %))
+                   scale   (update "scale" #(mapv dissoc-empty-lang-maps* %))
+                   source  (update "source" #(mapv dissoc-empty-lang-maps* %))
+                   target  (update "target" #(mapv dissoc-empty-lang-maps* %))
+                   steps   (update "steps" #(mapv dissoc-empty-lang-maps* %)))))
     ;; Dissoc empty attachemnt name + description
     (contains? statement "attachments")
     (update "attachments" #(mapv dissoc-empty-lang-maps* %))))
@@ -219,3 +221,26 @@
          (map stmt->row)
          (cons csv-headers)
          lazy-seq)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Versioning
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- ensure-103-timestamp
+  "Ensure the timestamp is in the 1.0.3 format."
+  [timestamp]
+  (if (cs/includes? timestamp " ")
+    (cs/replace-first timestamp " " "T")
+    timestamp))
+
+(defn convert-200-to-103
+  "Convert a Statement from xAPI 2.0.0 to 1.0.3 by removing properties not in
+   the 1.0.3 spec and normalizing timestamp."
+  [statement]
+  (if (= "2.0.0" (get statement "version"))
+    (-> statement
+        (assoc "version" "1.0.0")
+        (update "timestamp" ensure-103-timestamp)
+        (cond-> (get statement "context")
+          (update "context" dissoc "contextAgents" "contextGroups")))
+    statement))
