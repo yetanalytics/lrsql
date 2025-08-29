@@ -103,12 +103,11 @@
    {:name ::authenticate-admin
     :enter
     (fn authenticate-admin [ctx]
-      (let [{lrs :com.yetanalytics/lrs
+      (let [{lrs                         :com.yetanalytics/lrs
              {:keys [username password]} ::data}
             ctx
             {:keys [result]}
             (adp/-authenticate-account lrs username password)]
-
         (cond
           ;; The result is the account ID - success!
           ;; Pass it along as an intermediate value

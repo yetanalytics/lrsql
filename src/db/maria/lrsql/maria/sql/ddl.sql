@@ -11,10 +11,10 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   verb_hash    BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(verb_iri, 256))) STORED,
   is_voided    BOOLEAN DEFAULT FALSE NOT NULL,
   payload      JSON NOT NULL, -- faster read/write than JSONB
-  timestamp TIMESTAMP(6),
-  stored    TIMESTAMP(6),
-  reaction_id CHAR(36),
-  trigger_id CHAR(36),
+  timestamp    TIMESTAMP(6),
+  stored       TIMESTAMP(6),
+  reaction_id  CHAR(36),
+  trigger_id   CHAR(36),
 CONSTRAINT stmt_reaction_id_fk FOREIGN KEY (reaction_id) REFERENCES reaction(id),
 CONSTRAINT stmt_trigger_id_fk FOREIGN KEY (trigger_id) REFERENCES xapi_statement(statement_id)
 );
@@ -83,9 +83,7 @@ CREATE TABLE IF NOT EXISTS statement_to_actor (
   CONSTRAINT statement_fk_stactor
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id) ON DELETE CASCADE,
   CONSTRAINT actor_fk
-    FOREIGN KEY (actor_hash, actor_type) REFERENCES actor(actor_hash, actor_type)
-
-);
+    FOREIGN KEY (actor_hash, actor_type) REFERENCES actor(actor_hash, actor_type));
 CREATE INDEX IF NOT EXISTS stmt_actor_stmt_fk ON statement_to_actor(statement_id);
 CREATE INDEX IF NOT EXISTS stmt_actor_actor_fk ON statement_to_actor(actor_hash, actor_type);
 
@@ -95,15 +93,22 @@ CREATE INDEX IF NOT EXISTS stmt_actor_actor_fk ON statement_to_actor(actor_hash,
 CREATE TABLE IF NOT EXISTS statement_to_activity (
   id           CHAR(36) PRIMARY KEY,
   statement_id CHAR(36) NOT NULL,
-  `usage`        ENUM ('Object', 'Category', 'Grouping', 'Parent', 'Other',
-        'SubObject', 'SubCategory', 'SubGrouping', 'SubParent', 'SubOther') NOT NULL,
+  `usage`        ENUM ('Object',
+  		       'Category',
+		       'Grouping',
+		       'Parent',
+		       'Other',
+		       'SubObject',
+		       'SubCategory',
+		       'SubGrouping',
+		       'SubParent',
+		       'SubOther') NOT NULL,
   activity_iri TEXT NOT NULL,
   activity_hash BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(activity_iri, 256))) STORED,
   CONSTRAINT statement_fk_stactivity
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
   CONSTRAINT activity_fk
-    FOREIGN KEY (activity_hash) REFERENCES activity(activity_hash)
-);
+    FOREIGN KEY (activity_hash) REFERENCES activity(activity_hash));
 CREATE INDEX IF NOT EXISTS stmt_activ_stmt_fk ON statement_to_activity(statement_id);
 CREATE INDEX IF NOT EXISTS stmt_activ_activ_fk ON statement_to_activity(activity_hash);
 
@@ -135,7 +140,7 @@ CREATE TABLE IF NOT EXISTS state_document (
   agent_ifi      TEXT NOT NULL,
   agent_hash     BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(agent_ifi, 256))) STORED,
   registration   CHAR(36) DEFAULT NULL,
-  last_modified  TIMESTAMP(6) NOT NULL, -- todo---mimics WITH TIME ZONE functionality?
+  last_modified  TIMESTAMP(6) NOT NULL,
   content_type   TEXT NOT NULL,
   content_length INTEGER NOT NULL,
   contents       LONGBLOB NOT NULL,

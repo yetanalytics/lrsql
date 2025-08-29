@@ -320,7 +320,6 @@
                 (is (empty? (arb-query ["select * from statement_to_activity where statement_id  = ?" stmt-id]))))))))
       (finally (component/stop sys')))))
 
-
 (deftest download-csv-test
   (let [sys  (support/test-system)
         sys' (component/start sys)
@@ -380,7 +379,6 @@
                                                                  (dissoc "name"))})
             (let [stmt-str (str writer)
                   stmt-seq (csv/read-csv stmt-str)]
-              (println stmt-seq)
               (is (= 2 (count stmt-seq)))
               (is (= [(get stmt-2 "id")
                       (get-in stmt-2 ["actor" "mbox"] "") ; is nil
@@ -510,8 +508,8 @@
           (lrsp/-store-statements lrs auth-ident [stmt-1] [])
           (let [last-stored-1 (get-last-stored lrs auth-ident)
                 day-1         (snap-day last-stored-1)]
-            (is (= {:statement-count       2             ;; increments
-                    :actor-count           1             ;; same
+            (is (= {:statement-count       2  ;; increments
+                    :actor-count           1  ;; same
                     :last-statement-stored last-stored-1 ;; increments
                     :platform-frequency    {"example"         1
                                             ;; new platform

@@ -1,54 +1,54 @@
 {:paths ["src/main" "resources"]
  :deps
  {;; Clojure core deps
-  org.clojure/clojure                      {:mvn/version "1.11.2"}
-  org.clojure/tools.logging                {:mvn/version "1.1.0"}
-  org.clojure/core.memoize                 {:mvn/version "1.0.250"}
-  org.clojure/data.csv                     {:mvn/version "1.1.0"}
-  clojure-interop/java.security            {:mvn/version "1.0.5"}
-  org.clojure/core.async                   {:mvn/version "1.6.681"}
+  org.clojure/clojure                           {:mvn/version "1.11.2"}
+  org.clojure/tools.logging                     {:mvn/version "1.1.0"}
+  org.clojure/core.memoize                      {:mvn/version "1.0.250"}
+  org.clojure/data.csv                          {:mvn/version "1.1.0"}
+  clojure-interop/java.security                 {:mvn/version "1.0.5"}
+  org.clojure/core.async                        {:mvn/version "1.6.681"}
   ;; Util deps
-  camel-snake-kebab/camel-snake-kebab      {:mvn/version "0.4.2"}
-  cheshire/cheshire                        {:mvn/version "5.12.0"}
-  clj-commons/clj-yaml                     {:mvn/version "1.0.27"}
-  clojure.java-time/clojure.java-time      {:mvn/version "1.2.0"}
-  danlentz/clj-uuid                        {:mvn/version "0.1.9"}
-  metosin/spec-tools                       {:mvn/version "0.10.6"}
-  aero/aero                                {:mvn/version "1.1.6"}
-  selmer/selmer                            {:mvn/version "1.12.59"}
-  ch.qos.logback/logback-classic           {:mvn/version "1.5.15"}
-  commons-io/commons-io                    {:mvn/version "2.14.0"}
+  camel-snake-kebab/camel-snake-kebab           {:mvn/version "0.4.2"}
+  cheshire/cheshire                             {:mvn/version "5.12.0"}
+  clj-commons/clj-yaml                          {:mvn/version "1.0.27"}
+  clojure.java-time/clojure.java-time           {:mvn/version "1.2.0"}
+  danlentz/clj-uuid                             {:mvn/version "0.1.9"}
+  metosin/spec-tools                            {:mvn/version "0.10.6"}
+  aero/aero                                     {:mvn/version "1.1.6"}
+  selmer/selmer                                 {:mvn/version "1.12.59"}
+  ch.qos.logback/logback-classic                {:mvn/version "1.5.15"}
+  commons-io/commons-io                         {:mvn/version "2.14.0"}
   ;; DB/JDBC deps
   ;; - HikariCP: Need to exclude slf4j to make logback work properly
   ;; - HugSql: Use custom version instead of the released version (0.5.1)
-  com.stuartsierra/component               {:mvn/version "1.0.0"}
-  com.github.seancorfield/next.jdbc        {:mvn/version "1.2.709"}
-  com.yetanalytics/hugsql                  {:mvn/version "0.6.1-YetAnalytics"}
-  com.layerware/hugsql-adapter-next-jdbc   {:mvn/version "0.5.1"}
-  com.zaxxer/HikariCP                      {:mvn/version "5.0.0"
-                                            :exclusions  [org.slf4j/slf4j-api]}
+  com.stuartsierra/component                    {:mvn/version "1.0.0"}
+  com.github.seancorfield/next.jdbc             {:mvn/version "1.2.709"}
+  com.yetanalytics/hugsql                       {:mvn/version "0.6.1-YetAnalytics"}
+  com.layerware/hugsql-adapter-next-jdbc        {:mvn/version "0.5.1"}
+  com.zaxxer/HikariCP                           {:mvn/version "5.0.0"
+                                                 :exclusions  [org.slf4j/slf4j-api]}
   ;; Pedestal and Jetty webserver deps
-  io.pedestal/pedestal.jetty               {:mvn/version "0.6.3"}
-  org.eclipse.jetty/jetty-server           {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty/jetty-servlet          {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty/jetty-alpn-server      {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty.http2/http2-server     {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.56.v20240826"}
+  io.pedestal/pedestal.jetty                    {:mvn/version "0.6.3"}
+  org.eclipse.jetty/jetty-server                {:mvn/version "9.4.56.v20240826"}
+  org.eclipse.jetty/jetty-servlet               {:mvn/version "9.4.56.v20240826"}
+  org.eclipse.jetty/jetty-alpn-server           {:mvn/version "9.4.56.v20240826"}
+  org.eclipse.jetty.http2/http2-server          {:mvn/version "9.4.56.v20240826"}
+  org.eclipse.jetty/jetty-alpn-java-server      {:mvn/version "9.4.56.v20240826"}
   org.eclipse.jetty.websocket/websocket-api     {:mvn/version "9.4.56.v20240826"}
   org.eclipse.jetty.websocket/websocket-servlet {:mvn/version "9.4.56.v20240826"}
   org.eclipse.jetty.websocket/websocket-server  {:mvn/version "9.4.56.v20240826"}
   ;; Security deps
-  buddy/buddy-core    {:mvn/version "1.11.418"
-                       :exclusions [org.bouncycastle/bcprov-jdk18on
-                                    org.bouncycastle/bcpkix-jdk18on]}
-  buddy/buddy-sign    {:mvn/version "3.4.1"
-                       :exclusions [buddy/buddy-core]}
-  buddy/buddy-hashers {:mvn/version "2.0.162"
-                       :exclusions [buddy/buddy-core]}
-  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.78"}
-  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.78"}
-  less-awful-ssl/less-awful-ssl   {:mvn/version "1.0.6"}
-  xyz.capybara/clamav-client      {:mvn/version "2.1.2"}
+  buddy/buddy-core                              {:mvn/version "1.11.418"
+                                                 :exclusions  [org.bouncycastle/bcprov-jdk18on
+                                                              org.bouncycastle/bcpkix-jdk18on]}
+  buddy/buddy-sign                              {:mvn/version "3.4.1"
+                                                 :exclusions  [buddy/buddy-core]}
+  buddy/buddy-hashers                           {:mvn/version "2.0.162"
+                                                 :exclusions  [buddy/buddy-core]}
+  org.bouncycastle/bcprov-jdk18on               {:mvn/version "1.78"}
+  org.bouncycastle/bcpkix-jdk18on               {:mvn/version "1.78"}
+  less-awful-ssl/less-awful-ssl                 {:mvn/version "1.0.6"}
+  xyz.capybara/clamav-client                    {:mvn/version "2.1.2"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
   {:mvn/version "1.3.1"
@@ -71,7 +71,7 @@
                  buddy/buddy-sign]}
   com.yetanalytics/lrs-reactions
   {:mvn/version "0.0.1"
-   :exclusions [org.clojure/clojure]}
+   :exclusions  [org.clojure/clojure]}
   com.yetanalytics/gen-openapi
   {:mvn/version "0.0.4"
    :exclusions  [org.clojure/clojure
@@ -79,7 +79,7 @@
                  cheshire/cheshire
                  clj-commons/clj-yaml]}}
 
-:aliases
+ :aliases
  {:db-sqlite
   {:extra-paths ["src/db/sqlite"]
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.42.0.0"}}}
@@ -92,7 +92,7 @@
                  {:mvn/version "2.6.1"}}}
   :db-maria
   {:extra-paths ["src/db/maria"]
-   :extra-deps {org.mariadb.jdbc/mariadb-java-client  {:mvn/version "3.5.3"}}}
+   :extra-deps  {org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.5.3"}}}
   
   :bench
   {:extra-paths ["src/bench" "dev-resources"]
@@ -101,7 +101,7 @@
                  babashka/babashka.curl         {:mvn/version "0.0.3"}
                  com.yetanalytics/datasim
                  {:mvn/version "0.4.4"
-                  :exclusions [org.clojure/clojure
+                  :exclusions  [org.clojure/clojure
                                com.yetanalytics/xapi-schema]}}}
   :test
   {:extra-paths ["src/db/sqlite"
@@ -119,22 +119,22 @@
                  {:mvn/version "2.6.1"}
                  org.mariadb.jdbc/mariadb-java-client
                  {:mvn/version "3.5.3"}
-                 org.testcontainers/mariadb {:mvn/version "1.21.2"}
+                 org.testcontainers/mariadb    {:mvn/version "1.21.2"}
                  
                  ;; Other test deps
-                 org.clojure/test.check        {:mvn/version "1.1.1"}
-                 babashka/babashka.curl        {:mvn/version "0.0.3"}
-                 orchestra/orchestra           {:mvn/version "2021.01.01-1"}
+                 org.clojure/test.check {:mvn/version "1.1.1"}
+                 babashka/babashka.curl {:mvn/version "0.0.3"}
+                 orchestra/orchestra    {:mvn/version "2021.01.01-1"}
                  io.github.cognitect-labs/test-runner
                  {:git/url "https://github.com/cognitect-labs/test-runner.git"
-                  :git/sha    "3f288f1f16d167723ad87cc35b1dfee3c1681e10"}
+                  :git/sha "3f288f1f16d167723ad87cc35b1dfee3c1681e10"}
                  com.yetanalytics.lrs/test-runner
                  {:git/url    "https://github.com/yetanalytics/lrs-test-runner.git"
                   :git/sha    "8bd5be7816288e85f5c07fc11bf8cf53667e72da"
                   :exclusions [org.clojure/data.json]}
                  com.yetanalytics/datasim
                  {:mvn/version "0.4.4"
-                  :exclusions [org.clojure/clojure
+                  :exclusions  [org.clojure/clojure
                                com.yetanalytics/xapi-schema]}}}
   ;; Build alias invoked like clojure -Xbuild uber
   :build

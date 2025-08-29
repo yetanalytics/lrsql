@@ -19,9 +19,6 @@
 ;; Test content
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-#_(let [a 5]
-  (support/test-breakm))
-
 (def content-type {"Content-Type" "application/json"})
 
 (defn- login-account
@@ -50,14 +47,10 @@
 
 (deftest cors-default-test
   (let [sys  (support/test-system)
-
         sys' (component/start sys)
-
-
         ;; Seed information
         {:keys [api-key-default
                 api-secret-default]} (get-in sys' [:lrs :config])
-
         seed-body (u/write-json-str
                    {"username" api-key-default
                     "password" api-secret-default})

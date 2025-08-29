@@ -22,17 +22,6 @@
        (map (comp bytes->sql-hex sha256-bytes))
        (clojure.string/join ", "))) ;; emits: X'...', X'...', ...
 
-(defn json-extract [arg path]
-  (let [path (->> path
-                  (into [\$])
-                  (clojure.string/join \.)
-                  (format "'$%s'"))]
-  (str "JSON_EXTRACT(" arg "," path ")")))
-(defn json-unquote [arg] (str "JSON_UNQUOTE(" arg ")"))
-
-
-(def exception (atom nil))
-(def holder (atom nil))
 ;; Init HugSql functions
 
 (init-hugsql-adapter!)
@@ -78,14 +67,9 @@
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
-    ;;TODO
-    ;; only retry PGExceptions with a specified phrase
-    (reset! exception ex)
-    #_(and (instance? PSQLException ex)
-         (let [msg (.getMessage ^PSQLException ex)]
-           (or (includes? msg "ERROR: deadlock detected")
-               (includes? msg "ERROR: could not serialize access due to concurrent update")
-               (includes? msg "ERROR: could not serialize access due to read/write dependencies among transactions")))))
+
+
+    )
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
@@ -240,7 +224,7 @@
   bp/BackendIOSetter
   (-set-read! [_]
     (bd/set-read-time->instant!)
-    (md/set-read-experiment!
+    (md/set-read!
      {:json-columns #{"ruleset"
                       "error"
                       "payload"}

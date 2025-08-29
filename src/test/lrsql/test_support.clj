@@ -124,7 +124,7 @@
       (f))))
 
 
-(def stratom (atom :persistent))
+(def stratom (atom :tc))
 (defn fresh-maria-fixture [f]
   (let [{{{:keys [db-type
                   db-host

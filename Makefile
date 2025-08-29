@@ -264,7 +264,7 @@ exe: exe/lrsql.exe exe/lrsql_pg.exe
 # These targets create a bundle containing a lrsql JAR and then runs
 # the JAR to create the specific lrsql instance.
 
-.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres
+.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres run-jar-maria
 
 run-jar-sqlite-ephemeral: target/bundle
 	cd target/bundle; \
@@ -290,6 +290,14 @@ run-jar-postgres: target/bundle
 	LRSQL_API_KEY_DEFAULT=username \
 	LRSQL_API_SECRET_DEFAULT=password \
 	bin/run_postgres.sh
+
+run-jar-maria: target/bundle
+	cd target/bundle; \ 
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_maria.sh
 
 # *** Report Dependency Graph to GitHub ***
 

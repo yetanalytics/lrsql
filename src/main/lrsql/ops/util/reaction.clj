@@ -6,8 +6,6 @@
             [lrsql.util.reaction :as ru]
             [xapi-schema.spec :as-alias xs]))
 
-
-
 (def ops
   {"gt"    ">"
    "lt"    "<"

@@ -1,6 +1,6 @@
 (ns lrsql.test-runner
-  (:require [lrsql.test-support :as support]
-            [cognitect.test-runner.api :as runner]))
+  (:require[cognitect.test-runner.api :as runner]
+           [lrsql.test-support :as support]))
 
 (defn -main
   [& args]
@@ -16,4 +16,4 @@
                       "maria" support/fresh-maria-fixture)]
       (runner/test (merge {:dirs ["src/test"]}
                           (when ns {:nses [(symbol ns)]
-                                    :patterns [#"nonsensestring"]}))))))
+                                    #_#_:patterns [#"nonsensestring"]}))))))

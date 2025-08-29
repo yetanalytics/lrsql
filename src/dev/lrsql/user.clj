@@ -445,16 +445,6 @@
         (restore-vars! nses)
         (restore-fixtures! nses)))))
 
-(in-ns 'lrsql.test-runner)
-
-(with-redefs [support/fresh-db-fixture support/fresh-maria-fixture]
-  (runner/test {:dirs ["src/test"]
-                :nses ['lrsql.lrs-test]
-                :patterns [#"nonsensestring"]
-                }))
-
-(def ds)
-
 
 (defmacro capture-args []
                     (let [locals (keys &env)
@@ -481,3 +471,46 @@
                 [`(println ~(str form))
                  form]))
      (println "all done!")))
+
+
+(comment
+  (in-ns 'clojure.test)
+  (require '[clojure.main :as m])
+
+  (defmacro try-expr [msg form]
+    (let [locals (keys &env)
+          ctx-map (into {} (map (fn [s] [`'~s s]) locals))]
+
+      `(try ~(assert-expr msg form)
+            (catch Throwable t#
+              (do-report {:type :error, :message ~msg,
+                          :expected '~form, :actual t#})
+              (let [__locals__# ~ctx-map]
+                (println "🔎 Entering debug eval REPL with locals:" (keys __locals__#))
+                (m/repl :eval (fn [form#]
+                                (eval
+                                 `(let [~@(mapcat (fn [[sym# val#]] [`~sym# val#])
+                                                  __locals__#)]
+                                    ~form#)))))))))
+
+                                        ;dynamic, so can probably do that rather than alter-var-root
+  (defn test-var [v]
+    (when-let [t (:test (meta v))]
+      (binding [*testing-vars* (conj *testing-vars* v)]
+        (do-report {:type :begin-test-var, :var v})
+        (inc-report-counter :test)
+        (try (t)
+             (catch Throwable e
+               (do-report {:type :error, :message "Uncaught exception, not in assertion."
+                           :expected nil, :actual e})
+               (m/repl)             ;no locals so we can do it like so
+               ))
+        (do-report {:type :end-test-var, :var v}))))
+
+  (comment
+    (println "💥 Test failure:" ~test-name)
+    (println "🧵 Message:" (.getMessage t#)))
+
+
+  
+  )
