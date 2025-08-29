@@ -31,7 +31,7 @@ clean-dev:
 # Tests
 
 test-sqlite:
-	clojure -M:test -m lrsql.test-runner --database sqlite
+	clojure -M:test -m lrsql.test-runner --database sqlite $(if $(ns),--ns $(ns))
 
 TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres $(if $(ns),--ns $(ns))
 
@@ -292,7 +292,7 @@ run-jar-postgres: target/bundle
 	bin/run_postgres.sh
 
 run-jar-maria: target/bundle
-	cd target/bundle; \ 
+	cd target/bundle; \
 	LRSQL_ADMIN_USER_DEFAULT=username \
 	LRSQL_ADMIN_PASS_DEFAULT=password \
 	LRSQL_API_KEY_DEFAULT=username \
