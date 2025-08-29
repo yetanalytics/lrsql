@@ -7,7 +7,7 @@
             [lrsql.input.reaction          :as react-input]
             [lrsql.ops.command.reaction    :as react-cmd]
             [lrsql.ops.query.reaction      :as react-q]))
-
+;; TODO: configurable reactor xAPI version
 (defrecord Reactor [backend
                     lrs
                     reaction-executor]
@@ -55,6 +55,7 @@
                 (:statement-ids
                  (lrsp/-store-statements
                   lrs
+                  {:com.yetanalytics.lrs/version "1.0.3"}
                   {:agent  authority
                    :scopes #{:scope/statements.write}}
                   [statement]

@@ -551,9 +551,9 @@
 
               ifi         (ua/actor->ifi (stmt-0 "actor"))
               count-by-id (fn [id]
-                            (-> (lrsp/-get-statements lrs auth-ident {:statementsId id} [])
+                            (-> (lrsp/-get-statements lrs tc/ctx auth-ident {:statementsId id} [])
                                 :statement-result :statements count))]
-          (lrsp/-store-statements lrs auth-ident [stmt-0] [])
+          (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0] [])
           (is (= 1 (count-by-id (stmt-0 "id"))))
           (delete-actor headers
                         (u/write-json-str  {"actor-ifi" ifi}))
@@ -721,7 +721,7 @@
                 (bp/-query-credential-ids backend tx {:api-key api-key
                                                       :secret-key secret-key}))
 
-              _ (lrsp/-store-statements lrs auth-ident [lt/stmt-0] [])
+              _ (lrsp/-store-statements lrs tc/ctx auth-ident [lt/stmt-0] [])
               {:keys [status body]} (get-statements-via-url-param headers credential-id)]
           (is (= status 200))
           (is (seq ((u/parse-json body) "statements")))))

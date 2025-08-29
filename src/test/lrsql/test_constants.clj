@@ -4,6 +4,9 @@
 ;; General
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def ctx
+  {:com.yetanalytics.lrs/version "1.0.3"})
+
 (def auth-ident
   {:agent  {"objectType" "Agent"
             "account"    {"homePage" "http://example.org"

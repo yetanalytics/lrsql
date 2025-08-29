@@ -100,12 +100,12 @@
 
   lrsp/AboutResource
   (-get-about
-    [_lrs _auth-identity]
-    {:body {:version (into [] supported-versions)}})
+   [_lrs _ctx _auth-identity]
+   {:body {:version (into [] supported-versions)}})
 
   lrsp/StatementsResource
   (-store-statements
-    [lrs auth-identity statements attachments]
+    [lrs _ctx auth-identity statements attachments]
     (let [conn
           (lrs-conn lrs)
           authority
@@ -160,7 +160,7 @@
             ;; No more statement inputs - return
             stmt-res)))))
   (-get-statements
-    [lrs auth-identity params ltags]
+    [lrs _ctx auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
           prefix (:stmt-url-prefix config)
@@ -178,7 +178,7 @@
 
   lrsp/DocumentResource
   (-set-document
-    [lrs _auth-identity params document merge?]
+    [lrs _ctx _auth-identity params document merge?]
     (let [conn  (lrs-conn lrs)
           input (doc-input/insert-document-input params document)]
       (jdbc/with-transaction [tx conn]
@@ -186,25 +186,25 @@
           (doc-cmd/upsert-document! backend tx input)
           (doc-cmd/insert-document! backend tx input)))))
   (-get-document
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-input params)]
       (jdbc/with-transaction [tx conn]
         (doc-q/query-document backend tx input))))
   (-get-document-ids
-    [lrs _auth-identity params]
-    (let [conn  (lrs-conn lrs)
-          input (doc-input/document-ids-input params)]
-      (jdbc/with-transaction [tx conn]
-        (doc-q/query-document-ids backend tx input))))
+   [lrs _ctx _auth-identity params]
+   (let [conn  (lrs-conn lrs)
+         input (doc-input/document-ids-input params)]
+     (jdbc/with-transaction [tx conn]
+       (doc-q/query-document-ids backend tx input))))
   (-delete-document
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-input params)]
       (jdbc/with-transaction [tx conn]
         (doc-cmd/delete-document! backend tx input))))
   (-delete-documents
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-multi-input params)]
       (jdbc/with-transaction [tx conn]
@@ -212,7 +212,7 @@
 
   lrsp/AgentInfoResource
   (-get-person
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (agent-input/query-agent-input params)]
       (jdbc/with-transaction [tx conn]
@@ -220,7 +220,7 @@
 
   lrsp/ActivityInfoResource
   (-get-activity
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (activity-input/query-activity-input params)]
       (jdbc/with-transaction [tx conn]
