@@ -9,8 +9,8 @@
             [lrsql.system :as system]
             [lrsql.sqlite.record :as sr]
             [lrsql.postgres.record :as pr]
-            [lrsql.maria.record :as mr]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [clj-test-containers.core :as tc]))
 
 
 (defn- lrsql-syms
@@ -55,6 +55,49 @@
 ;; LRS test fixtures + systems
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Container spec, derived from settings
+(def ^:dynamic *postgres-container*
+  (let [{{{:keys [db-type
+                  db-host
+                  db-port
+                  db-name
+                  db-user
+                  db-password
+                  test-db-version]}
+          :database}
+         :connection} (read-config :test-postgres)]
+    (tc/create
+     {:image-name (format "%s:%s" db-type test-db-version)
+      :exposed-ports [db-port]
+      :env-vars {"POSTGRES_DB" db-name
+                 "POSTGRES_USER" db-user
+                 "POSTGRES_PASSWORD" db-password}
+      :wait-for {:wait-strategy :port}})))
+
+(def table-names
+  ["credential_to_scope"
+   "lrs_credential"
+   "admin_account"
+   "state_document"
+   "agent_profile_document"
+   "activity_profile_document"
+   "statement_to_statement"
+   "statement_to_activity"
+   "statement_to_actor"
+   "attachment"
+   "activity"
+   "actor"
+   "xapi_statement"
+   "reaction"])
+
+;; Utility to truncate all tables after tests in PG
+(defn truncate-all-postgres!
+  "Truncate all tables in the shared memory db."
+  [ds]
+  (jdbc/with-transaction [tx ds]
+    (doseq [table-name table-names]
+      (jdbc/execute! tx [(format "TRUNCATE TABLE %s CASCADE" table-name)]))))
+
 ;; Utility to truncate all tables after tests in sqlite
 (defn truncate-all-sqlite!
   "Truncate all tables in the shared memory db."
@@ -63,20 +106,7 @@
             :dbname ":memory:?cache=shared"}
         ds (jdbc/get-datasource db)]
     (jdbc/with-transaction [tx ds]
-      (doseq [table-name ["credential_to_scope"
-                          "lrs_credential"
-                          "admin_account"
-                          "state_document"
-                          "agent_profile_document"
-                          "activity_profile_document"
-                          "statement_to_statement"
-                          "statement_to_activity"
-                          "statement_to_actor"
-                          "attachment"
-                          "activity"
-                          "actor"
-                          "xapi_statement"
-                          "reaction"]]
+      (doseq [table-name table-names]
         (jdbc/execute! tx [(format "DELETE FROM %s" table-name)])))))
 
 ;; Returns `{}` as default - need to be used in a fixture
@@ -100,37 +130,47 @@
                     (system/system (sr/map->SQLiteBackend {}) :test-sqlite
                                    :conf-overrides conf-overrides))]
       (let [ret (f)]
-        (truncate-all-sqlite!)
+        ;; Wrapped in a try for fixture test
+        (try (truncate-all-sqlite!)
+             (catch Exception ex_
+               ))
         ret))))
 
 ;; Need to manually override db-type because next.jdbc does not support
 ;; `tc`-prefixed DB types.
-
 (defn fresh-postgres-fixture
   [f]
-  (let [id-str (u/uuid->str (u/generate-uuid))
-        pg-cfg (let [{{{:keys [db-type db-host db-port
-                               test-db-version]}
-                       :database} :connection :as raw-cfg}
-                     (read-config :test-postgres)]
-                 (assoc-in
-                  raw-cfg
-                  [:connection :database :db-jdbc-url]
-                  (-> {:dbtype db-type
-                       :dbname id-str
-                       :host   db-host
-                       :port   db-port}
-                      jdbc-url
-                      (cstr/replace #"postgresql:"
-                                    (format "tc:postgresql:%s:"
-                                            test-db-version)))))]
+  (let [{{{:keys [db-type
+                  db-host
+                  db-port
+                  db-name
+                  db-user
+                  db-password
+                  test-db-version]}
+          :database}
+         :connection
+         :as raw-cfg} (read-config :test-postgres)
+        mapped-port   (get (:mapped-ports *postgres-container*) db-port)
+        pg-cfg        (assoc-in
+                       raw-cfg
+                       [:connection :database :db-port]
+                       mapped-port)
+        db            {:dbtype db-type
+                       :dbname db-name
+                       :host db-host
+                       :port mapped-port
+                       :user db-user
+                       :password db-password}
+        ds            (jdbc/get-datasource db)]
     (with-redefs
       [read-config (constantly pg-cfg)
        test-system (fn [& {:keys [conf-overrides]}]
                      (system/system (pr/map->PostgresBackend {})
                                     :test-postgres
                                     :conf-overrides conf-overrides))]
-      (f))))
+      (let [ret (f)]
+        (truncate-all-postgres! ds)
+        ret))))
 
 (def fresh-db-fixture fresh-sqlite-fixture)
 
