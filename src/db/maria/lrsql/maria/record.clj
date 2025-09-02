@@ -9,6 +9,12 @@
             [clojure.string :refer [includes?]])
   (:import [java.security MessageDigest]))
 
+(defn make-path-str [p]
+   (as-> p path
+      (map #(format "\"%s\"" %) path)
+      (into [\$] path)
+      (clojure.string/join \. path)
+      (format "'%s'" path)))
 
 (defn sha256-bytes [^String s]
   (let [md (MessageDigest/getInstance "SHA-256")]

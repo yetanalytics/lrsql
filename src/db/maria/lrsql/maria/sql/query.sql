@@ -363,11 +363,7 @@ ORDER BY stored_time ASC;
 
 -- :snip snip-json-extract
 JSON_EXTRACT(:i:col,
-/*~ (as-> (:path params) path
-      (into [\$] path)
-      (clojure.string/join \. path)
-      (clojure.string/replace path ":" "\\:")
-      (str "'" path "'")) ~*/
+--~ (lrsql.maria.record/make-path-str (:path params))
 )
 
 -- :snip snip-val
@@ -390,12 +386,8 @@ JSON_EXTRACT(:i:col,
 
 -- :snip snip-contains-json
 -- :doc Does the json at col and path contain the given value? A special case with differing structure across backends
-JSON_CONTAINS(:i:col, :snip:right,
-/*~ (as-> (:path params) path
-      (into [\$] path)
-      (clojure.string/join \. path)
-      (clojure.string/replace path ":" "\\:")
-      (str "'" path "'")) ~*/
+JSON_CONTAINS(:i:col, JSON_QUOTE(:snip:right),
+--~  (lrsql.maria.record/make-path-str (:path params))
 )
 
 -- :snip snip-query-reaction

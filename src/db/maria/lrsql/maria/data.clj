@@ -61,7 +61,7 @@
   (extend-protocol SettableParameter
     IPersistentMap
     (set-parameter [^IPersistentMap m ^PreparedStatement stmt ^long i]
-      (.setObject stmt i (json/write-str m)))))
+      (.setObject stmt i (u/write-json-str m)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
