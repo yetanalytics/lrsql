@@ -1,9 +1,7 @@
 (ns lrsql.test-support
   (:require [clojure.spec.test.alpha :as stest]
-            [clojure.string :as cstr]
             [orchestra.spec.test :as otest]
             [next.jdbc :as jdbc]
-            [next.jdbc.connection :refer [jdbc-url]]
             [com.yetanalytics.datasim :as ds]
             [lrsql.init.config :refer [read-config]]
             [lrsql.system :as system]
@@ -39,7 +37,7 @@
    (let [opts {:clojure.spec.test.check/opts
                {:num-tests num-tests
                 :seed      (rand-int Integer/MAX_VALUE)}}
-         res (stest/check fname opts)]
+         res  (stest/check fname opts)]
      (when-not (true? (-> res first :clojure.spec.test.check/ret :pass?))
        res))))
 
@@ -58,7 +56,6 @@
 ;; Container spec, derived from settings
 (def ^:dynamic *postgres-container*
   (let [{{{:keys [db-type
-                  db-host
                   db-port
                   db-name
                   db-user
@@ -67,12 +64,12 @@
           :database}
          :connection} (read-config :test-postgres)]
     (tc/create
-     {:image-name (format "%s:%s" db-type test-db-version)
+     {:image-name    (format "%s:%s" db-type test-db-version)
       :exposed-ports [db-port]
-      :env-vars {"POSTGRES_DB" db-name
-                 "POSTGRES_USER" db-user
-                 "POSTGRES_PASSWORD" db-password}
-      :wait-for {:wait-strategy :port}})))
+      :env-vars      {"POSTGRES_DB"       db-name
+                      "POSTGRES_USER"     db-user
+                      "POSTGRES_PASSWORD" db-password}
+      :wait-for      {:wait-strategy :port}})))
 
 (def table-names
   ["credential_to_scope"
@@ -125,14 +122,14 @@
                    (assoc-in [:connection :database :db-name]
                              ":memory:?cache=shared"))]
     (with-redefs
-     [read-config (constantly sl-cfg)
-      test-system (fn [& {:keys [conf-overrides]}]
-                    (system/system (sr/map->SQLiteBackend {}) :test-sqlite
-                                   :conf-overrides conf-overrides))]
+      [read-config (constantly sl-cfg)
+       test-system (fn [& {:keys [conf-overrides]}]
+                     (system/system (sr/map->SQLiteBackend {}) :test-sqlite
+                                    :conf-overrides conf-overrides))]
       (let [ret (f)]
         ;; Wrapped in a try for fixture test
         (try (truncate-all-sqlite!)
-             (catch Exception ex_
+             (catch Exception _
                ))
         ret))))
 
@@ -145,8 +142,7 @@
                   db-port
                   db-name
                   db-user
-                  db-password
-                  test-db-version]}
+                  db-password]}
           :database}
          :connection
          :as raw-cfg} (read-config :test-postgres)
@@ -155,11 +151,11 @@
                        raw-cfg
                        [:connection :database :db-port]
                        mapped-port)
-        db            {:dbtype db-type
-                       :dbname db-name
-                       :host db-host
-                       :port mapped-port
-                       :user db-user
+        db            {:dbtype   db-type
+                       :dbname   db-name
+                       :host     db-host
+                       :port     mapped-port
+                       :user     db-user
                        :password db-password}
         ds            (jdbc/get-datasource db)]
     (with-redefs
@@ -195,9 +191,9 @@
    (fn splode [{:keys [_title
                        _status
                        tests]
-                :as test}
+                :as   test}
                & {:keys [depth]
-                  :or {depth 0}}]
+                  :or   {depth 0}}]
      (cons (-> test
                (assoc :depth depth))
            (mapcat #(splode % :depth (inc depth))
