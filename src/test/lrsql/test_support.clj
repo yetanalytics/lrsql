@@ -2,6 +2,7 @@
   (:require [clojure.spec.test.alpha :as stest]
             [clojure.string :as cstr]
             [orchestra.spec.test :as otest]
+            [next.jdbc :as jdbc]
             [next.jdbc.connection :refer [jdbc-url]]
             [com.yetanalytics.datasim :as ds]
             [lrsql.init.config :refer [read-config]]
@@ -54,6 +55,30 @@
 ;; LRS test fixtures + systems
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Utility to truncate all tables after tests in sqlite
+(defn truncate-all-sqlite!
+  "Truncate all tables in the shared memory db."
+  []
+  (let [db {:dbtype "sqlite"
+            :dbname ":memory:?cache=shared"}
+        ds (jdbc/get-datasource db)]
+    (jdbc/with-transaction [tx ds]
+      (doseq [table-name ["credential_to_scope"
+                          "lrs_credential"
+                          "admin_account"
+                          "state_document"
+                          "agent_profile_document"
+                          "activity_profile_document"
+                          "statement_to_statement"
+                          "statement_to_activity"
+                          "statement_to_actor"
+                          "attachment"
+                          "activity"
+                          "actor"
+                          "xapi_statement"
+                          "reaction"]]
+        (jdbc/execute! tx [(format "DELETE FROM %s" table-name)])))))
+
 ;; Returns `{}` as default - need to be used in a fixture
 (defn test-system
   "Create a lrsql system specifically for tests. Optional kwarg `conf-overrides`
@@ -67,41 +92,16 @@
 (defn fresh-sqlite-fixture
   [f]
   (let [sl-cfg (-> (read-config :test-sqlite)
-                   (assoc-in [:connection :database :db-name] ":memory:"))]
+                   (assoc-in [:connection :database :db-name]
+                             ":memory:?cache=shared"))]
     (with-redefs
-      [read-config (constantly sl-cfg)
-       test-system (fn [& {:keys [conf-overrides]}]
-                     (system/system (sr/map->SQLiteBackend {}) :test-sqlite
-                                    :conf-overrides conf-overrides))]
-      (f))))
-
-(defn fresh-maria-fixture [f]
-  (let [{{{:keys [db-type
-                  db-host
-                  db-port
-                  test-db-version]}
-          :database} :connection :as raw-config}
-        (read-config :test-maria)
-        maria-config (assoc-in raw-config
-                               [:connection :database :db-jdbc-url]
-                               (-> {:dbtype db-type
-                                    :dbname  (u/uuid->str (u/generate-uuid))
-                                    :allowMultiQueries true}
-                                   jdbc-url
-                                   (cstr/replace #"mariadb:"
-                                                 (format "tc:mariadb:%s:"
-                                                         "11.7.2"
-                                                         #_test-db-version))
-                                   (cstr/replace #"//"
-                                                 "///")))]
-    (with-redefs
-      [read-config (constantly maria-config)
-       test-system (fn [& {:keys [conf-overrides]}]
-                     (let [sys (system/system (mr/map->MariaBackend {})
-                                              :test-maria
-                                              :conf-overrides conf-overrides)]
-                       sys))]
-      (f))))
+     [read-config (constantly sl-cfg)
+      test-system (fn [& {:keys [conf-overrides]}]
+                    (system/system (sr/map->SQLiteBackend {}) :test-sqlite
+                                   :conf-overrides conf-overrides))]
+      (let [ret (f)]
+        (truncate-all-sqlite!)
+        ret))))
 
 ;; Need to manually override db-type because next.jdbc does not support
 ;; `tc`-prefixed DB types.

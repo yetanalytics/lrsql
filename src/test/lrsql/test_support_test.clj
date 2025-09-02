@@ -8,9 +8,9 @@
   (get-in config [:connection :database :db-name]))
 
 (deftest fresh-db-fixture-test
-  (testing "sets the db name to a random uuid"
+  (testing "sets the db name for shared memory db"
     (is
-     (= ":memory:"
+     (= ":memory:?cache=shared"
         (get-db-name
          (fresh-sqlite-fixture
           #(read-config :test-sqlite-mem)))))))
