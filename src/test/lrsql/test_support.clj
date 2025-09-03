@@ -125,7 +125,6 @@
       (jdbc/execute! tx [(format "TRUNCATE TABLE `%s`" t)]))
     (jdbc/execute! tx ["SET FOREIGN_KEY_CHECKS=1"])))
 
-
 ;; Returns `{}` as default - need to be used in a fixture
 (defn test-system
   "Create a lrsql system specifically for tests. Optional kwarg `conf-overrides`
