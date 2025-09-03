@@ -26,7 +26,10 @@
                     "sqlite" support/*postgres-container*
                     "postgres" support/*postgres-container*
                     "mariadb" (tc/start! support/*mariadb-container*))]
-          (runner/test {:dirs ["src/test"]}))
+          (runner/test (merge
+                        {:dirs ["src/test"]}
+                        (when ns
+                          {:nses [(symbol ns)]}))))
         (finally
           (when (= "postgres" db)
             (tc/stop! support/*postgres-container*))
