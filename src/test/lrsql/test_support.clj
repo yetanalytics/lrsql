@@ -7,9 +7,9 @@
             [lrsql.system :as system]
             [lrsql.sqlite.record :as sr]
             [lrsql.postgres.record :as pr]
+            [lrsql.maria.record :as mr]
             [lrsql.util :as u]
             [clj-test-containers.core :as tc]))
-
 
 (defn- lrsql-syms
   []
@@ -71,6 +71,26 @@
                       "POSTGRES_PASSWORD" db-password}
       :wait-for      {:wait-strategy :port}})))
 
+(def ^:dynamic *mariadb-container*
+  (let [{{{:keys [db-type
+                  db-port
+                  db-name
+                  db-user
+                  db-password
+                  test-db-version]}
+          :database}
+         :connection} (read-config :test-maria)]
+    (tc/create
+     {:image-name    (format "%s:%s" db-type test-db-version)
+      :exposed-ports [db-port]
+      :env-vars      {"MARIADB_DATABASE"             db-name
+                      "MARIADB_USER"                 db-user
+                      "MARIADB_PASSWORD"             db-password
+                      "MARIADB_RANDOM_ROOT_PASSWORD" "true"}
+      :wait-for      {:wait-strategy :log
+                      :message       "ready for connections"
+                      :times         1}})))
+
 (def table-names
   ["credential_to_scope"
    "lrs_credential"
@@ -89,7 +109,7 @@
 
 ;; Utility to truncate all tables after tests in PG
 (defn truncate-all-postgres!
-  "Truncate all tables in the shared memory db."
+  "Truncate all tables in the shared postgres db."
   [ds]
   (jdbc/with-transaction [tx ds]
     (doseq [table-name table-names]
@@ -105,6 +125,17 @@
     (jdbc/with-transaction [tx ds]
       (doseq [table-name table-names]
         (jdbc/execute! tx [(format "DELETE FROM %s" table-name)])))))
+
+;; Utility to truncate all tables after tests in Maria
+(defn truncate-all-mariadb!
+  "Truncate all tables in MariaDB."
+  [ds]
+  (jdbc/with-transaction [tx ds]
+    (jdbc/execute! tx ["SET FOREIGN_KEY_CHECKS=0"])
+    (doseq [t table-names]
+      (jdbc/execute! tx [(format "TRUNCATE TABLE `%s`" t)]))
+    (jdbc/execute! tx ["SET FOREIGN_KEY_CHECKS=1"])))
+
 
 ;; Returns `{}` as default - need to be used in a fixture
 (defn test-system
@@ -138,7 +169,6 @@
 (defn fresh-postgres-fixture
   [f]
   (let [{{{:keys [db-type
-                  db-host
                   db-port
                   db-name
                   db-user
@@ -147,13 +177,16 @@
          :connection
          :as raw-cfg} (read-config :test-postgres)
         mapped-port   (get (:mapped-ports *postgres-container*) db-port)
-        pg-cfg        (assoc-in
+        mapped-host   (get *postgres-container* :host)
+        pg-cfg        (update-in
                        raw-cfg
-                       [:connection :database :db-port]
-                       mapped-port)
+                       [:connection :database]
+                       merge
+                       {:db-port mapped-port
+                        :db-host mapped-host})
         db            {:dbtype   db-type
                        :dbname   db-name
-                       :host     db-host
+                       :host     mapped-host
                        :port     mapped-port
                        :user     db-user
                        :password db-password}
@@ -166,6 +199,41 @@
                                     :conf-overrides conf-overrides))]
       (let [ret (f)]
         (truncate-all-postgres! ds)
+        ret))))
+
+(defn fresh-mariadb-fixture
+  [f]
+  (let [{{{:keys [db-type
+                  db-port
+                  db-name
+                  db-user
+                  db-password]}
+          :database}
+         :connection
+         :as raw-cfg} (read-config :test-maria)
+        mapped-port   (get (:mapped-ports *mariadb-container*) db-port)
+        mapped-host   (get *mariadb-container* :host)
+        pg-cfg        (update-in
+                       raw-cfg
+                       [:connection :database]
+                       merge
+                       {:db-port mapped-port
+                        :db-host mapped-host})
+        db            {:dbtype   db-type
+                       :dbname   db-name
+                       :host     mapped-host
+                       :port     mapped-port
+                       :user     db-user
+                       :password db-password}
+        ds            (jdbc/get-datasource db)]
+    (with-redefs
+      [read-config (constantly pg-cfg)
+       test-system (fn [& {:keys [conf-overrides]}]
+                     (system/system (mr/map->MariaBackend {})
+                                    :test-maria
+                                    :conf-overrides conf-overrides))]
+      (let [ret (f)]
+        (truncate-all-mariadb! ds)
         ret))))
 
 (def fresh-db-fixture fresh-sqlite-fixture)

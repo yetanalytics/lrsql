@@ -23,7 +23,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp
@@ -57,10 +57,10 @@ test-postgres-15:
 test-postgres-16:
 	LRSQL_TEST_DB_VERSION=16 $(TEST_PG_COMMAND)
 
-test-maria:
-	clojure -M:test -m lrsql.test-runner --database maria $(if $(ns),--ns $(ns))
+test-mariadb:
+	clojure -M:test -m lrsql.test-runner --database mariadb $(if $(ns),--ns $(ns))
 
-ci: test-sqlite test-postgres test-maria
+ci: test-sqlite test-postgres test-mariadb
 
 
 # Dev
@@ -212,7 +212,7 @@ target/bundle/admin: resources/public/admin
 BUNDLE_RUNTIMES ?= true
 
 ifeq ($(BUNDLE_RUNTIMES),true)
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes 
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes
 else
 target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench
 endif

@@ -13,13 +13,22 @@
     (with-redefs [support/fresh-db-fixture
                   (case db
                     "sqlite"   support/fresh-sqlite-fixture
-                    "postgres" support/fresh-postgres-fixture)]
+                    "postgres" support/fresh-postgres-fixture
+                    "mariadb"  support/fresh-mariadb-fixture)]
       (try
         (binding [support/*postgres-container*
                   (case db
                     "sqlite" support/*postgres-container*
-                    "postgres" (tc/start! support/*postgres-container*))]
+                    "postgres" (tc/start! support/*postgres-container*)
+                    "mariadb" support/*mariadb-container*)
+                  support/*mariadb-container*
+                  (case db
+                    "sqlite" support/*postgres-container*
+                    "postgres" support/*postgres-container*
+                    "mariadb" (tc/start! support/*mariadb-container*))]
           (runner/test {:dirs ["src/test"]}))
         (finally
           (when (= "postgres" db)
-            (tc/stop! support/*postgres-container*)))))))
+            (tc/stop! support/*postgres-container*))
+          (when (= "mariadb" db)
+            (tc/stop! support/*mariadb-container*)))))))
