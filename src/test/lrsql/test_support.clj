@@ -54,7 +54,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Container spec, derived from settings
-(def ^:dynamic *postgres-container*
+(def postgres-container
   (let [{{{:keys [db-type
                   db-port
                   db-name
@@ -71,7 +71,7 @@
                       "POSTGRES_PASSWORD" db-password}
       :wait-for      {:wait-strategy :port}})))
 
-(def ^:dynamic *mariadb-container*
+(def mariadb-container
   (let [{{{:keys [db-type
                   db-port
                   db-name
@@ -90,6 +90,8 @@
       :wait-for      {:wait-strategy :log
                       :message       "ready for connections"
                       :times         1}})))
+
+(def ^:dynamic *container* nil)
 
 (def table-names
   ["credential_to_scope"
@@ -154,9 +156,6 @@
     (let [profile-kw    (case dbtype
                           :postgres :test-postgres
                           :mariadb  :test-maria)
-          container     (case dbtype
-                          :postgres *postgres-container*
-                          :mariadb  *mariadb-container*)
           {{{:keys [db-type
                     db-port
                     db-name
@@ -165,8 +164,8 @@
             :database}
            :connection
            :as raw-cfg} (read-config profile-kw)
-          mapped-port   (get (:mapped-ports container) db-port)
-          mapped-host   (get container :host)
+          mapped-port   (get (:mapped-ports *container*) db-port)
+          mapped-host   (get *container* :host)
           pg-cfg        (update-in
                          raw-cfg
                          [:connection :database]
