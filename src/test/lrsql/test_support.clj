@@ -166,75 +166,59 @@
 
 ;; Need to manually override db-type because next.jdbc does not support
 ;; `tc`-prefixed DB types.
-(defn fresh-postgres-fixture
-  [f]
-  (let [{{{:keys [db-type
-                  db-port
-                  db-name
-                  db-user
-                  db-password]}
-          :database}
-         :connection
-         :as raw-cfg} (read-config :test-postgres)
-        mapped-port   (get (:mapped-ports *postgres-container*) db-port)
-        mapped-host   (get *postgres-container* :host)
-        pg-cfg        (update-in
-                       raw-cfg
-                       [:connection :database]
-                       merge
-                       {:db-port mapped-port
-                        :db-host mapped-host})
-        db            {:dbtype   db-type
-                       :dbname   db-name
-                       :host     mapped-host
-                       :port     mapped-port
-                       :user     db-user
-                       :password db-password}
-        ds            (jdbc/get-datasource db)]
-    (with-redefs
-      [read-config (constantly pg-cfg)
-       test-system (fn [& {:keys [conf-overrides]}]
-                     (system/system (pr/map->PostgresBackend {})
-                                    :test-postgres
-                                    :conf-overrides conf-overrides))]
-      (let [ret (f)]
-        (truncate-all-postgres! ds)
-        ret))))
+(defn- fixture-builder
+  [dbtype]
+  (fn [f]
+    (let [profile-kw    (case dbtype
+                          :postgres :test-postgres
+                          :mariadb  :test-maria)
+          container     (case dbtype
+                          :postgres *postgres-container*
+                          :mariadb  *mariadb-container*)
+          {{{:keys [db-type
+                    db-port
+                    db-name
+                    db-user
+                    db-password]}
+            :database}
+           :connection
+           :as raw-cfg} (read-config profile-kw)
+          mapped-port   (get (:mapped-ports container) db-port)
+          mapped-host   (get container :host)
+          pg-cfg        (update-in
+                         raw-cfg
+                         [:connection :database]
+                         merge
+                         {:db-port mapped-port
+                          :db-host mapped-host})
+          db            {:dbtype   db-type
+                         :dbname   db-name
+                         :host     mapped-host
+                         :port     mapped-port
+                         :user     db-user
+                         :password db-password}
+          ds            (jdbc/get-datasource db)]
+      (with-redefs
+        [read-config (constantly pg-cfg)
+         test-system (fn [& {:keys [conf-overrides]}]
+                       (system/system ((case dbtype
+                                         :postgres pr/map->PostgresBackend
+                                         :mariadb  mr/map->MariaBackend)
+                                       {})
+                                      profile-kw
+                                      :conf-overrides conf-overrides))]
+        (let [ret (f)]
+          ((case dbtype
+             :postgres truncate-all-postgres!
+             :mariadb  truncate-all-mariadb!)
+           ds)
+          ret)))))
 
-(defn fresh-mariadb-fixture
-  [f]
-  (let [{{{:keys [db-type
-                  db-port
-                  db-name
-                  db-user
-                  db-password]}
-          :database}
-         :connection
-         :as raw-cfg} (read-config :test-maria)
-        mapped-port   (get (:mapped-ports *mariadb-container*) db-port)
-        mapped-host   (get *mariadb-container* :host)
-        pg-cfg        (update-in
-                       raw-cfg
-                       [:connection :database]
-                       merge
-                       {:db-port mapped-port
-                        :db-host mapped-host})
-        db            {:dbtype   db-type
-                       :dbname   db-name
-                       :host     mapped-host
-                       :port     mapped-port
-                       :user     db-user
-                       :password db-password}
-        ds            (jdbc/get-datasource db)]
-    (with-redefs
-      [read-config (constantly pg-cfg)
-       test-system (fn [& {:keys [conf-overrides]}]
-                     (system/system (mr/map->MariaBackend {})
-                                    :test-maria
-                                    :conf-overrides conf-overrides))]
-      (let [ret (f)]
-        (truncate-all-mariadb! ds)
-        ret))))
+(def fresh-postgres-fixture
+  (fixture-builder :postgres))
+
+(def fresh-mariadb-fixture
+  (fixture-builder :mariadb))
 
 (def fresh-db-fixture fresh-sqlite-fixture)
 
