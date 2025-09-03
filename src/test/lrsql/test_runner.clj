@@ -50,4 +50,5 @@
               (tc/stop! support/*mariadb-container*))
             (log/infof "%s container stopped. Cleaning up..." db)
             (tc/perform-cleanup!)
-            (log/info "tc cleanup complete.")))))))
+            (log/info "tc cleanup complete."))
+          (shutdown-agents))))))
