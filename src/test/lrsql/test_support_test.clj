@@ -10,7 +10,7 @@
 (deftest fresh-db-fixture-test
   (testing "sets the db name for shared memory db"
     (is
-     (= ":memory:?cache=shared"
+     (= ":memory:"
         (get-db-name
          (fresh-sqlite-fixture
           #(read-config :test-sqlite-mem)))))))

@@ -115,17 +115,6 @@
     (doseq [table-name table-names]
       (jdbc/execute! tx [(format "TRUNCATE TABLE %s CASCADE" table-name)]))))
 
-;; Utility to truncate all tables after tests in sqlite
-(defn truncate-all-sqlite!
-  "Truncate all tables in the shared memory db."
-  []
-  (let [db {:dbtype "sqlite"
-            :dbname ":memory:?cache=shared"}
-        ds (jdbc/get-datasource db)]
-    (jdbc/with-transaction [tx ds]
-      (doseq [table-name table-names]
-        (jdbc/execute! tx [(format "DELETE FROM %s" table-name)])))))
-
 ;; Utility to truncate all tables after tests in Maria
 (defn truncate-all-mariadb!
   "Truncate all tables in MariaDB."
@@ -146,23 +135,17 @@
   {})
 
 ;; `:memory:` is a special db-name value that creates an in-memory SQLite DB.
-
 (defn fresh-sqlite-fixture
   [f]
   (let [sl-cfg (-> (read-config :test-sqlite)
                    (assoc-in [:connection :database :db-name]
-                             ":memory:?cache=shared"))]
+                             ":memory:"))]
     (with-redefs
       [read-config (constantly sl-cfg)
        test-system (fn [& {:keys [conf-overrides]}]
                      (system/system (sr/map->SQLiteBackend {}) :test-sqlite
                                     :conf-overrides conf-overrides))]
-      (let [ret (f)]
-        ;; Wrapped in a try for fixture test
-        (try (truncate-all-sqlite!)
-             (catch Exception _
-               ))
-        ret))))
+      (f))))
 
 ;; Need to manually override db-type because next.jdbc does not support
 ;; `tc`-prefixed DB types.
