@@ -9,7 +9,8 @@
             [lrsql.postgres.record :as pr]
             [lrsql.maria.record :as mr]
             [lrsql.util :as u]
-            [clj-test-containers.core :as tc]))
+            [clj-test-containers.core :as tc]
+            [clojure.tools.logging :as log]))
 
 (defn- lrsql-syms
   []
@@ -148,52 +149,65 @@
                                     :conf-overrides conf-overrides))]
       (f))))
 
-;; Need to manually override db-type because next.jdbc does not support
-;; `tc`-prefixed DB types.
 (defn- fixture-builder
   [dbtype]
-  (fn [f]
-    (let [profile-kw    (case dbtype
-                          :postgres :test-postgres
-                          :mariadb  :test-maria)
-          {{{:keys [db-type
-                    db-port
-                    db-name
-                    db-user
-                    db-password]}
-            :database}
-           :connection
-           :as raw-cfg} (read-config profile-kw)
-          mapped-port   (get (:mapped-ports *container*) db-port)
-          mapped-host   (get *container* :host)
-          pg-cfg        (update-in
-                         raw-cfg
-                         [:connection :database]
-                         merge
-                         {:db-port mapped-port
-                          :db-host mapped-host})
-          db            {:dbtype   db-type
-                         :dbname   db-name
-                         :host     mapped-host
-                         :port     mapped-port
-                         :user     db-user
-                         :password db-password}
-          ds            (jdbc/get-datasource db)]
-      (with-redefs
-        [read-config (constantly pg-cfg)
-         test-system (fn [& {:keys [conf-overrides]}]
-                       (system/system ((case dbtype
-                                         :postgres pr/map->PostgresBackend
-                                         :mariadb  mr/map->MariaBackend)
-                                       {})
-                                      profile-kw
-                                      :conf-overrides conf-overrides))]
-        (let [ret (f)]
-          ((case dbtype
-             :postgres truncate-all-postgres!
-             :mariadb  truncate-all-mariadb!)
-           ds)
-          ret)))))
+  (fn db-fixture-fn [f]
+    (if (nil? *container*)
+      ;; ad-hoc test run from REPL. We must set everything up and tear it down!
+      (do
+        (log/infof "Starting container for %s..." (name dbtype))
+        (binding [*container* (tc/start!
+                               (case dbtype
+                                 :postgres postgres-container
+                                 :mariadb  mariadb-container))]
+          (log/infof "%s container started!" (name dbtype))
+          (try
+            (db-fixture-fn f)
+            (finally
+              (log/infof "Stopping %s container..." (name dbtype))
+              (tc/stop! *container*)
+              (log/infof "%s container stopped!" (name dbtype))))))
+      (let [profile-kw    (case dbtype
+                            :postgres :test-postgres
+                            :mariadb  :test-maria)
+            {{{:keys [db-type
+                      db-port
+                      db-name
+                      db-user
+                      db-password]}
+              :database}
+             :connection
+             :as raw-cfg} (read-config profile-kw)
+            mapped-port   (get (:mapped-ports *container*) db-port)
+            mapped-host   (get *container* :host)
+            pg-cfg        (update-in
+                           raw-cfg
+                           [:connection :database]
+                           merge
+                           {:db-port mapped-port
+                            :db-host mapped-host})
+            db            {:dbtype   db-type
+                           :dbname   db-name
+                           :host     mapped-host
+                           :port     mapped-port
+                           :user     db-user
+                           :password db-password}
+            ds            (jdbc/get-datasource db)]
+        (with-redefs
+          [read-config (constantly pg-cfg)
+           test-system (fn [& {:keys [conf-overrides]}]
+                         (system/system ((case dbtype
+                                           :postgres pr/map->PostgresBackend
+                                           :mariadb  mr/map->MariaBackend)
+                                         {})
+                                        profile-kw
+                                        :conf-overrides conf-overrides))]
+          (let [ret (f)]
+            ((case dbtype
+               :postgres truncate-all-postgres!
+               :mariadb  truncate-all-mariadb!)
+             ds)
+            ret))))))
 
 (def fresh-postgres-fixture
   (fixture-builder :postgres))
@@ -202,6 +216,17 @@
   (fixture-builder :mariadb))
 
 (def fresh-db-fixture fresh-sqlite-fixture)
+
+(defn set-db-fixture-mode!
+  "Manually set fixtures type to be used, useful in the REPL."
+  [dbtype]
+  (alter-var-root
+   #'fresh-db-fixture
+   (constantly
+    (case dbtype
+      :postgres fresh-postgres-fixture
+      :mariadb  fresh-mariadb-fixture
+      :sqlite   fresh-sqlite-fixture))))
 
 (defn instrumentation-fixture
   "Turn on instrumentation before running tests, turn off after."

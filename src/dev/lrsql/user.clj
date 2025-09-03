@@ -320,3 +320,17 @@
   ;; Stop the container
   (tc/stop! container)
   )
+
+;; Use containers in individual tests from the REPL!
+(comment
+
+  (require '[lrsql.test-support :as ts])
+
+  ;; Setting one of these fixture modes will result in automatically
+  ;; bootstrapping fixtures so you can use things like cider-test-run-test
+  (ts/set-db-fixture-mode! :postgres)
+
+  (ts/set-db-fixture-mode! :mariadb)
+
+
+  )
