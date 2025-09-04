@@ -12,14 +12,14 @@
 (defn maria-read-json [s]
       (u/parse-json s :keyword-keys? true))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;JWT hashing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn sha256-base64
   [^String input]
-  (let [digest (.digest (MessageDigest/getInstance "SHA-256") (.getBytes input "UTF-8"))]
+  (let [bytes  (.getBytes input "UTF-8")
+        digest (.digest (MessageDigest/getInstance "SHA-256") bytes)]
     (.encodeToString (java.util.Base64/getEncoder) digest)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -47,8 +47,7 @@
                   (= col-type-name "JSON"))
               (u/parse-json s :keyword-keys? (some? (keyword-columns label)))
 
-              :else
-              s)))))
+              :else s)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Write

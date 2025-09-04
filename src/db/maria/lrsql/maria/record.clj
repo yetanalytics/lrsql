@@ -69,6 +69,7 @@
     (create-credential-to-scope-table! tx)
     (create-blocked-jwt-table! tx))
   (-update-all! [_ _tx]
+    ;MariaDB is the latest database to get a SQl-LRS implementation, so no migrations are needed.  In the future migrations will go here.
     )
   
   bp/BackendUtil
@@ -235,7 +236,7 @@
                       "error"
                       "payload"}
       :keyword-columns #{"ruleset"
-                            "error"}}))
+                         "error"}}))
 
   (-set-write! [_]
     ;; next.jdbc automatically sets the reading of Instants as java.sql.Dates

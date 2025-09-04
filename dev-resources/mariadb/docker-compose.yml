@@ -1,0 +1,45 @@
+# Runs SQL LRS with MariaDB - Provided for demonstration purposes only!
+# To run: docker compose up
+# See the Docker Compose docs for more info: https://docs.docker.com/compose/
+volumes:
+  db_data:
+services:
+  db:
+    image: mariadb
+    volumes:
+      - db_data:/var/lib/mysql/
+    environment:
+      MARIADB_ROOT_PASSWORD: lrsql_root_password
+      MARIADB_DATABASE: lrsql_db
+      MARIADB_USER: lrsql_user
+      MARIADB_PASSWORD: lrsql_password
+
+    ports:
+      - "3306:3306" # Useful if we only want to run the DB w/o other services
+  clamav:
+    image: clamav/clamav:1.2.1
+  lrs:
+    # build: . # switch to this for active dev
+    image: yetanalytics/lrsql:latest
+    command:
+      - /lrsql/bin/run_mariadb.sh
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      LRSQL_API_KEY_DEFAULT: my_key
+      LRSQL_API_SECRET_DEFAULT: my_secret
+      LRSQL_ADMIN_USER_DEFAULT: my_username
+      LRSQL_ADMIN_PASS_DEFAULT: my_password
+      LRSQL_DB_HOST: db
+      LRSQL_DB_NAME: lrsql_db
+      LRSQL_DB_USER: lrsql_user
+      LRSQL_DB_PASSWORD: lrsql_password
+      # If MariaDB is too slow to start, increase this
+      LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
+      # Set to true if using dev UI, domain name, proxy server, etc.
+      LRSQL_ALLOW_ALL_ORIGINS: false
+      # Enable ClamAV Scanning
+      LRSQL_ENABLE_CLAMAV: true
+      LRSQL_CLAMAV_HOST: clamav
