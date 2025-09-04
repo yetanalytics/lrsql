@@ -10,13 +10,13 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   verb_iri     TEXT NOT NULL,
   verb_hash    BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(verb_iri, 256))) STORED,
   is_voided    BOOLEAN DEFAULT FALSE NOT NULL,
-  payload      JSON NOT NULL, -- faster read/write than JSONB
+  payload      JSON NOT NULL,
   timestamp    TIMESTAMP(6),
   stored       TIMESTAMP(6),
   reaction_id  CHAR(36),
   trigger_id   CHAR(36),
-CONSTRAINT stmt_reaction_id_fk FOREIGN KEY (reaction_id) REFERENCES reaction(id),
-CONSTRAINT stmt_trigger_id_fk FOREIGN KEY (trigger_id) REFERENCES xapi_statement(statement_id)
+  CONSTRAINT stmt_reaction_id_fk FOREIGN KEY (reaction_id) REFERENCES reaction(id),
+  CONSTRAINT stmt_trigger_id_fk FOREIGN KEY (trigger_id) REFERENCES xapi_statement(statement_id)
 );
 CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
 CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_hash);

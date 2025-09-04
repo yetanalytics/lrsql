@@ -264,7 +264,7 @@ exe: exe/lrsql.exe exe/lrsql_pg.exe
 # These targets create a bundle containing a lrsql JAR and then runs
 # the JAR to create the specific lrsql instance.
 
-.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres run-jar-maria
+.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres, run-jar-maria
 
 run-jar-sqlite-ephemeral: target/bundle
 	cd target/bundle; \
