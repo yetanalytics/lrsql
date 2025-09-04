@@ -1,16 +1,16 @@
 (ns lrsql.test-support
   (:require [clojure.spec.test.alpha :as stest]
-            [clojure.string :as cstr]
             [orchestra.spec.test :as otest]
-            [next.jdbc.connection :refer [jdbc-url]]
+            [next.jdbc :as jdbc]
             [com.yetanalytics.datasim :as ds]
             [lrsql.init.config :refer [read-config]]
             [lrsql.system :as system]
             [lrsql.sqlite.record :as sr]
             [lrsql.postgres.record :as pr]
             [lrsql.maria.record :as mr]
-            [lrsql.util :as u]))
-
+            [lrsql.util :as u]
+            [clj-test-containers.core :as tc]
+            [clojure.tools.logging :as log]))
 
 (defn- lrsql-syms
   []
@@ -38,7 +38,7 @@
    (let [opts {:clojure.spec.test.check/opts
                {:num-tests num-tests
                 :seed      (rand-int Integer/MAX_VALUE)}}
-         res (stest/check fname opts)]
+         res  (stest/check fname opts)]
      (when-not (true? (-> res first :clojure.spec.test.check/ret :pass?))
        res))))
 
@@ -54,6 +54,80 @@
 ;; LRS test fixtures + systems
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Container spec, derived from settings
+(def postgres-container
+  (let [{{{:keys [db-type
+                  db-port
+                  db-name
+                  db-user
+                  db-password
+                  test-db-version]}
+          :database}
+         :connection} (read-config :test-postgres)]
+    (tc/create
+     {:image-name    (format "%s:%s" db-type test-db-version)
+      :exposed-ports [db-port]
+      :env-vars      {"POSTGRES_DB"       db-name
+                      "POSTGRES_USER"     db-user
+                      "POSTGRES_PASSWORD" db-password}
+      :wait-for      {:wait-strategy :port}})))
+
+(def mariadb-container
+  (let [{{{:keys [db-type
+                  db-port
+                  db-name
+                  db-user
+                  db-password
+                  test-db-version]}
+          :database}
+         :connection} (read-config :test-maria)]
+    (tc/create
+     {:image-name    (format "%s:%s" db-type test-db-version)
+      :exposed-ports [db-port]
+      :env-vars      {"MARIADB_DATABASE"             db-name
+                      "MARIADB_USER"                 db-user
+                      "MARIADB_PASSWORD"             db-password
+                      "MARIADB_RANDOM_ROOT_PASSWORD" "true"}
+      :wait-for      {:wait-strategy :log
+                      :message       "ready for connections"
+                      :times         1}})))
+
+(def ^:dynamic *container* nil)
+
+(def table-names
+  ["credential_to_scope"
+   "lrs_credential"
+   "admin_account"
+   "state_document"
+   "agent_profile_document"
+   "activity_profile_document"
+   "statement_to_statement"
+   "statement_to_activity"
+   "statement_to_actor"
+   "attachment"
+   "activity"
+   "actor"
+   "xapi_statement"
+   "reaction"])
+
+;; Utility to truncate all tables after tests in PG
+(defn truncate-all-postgres!
+  "Truncate all tables in the shared postgres db."
+  [ds]
+  (jdbc/with-transaction [tx ds]
+    (doseq [table-name table-names]
+      (jdbc/execute! tx [(format "TRUNCATE TABLE %s CASCADE" table-name)]))))
+
+;; Utility to truncate all tables after tests in Maria
+(defn truncate-all-mariadb!
+  "Truncate all tables in MariaDB."
+  [ds]
+  (jdbc/with-transaction [tx ds]
+    (jdbc/execute! tx ["SET FOREIGN_KEY_CHECKS=0"])
+    (doseq [t table-names]
+      (jdbc/execute! tx [(format "TRUNCATE TABLE `%s`" t)]))
+    (jdbc/execute! tx ["SET FOREIGN_KEY_CHECKS=1"])))
+
 ;; Returns `{}` as default - need to be used in a fixture
 (defn test-system
   "Create a lrsql system specifically for tests. Optional kwarg `conf-overrides`
@@ -63,11 +137,11 @@
   {})
 
 ;; `:memory:` is a special db-name value that creates an in-memory SQLite DB.
-
 (defn fresh-sqlite-fixture
   [f]
   (let [sl-cfg (-> (read-config :test-sqlite)
-                   (assoc-in [:connection :database :db-name] ":memory:"))]
+                   (assoc-in [:connection :database :db-name]
+                             ":memory:"))]
     (with-redefs
       [read-config (constantly sl-cfg)
        test-system (fn [& {:keys [conf-overrides]}]
@@ -75,64 +149,84 @@
                                     :conf-overrides conf-overrides))]
       (f))))
 
-(defn fresh-maria-fixture [f]
-  (let [{{{:keys [db-type
-                  db-host
-                  db-port
-                  test-db-version]}
-          :database} :connection :as raw-config}
-        (read-config :test-maria)
-        maria-config (assoc-in raw-config
-                               [:connection :database :db-jdbc-url]
-                               (-> {:dbtype db-type
-                                    :dbname  (u/uuid->str (u/generate-uuid))
-                                    :allowMultiQueries true}
-                                   jdbc-url
-                                   (cstr/replace #"mariadb:"
-                                                 (format "tc:mariadb:%s:"
-                                                         "11.7.2"
-                                                         #_test-db-version))
-                                   (cstr/replace #"//"
-                                                 "///")))]
-    (with-redefs
-      [read-config (constantly maria-config)
-       test-system (fn [& {:keys [conf-overrides]}]
-                     (let [sys (system/system (mr/map->MariaBackend {})
-                                              :test-maria
-                                              :conf-overrides conf-overrides)]
-                       sys))]
-      (f))))
+(defn- fixture-builder
+  [dbtype]
+  (fn db-fixture-fn [f]
+    (if (nil? *container*)
+      ;; ad-hoc test run from REPL. We must set everything up and tear it down!
+      (do
+        (log/infof "Starting container for %s..." (name dbtype))
+        (binding [*container* (tc/start!
+                               (case dbtype
+                                 :postgres postgres-container
+                                 :mariadb  mariadb-container))]
+          (log/infof "%s container started!" (name dbtype))
+          (try
+            (db-fixture-fn f)
+            (finally
+              (log/infof "Stopping %s container..." (name dbtype))
+              (tc/stop! *container*)
+              (log/infof "%s container stopped!" (name dbtype))))))
+      (let [profile-kw    (case dbtype
+                            :postgres :test-postgres
+                            :mariadb  :test-maria)
+            {{{:keys [db-type
+                      db-port
+                      db-name
+                      db-user
+                      db-password]}
+              :database}
+             :connection
+             :as raw-cfg} (read-config profile-kw)
+            mapped-port   (get (:mapped-ports *container*) db-port)
+            mapped-host   (get *container* :host)
+            pg-cfg        (update-in
+                           raw-cfg
+                           [:connection :database]
+                           merge
+                           {:db-port mapped-port
+                            :db-host mapped-host})
+            db            {:dbtype   db-type
+                           :dbname   db-name
+                           :host     mapped-host
+                           :port     mapped-port
+                           :user     db-user
+                           :password db-password}
+            ds            (jdbc/get-datasource db)]
+        (with-redefs
+          [read-config (constantly pg-cfg)
+           test-system (fn [& {:keys [conf-overrides]}]
+                         (system/system ((case dbtype
+                                           :postgres pr/map->PostgresBackend
+                                           :mariadb  mr/map->MariaBackend)
+                                         {})
+                                        profile-kw
+                                        :conf-overrides conf-overrides))]
+          (let [ret (f)]
+            ((case dbtype
+               :postgres truncate-all-postgres!
+               :mariadb  truncate-all-mariadb!)
+             ds)
+            ret))))))
 
-;; Need to manually override db-type because next.jdbc does not support
-;; `tc`-prefixed DB types.
+(def fresh-postgres-fixture
+  (fixture-builder :postgres))
 
-(defn fresh-postgres-fixture
-  [f]
-  (let [id-str (u/uuid->str (u/generate-uuid))
-        pg-cfg (let [{{{:keys [db-type db-host db-port
-                               test-db-version]}
-                       :database} :connection :as raw-cfg}
-                     (read-config :test-postgres)]
-                 (assoc-in
-                  raw-cfg
-                  [:connection :database :db-jdbc-url]
-                  (-> {:dbtype db-type
-                       :dbname id-str
-                       :host   db-host
-                       :port   db-port}
-                      jdbc-url
-                      (cstr/replace #"postgresql:"
-                                    (format "tc:postgresql:%s:"
-                                            test-db-version)))))]
-    (with-redefs
-      [read-config (constantly pg-cfg)
-       test-system (fn [& {:keys [conf-overrides]}]
-                     (system/system (pr/map->PostgresBackend {})
-                                    :test-postgres
-                                    :conf-overrides conf-overrides))]
-      (f))))
+(def fresh-mariadb-fixture
+  (fixture-builder :mariadb))
 
 (def fresh-db-fixture fresh-sqlite-fixture)
+
+(defn set-db-fixture-mode!
+  "Manually set fixtures type to be used, useful in the REPL."
+  [dbtype]
+  (alter-var-root
+   #'fresh-db-fixture
+   (constantly
+    (case dbtype
+      :postgres fresh-postgres-fixture
+      :mariadb  fresh-mariadb-fixture
+      :sqlite   fresh-sqlite-fixture))))
 
 (defn instrumentation-fixture
   "Turn on instrumentation before running tests, turn off after."
@@ -155,9 +249,9 @@
    (fn splode [{:keys [_title
                        _status
                        tests]
-                :as test}
+                :as   test}
                & {:keys [depth]
-                  :or {depth 0}}]
+                  :or   {depth 0}}]
      (cons (-> test
                (assoc :depth depth))
            (mapcat #(splode % :depth (inc depth))

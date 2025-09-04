@@ -23,7 +23,7 @@
   (def ds (-> sys' :lrs :connection :conn-pool))
 
 
-  
+
   (lrsp/-store-statements lrs auth-ident [stmt-1] [])
   (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
 
@@ -76,7 +76,7 @@
        FROM pragma_table_info('admin_account')
        WHERE name = 'passhash'
        AND \"notnull\" = 1"])
-    
+
     (jdbc/execute!
      ds
      ["SELECT 1
@@ -84,7 +84,7 @@
        WHERE \"table\" = 'xapi_statement'
        AND on_delete = 'CASCADE'
       "])
-    
+
     (jdbc/execute!
      ds
      ["SELECT 1
@@ -176,10 +176,10 @@
           (adp/-create-api-keys lrs account-id ["agents_profile"])
           (adp/-create-api-keys lrs account-id ["agents_profile/read"]))
         (range 0 100000))
-  
+
   ;; Note: deletes initial username + password API keys
   (jdbc/execute! ds ["DELETE FROM credential_to_scope"])
-  
+
   ;; Query enums
 
   (jdbc/execute!
@@ -220,7 +220,7 @@
    '[lrsql.backend.protocol :aps bp]
    '[clojure.data.json :as json]
    '[lrsql.maria.data :as md])
-  
+
 
   (do (require '[clojure.tools.namespace.repl :refer [refresh]])
       (refresh)
@@ -231,30 +231,28 @@
           (def lrs (:lrs sys'))
           (def bk (:backend lrs))
           (def ds (-> sys' :lrs :connection :conn-pool))))
-  
-  #_(lrsql.init.log/set-log-level! "DEBUG")
+
   (def sys (system/system (rm/map->MariaBackend {}) :test-maria))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
   (def bk (:backend lrs))
-    
+
   (def ds (-> sys' :lrs :connection :conn-pool))
-  @stmt-cmd/holder
 
 
-  
+
   (lrsp/-store-statements lrs auth-ident [stmt-0 stmt-1 stmt-2] [])
   (lrsp/-store-statements lrs auth-ident [stmt-2] [])
   (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
 
 
 
-  
-  
+
+
   (do (require '[lrsql.test-runner :as tr])
       (tr/-main {"--database" "maria"}))
-  
+
   ;; Sanity check queries
   (jdbc/execute! ds
                  ["SELECT stmt.payload FROM xapi_statement stmt LIMIT 1"])
@@ -269,248 +267,70 @@
   (component/stop sys')
   )
 
-
-(with-open [writer (java.io.StringWriter.)]
-              (adp/-get-statements-csv lrs writer  [["id"] ["actor" "mbox"] ["verb" "id"] ["object" "id"]] {})
-              (str writer)
-)
-
-
-(require '[next.jdbc.result-set :as jrs])
-
-(require '[lrsql.ops.query.statement :as qs])
-(require '[com.yetanalytics.pathetic :as pa])
-
-(println  (lrsp/-get-statements lrs auth-ident {} []))
-
-(def res  (lrsp/-get-statements lrs auth-ident {} []))
-
-
-
-(stmt-input/query-statement-input {:ascending true} auth-ident )
-
- (get-ss lrs auth-ident {:limit 2 :ascending true} #{})
-
-
-;;;;single test harness
+;; Maria with containers
 (comment
   (require
+   '[lrsql.maria.record :as rm]
+   '[hugsql.core :as hug]
+   '[lrsql.init.log]
    '[lrsql.test-support :as ts]
-   '[clojure.test :as test])
+   '[lrsql.lrs-test :refer [stmt-0 stmt-1 stmt-2 auth-ident auth-ident-oauth]]
+   '[lrsql.ops.command.statement :as stmt-cmd]
+   '[lrsql.backend.protocol :aps bp]
+   '[clojure.data.json :as json]
+   '[lrsql.maria.data :as md]
+   '[clj-test-containers.core :as tc]
+   '[lrsql.init.config :as cfg]
+   )
 
-  (def implementation
-    #_ts/fresh-sqlite-fixture
-    #_ts/fresh-postgres-fixture
-    ts/fresh-maria-fixture)
+  ;; start a container
+  (def container (tc/start! ts/mariadb-container))
 
-(defn test-test [test]
-  (implementation #(test)))
+  ;; Make a system pointing at it
+  (let [{{{:keys [db-port]}
+          :database}
+         :connection
+         :as raw-cfg} (cfg/read-config :test-maria)
+        mapped-port   (get (:mapped-ports container) db-port)
+        mapped-host   (get container :host)]
+    (def sys
+      (system/system (rm/map->MariaBackend {}) :test-maria
+                     :conf-overrides
+                     {[:connection :database :db-port] mapped-port
+                      [:connection :database :db-host] mapped-host})))
 
-(defn test-ns [ns]
   (do
-    (require ns)
-    (alter-meta! (find-ns ns)
-                 assoc
-                 ::test/each-fixtures
-                 [implementation])
-    (test/run-tests ns)))
+    (def sys' (component/start sys))
+    (def lrs (:lrs sys'))
+    (def bk (:backend lrs))
+    (def ds (-> sys' :lrs :connection :conn-pool)))
 
-(defmacro with-fixtures [& forms]
-  `(implementation
-    (fn []
-      (do ~@forms)))))
+  ;; Sanity check queries
+  (jdbc/execute! ds
+                 ["SELECT stmt.payload FROM xapi_statement stmt LIMIT 1"])
 
-(comment
-;using cognitect's test runner
-  (require '[cognitect.test-runner.api :as runner]
-           '[lrsql.test-support :as support])
-  
-  (with-redefs [support/fresh-db-fixture support/fresh-maria-fixture]
-    (runner/test {
-                  #_#_:patterns [#"lrsql.lrs-test"]
-                  :nses ['lrsql.lrs-test]
-                  :dirs ["src/test"]})))
+  (jdbc/execute! ds
+                 ["SELECT COUNT(*) FROM xapi_statement"])
 
 
 
+  ;; Stop system
+  (component/stop sys')
 
-(require '[lrsql.util.statement :as us])
-
-
-
-
-(+ 2 2)
-(defn stdin-works? []
-  (try
-    ;; Try to read a line without blocking
-    (when (.ready *in*)
-      (.readLine (java.io.BufferedReader. *in*)))
-    true
-    (catch Exception _
-      false)))
-
-(defn safe-repl []
-  (if (stdin-works?)
-    (try
-      (println "🛠️  Starting fallback REPL. Ctrl-D to exit.")
-      (clojure.main/repl)
-      (catch Throwable e
-        (println "⚠️  Could not start fallback REPL:" (.getMessage e))))
-    (println "⚠️  Input stream is not available (probably CIDER). Skipping REPL.")))
-
-(safe-repl)
-
-
-
-
-
-
-
-(defmacro test-macro [& body]
-  `(do
-     (println "test-macro!")
-     ~@body))
-
-(alter-var-root #'test-macro
-                (fn [_]
-                  (fn [& form]
-                    `(do
-                       (println "rebound!")
-                       ~@(rest form)))))
-
-(alter-meta! #'test-macro assoc :macro true)
-
-(def v)
-
-(alter-meta! #'v assoc :macro true)
-
-(alter-var-root #'v (fn [_]
-                      (fn [_ & form]
-                        `(do
-                           (println "vvvvv!!")
-                           ~@form))))
-
-(def holder (atom nil))
-(defmacro env-macro [& form]
-  (reset! holder  &env)
-  `(do ~@form)
+  ;; Stop the container
+  (tc/stop! container)
   )
 
-
-  (require '[cognitect.test-runner.api :as runner]
-           '[lrsql.test-support :as support])
-(in-ns 'cognitect.test-runner)
-
-(def unfiltered (->>  ["src/test"] 
-                     (map io/file)
-                     (mapcat find/find-namespaces-in-dir)
-                     ))
-
-(filter (ns-filter {:namespace [#{'lrsql.lrs-test}] :namespace-regex [#"lrs-test"]}) unfiltered)
-
-((ns-filter {:namespace #{'lrsql.lrs-test} :namespace-regex [#"lrs-test"]}) 'lrsql.lrs-test)
-
-
-
-(in-ns 'cognitect.test-runner)
-
-(defn- ns-filter
-  [{:keys [namespace namespace-regex] :as opts}]
-  (println "opts:" opts)
-  (let [regexes (or namespace-regex [#".*\-test$"])]
-    (fn [ns]
-      (or
-       (get namespace ns)
-       (some #(re-matches % (name ns)) regexes)))))
-
-(require 'clojure.repl)
-(clojure.repl/source test)
-
-(defn test
-  [options]
-  (let [dirs (or (:dir options)
-                 #{"test"})
-        nses (->> dirs
-                  (map io/file)
-                  (mapcat find/find-namespaces-in-dir))
-        nses (filter (ns-filter options) nses)]
-    (println "nses:" nses)
-    (println (format "\nRunning tests in %s" dirs))
-    #_#_(dorun (map require nses))
-    (try
-      (filter-vars! nses (var-filter options))
-      (filter-fixtures! nses)
-      (apply test/run-tests nses)
-      (finally
-        (restore-vars! nses)
-        (restore-fixtures! nses)))))
-
-
-(defmacro capture-args []
-                    (let [locals (keys &env)
-                          syms (mapv (comp symbol name) locals)
-                          vals (vec locals)]
-                      `(let [syms# '~syms
-                             vals# (vector ~@locals)]
-                      (def holder (atom (zipmap syms# vals#))))))
-
-(require '[clojure.walk :as walk])
-
-(defmacro with-holder [form]
-  (let [params (mapv (comp symbol gensym name) (keys @holder))
-        mapping (zipmap (keys @holder) params)
-        rewritten (walk/postwalk-replace mapping form)
-        fn-form (list 'fn params rewritten)]
-    `(apply (eval ~fn-form) (vals @holder))))
-
-
-(defmacro do-print [& forms]
-  `(do
-     ~@(apply concat
-              (for [form forms]
-                [`(println ~(str form))
-                 form]))
-     (println "all done!")))
-
-
+;; Use containers in individual tests from the REPL!
 (comment
-  (in-ns 'clojure.test)
-  (require '[clojure.main :as m])
 
-  (defmacro try-expr [msg form]
-    (let [locals (keys &env)
-          ctx-map (into {} (map (fn [s] [`'~s s]) locals))]
+  (require '[lrsql.test-support :as ts])
 
-      `(try ~(assert-expr msg form)
-            (catch Throwable t#
-              (do-report {:type :error, :message ~msg,
-                          :expected '~form, :actual t#})
-              (let [__locals__# ~ctx-map]
-                (println "🔎 Entering debug eval REPL with locals:" (keys __locals__#))
-                (m/repl :eval (fn [form#]
-                                (eval
-                                 `(let [~@(mapcat (fn [[sym# val#]] [`~sym# val#])
-                                                  __locals__#)]
-                                    ~form#)))))))))
+  ;; Setting one of these fixture modes will result in automatically
+  ;; bootstrapping fixtures so you can use things like cider-test-run-test
+  (ts/set-db-fixture-mode! :postgres)
 
-                                        ;dynamic, so can probably do that rather than alter-var-root
-  (defn test-var [v]
-    (when-let [t (:test (meta v))]
-      (binding [*testing-vars* (conj *testing-vars* v)]
-        (do-report {:type :begin-test-var, :var v})
-        (inc-report-counter :test)
-        (try (t)
-             (catch Throwable e
-               (do-report {:type :error, :message "Uncaught exception, not in assertion."
-                           :expected nil, :actual e})
-               (m/repl)             ;no locals so we can do it like so
-               ))
-        (do-report {:type :end-test-var, :var v}))))
-
-  (comment
-    (println "💥 Test failure:" ~test-name)
-    (println "🧵 Message:" (.getMessage t#)))
+  (ts/set-db-fixture-mode! :mariadb)
 
 
-  
   )
