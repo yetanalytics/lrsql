@@ -21,7 +21,7 @@ jobs:
           - test-postgres-14
           - test-postgres-15
           - test-postgres-16
-          - test-maria
+          - test-mariadb
 
     steps:
       - name: Checkout repository
