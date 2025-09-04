@@ -1,4 +1,4 @@
-{:pool-auto-commit        false
+{:pool-auto-commit        true
  :pool-keepalive-time     0
  :pool-connection-timeout 30000
  :pool-idle-timeout       600000

@@ -39,7 +39,6 @@
 (hug/def-db-fns "lrsql/maria/sql/delete.sql")
 (hug/def-sqlvec-fns "lrsql/maria/sql/query.sql")
 
-
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
 (defrecord MariaBackend [tuning]
@@ -73,9 +72,11 @@
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
-
-
-    )
+    (and (instance? java.sql.SQLException ex)
+         (let [msg (.getMessage ex)]
+           (or (includes? msg "Record has changed since last read")
+               #_(includes? msg "ERROR: could not serialize access due to concurrent update")
+               #_(includes? msg "ERROR: could not serialize access due to read/write dependencies among transactions")))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
