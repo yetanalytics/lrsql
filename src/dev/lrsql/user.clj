@@ -5,16 +5,17 @@
             [next.jdbc :as jdbc]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.admin.protocol :as adp]
-            [lrsql.util :as u]
             [lrsql.util.actor :as a-util]
-            [lrsql.maria.record :as rm]))
+            [hugsql.core :as hug]
+            [lrsql.lrs-test :refer [stmt-0 stmt-1 stmt-2 auth-ident auth-ident-oauth]]
+            [lrsql.test-support :as ts]
+            ))
 
 
 ;; SQLite
 (comment
   (require
-   '[lrsql.sqlite.record :as r]
-   '[lrsql.lrs-test :refer [stmt-1 stmt-2 auth-ident auth-ident-oauth]])
+   '[lrsql.sqlite.record :as r])
 
   (def sys (system/system (r/map->SQLiteBackend {}) :test-sqlite-mem))
   (def sys' (component/start sys))
@@ -114,7 +115,7 @@
 (comment
   (require
    '[lrsql.postgres.record :as rp]
-   '[hugsql.core :as hug])
+)
 
   (def sys (system/system (rp/map->PostgresBackend {}) :test-postgres))
   (def sys' (component/start sys))
@@ -163,18 +164,18 @@
   (run! (fn [idx]
           (when (zero? (mod idx 1000))
             (println (str "On iteration: " idx)))
-          (adp/-create-api-keys lrs account-id ["all"])
-          (adp/-create-api-keys lrs account-id ["all/read"])
-          (adp/-create-api-keys lrs account-id ["statements/read"])
-          (adp/-create-api-keys lrs account-id ["statements/read/mine"])
-          (adp/-create-api-keys lrs account-id ["statements/write"])
-          (adp/-create-api-keys lrs account-id ["define"])
-          (adp/-create-api-keys lrs account-id ["state"])
-          (adp/-create-api-keys lrs account-id ["state/read"])
-          (adp/-create-api-keys lrs account-id ["activities_profile"])
-          (adp/-create-api-keys lrs account-id ["activities_profile/read"])
-          (adp/-create-api-keys lrs account-id ["agents_profile"])
-          (adp/-create-api-keys lrs account-id ["agents_profile/read"]))
+          (adp/-create-api-keys lrs "label" account-id ["all"])
+          (adp/-create-api-keys lrs "label" account-id ["all/read"])
+          (adp/-create-api-keys lrs "label" account-id ["statements/read"])
+          (adp/-create-api-keys lrs "label" account-id ["statements/read/mine"])
+          (adp/-create-api-keys lrs "label" account-id ["statements/write"])
+          (adp/-create-api-keys lrs "label" account-id ["define"])
+          (adp/-create-api-keys lrs "label" account-id ["state"])
+          (adp/-create-api-keys lrs "label" account-id ["state/read"])
+          (adp/-create-api-keys lrs "label" account-id ["activities_profile"])
+          (adp/-create-api-keys lrs "label" account-id ["activities_profile/read"])
+          (adp/-create-api-keys lrs "label" account-id ["agents_profile"])
+          (adp/-create-api-keys lrs "label" account-id ["agents_profile/read"]))
         (range 0 100000))
 
   ;; Note: deletes initial username + password API keys
@@ -212,25 +213,13 @@
 (comment
   (require
    '[lrsql.maria.record :as rm]
-   '[hugsql.core :as hug]
    '[lrsql.init.log]
-   '[lrsql.test-support :as ts]
-   '[lrsql.lrs-test :refer [stmt-0 stmt-1 stmt-2 auth-ident auth-ident-oauth]]
-   '[lrsql.ops.command.statement :as stmt-cmd]
-   '[lrsql.backend.protocol :aps bp]
-   '[clojure.data.json :as json]
-   '[lrsql.maria.data :as md])
 
+   '[clj-test-containers.core :as tc]
+   '[lrsql.init.config :as cfg]
+   )
 
-  (do (require '[clojure.tools.namespace.repl :refer [refresh]])
-      (refresh)
-      (require '[clojure.tools.namespace.repl :refer [refresh]])
-      (do (component/stop sys')
-          (def sys (system/system (rm/map->MariaBackend {}) :test-maria))
-          (def sys' (component/start sys))
-          (def lrs (:lrs sys'))
-          (def bk (:backend lrs))
-          (def ds (-> sys' :lrs :connection :conn-pool))))
+  ;with running Docker instance
 
   (def sys (system/system (rm/map->MariaBackend {}) :test-maria))
   (def sys' (component/start sys))
@@ -240,49 +229,16 @@
 
   (def ds (-> sys' :lrs :connection :conn-pool))
 
-
-
   (lrsp/-store-statements lrs auth-ident [stmt-0 stmt-1 stmt-2] [])
   (lrsp/-store-statements lrs auth-ident [stmt-2] [])
   (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
 
-
-
-
-
-  (do (require '[lrsql.test-runner :as tr])
-      (tr/-main {"--database" "maria"}))
-
-  ;; Sanity check queries
-  (jdbc/execute! ds
-                 ["SELECT stmt.payload FROM xapi_statement stmt LIMIT 1"])
-
-  (jdbc/execute! ds
-                 ["SELECT COUNT(*) FROM xapi_statement"])
-
-
-
   ;; Stop system
 
   (component/stop sys')
-  )
+
 
 ;; Maria with containers
-(comment
-  (require
-   '[lrsql.maria.record :as rm]
-   '[hugsql.core :as hug]
-   '[lrsql.init.log]
-   '[lrsql.test-support :as ts]
-   '[lrsql.lrs-test :refer [stmt-0 stmt-1 stmt-2 auth-ident auth-ident-oauth]]
-   '[lrsql.ops.command.statement :as stmt-cmd]
-   '[lrsql.backend.protocol :aps bp]
-   '[clojure.data.json :as json]
-   '[lrsql.maria.data :as md]
-   '[clj-test-containers.core :as tc]
-   '[lrsql.init.config :as cfg]
-   )
-
   ;; start a container
   (def container (tc/start! ts/mariadb-container))
 
@@ -290,7 +246,7 @@
   (let [{{{:keys [db-port]}
           :database}
          :connection
-         :as raw-cfg} (cfg/read-config :test-maria)
+         :as _raw-cfg} (cfg/read-config :test-maria)
         mapped-port   (get (:mapped-ports container) db-port)
         mapped-host   (get container :host)]
     (def sys
@@ -319,18 +275,18 @@
 
   ;; Stop the container
   (tc/stop! container)
-  )
+
 
 ;; Use containers in individual tests from the REPL!
-(comment
-
-  (require '[lrsql.test-support :as ts])
-
-  ;; Setting one of these fixture modes will result in automatically
-  ;; bootstrapping fixtures so you can use things like cider-test-run-test
-  (ts/set-db-fixture-mode! :postgres)
-
-  (ts/set-db-fixture-mode! :mariadb)
 
 
-  )
+;; Setting one of these fixture modes will result in automatically
+;; bootstrapping fixtures so you can use things like cider-test-run-test
+(ts/set-db-fixture-mode! :postgres)
+
+(ts/set-db-fixture-mode! :mariadb)
+)
+
+
+
+

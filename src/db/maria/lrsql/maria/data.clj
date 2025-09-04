@@ -1,8 +1,7 @@
 (ns lrsql.maria.data
   (:require [next.jdbc.prepare :refer [SettableParameter]]
             [next.jdbc.result-set :refer [ReadableColumn]]
-            [lrsql.util :as u]
-            [clojure.data.json :as json])
+            [lrsql.util :as u])
   (:import [clojure.lang IPersistentMap]
            [java.sql PreparedStatement ResultSetMetaData]
            [java.security MessageDigest]))
@@ -38,9 +37,7 @@
 
     (read-column-by-index [^String s ^ResultSetMetaData rsmeta ^long i]
       (let [label (.getColumnLabel rsmeta i)
-            col-type (.getColumnType rsmeta i)
-            col-type-name (.getColumnTypeName rsmeta i)
-            table-name (.getTableName rsmeta i)]
+            col-type-name (.getColumnTypeName rsmeta i)]
 
         (cond (and (= col-type-name "CHAR")
                    (= (count s) 36))

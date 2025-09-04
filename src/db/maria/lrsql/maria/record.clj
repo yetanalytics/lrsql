@@ -68,15 +68,14 @@
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx)
     (create-blocked-jwt-table! tx))
-  (-update-all! [_ tx])
-
+  (-update-all! [_ _tx]
+    )
+  
   bp/BackendUtil
   (-txn-retry? [_ ex]
     (and (instance? java.sql.SQLException ex)
          (let [msg (.getMessage ex)]
-           (or (includes? msg "Record has changed since last read")
-               #_(includes? msg "ERROR: could not serialize access due to concurrent update")
-               #_(includes? msg "ERROR: could not serialize access due to read/write dependencies among transactions")))))
+           (includes? msg "Record has changed since last read"))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
