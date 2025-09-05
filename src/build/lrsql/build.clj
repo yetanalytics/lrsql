@@ -8,7 +8,8 @@
   ["src/main"
    "resources"
    "src/db/sqlite"
-   "src/db/postgres"])
+   "src/db/postgres"
+   "src/db/maria"])
 
 (def class-dir
   "target/classes/")
@@ -28,7 +29,7 @@
 (defn- create-basis []
   (b/create-basis
    {:project "deps.edn"
-    :aliases [:db-sqlite :db-postgres]}))
+    :aliases [:db-sqlite :db-postgres :db-maria]}))
 
 (defn write-git-data! []
   (when-let [version (b/git-process {:git-args "describe --exact-match --tags"})]

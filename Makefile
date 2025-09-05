@@ -297,7 +297,7 @@ run-jar-maria: target/bundle
 	LRSQL_ADMIN_PASS_DEFAULT=password \
 	LRSQL_API_KEY_DEFAULT=username \
 	LRSQL_API_SECRET_DEFAULT=password \
-	bin/run_maria.sh
+	bin/run_mariadb.sh
 
 # *** Report Dependency Graph to GitHub ***
 
