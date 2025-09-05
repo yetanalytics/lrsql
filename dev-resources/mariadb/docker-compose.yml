@@ -19,8 +19,8 @@ services:
   clamav:
     image: clamav/clamav:1.2.1
   lrs:
-    # build: . # switch to this for active dev
-    image: yetanalytics/lrsql:latest
+    build: ../../. # switch to this for active dev
+    #image: yetanalytics/lrsql:latest
     command:
       - /lrsql/bin/run_mariadb.sh
     ports:
