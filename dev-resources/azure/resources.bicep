@@ -30,17 +30,24 @@ param pgStorageType string = 'Premium_LRS'
 @allowed(['P1','P2','P3','P4','P6','P10','P15','P20','P30','P40','P50','P60','P70','P80'])
 param pgStorageTier string = 'P4'
 
-// ---- Derived names/values ----
-var pgServerName = toLower('${namePrefix}-pg-${uniqueString(resourceGroup().id)}')
-
 // LRSQL params
 param appName string = 'lrsql-app'
-
 param lrsqlAdminUser string = 'admin'
 
 @secure()
 @description('(required) LRSQL Admin Password')
 param lrsqlAdminPassword string
+
+// Jumpbox
+
+@description('(Optional) Deploy a tiny Ubuntu jumpbox VM for psql via Bastion')
+param deployJumpbox bool = false
+
+@description('(If deployJumpbox) Admin username for the VM')
+param jumpboxAdminUsername string = 'azureuser'
+
+@description('(If deployJumpbox) SSH public key for the VM (ssh-rsa/ssh-ed25519 ...)')
+param jumpboxSshPublicKey string = ''
 
 // -------------------- Variables --------------------
 
@@ -48,6 +55,13 @@ var vnetName       = '${namePrefix}-vnet'
 var appSubnetName  = 'appsvc-subnet'
 var pgSubnetName   = 'pg-subnet'
 var pgDnsZoneName  = 'privatelink.postgres.database.azure.com'
+var pgServerName = toLower('${namePrefix}-pg-${uniqueString(resourceGroup().id)}')
+
+// Bastion variables
+var bastionSubnetName   = 'bastion-subnet'
+var bastionAddressPrefix = '10.20.3.0/27'
+var bastionIpName       = '${namePrefix}-bst-pip'
+var bastionName         = '${namePrefix}-bastion'
 
 // -------------------- Networking --------------------
 
@@ -93,6 +107,12 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-03-01' = {
           privateLinkServiceNetworkPolicies: 'Disabled'
         }
       }
+      {
+        name: bastionSubnetName
+        properties: {
+          addressPrefix: bastionAddressPrefix
+        }
+      }
     ]
   }
 }
@@ -116,6 +136,128 @@ resource pgDnsVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@20
     }
     registrationEnabled: false
   }
+}
+
+// -------- Azure Bastion (for secure jump access) ----------
+resource bastionSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-03-01' = {
+  name: '${vnet.name}/${bastionSubnetName}'
+  properties: {
+    addressPrefix: bastionAddressPrefix
+  }
+}
+
+resource bastionPip 'Microsoft.Network/publicIPAddresses@2024-03-01' = {
+  name: bastionIpName
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
+}
+
+resource bastionHost 'Microsoft.Network/bastionHosts@2023-11-01' = {
+  name: bastionName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'bastionIpConf'
+        properties: {
+          subnet: {
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, bastionSubnetName)
+          }
+          publicIPAddress: {
+            id: bastionPip.id
+          }
+        }
+      }
+    ]
+    enableTunneling: true
+    scaleUnits: 2
+  }
+  dependsOn: [
+    vnet
+    bastionPip
+  ]
+}
+
+// -------- Optional Jumpbox VM (no public IP; access via Bastion) ----------
+resource jumpNic 'Microsoft.Network/networkInterfaces@2024-03-01' = if (deployJumpbox) {
+  name: '${namePrefix}-jump-nic'
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          subnet: { id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, bastionSubnetName) }
+        }
+      }
+    ]
+  }
+}
+
+resource jumpVm 'Microsoft.Compute/virtualMachines@2024-07-01' = if (deployJumpbox) {
+  name: '${namePrefix}-jumpbox'
+  location: location
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_B1s'
+    }
+    osProfile: {
+      computerName: '${namePrefix}-jumpbox'
+      adminUsername: jumpboxAdminUsername
+      linuxConfiguration: {
+        disablePasswordAuthentication: true
+        ssh: {
+          publicKeys: [
+            {
+              path: '/home/${jumpboxAdminUsername}/.ssh/authorized_keys'
+              keyData: jumpboxSshPublicKey
+            }
+          ]
+        }
+      }
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'Canonical'
+        offer: '0001-com-ubuntu-server-jammy'
+        sku: '22_04-lts'
+        version: 'latest'
+      }
+      osDisk: {
+        createOption: 'FromImage'
+        managedDisk: { storageAccountType: 'Premium_LRS' }
+        diskSizeGB: 30
+      }
+    }
+    networkProfile: {
+      networkInterfaces: [
+        { id: jumpNic.id }
+      ]
+    }
+  }
+}
+
+resource jumpInit 'Microsoft.Compute/virtualMachines/extensions@2023-09-01' = if (deployJumpbox) {
+  name: '${jumpVm.name}/init'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Azure.Extensions'
+    type: 'CustomScript'
+    typeHandlerVersion: '2.1'
+    autoUpgradeMinorVersion: true
+    settings: {
+      fileUris: []
+      commandToExecute: 'bash -lc "sudo apt-get update && sudo apt-get install -y postgresql-client"'
+    }
+  }
+  dependsOn: [ jumpVm ]
 }
 
 // -------- Postgres ----------
@@ -154,6 +296,7 @@ resource pgServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
     
   }
 }
+
 
 // Optional initial database (handy for app bootstrap)
 @description('Initial database name to create.')
@@ -196,9 +339,9 @@ resource app 'Microsoft.Web/sites@2024-11-01' = {
         // azure specific stuff
         { name: 'WEBSITES_PORT', value: '8080' }
         { name: 'WEBSITE_HEALTHCHECK_PATH', value: '/health' }
-        { name: 'WEBSITE_DNS_SERVER', value: '168.63.129.16' }
-        { name: 'WEBSITE_DNS_ALT_SERVER', value: '8.8.8.8'  }
-        { name: 'WEBSITE_VNET_ROUTE_ALL', value: '1' }
+        //{ name: 'WEBSITE_DNS_SERVER', value: '168.63.129.16' }
+        //{ name: 'WEBSITE_DNS_ALT_SERVER', value: '8.8.8.8'  }
+        //{ name: 'WEBSITE_VNET_ROUTE_ALL', value: '1' }
         
         // lrsql settings
         { name: 'LRSQL_DB_HOST', value: '${pgServer.name}.postgres.database.azure.com' }
@@ -242,3 +385,7 @@ output urlStyleConnExample string = 'postgres://${pgUserFull}:<PASSWORD>@${pgHos
 
 output appUrl string =  'https://${app.name}.azurewebsites.net'
 //output appUrl        string = 'https://${appDefaultHost}'
+
+// Bastion outputs
+output bastionHostId string = bastionHost.id
+output bastionPublicIp string = bastionPip.properties.ipAddress

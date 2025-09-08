@@ -51,15 +51,14 @@ param pgStorageType string = 'Premium_LRS'
 @allowed(['P1','P2','P3','P4','P6','P10','P15','P20','P30','P40','P50','P60','P70','P80'])
 param pgStorageTier string = 'P4'
 
-// ---- Simple public networking (dev) ----
-@description('Enable public network access to the server (dev/simple).')
-param publicNetworkAccess bool = true
+@description('(Optional) Deploy a tiny Ubuntu jumpbox VM for psql via Bastion')
+param deployJumpbox bool = false
 
-@description('(Optional) allow Azure services to connect (0.0.0.0 firewall rule).')
-param allowAzureServices bool = false
+@description('(If deployJumpbox) Admin username for the VM')
+param jumpboxAdminUsername string = 'azureuser'
 
-@description('(Optional) client IPv4s to permit; each entry creates a firewall rule (start=end).')
-param allowedClientIps string = '[]'
+@description('(If deployJumpbox) SSH public key for the VM (ssh-rsa/ssh-ed25519 ...)')
+param jumpboxSshPublicKey string = ''
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: rgName
@@ -82,6 +81,9 @@ module resources './resources.bicep' = {
     pgStorageTier: pgStorageTier
     lrsqlAdminPassword: lrsqlAdminPassword
     lrsqlAdminUser: lrsqlAdminUser
+    deployJumpbox: deployJumpbox
+    jumpboxAdminUsername: jumpboxAdminUsername
+    jumpboxSshPublicKey: jumpboxSshPublicKey
   }
 }
 
