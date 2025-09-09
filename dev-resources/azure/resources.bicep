@@ -32,6 +32,7 @@ param pgStorageTier string = 'P4'
 
 // LRSQL params
 param appName string = 'lrsql-app'
+
 param lrsqlAdminUser string = 'admin'
 
 @secure()
@@ -58,7 +59,6 @@ var pgDnsZoneName  = 'privatelink.postgres.database.azure.com'
 var pgServerName = toLower('${namePrefix}-pg-${uniqueString(resourceGroup().id)}')
 
 // Bastion variables
-var bastionAddressPrefix = '10.20.3.0/27'
 var bastionIpName       = '${namePrefix}-bst-pip'
 var bastionName         = '${namePrefix}-bastion'
 
@@ -261,7 +261,7 @@ resource jumpInit 'Microsoft.Compute/virtualMachines/extensions@2023-09-01' = if
     autoUpgradeMinorVersion: true
     settings: {
       fileUris: []
-      commandToExecute: 'bash -lc "sudo apt-get update && sudo apt-get install -y postgresql-client"'
+      commandToExecute: 'bash -lc "sudo apt update && sudo apt install -y postgresql-client"'
     }
   }
   dependsOn: [ jumpVm ]
@@ -361,7 +361,7 @@ resource app 'Microsoft.Web/sites@2024-11-01' = {
         { name: 'LRSQL_ADMIN_PASS_DEFAULT', value: lrsqlAdminPassword }
 
         // CORS
-        { name: 'LRSQL_ALLOWED_ORIGINS', value: '["https://${appName}.azurewebsites.net"]' }
+        { name: 'LRSQL_ALLOWED_ORIGINS', value: 'https://${appName}.azurewebsites.net' }
       ]
     }
   }
