@@ -30,14 +30,14 @@
                                             :exclusions  [org.slf4j/slf4j-api]}
   ;; Pedestal and Jetty webserver deps
   io.pedestal/pedestal.jetty               {:mvn/version "0.6.3"}
-  org.eclipse.jetty/jetty-server           {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty/jetty-servlet          {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty/jetty-alpn-server      {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty.http2/http2-server     {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty.websocket/websocket-api     {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty.websocket/websocket-servlet {:mvn/version "9.4.56.v20240826"}
-  org.eclipse.jetty.websocket/websocket-server  {:mvn/version "9.4.56.v20240826"}
+  org.eclipse.jetty/jetty-server           {:mvn/version "9.4.58.v20250814"}
+  org.eclipse.jetty/jetty-servlet          {:mvn/version "9.4.58.v20250814"}
+  org.eclipse.jetty/jetty-alpn-server      {:mvn/version "9.4.58.v20250814"}
+  org.eclipse.jetty.http2/http2-server     {:mvn/version "9.4.58.v20250814"}
+  org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "9.4.58.v20250814"}
+  org.eclipse.jetty.websocket/websocket-api     {:mvn/version "9.4.58.v20250814"}
+  org.eclipse.jetty.websocket/websocket-servlet {:mvn/version "9.4.58.v20250814"}
+  org.eclipse.jetty.websocket/websocket-server  {:mvn/version "9.4.58.v20250814"}
   ;; Security deps
   buddy/buddy-core    {:mvn/version "1.11.418"
                        :exclusions [org.bouncycastle/bcprov-jdk18on
@@ -46,8 +46,8 @@
                        :exclusions [buddy/buddy-core]}
   buddy/buddy-hashers {:mvn/version "2.0.162"
                        :exclusions [buddy/buddy-core]}
-  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.78"}
-  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.78"}
+  org.bouncycastle/bcprov-jdk18on {:mvn/version "1.79"}
+  org.bouncycastle/bcpkix-jdk18on {:mvn/version "1.79"}
   less-awful-ssl/less-awful-ssl   {:mvn/version "1.0.6"}
   xyz.capybara/clamav-client      {:mvn/version "2.1.2"}
   ;; Yet Analytics deps

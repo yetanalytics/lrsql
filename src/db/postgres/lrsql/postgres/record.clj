@@ -73,9 +73,10 @@
       (xapi-statement-add-reaction-id! tx))
     (when-not (some? (query-xapi-statement-trigger-id-exists tx))
       (xapi-statement-add-trigger-id! tx))
-    (if (-> tuning :config :enable-jsonb)
-      (migrate-to-jsonb! tx)
-      (migrate-to-json! tx))
+    (let [is-json? (some? (query-payload-json tx))
+          enable-b (-> tuning :config :enable-jsonb)]
+      (when (and is-json? enable-b) (migrate-to-jsonb! tx)) 
+      (when (not (or is-json? enable-b)) (migrate-to-json! tx)))
     (when (nil? (check-statement-to-actor-cascading-delete tx))
       (add-statement-to-actor-cascading-delete! tx))
     (when (some? (query-varchar-exists tx))
