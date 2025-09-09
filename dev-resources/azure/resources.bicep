@@ -58,7 +58,6 @@ var pgDnsZoneName  = 'privatelink.postgres.database.azure.com'
 var pgServerName = toLower('${namePrefix}-pg-${uniqueString(resourceGroup().id)}')
 
 // Bastion variables
-var bastionSubnetName   = 'bastion-subnet'
 var bastionAddressPrefix = '10.20.3.0/27'
 var bastionIpName       = '${namePrefix}-bst-pip'
 var bastionName         = '${namePrefix}-bastion'
@@ -107,12 +106,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-03-01' = {
           privateLinkServiceNetworkPolicies: 'Disabled'
         }
       }
-      {
-        name: bastionSubnetName
-        properties: {
-          addressPrefix: bastionAddressPrefix
-        }
-      }
     ]
   }
 }
@@ -139,10 +132,12 @@ resource pgDnsVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@20
 }
 
 // -------- Azure Bastion (for secure jump access) ----------
-resource bastionSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-03-01' = {
-  name: '${vnet.name}/${bastionSubnetName}'
+resource bastionSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' = {
+  // MUST be exactly 'AzureBastionSubnet' and at least /27
+  name: 'AzureBastionSubnet'
+  parent: vnet
   properties: {
-    addressPrefix: bastionAddressPrefix
+    addressPrefix: '10.20.3.0/27'
   }
 }
 
@@ -161,13 +156,14 @@ resource bastionPip 'Microsoft.Network/publicIPAddresses@2024-03-01' = {
 resource bastionHost 'Microsoft.Network/bastionHosts@2023-11-01' = {
   name: bastionName
   location: location
+  sku: {name: 'Standard' }
   properties: {
     ipConfigurations: [
       {
         name: 'bastionIpConf'
         properties: {
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, bastionSubnetName)
+            id: bastionSubnet.id
           }
           publicIPAddress: {
             id: bastionPip.id
@@ -185,6 +181,17 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2023-11-01' = {
 }
 
 // -------- Optional Jumpbox VM (no public IP; access via Bastion) ----------
+
+resource jumpSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-11-01' = if (deployJumpbox) {
+  name: 'jump-subnet'
+  parent: vnet
+  properties: {
+    addressPrefix: '10.20.4.0/27'
+    // no delegations; normal subnet
+  }
+}
+
+
 resource jumpNic 'Microsoft.Network/networkInterfaces@2024-03-01' = if (deployJumpbox) {
   name: '${namePrefix}-jump-nic'
   location: location
@@ -194,7 +201,7 @@ resource jumpNic 'Microsoft.Network/networkInterfaces@2024-03-01' = if (deployJu
         name: 'ipconfig1'
         properties: {
           privateIPAllocationMethod: 'Dynamic'
-          subnet: { id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, bastionSubnetName) }
+          subnet: { id: jumpSubnet.id }
         }
       }
     ]
@@ -352,6 +359,9 @@ resource app 'Microsoft.Web/sites@2024-11-01' = {
         // Credentials
         { name: 'LRSQL_ADMIN_USER_DEFAULT', value: lrsqlAdminUser }
         { name: 'LRSQL_ADMIN_PASS_DEFAULT', value: lrsqlAdminPassword }
+
+        // CORS
+        { name: 'LRSQL_ALLOWED_ORIGINS', value: '["https://${appName}.azurewebsites.net"]' }
       ]
     }
   }
