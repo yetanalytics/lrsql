@@ -314,6 +314,33 @@ resource pgDb 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-01' =
   properties: {}
 }
 
+// ---------- Logging ----------
+resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: '${namePrefix}-app-insights'
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+  }
+}
+
+param lawName string = '${appName}-law'
+
+resource law 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: lawName
+  location: location
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 30
+    features: {
+      enableLogAccessUsingOnlyResourcePermissions: true
+    }
+  }
+}
+
+// ---------- Web App ----------
 resource plan 'Microsoft.Web/serverfarms@2024-11-01' = {
   name: '${appName}-plan'
   location: location
@@ -362,9 +389,85 @@ resource app 'Microsoft.Web/sites@2024-11-01' = {
 
         // CORS
         { name: 'LRSQL_ALLOWED_ORIGINS', value: 'https://${appName}.azurewebsites.net' }
+
+        // Logging
+        { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
+        { name: 'APPINSIGHTS_INSTRUMENTATIONKEY', value: appInsights.properties.InstrumentationKey }
+        { name: 'DOCKER_ENABLE_CI_LOGGING', value: 'true' }
+        { name: 'WEBSITES_ENABLE_APP_SERVICE_STORAGE', value: 'true' }
       ]
     }
   }
+}
+
+resource appLogs 'Microsoft.Web/sites/config@2024-11-01' = {
+  name: '${app.name}/logs'
+  properties: {
+    // Application logs (maps to AppServiceAppLogs)
+    applicationLogs: {
+      fileSystem: {
+        level: 'Information' // Trace | Debug | Information | Warning | Error | Critical | Off
+      }
+    }
+
+    // HTTP logs to file system (you already see these in LAW via diag settings,
+    // but enabling here ensures they’re also written locally/streamable)
+    httpLogs: {
+      fileSystem: {
+        enabled: true
+        retentionInMb: 100
+        retentionInDays: 7
+      }
+    }
+
+    // Optional but useful for troubleshooting
+    detailedErrorMessages: {
+      enabled: true
+    }
+    failedRequestsTracing: {
+      enabled: true
+    }
+  }
+}
+
+//
+// Diagnostic Settings for Logging
+//
+resource appDiag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${appName}-diag'
+  scope: app
+  properties: {
+    workspaceId: law.id
+    storageAccountId: null
+    eventHubAuthorizationRuleId: null
+    eventHubName: null
+
+    logs: [
+      {
+        category: 'AppServiceHTTPLogs'
+        enabled: true
+      }
+      {
+        category: 'AppServiceConsoleLogs'
+        enabled: true
+      }
+      {
+        category: 'AppServiceAppLogs'
+        enabled: true
+      }
+    ]
+
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+  dependsOn: [
+    app
+    appInsights
+  ]
 }
 
 // ---------- App Service VNet Integration (Swift) ----------
@@ -394,7 +497,9 @@ output urlStyleConnExample string = 'postgres://${pgUserFull}:<PASSWORD>@${pgHos
 // ---- LRSQL app outputs ----
 
 output appUrl string =  'https://${app.name}.azurewebsites.net'
-//output appUrl        string = 'https://${appDefaultHost}'
+
+// Logging
+output appInsightsConnectionString string = appInsights.properties.ConnectionString
 
 // Bastion outputs
 output bastionHostId string = bastionHost.id
