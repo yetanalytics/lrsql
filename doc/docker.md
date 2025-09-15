@@ -64,7 +64,7 @@ docker run \
 # replace with run_mariadb.sh for MariaDB    
 ```
 
-Note that you will also need to ensure that a Postgres(or MariaDB, respectively) instance is accessible to the container for this command to work. For a demonstration of containerized SQL LRS with Postgres you can use the `docker-compose.yml` file in the project root:
+Note that you will also need to ensure that a Postgres (or MariaDB, respectively) instance is accessible to the container for this command to work. For a demonstration of containerized SQL LRS with Postgres you can use the `docker-compose.yml` file in the project root:
 
 ``` shell
 docker compose up
