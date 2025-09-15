@@ -16,6 +16,6 @@
       su/add-shutdown-hook!))
 
 (defn -main [& _args]
-  (-> (system/system maria-backend :prod-maria)
+  (-> (system/system maria-backend :prod-mariadb)
       component/start
       su/add-shutdown-hook!))

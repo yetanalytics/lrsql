@@ -19,7 +19,7 @@
 ;; On the other hand, we keep the unobfuscated OSS source code so that users
 ;; have easy access to it.
 (def ignored-file-regexes
-  [".*#.*"
+  [".*#.*" ;;catches emacs auto-save files
    "^.*jks$"
    "^.*key$"
    "^.*pem$"])
