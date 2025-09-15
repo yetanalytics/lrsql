@@ -8,10 +8,10 @@
 (def maria-backend (md/map->MariaBackend {}))
 
 (defn run-test-maria
-  "Run a MariaDB-backed LRSQL instance based on the `:test-maria`
+  "Run a MariaDB-backed LRSQL instance based on the `:test-mariadb`
    config profile. For use with `clojure -X:db-mariadb`."
   [_] ; Need to pass in a map for -X
-  (-> (system/system maria-backend :test-maria)
+  (-> (system/system maria-backend :test-mariadb)
       component/start
       su/add-shutdown-hook!))
 

@@ -221,7 +221,7 @@
 
   ;with running Docker instance
 
-  (def sys (system/system (rm/map->MariaBackend {}) :test-maria))
+  (def sys (system/system (rm/map->MariaBackend {}) :test-mariadb))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
@@ -246,11 +246,11 @@
   (let [{{{:keys [db-port]}
           :database}
          :connection
-         :as _raw-cfg} (cfg/read-config :test-maria)
+         :as _raw-cfg} (cfg/read-config :test-mariadb)
         mapped-port   (get (:mapped-ports container) db-port)
         mapped-host   (get container :host)]
     (def sys
-      (system/system (rm/map->MariaBackend {}) :test-maria
+      (system/system (rm/map->MariaBackend {}) :test-mariadb
                      :conf-overrides
                      {[:connection :database :db-port] mapped-port
                       [:connection :database :db-host] mapped-host})))
@@ -286,7 +286,3 @@
 
 (ts/set-db-fixture-mode! :mariadb)
 )
-
-
-
-

@@ -169,7 +169,7 @@
               (log/infof "%s container stopped!" (name dbtype))))))
       (let [profile-kw    (case dbtype
                             :postgres :test-postgres
-                            :mariadb  :test-maria)
+                            :mariadb  :test-mariadb)
             {{{:keys [db-type
                       db-port
                       db-name
