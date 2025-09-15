@@ -17,8 +17,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest conformance-test
-  (conf/with-test-suite-args
-    {:branch "adding-back-compat"}
+  (conf/with-test-suite
     (binding [conf/*print-logs* true]
       (testing "no regressions"
         (let [sys  (support/test-system)
