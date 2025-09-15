@@ -80,7 +80,7 @@
                   db-password
                   test-db-version]}
           :database}
-         :connection} (read-config :test-maria)]
+         :connection} (read-config :test-mariadb)]
     (tc/create
      {:image-name    (format "%s:%s" db-type test-db-version)
       :exposed-ports [db-port]
