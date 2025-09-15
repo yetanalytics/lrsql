@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
   profile_id     VARCHAR(191) NOT NULL,
   agent_ifi      TEXT NOT NULL,
   agent_hash     BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(agent_ifi, 256))) STORED,
-  last_modified  TIMESTAMP(6) NOT NULL, -- todo---mimics WITH TIME ZONE functionality?
+  last_modified  TIMESTAMP(6) NOT NULL,
   content_type   VARCHAR(191) NOT NULL,
   content_length INTEGER NOT NULL,
   contents       LONGBLOB NOT NULL,

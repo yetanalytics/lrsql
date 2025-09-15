@@ -6,7 +6,7 @@
     <mainClass>lrsql.maria.main</mainClass>
     <cp>lrsql.jar</cp>
   </classPath>
-  <outfile>lrsql_maria.exe</outfile>
+  <outfile>lrsql_mariadb.exe</outfile>
   <errTitle>You must have Java 11+ installed to run SQL LRS</errTitle>
   <chdir>.</chdir>
   <priority>normal</priority>
