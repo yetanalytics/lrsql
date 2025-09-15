@@ -73,7 +73,7 @@ WHERE stmt.is_voided = FALSE
 --~ (when (:registration params)   "AND stmt.registration = :registration")
 --~ (when (:authority-ifis params) "AND :frag:maria-auth-subquery")
 --~ (if (:ascending? params)       "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
-/*  (when (:limit params)          "LIMIT :limit") */
+--~ (when (:limit params)          "LIMIT :limit") 
 
 /* Note: We sort by both the PK and statement ID in order to force the query
    planner to avoid scanning on `stmt_a.id` first, which is much slower than
@@ -98,7 +98,7 @@ WHERE stmt_a.is_voided = FALSE
 --~ (when (:authority-ifis params) "AND :frag:maria-auth-subquery")
 /*~ (if (:ascending? params)       "ORDER BY stmt_a.id ASC, stmt_a.statement_id ASC"
                                    "ORDER BY stmt_a.id DESC, stmt_a.statement_id DESC") ~*/
-/* (when (:limit params)          "LIMIT :limit")*/
+--~ (when (:limit params)          "LIMIT :limit")
 
 
 

@@ -19,16 +19,16 @@
 
                     ;; Testing Only! Specify the version used with testcontainers
                     :test-db-version #or [#env LRSQL_TEST_DB_VERSION "11"]}
-  :test-maria {:db-type       "mariadb"
-               :db-name       "lrsql_db"
-               :db-host       "0.0.0.0"
-               :db-port       3306
-               :db-user       "lrsql_user"
-               :db-password   "lrsql_password"
-               :db-properties "allowMultiQueries=true"
+  :test-mariadb {:db-type       "mariadb"
+                 :db-name       "lrsql_db"
+                 :db-host       "0.0.0.0"
+                 :db-port       3306
+                 :db-user       "lrsql_user"
+                 :db-password   "lrsql_password"
+                 :db-properties "allowMultiQueries=true"
 
-               ;; Testing Only! Specify the version used with testcontainers
-               :test-db-version #or [#env LRSQL_TEST_DB_VERSION "11.7.2"]}
+                 ;; Testing Only! Specify the version used with testcontainers
+                 :test-db-version #or [#env LRSQL_TEST_DB_VERSION "11.7.2"]}
   :test-oidc {:db-type "sqlite"
               :db-name ":memory:"}
 

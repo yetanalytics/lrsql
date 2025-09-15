@@ -83,7 +83,7 @@ postgres: resources/public/admin # Requires a running Postgres instance
 	clojure -X:db-postgres lrsql.postgres.main/run-test-postgres
 
 maria: resources/public/admin # Requires a running MariaDB instance
-	clojure -X:db-maria lrsql.maria.main/run-test-maria
+	clojure -X:db-mariadb lrsql.mariadb.main/run-test-mariadb
 
 # Bench - requires a running lrsql instance
 
@@ -92,7 +92,7 @@ bench:
 	    -e http://0.0.0.0:8080/xapi/statements \
 		-i dev-resources/bench/insert_input.json \
 		-q dev-resources/bench/query_input.json \
-		-u username -p password
+		-u my_key -p my_secret
 
 bench-async:
 	clojure -M:bench -m lrsql.bench \
@@ -201,6 +201,10 @@ target/bundle/lrsql_pg.exe: exe/lrsql_pg.exe
 	mkdir -p target/bundle
 	cp exe/lrsql_pg.exe target/bundle/lrsql_pg.exe
 
+target/bundle/lrsql_mariadb.exe: exe/lrsql_mariadb.exe
+	mkdir -p target/bundle
+	cp exe/lrsql_mariadb.exe target/bundle/lrsql_mariadb.exe
+
 # Copy Admin UI
 
 target/bundle/admin: resources/public/admin
@@ -212,9 +216,9 @@ target/bundle/admin: resources/public/admin
 BUNDLE_RUNTIMES ?= true
 
 ifeq ($(BUNDLE_RUNTIMES),true)
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/lrsql_mariadb.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes
 else
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/lrsql_mariadb.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench
 endif
 
 bundle: target/bundle
@@ -257,14 +261,22 @@ else
 	launch4j exe/config_pg.xml
 endif
 
-exe: exe/lrsql.exe exe/lrsql_pg.exe
+exe/lrsql_mariadb.exe:
+ifeq (,$(shell which launch4j))
+	$(error "ERROR: launch4j is not installed!")
+else
+	launch4j exe/config_mariadb.xml
+endif
+
+
+exe: exe/lrsql.exe exe/lrsql_pg.exe exe/lrsql_mariadb.exe
 
 # *** Run build ***
 
 # These targets create a bundle containing a lrsql JAR and then runs
 # the JAR to create the specific lrsql instance.
 
-.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres, run-jar-maria
+.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres, run-jar-mariadb
 
 run-jar-sqlite-ephemeral: target/bundle
 	cd target/bundle; \
@@ -291,7 +303,7 @@ run-jar-postgres: target/bundle
 	LRSQL_API_SECRET_DEFAULT=password \
 	bin/run_postgres.sh
 
-run-jar-maria: target/bundle
+run-jar-mariadb: target/bundle
 	cd target/bundle; \
 	LRSQL_ADMIN_USER_DEFAULT=username \
 	LRSQL_ADMIN_PASS_DEFAULT=password \

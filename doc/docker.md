@@ -43,7 +43,7 @@ See [Getting Started](startup.md) for more information on configuration files an
 
 #### Other DBMSs
 
-The SQL LRS Dockerfile uses the SQLite run script in `bin` as the default `CMD`. To change to another DBMS use the corresponding script. For instance to use Postgres:
+The SQL LRS Dockerfile uses the SQLite run script in `bin` as the default `CMD`. To change to another DBMS, like Postgres or MariaDB, use the corresponding script. For instance to use Postgres:
 
 ``` shell
 docker run \
@@ -55,20 +55,24 @@ docker run \
     -e LRSQL_ADMIN_PASS_DEFAULT=my_password \
     -e LRSQL_DB_HOST=0.0.0.0 \
     -e LRSQL_DB_PORT=5432 \
+# replace port with 3306 for MariaDB
     -e LRSQL_DB_NAME=lrsql_db \
     -e LRSQL_DB_USER=lrsql_user \
     -e LRSQL_DB_PASSWORD=lrsql_password \
     yetanalytics/lrsql:latest \
     /lrsql/bin/run_postgres.sh
+# replace with run_mariadb.sh for MariaDB    
 ```
 
-Note that you will also need to ensure that a Postgres instance is accessible to the container for this command to work. For a demonstration of containerized SQL LRS with Postgres you can use the `docker-compose.yml` file in the project root:
+Note that you will also need to ensure that a Postgres(or MariaDB, respectively) instance is accessible to the container for this command to work. For a demonstration of containerized SQL LRS with Postgres you can use the `docker-compose.yml` file in the project root:
 
 ``` shell
 docker compose up
 ```
 
 Docker will start Postgres and the [ClamAV antivirus daemon](https://www.clamav.net/), then SQL LRS. Note that Postgres can sometimes take a while to start causing SQL LRS initialization to fail. If this happens, stop the system with ctrl-C and run the command again, optionally increasing the value of `LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT` to allow more time before the SQL LRS declares a connection failure (see `docker-compose.yml` file).
+
+A similar workflow is available for MariaDB, except that the `docker-compose.yml` file is in `lrsql/dev-resources/mariadb` rather than `lrsql`.
 
 ### Customization
 

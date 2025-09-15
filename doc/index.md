@@ -21,6 +21,7 @@
 ### DBMS-specific Sections
 
 - [Postgres](postgres.md)
+- [MariaDB](mariadb.md)
 - [SQLite](sqlite.md)
 
 ### Reference

@@ -20,11 +20,11 @@ Create initial configuration variables. Config vars can be set by creating and e
 - `adminUserDefault` and `adminPassDefault` MUST be set in order to create an initial admin account. Otherwise you will not be able to use the LRS. These are temporary credentials that you will use to log in the very first time.
 - `httpHost` should be set to the host address you are running your webserver on if you are allowing network access (by default it is `0.0.0.0` for localhost); likewise for `httpPort` and `sslPort` (which by default are `8080` and `8443`, respectively).
 - Likewise, `authorityUrl` should be set to a custom domain in order to uniquely identify Statements inserted into your LRS. (It is set to `http://example.org` by default.)
-- If you are running Postgres, you should set `dbHost`, `dbName`, `dbUser`, and `dbPassword` to the appropriate Postgres system, as well as `dbPort`, `dbSchema` and `dbProperties` if needed.
+- If you are running Postgres or MariaDB, you should set `dbHost`, `dbName`, `dbUser`, and `dbPassword` to the appropriate system, as well as `dbPort`, `dbSchema` and `dbProperties` if needed.
 
 The `config/lrsql.json` file does not need to contain _all_ config vars; those that are skipped will use their default values.
 
-The following is an example of a basic (non-Postgres) `config/lrsql.json` config file:
+The following is an example of a basic (SQLite) `config/lrsql.json` config file:
 
 ```json
 {
@@ -46,9 +46,9 @@ The following is an example of a basic (non-Postgres) `config/lrsql.json` config
 
 The `allowAllOrigins` variable allows for a very permissive CORS configuration for testing and working locally in the absence of a permanent domain name/host. For a deployed system you will want to more properly configure CORS settings. For a complete list of config variables, see [here](env_vars.md). There is also a sample JSON config file provided for reference at `config/lrsql.json.example` which contains many more variables than the above.
 
-#### 4. Setup Postgres DB (Optional)
+#### 4. Setup External DB (Postgres or MariaDB)(Optional)
 
-- If using Postgres, setup instructions can be found [here](postgres.md).
+- If using an external database, setup instructions can be found [here](postgres.md)(postgres), or [here](mariadb.md)(MariaDB).
 
 #### 5. Start the LRS
 
@@ -58,6 +58,7 @@ The LRS uses a slightly different startup procedure depending on what SQL databa
 | ---------------- | ----------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | SQLite           | `bin/run_sqlite.sh`           | `lrsql.exe`    | Run with a SQLite database on the filesystem. This is the typical run mode for an LRS without an external database.                                                              |
 | Postgres         | `bin/run_postgres.sh`         | `lrsql_pg.exe` | Run with a separate Postgres Database. You must perform [additional configuration](postgres.md) to use this mode, and have a database already running and accessible by the LRS. |
+| MariaDB         | `bin/run_mariadb.sh`           | `lrsql_mariadb.exe` | Run with a separate MariaDB Database. You must perform [additional configuration](mariadb.md) to use this mode, and have a database already running and accessible by the LRS. |
 | SQLite In-Memory | `bin/run_sqlite_ephemeral.sh` | `n/a`          | In-memory SQLite db mostly used for development. This will not save your data after a restart. There is not a windows executable for this mode.                                  |
 
 ##### Mac or Linux
