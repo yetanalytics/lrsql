@@ -194,6 +194,12 @@
   (-query-account-count-local [_ tx]
     (query-account-count-local tx))
 
+  ;;;; MariaDB doesn't like long values as primary keys.  Fortunately, we don't actually *use* the JWT
+  ;;;; once it's in the DB, except to check for its existence.
+  ;;;; So we don't actually store the JWT; we just store a (shorter) hash of it.  
+  ;;;; Operations that don't interact with the jwt obviously don't need to hash it.
+  ;;;;
+  
   bp/JWTBlocklistBackend
   (-insert-blocked-jwt! [_ tx input]
     (insert-blocked-jwt! tx (update input :jwt md/sha256-base64)))
