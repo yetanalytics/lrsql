@@ -90,7 +90,7 @@
                  {:mvn/version "2.6.1"}
                  com.kohlschutter.junixsocket/junixsocket-native-common
                  {:mvn/version "2.6.1"}}}
-  :db-maria
+  :db-mariadb
   {:extra-paths ["src/db/maria"]
    :extra-deps  {org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.5.3"}}}
   

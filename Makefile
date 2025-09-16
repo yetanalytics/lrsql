@@ -83,7 +83,7 @@ postgres: resources/public/admin # Requires a running Postgres instance
 	clojure -X:db-postgres lrsql.postgres.main/run-test-postgres
 
 maria: resources/public/admin # Requires a running MariaDB instance
-	clojure -X:db-mariadb lrsql.mariadb.main/run-test-mariadb
+	clojure -X:db-mariadb lrsql.maria.main/run-test-mariadb
 
 # Bench - requires a running lrsql instance
 

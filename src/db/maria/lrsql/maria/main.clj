@@ -7,7 +7,7 @@
 
 (def maria-backend (md/map->MariaBackend {}))
 
-(defn run-test-maria
+(defn run-test-mariadb
   "Run a MariaDB-backed LRSQL instance based on the `:test-mariadb`
    config profile. For use with `clojure -X:db-mariadb`."
   [_] ; Need to pass in a map for -X
