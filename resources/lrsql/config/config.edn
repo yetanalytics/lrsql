@@ -50,7 +50,7 @@
   :prod-sqlite     #include "prod/default/connection.edn"
   :prod-sqlite-mem #include "prod/sqlite_mem/connection.edn"
   :prod-postgres   #include "prod/postgres/connection.edn"
-  :prod-mariadb      #include "prod/maria/connection.edn"
+  :prod-mariadb    #include "prod/maria/connection.edn"
   }
  :tuning
  #profile
@@ -64,7 +64,7 @@
   :prod-sqlite     #include "prod/default/tuning.edn"
   :prod-sqlite-mem #include "prod/default/tuning.edn"
   :prod-postgres   #include "prod/postgres/tuning.edn"
-  :prod-mariadb    #include  "prod/maria/tuning.edn"
+  :prod-mariadb    #include "prod/maria/tuning.edn"
   }
  :lrs
  #profile
