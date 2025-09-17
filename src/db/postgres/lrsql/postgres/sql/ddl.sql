@@ -379,6 +379,13 @@ USING last_modified AT TIME ZONE :sql:tz-id;
 ALTER TABLE agent_profile_document ALTER COLUMN last_modified TYPE TIMESTAMP WITH TIME ZONE
 USING last_modified AT TIME ZONE :sql:tz-id;
 
+-- :name query-payload-json
+-- :command :query
+-- :result :one
+-- :doc Query to see if any of 'xapi_statement.payload', 'actor.payload', or 'activity.payload' is json
+SELECT 1 FROM information_schema.columns
+WHERE column_name = 'payload' AND data_type = 'json' AND table_name in ('xapi_statement', 'actor', 'activity');
+
 -- :name migrate-to-jsonb!
 -- :command :execute
 -- :doc Convert all JSON payloads to JSONB to allow for faster reads and advanced indexing

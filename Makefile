@@ -39,12 +39,6 @@ TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres $(if
 test-postgres:
 	$(TEST_PG_COMMAND)
 
-test-postgres-11:
-	LRSQL_TEST_DB_VERSION=11 $(TEST_PG_COMMAND)
-
-test-postgres-12:
-	LRSQL_TEST_DB_VERSION=12 $(TEST_PG_COMMAND)
-
 test-postgres-13:
 	LRSQL_TEST_DB_VERSION=13 $(TEST_PG_COMMAND)
 
@@ -57,10 +51,14 @@ test-postgres-15:
 test-postgres-16:
 	LRSQL_TEST_DB_VERSION=16 $(TEST_PG_COMMAND)
 
+test-postgres-17:
+	LRSQL_TEST_DB_VERSION=17 $(TEST_PG_COMMAND)
+
 test-mariadb:
 	clojure -M:test -m lrsql.test-runner --database mariadb $(if $(ns),--ns $(ns))
 
 ci: test-sqlite test-postgres test-mariadb
+
 
 
 # Dev
