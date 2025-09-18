@@ -56,7 +56,7 @@ test-postgres-17:
 	LRSQL_TEST_DB_VERSION=17 $(TEST_PG_COMMAND)
 
 test-mariadb:
-	clojure -M:test -m lrsql.test-runner --database mariadb $(if $(ns),--ns $(ns))
+        $(TEST_MARIADB_COMMAND)
 
 test-mariadb-10.6:
 	LRSQL_TEST_DB_VERSION=10.6 $(TEST_MARIADB_COMMAND)
