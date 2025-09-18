@@ -23,7 +23,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb, test-mariadb-11.8
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb, test-mariadb-10.6, test-mariadb-10.11, test-mariadb-11.4, test-mariadb-11.7.2, test-mariadb-11.8
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp
