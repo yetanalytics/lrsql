@@ -76,7 +76,8 @@
   (-txn-retry? [_ ex]
     (and (instance? java.sql.SQLException ex)
          (let [msg (.getMessage ex)]
-           (includes? msg "Record has changed since last read"))))
+           (or (includes? msg "Record has changed since last read")
+               (includes? msg "Deadlock found when trying to get lock")))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
@@ -238,9 +239,9 @@
   (-set-read! [_]
     (bd/set-read-time->instant!)
     (md/set-read!
-     {:json-columns #{"ruleset"
-                      "error"
-                      "payload"}
+     {:json-columns    #{"ruleset"
+                         "error"
+                         "payload"}
       :keyword-columns #{"ruleset"
                          "error"}}))
 
