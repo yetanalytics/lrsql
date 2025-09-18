@@ -20,7 +20,11 @@ jobs:
           - test-postgres-15
           - test-postgres-16
           - test-postgres-17
-          - test-mariadb
+          - test-mariadb-10.6
+          - test-mariadb-10.11
+          - test-mariadb-11.4
+          - test-mariadb-11.7.2
+          - test-mariadb-11.8
           
     steps:
       - name: Checkout repository

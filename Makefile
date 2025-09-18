@@ -23,7 +23,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb, test-mariadb-11.8
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp
@@ -34,6 +34,7 @@ test-sqlite:
 	clojure -M:test -m lrsql.test-runner --database sqlite $(if $(ns),--ns $(ns))
 
 TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres $(if $(ns),--ns $(ns))
+TEST_MARIADB_COMMAND ?= clojure -M:test -m lrsql.test-runner --database mariadb $(if $(ns),--ns $(ns))
 
 # Without LRSQL_TEST_DB_VERSION, defaults to version 11
 test-postgres:
@@ -56,6 +57,22 @@ test-postgres-17:
 
 test-mariadb:
 	clojure -M:test -m lrsql.test-runner --database mariadb $(if $(ns),--ns $(ns))
+
+test-mariadb-10.6:
+	LRSQL_TEST_DB_VERSION=10.6 $(TEST_MARIADB_COMMAND)
+
+test-mariadb-10.11:
+	LRSQL_TEST_DB_VERSION=10.11 $(TEST_MARIADB_COMMAND)
+
+test-mariadb-11.4:
+	LRSQL_TEST_DB_VERSION=11.4 $(TEST_MARIADB_COMMAND)
+
+test-mariadb-11.7.2:
+	LRSQL_TEST_DB_VERSION=11.7.2 $(TEST_MARIADB_COMMAND)
+
+test-mariadb-11.8:
+	LRSQL_TEST_DB_VERSION=11.8 $(TEST_MARIADB_COMMAND)
+
 
 ci: test-sqlite test-postgres test-mariadb
 
