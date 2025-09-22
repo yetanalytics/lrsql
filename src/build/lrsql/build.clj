@@ -30,7 +30,7 @@
 (defn- create-basis []
   (b/create-basis
    {:project "deps.edn"
-    :aliases [:db-sqlite :db-postgres :db-maria]}))
+    :aliases [:db-sqlite :db-postgres :db-mariadb]}))
 
 (defn write-git-data! []
   (when-let [version (b/git-process {:git-args "describe --exact-match --tags"})]
