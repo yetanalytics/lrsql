@@ -156,7 +156,7 @@
             (is (true?
                  (adp/-jwt-blocked? lrs jwt))))
           (testing "- can be purged from blocklist when expired"
-            (Thread/sleep 1000)
+            (Thread/sleep 2000)
             (is (= nil
                    (adp/-purge-blocklist lrs leeway)))
             (is (false?
