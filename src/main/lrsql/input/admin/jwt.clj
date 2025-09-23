@@ -4,10 +4,10 @@
             [lrsql.util :as u]))
 
 (defn- eviction-time
-  "Generate the current time, offset by `exp` number of seconds later."
+  "Takes a jwt expiry interval ('seconds from now'), and returns an *eviction instant*, the time at which the jwt has expired and no longer needs to be blocked."
   [exp]
   (-> (u/current-time)
-      (u/offset-time exp :seconds)))
+      (u/offset-time (inc exp) :seconds)))
 
 (defn- current-time
   "Generate the current time, offset by `leeway` number of seconds earlier.
