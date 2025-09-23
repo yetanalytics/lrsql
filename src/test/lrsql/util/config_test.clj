@@ -79,7 +79,8 @@
                               :pred #{"sqlite"
                                       "postgres"
                                       "postgresql"
-                                      "mariadb"}
+                                      "mariadb"
+                                      "mysql"}
                               :val  "AS400"
                               :via  [::cs/database ::cs/db-type]
                               :in   [:db-type]}
