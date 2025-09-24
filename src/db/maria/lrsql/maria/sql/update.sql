@@ -38,7 +38,8 @@ SET
   content_length = :content-length,
   contents = :contents,
   last_modified = :last-modified
-WHERE state_id = :state-id
+WHERE state_hash = UNHEX(SHA2(:state-id,256))
+AND state_id = :state-id
 AND activity_hash = UNHEX(SHA2(:activity-iri,256))
 AND agent_hash = UNHEX(SHA2(:agent-ifi,256))
 --~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
@@ -65,7 +66,8 @@ SET
   content_length = :content-length,
   contents = :contents,
   last_modified = :last-modified
-WHERE profile_id = :profile-id
+WHERE profile_hash = UNHEX(SHA2(:profile-id,256))
+AND profile_id = :profile-id
 AND activity_hash = UNHEX(SHA2(:activity-iri,256));
 
 /* Admin Accounts + Credentials */

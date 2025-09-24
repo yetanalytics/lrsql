@@ -3,8 +3,10 @@
             [next.jdbc.result-set :refer [ReadableColumn]]
             [lrsql.util :as u])
   (:import [clojure.lang IPersistentMap]
-           [java.sql PreparedStatement ResultSetMetaData]
-           [java.security MessageDigest]))
+           [java.sql PreparedStatement ResultSetMetaData Timestamp]
+           [java.security MessageDigest]
+           [java.time Instant]
+           [java.util UUID]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;JSON read
@@ -58,6 +60,18 @@
     IPersistentMap
     (set-parameter [^IPersistentMap m ^PreparedStatement stmt ^long i]
       (.setObject stmt i (u/write-json-str m)))))
+
+(defn set-write-uuid->str! []
+  (extend-protocol SettableParameter
+    UUID
+    (set-parameter [^UUID u ^PreparedStatement stmt ^long i]
+      (.setString stmt i (u/uuid->str u)))))
+
+(defn set-write-inst->timestamp! []
+  (extend-protocol SettableParameter
+    Instant
+    (set-parameter [^Instant inst ^PreparedStatement stmt ^long i]
+      (.setTimestamp stmt i (Timestamp/from inst)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

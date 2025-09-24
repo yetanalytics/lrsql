@@ -11,18 +11,18 @@ CREATE TABLE IF NOT EXISTS xapi_statement (
   verb_hash    BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(verb_iri, 256))) STORED,
   is_voided    BOOLEAN DEFAULT FALSE NOT NULL,
   payload      JSON NOT NULL,
-  timestamp    TIMESTAMP(6),
-  stored       TIMESTAMP(6),
+  `timestamp`  TIMESTAMP(6),
+  `stored`     TIMESTAMP(6),
   reaction_id  CHAR(36),
   trigger_id   CHAR(36),
   CONSTRAINT stmt_reaction_id_fk FOREIGN KEY (reaction_id) REFERENCES reaction(id),
-  CONSTRAINT stmt_trigger_id_fk FOREIGN KEY (trigger_id) REFERENCES xapi_statement(statement_id)
+  CONSTRAINT stmt_trigger_id_fk FOREIGN KEY (trigger_id) REFERENCES xapi_statement(statement_id),
+  KEY desc_id_idx (id DESC),
+  KEY verb_iri_idx (verb_hash),
+  KEY registration (registration),
+  KEY stmt_reaction_id_idx (reaction_id),
+  KEY stmt_trigger_id_idx (trigger_id)
 );
-CREATE INDEX IF NOT EXISTS desc_id_idx ON xapi_statement(id DESC);
-CREATE INDEX IF NOT EXISTS verb_iri_idx ON xapi_statement(verb_hash);
-CREATE INDEX IF NOT EXISTS registration ON xapi_statement(registration);
-CREATE INDEX IF NOT EXISTS stmt_reaction_id_idx ON xapi_statement(reaction_id);
-CREATE INDEX IF NOT EXISTS stmt_trigger_id_idx ON xapi_statement(trigger_id);
 
 
 -- :name create-actor-table!
@@ -58,9 +58,9 @@ CREATE TABLE IF NOT EXISTS attachment (
   content_length INTEGER NOT NULL,
   contents       LONGBLOB NOT NULL,
   CONSTRAINT statement_fk_attachment
-    FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
+    FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
+  KEY attachment_stmt_fk (statement_id)
 );
-CREATE INDEX IF NOT EXISTS attachment_stmt_fk ON attachment(statement_id);
 
 -- :name create-statement-to-actor-table!
 -- :command :execute
@@ -83,9 +83,10 @@ CREATE TABLE IF NOT EXISTS statement_to_actor (
   CONSTRAINT statement_fk_stactor
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id) ON DELETE CASCADE,
   CONSTRAINT actor_fk
-    FOREIGN KEY (actor_hash, actor_type) REFERENCES actor(actor_hash, actor_type));
-CREATE INDEX IF NOT EXISTS stmt_actor_stmt_fk ON statement_to_actor(statement_id);
-CREATE INDEX IF NOT EXISTS stmt_actor_actor_fk ON statement_to_actor(actor_hash, actor_type);
+    FOREIGN KEY (actor_hash, actor_type) REFERENCES actor(actor_hash, actor_type),
+  KEY stmt_actor_stmt_fk (statement_id),
+  KEY stmt_actor_actor_fk (actor_hash, actor_type)
+);
 
 -- :name create-statement-to-activity-table!
 -- :command :execute
@@ -108,9 +109,10 @@ CREATE TABLE IF NOT EXISTS statement_to_activity (
   CONSTRAINT statement_fk_stactivity
     FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id),
   CONSTRAINT activity_fk
-    FOREIGN KEY (activity_hash) REFERENCES activity(activity_hash));
-CREATE INDEX IF NOT EXISTS stmt_activ_stmt_fk ON statement_to_activity(statement_id);
-CREATE INDEX IF NOT EXISTS stmt_activ_activ_fk ON statement_to_activity(activity_hash);
+    FOREIGN KEY (activity_hash) REFERENCES activity(activity_hash),
+  KEY stmt_activ_stmt_fk (statement_id),
+  KEY stmt_activ_activ_fk (activity_hash)
+);
 
 -- :name create-statement-to-statement-table!
 -- :command :execute
@@ -122,10 +124,10 @@ CREATE TABLE IF NOT EXISTS statement_to_statement (
   CONSTRAINT ancestor_fk
     FOREIGN KEY (ancestor_id) REFERENCES xapi_statement(statement_id),
   CONSTRAINT descendant_fk
-    FOREIGN KEY (descendant_id) REFERENCES xapi_statement(statement_id)
+    FOREIGN KEY (descendant_id) REFERENCES xapi_statement(statement_id),
+  KEY stmt_stmt_ans_fk (ancestor_id),
+  KEY stmt_stmt_desc_fk (descendant_id)
 );
-CREATE INDEX IF NOT EXISTS stmt_stmt_ans_fk ON statement_to_statement(ancestor_id);
-CREATE INDEX IF NOT EXISTS stmt_stmt_desc_fk ON statement_to_statement(descendant_id);
 
 /* Document Tables */
 
@@ -135,6 +137,7 @@ CREATE INDEX IF NOT EXISTS stmt_stmt_desc_fk ON statement_to_statement(descendan
 CREATE TABLE IF NOT EXISTS state_document (
   id             CHAR(36) PRIMARY KEY,
   state_id       TEXT NOT NULL,
+  state_hash     BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(state_id, 256))) STORED,
   activity_iri   TEXT NOT NULL,
   activity_hash  BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(activity_iri, 256))) STORED,
   agent_ifi      TEXT NOT NULL,
@@ -145,7 +148,7 @@ CREATE TABLE IF NOT EXISTS state_document (
   content_length INTEGER NOT NULL,
   contents       LONGBLOB NOT NULL,
   CONSTRAINT state_doc_idx
-    UNIQUE (state_id, activity_hash, agent_hash, registration)
+    UNIQUE (state_hash, activity_hash, agent_hash, registration)
 );
 
 -- :name create-agent-profile-document-table!
@@ -170,6 +173,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
 CREATE TABLE IF NOT EXISTS activity_profile_document (
   id             CHAR(36) PRIMARY KEY,
   profile_id     TEXT NOT NULL,
+  profile_hash   BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(profile_id, 256))) STORED,
   activity_iri   TEXT NOT NULL,
   activity_hash  BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(activity_iri, 256))) STORED,
   last_modified  TIMESTAMP(6) NOT NULL, -- todo---mimics WITH TIME ZONE functionality?
@@ -177,7 +181,7 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
   content_length INTEGER NOT NULL,
   contents       LONGBLOB NOT NULL,
   CONSTRAINT activity_profile_doc_idx
-    UNIQUE (profile_id, activity_hash)
+    UNIQUE (profile_hash, activity_hash)
 );
 
 /* Admin Account Table */
@@ -187,9 +191,11 @@ CREATE TABLE IF NOT EXISTS activity_profile_document (
 -- :doc Create the `admin_account` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS admin_account (
   id       CHAR(36) PRIMARY KEY,
-  username TEXT NOT NULL UNIQUE,
+  username TEXT NOT NULL,
+  username_hash BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(username, 256))) STORED,
   passhash TEXT,
-  oidc_issuer TEXT
+  oidc_issuer TEXT,
+  CONSTRAINT admin_account_username_idx UNIQUE (username_hash)
 );
 
 /* Credential Tables */
@@ -209,9 +215,9 @@ CREATE TABLE IF NOT EXISTS lrs_credential (
   CONSTRAINT account_fk
     FOREIGN KEY (account_id)
     REFERENCES admin_account(id)
-    ON DELETE CASCADE
+    ON DELETE CASCADE,
+  KEY cred_account_fk (account_id)
 );
-CREATE INDEX IF NOT EXISTS cred_account_fk ON lrs_credential(account_id);
 
 -- :name create-credential-to-scope-table!
 -- :command :execute
@@ -237,9 +243,9 @@ CREATE TABLE IF NOT EXISTS credential_to_scope (
   CONSTRAINT credential_fk
     FOREIGN KEY (api_key, secret_key)
     REFERENCES lrs_credential(api_key, secret_key)
-    ON DELETE CASCADE
+    ON DELETE CASCADE,
+  KEY cred_keypair_fk (api_key, secret_key)
 );
-CREATE INDEX IF NOT EXISTS cred_keypair_fk ON credential_to_scope(api_key, secret_key);
 
 
 -- :name create-reaction-table!
@@ -247,12 +253,14 @@ CREATE INDEX IF NOT EXISTS cred_keypair_fk ON credential_to_scope(api_key, secre
 -- :doc Create the `reaction` table if it does not yet exist.
 CREATE TABLE IF NOT EXISTS reaction (
   id           CHAR(36) PRIMARY KEY,
-  title        TEXT NOT NULL UNIQUE, -- string title
+  title        TEXT NOT NULL, -- string title
+  title_hash   BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(title, 256))) STORED,
   ruleset      JSON NOT NULL,                -- serialized reaction spec
   created      TIMESTAMP(6) NOT NULL,           -- timestamp
   modified     TIMESTAMP(6) NOT NULL,           -- timestamp
   active       BOOLEAN,                      -- true/false/null - active/inactive/soft delete
-  error        JSON                          -- serialized error
+  error        JSON,                         -- serialized error
+  CONSTRAINT reaction_title_idx UNIQUE (title_hash)
 );
 
 -- :name create-blocked-jwt-table!
@@ -261,6 +269,6 @@ CREATE TABLE IF NOT EXISTS reaction (
 CREATE TABLE IF NOT EXISTS blocked_jwt (
   jwt        CHAR(44) PRIMARY KEY,
   evict_time TIMESTAMP(6) NOT NULL,
-  one_time_id CHAR(36) UNIQUE
+  one_time_id CHAR(36) UNIQUE,
+  KEY blocked_jwt_evict_time_idx (evict_time)
 );
-CREATE INDEX IF NOT EXISTS blocked_jwt_evict_time_idx ON blocked_jwt(evict_time);

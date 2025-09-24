@@ -161,6 +161,7 @@ SELECT contents, content_type, content_length, state_id, last_modified
 FROM state_document
 WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
 AND agent_hash =  UNHEX(SHA2(:agent-ifi,256))
+AND state_hash = UNHEX(SHA2(:state-id,256))
 AND state_id = :state-id
 --~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
 ;
@@ -181,6 +182,7 @@ AND profile_id = :profile-id;
 SELECT contents, content_type, content_length, profile_id, last_modified
 FROM activity_profile_document
 WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
+AND profile_hash = UNHEX(SHA2(:profile-id,256))
 AND profile_id = :profile-id;
 -- :name query-state-document-exists
 -- :command :query
@@ -189,6 +191,7 @@ AND profile_id = :profile-id;
 SELECT 1 FROM state_document
 WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
 AND agent_hash = UNHEX(SHA2(:agent-ifi,256))
+AND state_hash = UNHEX(SHA2(:state-id,256))
 AND state_id = :state-id
 --~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
 ;
@@ -207,6 +210,7 @@ AND profile_id = :profile-id;
 -- :doc Query whether a particular activity profile document exists.
 SELECT 1 FROM activity_profile_document
 WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
+AND profile_hash = UNHEX(SHA2(:profile-id,256))
 AND profile_id = :profile-id;
 
 -- :name query-state-document-ids
@@ -245,7 +249,7 @@ WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
 -- :result :one
 -- :doc Given an account `username` or `account-id`, return the ID and the hashed password, which can be used to verify the account.
 SELECT id, passhash, username FROM admin_account
---~ (when (:username params)   "WHERE username = :username")
+--~ (when (:username params)   "WHERE username_hash = UNHEX(SHA2(:username,256))\nAND username = :username")
 --~ (when (:account-id params) "WHERE id = :account-id")
 ;
 
@@ -254,7 +258,8 @@ SELECT id, passhash, username FROM admin_account
 -- :result :one
 -- :doc Given an account `username`, return the ID and OIDC issuer, which can be used to verify the OIDC identity.
 SELECT id, oidc_issuer FROM admin_account
-WHERE username = :username;
+WHERE username_hash = UNHEX(SHA2(:username,256))
+AND username = :username;
 
 -- :name query-account-by-id
 -- :command :query
@@ -274,7 +279,7 @@ SELECT id, username FROM admin_account
 -- :result :one
 -- :doc Given an account `username` or `account-id`, return whether the account exists in the table.
 SELECT 1 FROM admin_account
---~ (when (:username params)   "WHERE username = :username")
+--~ (when (:username params)   "WHERE username_hash = UNHEX(SHA2(:username,256))\nAND username = :username")
 --~ (when (:account-id params) "WHERE id = :account-id")
 ;
 
