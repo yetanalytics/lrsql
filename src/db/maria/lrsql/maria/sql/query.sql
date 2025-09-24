@@ -106,7 +106,7 @@ WHERE stmt_a.is_voided = FALSE
 -- :command :query
 -- :result :many
 -- :doc Query for one or more statements using statement resource parameters.
-SELECT all_stmt.id, all_stmt.payload
+SELECT all_stmt.id, MAX(all_stmt.payload) AS payload
 FROM (
   (:frag:maria-stmt-no-ref-subquery-frag)
   UNION ALL
