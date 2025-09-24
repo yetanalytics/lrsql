@@ -5,6 +5,7 @@
 DELETE FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
+AND state_hash = UNHEX(SHA2(:state-id,256))
 AND state_id = :state-id
 --~ (when (:registration params) "AND registration = :registration" "AND registration IS NULL")
 ;
@@ -32,7 +33,8 @@ AND agent_ifi = :agent-ifi;
 -- :result :affected
 -- :doc Delete a single activity profile document using resource params.
 DELETE FROM activity_profile_document
-WHERE profile_id = :profile-id
+WHERE profile_hash = UNHEX(SHA2(:profile-id,256))
+AND profile_id = :profile-id
 AND activity_iri = :activity-iri;
 
 /* Admin Accounts + Credentials */

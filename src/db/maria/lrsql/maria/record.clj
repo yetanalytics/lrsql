@@ -247,6 +247,8 @@
 
   (-set-write! [_]
     ;; next.jdbc automatically sets the reading of Instants as java.sql.Dates
+    (md/set-write-uuid->str!)
+    (md/set-write-inst->timestamp!)
     (md/set-write-edn->json!))
 
   bp/AdminStatusBackend
