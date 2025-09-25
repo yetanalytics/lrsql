@@ -1,11 +1,11 @@
-(ns lrsql.maria.record
+(ns lrsql.mariadb.record
   (:require [com.stuartsierra.component :as cmp]
             [hugsql.core :as hug]
             [next.jdbc :as jdbc]
             [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
-            [lrsql.maria.data :as md]
+            [lrsql.mariadb.data :as md]
             [clojure.string :refer [includes?]])
   (:import [java.security MessageDigest]))
 
@@ -32,16 +32,16 @@
 
 (init-hugsql-adapter!)
 
-(hug/def-db-fns "lrsql/maria/sql/ddl.sql")
-(hug/def-db-fns "lrsql/maria/sql/insert.sql")
-(hug/def-db-fns "lrsql/maria/sql/query.sql")
-(hug/def-db-fns "lrsql/maria/sql/update.sql")
-(hug/def-db-fns "lrsql/maria/sql/delete.sql")
-(hug/def-sqlvec-fns "lrsql/maria/sql/query.sql")
+(hug/def-db-fns "lrsql/mariadb/sql/ddl.sql")
+(hug/def-db-fns "lrsql/mariadb/sql/insert.sql")
+(hug/def-db-fns "lrsql/mariadb/sql/query.sql")
+(hug/def-db-fns "lrsql/mariadb/sql/update.sql")
+(hug/def-db-fns "lrsql/mariadb/sql/delete.sql")
+(hug/def-sqlvec-fns "lrsql/mariadb/sql/query.sql")
 
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
-(defrecord MariaBackend [tuning]
+(defrecord MariadbBackend [tuning]
   cmp/Lifecycle
   (start [this] this)
   (stop [this] this)
@@ -69,7 +69,8 @@
     (create-credential-to-scope-table! tx)
     (create-blocked-jwt-table! tx))
   (-update-all! [_ _tx]
-    ;MariaDB is the latest database to get a SQl-LRS implementation, so no migrations are needed.  In the future migrations will go here.
+    ; MariaDB is the latest database to get a SQl-LRS implementation, so no migrations are needed.
+    ; In the future migrations will go here.
     )
   
   bp/BackendUtil

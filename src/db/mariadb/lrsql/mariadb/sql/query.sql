@@ -1,11 +1,11 @@
 /* Authority subquery fragments */
 -- Solution taken from https://stackoverflow.com/a/66315951
 
--- :frag maria-auth-subquery
+-- :frag mariadb-auth-subquery
 (
   SELECT COUNT(DISTINCT stmt_auth.actor_hash) = :authority-ifi-count
      AND SUM(stmt_auth.actor_hash NOT IN (
---~ (lrsql.maria.record/emit-binary-hashes (:authority-ifis params))
+--~ (lrsql.mariadb.record/emit-binary-hashes (:authority-ifis params))
 )) = 0
   FROM statement_to_actor stmt_auth
   WHERE stmt_auth.statement_id = stmt.statement_id
@@ -15,7 +15,7 @@
 
 /* /\ stmt_auth.usage was casted to actor_usage_enum*/
 /* can probably speed up above/below by changing actor_ifi in SUM clauses to actor_hash*/
--- :frag maria-auth-ans-subquery
+-- :frag mariadb-auth-ans-subquery
 (
   SELECT COUNT(DISTINCT stmt_auth.actor_hash) = :authority-ifi-count
      AND SUM(stmt_auth.actor_ifi NOT IN (:v*:authority-ifis)) = 0 
@@ -35,7 +35,7 @@ SELECT stmt.payload
 FROM xapi_statement stmt
 WHERE statement_id = :statement-id
 --~ (when (some? (:voided? params)) "AND is_voided = :voided?")
---~ (when (:authority-ifis params)  "AND :frag:maria-auth-subquery")
+--~ (when (:authority-ifis params)  "AND :frag:mariadb-auth-subquery")
 ;
 
 -- :name query-statement-exists
@@ -47,23 +47,23 @@ WHERE statement_id = :statement-id;
 
 /* Multi-statement query */
 
--- :frag maria-actors-join
+-- :frag mariadb-actors-join
 INNER JOIN statement_to_actor stmt_actor
 ON stmt.statement_id = stmt_actor.statement_id
 AND stmt_actor.actor_hash = UNHEX(SHA2(:actor-ifi, 256))
 --~ (when-not (:related-actors? params) "AND stmt_actor.usage = 'Actor'")
 
--- :frag maria-activities-join
+-- :frag mariadb-activities-join
 INNER JOIN statement_to_activity stmt_activ
 ON stmt.statement_id = stmt_activ.statement_id
 AND stmt_activ.activity_hash = UNHEX(SHA2(:activity-iri, 256))
 --~ (when-not (:related-activities? params) "AND stmt_activ.usage = 'Object'")
 
--- :frag maria-stmt-no-ref-subquery-frag
+-- :frag mariadb-stmt-no-ref-subquery-frag
 SELECT stmt.id, stmt.payload
 FROM xapi_statement stmt
---~ (when (:actor-ifi params)    ":frag:maria-actors-join")
---~ (when (:activity-iri params) ":frag:maria-activities-join")
+--~ (when (:actor-ifi params)    ":frag:mariadb-actors-join")
+--~ (when (:activity-iri params) ":frag:mariadb-activities-join")
 WHERE stmt.is_voided = FALSE
 /*~ (when (:from params)
      (if (:ascending? params)      "AND stmt.id >= :from" "AND stmt.id <= :from"))  ~*/
@@ -71,7 +71,7 @@ WHERE stmt.is_voided = FALSE
 --~ (when (:until params)          "AND stmt.id <= :until")
 --~ (when (:verb-iri params)       "AND stmt.verb_hash = UNHEX(SHA2(:verb-iri, 256))")
 --~ (when (:registration params)   "AND stmt.registration = :registration")
---~ (when (:authority-ifis params) "AND :frag:maria-auth-subquery")
+--~ (when (:authority-ifis params) "AND :frag:mariadb-auth-subquery")
 --~ (if (:ascending? params)       "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
 --~ (when (:limit params)          "LIMIT :limit") 
 
@@ -80,11 +80,11 @@ WHERE stmt.is_voided = FALSE
    joining on `statement_to_statement` (at least when the number of such links
    is lower than the number of statements, which is most cases). */
 
--- :frag maria-stmt-ref-subquery-frag
+-- :frag mariadb-stmt-ref-subquery-frag
 SELECT stmt_a.id, stmt_a.payload
 FROM xapi_statement stmt
---~ (when (:actor-ifi params)    ":frag:maria-actors-join")
---~ (when (:activity-iri params) ":frag:maria-activities-join")
+--~ (when (:actor-ifi params)    ":frag:mariadb-actors-join")
+--~ (when (:activity-iri params) ":frag:mariadb-activities-join")
 INNER JOIN statement_to_statement sts ON stmt.statement_id = sts.descendant_id
 INNER JOIN xapi_statement stmt_a ON sts.ancestor_id = stmt_a.statement_id
 WHERE stmt_a.is_voided = FALSE
@@ -94,8 +94,8 @@ WHERE stmt_a.is_voided = FALSE
 --~ (when (:until params)          "AND stmt_a.id <= :until")
 --~ (when (:verb-iri params)       "AND stmt.verb_hash = UNHEX(SHA2(:verb-iri, 256))")
 --~ (when (:registration params)   "AND stmt.registration = :registration")
---~ (when (:authority-ifis params) "AND :frag:maria-auth-ans-subquery")
---~ (when (:authority-ifis params) "AND :frag:maria-auth-subquery")
+--~ (when (:authority-ifis params) "AND :frag:mariadb-auth-ans-subquery")
+--~ (when (:authority-ifis params) "AND :frag:mariadb-auth-subquery")
 /*~ (if (:ascending? params)       "ORDER BY stmt_a.id ASC, stmt_a.statement_id ASC"
                                    "ORDER BY stmt_a.id DESC, stmt_a.statement_id DESC") ~*/
 --~ (when (:limit params)          "LIMIT :limit")
@@ -108,9 +108,9 @@ WHERE stmt_a.is_voided = FALSE
 -- :doc Query for one or more statements using statement resource parameters.
 SELECT all_stmt.id, MAX(all_stmt.payload) AS payload
 FROM (
-  (:frag:maria-stmt-no-ref-subquery-frag)
+  (:frag:mariadb-stmt-no-ref-subquery-frag)
   UNION ALL
-  (:frag:maria-stmt-ref-subquery-frag))
+  (:frag:mariadb-stmt-ref-subquery-frag))
 AS all_stmt
 GROUP BY all_stmt.id
 --~ (if (:ascending? params) "ORDER BY all_stmt.id ASC" "ORDER BY all_stmt.id DESC")
@@ -368,7 +368,7 @@ ORDER BY stored_time ASC;
 
 -- :snip snip-json-extract
 JSON_EXTRACT(:i:col,
---~ (lrsql.maria.record/make-path-str (:path params))
+--~ (lrsql.mariadb.record/make-path-str (:path params))
 )
 
 -- :snip snip-val
@@ -392,7 +392,7 @@ JSON_EXTRACT(:i:col,
 -- :snip snip-contains-json
 -- :doc Does the json at col and path contain the given value? A special case with differing structure across backends
 JSON_CONTAINS(:i:col, JSON_QUOTE(:snip:right),
---~  (lrsql.maria.record/make-path-str (:path params))
+--~  (lrsql.mariadb.record/make-path-str (:path params))
 )
 
 -- :snip snip-query-reaction

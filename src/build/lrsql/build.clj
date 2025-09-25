@@ -9,7 +9,7 @@
    "resources"
    "src/db/sqlite"
    "src/db/postgres"
-   "src/db/maria"])
+   "src/db/mariadb"])
 
 (def class-dir
   "target/classes/")
@@ -86,6 +86,5 @@
      {:basis     basis
       :class-dir class-dir
       :uber-file uberjar-file-bench})))
-
 
 

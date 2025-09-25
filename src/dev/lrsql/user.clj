@@ -212,7 +212,7 @@
 ;; MariaDB
 (comment
   (require
-   '[lrsql.maria.record :as rm]
+   '[lrsql.mariadb.record :as rm]
    '[lrsql.init.log]
 
    '[clj-test-containers.core :as tc]
@@ -221,7 +221,7 @@
 
   ;with running Docker instance
 
-  (def sys (system/system (rm/map->MariaBackend {}) :test-mariadb))
+  (def sys (system/system (rm/map->MariadbBackend {}) :test-mariadb))
   (def sys' (component/start sys))
 
   (def lrs (:lrs sys'))
@@ -238,7 +238,7 @@
   (component/stop sys')
 
 
-;; Maria with containers
+;; MariaDB with containers
   ;; start a container
   (def container (tc/start! ts/mariadb-container))
 
@@ -250,7 +250,7 @@
         mapped-port   (get (:mapped-ports container) db-port)
         mapped-host   (get container :host)]
     (def sys
-      (system/system (rm/map->MariaBackend {}) :test-mariadb
+      (system/system (rm/map->MariadbBackend {}) :test-mariadb
                      :conf-overrides
                      {[:connection :database :db-port] mapped-port
                       [:connection :database :db-host] mapped-host})))

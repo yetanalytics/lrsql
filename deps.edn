@@ -93,7 +93,7 @@
                  com.kohlschutter.junixsocket/junixsocket-native-common
                  {:mvn/version "2.6.1"}}}
   :db-mariadb
-  {:extra-paths ["src/db/maria"]
+  {:extra-paths ["src/db/mariadb"]
    :extra-deps  {org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.5.3"}
                  ;; allow MySQL swap-in
                  com.mysql/mysql-connector-j          {:mvn/version "9.4.0"}}}
@@ -110,7 +110,7 @@
   :test
   {:extra-paths ["src/db/sqlite"
                  "src/db/postgres"
-                 "src/db/maria"
+                 "src/db/mariadb"
                  "src/test"
                  "dev-resources"]
    :extra-deps  {;; DB deps
