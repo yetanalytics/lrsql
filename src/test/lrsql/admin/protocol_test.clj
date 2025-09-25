@@ -156,7 +156,7 @@
             (is (true?
                  (adp/-jwt-blocked? lrs jwt))))
           (testing "- can be purged from blocklist when expired"
-            (Thread/sleep 1000)
+            (Thread/sleep 2000)
             (is (= nil
                    (adp/-purge-blocklist lrs leeway)))
             (is (false?
@@ -508,8 +508,8 @@
           (lrsp/-store-statements lrs auth-ident [stmt-1] [])
           (let [last-stored-1 (get-last-stored lrs auth-ident)
                 day-1         (snap-day last-stored-1)]
-            (is (= {:statement-count       2 ;; increments
-                    :actor-count           1 ;; same
+            (is (= {:statement-count       2  ;; increments
+                    :actor-count           1  ;; same
                     :last-statement-stored last-stored-1 ;; increments
                     :platform-frequency    {"example"         1
                                             ;; new platform

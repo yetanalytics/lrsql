@@ -78,7 +78,9 @@
       (is (= {::s/problems '({:path [:no-jdbc-url :db-type]
                               :pred #{"sqlite"
                                       "postgres"
-                                      "postgresql"}
+                                      "postgresql"
+                                      "mariadb"
+                                      "mysql"}
                               :val  "AS400"
                               :via  [::cs/database ::cs/db-type]
                               :in   [:db-type]}

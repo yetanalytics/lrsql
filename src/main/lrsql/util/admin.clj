@@ -57,10 +57,11 @@
                 (u/offset-time ctime exp :seconds))
         otid  (random-uuid)
         claim {:iat (quot (u/time->millis ctime) 1000)
-               :exp (quot (u/time->millis etime) 1000)
+               :exp (quot (u/time->millis etime) 1000) ; seconds from epoch
                :oti otid}]
     {:jwt (bj/sign claim secret)
-     :exp (:exp claim)
+     :exp (- (:exp claim)  ; later machinery needs exp denoted in "seconds from now"
+             (:iat claim)) ; so, subtracting current time
      :oti otid}))
 
 (defn account-id->jwt*

@@ -23,7 +23,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb, test-mariadb-10.6, test-mariadb-10.11, test-mariadb-11.4, test-mariadb-11.7.2, test-mariadb-11.8, mariadb
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp
@@ -31,9 +31,10 @@ clean-dev:
 # Tests
 
 test-sqlite:
-	clojure -M:test -m lrsql.test-runner --database sqlite
+	clojure -M:test -m lrsql.test-runner --database sqlite $(if $(ns),--ns $(ns))
 
-TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres
+TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres $(if $(ns),--ns $(ns))
+TEST_MARIADB_COMMAND ?= clojure -M:test -m lrsql.test-runner --database mariadb $(if $(ns),--ns $(ns))
 
 # Without LRSQL_TEST_DB_VERSION, defaults to version 11
 test-postgres:
@@ -54,7 +55,28 @@ test-postgres-16:
 test-postgres-17:
 	LRSQL_TEST_DB_VERSION=17 $(TEST_PG_COMMAND)
 
-ci: test-sqlite test-postgres
+test-mariadb:
+        $(TEST_MARIADB_COMMAND)
+
+test-mariadb-10.6:
+	LRSQL_TEST_DB_VERSION=10.6 $(TEST_MARIADB_COMMAND)
+
+test-mariadb-10.11:
+	LRSQL_TEST_DB_VERSION=10.11 $(TEST_MARIADB_COMMAND)
+
+test-mariadb-11.4:
+	LRSQL_TEST_DB_VERSION=11.4 $(TEST_MARIADB_COMMAND)
+
+test-mariadb-11.7.2:
+	LRSQL_TEST_DB_VERSION=11.7.2 $(TEST_MARIADB_COMMAND)
+
+test-mariadb-11.8:
+	LRSQL_TEST_DB_VERSION=11.8 $(TEST_MARIADB_COMMAND)
+
+
+ci: test-sqlite test-postgres test-mariadb
+
+
 
 # Dev
 
@@ -75,6 +97,9 @@ sqlite: resources/public/admin
 postgres: resources/public/admin # Requires a running Postgres instance
 	clojure -X:db-postgres lrsql.postgres.main/run-test-postgres
 
+mariadb: resources/public/admin # Requires a running MariaDB instance
+	clojure -X:db-mariadb lrsql.mariadb.main/run-test-mariadb
+
 # Bench - requires a running lrsql instance
 
 bench:
@@ -82,7 +107,7 @@ bench:
 	    -e http://0.0.0.0:8080/xapi/statements \
 		-i dev-resources/bench/insert_input.json \
 		-q dev-resources/bench/query_input.json \
-		-u username -p password
+		-u my_key -p my_secret
 
 bench-async:
 	clojure -M:bench -m lrsql.bench \
@@ -191,6 +216,10 @@ target/bundle/lrsql_pg.exe: exe/lrsql_pg.exe
 	mkdir -p target/bundle
 	cp exe/lrsql_pg.exe target/bundle/lrsql_pg.exe
 
+target/bundle/lrsql_mariadb.exe: exe/lrsql_mariadb.exe
+	mkdir -p target/bundle
+	cp exe/lrsql_mariadb.exe target/bundle/lrsql_mariadb.exe
+
 # Copy Admin UI
 
 target/bundle/admin: resources/public/admin
@@ -202,9 +231,9 @@ target/bundle/admin: resources/public/admin
 BUNDLE_RUNTIMES ?= true
 
 ifeq ($(BUNDLE_RUNTIMES),true)
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/lrsql_mariadb.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes
 else
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/lrsql_mariadb.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench
 endif
 
 bundle: target/bundle
@@ -247,14 +276,22 @@ else
 	launch4j exe/config_pg.xml
 endif
 
-exe: exe/lrsql.exe exe/lrsql_pg.exe
+exe/lrsql_mariadb.exe:
+ifeq (,$(shell which launch4j))
+	$(error "ERROR: launch4j is not installed!")
+else
+	launch4j exe/config_mariadb.xml
+endif
+
+
+exe: exe/lrsql.exe exe/lrsql_pg.exe exe/lrsql_mariadb.exe
 
 # *** Run build ***
 
 # These targets create a bundle containing a lrsql JAR and then runs
 # the JAR to create the specific lrsql instance.
 
-.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres
+.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres, run-jar-mariadb
 
 run-jar-sqlite-ephemeral: target/bundle
 	cd target/bundle; \
@@ -280,6 +317,14 @@ run-jar-postgres: target/bundle
 	LRSQL_API_KEY_DEFAULT=username \
 	LRSQL_API_SECRET_DEFAULT=password \
 	bin/run_postgres.sh
+
+run-jar-mariadb: target/bundle
+	cd target/bundle; \
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_mariadb.sh
 
 # *** Report Dependency Graph to GitHub ***
 

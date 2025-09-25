@@ -12,4 +12,7 @@
   <logger name="lrsql.ops.query.reaction" level="off" />
   <!-- allow logs for bench tests -->
   <logger name="lrsql.bench-test" level="info" />
+  <!-- allow logs for test runner -->
+  <logger name="lrsql.test-runner" level="info" />
+  <logger name="lrsql.test-support" level="info" />
 </configuration>
