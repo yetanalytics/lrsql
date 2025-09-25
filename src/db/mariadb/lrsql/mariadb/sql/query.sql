@@ -173,7 +173,7 @@ AND state_id = :state-id
 SELECT contents, content_type, content_length, profile_id, last_modified
 FROM agent_profile_document
 WHERE agent_hash = UNHEX(SHA2(:agent-ifi,256))
-AND profile_id = :profile-id;
+AND profile_hash = UNHEX(SHA2(:profile-id, 256));
 
 -- :name query-activity-profile-document
 -- :command :query
@@ -202,7 +202,7 @@ AND state_id = :state-id
 -- :doc Query whether a particular agent profile document exists.
 SELECT 1 FROM agent_profile_document
 WHERE agent_hash = UNHEX(SHA2(:agent-ifi,256))
-AND profile_id = :profile-id;
+AND profile_hash = UNHEX(SHA2(:profile-id,256));
 
 -- :name query-activity-profile-document-exists
 -- :command :query

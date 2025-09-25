@@ -156,7 +156,8 @@ CREATE TABLE IF NOT EXISTS state_document (
 -- :doc Create the `agent_profile_document` table if it does not exist yet.
 CREATE TABLE IF NOT EXISTS agent_profile_document (
   id             CHAR(36) PRIMARY KEY,
-  profile_id     VARCHAR(191) NOT NULL,
+  profile_id     TEXT NOT NULL,
+  profile_hash   BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(profile_id, 256))) STORED,
   agent_ifi      TEXT NOT NULL,
   agent_hash     BINARY(32) GENERATED ALWAYS AS (UNHEX(SHA2(agent_ifi, 256))) STORED,
   last_modified  TIMESTAMP(6) NOT NULL,
@@ -164,7 +165,7 @@ CREATE TABLE IF NOT EXISTS agent_profile_document (
   content_length INTEGER NOT NULL,
   contents       LONGBLOB NOT NULL,
   CONSTRAINT agent_profile_doc_idx
-  UNIQUE (profile_id, agent_hash)
+  UNIQUE (profile_hash, agent_hash)
 );
 
 -- :name create-activity-profile-document-table!

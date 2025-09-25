@@ -25,7 +25,8 @@ AND agent_ifi = :agent-ifi
 -- :result :affected
 -- :doc Delete a single agent profile document using resource params.
 DELETE FROM agent_profile_document
-WHERE profile_id = :profile-id
+WHERE profile_hash = UNHEX(SHA2(:profile-id,256))
+AND profile_id = :profile-id
 AND agent_ifi = :agent-ifi;
 
 -- :name delete-activity-profile-document!

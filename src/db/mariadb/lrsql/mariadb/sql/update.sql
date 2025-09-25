@@ -54,7 +54,8 @@ SET
   content_length = :content-length,
   contents = :contents,
   last_modified = :last-modified
-WHERE profile_id = :profile-id
+WHERE profile_hash = UNHEX(SHA2(:profile-id, 256))
+AND profile_id = :profile-id
 AND agent_hash = UNHEX(SHA2(:agent-ifi,256));
 
 -- :name update-activity-profile-document!
