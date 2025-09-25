@@ -7,7 +7,7 @@
             [lrsql.system :as system]
             [lrsql.sqlite.record :as sr]
             [lrsql.postgres.record :as pr]
-            [lrsql.maria.record :as mr]
+            [lrsql.mariadb.record :as mr]
             [lrsql.util :as u]
             [clj-test-containers.core :as tc]
             [clojure.tools.logging :as log]))
@@ -118,7 +118,7 @@
     (doseq [table-name table-names]
       (jdbc/execute! tx [(format "TRUNCATE TABLE %s CASCADE" table-name)]))))
 
-;; Utility to truncate all tables after tests in Maria
+;; Utility to truncate all tables after tests in MariaDB
 (defn truncate-all-mariadb!
   "Truncate all tables in MariaDB."
   [ds]
@@ -198,7 +198,7 @@
            test-system (fn [& {:keys [conf-overrides]}]
                          (system/system ((case dbtype
                                            :postgres pr/map->PostgresBackend
-                                           :mariadb  mr/map->MariaBackend)
+                                           :mariadb  mr/map->MariadbBackend)
                                          {})
                                         profile-kw
                                         :conf-overrides conf-overrides))]

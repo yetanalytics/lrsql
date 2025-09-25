@@ -36,7 +36,7 @@
   :prod-sqlite-mem #include "prod/sqlite_mem/database.edn"
   :prod-sqlite     #include "prod/sqlite/database.edn"
   :prod-postgres   #include "prod/postgres/database.edn"
-  :prod-mariadb    #include "prod/maria/database.edn"
+  :prod-mariadb    #include "prod/mariadb/database.edn"
   }
  :connection
  #profile
@@ -44,13 +44,13 @@
   :test-sqlite     #include "test/default/connection.edn"
   :test-sqlite-mem #include "test/sqlite_mem/connection.edn"
   :test-postgres   #include "test/postgres/connection.edn"
-  :test-mariadb    #include "test/maria/connection.edn"
+  :test-mariadb    #include "test/mariadb/connection.edn"
   :test-oidc       #include "test/default/connection.edn"
   ;; Production
   :prod-sqlite     #include "prod/default/connection.edn"
   :prod-sqlite-mem #include "prod/sqlite_mem/connection.edn"
   :prod-postgres   #include "prod/postgres/connection.edn"
-  :prod-mariadb    #include "prod/maria/connection.edn"
+  :prod-mariadb    #include "prod/mariadb/connection.edn"
   }
  :tuning
  #profile
@@ -58,13 +58,13 @@
   :test-sqlite     #include "test/default/tuning.edn"
   :test-sqlite-mem #include "test/default/tuning.edn"
   :test-postgres   #include "test/postgres/tuning.edn"
-  :test-mariadb    #include "test/maria/tuning.edn"
+  :test-mariadb    #include "test/mariadb/tuning.edn"
   :test-oidc       #include "test/default/tuning.edn"
   ;; Production
   :prod-sqlite     #include "prod/default/tuning.edn"
   :prod-sqlite-mem #include "prod/default/tuning.edn"
   :prod-postgres   #include "prod/postgres/tuning.edn"
-  :prod-mariadb    #include "prod/maria/tuning.edn"
+  :prod-mariadb    #include "prod/mariadb/tuning.edn"
   }
  :lrs
  #profile

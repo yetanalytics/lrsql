@@ -1,4 +1,4 @@
-(ns lrsql.maria.data
+(ns lrsql.mariadb.data
   (:require [next.jdbc.prepare :refer [SettableParameter]]
             [next.jdbc.result-set :refer [ReadableColumn]]
             [lrsql.util :as u])
@@ -11,7 +11,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;JSON read
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn maria-read-json [s]
+(defn mariadb-read-json [s]
       (u/parse-json s :keyword-keys? true))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -3,7 +3,7 @@
   <dontWrapJar>true</dontWrapJar>
   <headerType>console</headerType>
   <classPath>
-    <mainClass>lrsql.maria.main</mainClass>
+    <mainClass>lrsql.mariadb.main</mainClass>
     <cp>lrsql.jar</cp>
   </classPath>
   <outfile>lrsql_mariadb.exe</outfile>
