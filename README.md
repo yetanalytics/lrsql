@@ -40,6 +40,7 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 ### DBMS-specific Sections
 
 - [Postgres](doc/postgres.md)
+- [MariaDB](mariadb.md)
 - [SQLite](doc/sqlite.md)
 
 ### Reference
