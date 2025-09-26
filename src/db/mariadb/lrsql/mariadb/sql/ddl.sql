@@ -273,3 +273,34 @@ CREATE TABLE IF NOT EXISTS blocked_jwt (
   one_time_id CHAR(36) UNIQUE,
   KEY blocked_jwt_evict_time_idx (evict_time)
 );
+
+/* Migration 2025-09-26 - Add ContextAgent, ContextGroup, SubContextAgent, SubContextGroup to statement_to_actor usage enum */
+
+-- :name query-statement-to-actor-usage-enum-has-context-actors
+-- :command :query
+-- :result :one
+-- :doc Query to see if the `statement_to_actor.usage` column has ContextAgent in its enum.
+SELECT EXISTS (
+    SELECT 1
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 'statement_to_actor'
+      AND COLUMN_NAME = 'usage'
+      AND FIND_IN_SET('ContextAgent', REPLACE(REPLACE(COLUMN_TYPE, 'enum(', ''), ')', '')) > 0
+) AS has_context_agent;
+
+-- :name alter-statement-to-actor-usage-enum-add-context-actors!
+-- :command :execute
+-- :doc Change the enum datatype of the `statement_to_actor.usage` column to add ContextAgent, ContextGroup, SubContextAgent, and SubContextGroup.
+ALTER TABLE statement_to_actor MODIFY COLUMN `usage` ENUM ('Actor',
+                     'Object',
+                     'Authority',
+                     'Instructor',
+                     'Team',
+                     'SubActor',
+                     'SubObject',
+                     'SubInstructor',
+                     'SubTeam',
+                     'ContextAgent',
+                     'ContextGroup',
+                     'SubContextAgent',
+                     'SubContextGroup') NOT NULL;
