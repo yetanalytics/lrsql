@@ -1,29 +1,47 @@
-(ns lrsql.postgres.record
+(ns lrsql.mariadb.record
   (:require [com.stuartsierra.component :as cmp]
             [hugsql.core :as hug]
             [next.jdbc :as jdbc]
             [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
-            [lrsql.postgres.data :as pd]
+            [lrsql.mariadb.data :as md]
             [clojure.string :refer [includes?]])
-  (:import [org.postgresql.util PSQLException]))
+  (:import [java.security MessageDigest]))
+
+(defn make-path-str [p]
+   (as-> p path
+      (map #(format "\"%s\"" %) path)
+      (into [\$] path)
+      (clojure.string/join \. path)
+      (format "'%s'" path)))
+
+(defn sha256-bytes [^String s]
+  (let [md (MessageDigest/getInstance "SHA-256")]
+    (.digest md (.getBytes s "UTF-8"))))
+
+(defn bytes->sql-hex [^bytes ba]
+  (str "X'" (apply str (map #(format "%02X" (bit-and % 0xFF)) ba)) "'"))
+
+(defn emit-binary-hashes [ifis]
+  (->> ifis
+       (map (comp bytes->sql-hex sha256-bytes))
+       (clojure.string/join ", "))) ;; emits: X'...', X'...', ...
 
 ;; Init HugSql functions
 
 (init-hugsql-adapter!)
 
-(hug/def-db-fns "lrsql/postgres/sql/ddl.sql")
-(hug/def-db-fns "lrsql/postgres/sql/insert.sql")
-(hug/def-db-fns "lrsql/postgres/sql/query.sql")
-(hug/def-db-fns "lrsql/postgres/sql/update.sql")
-(hug/def-db-fns "lrsql/postgres/sql/delete.sql")
-
-(hug/def-sqlvec-fns "lrsql/postgres/sql/query.sql")
+(hug/def-db-fns "lrsql/mariadb/sql/ddl.sql")
+(hug/def-db-fns "lrsql/mariadb/sql/insert.sql")
+(hug/def-db-fns "lrsql/mariadb/sql/query.sql")
+(hug/def-db-fns "lrsql/mariadb/sql/update.sql")
+(hug/def-db-fns "lrsql/mariadb/sql/delete.sql")
+(hug/def-sqlvec-fns "lrsql/mariadb/sql/query.sql")
 
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
-(defrecord PostgresBackend [tuning]
+(defrecord MariadbBackend [tuning]
   cmp/Lifecycle
   (start [this] this)
   (stop [this] this)
@@ -34,12 +52,8 @@
 
   bp/BackendInit
   (-create-all! [_ tx]
-    ;; Enums
-    (create-actor-type-enum! tx)
-    (create-actor-usage-enum! tx)
-    (create-activity-usage-enum! tx)
-    (create-scope-enum! tx)
     ;; Tables
+    (create-reaction-table! tx)
     (create-statement-table! tx)
     (create-actor-table! tx)
     (create-activity-table! tx)
@@ -52,48 +66,19 @@
     (create-activity-profile-document-table! tx)
     (create-admin-account-table! tx)
     (create-credential-table! tx)
-    (create-credential-to-scope-table! tx))
-  (-update-all! [_ tx]
-    (alter-admin-account-passhash-optional! tx)
-    (alter-admin-account-add-openid-issuer! tx)
-    (when-not (some? (query-scope-enum-updated tx))
-      (alter-scope-enum-type! tx))
-    (when-not (some? (query-xapi-statement-timestamp-exists tx))
-      (alter-xapi-statement-add-timestamp! tx)
-      (migrate-xapi-statement-timestamps! tx))
-    (when-not (some? (query-xapi-statement-stored-exists tx))
-      (alter-xapi-statement-add-stored! tx)
-      (migrate-xapi-statement-stored-times! tx))
-    (when-not (some? (query-state-document-last-modified-is-timestamptz tx))
-      (migrate-state-document-last-modified! tx pd/local-tz-input)
-      (migrate-activity-profile-document-last-modified! tx pd/local-tz-input)
-      (migrate-agent-profile-document-last-modified! tx pd/local-tz-input))
-    (create-reaction-table! tx)
-    (when-not (some? (query-xapi-statement-reaction-id-exists tx))
-      (xapi-statement-add-reaction-id! tx))
-    (when-not (some? (query-xapi-statement-trigger-id-exists tx))
-      (xapi-statement-add-trigger-id! tx))
-    (let [is-json? (some? (query-payload-json tx))
-          enable-b (-> tuning :config :enable-jsonb)]
-      (when (and is-json? enable-b) (migrate-to-jsonb! tx)) 
-      (when (not (or is-json? enable-b)) (migrate-to-json! tx)))
-    (when (nil? (check-statement-to-actor-cascading-delete tx))
-      (add-statement-to-actor-cascading-delete! tx))
-    (when (some? (query-varchar-exists tx))
-      (convert-varchars-to-text! tx))
-    (create-blocked-jwt-table! tx)
-    (alter-blocked-jwt-add-one-time-id! tx)
-    (alter-lrs-credential-add-label! tx)
-    (alter-lrs-credential-add-is-seed! tx))
-
+    (create-credential-to-scope-table! tx)
+    (create-blocked-jwt-table! tx))
+  (-update-all! [_ _tx]
+    ; MariaDB is the latest database to get a SQl-LRS implementation, so no migrations are needed.
+    ; In the future migrations will go here.
+    )
+  
   bp/BackendUtil
   (-txn-retry? [_ ex]
-    ;; only retry PGExceptions with a specified phrase
-    (and (instance? PSQLException ex)
-         (let [msg (.getMessage ^PSQLException ex)]
-           (or (includes? msg "ERROR: deadlock detected")
-               (includes? msg "ERROR: could not serialize access due to concurrent update")
-               (includes? msg "ERROR: could not serialize access due to read/write dependencies among transactions")))))
+    (and (instance? java.sql.SQLException ex)
+         (let [msg (.getMessage ex)]
+           (or (includes? msg "Record has changed since last read")
+               (includes? msg "Deadlock found when trying to get lock")))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
@@ -211,19 +196,25 @@
   (-query-account-count-local [_ tx]
     (query-account-count-local tx))
 
+  ;;;; MariaDB doesn't like long values as primary keys.  Fortunately, we don't actually *use* the JWT
+  ;;;; once it's in the DB, except to check for its existence.
+  ;;;; So we don't actually store the JWT; we just store a (shorter) hash of it.  
+  ;;;; Operations that don't interact with the jwt obviously don't need to hash it.
+  ;;;;
+  
   bp/JWTBlocklistBackend
   (-insert-blocked-jwt! [_ tx input]
-    (insert-blocked-jwt! tx input))
+    (insert-blocked-jwt! tx (update input :jwt md/sha256-base64)))
   (-insert-one-time-jwt! [_ tx input]
-    (insert-one-time-jwt! tx input))
+    (insert-one-time-jwt! tx  (update input :jwt md/sha256-base64)))
   (-update-one-time-jwt! [_ tx input]
     (update-one-time-jwt! tx input))
   (-delete-blocked-jwt-by-time! [_ tx input]
     (delete-blocked-jwt-by-time! tx input))
   (-query-blocked-jwt [_ tx input]
-    (query-blocked-jwt-exists tx input))
+    (query-blocked-jwt-exists tx (update input :jwt md/sha256-base64)))
   (-query-one-time-jwt [_ tx input]
-    (query-one-time-jwt-exists tx input))
+    (query-one-time-jwt-exists tx (update input :jwt md/sha256-base64)))
 
   bp/CredentialBackend
   (-insert-credential! [_ tx input]
@@ -248,13 +239,18 @@
   bp/BackendIOSetter
   (-set-read! [_]
     (bd/set-read-time->instant!)
-    (pd/set-read-pgobject->json!
-     #{"ruleset"
-       "error"}))
+    (md/set-read!
+     {:json-columns    #{"ruleset"
+                         "error"
+                         "payload"}
+      :keyword-columns #{"ruleset"
+                         "error"}}))
+
   (-set-write! [_]
     ;; next.jdbc automatically sets the reading of Instants as java.sql.Dates
-    (pd/set-write-json->pgobject! (if (-> tuning :config :enable-jsonb)
-                                    "jsonb" "json")))
+    (md/set-write-uuid->str!)
+    (md/set-write-inst->timestamp!)
+    (md/set-write-edn->json!))
 
   bp/AdminStatusBackend
   (-query-statement-count [_ tx]
@@ -272,15 +268,15 @@
   (-insert-reaction! [_ tx params]
     (try
       (insert-reaction! tx params)
-      (catch PSQLException ex
-        (if (= "23505" (.getSQLState ex))
+      (catch java.sql.SQLIntegrityConstraintViolationException ex
+        (if (= 1062 (.getErrorCode ex))
           :lrsql.reaction/title-conflict-error
           (throw ex)))))
   (-update-reaction! [_ tx params]
     (try
       (update-reaction! tx params)
-      (catch PSQLException ex
-        (if (= "23505" (.getSQLState ex))
+      (catch java.sql.SQLIntegrityConstraintViolationException ex
+        (if (= 1062 (.getErrorCode ex))
           :lrsql.reaction/title-conflict-error
           (throw ex)))))
   (-delete-reaction! [_ tx params]
@@ -288,9 +284,8 @@
   (-error-reaction! [_ tx params]
     (error-reaction! tx params))
   (-snip-json-extract [_ {:keys [datatype] :as params}]
-    (if (-> tuning :config :enable-jsonb)
-      (snip-jsonb-extract (assoc params :type (pd/type->pg-type datatype)))
-      (snip-json-extract (assoc params :type (pd/type->pg-type datatype)))))
+    (snip-json-extract (assoc params :type
+                              datatype)))
   (-snip-val [_ params]
     (snip-val params))
   (-snip-col [_ params]
@@ -304,9 +299,8 @@
   (-snip-not [_ params]
     (snip-not params))
   (-snip-contains [_ {:keys [datatype] :as params}]
-    (if (-> tuning :config :enable-jsonb)
-      (snip-contains-jsonb (assoc params :type (pd/type->pg-type datatype)))
-      (snip-contains-json (assoc params :type (pd/type->pg-type datatype)))))
+    (snip-contains-json (assoc params :type
+                               (md/type->mdb-type datatype))))
   (-snip-query-reaction [_ params]
     (snip-query-reaction params))
   (-query-reaction [_ tx params]

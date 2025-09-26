@@ -8,7 +8,8 @@
             [lrsql.util :as u]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.ops.command.reaction :as cr]
-            [lrsql.input.reaction :as ir]))
+            [lrsql.input.reaction :as ir]
+            [next.jdbc :as jdbc]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
@@ -35,10 +36,11 @@
                                    "reaction-bad"
                                    tc/simple-reaction-ruleset
                                    true)]
-        (cr/error-reaction! bk ds (ir/error-reaction-input
-                                   reaction-id
-                                   {:type "ReactionQueryError"
-                                    :message "Unknown Query Error!"})))
+        (jdbc/with-transaction [tx ds]
+          (cr/error-reaction! bk tx (ir/error-reaction-input
+                                     reaction-id
+                                     {:type "ReactionQueryError"
+                                      :message "Unknown Query Error!"}))))
 
       (testing "Finds all reactions"
         (is (= [{:ruleset tc/simple-reaction-ruleset

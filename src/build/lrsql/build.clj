@@ -8,7 +8,8 @@
   ["src/main"
    "resources"
    "src/db/sqlite"
-   "src/db/postgres"])
+   "src/db/postgres"
+   "src/db/mariadb"])
 
 (def class-dir
   "target/classes/")
@@ -18,7 +19,8 @@
 ;; On the other hand, we keep the unobfuscated OSS source code so that users
 ;; have easy access to it.
 (def ignored-file-regexes
-  ["^.*jks$"
+  [".*#.*" ;;catches emacs auto-save files
+   "^.*jks$"
    "^.*key$"
    "^.*pem$"])
 
@@ -28,7 +30,7 @@
 (defn- create-basis []
   (b/create-basis
    {:project "deps.edn"
-    :aliases [:db-sqlite :db-postgres]}))
+    :aliases [:db-sqlite :db-postgres :db-mariadb]}))
 
 (defn write-git-data! []
   (when-let [version (b/git-process {:git-args "describe --exact-match --tags"})]
@@ -84,6 +86,5 @@
      {:basis     basis
       :class-dir class-dir
       :uber-file uberjar-file-bench})))
-
 
 

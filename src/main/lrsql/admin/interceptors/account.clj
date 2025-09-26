@@ -103,7 +103,7 @@
    {:name ::authenticate-admin
     :enter
     (fn authenticate-admin [ctx]
-      (let [{lrs :com.yetanalytics/lrs
+      (let [{lrs                         :com.yetanalytics/lrs
              {:keys [username password]} ::data}
             ctx
             {:keys [result]}
