@@ -6,7 +6,8 @@
             [lrsql.admin.protocol           :as adp]
             [lrsql.test-support             :as support]
             [lrsql.test-constants           :as tc]
-            [lrsql.util                     :as u]))
+            [lrsql.util                     :as u]
+            [xapi-schema.spec               :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init Test Config
@@ -191,6 +192,25 @@
    "verb"   {"id"         "http://example.com/verbs/24g890gh348h8934gh8349h89g34hg8934hg8934h3489gh8934hg3489h8g34h89g34h4389g34gh83h89gh8934hg894hgfuifbgnusrbgjrjkgbneruiognhuio34bnhuobgh4389gh48gh34g8493ghu34wenhgberuiohegr89h3458ghjerihertyuioernhjkogernguioh89gh348gh84ibhgiohsdrioghb349uih3489ghbu934hgi9erhjgiheru9gh943h89gh3894hu9ghu89werhguibhdsfuijgbnerjinuigernhuighjeriohjgioehuirgh4ioghjioerhg34uiogh349hgf3489gh34u89gh3489hg8943hg8934h89gh23489g34h89g34h89g34hg8934hg3489h4389gh3489hyg3489hg8934hg893h489gh3489gh89",
              "display"    {"en-US" "Very Normal Verb"}}
    "object" {"id"         "http://www.example.com/activities/38902fh23890fh2389fh238hf8923fh8239hf8923h829hf8923hf87923h89hf8h2389fh8239h238fh2389fh8923fh2389fh2389fh823fh3892fh8923hf2389hf8239fh8239fh8923h8392h823f9hf823h89f32hf8932h89f23h89f23h89f23h89f32h8923fh8f23hf23h823fh89f23h3892hf2389fh2389hf8932hf8923h89f3h8932hf893hf8923hf8932h238hf328hf8923h23f8ifh23uifh23uibfh23ubf23ifb23yi23bfyuifui23b23fuib3fui2b23fuifb23bfu32bfui23bui32bf23uibfui23bfui23bfui23bfui32bfui23bgh23uifbui23bfuib23uibf2ui3bfui23buifb23uibfu32b3uifbui"}})
+
+;; xAPI 2.0 context Actors and Groups
+(def stmt-8
+  {"id"     "00000000-0000-4000-8000-000000000200"
+   "actor"  {"mbox"       "mailto:sample.foo@example.com"
+             "objectType" "Agent"}
+   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
+             "display" {"en-US" "answered"
+                        "zh-CN" "回答了"}}
+   "object" {"id" "http://www.example.com/tincan/activities/multipart"}
+   "context"
+   {"contextAgents" [{"objectType" "contextAgent"
+                      "agent"      {"mbox" "mailto:ctxagent@example.com"
+                                    "objectType" "Agent"}}]
+    "contextGroups" [{"objectType" "contextGroup"
+                      "group"      {"mbox"   "mailto:ctxgroup@example.com"
+                                    "objectType" "Group"
+                                    "member" [{"mbox" "mailto:ctxmember@example.com"
+                                                "objectType" "Agent"}]}}]}})
 
 (deftest test-statement-fns
   (let [sys   (support/test-system)
@@ -505,6 +525,43 @@
                    string-result-attachment-content
                    (update :attachments set))))))
     (component/stop sys')))
+
+(deftest context-agents-and-groups-query-test
+  (binding [xs/*xapi-version* "2.0.0"] ;; for instrumentation
+    (let [sys   (support/test-system)
+          sys'  (component/start sys)
+          lrs   (-> sys' :lrs)
+          id-8  (get stmt-8 "id")
+          agt-0 (-> stmt-8 (get "actor"))
+          agt-ctx (-> stmt-8 (get-in ["context" "contextAgents" 0 "agent"]))
+          grp-ctx (-> stmt-8 (get-in ["context" "contextGroups" 0 "group"])
+                      (dissoc "name"))
+          mem-ctx (-> stmt-8 (get-in ["context" "contextGroups" 0 "group" "member" 0])
+                      (dissoc "name"))
+          ctx     {:com.yetanalytics.lrs/version "2.0.0"}]
+      (try
+        (testing "statement insertions (2.0.0)"
+          (is (= {:statement-ids [id-8]}
+                 (lrsp/-store-statements lrs ctx auth-ident [stmt-8] []))))
+
+        (testing "statement property queries (2.0.0)"
+          (is (= {:statement-result {:statements [stmt-8] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:agent agt-0} #{})))
+          (is (= {:statement-result {:statements [stmt-8] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:agent          agt-ctx
+                                         :related_agents true} #{})))
+          (is (= {:statement-result {:statements [stmt-8] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:agent          grp-ctx
+                                         :related_agents true} #{})))
+          (is (= {:statement-result {:statements [stmt-8] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:agent          mem-ctx
+                                         :related_agents true} #{}))))
+        (finally
+          (component/stop sys'))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Ref Tests

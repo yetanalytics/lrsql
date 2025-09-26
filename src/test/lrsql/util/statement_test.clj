@@ -116,10 +116,10 @@
   (-> statement-1
       (assoc "version" "2.0.0")
       (assoc "timestamp" "2025-08-29 15:16:24.816950Z")
-      (assoc-in ["context" "contextAgents"] [{"objectType" "ContextAgent"
+      (assoc-in ["context" "contextAgents"] [{"objectType" "contextAgent"
                                               "agent" {"mbox" "mailto:a@example.com"
                                                        "objectType" "Agent"}}])
-      (assoc-in ["context" "contextGroups"] [{"objectType" "ContextGroup"
+      (assoc-in ["context" "contextGroups"] [{"objectType" "contextGroup"
                                                 "group" {"mbox" "mailto:g@example.com"
                                                           "objectType" "Group"
                                                           "member" [{"mbox" "mailto:m@example.com"

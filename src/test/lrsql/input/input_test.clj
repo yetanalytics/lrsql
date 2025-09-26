@@ -9,8 +9,7 @@
             [lrsql.input.admin.status :as i-adm-stat]
             [lrsql.input.auth         :as i-auth]
             [lrsql.input.statement    :as i-stmt]
-            [lrsql.input.document     :as i-doc]
-            [xapi-schema.spec         :as xs]))
+            [lrsql.input.document     :as i-doc]))
 
 (deftest test-insert-inputs
   (testing "statement object insertion inputs"
