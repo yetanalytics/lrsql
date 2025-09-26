@@ -69,7 +69,7 @@
     (create-credential-to-scope-table! tx)
     (create-blocked-jwt-table! tx))
   (-update-all! [_ tx]
-    (when-not (some? (query-statement-to-actor-usage-enum-has-context-actors tx))
+    (when-not (= 1 (:has_context_agent (query-statement-to-actor-usage-enum-has-context-actors tx)))
       (alter-statement-to-actor-usage-enum-add-context-actors! tx)))
 
   bp/BackendUtil
