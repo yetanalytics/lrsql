@@ -2,7 +2,6 @@
   (:require [clojure.string :as cs]
             [com.yetanalytics.pathetic :as pa]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [com.yetanalytics.lrs.xapi.statements.timestamp :as ts]
             [lrsql.util :as u]
             [lrsql.util.path :as up]))
 

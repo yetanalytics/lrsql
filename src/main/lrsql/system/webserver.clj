@@ -12,8 +12,7 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
-            [lrsql.util.interceptor :refer [handle-json-parse-exn]]
-            [lrsql.util.statement :as su]))
+            [lrsql.util.interceptor :refer [handle-json-parse-exn]]))
 
 (defn- service-map
   "Create a new service map for the webserver."

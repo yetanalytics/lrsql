@@ -3,8 +3,7 @@
             [clojure.spec.alpha :as s]
             [lrsql.util.statement :as su]
             [lrsql.util :as u]
-            [xapi-schema.spec :as xs]
-            [xapi-schema.spec.resources :as xsr]))
+            [xapi-schema.spec :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Test Constants
