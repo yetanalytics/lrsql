@@ -1,0 +1,5 @@
+#merge
+ [#include "test/default/connection.edn"
+  {:pool-minimum-idle 10
+   :pool-maximum-size 10
+   :pool-initialization-fail-timeout 0}]

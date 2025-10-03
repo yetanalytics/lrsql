@@ -11,19 +11,22 @@
          :or {db "sqlite"
               ns nil}} args]
     (when (contains? #{"postgres"
-                       "mariadb"}
+                       "mariadb"
+                       "mysql"}
                      db)
       (log/infof "Starting container for %s..." db))
     (with-redefs [support/fresh-db-fixture
                   (case db
                     "sqlite"   support/fresh-sqlite-fixture
                     "postgres" support/fresh-postgres-fixture
-                    "mariadb"  support/fresh-mariadb-fixture)
+                    "mariadb"  support/fresh-mariadb-fixture
+                    "mysql"    support/fresh-mysql-fixture)
                   support/*container*
                   (case db
                     "sqlite"   nil
                     "postgres" (tc/start! support/postgres-container)
-                    "mariadb"  (tc/start! support/mariadb-container))]
+                    "mariadb"  (tc/start! support/mariadb-container)
+                    "mysql"    (tc/start! support/mysql-container))]
       (try
         (when support/*container*
           (log/infof "Container for %s started!" db))

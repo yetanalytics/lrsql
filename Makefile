@@ -35,7 +35,7 @@ test-sqlite:
 
 TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres $(if $(ns),--ns $(ns))
 TEST_MARIADB_COMMAND ?= clojure -M:test -m lrsql.test-runner --database mariadb $(if $(ns),--ns $(ns))
-
+TEST_MYSQL_COMMAND ?= clojure -M:test -m lrsql.test-runner --database mysql $(if $(ns),--ns $(ns))
 # Without LRSQL_TEST_DB_VERSION, defaults to version 11
 test-postgres:
 	$(TEST_PG_COMMAND)
@@ -73,8 +73,10 @@ test-mariadb-11.7.2:
 test-mariadb-11.8:
 	LRSQL_TEST_DB_VERSION=11.8 $(TEST_MARIADB_COMMAND)
 
+test-mysql:
+	LRSQL_TEST_DB_VERSION=8.0.36 $(TEST_MYSQL_COMMAND)
 
-ci: test-sqlite test-postgres test-mariadb
+ci: test-sqlite test-postgres test-mariadb test-mysql
 
 
 
