@@ -19,7 +19,6 @@
   ch.qos.logback/logback-classic        {:mvn/version "1.5.15"}
   commons-io/commons-io                 {:mvn/version "2.14.0"}
   commons-fileupload/commons-fileupload {:mvn/version "1.6.0"}
-  myrmidon/myrmidon {:local/root "../myrmidon"}
   
   ;; DB/JDBC deps
   ;; - HikariCP: Need to exclude slf4j to make logback work properly
@@ -80,7 +79,10 @@
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript
                  cheshire/cheshire
-                 clj-commons/clj-yaml]}}
+                 clj-commons/clj-yaml]}
+
+
+  }
 
  :aliases
  {:db-sqlite
