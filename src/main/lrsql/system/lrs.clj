@@ -70,8 +70,10 @@
            sup-versions :supported-versions}
           config
           ;; Authority function
-          auth-fn      (make-authority-fn auth-tp)
-          oidc-auth-fn (oidc-init/make-authority-fn oidc-auth-tp)]
+          auth-fn               (make-authority-fn auth-tp)
+          oidc-auth-fn          (oidc-init/make-authority-fn oidc-auth-tp)
+          supported-version-set (s/conform ::cs/supported-versions
+                                           sup-versions)]
       ;; Combine all init ops into a single txn, since the user would expect
       ;; such actions to happen as a single unit. If init-backend! succeeds
       ;; but insert-default-creds! fails, this would constitute a partial
@@ -85,8 +87,7 @@
                :authority-fn auth-fn
                :oidc-authority-fn oidc-auth-fn
                :reaction-channel (react-init/reaction-channel config)
-               :supported-versions (s/conform ::cs/supported-versions
-                                              sup-versions)))))
+               :supported-versions supported-version-set))))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
