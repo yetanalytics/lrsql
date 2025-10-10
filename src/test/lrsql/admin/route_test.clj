@@ -9,7 +9,6 @@
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.backend.protocol :as bp]
             [lrsql.test-support :as support]
-            [lrsql.lrs-test :as lt]
             [lrsql.test-constants :as tc]
             [lrsql.util :as u]
             [lrsql.util.headers :as h]
@@ -685,7 +684,6 @@
                [:webserver :jwt-no-val-role]     "/domain/app/ADMIN"
                [:webserver :auth-by-cred-id]     true})
         sys' (component/start sys)
-        lrs (:lrs sys')
         ds (get-in sys' [:lrs :connection :conn-pool])
         backend (:backend sys')
         ;; proxy jwt auth
