@@ -80,7 +80,7 @@
   :prod-sqlite-mem #include "prod/default/tuning.edn"
   :prod-postgres   #include "prod/postgres/tuning.edn"
   :prod-mariadb    #include "prod/mariadb/tuning.edn"
-  :prod-mysql    #include "prod/mysql/tuning.edn"
+  :prod-mysql      #include "prod/mysql/tuning.edn"
   }
  :lrs
  #profile

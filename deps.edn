@@ -79,10 +79,7 @@
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript
                  cheshire/cheshire
-                 clj-commons/clj-yaml]}
-
-
-  }
+                 clj-commons/clj-yaml]}}
 
  :aliases
  {:db-sqlite
@@ -100,7 +97,6 @@
    :extra-deps  {org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.5.3"}
                  ;; allow MySQL swap-in
                  com.mysql/mysql-connector-j          {:mvn/version "9.4.0"}}}
-  
   :bench
   {:extra-paths ["src/bench" "dev-resources"]
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}

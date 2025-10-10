@@ -285,12 +285,12 @@
     (error-reaction! tx params))
   (-snip-json-extract [_ {:keys [datatype] :as params}]
     (let [params (assoc params
-              :path-str (make-path-str (:path params))
+                        :path-str (make-path-str (:path params))
                         :type (md/type->mdb-type datatype))]
-          (cond (#{:bool :int :dec} datatype)
-                (snip-json-extract-numeric params)
-                (#{:string :json} datatype)
-                (snip-json-extract-string params))))
+      (cond (#{:bool :int :dec} datatype)
+            (snip-json-extract-numeric params)
+            (#{:string :json} datatype)
+            (snip-json-extract-string params))))
   (-snip-val [_ params]
     (snip-val params))
   (-snip-col [_ params]
