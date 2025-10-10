@@ -125,10 +125,10 @@
 
 (defn- post-statements-via-url-param [headers credential-id body]
   (curl/post (str "http://0.0.0.0:8080/xapi/statements?credentialID=" credential-id)
-            {:headers (merge headers
-                             {"Accept" "application/json"
-                              "X-Experience-API-Version" "1.0.3"})
-             :body body}))
+             {:headers (merge headers
+                              {"Accept" "application/json"
+                               "X-Experience-API-Version" "1.0.3"})
+              :body body}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -727,11 +727,13 @@
               (jdbc/with-transaction [tx ds]
                 (bp/-query-credential-ids backend tx {:api-key api-key
                                                       :secret-key secret-key}))
-
-              _ (lrsp/-store-statements lrs auth-ident [lt/stmt-0] [])
-              body (assoc stmt-0 :id "00000000-0000-4000-8000-000000000007")
-              post-resp (post-statements-via-url-param headers credential-id body)
-              {:keys [status body]} (get-statements-via-url-param headers credential-id)]
+              stmt-body 
+              (u/write-json-str 
+               (assoc stmt-0 :id "00000000-0000-4000-8000-000000000007"))
+              post-resp 
+              (post-statements-via-url-param headers credential-id stmt-body)
+              {:keys [status body]} 
+              (get-statements-via-url-param headers credential-id)]
           (is (= (:status post-resp) 200))
           (is (= status 200))
           (is (seq ((u/parse-json body) "statements")))))
