@@ -10,11 +10,11 @@
   (:import [java.security MessageDigest]))
 
 (defn make-path-str [p]
-   (as-> p path
-      (map #(format "\"%s\"" %) path)
-      (into [\$] path)
-      (clojure.string/join \. path)
-      (format "'%s'" path)))
+  (as-> p path
+    (map #(format "\"%s\"" %) path)
+    (into [\$] path)
+    (clojure.string/join \. path)
+    (format "'%s'" path)))
 
 (defn sha256-bytes [^String s]
   (let [md (MessageDigest/getInstance "SHA-256")]
@@ -284,8 +284,13 @@
   (-error-reaction! [_ tx params]
     (error-reaction! tx params))
   (-snip-json-extract [_ {:keys [datatype] :as params}]
-    (snip-json-extract (assoc params :type
-                              datatype)))
+    (let [params (assoc params
+              :path-str (make-path-str (:path params))
+                        :type (md/type->mdb-type datatype))]
+          (cond (#{:bool :int :dec} datatype)
+                (snip-json-extract-numeric params)
+                (#{:string :json} datatype)
+                (snip-json-extract-string params))))
   (-snip-val [_ params]
     (snip-val params))
   (-snip-col [_ params]
