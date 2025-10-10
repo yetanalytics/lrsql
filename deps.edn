@@ -19,7 +19,7 @@
   ch.qos.logback/logback-classic        {:mvn/version "1.5.15"}
   commons-io/commons-io                 {:mvn/version "2.14.0"}
   commons-fileupload/commons-fileupload {:mvn/version "1.6.0"}
-  
+
   ;; DB/JDBC deps
   ;; - HikariCP: Need to exclude slf4j to make logback work properly
   ;; - HugSql: Use custom version instead of the released version (0.5.1)
@@ -97,6 +97,7 @@
    :extra-deps  {org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.5.3"}
                  ;; allow MySQL swap-in
                  com.mysql/mysql-connector-j          {:mvn/version "9.4.0"}}}
+
   :bench
   {:extra-paths ["src/bench" "dev-resources"]
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
@@ -126,9 +127,8 @@
                  {:mvn/version "3.5.3"}
                  com.mysql/mysql-connector-j
                  {:mvn/version "9.4.0"}
-
                  org.testcontainers/mariadb {:mvn/version "1.21.2"}
-                 org.testcontainers/mysql {:mvn/version "1.21.3"}
+                 org.testcontainers/mysql   {:mvn/version "1.21.3"}
                  
                  ;; Other test deps
                  org.clojure/test.check {:mvn/version "1.1.1"}
