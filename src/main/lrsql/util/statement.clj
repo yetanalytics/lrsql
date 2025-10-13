@@ -1,5 +1,6 @@
 (ns lrsql.util.statement
-  (:require [com.yetanalytics.pathetic :as pa]
+  (:require [clojure.string :as cs]
+            [com.yetanalytics.pathetic :as pa]
             [com.yetanalytics.lrs.xapi.statements :as ss]
             [lrsql.util :as u]
             [lrsql.util.path :as up]))
@@ -7,11 +8,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Preparation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; If a Statement lacks a version, the version MUST be set to 1.0.0
-;; TODO: Change for version 2.0.0
-;; FIXME: Why is this not version 1.0.3?
-(def xapi-version "1.0.0")
 
 ;; NOTE: SQL LRS overwrites any pre-existing authority object in a statement, as
 ;; suggested by the spec:
@@ -33,13 +29,13 @@
     ;; Dissoc empty object activity name + description
     (= "Activity" (get-in statement ["object" "objectType"]))
     (update-in ["object" "definition"]
-            (fn [{:strs [choices scale source target steps] :as obj-def}]
-              (cond-> (dissoc-empty-lang-maps* obj-def)
-                choices (update "choices" #(mapv dissoc-empty-lang-maps* %))
-                scale   (update "scale" #(mapv dissoc-empty-lang-maps* %))
-                source  (update "source" #(mapv dissoc-empty-lang-maps* %))
-                target  (update "target" #(mapv dissoc-empty-lang-maps* %))
-                steps   (update "steps" #(mapv dissoc-empty-lang-maps* %)))))
+               (fn [{:strs [choices scale source target steps] :as obj-def}]
+                 (cond-> (dissoc-empty-lang-maps* obj-def)
+                   choices (update "choices" #(mapv dissoc-empty-lang-maps* %))
+                   scale   (update "scale" #(mapv dissoc-empty-lang-maps* %))
+                   source  (update "source" #(mapv dissoc-empty-lang-maps* %))
+                   target  (update "target" #(mapv dissoc-empty-lang-maps* %))
+                   steps   (update "steps" #(mapv dissoc-empty-lang-maps* %)))))
     ;; Dissoc empty attachemnt name + description
     (contains? statement "attachments")
     (update "attachments" #(mapv dissoc-empty-lang-maps* %))))
@@ -58,7 +54,7 @@
   "Prepare `statement` for LRS storage by coll-ifying context activities
    and setting missing id, timestamp, authority, version, and stored
    properties. In addition, removes empty maps from `statement`."
-  [authority statement]
+  [version authority statement]
   (let [{?id        "id"
          ?timestamp "timestamp"
          ?version   "version"}
@@ -94,7 +90,9 @@
       (not ?timestamp)
       (assoc-to-statement "timestamp" squuid-ts-str)
       (not ?version)
-      (assoc-to-statement "version" xapi-version))))
+      (assoc-to-statement "version" (case version
+                                      "1.0.3" "1.0.0"
+                                      "2.0.0" "2.0.0")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Equality
@@ -222,3 +220,39 @@
          (map stmt->row)
          (cons csv-headers)
          lazy-seq)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Versioning
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- ensure-103-timestamp
+  "Ensure the timestamp is in the 1.0.3 format."
+  [timestamp]
+  (if (cs/includes? timestamp " ")
+    (cs/replace-first timestamp " " "T")
+    timestamp))
+
+(defn convert-200-to-103
+  "Convert a Statement from xAPI 2.0.0 to 1.0.3 by removing properties not in
+   the 1.0.3 spec and normalizing timestamp."
+  [statement]
+  (if (= "2.0.0" (get statement "version"))
+    (-> statement
+        (assoc "version" "1.0.0")
+        (update "timestamp" ensure-103-timestamp)
+        (cond-> (get statement "context")
+          (update "context" dissoc "contextAgents" "contextGroups")))
+    statement))
+
+(defn strict-version-result
+  "Process a get-statements result in strict version mode."
+  [{:keys [statement statement-result]
+    :as    get-statements-ret}]
+  (cond
+    statement
+    (update get-statements-ret :statement convert-200-to-103)
+    statement-result
+    (update-in get-statements-ret
+               [:statement-result :statements]
+               #(mapv convert-200-to-103 %))
+    :else get-statements-ret))

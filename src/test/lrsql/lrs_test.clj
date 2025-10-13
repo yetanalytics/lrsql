@@ -6,14 +6,15 @@
             [lrsql.admin.protocol           :as adp]
             [lrsql.test-support             :as support]
             [lrsql.test-constants           :as tc]
-            [lrsql.util                     :as u]))
+            [lrsql.util                     :as u]
+            [xapi-schema.spec               :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init Test Config
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Instrument
-(support/instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 ;; New DB config
 (use-fixtures :each support/fresh-db-fixture)
@@ -39,9 +40,9 @@
   [lrs auth-ident params ltags]
   (if (or (contains? params :statementId)
           (contains? params :voidedStatementId))
-    (-> (lrsp/-get-statements lrs auth-ident params ltags)
+    (-> (lrsp/-get-statements lrs {} auth-ident params ltags)
         (update :statement remove-props))
-    (-> (lrsp/-get-statements lrs auth-ident params ltags)
+    (-> (lrsp/-get-statements lrs {} auth-ident params ltags)
         (update-in [:statement-result :statements]
                    (partial map remove-props)))))
 
@@ -192,6 +193,25 @@
              "display"    {"en-US" "Very Normal Verb"}}
    "object" {"id"         "http://www.example.com/activities/38902fh23890fh2389fh238hf8923fh8239hf8923h829hf8923hf87923h89hf8h2389fh8239h238fh2389fh8923fh2389fh2389fh823fh3892fh8923hf2389hf8239fh8239fh8923h8392h823f9hf823h89f32hf8932h89f23h89f23h89f23h89f32h8923fh8f23hf23h823fh89f23h3892hf2389fh2389hf8932hf8923h89f3h8932hf893hf8923hf8932h238hf328hf8923h23f8ifh23uifh23uibfh23ubf23ifb23yi23bfyuifui23b23fuib3fui2b23fuifb23bfu32bfui23bui32bf23uibfui23bfui23bfui23bfui32bfui23bgh23uifbui23bfuib23uibf2ui3bfui23buifb23uibfu32b3uifbui"}})
 
+;; xAPI 2.0 context Actors and Groups
+(def stmt-8
+  {"id"     "00000000-0000-4000-8000-000000000200"
+   "actor"  {"mbox"       "mailto:sample.foo@example.com"
+             "objectType" "Agent"}
+   "verb"   {"id"      "http://adlnet.gov/expapi/verbs/answered"
+             "display" {"en-US" "answered"
+                        "zh-CN" "回答了"}}
+   "object" {"id" "http://www.example.com/tincan/activities/multipart"}
+   "context"
+   {"contextAgents" [{"objectType" "contextAgent"
+                      "agent"      {"mbox" "mailto:ctxagent@example.com"
+                                    "objectType" "Agent"}}]
+    "contextGroups" [{"objectType" "contextGroup"
+                      "group"      {"mbox"   "mailto:ctxgroup@example.com"
+                                    "objectType" "Group"
+                                    "member" [{"mbox" "mailto:ctxmember@example.com"
+                                                "objectType" "Agent"}]}}]}})
+
 (deftest test-statement-fns
   (let [sys   (support/test-system)
         sys'  (component/start sys)
@@ -214,7 +234,9 @@
     (try
       (testing "empty statement insertions"
         (is (= {:statement-ids []}
-               (lrsp/-store-statements lrs auth-ident [] [])))
+               (lrsp/-store-statements lrs
+                                       tc/ctx
+                                       auth-ident [] [])))
         (is (= {:statement-result {:statements []
                                    :more       ""}
                 :attachments      []}
@@ -222,19 +244,19 @@
 
       (testing "statement insertions"
         (is (= {:statement-ids [id-0]}
-               (lrsp/-store-statements lrs auth-ident [stmt-0] [])))
+               (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0] [])))
         (is (= {:statement-ids [id-1 id-2 id-3]}
-               (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-2 stmt-3] [])))
+               (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-1 stmt-2 stmt-3] [])))
         (is (= {:statement-ids [id-4]}
-               (lrsp/-store-statements lrs auth-ident [stmt-4] [stmt-4-attach]))))
+               (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-4] [stmt-4-attach]))))
 
       (testing "statement conflicts"
         (is (= {:statement-ids []}
-               (lrsp/-store-statements lrs auth-ident [stmt-1 stmt-1] [])))
+               (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-1 stmt-1] [])))
         (testing "(verb display not part of Statement Immutability)"
           (let [stmt-1' (assoc-in stmt-1 ["verb" "display" "en-US"] "ANSWERED")]
             (is (= {:statement-ids []}
-                   (lrsp/-store-statements lrs auth-ident [stmt-1'] [])))))
+                   (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-1'] [])))))
         (testing "(actor IFI is part of Statement Immutability)"
           ;; Neither statement should be inserted due to batch rollback, even
           ;; though stmt-b could be inserted by itself.
@@ -245,7 +267,7 @@
                               "id"
                               "00000000-0000-4000-8000-000000000010")]
             (is (= ::lrsp/statement-conflict
-                   (-> (lrsp/-store-statements lrs auth-ident [stmt-b stmt-a] [])
+                   (-> (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-b stmt-a] [])
                        :error
                        ex-data
                        :type))))))
@@ -417,21 +439,20 @@
                 {"objectType" "Person"
                  "name"       ["Sample Agent 1"]
                  "mbox"       ["mailto:sample.agent@example.com"]}}
-               (lrsp/-get-person lrs auth-ident {:agent agt-1}))))
+               (lrsp/-get-person lrs tc/ctx auth-ident {:agent agt-1}))))
 
       (testing "activity query"
         ;; Activity was updated between stmt-0 and stmt-1
         ;; Result should contain full definition.
         (is (= {:activity
                 (get stmt-1 "object")}
-               (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
+               (lrsp/-get-activity lrs tc/ctx auth-ident {:activityId act-1}))))
 
       (testing "Extremely long IRIs"
         (is (= {:statement-ids [id-7]}
-               (lrsp/-store-statements lrs auth-ident [stmt-7] []))))
+               (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-7] []))))
       (finally
-        (component/stop sys')
-        (support/unstrument-lrsql)))))
+        (component/stop sys')))))
 
 (deftest reverse-activity-query-test
   (let [sys   (support/test-system)
@@ -440,16 +461,15 @@
         act-1 (get-in stmt-1 ["object" "id"])]
     (try
       (testing "activity query (reverse)"
-        (lrsp/-store-statements lrs auth-ident [stmt-1] [])
-        (lrsp/-store-statements lrs auth-ident [stmt-0] [])
+        (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-1] [])
+        (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0] [])
         ;; Activity was updated between stmt-1 and stmt-0
         (is (= {:activity
                 (get stmt-1 "object")}
-               (lrsp/-get-activity lrs auth-ident {:activityId act-1}))))
+               (lrsp/-get-activity lrs tc/ctx auth-ident {:activityId act-1}))))
 
       (finally
-        (component/stop sys')
-        (support/unstrument-lrsql)))))
+        (component/stop sys')))))
 
 (deftest attachment-normalization-test
   (let [sys   (support/test-system)
@@ -467,7 +487,7 @@
              (lrsp/-store-statements
               ;; stmt-5 references stmt-4-attach
               ;; stmt-6 references stmt-4-attach AND stmt-6-attach (twice)
-              lrs auth-ident [stmt-4 stmt-5 stmt-6] [stmt-4-attach stmt-6-attach]))))
+              lrs tc/ctx auth-ident [stmt-4 stmt-5 stmt-6] [stmt-4-attach stmt-6-attach]))))
 
     (testing "returns normalized attachments"
       (testing "(multiple)"
@@ -504,8 +524,44 @@
                            #{})
                    string-result-attachment-content
                    (update :attachments set))))))
-    (component/stop sys')
-    (support/unstrument-lrsql)))
+    (component/stop sys')))
+
+(deftest context-agents-and-groups-query-test
+  (binding [xs/*xapi-version* "2.0.0"] ;; for instrumentation
+    (let [sys   (support/test-system)
+          sys'  (component/start sys)
+          lrs   (-> sys' :lrs)
+          id-8  (get stmt-8 "id")
+          agt-0 (-> stmt-8 (get "actor"))
+          agt-ctx (-> stmt-8 (get-in ["context" "contextAgents" 0 "agent"]))
+          grp-ctx (-> stmt-8 (get-in ["context" "contextGroups" 0 "group"])
+                      (dissoc "name"))
+          mem-ctx (-> stmt-8 (get-in ["context" "contextGroups" 0 "group" "member" 0])
+                      (dissoc "name"))
+          ctx     {:com.yetanalytics.lrs/version "2.0.0"}]
+      (try
+        (testing "statement insertions (2.0.0)"
+          (is (= {:statement-ids [id-8]}
+                 (lrsp/-store-statements lrs ctx auth-ident [stmt-8] []))))
+
+        (testing "statement property queries (2.0.0)"
+          (is (= {:statement-result {:statements [stmt-8] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:agent agt-0} #{})))
+          (is (= {:statement-result {:statements [stmt-8] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:agent          agt-ctx
+                                         :related_agents true} #{})))
+          (is (= {:statement-result {:statements [stmt-8] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:agent          grp-ctx
+                                         :related_agents true} #{})))
+          (is (= {:statement-result {:statements [stmt-8] :more ""}
+                  :attachments      []}
+                 (get-ss lrs auth-ident {:agent          mem-ctx
+                                         :related_agents true} #{}))))
+        (finally
+          (component/stop sys'))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Ref Tests
@@ -555,7 +611,7 @@
       (is (= {:statement-ids ["00000000-0000-4000-0000-000000000001"
                               "00000000-0000-4000-0000-000000000002"
                               "00000000-0000-4000-0000-000000000003"]}
-             (lrsp/-store-statements lrs auth-ident [stmt-1' stmt-2' stmt-3'] []))))
+             (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-1' stmt-2' stmt-3'] []))))
 
     (testing "statement queries"
       (is (= {:statement-result {:statements [stmt-3' stmt-2' stmt-1'] :more ""}
@@ -600,7 +656,7 @@
 
     (testing "don't return voided statement refs"
       (is (= {:statement-ids ["00000000-0000-4000-0000-000000000004"]}
-             (lrsp/-store-statements lrs auth-ident [stmt-4'] [])))
+             (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-4'] [])))
       ;; stmt-4' is returned because it targets stmt-3', whose voided status
       ;; does not matter. On the other hand, stmt-3' itself is not returned
       ;; because it was voided.
@@ -655,8 +711,8 @@
             "55555555-0000-4000-5555-555555555555"))
 
 (defn- get-ss-authority
-  [lrs auth-ident params ltags]
-  (-> (lrsp/-get-statements lrs auth-ident params ltags)
+  [lrs ctx auth-ident params ltags]
+  (-> (lrsp/-get-statements lrs ctx auth-ident params ltags)
       :statement
       (get "authority")
       (update "member" set)))
@@ -679,11 +735,11 @@
         mp-obj (get-in stmt-1 ["object" "id"])
         vrb-4  (get-in stmt-4 ["verb" "id"])
         obj-4  (get-in stmt-4 ["object" "id"])]
-    (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-    (lrsp/-store-statements lrs auth-ident [stmt-1] [])
-    (lrsp/-store-statements lrs auth-ident-oauth [stmt-2] [])
-    (lrsp/-store-statements lrs auth-ident-oauth [stmt-3] [])
-    (lrsp/-store-statements lrs auth-ident-oauth* [stmt-4] [stmt-4-attach])
+    (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0] [])
+    (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-1] [])
+    (lrsp/-store-statements lrs tc/ctx auth-ident-oauth [stmt-2] [])
+    (lrsp/-store-statements lrs tc/ctx auth-ident-oauth [stmt-3] [])
+    (lrsp/-store-statements lrs tc/ctx auth-ident-oauth* [stmt-4] [stmt-4-attach])
     (testing "statements/read"
       (let [auth-ident-1 (assoc auth-ident
                                 :scopes #{:scope/statements.read})
@@ -713,25 +769,25 @@
                  (get-ss lrs auth-ident-2 {:statementId id-4} #{})
                  (get-ss lrs auth-ident-3 {:statementId id-4} #{})))
           (is (= (-> auth-ident :agent (update "member" set))
-                 (get-ss-authority lrs auth-ident-1 {:voidedStatementId id-0} #{})
-                 (get-ss-authority lrs auth-ident-2 {:voidedStatementId id-0} #{})
-                 (get-ss-authority lrs auth-ident-3 {:voidedStatementId id-0} #{})))
+                 (get-ss-authority lrs tc/ctx auth-ident-1 {:voidedStatementId id-0} #{})
+                 (get-ss-authority lrs tc/ctx auth-ident-2 {:voidedStatementId id-0} #{})
+                 (get-ss-authority lrs tc/ctx auth-ident-3 {:voidedStatementId id-0} #{})))
           (is (= (-> auth-ident :agent (update "member" set))
-                 (get-ss-authority lrs auth-ident-1 {:statementId id-1} #{})
-                 (get-ss-authority lrs auth-ident-2 {:statementId id-1} #{})
-                 (get-ss-authority lrs auth-ident-3 {:statementId id-1} #{})))
+                 (get-ss-authority lrs tc/ctx auth-ident-1 {:statementId id-1} #{})
+                 (get-ss-authority lrs tc/ctx auth-ident-2 {:statementId id-1} #{})
+                 (get-ss-authority lrs tc/ctx auth-ident-3 {:statementId id-1} #{})))
           (is (= (-> auth-ident-oauth :agent (update "member" set))
-                 (get-ss-authority lrs auth-ident-1 {:statementId id-2} #{})
-                 (get-ss-authority lrs auth-ident-2 {:statementId id-2} #{})
-                 (get-ss-authority lrs auth-ident-3 {:statementId id-2} #{})))
+                 (get-ss-authority lrs tc/ctx auth-ident-1 {:statementId id-2} #{})
+                 (get-ss-authority lrs tc/ctx auth-ident-2 {:statementId id-2} #{})
+                 (get-ss-authority lrs tc/ctx auth-ident-3 {:statementId id-2} #{})))
           (is (= (-> auth-ident-oauth :agent (update "member" set))
-                 (get-ss-authority lrs auth-ident-1 {:statementId id-3} #{})
-                 (get-ss-authority lrs auth-ident-2 {:statementId id-3} #{})
-                 (get-ss-authority lrs auth-ident-3 {:statementId id-3} #{})))
+                 (get-ss-authority lrs tc/ctx auth-ident-1 {:statementId id-3} #{})
+                 (get-ss-authority lrs tc/ctx auth-ident-2 {:statementId id-3} #{})
+                 (get-ss-authority lrs tc/ctx auth-ident-3 {:statementId id-3} #{})))
           (is (= (-> auth-ident-oauth* :agent (update "member" set))
-                 (get-ss-authority lrs auth-ident-1 {:statementId id-4} #{})
-                 (get-ss-authority lrs auth-ident-2 {:statementId id-4} #{})
-                 (get-ss-authority lrs auth-ident-3 {:statementId id-4} #{}))))
+                 (get-ss-authority lrs tc/ctx auth-ident-1 {:statementId id-4} #{})
+                 (get-ss-authority lrs tc/ctx auth-ident-2 {:statementId id-4} #{})
+                 (get-ss-authority lrs tc/ctx auth-ident-3 {:statementId id-4} #{}))))
         (testing "- statement property query"
           ;; stmt-0 is not returned since it was voided by stmt-2
           (is (= {:statement-result {:statements [stmt-2] :more ""}
@@ -936,10 +992,10 @@
         sys'    (component/start sys)
         lrs     (:lrs sys')
         get-ss' (fn [params]
-                  (-> (lrsp/-get-statements lrs auth-ident params #{"en-US"})
+                  (-> (lrsp/-get-statements lrs tc/ctx auth-ident params #{"en-US"})
                       :statement-result
                       :statements))]
-    (lrsp/-store-statements lrs auth-ident test-statements [])
+    (lrsp/-store-statements lrs tc/ctx auth-ident test-statements [])
     (testing "descending query"
       (let [query-res (get-ss' {:limit 50})]
         (is (= 50
@@ -970,7 +1026,7 @@
     ;; monotonic in lrsql, unlike in those other libs. Because of this,
     ;; query result counts will vary depending on the exact timestamp values.
     (testing "since + until:"
-      (let [query-res  (-> (lrsp/-get-statements lrs auth-ident {:limit 50} #{})
+      (let [query-res  (-> (lrsp/-get-statements lrs tc/ctx auth-ident {:limit 50} #{})
                            :statement-result
                            :statements)
             ;; since
@@ -1032,6 +1088,7 @@
             reg (-> test-statements first (get-in ["context" "registration"]))]
         (is (:statement (lrsp/-get-statements
                          lrs
+                         tc/ctx
                          auth-ident
                          {:statementId (cstr/upper-case id)}
                          #{})))
@@ -1043,9 +1100,10 @@
                      first
                      (assoc "id" (cstr/upper-case id))
                      (assoc-in ["context" "registration"] (cstr/upper-case id)))
-            _ (lrsp/-store-statements lrs auth-ident [stmt] [])]
+            _ (lrsp/-store-statements lrs tc/ctx auth-ident [stmt] [])]
         (is (:statement (lrsp/-get-statements
                          lrs
+                         tc/ctx
                          auth-ident
                          {:statementId id}
                          #{})))
@@ -1055,6 +1113,7 @@
         (is (= (cstr/upper-case id)
                (-> (lrsp/-get-statements
                     lrs
+                    tc/ctx
                     auth-ident
                     {:statementId id}
                     #{})
@@ -1092,7 +1151,7 @@
           (doseq [s [tc/reaction-stmt-a
                      tc/reaction-stmt-b]]
             (Thread/sleep 100)
-            (lrsp/-store-statements lrs tc/auth-ident [s] []))
+            (lrsp/-store-statements lrs tc/ctx tc/auth-ident [s] []))
           ;; Wait a little bit for the reactor
           (Thread/sleep 300)
           (testing "New statement added"
@@ -1105,6 +1164,7 @@
                     :attachments []}
                    (-> (lrsp/-get-statements
                         lrs
+                        tc/ctx
                         tc/auth-ident
                         {}
                         [])
@@ -1202,8 +1262,8 @@
 
 (defn- get-doc
   "Same as lrsp/-get-documents except automatically formats the result."
-  [lrs auth-ident params]
-  (-> (lrsp/-get-document lrs auth-ident params)
+  [lrs ctx auth-ident params]
+  (-> (lrsp/-get-document lrs ctx auth-ident params)
       (update :document dissoc :updated)
       (update-in [:document :contents] u/bytes->str)))
 
@@ -1215,46 +1275,67 @@
       (support/seq-is
        {}
        (lrsp/-set-document lrs
+                           tc/ctx
                            auth-ident
                            state-id-params
                            state-doc-1
                            true)
        (lrsp/-set-document lrs
+                           tc/ctx
                            auth-ident
                            state-id-params
                            state-doc-2
                            true)
        (lrsp/-set-document lrs
+                           tc/ctx
                            auth-ident
                            state-id-params-2
                            state-doc-1
                            false)
        (lrsp/-set-document lrs
+                           tc/ctx
+                           auth-ident
+                           state-id-params
+                           state-doc-2
+                           true)
+       (lrsp/-set-document lrs
+                           tc/ctx
+                           auth-ident
+                           state-id-params-2
+                           state-doc-1
+                           false)
+       (lrsp/-set-document lrs
+                           tc/ctx
                            auth-ident
                            state-id-params-2
                            state-doc-2
                            false)
        (lrsp/-set-document lrs
+                           tc/ctx
                            auth-ident
                            agent-prof-id-params
                            agent-prof-doc
                            false)
        (lrsp/-set-document lrs
+                           tc/ctx
                            auth-ident
                            activity-prof-id-params
                            activity-prof-doc
                            false)
        (lrsp/-set-document lrs
+                           tc/ctx
                            auth-ident
                            bad-doc-params
                            bad-doc
                            false)
        (lrsp/-set-document lrs
+                           tc/ctx
                            auth-ident
                            bad-doc-params-2
                            bad-doc-a
                            true)
        (lrsp/-set-document lrs
+                           tc/ctx
                            auth-ident
                            bad-doc-params-2
                            bad-doc-b
@@ -1266,52 +1347,55 @@
                :content-length 18
                :content-type   "application/json"
                :id             "some-id"}}
-             (get-doc lrs auth-ident state-id-params)))
+             (get-doc lrs tc/ctx auth-ident state-id-params)))
       (is (= {:document
               {:contents       "{\"foo\":10}"
                :content-length 10
                :content-type   "application/json"
                :id             "some-other-id"}}
-             (get-doc lrs auth-ident state-id-params-2)))
+             (get-doc lrs tc/ctx auth-ident state-id-params-2)))
       (is (= {:document
               {:contents       "Example Document"
                :content-length 16
                :content-type   "text/plain"
                :id             "https://example.org/some-profile"}}
-             (get-doc lrs auth-ident agent-prof-id-params)))
+             (get-doc lrs tc/ctx auth-ident agent-prof-id-params)))
       (is (= {:document
               {:contents       "Example Document 2"
                :content-length 18
                :content-type   "text/plain"
                :id             "https://example.org/some-profile"}}
-             (get-doc lrs auth-ident activity-prof-id-params)))
+             (get-doc lrs tc/ctx auth-ident activity-prof-id-params)))
       (is (= {:document
               {:contents       "I'm a bad guy"
                :content-length 13
                :content-type   "application/octet-stream"
                :id             "https://example.org/some-profile"}}
-             (get-doc lrs auth-ident bad-doc-params)))
+             (get-doc lrs tc/ctx auth-ident bad-doc-params)))
       (is (= {:document
               {:contents       "{\"ABC\":1,\"123\":2}"
                :content-length 17
                :content-type   "application/json"
                :id             "https://example.org/some-profile"}}
-             (get-doc lrs auth-ident bad-doc-params-2))))
+             (get-doc lrs tc/ctx auth-ident bad-doc-params-2))))
 
     (testing "document ID query"
       (is (= {:document-ids ["some-id" "some-other-id"]}
              (lrsp/-get-document-ids
               lrs
+              tc/ctx
               auth-ident
               (dissoc state-id-params :stateId))))
       (is (= {:document-ids ["https://example.org/some-profile"]}
              (lrsp/-get-document-ids
               lrs
+              tc/ctx
               auth-ident
               (dissoc agent-prof-id-params :profileId))))
       (is (= {:document-ids ["https://example.org/some-profile"]}
              (lrsp/-get-document-ids
               lrs
+              tc/ctx
               auth-ident
               (dissoc activity-prof-id-params :profileId)))))
 
@@ -1319,23 +1403,29 @@
       (support/seq-is
        {}
        (lrsp/-delete-documents lrs
+                               tc/ctx
                                auth-ident
                                (dissoc state-id-params :stateId))
        (lrsp/-delete-document lrs
+                              tc/ctx
                               auth-ident
                               agent-prof-id-params)
        (lrsp/-delete-document lrs
+                              tc/ctx
                               auth-ident
                               activity-prof-id-params))
       (support/seq-is
        {:document nil}
        (lrsp/-get-document lrs
+                           tc/ctx
                            auth-ident
                            state-id-params)
        (lrsp/-get-document lrs
+                           tc/ctx
                            auth-ident
                            agent-prof-id-params)
        (lrsp/-get-document lrs
+                           tc/ctx
                            auth-ident
                            activity-prof-id-params)))
 

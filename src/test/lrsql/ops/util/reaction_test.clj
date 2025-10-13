@@ -52,8 +52,8 @@
                           tc/reaction-stmt-b
                           tc/reaction-stmt-c]]
                  (Thread/sleep 100)
-                 (lrsp/-store-statements lrs tc/auth-ident [s] []))
-        stmts  (-> (lrsp/-get-statements lrs tc/auth-ident {} [])
+                 (lrsp/-store-statements lrs tc/ctx tc/auth-ident [s] []))
+        stmts  (-> (lrsp/-get-statements lrs tc/ctx tc/auth-ident {} [])
                    :statement-result
                    :statements)]
     (try
@@ -198,6 +198,7 @@
 
     ;; store a statements with chained reaciton data
     (lrsp/-store-statements lrs
+                            tc/ctx
                             tc/auth-ident
                             [tc/reaction-stmt-a
                              (ru/add-reaction-metadata

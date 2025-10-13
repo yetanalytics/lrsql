@@ -91,7 +91,8 @@
                      :file-scanner      (when enable-clamav
                                           (clamav/init-file-scanner
                                            {:clamav-host clamav-host
-                                            :clamav-port clamav-port}))})
+                                            :clamav-port clamav-port}))
+                     :supported-versions (:supported-versions lrs)})
              (add-admin-routes
               {:lrs                       lrs
                :exp                       jwt-exp
@@ -122,7 +123,7 @@
               {:lrs lrs
                :head-opts head-opts
                :version (read-version)}))
-        
+
         ;; Build allowed-origins list. Add without ports as well for
         ;; default ports
         allowed-list

@@ -15,7 +15,7 @@
              "X-Experience-API-Version" "1.0.3"}
    :basic-auth ["username" "password"]})
 
-(support/instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 (use-fixtures :each support/fresh-db-fixture)
 
@@ -33,33 +33,34 @@
   (testing "Extra parameters"
     (let [sys  (support/test-system)
           sys' (component/start sys)]
-      (is (= 400
-             (try (curl/get "http://0.0.0.0:8080/xapi/statements?foo=bar"
-                            get-map)
-                  (catch ExceptionInfo e (-> e ex-data :status)))))
-      (testing "- `from`"
-        (is (= 200
-               (:status
-                (curl/get "http://0.0.0.0:8080/xapi/statements?from=00000000-4000-8000-0000-111122223333"
-                          get-map))))
+      (try
         (is (= 400
-               (try (curl/get "http://0.0.0.0:8080/xapi/statements?from=2024-10-10T10:10:10Z"
+               (try (curl/get "http://0.0.0.0:8080/xapi/statements?foo=bar"
                               get-map)
-                    (catch ExceptionInfo e (-> e ex-data :status))))))
-      (testing "- `unwrap_html`"
-        (is (= 200
-               (:status
-                (curl/get "http://0.0.0.0:8080/xapi/statements?unwrap_html=true"
-                          get-map))))
-        ;; TODO: Disallow non-boolean `unrwap_html` values?
-        (is (= 200
-               (:status
-                (curl/get "http://0.0.0.0:8080/xapi/statements?unwrap_html=not-a-boolean"
-                          get-map)))))
-      (testing "- `page`"
-        ;; TODO: Disallow `page` param?
-        (is (= 200
-               (:status
-                (curl/get "http://0.0.0.0:8080/xapi/statements?page=123"
-                          get-map)))))
-      (component/stop sys'))))
+                    (catch ExceptionInfo e (-> e ex-data :status)))))
+        (testing "- `from`"
+          (is (= 200
+                 (:status
+                  (curl/get "http://0.0.0.0:8080/xapi/statements?from=00000000-4000-8000-0000-111122223333"
+                            get-map))))
+          (is (= 400
+                 (try (curl/get "http://0.0.0.0:8080/xapi/statements?from=2024-10-10T10:10:10Z"
+                                get-map)
+                      (catch ExceptionInfo e (-> e ex-data :status))))))
+        (testing "- `unwrap_html`"
+          (is (= 200
+                 (:status
+                  (curl/get "http://0.0.0.0:8080/xapi/statements?unwrap_html=true"
+                            get-map))))
+          ;; TODO: Disallow non-boolean `unrwap_html` values?
+          (is (= 200
+                 (:status
+                  (curl/get "http://0.0.0.0:8080/xapi/statements?unwrap_html=not-a-boolean"
+                            get-map)))))
+        (testing "- `page`"
+          ;; TODO: Disallow `page` param?
+          (is (= 200
+                 (:status
+                  (curl/get "http://0.0.0.0:8080/xapi/statements?page=123"
+                            get-map)))))
+        (finally (component/stop sys'))))))

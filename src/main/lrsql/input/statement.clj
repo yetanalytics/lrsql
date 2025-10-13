@@ -19,15 +19,15 @@
 ;; Statement Insertion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: Deal with contextAgents, contextGroups, and any other properties
-;; in version 2.0
-
 (defn- insert-stmt-actor-inputs
   "Helper to construct the value for `:actor-inputs` in the statement input
    param map."
-  [stmt-id stmt-act stmt-obj ?stmt-auth ?stmt-inst ?stmt-team sql-enums]
+  [stmt-id stmt-act stmt-obj
+   ?stmt-auth ?stmt-inst ?stmt-team ?stmt-ctx-agents ?stmt-ctx-groups
+   sql-enums]
   (let [;; Destructuring
-        {:keys [act-enum obj-enum auth-enum inst-enum team-enum]}
+        {:keys [act-enum obj-enum auth-enum inst-enum team-enum
+                ctx-ag-enum ctx-gr-enum]}
         sql-enums
         {stmt-obj-type "objectType" :or {stmt-obj-type "Activity"}}
         stmt-obj
@@ -35,17 +35,24 @@
         actor-obj?
         (boolean (#{"Agent" "Group"} stmt-obj-type))
         ;; Statement Actors
-        ?act-input  (i-ac/insert-actor-input stmt-act)
-        ?obj-input  (when actor-obj? (i-ac/insert-actor-input stmt-obj))
-        ?auth-input (when ?stmt-auth (i-ac/insert-actor-input ?stmt-auth))
-        ?inst-input (when ?stmt-inst (i-ac/insert-actor-input ?stmt-inst))
-        ?team-input (when ?stmt-team (i-ac/insert-actor-input ?stmt-team))
+        ?act-input         (i-ac/insert-actor-input stmt-act)
+        ?obj-input         (when actor-obj? (i-ac/insert-actor-input stmt-obj))
+        ?auth-input        (when ?stmt-auth (i-ac/insert-actor-input ?stmt-auth))
+        ?inst-input        (when ?stmt-inst (i-ac/insert-actor-input ?stmt-inst))
+        ?team-input        (when ?stmt-team (i-ac/insert-actor-input ?stmt-team))
+        ;; Context Agents/Groups
+        ?ctx-ag-inputs     (when ?stmt-ctx-agents
+                             (map i-ac/insert-actor-input ?stmt-ctx-agents))
+        ?ctx-gr-inputs     (when ?stmt-ctx-groups
+                             (map i-ac/insert-actor-input ?stmt-ctx-groups))
         ;; Member Actors
-        ?act-mem-inputs  (i-ac/insert-group-input stmt-act)
-        ?obj-mem-inputs  (when actor-obj? (i-ac/insert-group-input stmt-obj))
-        ?auth-mem-inputs (when ?stmt-auth (i-ac/insert-group-input ?stmt-auth))
-        ?inst-mem-inputs (when ?stmt-inst (i-ac/insert-group-input ?stmt-inst))
-        ?team-mem-inputs (when ?stmt-team (i-ac/insert-group-input ?stmt-team))
+        ?act-mem-inputs    (i-ac/insert-group-input stmt-act)
+        ?obj-mem-inputs    (when actor-obj? (i-ac/insert-group-input stmt-obj))
+        ?auth-mem-inputs   (when ?stmt-auth (i-ac/insert-group-input ?stmt-auth))
+        ?inst-mem-inputs   (when ?stmt-inst (i-ac/insert-group-input ?stmt-inst))
+        ?team-mem-inputs   (when ?stmt-team (i-ac/insert-group-input ?stmt-team))
+        ?ctx-gr-mem-inputs (when ?stmt-ctx-groups
+                             (mapcat i-ac/insert-group-input ?stmt-ctx-groups))
         ;; Actor Inputs
         actor-inputs (cond-> []
                        ;; Statememt Actors
@@ -54,12 +61,16 @@
                        ?auth-input (conj ?auth-input)
                        ?inst-input (conj ?inst-input)
                        ?team-input (conj ?team-input)
+                       ;; Context Agents/Groups
+                       ?ctx-ag-inputs (concat ?ctx-ag-inputs)
+                       ?ctx-gr-inputs (concat ?ctx-gr-inputs)
                        ;; Member Actors
                        ?act-mem-inputs  (concat ?act-mem-inputs)
                        ?obj-mem-inputs  (concat ?obj-mem-inputs)
                        ?auth-mem-inputs (concat ?auth-mem-inputs)
                        ?inst-mem-inputs (concat ?inst-mem-inputs)
-                       ?team-mem-inputs (concat ?team-mem-inputs))
+                       ?team-mem-inputs (concat ?team-mem-inputs)
+                       ?ctx-gr-mem-inputs (concat ?ctx-gr-mem-inputs))
         ;; Statement to Actor Inputs
         actor->link (partial i-ac/insert-statement-to-actor-input stmt-id)
         stmt-actors (cond-> []
@@ -74,6 +85,13 @@
                       (conj (actor->link inst-enum ?inst-input))
                       ?team-input
                       (conj (actor->link team-enum ?team-input))
+                      ;; Context Agents/Groups
+                      ?ctx-ag-inputs
+                      (concat (map (partial actor->link ctx-ag-enum)
+                                   ?ctx-ag-inputs))
+                      ?ctx-gr-inputs
+                      (concat (map (partial actor->link ctx-gr-enum)
+                                   ?ctx-gr-inputs))
                       ;; Member Actors
                       ?act-mem-inputs
                       (concat (map (partial actor->link act-enum)
@@ -89,7 +107,10 @@
                                    ?inst-mem-inputs))
                       ?team-mem-inputs
                       (concat (map (partial actor->link team-enum)
-                                   ?team-mem-inputs)))]
+                                   ?team-mem-inputs))
+                      ?ctx-gr-mem-inputs
+                      (concat (map (partial actor->link ctx-gr-enum)
+                                   ?ctx-gr-mem-inputs)))]
     [actor-inputs stmt-actors]))
 
 (defn- insert-stmt-activity-inputs
@@ -148,7 +169,9 @@
         sub-statement
         {?sub-stmt-ctx-acts "contextActivities"
          ?sub-stmt-inst     "instructor"
-         ?sub-stmt-team     "team"}
+         ?sub-stmt-team     "team"
+         ?sub-stmt-ctx-ags  "contextAgents"
+         ?sub-stmt-ctx-grps "contextGroups"}
         ?sub-stmt-ctx
         ;; Actor Inputs
         [actor-inputs stmt-actor-inputs]
@@ -158,10 +181,16 @@
                                   nil ; No Authority for SubStatements
                                   ?sub-stmt-inst
                                   ?sub-stmt-team
-                                  {:act-enum  "SubActor"
-                                   :obj-enum  "SubObject"
-                                   :inst-enum "SubInstructor"
-                                   :team-enum "SubTeam"})
+                                  (when ?sub-stmt-ctx-ags
+                                    (map #(get % "agent") ?sub-stmt-ctx-ags))
+                                  (when ?sub-stmt-ctx-grps
+                                    (map #(get % "group") ?sub-stmt-ctx-grps))
+                                  {:act-enum    "SubActor"
+                                   :obj-enum    "SubObject"
+                                   :inst-enum   "SubInstructor"
+                                   :team-enum   "SubTeam"
+                                   :ctx-ag-enum "SubContextAgent"
+                                   :ctx-gr-enum "SubContextGroup"})
         ;; Activity Inputs
         [activity-inputs stmt-activity-inputs]
         (insert-stmt-activity-inputs stmt-id
@@ -202,7 +231,9 @@
         {?stmt-ctx-acts "contextActivities"
          ?stmt-inst     "instructor"
          ?stmt-team     "team"
-         ?stmt-reg      "registration"}
+         ?stmt-reg      "registration"
+         ?stmt-ctx-ags  "contextAgents"
+         ?stmt-ctx-grps "contextGroups"}
         ?stmt-ctx
         ;; Revised Statement Properties
         stmt-pk      (-> statement meta :primary-key)
@@ -247,11 +278,17 @@
                                   ?stmt-auth
                                   ?stmt-inst
                                   ?stmt-team
-                                  {:act-enum  "Actor"
-                                   :obj-enum  "Object"
-                                   :auth-enum "Authority"
-                                   :inst-enum "Instructor"
-                                   :team-enum "Team"})
+                                  (when ?stmt-ctx-ags
+                                    (map #(get % "agent") ?stmt-ctx-ags))
+                                  (when ?stmt-ctx-grps
+                                    (map #(get % "group") ?stmt-ctx-grps))
+                                  {:act-enum    "Actor"
+                                   :obj-enum    "Object"
+                                   :auth-enum   "Authority"
+                                   :inst-enum   "Instructor"
+                                   :team-enum   "Team"
+                                   :ctx-ag-enum "ContextAgent"
+                                   :ctx-gr-enum "ContextGroup"})
         ;; Activity HugSql Inputs
         [activ-inputs stmt-activ-inputs]
         (insert-stmt-activity-inputs stmt-id

@@ -74,7 +74,7 @@
       (doseq [s [tc/reaction-stmt-a
                  tc/reaction-stmt-b]]
         (Thread/sleep 100)
-        (lrsp/-store-statements lrs tc/auth-ident [s] []))
+        (lrsp/-store-statements lrs tc/ctx tc/auth-ident [s] []))
       (try
         (is (= {:result
                 [{:reaction-id reaction-id
@@ -110,7 +110,7 @@
       (doseq [s [tc/reaction-stmt-a
                  tc/reaction-stmt-b]]
         (Thread/sleep 100)
-        (lrsp/-store-statements lrs tc/auth-ident [s] []))
+        (lrsp/-store-statements lrs tc/ctx tc/auth-ident [s] []))
       (try
         (is (= {:result
                 [{:reaction-id reaction-id
@@ -149,7 +149,7 @@
         (doseq [s [tc/reaction-stmt-a
                    tc/reaction-stmt-b]]
           (Thread/sleep 100)
-          (lrsp/-store-statements lrs tc/auth-ident [s] []))
+          (lrsp/-store-statements lrs tc/ctx tc/auth-ident [s] []))
         (is (= {:result
                 [{:reaction-id reaction-id
                   :trigger-id  trigger-id
@@ -195,7 +195,7 @@
         (doseq [s [tc/reaction-stmt-a
                    tc/reaction-stmt-b]]
           (Thread/sleep 100)
-          (lrsp/-store-statements lrs tc/auth-ident [s] []))
+          (lrsp/-store-statements lrs tc/ctx tc/auth-ident [s] []))
         (is (= {:result
                 [{:reaction-id reaction-id
                   :trigger-id  trigger-id

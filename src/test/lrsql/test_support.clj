@@ -10,14 +10,15 @@
             [lrsql.mariadb.record :as mr]
             [lrsql.util :as u]
             [clj-test-containers.core :as tc]
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [xapi-schema.spec :as xs]))
 
 (defn- lrsql-syms
   []
   (set (filter #(->> % namespace (re-matches #"lrsql\..*"))
                (stest/instrumentable-syms))))
 
-(defn instrument-lrsql
+(defn- instrument-lrsql
   "Instrument all instrumentable functions defined in lrsql."
   []
   (otest/instrument (lrsql-syms)))
@@ -235,6 +236,12 @@
   (try
     (f)
     (finally (unstrument-lrsql))))
+
+(defn xapi-version-fixture
+  "Set xAPI spec version for tests."
+  [f version]
+  (binding [xs/*xapi-version* version]
+    (f)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Conformance test helpers

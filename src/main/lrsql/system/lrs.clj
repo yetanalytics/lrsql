@@ -1,5 +1,6 @@
 (ns lrsql.system.lrs
   (:require [clojure.set                   :as cset]
+            [clojure.spec.alpha            :as s]
             [clojure.tools.logging         :as log]
             [com.stuartsierra.component    :as cmp]
             [next.jdbc                     :as jdbc]
@@ -51,7 +52,8 @@
                                 config
                                 authority-fn
                                 oidc-authority-fn
-                                reaction-channel]
+                                reaction-channel
+                                supported-versions]
   cmp/Lifecycle
   (start
     [lrs]
@@ -64,11 +66,14 @@
            api-key      :api-key-default
            srt-key      :api-secret-default
            auth-tp      :authority-template
-           oidc-auth-tp :oidc-authority-template}
+           oidc-auth-tp :oidc-authority-template
+           sup-versions :supported-versions}
           config
           ;; Authority function
-          auth-fn      (make-authority-fn auth-tp)
-          oidc-auth-fn (oidc-init/make-authority-fn oidc-auth-tp)]
+          auth-fn               (make-authority-fn auth-tp)
+          oidc-auth-fn          (oidc-init/make-authority-fn oidc-auth-tp)
+          supported-version-set (s/conform ::cs/supported-versions
+                                           sup-versions)]
       ;; Combine all init ops into a single txn, since the user would expect
       ;; such actions to happen as a single unit. If init-backend! succeeds
       ;; but insert-default-creds! fails, this would constitute a partial
@@ -81,7 +86,8 @@
                :connection connection
                :authority-fn auth-fn
                :oidc-authority-fn oidc-auth-fn
-               :reaction-channel (react-init/reaction-channel config)))))
+               :reaction-channel (react-init/reaction-channel config)
+               :supported-versions supported-version-set))))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
@@ -89,23 +95,24 @@
            :connection nil
            :authority-fn nil
            :oidc-authority-fn nil
-           :reaction-channel nil))
+           :reaction-channel nil
+           :supported-versions nil))
 
   lrsp/AboutResource
   (-get-about
-    [_lrs _auth-identity]
-    ;; TODO: Add 2.X.X versions
-    {:body {:version ["1.0.0" "1.0.1" "1.0.2" "1.0.3"]}})
+   [_lrs _ctx _auth-identity]
+   {:body {:version (into [] supported-versions)}})
 
   lrsp/StatementsResource
   (-store-statements
-    [lrs auth-identity statements attachments]
+    [lrs ctx auth-identity statements attachments]
     (let [conn
           (lrs-conn lrs)
           authority
           (-> auth-identity :agent)
+          version (:com.yetanalytics.lrs/version ctx)
           stmts
-          (map (partial stmt-util/prepare-statement authority)
+          (map (partial stmt-util/prepare-statement version authority)
                statements)
           stmt-inputs
           (-> (map stmt-input/insert-statement-input stmts)
@@ -153,7 +160,7 @@
             ;; No more statement inputs - return
             stmt-res)))))
   (-get-statements
-    [lrs auth-identity params ltags]
+    [lrs ctx auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
           prefix (:stmt-url-prefix config)
@@ -162,16 +169,23 @@
           ?auth  (if auth? (:agent auth-identity) nil)
           inputs (-> params
                      (stmt-util/ensure-default-max-limit config)
-                     (stmt-input/query-statement-input ?auth))]
+                     (stmt-input/query-statement-input ?auth))
+          version (:com.yetanalytics.lrs/version ctx)
+          strict-version?
+          (:enable-strict-version config)]
       (jdbc/with-transaction [tx conn]
-        (stmt-q/query-statements backend tx inputs ltags prefix))))
+        (cond-> (stmt-q/query-statements backend tx inputs ltags prefix)
+          (and
+           strict-version?
+           (= "1.0.3" version))
+          stmt-util/strict-version-result))))
   (-consistent-through
     [_lrs _ctx _auth-identity]
     (str (util/current-time)))
 
   lrsp/DocumentResource
   (-set-document
-    [lrs _auth-identity params document merge?]
+    [lrs _ctx _auth-identity params document merge?]
     (let [conn  (lrs-conn lrs)
           input (doc-input/insert-document-input params document)]
       (jdbc/with-transaction [tx conn]
@@ -179,25 +193,25 @@
           (doc-cmd/upsert-document! backend tx input)
           (doc-cmd/insert-document! backend tx input)))))
   (-get-document
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-input params)]
       (jdbc/with-transaction [tx conn]
         (doc-q/query-document backend tx input))))
   (-get-document-ids
-    [lrs _auth-identity params]
-    (let [conn  (lrs-conn lrs)
-          input (doc-input/document-ids-input params)]
-      (jdbc/with-transaction [tx conn]
-        (doc-q/query-document-ids backend tx input))))
+   [lrs _ctx _auth-identity params]
+   (let [conn  (lrs-conn lrs)
+         input (doc-input/document-ids-input params)]
+     (jdbc/with-transaction [tx conn]
+       (doc-q/query-document-ids backend tx input))))
   (-delete-document
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-input params)]
       (jdbc/with-transaction [tx conn]
         (doc-cmd/delete-document! backend tx input))))
   (-delete-documents
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-multi-input params)]
       (jdbc/with-transaction [tx conn]
@@ -205,7 +219,7 @@
 
   lrsp/AgentInfoResource
   (-get-person
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (agent-input/query-agent-input params)]
       (jdbc/with-transaction [tx conn]
@@ -213,7 +227,7 @@
 
   lrsp/ActivityInfoResource
   (-get-activity
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (activity-input/query-activity-input params)]
       (jdbc/with-transaction [tx conn]
@@ -303,38 +317,38 @@
                          account-id new-password)]
               (admin-cmd/update-admin-password! backend tx input))
             {:result result})))))
-  
+
   adp/AdminJWTManager
   (-purge-blocklist
-   [this leeway]
-   (let [conn  (lrs-conn this)
-         input (admin-jwt-input/purge-blocklist-input leeway)]
-     (jdbc/with-transaction [tx conn]
-       (admin-cmd/purge-blocklist! backend tx input))))
+    [this leeway]
+    (let [conn  (lrs-conn this)
+          input (admin-jwt-input/purge-blocklist-input leeway)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/purge-blocklist! backend tx input))))
   (-create-one-time-jwt
-   [this jwt exp one-time-id]
-   (let [conn  (lrs-conn this)
-         input (admin-jwt-input/insert-one-time-jwt-input jwt exp one-time-id)]
-     (jdbc/with-transaction [tx conn]
-       (admin-cmd/insert-one-time-jwt! backend tx input))))
+    [this jwt exp one-time-id]
+    (let [conn  (lrs-conn this)
+          input (admin-jwt-input/insert-one-time-jwt-input jwt exp one-time-id)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/insert-one-time-jwt! backend tx input))))
   (-block-jwt
-   [this jwt exp]
-   (let [conn      (lrs-conn this)
-         jwt-input (admin-jwt-input/insert-blocked-jwt-input jwt exp)]
-     (jdbc/with-transaction [tx conn]
-       (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
+    [this jwt exp]
+    (let [conn      (lrs-conn this)
+          jwt-input (admin-jwt-input/insert-blocked-jwt-input jwt exp)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
   (-block-one-time-jwt
-   [this jwt one-time-id]
-   (let [conn      (lrs-conn this)
-         jwt-input (admin-jwt-input/update-one-time-jwt-input jwt one-time-id)]
-     (jdbc/with-transaction [tx conn]
-       (admin-cmd/update-one-time-jwt! backend tx jwt-input))))
+    [this jwt one-time-id]
+    (let [conn      (lrs-conn this)
+          jwt-input (admin-jwt-input/update-one-time-jwt-input jwt one-time-id)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/update-one-time-jwt! backend tx jwt-input))))
   (-jwt-blocked?
-   [this jwt]
-   (let [conn      (lrs-conn this)
-         jwt-input (admin-jwt-input/query-blocked-jwt-input jwt)]
-     (jdbc/with-transaction [tx conn]
-       (admin-q/query-blocked-jwt-exists backend tx jwt-input))))
+    [this jwt]
+    (let [conn      (lrs-conn this)
+          jwt-input (admin-jwt-input/query-blocked-jwt-input jwt)]
+      (jdbc/with-transaction [tx conn]
+        (admin-q/query-blocked-jwt-exists backend tx jwt-input))))
 
   adp/APIKeyManager
   (-create-api-keys

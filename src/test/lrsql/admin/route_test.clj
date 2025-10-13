@@ -20,7 +20,7 @@
 ;; Init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(support/instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 (use-fixtures :each support/fresh-db-fixture)
 
@@ -557,9 +557,9 @@
 
               ifi         (ua/actor->ifi (stmt-0 "actor"))
               count-by-id (fn [id]
-                            (-> (lrsp/-get-statements lrs auth-ident {:statementsId id} [])
+                            (-> (lrsp/-get-statements lrs tc/ctx auth-ident {:statementsId id} [])
                                 :statement-result :statements count))]
-          (lrsp/-store-statements lrs auth-ident [stmt-0] [])
+          (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0] [])
           (is (= 1 (count-by-id (stmt-0 "id"))))
           (delete-actor headers
                         (u/write-json-str  {"actor-ifi" ifi}))
@@ -735,7 +735,7 @@
           (is (= (:status post-resp) 200))
           (is (= status 200))
           (is (seq ((u/parse-json body) "statements")))))
-      
+
       (finally
         (component/stop sys')))))
 
@@ -776,7 +776,7 @@
                   (jdbc/with-transaction [tx ds]
                     (bp/-query-credential-ids backend tx {:api-key api-key
                                                           :secret-key secret-key}))
-                  
+
                   {:keys [status body]}
                   (curl/get
                    "http://0.0.0.0:8080/admin/creds"
@@ -802,7 +802,7 @@
                      (first (filter (fn [cred]
                                       (= api-key (get cred "api-key")))
                                     body*))))))
-          
+
           (testing "and updating"
             (let [req-scopes
                   ["all/read" "statements/read" "statements/read/mine"]

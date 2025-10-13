@@ -1,7 +1,9 @@
 (ns lrsql.util.statement-test
   (:require [clojure.test :refer [deftest testing is]]
+            [clojure.spec.alpha :as s]
             [lrsql.util.statement :as su]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [xapi-schema.spec :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Test Constants
@@ -109,6 +111,20 @@
                     "steps"   [{"id"          "Step"
                                 "description" {}}]})})
 
+;; A version 2.0.0 version of statement-1
+(def statement-5
+  (-> statement-1
+      (assoc "version" "2.0.0")
+      (assoc "timestamp" "2025-08-29 15:16:24.816950Z")
+      (assoc-in ["context" "contextAgents"] [{"objectType" "contextAgent"
+                                              "agent" {"mbox" "mailto:a@example.com"
+                                                       "objectType" "Agent"}}])
+      (assoc-in ["context" "contextGroups"] [{"objectType" "contextGroup"
+                                                "group" {"mbox" "mailto:g@example.com"
+                                                          "objectType" "Group"
+                                                          "member" [{"mbox" "mailto:m@example.com"
+                                                                     "objectType" "Agent"}]}}])))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -147,14 +163,14 @@
 
 (deftest prepare-statement-test
   (testing "adds timestamp, stored, version, and authority"
-    (let [statement* (su/prepare-statement lrs-authority statement-1)]
+    (let [statement* (su/prepare-statement "1.0.3" lrs-authority statement-1)]
       (is (inst? (u/str->time (get statement* "timestamp"))))
       (is (inst? (u/str->time (get statement* "stored"))))
-      (is (= su/xapi-version (get statement* "version")))
+      (is (= "1.0.0" (get statement* "version")))
       (is (= lrs-authority (get statement* "authority")))))
   (testing "overwrites authority"
     (is (= lrs-authority
-           (-> (su/prepare-statement lrs-authority statement-2)
+           (-> (su/prepare-statement "1.0.3" lrs-authority statement-2)
                (get "authority")))))
   (testing "dissocs empty maps"
     (is (= {"id"          sample-id
@@ -164,7 +180,7 @@
             "attachments" [(dissoc sample-attachment
                                    "display"
                                    "description")]}
-           (-> (su/prepare-statement lrs-authority statement-3)
+           (-> (su/prepare-statement "1.0.3" lrs-authority statement-3)
                (dissoc "timestamp" "stored" "authority" "version"))))
     (is (= {"id"     sample-id
             "actor"  sample-group
@@ -176,7 +192,7 @@
                              "source"  [{"id" "Source"}]
                              "target"  [{"id" "Target"}]
                              "steps"   [{"id" "Step"}]})}
-           (-> (su/prepare-statement lrs-authority statement-4)
+           (-> (su/prepare-statement "1.0.3" lrs-authority statement-4)
                (dissoc "timestamp" "stored" "authority" "version"))))))
 
 (deftest statements-equal-test
@@ -325,3 +341,32 @@
              (first (-> stream rest rest rest rest))))
       (is (nil? (first (-> stream rest rest rest rest rest))))
       (is (realized? stream)))))
+
+;; Versioning ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest convert-200-to-103-test
+  (testing "Convert 2.0.0 statement to 1.0.3"
+    (is (= statement-1
+           (su/convert-200-to-103 statement-1)))
+    (binding [xs/*xapi-version* "1.0.3"]
+      (is (not (s/valid? ::xs/statement
+                statement-5)))
+      (is (s/valid? ::xs/statement
+               (su/convert-200-to-103 statement-5))))))
+
+(deftest strict-version-result-test
+  (testing "Convert statements get result to strict version"
+    (testing "single statement result"
+      (binding [xs/*xapi-version* "1.0.3"]
+        (is (s/valid? ::xs/statement
+               (get (su/strict-version-result
+                     {:statement statement-5})
+                    :statement)))))
+    (testing "multiple statement result"
+      (binding [xs/*xapi-version* "1.0.3"]
+        (is (s/valid? ::xs/statements
+               (get-in
+                (su/strict-version-result
+                 {:statement-result
+                  {:statements [statement-5]}})
+                [:statement-result :statements])))))))

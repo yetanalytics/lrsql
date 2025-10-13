@@ -1,9 +1,9 @@
 (ns lrsql.util.auth-test
-  (:require [clojure.test :refer [deftest testing is are]]
-            [lrsql.test-support :refer [check-validate instrument-lrsql]]
+  (:require [clojure.test :refer [deftest testing is are use-fixtures]]
+            [lrsql.test-support :as support :refer [check-validate]]
             [lrsql.util.auth :as au]))
 
-(instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 (deftest key-pair-test
   (testing "header->key-pair test"

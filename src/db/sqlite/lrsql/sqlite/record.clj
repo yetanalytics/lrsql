@@ -124,6 +124,8 @@
       (alter-lrs-credential-add-label! tx))
     (when-not (some? (query-lrs-credential-is-seed-exists tx))
       (alter-lrs-credential-add-is-seed! tx))
+    (when-not (some? (query-statement-to-actor-usage-enum-has-context-actors tx))
+      (update-schema-simple! tx alter-statement-to-actor-usage-enum-add-context-actors!))
     (log/infof "sqlite schema_version: %d"
                (:schema_version (query-schema-version tx))))
 

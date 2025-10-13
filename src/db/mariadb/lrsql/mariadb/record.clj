@@ -68,11 +68,10 @@
     (create-credential-table! tx)
     (create-credential-to-scope-table! tx)
     (create-blocked-jwt-table! tx))
-  (-update-all! [_ _tx]
-    ; MariaDB is the latest database to get a SQl-LRS implementation, so no migrations are needed.
-    ; In the future migrations will go here.
-    )
-  
+  (-update-all! [_ tx]
+    (when-not (= 1 (:has_context_agent (query-statement-to-actor-usage-enum-has-context-actors tx)))
+      (alter-statement-to-actor-usage-enum-add-context-actors! tx)))
+
   bp/BackendUtil
   (-txn-retry? [_ ex]
     (and (instance? java.sql.SQLException ex)
@@ -201,7 +200,7 @@
   ;;;; So we don't actually store the JWT; we just store a (shorter) hash of it.  
   ;;;; Operations that don't interact with the jwt obviously don't need to hash it.
   ;;;;
-  
+
   bp/JWTBlocklistBackend
   (-insert-blocked-jwt! [_ tx input]
     (insert-blocked-jwt! tx (update input :jwt md/sha256-base64)))
