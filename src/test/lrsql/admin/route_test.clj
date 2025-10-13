@@ -9,7 +9,6 @@
             [com.yetanalytics.lrs.protocol :as lrsp]
             [lrsql.backend.protocol :as bp]
             [lrsql.test-support :as support]
-            [lrsql.lrs-test :as lt]
             [lrsql.test-constants :as tc]
             [lrsql.util :as u]
             [lrsql.util.headers :as h]
@@ -122,6 +121,13 @@
             {:headers (merge headers
                              {"Accept" "application/json"
                               "X-Experience-API-Version" "1.0.3"})}))
+
+(defn- post-statements-via-url-param [headers credential-id body]
+  (curl/post (str "http://0.0.0.0:8080/xapi/statements?credentialID=" credential-id)
+             {:headers (merge headers
+                              {"Accept" "application/json"
+                               "X-Experience-API-Version" "1.0.3"})
+              :body body}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -678,7 +684,6 @@
                [:webserver :jwt-no-val-role]     "/domain/app/ADMIN"
                [:webserver :auth-by-cred-id]     true})
         sys' (component/start sys)
-        lrs (:lrs sys')
         ds (get-in sys' [:lrs :connection :conn-pool])
         backend (:backend sys')
         ;; proxy jwt auth
@@ -720,9 +725,14 @@
               (jdbc/with-transaction [tx ds]
                 (bp/-query-credential-ids backend tx {:api-key api-key
                                                       :secret-key secret-key}))
-
-              _ (lrsp/-store-statements lrs tc/ctx auth-ident [lt/stmt-0] [])
-              {:keys [status body]} (get-statements-via-url-param headers credential-id)]
+              stmt-body 
+              (u/write-json-str 
+               (assoc stmt-0 :id "00000000-0000-4000-8000-000000000007"))
+              post-resp 
+              (post-statements-via-url-param headers credential-id stmt-body)
+              {:keys [status body]} 
+              (get-statements-via-url-param headers credential-id)]
+          (is (= (:status post-resp) 200))
           (is (= status 200))
           (is (seq ((u/parse-json body) "statements")))))
 
