@@ -124,23 +124,7 @@ span.build {
             <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
           </div>
         </div>
-        <p><a href='index.html'><- Back to Index</a></p><h1 id="mariadb">MariaDB</h1><p>To run SQL-LRS with MariaDB, you need a properly configured MariaDB instance.  "Properly configured" really just means setting up a database, user, and password, and configuring SQL-LRS to connect to/with those.</p><h2 id="environment&#95;variables">Environment Variables</h2><p>You can configure MariaDB by setting the relevant environment variables.  Here is the <code>environment</code> entry from our <a href='https://github.com/yetanalytics/lrsql/blob/main/dev-resources/mariadb/docker-compose.yml'>MariaDB docker-compose demo</a></p><pre><code class="yml">    environment:
-      MARIADB&#95;ROOT&#95;PASSWORD: lrsql&#95;root&#95;password 
-      MARIADB&#95;DATABASE: lrsql&#95;db
-      MARIADB&#95;USER: lrsql&#95;user
-      MARIADB&#95;PASSWORD: lrsql&#95;password
-</code></pre><p>Note that <code>MARIADB&#95;ROOT&#95;PASSWORD</code> is only required if running in a container; see the <a href='https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/installing-mariadb/binary-packages/automated-mariadb-deployment-and-administration/docker-and-mariadb/mariadb-server-docker-official-image-environment-variables#mariadb_root_password_hash-mariadb_root_password-mysql_root_password'>MariaDB docs</a> for details.</p><p>The corresponding <code>lrsql.json</code> would look like</p><pre><code class="json">{
-  ...
-  &quot;database&quot;: {
-    &quot;dbHost&quot;: &quot;0.0.0.0&quot;,
-    &quot;dbPort&quot;: 3306,
-    &quot;dbName&quot;: &quot;lrsql&#95;db&quot;,
-    &quot;dbUser&quot;: &quot;lrsql&#95;user&quot;,
-    &quot;dbPassword&quot;: &quot;lrsql&#95;password&quot;,
-  }
-}
-
-</code></pre>
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="xapi&#95;versioning">xAPI Versioning</h1><p>SQL LRS supports xAPI versions 1.0.3 and 2.0.0. The version used is determined by the <code>X-Experience-API-Version</code> header in the request. Use the LRSQL<i>SUPPORTED</i>VERSIONS environment variable or the <code>supportedVersions</code> LRS configuration property to set which versions are supported. By default, both versions are supported. For more information see <a href='env_vars.html'>the configuration documentation</a>.</p><h2 id="strict&#95;versioning">Strict Versioning</h2><p>Note that by default, responses to requests with an <code>X-Experience-API-Version</code> header set to <code>1.0.3</code> may contain statements in <code>2.0.0</code> format. To ensure that <code>2.0.0</code> statements are downgraded to <code>1.0.3</code> format use the <code>LRSQL&#95;ENABLE&#95;STRICT&#95;VERSION</code> environment variable or the <code>enableStrictVersion</code> LRS configuration property. For more information see <a href='env_vars.html'>the configuration documentation</a>.</p><h2 id="reaction&#95;versioning">Reaction Versioning</h2><p>Reactions generate version <code>1.0.3</code> statements by default but you can configure this by setting the <code>LRSQL&#95;REACTION&#95;VERSION</code> environment variable or the <code>reactionVersion</code> LRS configuration property. For more information see <a href='env_vars.html'>the configuration documentation</a>. Note that creating reactions under <code>2.0.0</code> and then restricting the LRS to version <code>1.0.3</code> only will lead to errors in the LRS Admin UI frontend. To recover from this situation reenable <code>2.0.0</code> support and delete any incompatible reactions before returning to <code>1.0.3</code> only.</p><p><a href='index.html'><- Back to Index</a></p>
         <div class="footer">
          &copy; 2021-2025 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
