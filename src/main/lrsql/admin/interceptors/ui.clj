@@ -46,7 +46,8 @@
     :enter
     (fn get-env [ctx]
       (let [{url-prefix       ::i/path-prefix
-             oidc-env         ::oidc-i/admin-env} ctx]
+             oidc-env         ::oidc-i/admin-env
+             lrs              :com.yetanalytics/lrs} ctx]
         (assoc ctx
                :response
                {:status 200
@@ -63,7 +64,9 @@
                           :admin-language-code       admin-language-code
                           :custom-language           (custom-language-map)
                           :stmt-get-max              stmt-get-max
-                          :auth-by-cred-id           auth-by-cred-id}
+                          :auth-by-cred-id           auth-by-cred-id
+                          :supported-versions        (:supported-versions lrs)
+                          :reaction-version          (get-in lrs [:config :reaction-version])}
                    (and no-val?
                         (not-empty no-val-logout-url))
                    (assoc :no-val-logout-url no-val-logout-url))

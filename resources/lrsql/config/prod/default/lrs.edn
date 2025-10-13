@@ -14,5 +14,6 @@
  :stmt-retry-budget       #or [#env LRSQL_STMT_RETRY_BUDGET 1000]
  :enable-reactions        #boolean #or [#env LRSQL_ENABLE_REACTIONS false]
  :reaction-buffer-size    #long #or [#env LRSQL_REACTION_BUFFER_SIZE 10000]
+ :reaction-version        #or [#env LRSQL_REACTION_VERSION "1.0.3"]
  :supported-versions      #or [#env LRSQL_SUPPORTED_VERSIONS "1.0.3,2.0.0"]
  :enable-strict-version   #boolean #or [#env LRSQL_ENABLE_STRICT_VERSION false]}

@@ -72,7 +72,7 @@
    :exclusions  [org.clojure/clojure
                  buddy/buddy-sign]}
   com.yetanalytics/lrs-reactions
-  {:mvn/version "0.0.1"
+  {:mvn/version "0.0.3"
    :exclusions  [org.clojure/clojure]}
   com.yetanalytics/gen-openapi
   {:mvn/version "0.0.4"
