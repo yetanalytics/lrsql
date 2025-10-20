@@ -113,45 +113,52 @@
                attachments))
           retry-test   (partial bp/-txn-retry? backend)
           retry-limit  (:stmt-retry-limit config)
-          retry-budget (:stmt-retry-budget config)]
-      (with-rerunable-txn [tx conn {:retry-test  retry-test
-                                    :budget      retry-budget
-                                    :max-attempt retry-limit}]
-        (loop [stmt-ins stmt-inputs
-               stmt-res {:statement-ids []}]
-          (if-some [stmt-input (first stmt-ins)]
-            ;; Statement input available to insert
-            (let [stmt-descs  (stmt-q/query-descendants
-                               backend
-                               tx
-                               stmt-input)
-                  stmt-input' (stmt-input/add-insert-descendant-inputs
-                               stmt-input
-                               stmt-descs)
-                  stmt-result (stmt-cmd/insert-statement!
-                               backend
-                               tx
-                               stmt-input')]
-              (if-some [err (:error stmt-result)]
-                ;; Statement conflict or some other error - stop and rollback
-                ;; Return the error, which will either be logged here or
-                ;; (if it's unexpected) bubble up until the end
-                (do (when (= ::lrsp/statement-conflict (-> err ex-data :type))
-                      (log/warn (ex-message err)))
-                    (log/warn "Rolling back transaction...")
-                    (.rollback tx)
-                    stmt-result)
-                ;; Non-error result - continue
-                (if-some [stmt-id (:statement-id stmt-result)]
-                  (do
-                    ;; Submit statement for reaction if enabled
-                    (react-init/offer-trigger! reaction-channel stmt-id)
-                    (recur (rest stmt-ins)
-                           (update stmt-res :statement-ids conj stmt-id)))
-                  (recur (rest stmt-ins)
-                         stmt-res))))
-            ;; No more statement inputs - return
-            stmt-res)))))
+          retry-budget (:stmt-retry-budget config)
+          triggers-to-offer (atom [])
+          result (with-rerunable-txn [tx conn {:retry-test  retry-test
+                                               :budget      retry-budget
+                                               :max-attempt retry-limit}]
+                   (loop [stmt-ins stmt-inputs
+                          stmt-res {:statement-ids []}]
+                     (if-some [stmt-input (first stmt-ins)]
+                       ;; Statement input available to insert
+                       (let [stmt-descs  (stmt-q/query-descendants
+                                          backend
+                                          tx
+                                          stmt-input)
+                             stmt-input' (stmt-input/add-insert-descendant-inputs
+                                          stmt-input
+                                          stmt-descs)
+                             stmt-result (stmt-cmd/insert-statement!
+                                          backend
+                                          tx
+                                          stmt-input')]
+                                        ;verify statement presence and query success
+                         (if-some [err (:error stmt-result)]
+                           ;; Statement conflict or some other error - stop and rollback
+                           ;; Return the error, which will either be logged here or
+                           ;; (if it's unexpected) bubble up until the end
+                           (do (when (= ::lrsp/statement-conflict (-> err ex-data :type))
+                                 (log/warn (ex-message err)))
+                               (log/warn "Rolling back transaction...")
+                               (.rollback tx)
+                               (reset! triggers-to-offer [])
+                               stmt-result)
+                           ;; Non-error result - continue
+                           (if-some [stmt-id (:statement-id stmt-result)]
+                             (do
+                               ;; Log stmt for reaction submission if enabled
+                               (swap! triggers-to-offer conj stmt-id)
+
+                               (recur (rest stmt-ins)
+                                      (update stmt-res :statement-ids conj stmt-id)))
+                             (recur (rest stmt-ins)
+                                    stmt-res))))
+                       ;; No more statement inputs - return
+                       stmt-res)))]
+      (doseq [stmt-id @triggers-to-offer]
+        (react-init/offer-trigger! reaction-channel stmt-id))
+      result))
   (-get-statements
     [lrs auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
