@@ -1194,6 +1194,50 @@
       (finally
         (component/stop sys')))))
 
+(deftest reaction-race-test
+  (let [sys           (support/test-system)
+        sys'          (component/start sys)
+        {:keys [lrs]} sys']
+    (try
+      (testing "Processes simple reaction"
+        (let [;; Add a reaction
+              {reaction-id
+               :result} (adp/-create-reaction
+                          lrs "reaction-0" tc/simple-reaction-ruleset true)]
+          ;; Add a batch of statements, but add some "irrelevant" (to this reaction) statements in same transaction
+          (lrsp/-store-statements lrs tc/auth-ident [tc/reaction-stmt-a
+                                                     tc/reaction-stmt-b
+                                                     tc/reaction-stmt-c
+                                                     tc/reaction-stmt-d] [])
+            (Thread/sleep 100)
+          ;; Wait a little bit for the reactor
+          (Thread/sleep 300)
+          (testing "New statement added"
+            (is (= {:statement-result
+                    {:statements
+                     [tc/reaction-stmt-result
+                      (remove-id tc/reaction-stmt-b)
+                      (remove-id tc/reaction-stmt-a)]
+                     :more ""}
+                    :attachments []}
+                   (-> (lrsp/-get-statements
+                        lrs
+                        tc/auth-ident
+                        {}
+                        [])
+                       ;; Remove LRS fields
+                       (update-in
+                        [:statement-result :statements]
+                        #(mapv (comp
+                                remove-id
+                                remove-props)
+                               %))))))))
+      (finally
+        (component/stop sys')))))
+
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
