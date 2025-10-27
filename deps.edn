@@ -16,7 +16,7 @@
   metosin/spec-tools                    {:mvn/version "0.10.6"}
   aero/aero                             {:mvn/version "1.1.6"}
   selmer/selmer                         {:mvn/version "1.12.59"}
-  ch.qos.logback/logback-classic        {:mvn/version "1.5.15"}
+  ch.qos.logback/logback-classic        {:mvn/version "1.5.19"}
   commons-io/commons-io                 {:mvn/version "2.14.0"}
   commons-fileupload/commons-fileupload {:mvn/version "1.6.0"}
 
@@ -97,7 +97,7 @@
    :extra-deps  {org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.5.3"}
                  ;; allow MySQL swap-in
                  com.mysql/mysql-connector-j          {:mvn/version "9.4.0"}}}
-  
+
   :bench
   {:extra-paths ["src/bench" "dev-resources"]
    :extra-deps  {org.clojure/tools.cli          {:mvn/version "1.0.194"}
@@ -126,7 +126,7 @@
                  org.mariadb.jdbc/mariadb-java-client
                  {:mvn/version "3.5.3"}
                  org.testcontainers/mariadb {:mvn/version "1.21.2"}
-                 
+
                  ;; Other test deps
                  org.clojure/test.check {:mvn/version "1.1.1"}
                  babashka/babashka.curl {:mvn/version "0.0.3"}
