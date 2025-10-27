@@ -23,7 +23,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb, test-mariadb-10.6, test-mariadb-10.11, test-mariadb-11.4, test-mariadb-11.7.2, test-mariadb-11.8, mariadb
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb, test-mariadb-10.6, test-mariadb-10.11, test-mariadb-11.4, test-mariadb-11.7.2, test-mariadb-11.8, mariadb, test-mysql, test-mysql-8.0.44, test-mysql-8.4, test-mysql-9.5.0, mysql
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp
@@ -83,6 +83,14 @@ test-mysql:
 
 test-mysql-8.0.36:
 	LRSQL_TEST_DB_VERSION=8.0.36 $(TEST_MYSQL_COMMAND)
+test-mysql-8.0.44:
+	LRSQL_TEST_DB_VERSION=8.0.44 $(TEST_MYSQL_COMMAND)
+test-mysql-8.4:
+	LRSQL_TEST_DB_VERSION=8.4 $(TEST_MYSQL_COMMAND)
+test-mysql-9.5.0:
+	LRSQL_TEST_DB_VERSION=9.5.0 $(TEST_MYSQL_COMMAND)
+
+
 
 ci: test-sqlite test-postgres test-mariadb test-mysql
 
@@ -230,6 +238,10 @@ target/bundle/lrsql_mariadb.exe: exe/lrsql_mariadb.exe
 	mkdir -p target/bundle
 	cp exe/lrsql_mariadb.exe target/bundle/lrsql_mariadb.exe
 
+target/bundle/lrsql_mysql.exe: exe/lrsql_mysql.exe
+	mkdir -p target/bundle
+	cp exe/lrsql_mysql.exe target/bundle/lrsql_mysql.exe
+
 # Copy Admin UI
 
 target/bundle/admin: resources/public/admin
@@ -241,9 +253,9 @@ target/bundle/admin: resources/public/admin
 BUNDLE_RUNTIMES ?= true
 
 ifeq ($(BUNDLE_RUNTIMES),true)
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/lrsql_mariadb.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/lrsql_mariadb.exe target/bundle/lrsql_mysql.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench target/bundle/runtimes
 else
-target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/lrsql_mariadb.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench
+target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/bundle/lrsql.jar target/bundle/admin target/bundle/lrsql.exe target/bundle/lrsql_pg.exe target/bundle/lrsql_mariadb.exe target/bundle/lrsql_mysql.exe target/bundle/LICENSE target/bundle/NOTICE target/bundle/customization target/bundle/bench.jar target/bundle/bench
 endif
 
 bundle: target/bundle
@@ -293,15 +305,21 @@ else
 	launch4j exe/config_mariadb.xml
 endif
 
+exe/lrsql_mysql.exe:
+ifeq (,$(shell which launch4j))
+	$(error "ERROR: launch4j is not installed!")
+else
+	launch4j exe/config_mysql.xml
+endif
 
-exe: exe/lrsql.exe exe/lrsql_pg.exe exe/lrsql_mariadb.exe
+exe: exe/lrsql.exe exe/lrsql_pg.exe exe/lrsql_mariadb.exe exe/lrsql_mysql.exe
 
 # *** Run build ***
 
 # These targets create a bundle containing a lrsql JAR and then runs
 # the JAR to create the specific lrsql instance.
 
-.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres, run-jar-mariadb
+.phony: run-jar-sqlite, run-jar-sqlite-ephemeral, run-jar-postgres, run-jar-mariadb, run-jar-mysql
 
 run-jar-sqlite-ephemeral: target/bundle
 	cd target/bundle; \
@@ -335,6 +353,14 @@ run-jar-mariadb: target/bundle
 	LRSQL_API_KEY_DEFAULT=username \
 	LRSQL_API_SECRET_DEFAULT=password \
 	bin/run_mariadb.sh
+
+run-jar-mysql: target/bundle
+	cd target/bundle; \
+	LRSQL_ADMIN_USER_DEFAULT=username \
+	LRSQL_ADMIN_PASS_DEFAULT=password \
+	LRSQL_API_KEY_DEFAULT=username \
+	LRSQL_API_SECRET_DEFAULT=password \
+	bin/run_mysql.sh
 
 # *** Report Dependency Graph to GitHub ***
 

@@ -24,6 +24,7 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 | `ci`               | Called when running continuous integration; runs all test cases in all SQL flavors.                                                                                                                          |
 | `test-sqlite`      | Run all tests with SQLite database.                                                                                                                                                                          |
 | `test-mariadb`       | Run all tests with Mariadb database version 11.7.2. Set the `LRSQL_TEST_DB_VERSION` env var to a valid Postgres docker tag to use another version.                                                              |
+| `test-mysql`       | Run all tests with MySQL database version 8.0.36.                                                                                                                                                             |
 | `test-postgres`    | Run all tests with Postgres database version 11. Set the `LRSQL_TEST_DB_VERSION` env var to a valid Postgres docker tag to use another version.                                                              |
 | `test-postgres-11` | Run all tests with Postgres database version 11.                                                                                                                                                             |
 | `test-postgres-12` | Run all tests with Postgres database version 12.                                                                                                                                                             |
@@ -43,10 +44,13 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 | `sqlite`                   | Start a SQLite-based SQL LRS.                                                                                                              |
 | `postgres`                 | Start a Postgres SQL LRS. Requires a running Postgres instance.                                                                            |
 | `mariadb`                  | Start a Mariadb SQL LRS. Requires a running MariaDB instance.                                                                             |
+| `mysql`                    | Start a MySQL SQL LRS. Requires a running MySQL instance.                                                                             |
 | `run-jar-sqlite`           | Similar to `sqlite` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables.    |
 | `run-jar-sqlite-ephemeral` | Similar to `ephemeral` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables. |
 | `run-jar-postgres`         | Similar to `postgres` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables.  |
 | `run-jar-mariadb`          | Similar to `mariadb` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables.  |
+| `run-jar-mysql`          | Similar to `mysql` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables.  |
+
 
 #### Cleanup Targets
 

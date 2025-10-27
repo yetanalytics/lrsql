@@ -22,6 +22,7 @@
 
 - [Postgres](postgres.md)
 - [MariaDB](mariadb.md)
+- [MySQL](mysql.md)
 - [SQLite](sqlite.md)
 
 ### Reference
