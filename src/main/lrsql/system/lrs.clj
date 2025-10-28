@@ -156,7 +156,6 @@
                              (do
                                ;; Log stmt for reaction submission if enabled
                                (swap! triggers-to-offer conj stmt-id)
-
                                (recur (rest stmt-ins)
                                       (update stmt-res :statement-ids conj stmt-id)))
                              (recur (rest stmt-ins)
