@@ -7,7 +7,7 @@
             [lrsql.input.reaction          :as react-input]
             [lrsql.ops.command.reaction    :as react-cmd]
             [lrsql.ops.query.reaction      :as react-q]))
-
+;; TODO: configurable reactor xAPI version
 (defrecord Reactor [backend
                     lrs
                     reaction-executor]
@@ -46,8 +46,9 @@
              []
              (:result
               (react-q/query-statement-reactions
-               backend tx {:trigger-id statement-id}))))]
-      ;; Submit statements one at a time with varying authority
+               backend tx {:trigger-id statement-id}))))
+          reaction-version (get-in lrs [:config :reaction-version] "1.0.3")]
+      ;; Submit statements one at a time with varying authority 
       {:statement-ids
        (reduce
         (fn [acc {:keys [statement authority]}]
@@ -55,6 +56,7 @@
                 (:statement-ids
                  (lrsp/-store-statements
                   lrs
+                  {:com.yetanalytics.lrs/version reaction-version}
                   {:agent  authority
                    :scopes #{:scope/statements.write}}
                   [statement]

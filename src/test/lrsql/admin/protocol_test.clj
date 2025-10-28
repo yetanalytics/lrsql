@@ -20,7 +20,7 @@
 ;; Init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(support/instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 (use-fixtures :each support/fresh-db-fixture)
 
@@ -248,9 +248,9 @@
       (testing "delete actor"
         (testing "delete actor: delete actor"
           (let [actor (stmt-1 "actor")]
-            (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+            (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-1] [])
             (adp/-delete-actor lrs {:actor-ifi (ua/actor->ifi actor)})
-            (is (= (lrsp/-get-person lrs auth-ident {:agent actor})
+            (is (= (lrsp/-get-person lrs tc/ctx auth-ident {:agent actor})
                    {:person {"objectType" "Person"}}))))
         (let [arb-query #(jdbc/execute! ds %)]
           (testing "delete-actor: delete statements related to actor"
@@ -258,7 +258,7 @@
                   ifis (->> (conj stmts (stmt-3 "object"))
                             (map #(ua/actor->ifi (% "actor"))))
                   get-actor-ss-count (fn [ifi]
-                                       (-> (lrsp/-get-statements lrs auth-ident {:actor-ifi ifi} [])
+                                       (-> (lrsp/-get-statements lrs tc/ctx auth-ident {:actor-ifi ifi} [])
                                            (get-in [:statement-result :statements])
                                            count))
                   get-stmt-#s (fn []
@@ -266,31 +266,31 @@
                                           (assoc m actor-ifi (get-actor-ss-count actor-ifi)))
                                         {} ifis))]
 
-              (lrsp/-store-statements lrs auth-ident stmts [])
+              (lrsp/-store-statements lrs tc/ctx auth-ident stmts [])
               (is (every? pos-int? (vals (get-stmt-#s))))
               (doseq [ifi ifis]
                 (adp/-delete-actor lrs {:actor-ifi ifi}))
               (is (every? zero? (vals (get-stmt-#s))))))
           (testing "delete-actor: delete statements related to deleted statements"
             (let [stmt->ifi #(ua/actor->ifi (% "actor"))
-                  count-of-actor (fn [actor-ifi] (-> (lrsp/-get-statements lrs auth-ident {:actor-ifi actor-ifi} []) :statement-result :statements count))
+                  count-of-actor (fn [actor-ifi] (-> (lrsp/-get-statements lrs tc/ctx auth-ident {:actor-ifi actor-ifi} []) :statement-result :statements count))
                   child-ifi (stmt->ifi (stmt-3 "object"))
                   parent-ifi (stmt->ifi stmt-3)]
               (testing "delete-actor correctly deletes statements that are parent to actor (sub)statements"
-                (lrsp/-store-statements lrs auth-ident [stmt-3] [])
+                (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-3] [])
                 (is (= 1 (count-of-actor parent-ifi)))
                 (adp/-delete-actor lrs {:actor-ifi child-ifi})
                 (is (zero? (count-of-actor parent-ifi))) ;
                 (adp/-delete-actor lrs {:actor-ifi parent-ifi}))
               (testing "delete-actor correctly deletes substatements that are child to actor statements"
-                (lrsp/-store-statements lrs auth-ident [stmt-3] [])
+                (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-3] [])
                 (is (= 1 (count-of-actor child-ifi)))
                 (adp/-delete-actor lrs {:actor-ifi parent-ifi})
                 (is (zero? (count-of-actor child-ifi)))
                 (adp/-delete-actor lrs {:actor-ifi child-ifi}))
               (testing "for StatementRefs, delete-actor deletes statement->actor relationships but leaves statements by another actor untouched"
                 (let [[ifi-0 ifi-2] (mapv stmt->ifi [stmt-0 stmt-2])]
-                  (lrsp/-store-statements lrs auth-ident [stmt-0 stmt-2] [])
+                  (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0 stmt-2] [])
                   (is (= [2 2] (mapv count-of-actor [ifi-0 ifi-2])))
                   (adp/-delete-actor lrs {:actor-ifi ifi-0})
                   (is (= [1 1] (mapv count-of-actor [ifi-0 ifi-2])))
@@ -299,23 +299,23 @@
 
           (testing "delete-actor: delete state_document of deleted actor"
             (let [ifi (ua/actor->ifi (:agent lrst/state-id-params))]
-              (lrsp/-set-document lrs auth-ident lrst/state-id-params lrst/state-doc-1 true)
+              (lrsp/-set-document lrs tc/ctx auth-ident lrst/state-id-params lrst/state-doc-1 true)
               (adp/-delete-actor lrs {:actor-ifi ifi})
               (is (empty? (arb-query ["select * from state_document where agent_ifi  = ?" ifi])))))
 
           (testing "delete-actor: delete agent profile document of deleted actor"
             (let [{:keys [agent profileId]}  lrst/agent-prof-id-params
                   ifi (ua/actor->ifi agent)]
-              (lrsp/-set-document lrs auth-ident lrst/agent-prof-id-params lrst/agent-prof-doc true)
+              (lrsp/-set-document lrs tc/ctx auth-ident lrst/agent-prof-id-params lrst/agent-prof-doc true)
               (adp/-delete-actor lrs {:actor-ifi ifi})
-              (is (nil? (:document (lrsp/-get-document lrs auth-ident {:profileId profileId
+              (is (nil? (:document (lrsp/-get-document lrs tc/ctx auth-ident {:profileId profileId
                                                                        :agent agent}))))))
           (testing "delete-actor: delete attachments of deleted statements"
             (let [ifi (ua/actor->ifi (lrst/stmt-4 "actor"))
                   stmt-id (u/str->uuid (lrst/stmt-4 "id"))]
-              (lrsp/-store-statements lrs auth-ident [lrst/stmt-4] [lrst/stmt-4-attach])
+              (lrsp/-store-statements lrs tc/ctx auth-ident [lrst/stmt-4] [lrst/stmt-4-attach])
               (adp/-delete-actor lrs {:actor-ifi ifi})
-              (is (empty? (:attachments (lrsp/-get-statements lrs auth-ident {:statement_id stmt-id} []))))
+              (is (empty? (:attachments (lrsp/-get-statements lrs tc/ctx auth-ident {:statement_id stmt-id} []))))
               (testing "delete actor: delete statement-to-activity entries for deleted statements"
                 (is (empty? (arb-query ["select * from statement_to_activity where statement_id  = ?" stmt-id]))))))))
       (finally (component/stop sys')))))
@@ -326,7 +326,7 @@
         lrs  (:lrs sys')
         hdrs [["id"] ["actor" "mbox"] ["verb" "id"] ["object" "id"]]]
     (try
-      (lrsp/-store-statements lrs auth-ident [stmt-0 stmt-1 stmt-2] [])
+      (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0 stmt-1 stmt-2] [])
       (testing "CSV Seq"
         (testing "- no params"
           (with-open [writer (java.io.StringWriter.)]
@@ -399,7 +399,7 @@
         (testing "- entire database gets returned beyond `:limit`"
           (let [statements (->> #(assoc stmt-0 "id" (str (squuid/generate-squuid)))
                                 (repeatedly 100))]
-            (lrsp/-store-statements lrs auth-ident statements []))
+            (lrsp/-store-statements lrs tc/ctx auth-ident statements []))
           (with-open [writer (java.io.StringWriter.)]
             (adp/-get-statements-csv lrs writer hdrs {})
             (let [stmt-str (str writer)
@@ -467,9 +467,9 @@
       (finally (component/stop sys')))))
 
 (defn- get-last-stored
-  [lrs auth-ident]
+  [lrs ctx auth-ident]
   (get-in
-   (lrsp/-get-statements lrs auth-ident {} [])
+   (lrsp/-get-statements lrs ctx auth-ident {} [])
    [:statement-result
     :statements
     0
@@ -494,8 +494,8 @@
                 :timeline              []}
                (adp/-get-status lrs {})))
         ;; add a statement
-        (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-        (let [last-stored-0 (get-last-stored lrs auth-ident)
+        (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0] [])
+        (let [last-stored-0 (get-last-stored lrs tc/ctx auth-ident)
               day-0         (snap-day last-stored-0)]
           (is (= {:statement-count       1
                   :actor-count           1
@@ -505,8 +505,8 @@
                                            :count  1}]}
                  (adp/-get-status lrs {})))
           ;; add another
-          (lrsp/-store-statements lrs auth-ident [stmt-1] [])
-          (let [last-stored-1 (get-last-stored lrs auth-ident)
+          (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-1] [])
+          (let [last-stored-1 (get-last-stored lrs tc/ctx auth-ident)
                 day-1         (snap-day last-stored-1)]
             (is (= {:statement-count       2  ;; increments
                     :actor-count           1  ;; same

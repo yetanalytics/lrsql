@@ -56,27 +56,29 @@
               true          (conj v)))
           (empty coll) coll))
 
+;; Paths which will also allow admin credentials override
+(def override-paths
+  #{["statements" :get]
+    ["statements" :post]})
+
 (defn add-credentials-override [routes validate-jwt oidc]
   (let [[decode validate _authorize ensure req] oidc
-        [_ _ interceptors :as statements-route]
-        (->> routes (some (fn [[path method :as r]]
-                            (when (= ["statements" :get]
-                                     [(last (string/split path #"/")) method])
-                              r))))
         payload-interceptors (conj
                               ;;oidc interceptors, minus _authorize
                               (filterv identity [decode
                                                  validate
                                                  ensure
                                                  req])
-                              validate-jwt 
+                              validate-jwt
                               replace-auth)
-        
-        new-interceptors (splice-before #(= (:name %) ::ai/lrs-authenticate)
-                                        (check-for-credential-id payload-interceptors)
-                                        interceptors)
-
-        new-route (assoc statements-route 2 new-interceptors)]
-    (-> routes
-        (disj statements-route)
-        (conj new-route))))
+        inject (fn [interceptors]
+                 (splice-before #(= (:name %) ::ai/lrs-authenticate)
+                                (check-for-credential-id payload-interceptors)
+                                interceptors))
+        match? (fn [[path method & _]]
+                 (override-paths [(last (string/split path #"/")) method]))
+        update-route (fn [r]
+                       (if (match? r)
+                         (update r 2 inject)
+                         r))]
+    (into (empty routes) (map update-route routes))))

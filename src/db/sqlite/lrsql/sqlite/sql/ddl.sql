@@ -581,3 +581,38 @@ SELECT 1 FROM pragma_table_info('lrs_credential') WHERE name = 'is_seed'
 -- :command :execute
 -- :doc Add the `is_seed` column to the `lrs_credential` table.
 ALTER TABLE lrs_credential ADD COLUMN is_seed INTEGER; -- boolean type
+
+/* Migration 2025-09-26 - Add ContextAgent, ContextGroup, SubContextAgent, SubContextGroup to statement_to_actor usage enum */
+
+-- :name query-statement-to-actor-usage-enum-has-context-actors
+-- :command :query
+-- :result :one
+-- :doc Query to see if the `statement_to_actor.usage` column has ContextAgent in its enum.
+SELECT 1
+FROM sqlite_master
+WHERE type = 'table'
+  AND name = 'statement_to_actor'
+  AND sql LIKE '%ContextAgent%';
+
+-- :name alter-statement-to-actor-usage-enum-add-context-actors!
+-- :command :execute
+-- :doc Change the enum datatype of the `statement_to_actor.usage` column to add ContextAgent, ContextGroup, SubContextAgent, and SubContextGroup.
+UPDATE sqlite_schema
+SET sql = 'CREATE TABLE statement_to_actor (
+  id           TEXT NOT NULL PRIMARY KEY, -- uuid
+  statement_id TEXT NOT NULL,             -- uuid
+  usage        TEXT NOT NULL CHECK (
+                 usage IN (''Actor'', ''Object'', ''Authority'', ''Instructor'', ''Team'',
+                           ''SubActor'', ''SubObject'', ''SubInstructor'', ''SubTeam'',
+                           ''ContextAgent'', ''ContextGroup'', ''SubContextAgent'', ''SubContextGroup'')
+                                   ),     -- enum
+  actor_ifi    TEXT NOT NULL,             -- ifi string
+  actor_type   TEXT NOT NULL CHECK (
+                 actor_type IN (''Agent'', ''Group'')
+                 ),                       -- enum
+
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
+    ON DELETE CASCADE,
+  FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
+)'
+WHERE type = 'table' AND name = 'statement_to_actor';

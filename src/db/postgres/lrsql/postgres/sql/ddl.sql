@@ -525,3 +525,24 @@ ALTER TABLE lrs_credential ADD COLUMN IF NOT EXISTS label TEXT;
 -- :command :execute
 -- :doc Add the `is_seed` column to the `lrs_credential` table if it does not exist.
 ALTER TABLE lrs_credential ADD COLUMN IF NOT EXISTS is_seed BOOLEAN;
+
+/* Migration 2025-09-26 - Add ContextAgent, ContextGroup, SubContextAgent, SubContextGroup to statement_to_actor usage enum */
+
+-- :name query-statement-to-actor-usage-enum-has-context-actors
+-- :command :query
+-- :result :one
+-- :doc Query to see if the `statement_to_actor.usage` column has ContextAgent in its enum.
+SELECT 1
+WHERE enum_range(NULL::actor_usage_enum)::TEXT[]
+  @> ARRAY['ContextAgent'];
+
+-- :name alter-statement-to-actor-usage-enum-add-context-actors!
+-- :command :execute
+-- :doc Change the enum datatype of the `statement_to_actor.usage` column to add ContextAgent, ContextGroup, SubContextAgent, and SubContextGroup.
+ALTER TABLE IF EXISTS statement_to_actor ALTER COLUMN usage TYPE VARCHAR(255);
+DROP TYPE IF EXISTS actor_usage_enum;
+CREATE TYPE actor_usage_enum AS ENUM (
+    'Actor', 'Object', 'Authority', 'Instructor', 'Team',
+    'SubActor', 'SubObject', 'SubInstructor', 'SubTeam',
+    'ContextAgent', 'ContextGroup', 'SubContextAgent', 'SubContextGroup');
+ALTER TABLE IF EXISTS statement_to_actor ALTER COLUMN usage TYPE actor_usage_enum USING (usage::actor_usage_enum);

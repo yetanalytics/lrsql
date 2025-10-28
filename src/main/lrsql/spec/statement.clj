@@ -136,7 +136,7 @@
            #(contains? % :statement/timestamp)
            #(contains? % :statement/stored)
            #(contains? % :statement/authority))
-    #(sgen/fmap (partial apply prepare-statement)
+    #(sgen/fmap (partial apply (partial prepare-statement "1.0.3"))
                 (s/gen (s/tuple ::xs/agent
                                 ::xs/statement)))))
 

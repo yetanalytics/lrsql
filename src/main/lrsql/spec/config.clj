@@ -133,6 +133,23 @@
 
 (s/def ::enable-reactions boolean?)
 (s/def ::reaction-buffer-size pos-int?)
+(s/def ::reaction-version #{"1.0.3" "2.0.0"})
+
+(s/def ::supported-versions
+  (s/and
+   (s/conformer
+    (fn [x]
+      (if (string? x)
+        (into #{}
+              (cstr/split x #","))
+        x)))
+   (s/coll-of
+    #{"1.0.3" "2.0.0"}
+    :kind set?
+    :into #{}
+    :min-count 1)))
+
+(s/def ::enable-strict-version boolean?)
 
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
@@ -145,12 +162,20 @@
                           ::oidc-authority-template
                           ::oidc-scope-prefix
                           ::enable-reactions
-                          ::reaction-buffer-size]
+                          ::reaction-buffer-size
+                          ::reaction-version
+                          ::supported-versions
+                          ::enable-strict-version]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default
                           ::api-secret-default
-                          ::stmt-get-max-csv])))
+                          ::stmt-get-max-csv])
+         (fn reaction-version-supported?
+           [{:keys [reaction-version supported-versions]}]
+           (let [supported-set (s/conform ::supported-versions supported-versions)]
+             (and (not= ::s/invalid supported-set)
+                  (contains? supported-set reaction-version))))))
 
 (s/def ::enable-http boolean?)
 (s/def ::enable-http2 boolean?)

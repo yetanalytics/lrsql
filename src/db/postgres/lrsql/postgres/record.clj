@@ -84,7 +84,9 @@
     (create-blocked-jwt-table! tx)
     (alter-blocked-jwt-add-one-time-id! tx)
     (alter-lrs-credential-add-label! tx)
-    (alter-lrs-credential-add-is-seed! tx))
+    (alter-lrs-credential-add-is-seed! tx)
+    (when-not (some? (query-statement-to-actor-usage-enum-has-context-actors tx))
+      (alter-statement-to-actor-usage-enum-add-context-actors! tx)))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]

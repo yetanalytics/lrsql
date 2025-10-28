@@ -33,6 +33,7 @@
 - [Example AWS Deployment](aws.md)
 - [Reactions](reactions.md)
 - [Sending xAPI statement(s) with Postman](postman.md)
+- [xAPI Versioning](xapi_versioning.md)
 
 ### Demos
 
