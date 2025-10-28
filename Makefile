@@ -23,7 +23,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb, test-mariadb-10.6, test-mariadb-10.11, test-mariadb-11.4, test-mariadb-11.7.2, test-mariadb-11.8, mariadb, test-mysql, test-mysql-8.0.44, test-mysql-8.4, test-mysql-9.5.0, mysql
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, mariadb, mysql, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb, test-mariadb-10.6, test-mariadb-10.11, test-mariadb-11.4, test-mariadb-11.7.2, test-mariadb-11.8, test-mysql, test-mysql-8.0.44, test-mysql-8.4, test-mysql-9.5.0
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp
@@ -90,11 +90,7 @@ test-mysql-8.4:
 test-mysql-9.5.0:
 	LRSQL_TEST_DB_VERSION=9.5.0 $(TEST_MYSQL_COMMAND)
 
-
-
 ci: test-sqlite test-postgres test-mariadb test-mysql
-
-
 
 # Dev
 
