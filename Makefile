@@ -39,7 +39,7 @@ TEST_PG_COMMAND ?= clojure -M:test -m lrsql.test-runner --database postgres $(if
 # Without LRSQL_TEST_DB_VERSION, defaults to version 11.7.2
 TEST_MARIADB_COMMAND ?= clojure -M:test -m lrsql.test-runner --database mariadb $(if $(ns),--ns $(ns))
 
-# Without LRSQL_TEST_DB_VERSION, defaults to version 8.0.36
+# Without LRSQL_TEST_DB_VERSION, defaults to version 8.0.44
 TEST_MYSQL_COMMAND ?= clojure -M:test -m lrsql.test-runner --database mysql $(if $(ns),--ns $(ns))
 
 test-postgres:

@@ -39,7 +39,7 @@
                :db-properties "allowMultiQueries=true"
 
                ;; Testing Only! Specify the version used with testcontainers
-               :test-db-version #or [#env LRSQL_TEST_DB_VERSION "8.0.36"]}
+               :test-db-version #or [#env LRSQL_TEST_DB_VERSION "8.0.44"]}
 
   :test-oidc {:db-type "sqlite"
               :db-name ":memory:"}
