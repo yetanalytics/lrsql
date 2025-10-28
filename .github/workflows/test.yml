@@ -25,7 +25,9 @@ jobs:
           - test-mariadb-11.4
           - test-mariadb-11.7.2
           - test-mariadb-11.8
-          - test-mysql
+          - test-mysql-8.0.44
+          - test-mysql-8.4
+          - test-mysql-9.5.0
           
     steps:
       - name: Checkout repository
