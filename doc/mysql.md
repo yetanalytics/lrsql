@@ -8,12 +8,17 @@ To run SQL-LRS with MySQL, you need a properly configured MySQL instance.  "Prop
 
 ## Environment Variables
 
-You can configure MySQL by setting the relevant environment variables.  The settings relevant to SQL-LRS are:
+You can configure MariaDB by setting the relevant environment variables.  Here is the `environment` entry from our [MySQL docker-compose demo](https://github.com/yetanalytics/lrsql/blob/main/dev-resources/mysql/docker-compose.yml)
 
- - `MYSQL_DATABASE` (should match  `lrsql_db` in `lrsql.json`)
- - `MYSQL_USER` (should match  `lrsql_user` in `lrsql.json`)
- - `MYSQL_PASSWORD` (should match  `lrsql_password` in `lrsql.json`)
+```yml
+    environment:
+      MYSQL_ROOT_PASSWORD: lrsql_root_password 
+      MYSQL_DATABASE: lrsql_db
+      MYSQL_USER: lrsql_user
+      MYSQL_PASSWORD: lrsql_password
+```
 
+(`MYSQL_ROOT_PASSWORD` can be anything, as SQL-LRS doesn't use the root account.  It is only included here because the MySQL Docker container requires a root password setting.  See the [MySQL docs](https://dev.mysql.com/doc/refman/8.4/en/docker-mysql-more-topics.html] for details)
 
 The corresponding `lrsql.json` would look like
 
@@ -30,10 +35,6 @@ The corresponding `lrsql.json` would look like
 }
 
 ```
-
-## Running
-
-
 
 ## Precision Limitation
 
