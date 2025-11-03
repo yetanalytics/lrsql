@@ -151,14 +151,13 @@
                                stmt-result)
                            ;; Non-error result - continue
                            (if-some [stmt-id (:statement-id stmt-result)]
-                             (do
-                               ;; Log stmt for reaction submission if enabled
-                               (recur (rest stmt-ins)
-                                      (update stmt-res :statement-ids conj stmt-id)))
+                             (recur (rest stmt-ins)
+                                    (update stmt-res :statement-ids conj stmt-id))
                              (recur (rest stmt-ins)
                                     stmt-res))))
                        ;; No more statement inputs - return
                        stmt-res)))]
+      ;; Log stmts for reaction submission if enabled
       (when-not (:error result)
         (doseq [stmt-id (:statement-ids result)]
           (react-init/offer-trigger! reaction-channel stmt-id)))
