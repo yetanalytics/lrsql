@@ -2,13 +2,13 @@
 
 # MySQL
 
-SQL-LRS supports MySQL, a sister database to MariaDB.  
+SQL-LRS supports MySQL.
 
 To run SQL-LRS with MySQL, you need a properly configured MySQL instance.  "Properly configured" really just means setting up a database, user, and password, and configuring SQL-LRS to connect to/with those.
 
 ## Environment Variables
 
-You can configure MariaDB by setting the relevant environment variables.  Here is the `environment` entry from our [MySQL docker-compose demo](https://github.com/yetanalytics/lrsql/blob/main/dev-resources/mysql/docker-compose.yml)
+You can configure MySQLDB by setting the relevant environment variables.  Here is the `environment` entry from our [MySQL docker-compose demo](https://github.com/yetanalytics/lrsql/blob/main/dev-resources/mysql/docker-compose.yml)
 
 ```yml
     environment:
@@ -38,4 +38,4 @@ The corresponding `lrsql.json` would look like
 
 ## Precision Limitation
 
-SQL-LRS stores statements in its partner databases as JSON.  Due to the way MySQL interprets numbers in JSON, we **cannot guarantee more than 15 significant digits of precision** when using SQL-LRS alongside MySQL.  If you need that much precision, consider using SQL-LRS alongside [Postgres](postgres.md) or [MariaDB](mariadb.md) instead.
+SQL-LRS stores statements in its implementation databases as JSON.  Due to the way MySQL interprets numbers in JSON, we **cannot guarantee more than 15 significant digits of precision** when using SQL-LRS alongside MySQL.  If you need that much precision, consider using SQL-LRS alongside [Postgres](postgres.md) or [MariaDB](mariadb.md) instead.

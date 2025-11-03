@@ -81,8 +81,6 @@ test-mariadb-11.8:
 test-mysql:
 	 $(TEST_MYSQL_COMMAND)
 
-test-mysql-8.0.36:
-	LRSQL_TEST_DB_VERSION=8.0.36 $(TEST_MYSQL_COMMAND)
 test-mysql-8.0.44:
 	LRSQL_TEST_DB_VERSION=8.0.44 $(TEST_MYSQL_COMMAND)
 test-mysql-8.4:
