@@ -121,7 +121,6 @@
           retry-test   (partial bp/-txn-retry? backend)
           retry-limit  (:stmt-retry-limit config)
           retry-budget (:stmt-retry-budget config)
-          triggers-to-offer (atom [])
           result (with-rerunable-txn [tx conn {:retry-test  retry-test
                                                :budget      retry-budget
                                                :max-attempt retry-limit}]
@@ -149,21 +148,20 @@
                                  (log/warn (ex-message err)))
                                (log/warn "Rolling back transaction...")
                                (.rollback tx)
-                               (reset! triggers-to-offer [])
                                stmt-result)
                            ;; Non-error result - continue
                            (if-some [stmt-id (:statement-id stmt-result)]
                              (do
                                ;; Log stmt for reaction submission if enabled
-                               (swap! triggers-to-offer conj stmt-id)
                                (recur (rest stmt-ins)
                                       (update stmt-res :statement-ids conj stmt-id)))
                              (recur (rest stmt-ins)
                                     stmt-res))))
                        ;; No more statement inputs - return
                        stmt-res)))]
-      (doseq [stmt-id @triggers-to-offer]
-        (react-init/offer-trigger! reaction-channel stmt-id))
+      (when-not (:error result)
+        (doseq [stmt-id (:statement-ids result)]
+          (react-init/offer-trigger! reaction-channel stmt-id)))
       result))
   (-get-statements
     [lrs ctx auth-identity params ltags]
