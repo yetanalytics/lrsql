@@ -28,7 +28,6 @@ services:
     depends_on:
       - db
     environment:
-      LRSQL_DB_TYPE: mysql
       LRSQL_API_KEY_DEFAULT: my_key
       LRSQL_API_SECRET_DEFAULT: my_secret
       LRSQL_ADMIN_USER_DEFAULT: my_username
