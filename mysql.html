@@ -124,12 +124,12 @@ span.build {
             <img alt="Yet LRS Logo" src="images/doc_logo.png"/>
           </div>
         </div>
-        <p><a href='index.html'><- Back to Index</a></p><h1 id="mariadb">MariaDB</h1><p>To run SQL-LRS with MariaDB, you need a properly configured MariaDB instance.  "Properly configured" really just means setting up a database, user, and password, and configuring SQL-LRS to connect to/with those.</p><h2 id="environment&#95;variables">Environment Variables</h2><p>You can configure MariaDB by setting the relevant environment variables.  Here is the <code>environment</code> entry from our <a href='https://github.com/yetanalytics/lrsql/blob/main/dev-resources/mariadb/docker-compose.yml'>MariaDB docker-compose demo</a></p><pre><code class="yml">    environment:
-      MARIADB&#95;ROOT&#95;PASSWORD: lrsql&#95;root&#95;password 
-      MARIADB&#95;DATABASE: lrsql&#95;db
-      MARIADB&#95;USER: lrsql&#95;user
-      MARIADB&#95;PASSWORD: lrsql&#95;password
-</code></pre><p>Note that <code>MARIADB&#95;ROOT&#95;PASSWORD</code> is only required if running in a container; see the <a href='https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/installing-mariadb/binary-packages/automated-mariadb-deployment-and-administration/docker-and-mariadb/mariadb-server-docker-official-image-environment-variables#mariadb_root_password_hash-mariadb_root_password-mysql_root_password'>MariaDB docs</a> for details.</p><p>The corresponding <code>lrsql.json</code> would look like</p><pre><code class="json">{
+        <p><a href='index.html'><- Back to Index</a></p><h1 id="mysql">MySQL</h1><p>SQL-LRS supports MySQL.</p><p>To run SQL-LRS with MySQL, you need a properly configured MySQL instance.  "Properly configured" really just means setting up a database, user, and password, and configuring SQL-LRS to connect to/with those.</p><h2 id="environment&#95;variables">Environment Variables</h2><p>You can configure MySQLDB by setting the relevant environment variables.  Here is the <code>environment</code> entry from our <a href='https://github.com/yetanalytics/lrsql/blob/main/dev-resources/mysql/docker-compose.yml'>MySQL docker-compose demo</a></p><pre><code class="yml">    environment:
+      MYSQL&#95;ROOT&#95;PASSWORD: lrsql&#95;root&#95;password 
+      MYSQL&#95;DATABASE: lrsql&#95;db
+      MYSQL&#95;USER: lrsql&#95;user
+      MYSQL&#95;PASSWORD: lrsql&#95;password
+</code></pre><p>(<code>MYSQL&#95;ROOT&#95;PASSWORD</code> can be anything, as SQL-LRS doesn't use the root account.  It is only included here because the MySQL Docker container requires a root password setting.  See the <a href='https://dev.mysql.com/doc/refman/8.4/en/docker-mysql-more-topics.html]' title=for details>MySQL docs</a></p><p>The corresponding <code>lrsql.json</code> would look like</p><pre><code class="json">{
   ...
   &quot;database&quot;: {
     &quot;dbHost&quot;: &quot;0.0.0.0&quot;,
@@ -140,7 +140,7 @@ span.build {
   }
 }
 
-</code></pre>
+</code></pre><h2 id="precision&#95;limitation">Precision Limitation</h2><p>SQL-LRS stores statements in its implementation databases as JSON.  Due to the way MySQL interprets numbers in JSON, we <strong>cannot guarantee more than 15 significant digits of precision</strong> when using SQL-LRS alongside MySQL.  If you need that much precision, consider using SQL-LRS alongside <a href='postgres.html'>Postgres</a> or <a href='mariadb.html'>MariaDB</a> instead.</p>
         <div class="footer">
          &copy; 2021-2025 <a href="https://www.yetanalytics.com" target="_blank">Yet Analytics Inc.</a> |
          <a href="https://github.com/yetanalytics/lrsql/blob/main/LICENSE" target="_blank">Licensed under the Apache 2.0 License</a> |
