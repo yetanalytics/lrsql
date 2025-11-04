@@ -1,6 +1,7 @@
 (ns lrsql.lrs-test
   (:require [clojure.test   :refer [deftest testing is use-fixtures]]
             [clojure.string :as cstr]
+            [clojure.walk                   :as walk]
             [com.stuartsierra.component     :as component]
             [com.yetanalytics.lrs.protocol  :as lrsp]
             [lrsql.admin.protocol           :as adp]
@@ -984,8 +985,24 @@
 ;; Taken from lrs and third lib tests
 ;; We reuse bench resources for tests here.
 
+
+
+(defn trunc [n d]
+  (let [pow (Math/pow 10 d)]
+    (-> n
+        (* pow)
+        (Math/floor)
+        (/ pow))))
+
 (def test-statements
-  (support/bench-statements 50))
+  (->> (support/bench-statements 50)
+       (walk/prewalk
+        (fn [v]
+          (if (and (number? v)
+                   (not= v (Math/floor v)))
+            (let [before (count (str (int (Math/floor v)) ))]
+              (trunc v (- 15 before)))
+            v)))))
 
 (deftest datasim-tests
   (let [sys     (support/test-system)

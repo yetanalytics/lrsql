@@ -93,6 +93,27 @@
                       :message       "ready for connections"
                       :times         1}})))
 
+(def mysql-container
+  (let [{{{:keys [db-type
+                  db-port
+                  db-name
+                  db-user
+                  db-password
+                  test-db-version]}
+          :database}
+         :connection} (read-config :test-mysql)]
+    (tc/create
+     {:image-name    (format "%s:%s" db-type test-db-version)
+      :exposed-ports [db-port]
+      :env-vars      {"MYSQL_DATABASE"             db-name
+                      "MYSQL_USER"                 db-user
+                      "MYSQL_PASSWORD"             db-password
+                      "MYSQL_RANDOM_ROOT_PASSWORD" "true"}
+      :wait-for      {:wait-strategy :log
+                      :message       "ready for connections"
+                      :times         1}})))
+
+
 (def ^:dynamic *container* nil)
 
 (def table-names
@@ -160,7 +181,8 @@
         (binding [*container* (tc/start!
                                (case dbtype
                                  :postgres postgres-container
-                                 :mariadb  mariadb-container))]
+                                 :mariadb  mariadb-container
+                                 :mysql    mysql-container))]
           (log/infof "%s container started!" (name dbtype))
           (try
             (db-fixture-fn f)
@@ -170,7 +192,8 @@
               (log/infof "%s container stopped!" (name dbtype))))))
       (let [profile-kw    (case dbtype
                             :postgres :test-postgres
-                            :mariadb  :test-mariadb)
+                            :mariadb  :test-mariadb
+                            :mysql    :test-mysql)
             {{{:keys [db-type
                       db-port
                       db-name
@@ -199,14 +222,16 @@
            test-system (fn [& {:keys [conf-overrides]}]
                          (system/system ((case dbtype
                                            :postgres pr/map->PostgresBackend
-                                           :mariadb  mr/map->MariadbBackend)
+                                           :mariadb  mr/map->MariadbBackend
+                                           :mysql    mr/map->MariadbBackend)
                                          {})
                                         profile-kw
                                         :conf-overrides conf-overrides))]
           (let [ret (f)]
             ((case dbtype
                :postgres truncate-all-postgres!
-               :mariadb  truncate-all-mariadb!)
+               :mariadb  truncate-all-mariadb!
+               :mysql    truncate-all-mariadb!)
              ds)
             ret))))))
 
@@ -215,6 +240,9 @@
 
 (def fresh-mariadb-fixture
   (fixture-builder :mariadb))
+
+(def fresh-mysql-fixture
+  (fixture-builder :mysql))
 
 (def fresh-db-fixture fresh-sqlite-fixture)
 

@@ -1,11 +1,11 @@
-# Runs SQL LRS with MariaDB - Provided for demonstration purposes only!
+# Runs SQL LRS with MySQL - Provided for demonstration purposes only!
 # To run: docker compose up
 # See the Docker Compose docs for more info: https://docs.docker.com/compose/
 volumes:
   db_data:
 services:
   db:
-    image: mysql:8.0
+    image: mysql:9.5.0
     volumes:
       - db_data:/var/lib/mysql/
     environment:
@@ -19,16 +19,15 @@ services:
   clamav:
     image: clamav/clamav:1.2.1
   lrs:
-    build: ../../. # switch to this for active dev
-    #image: yetanalytics/lrsql:latest
+    #build: ../../. # switch to this for active dev
+    image: yetanalytics/lrsql:latest
     command:
-      - /lrsql/bin/run_mariadb.sh
+      - /lrsql/bin/run_mysql.sh
     ports:
       - "8080:8080"
     depends_on:
       - db
     environment:
-      LRSQL_DB_TYPE: mysql
       LRSQL_API_KEY_DEFAULT: my_key
       LRSQL_API_SECRET_DEFAULT: my_secret
       LRSQL_ADMIN_USER_DEFAULT: my_username
@@ -37,7 +36,7 @@ services:
       LRSQL_DB_NAME: lrsql_db
       LRSQL_DB_USER: lrsql_user
       LRSQL_DB_PASSWORD: lrsql_password
-      # If MariaDB is too slow to start, increase this
+      # If MySQL is too slow to start, increase this
       LRSQL_POOL_INITIALIZATION_FAIL_TIMEOUT: 10000
       # Set to true if using dev UI, domain name, proxy server, etc.
       LRSQL_ALLOW_ALL_ORIGINS: false

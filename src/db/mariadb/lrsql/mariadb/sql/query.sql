@@ -366,10 +366,11 @@ ORDER BY stored_time ASC;
 
 /* Statement Reactions */
 
--- :snip snip-json-extract
-JSON_EXTRACT(:i:col,
---~ (lrsql.mariadb.record/make-path-str (:path params))
-)
+-- :snip snip-json-extract-numeric
+CAST(JSON_EXTRACT(:i:col, :sql:path-str)+0 AS :sql:type)
+
+-- :snip snip-json-extract-string
+JSON_UNQUOTE(JSON_EXTRACT(:i:col, :sql:path-str))
 
 -- :snip snip-val
 :v:val

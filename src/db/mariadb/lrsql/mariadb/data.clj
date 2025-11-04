@@ -79,8 +79,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def type->mdb-type
-  {:bool   "BOOLEAN"
-   :int    "INTEGER"
+  {:bool   "UNSIGNED"
+   :int    "SIGNED"
    :dec    "DECIMAL"
    :string "CHAR"
    :json   "JSON"})
