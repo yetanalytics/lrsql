@@ -1451,10 +1451,9 @@
     (component/stop sys')))
 
 (deftest accept-version-test
-  (let [lrs            (support/test-system)]
+  (let [lrs            (component/start (support/test-system))]
     (testing "Accepts versions 1.0.0-1.0.3"
       (try
-        (component/start lrs)
         (are [version-header
               result-status]
             (= result-status
