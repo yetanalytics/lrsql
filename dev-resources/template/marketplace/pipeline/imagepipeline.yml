@@ -1,0 +1,167 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AMI pipeline for LRSQL"
+Parameters:
+  VPCStackName:
+    Description: "VPC template referenced by pipeline infrastructure configuration"
+    Type: String
+  LRSQLVersion:
+    Description: "Semantic version ID for LRSQL"
+    Type: String
+    Default: "0.7.13"
+Resources:
+  AMIPipelineSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to AMI VPC
+      VpcId:
+        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "VPCId"]]
+  LRSQLImageRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/EC2InstanceProfileForImageBuilder"
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  LRSQLImageInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - Ref: LRSQLImageRole
+  LRSQLImageInfrastructure:
+    Type: AWS::ImageBuilder::InfrastructureConfiguration
+    Properties:
+      Name: lrsql-image-infrastructure
+      InstanceProfileName: !Ref LRSQLImageInstanceProfile 
+      SecurityGroupIds:
+        - !Ref AMIPipelineSG
+      SubnetId:
+        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PublicSubnetOne"]]
+  LRSQLInstallComponent:
+    Type: AWS::ImageBuilder::Component
+    Properties:
+      Name: InstallLRSQL 
+      Description: "Installs LRS to AMI"
+      Version: "1.0.0" 
+      Platform: "Linux"
+      Data: !Sub |
+        name: Install LRSQL
+        description: This document installs LRSQL.
+        schemaVersion: 1.0
+        parameters:
+          - Version:
+              type: string
+              default: v${LRSQLVersion} 
+              description: The version of LRSQL we're downloading
+        
+        phases:
+          - name: build
+            steps:
+              - name: DownloadLRS
+                action: WebDownload
+                inputs:
+                  - source: "https://github.com/yetanalytics/lrsql/releases/download/{{ Version }}/lrsql.zip"
+                    destination: "/tmp/lrsql.zip"
+              - name: MakeLRSDirectory
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - mkdir /opt/lrsql
+              - name: UnzipLRS
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - unzip /tmp/lrsql.zip -d /opt/lrsql/
+              - name: DefineLRSQLSystemService
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - |
+                      cat << EOF > /lib/systemd/system/lrsql.service
+                      [Unit]
+                      Description=SQL LRS Service
+                      [Service]
+                      User=root
+                      Environment="LC_ALL=en_US.UTF-8"
+                      WorkingDirectory=/opt/lrsql
+                      ExecStart=/opt/lrsql/bin/run_postgres.sh
+                      SuccessExitStatus=143
+                      TimeoutStopSec=10
+                      Restart=on-failure
+                      RestartSec=5
+                      [Install]
+                      WantedBy=multi-user.target
+                      EOF
+              - name: EnableLRSQLService
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - systemctl enable lrsql.service
+              - name: DefineLRSQLEphemeralService
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - |
+                      cat << EOF > /lib/systemd/system/lrsql-ephemeral.service
+                      [Unit]
+                      Description=SQL LRS Ephemeral Service
+                      [Service]
+                      User=root
+                      Environment="LC_ALL=en_US.UTF-8"
+                      WorkingDirectory=/opt/lrsql
+                      ExecStart=/opt/lrsql/bin/run_sqlite_ephemeral.sh
+                      SuccessExitStatus=143
+                      TimeoutStopSec=10
+                      Restart=on-failure
+                      RestartSec=5
+                      [Install]
+                      WantedBy=multi-user.target
+                      EOF
+              - name: EnableLRSQLEphemeralService
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - systemctl enable lrsql-ephemeral.service
+      SupportedOsVersions:
+        - "Amazon Linux 2"
+        - "Amazon Linux 2023"
+  LRSQLImageRecipe:
+    Type: AWS::ImageBuilder::ImageRecipe
+    Properties:
+      Name: lrsql-ami
+      Version: !Ref LRSQLVersion 
+      ParentImage: !Sub "arn:aws:imagebuilder:${AWS::Region}:aws:image/amazon-linux-2023-x86/x.x.x"
+      Components:
+        - ComponentArn: !Ref LRSQLInstallComponent
+  LRSQLDistributionConfiguration:
+    Type: AWS::ImageBuilder::DistributionConfiguration
+    Properties:
+      Name: lrsql-distribution-configuration
+      Distributions:
+        - Region: us-east-1
+          AmiDistributionConfiguration:
+            Name: lrsql-ami-us-east-1-{{ imagebuilder:buildDate }}
+        - Region: us-east-2
+          AmiDistributionConfiguration:
+            Name: lrsql-ami-us-east-2-{{ imagebuilder:buildDate }}
+        - Region: us-west-1
+          AmiDistributionConfiguration:
+            Name: lrsql-ami-us-west-1-{{ imagebuilder:buildDate }}
+        - Region: us-west-2
+          AmiDistributionConfiguration:
+            Name: lrsql-ami-us-west-2-{{ imagebuilder:buildDate }}
+  LRSQLImagePipeline:
+    Type: AWS::ImageBuilder::ImagePipeline
+    Properties:
+      Name: lrsql-ami-pipeline
+      Description: "Pipeline for generating the LRSQL Ami"
+      ImageRecipeArn: !Ref LRSQLImageRecipe
+      InfrastructureConfigurationArn: !Ref LRSQLImageInfrastructure
+      DistributionConfigurationArn: !Ref LRSQLDistributionConfiguration

@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create an IAM Role for GitHub Actions to assume with web identity.
+
+Resources:
+  BuildAMIGithubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringEquals:
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+              StringLike:
+                "token.actions.githubusercontent.com:sub": "repo:yetanalytics/lrsql:*"
+  ImageBuilderAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub "${AWS::StackName}-ImageBuilderAccessPolicy"
+      Roles: [!Ref BuildAMIGithubActionsRole]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "imagebuilder:*"
+            Resource: "*"
+
+Outputs:
+  BuildAMIGithubActionsRoleArn:
+    Description: "The ARN of the IAM Role for GitHub Actions"
+    Value: !GetAtt BuildAMIGithubActionsRole.Arn
+  ImageBuilderAccessPolicyArn:
+    Description: "The ARN of IAM policy created for imagebuilder access"
+    Value: !Ref ImageBuilderAccessPolicy
