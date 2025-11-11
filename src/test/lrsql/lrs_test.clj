@@ -1,5 +1,5 @@
 (ns lrsql.lrs-test
-  (:require [clojure.test   :refer [deftest testing is use-fixtures]]
+  (:require [clojure.test   :refer [deftest testing is use-fixtures are]]
             [clojure.string :as cstr]
             [clojure.walk                   :as walk]
             [com.stuartsierra.component     :as component]
@@ -8,7 +8,9 @@
             [lrsql.test-support             :as support]
             [lrsql.test-constants           :as tc]
             [lrsql.util                     :as u]
-            [xapi-schema.spec               :as xs]))
+            [xapi-schema.spec               :as xs]
+            [babashka.curl                  :as curl]
+            [cheshire.core                  :as json]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init Test Config
@@ -1447,3 +1449,28 @@
                            activity-prof-id-params)))
 
     (component/stop sys')))
+
+(deftest accept-version-test
+  (let [lrs            (component/start (support/test-system))]
+    (testing "Accepts versions 1.0.0-1.0.3"
+      (try
+        (are [version-header
+              result-status]
+            (= result-status
+               (:status
+                (curl/post
+                 "http://localhost:8080/xapi/statements"
+                 {:basic-auth ["username" "password"]
+                  :headers {"X-Experience-API-Version" version-header
+                            "Content-Type" "application/json;"}
+                  :body (json/generate-string test-statements)
+                  :throw false})))
+          "0.9.5" 400
+          "1.0.0" 200
+          "1.0.1" 200
+          "1.0.2" 200
+          "1.0.3" 200
+          "1.0.4" 400
+          "2.0.0" 200)
+        (finally
+          (component/stop lrs))))))

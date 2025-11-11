@@ -53,7 +53,7 @@
   xyz.capybara/clamav-client                    {:mvn/version "2.1.2"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
-  {:mvn/version "1.4.0"
+  {:mvn/version "1.4.2"
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript
                  com.yetanalytics/xapi-schema]}
