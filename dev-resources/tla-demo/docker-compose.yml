@@ -1,5 +1,7 @@
 # Example Architecture with Two Noisy LRS' and one Transactional LRS
 
+x-lrsql-image: &lrsql_image yetanalytics/lrsql:v0.7.20
+
 volumes:
   nsy_lrs_1_db_data:
   nsy_lrs_2_db_data:
@@ -20,7 +22,7 @@ services:
       POSTGRES_DB: lrsql_db
   # - Noisy LRS 1: App
   nsy_lrs_1:
-    image: yetanalytics/lrsql:v0.7.20
+    image: *lrsql_image
     command:
       - /lrsql/bin/run_postgres.sh
     ports:
@@ -58,7 +60,7 @@ services:
       POSTGRES_DB: lrsql_db
   # - Noisy LRS 2: App
   nsy_lrs_2:
-    image: yetanalytics/lrsql:v0.7.20
+    image: *lrsql_image
     command:
       - /lrsql/bin/run_postgres.sh
     ports:
@@ -96,7 +98,7 @@ services:
       POSTGRES_DB: lrsql_db
   # - Noisy LRS 3: App
   nsy_lrs_3:
-    image: yetanalytics/lrsql:v0.7.20
+    image: *lrsql_image
     command:
       - /lrsql/bin/run_postgres.sh
     ports:
@@ -136,7 +138,7 @@ services:
       - "5431:5432"
   # - Transactional LRS: App
   txn_lrs:
-    image: yetanalytics/lrsql:v0.7.20
+    image: *lrsql_image
     command:
       - /lrsql/bin/run_postgres.sh
     ports:
