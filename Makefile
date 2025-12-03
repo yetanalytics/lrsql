@@ -23,7 +23,7 @@ resources/public/admin:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, mariadb, mysql, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-11, test-postgres-12, test-postgres-13, test-postgres-14, test-postgres-15, test-mariadb, test-mariadb-10.6, test-mariadb-10.11, test-mariadb-11.4, test-mariadb-11.7.2, test-mariadb-11.8, test-mysql, test-mysql-8.0.44, test-mysql-8.4, test-mysql-9.5.0
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, mariadb, mysql, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-14, test-postgres-15, test-mariadb, test-mariadb-10.6, test-mariadb-10.11, test-mariadb-11.4, test-mariadb-11.7.2, test-mariadb-11.8, test-mysql, test-mysql-8.0.44, test-mysql-8.4, test-mysql-9.5.0
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp
@@ -44,9 +44,6 @@ TEST_MYSQL_COMMAND ?= clojure -M:test -m lrsql.test-runner --database mysql $(if
 
 test-postgres:
 	$(TEST_PG_COMMAND)
-
-test-postgres-13:
-	LRSQL_TEST_DB_VERSION=13 $(TEST_PG_COMMAND)
 
 test-postgres-14:
 	LRSQL_TEST_DB_VERSION=14 $(TEST_PG_COMMAND)
