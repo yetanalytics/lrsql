@@ -1,6 +1,6 @@
 # Example Architecture with Two Noisy LRS' and one Transactional LRS
 
-x-lrsql-image: &lrsql_image yetanalytics/lrsql:v0.7.20
+x-lrsql-image: &lrsql_image yetanalytics/lrsql:v0.9.3
 
 volumes:
   nsy_lrs_1_db_data:
@@ -8,6 +8,7 @@ volumes:
   nsy_lrs_3_db_data:
   txn_lrs_db_data:
   lrspipe_storage:
+
 
 services:
   # Noisy LRS 1
