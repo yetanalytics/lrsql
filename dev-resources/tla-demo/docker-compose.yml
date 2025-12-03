@@ -1,7 +1,7 @@
 # Example Architecture with Two Noisy LRS' and one Transactional LRS
 
 x-lrsql-image: &lrsql_image yetanalytics/lrsql:v0.9.3
-x-postgres-image: &postgres_image postgres:15
+x-postgres-image: &postgres_image postgres:17
 x-redis-image: &redis_image redis:8-alpine
 
 volumes:
