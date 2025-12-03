@@ -19,5 +19,3 @@ for PORT in 8081 8082 8083; do
     -d "$BASE_STATEMENT" \
     "http://localhost:${PORT}/xapi/statements"
 done
-
-echo "Statement ID: $STATEMENT_ID"
