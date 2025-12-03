@@ -1,6 +1,8 @@
 # Example Architecture with Two Noisy LRS' and one Transactional LRS
 
 x-lrsql-image: &lrsql_image yetanalytics/lrsql:v0.9.3
+x-postgres-image: &postgres_image postgres:15
+x-redis-image: &redis_image redis:8-alpine
 
 volumes:
   nsy_lrs_1_db_data:
@@ -14,7 +16,7 @@ services:
   # Noisy LRS 1
   # - Noisy LRS 1: DB
   nsy_lrs_1_db:
-    image: postgres:14
+    image: *postgres_image
     volumes:
       - nsy_lrs_1_db_data:/var/lib/postgresql/data
     environment:
@@ -52,7 +54,7 @@ services:
   # Noisy LRS 2
   # - Noisy LRS 2: DB
   nsy_lrs_2_db:
-    image: postgres:14
+    image: *postgres_image
     volumes:
       - nsy_lrs_2_db_data:/var/lib/postgresql/data
     environment:
@@ -90,7 +92,7 @@ services:
   # Noisy LRS 3
   # - Noisy LRS 3: DB
   nsy_lrs_3_db:
-    image: postgres:14
+    image: *postgres_image
     volumes:
       - nsy_lrs_3_db_data:/var/lib/postgresql/data
     environment:
@@ -128,7 +130,7 @@ services:
   # Transactional LRS
   # - Transactional LRS: DB
   txn_lrs_db:
-    image: postgres:14
+    image: *postgres_image
     volumes:
       - txn_lrs_db_data:/var/lib/postgresql/data
     environment:
@@ -168,7 +170,7 @@ services:
   # LRSPipe
   # - LRSPipe: Shared Redis
   redis:
-    image: redis:6-alpine
+    image: *redis_image
     volumes:
       - lrspipe_storage:/data
     ports:
