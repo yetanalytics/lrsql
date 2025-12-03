@@ -1,7 +1,7 @@
 # Example Architecture with Two Noisy LRS' and one Transactional LRS
 
 x-lrsql-image: &lrsql_image yetanalytics/lrsql:v0.9.3
-x-postgres-image: &postgres_image postgres:17
+x-postgres-image: &postgres_image postgres:18
 x-redis-image: &redis_image redis:8-alpine
 
 volumes:
@@ -18,7 +18,7 @@ services:
   nsy_lrs_1_db:
     image: *postgres_image
     volumes:
-      - nsy_lrs_1_db_data:/var/lib/postgresql/data
+      - nsy_lrs_1_db_data:/var/lib/postgresql
     environment:
       POSTGRES_USER: lrsql_user
       POSTGRES_PASSWORD: lrsql_password
@@ -56,7 +56,7 @@ services:
   nsy_lrs_2_db:
     image: *postgres_image
     volumes:
-      - nsy_lrs_2_db_data:/var/lib/postgresql/data
+      - nsy_lrs_2_db_data:/var/lib/postgresql
     environment:
       POSTGRES_USER: lrsql_user
       POSTGRES_PASSWORD: lrsql_password
@@ -94,7 +94,7 @@ services:
   nsy_lrs_3_db:
     image: *postgres_image
     volumes:
-      - nsy_lrs_3_db_data:/var/lib/postgresql/data
+      - nsy_lrs_3_db_data:/var/lib/postgresql
     environment:
       POSTGRES_USER: lrsql_user
       POSTGRES_PASSWORD: lrsql_password
@@ -132,7 +132,7 @@ services:
   txn_lrs_db:
     image: *postgres_image
     volumes:
-      - txn_lrs_db_data:/var/lib/postgresql/data
+      - txn_lrs_db_data:/var/lib/postgresql
     environment:
       POSTGRES_USER: lrsql_user
       POSTGRES_PASSWORD: lrsql_password
