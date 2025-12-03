@@ -37,11 +37,24 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 - [OpenID Connect Support](doc/oidc.md)
   - [Auth0 Setup Guide](doc/oidc/auth0.md)
 
-### DBMS-specific Sections
+### DBMS-specific Information
 
-- [Postgres](doc/postgres.md)
-- [MariaDB](doc/mariadb.md)
-- [SQLite](doc/sqlite.md)
+| DB Engine  | Supported Versions |
+| ---------- | ------------------ |
+| [SQLite](doc/sqlite.md) | 3.42 (Embedded Engine) |
+| [Postgres](doc/postgres.md) | 14 |
+|  | 15 |
+|  | 16 |
+|  | 17 |
+|  | 18 |
+| [MariaDB](doc/mariadb.md) | 10.6 |
+|  | 10.11 |
+|  | 11.4 |
+|  | 11.7.2 |
+|  | 11.8 |
+| [MySQL](doc/mysql.md) | 8.0.44 |
+|  | 8.4 |
+|  | 9.5.0 |
 
 ### Reference
 

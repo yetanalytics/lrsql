@@ -15,11 +15,11 @@ jobs:
       matrix:
         target:
           - test-sqlite
-          - test-postgres-13
           - test-postgres-14
           - test-postgres-15
           - test-postgres-16
           - test-postgres-17
+          - test-postgres-18
           - test-mariadb-10.6
           - test-mariadb-10.11
           - test-mariadb-11.4
@@ -28,7 +28,7 @@ jobs:
           - test-mysql-8.0.44
           - test-mysql-8.4
           - test-mysql-9.5.0
-          
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
