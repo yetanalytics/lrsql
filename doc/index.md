@@ -18,7 +18,7 @@
 - [OpenID Connect Support](oidc.md)
   - [Auth0 Setup Guide](oidc/auth0.md)
 
-### DBMS Information
+### DBMS-specific Information
 
 | DB Engine  | Supported Versions |
 | ---------- | ------------------ |
