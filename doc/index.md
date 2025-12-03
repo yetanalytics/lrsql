@@ -18,12 +18,24 @@
 - [OpenID Connect Support](oidc.md)
   - [Auth0 Setup Guide](oidc/auth0.md)
 
-### DBMS-specific Sections
+### DBMS-specific Information
 
-- [Postgres](postgres.md)
-- [MariaDB](mariadb.md)
-- [MySQL](mysql.md)
-- [SQLite](sqlite.md)
+| DB Engine  | Supported Versions |
+| ---------- | ------------------ |
+| [SQLite](sqlite.md) | 3.42 (Embedded Engine) |
+| [Postgres](postgres.md) | 14 |
+|  | 15 |
+|  | 16 |
+|  | 17 |
+|  | 18 |
+| [MariaDB](mariadb.md) | 10.6 |
+|  | 10.11 |
+|  | 11.4 |
+|  | 11.7.2 |
+|  | 11.8 |
+| [MySQL](mysql.md) | 8.0.44 |
+|  | 8.4 |
+|  | 9.5.0 |
 
 ### Reference
 
