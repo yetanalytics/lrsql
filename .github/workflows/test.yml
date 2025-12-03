@@ -19,6 +19,7 @@ jobs:
           - test-postgres-15
           - test-postgres-16
           - test-postgres-17
+          - test-postgres-18
           - test-mariadb-10.6
           - test-mariadb-10.11
           - test-mariadb-11.4

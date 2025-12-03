@@ -101,7 +101,7 @@ The `connection`, `lrs`, and `webserver` sections of the config can then be set 
 
 ### Supported Versions
 
-SQL LRS supports PostgreSQL versions 14 through 17. It is tested against the [current minor point release](https://www.postgresql.org/support/versioning/) of each version.
+SQL LRS supports PostgreSQL versions 14 through 18. It is tested against the [current minor point release](https://www.postgresql.org/support/versioning/) of each version.
 
 ### Unix Socket Support
 
