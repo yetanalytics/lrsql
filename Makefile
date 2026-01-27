@@ -149,7 +149,7 @@ clamav-demo:
 # lrsql package, including config, docs, JARs, admin UI files, JREs,
 # Windows executables, NOTICE and LICENSE
 
-.phony: clean, clean-non-dl, bundle
+.phony: clean, clean-non-dl, bundle, runtime-info
 
 clean:
 	rm -rf target resources/public pom.xml
@@ -253,6 +253,14 @@ target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/b
 endif
 
 bundle: target/bundle
+
+# Runtime info (Docker)
+
+target/runtime-info.txt: bundle Dockerfile
+	mkdir -p target
+	docker build -t lrsql:local .
+	docker run --rm --entrypoint sh lrsql:local -c 'set -e; echo "== OS =="; cat /etc/os-release; echo; echo "== Kernel =="; uname -a; echo; echo "== Java =="; /lrsql/runtimes/linux/bin/java -version 2>&1; echo; echo "== Packages =="; apk info -vv' > target/runtime-info.txt
+runtime-info: target/runtime-info.txt
 
 # *** Build Windows EXEs with launch4j ***
 
