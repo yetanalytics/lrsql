@@ -101,4 +101,66 @@ CMD ["/lrsql/bin/run_postgres.sh"]
 
 The resulting image will use the provided configuration file and run Postgres. See [Getting Started](startup.md) for more configuration information.
 
+### Building the Docker Image
+
+To build the Docker image locally from source:
+
+#### Prerequisites
+
+- Java 25+ (must match the JDK used in the Dockerfile)
+- [Clojure CLI tools](https://clojure.org/guides/install_clojure)
+- Docker
+- `make`
+
+#### Steps
+
+1. **Download the Admin UI assets:**
+
+``` shell
+make resources/public/admin
+```
+
+2. **Build the uberjar:**
+
+``` shell
+clojure -X:build uber
+```
+
+This creates `target/bundle/lrsql.jar`.
+
+3. **Assemble the bundle directory:**
+
+The Dockerfile expects a `target/bundle` directory containing the jar, run scripts and config. You can build the full bundle with:
+
+``` shell
+make bundle
+```
+
+Or assemble a minimal bundle manually:
+
+``` shell
+mkdir -p target/bundle/config
+cp -r bin target/bundle/bin
+cp resources/lrsql/config/lrsql.json.example target/bundle/config/
+cp resources/lrsql/config/authority.json.template target/bundle/config/authority.json.template.example
+cp -r resources/public/admin target/bundle/admin
+```
+
+4. **Build the Docker image:**
+
+``` shell
+docker build -t lrsql .
+```
+
+5. **Run it:**
+
+``` shell
+docker run -d -p 8080:8080 \
+    -e LRSQL_API_KEY_DEFAULT=my_key \
+    -e LRSQL_API_SECRET_DEFAULT=my_secret \
+    -e LRSQL_ADMIN_USER_DEFAULT=my_username \
+    -e LRSQL_ADMIN_PASS_DEFAULT=my_password \
+    lrsql
+```
+
 [<- Back to Index](index.md)
