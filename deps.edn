@@ -30,13 +30,21 @@
   com.zaxxer/HikariCP                           {:mvn/version "5.0.0"
                                                  :exclusions  [org.slf4j/slf4j-api]}
   ;; Pedestal and Jetty webserver deps
-  io.pedestal/pedestal.error               {:mvn/version "0.7.1"}
-  io.pedestal/pedestal.jetty               {:mvn/version "0.7.1"}
-  org.eclipse.jetty/jetty-server           {:mvn/version "11.0.20"}
-  org.eclipse.jetty/jetty-servlet          {:mvn/version "11.0.20"}
-  org.eclipse.jetty/jetty-alpn-server      {:mvn/version "11.0.20"}
-  org.eclipse.jetty.http2/http2-server     {:mvn/version "11.0.20"}
-  org.eclipse.jetty/jetty-alpn-java-server {:mvn/version "11.0.20"}
+  io.pedestal/pedestal.error                  {:mvn/version "0.8.2-beta-4"}
+  io.pedestal/pedestal.jetty                  {;; :mvn/version "0.8.2-beta-4"
+                                               ;; :local/root "../pedestal/jetty"
+                                               :git/url "https://github.com/yetanalytics/pedestal.git"
+                                               :git/sha "5e95fe5543dd596725ab30f3a06199875bea1259"
+                                               :deps/root "jetty"
+                                               }
+  ;; re-add metrics libs removed from pedestal log
+  io.dropwizard.metrics/metrics-core          {:mvn/version "4.2.19"}
+  io.dropwizard.metrics/metrics-jmx           {:mvn/version "4.2.19"}
+  ;; org.eclipse.jetty/jetty-server           {:mvn/version "11.0.20"}
+  org.eclipse.jetty.ee10/jetty-ee10-servlet   {:mvn/version "12.0.32"}
+  org.eclipse.jetty/jetty-alpn-server         {:mvn/version "12.0.32"}
+  ;; org.eclipse.jetty.http2/http2-server        {:mvn/version "12.0.32"}
+  org.eclipse.jetty/jetty-alpn-java-server    {:mvn/version "12.0.32"}
   ;; Security deps
   buddy/buddy-core                              {:mvn/version "1.11.418"
                                                  :exclusions  [org.bouncycastle/bcprov-jdk18on
