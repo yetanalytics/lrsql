@@ -48,7 +48,7 @@
               _          (doseq [s [tc/reaction-stmt-a
                                     tc/reaction-stmt-b]]
                            (Thread/sleep 100)
-                           (lrsp/-store-statements lrs tc/auth-ident [s] []))
+                           (lrsp/-store-statements lrs tc/ctx tc/auth-ident [s] []))
               ;; React to last statement
               {[reaction-s-id] :statement-ids}
               (rp/-react-to-statement reactor trigger-id)]
@@ -68,6 +68,7 @@
                     :attachments []}
                    (-> (lrsp/-get-statements
                         lrs
+                        tc/ctx
                         tc/auth-ident
                         {}
                         [])
@@ -118,7 +119,7 @@
               _          (doseq [s [tc/reaction-stmt-a
                                     tc/reaction-stmt-b]]
                            (Thread/sleep 100)
-                           (lrsp/-store-statements lrs tc/auth-ident [s] []))]
+                           (lrsp/-store-statements lrs tc/ctx tc/auth-ident [s] []))]
           (testing "No statement id results"
             (is (= {:statement-ids []}
                    (rp/-react-to-statement reactor trigger-id))))
@@ -131,6 +132,7 @@
                     :attachments []}
                    (-> (lrsp/-get-statements
                         lrs
+                        tc/ctx
                         tc/auth-ident
                         {}
                         [])

@@ -7,22 +7,6 @@
 
 (use-fixtures :once support/instrumentation-fixture)
 
-(deftest path->string-test
-  (are [input output]
-      (= output
-         (r/path->string input))
-    []
-    "$"
-
-    ["object" "id"]
-    "$.\"object\".\"id\""
-
-    ["context" "contextActivities" "parent" 0 "id"]
-    "$.\"context\".\"contextActivities\".\"parent\"[0].\"id\""
-
-    ["context" "extensions" "https://www.google.com/array"]
-    "$.\"context\".\"extensions\".\"https://www.google.com/array\""))
-
 (def stmt-a
   {"actor"   {"mbox" "mailto:bob@example.com"}
    "verb"    {"id" "https://example.com/verbs/completed"}

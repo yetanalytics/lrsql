@@ -3,13 +3,6 @@ name: CI
 on: push
 
 jobs:
-  nvd_scan:
-    uses: yetanalytics/workflow-nvd/.github/workflows/nvd-scan.yml@v2
-    with:
-      nvd-clojure-version: "3.3.0"
-      classpath-command: "clojure -Spath -Adb-sqlite:db-postgres"
-      nvd-config-filename: ".nvd/config.json"
-
   lint:
     uses: yetanalytics/workflow-linter/.github/workflows/linter.yml@v2024.08.01
     with:
@@ -22,12 +15,19 @@ jobs:
       matrix:
         target:
           - test-sqlite
-          - test-postgres-11
-          - test-postgres-12
-          - test-postgres-13
           - test-postgres-14
           - test-postgres-15
           - test-postgres-16
+          - test-postgres-17
+          - test-postgres-18
+          - test-mariadb-10.6
+          - test-mariadb-10.11
+          - test-mariadb-11.4
+          - test-mariadb-11.7.2
+          - test-mariadb-11.8
+          - test-mysql-8.0.44
+          - test-mysql-8.4
+          - test-mysql-9.5.0
 
     steps:
       - name: Checkout repository

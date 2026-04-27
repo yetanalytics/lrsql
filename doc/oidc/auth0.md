@@ -186,7 +186,7 @@ This will launch an in-memory instance of SQL LRS that will not persist any data
        |_____  |  | |   | |  | |          | |        |   ____|  |_____  |
         _____| |  | |__ | |  | |_____     | |_____   | |\  \     _____| |
        |_______|  |_____\_\  |_______|    |_______|  |_|  \__\  |_______|
-                        (c) 2021-2024 Yet Analytics Inc.
+                        (c) 2021-2025 Yet Analytics Inc.
 
 ```
 

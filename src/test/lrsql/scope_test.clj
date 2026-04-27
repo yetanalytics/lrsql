@@ -5,7 +5,6 @@
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.string :as cstr]
             [babashka.curl :as curl]
-            [ring.util.codec :refer [form-encode]]
             [com.stuartsierra.component :as component]
             [lrsql.test-support :as support]
             [lrsql.util :as u])
@@ -159,7 +158,7 @@
   (let [params-vec (reduce-kv
                     (fn [acc k v]
                       (let [k-str (name k)
-                            v-str (form-encode v)]
+                            v-str (u/form-encode v)]
                         (conj acc (str k-str "=" v-str))))
                     []
                     params)

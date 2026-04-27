@@ -379,6 +379,13 @@ USING last_modified AT TIME ZONE :sql:tz-id;
 ALTER TABLE agent_profile_document ALTER COLUMN last_modified TYPE TIMESTAMP WITH TIME ZONE
 USING last_modified AT TIME ZONE :sql:tz-id;
 
+-- :name query-payload-json
+-- :command :query
+-- :result :one
+-- :doc Query to see if any of 'xapi_statement.payload', 'actor.payload', or 'activity.payload' is json
+SELECT 1 FROM information_schema.columns
+WHERE column_name = 'payload' AND data_type = 'json' AND table_name in ('xapi_statement', 'actor', 'activity');
+
 -- :name migrate-to-jsonb!
 -- :command :execute
 -- :doc Convert all JSON payloads to JSONB to allow for faster reads and advanced indexing
@@ -488,3 +495,54 @@ ALTER TABLE lrs_credential ALTER COLUMN secret_key TYPE TEXT;
 ALTER TABLE credential_to_scope ALTER COLUMN api_key TYPE TEXT;
 ALTER TABLE credential_to_scope ALTER COLUMN secret_key TYPE TEXT;
 ALTER TABLE reaction ALTER COLUMN title TYPE TEXT;
+
+/* Migration 2024-10-31 - Add JWT Blocklist Table */
+
+-- :name create-blocked-jwt-table!
+-- :command :execute
+-- :doc Create the `blocked_jwt` table and associated indexes if they do not exist yet.
+CREATE TABLE IF NOT EXISTS blocked_jwt (
+  jwt        TEXT PRIMARY KEY,
+  evict_time TIMESTAMP WITH TIME ZONE
+);
+CREATE INDEX IF NOT EXISTS blocked_jwt_evict_time_idx ON blocked_jwt(evict_time);
+
+/* Migration 2025-03-05 - Add One-Time ID to Blocklist Table */
+
+-- :name alter-blocked-jwt-add-one-time-id!
+-- :command :execute
+-- :doc Add the column `blocked_jwt.one_time_id` for one-time JWTs; JWTs with one-time IDs are not considered blocked yet.
+ALTER TABLE IF EXISTS blocked_jwt ADD COLUMN IF NOT EXISTS one_time_id UUID UNIQUE;
+
+/* Migration 2025-03-21 - Add label column to lrs_credential table */
+
+-- :name alter-lrs-credential-add-label!
+-- :command :execute
+-- :doc Add the `label` column to the `lrs_credential` table if it does not exist.
+ALTER TABLE lrs_credential ADD COLUMN IF NOT EXISTS label TEXT;
+
+-- :name alter-lrs-credential-add-is-seed!
+-- :command :execute
+-- :doc Add the `is_seed` column to the `lrs_credential` table if it does not exist.
+ALTER TABLE lrs_credential ADD COLUMN IF NOT EXISTS is_seed BOOLEAN;
+
+/* Migration 2025-09-26 - Add ContextAgent, ContextGroup, SubContextAgent, SubContextGroup to statement_to_actor usage enum */
+
+-- :name query-statement-to-actor-usage-enum-has-context-actors
+-- :command :query
+-- :result :one
+-- :doc Query to see if the `statement_to_actor.usage` column has ContextAgent in its enum.
+SELECT 1
+WHERE enum_range(NULL::actor_usage_enum)::TEXT[]
+  @> ARRAY['ContextAgent'];
+
+-- :name alter-statement-to-actor-usage-enum-add-context-actors!
+-- :command :execute
+-- :doc Change the enum datatype of the `statement_to_actor.usage` column to add ContextAgent, ContextGroup, SubContextAgent, and SubContextGroup.
+ALTER TABLE IF EXISTS statement_to_actor ALTER COLUMN usage TYPE VARCHAR(255);
+DROP TYPE IF EXISTS actor_usage_enum;
+CREATE TYPE actor_usage_enum AS ENUM (
+    'Actor', 'Object', 'Authority', 'Instructor', 'Team',
+    'SubActor', 'SubObject', 'SubInstructor', 'SubTeam',
+    'ContextAgent', 'ContextGroup', 'SubContextAgent', 'SubContextGroup');
+ALTER TABLE IF EXISTS statement_to_actor ALTER COLUMN usage TYPE actor_usage_enum USING (usage::actor_usage_enum);

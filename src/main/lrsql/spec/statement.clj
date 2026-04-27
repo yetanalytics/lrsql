@@ -136,7 +136,7 @@
            #(contains? % :statement/timestamp)
            #(contains? % :statement/stored)
            #(contains? % :statement/authority))
-    #(sgen/fmap (partial apply prepare-statement)
+    #(sgen/fmap (partial apply (partial prepare-statement "1.0.3"))
                 (s/gen (s/tuple ::xs/agent
                                 ::xs/statement)))))
 
@@ -221,8 +221,7 @@
 ;; This is to instrument functions, not for production-time validation,
 ;; which is handled by the `:xapi.statements.GET.request/params` spec.
 (s/def ::query-params
-  (s/merge ::get-statement-params
-           (s/keys :req-un [::limit])))
+  ::get-statement-params)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Query spec
@@ -235,8 +234,7 @@
                    ::attachments?]))
 
 (def statement-query-many-spec
-  (s/keys :req-un [::limit
-                   ::ascending?
+  (s/keys :req-un [::ascending?
                    ::format
                    ::attachments?
                    ::query-params
@@ -250,7 +248,8 @@
                    ::related-activities?
                    ::from
                    ::since
-                   ::until]))
+                   ::until
+                   ::limit]))
 
 (def statement-query-spec
   (s/or :single   statement-query-one-spec

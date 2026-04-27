@@ -9,7 +9,8 @@
             [lrsql.util :as u]
             [lrsql.util.reaction :as ru]
             [lrsql.ops.command.reaction :as cr]
-            [lrsql.input.reaction :as ir]))
+            [lrsql.input.reaction :as ir]
+            [next.jdbc :as jdbc]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helper Functions
@@ -51,8 +52,8 @@
                           tc/reaction-stmt-b
                           tc/reaction-stmt-c]]
                  (Thread/sleep 100)
-                 (lrsp/-store-statements lrs tc/auth-ident [s] []))
-        stmts  (-> (lrsp/-get-statements lrs tc/auth-ident {} [])
+                 (lrsp/-store-statements lrs tc/ctx tc/auth-ident [s] []))
+        stmts  (-> (lrsp/-get-statements lrs tc/ctx tc/auth-ident {} [])
                    :statement-result
                    :statements)]
     (try
@@ -155,10 +156,11 @@
                                    "reaction-bad"
                                    tc/simple-reaction-ruleset
                                    true)]
-        (cr/error-reaction! bk ds (ir/error-reaction-input
-                                   reaction-id
-                                   {:type "ReactionQueryError"
-                                    :message "Unknown Query Error!"})))
+        (jdbc/with-transaction [tx ds]
+          (cr/error-reaction! bk tx (ir/error-reaction-input
+                                     reaction-id
+                                     {:type "ReactionQueryError"
+                                      :message "Unknown Query Error!"}))))
       (testing "Finds only active reactions"
         (is (= [{:ruleset tc/simple-reaction-ruleset}]
                (->> (ur/query-active-reactions bk ds)
@@ -196,6 +198,7 @@
 
     ;; store a statements with chained reaciton data
     (lrsp/-store-statements lrs
+                            tc/ctx
                             tc/auth-ident
                             [tc/reaction-stmt-a
                              (ru/add-reaction-metadata

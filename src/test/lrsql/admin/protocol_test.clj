@@ -1,22 +1,26 @@
 (ns lrsql.admin.protocol-test
   "Test the protocol fns of `AdminAccountManager`, `APIKeyManager`, `AdminStatusProvider` directly."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [com.stuartsierra.component :as component]
+            [clojure.data.csv              :as csv]
+            [next.jdbc                     :as jdbc]
+            [com.stuartsierra.component    :as component]
+            [com.yetanalytics.squuid       :as squuid]
             [com.yetanalytics.lrs.protocol :as lrsp]
             [xapi-schema.spec.regex :refer [Base64RegEx]]
             [lrsql.admin.protocol :as adp]
-            [lrsql.lrs-test :as lrst]
+            [lrsql.lrs-test       :as lrst]
+            [lrsql.backend.protocol :as bp]
             [lrsql.test-support   :as support]
             [lrsql.util           :as u]
             [lrsql.test-constants :as tc]
-            [next.jdbc            :as jdbc]
-            [lrsql.util.actor     :as ua]))
+            [lrsql.util.actor     :as ua]
+            [lrsql.util.admin     :as uadm]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(support/instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 (use-fixtures :each support/fresh-db-fixture)
 
@@ -25,6 +29,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def test-username "DonaldChamberlin123") ; co-inventor of SQL
+
+(def test-username-2 "MichaelBJones456") ; co-inventor of JWTs
 
 (def test-password "iLoveSqlS0!")
 
@@ -98,7 +104,10 @@
                 uuid?))
         (is (-> (adp/-create-account lrs test-username test-password)
                 :result
-                (= :lrsql.admin/existing-account-error))))
+                (= :lrsql.admin/existing-account-error)))
+        (is (-> (adp/-create-account lrs test-username-2 test-password)
+                :result
+                uuid?)))
       (testing "Admin account get"
         (let [accounts (adp/-get-accounts lrs)]
           (is (vector? accounts))
@@ -121,6 +130,46 @@
           (is (adp/-existing-account? lrs account-id)))
         (let [bad-account-id #uuid "00000000-0000-4000-8000-000000000000"]
           (is (not (adp/-existing-account? lrs bad-account-id)))))
+      (testing "Admin JWTs"
+        (let [exp    2
+              leeway 1
+              jwt    "Foo"]
+          (testing "- are unblocked by default"
+            (is (false?
+                 (adp/-jwt-blocked? lrs jwt))))
+          (testing "- can be blocked"
+            (is (= jwt
+                   (:result (adp/-block-jwt lrs jwt exp))))
+            (is (true?
+                 (adp/-jwt-blocked? lrs jwt))))
+          (testing "- cannot insert duplicates into blocklist"
+            (is (some? (:error (adp/-block-jwt lrs jwt exp)))))
+          (testing "- cannot be purged from blocklist if not expired"
+            (is (= nil
+                   (adp/-purge-blocklist lrs leeway)))
+            (is (true?
+                 (adp/-jwt-blocked? lrs jwt))))
+          (testing "- not counted as expired in blocklist due to leeway"
+            (Thread/sleep 2000)
+            (is (= nil
+                   (adp/-purge-blocklist lrs leeway)))
+            (is (true?
+                 (adp/-jwt-blocked? lrs jwt))))
+          (testing "- can be purged from blocklist when expired"
+            (Thread/sleep 2000)
+            (is (= nil
+                   (adp/-purge-blocklist lrs leeway)))
+            (is (false?
+                 (adp/-jwt-blocked? lrs jwt))))))
+      (testing "Admin one-time JWTs"
+        (let [{:keys [jwt exp oti]}
+              (uadm/one-time-jwt {} "MySecret" 100)]
+          (testing "- can be added"
+            (is (adp/-create-one-time-jwt lrs jwt exp oti))
+            (is (false? (adp/-jwt-blocked? lrs jwt))))
+          (testing "- can be blocked"
+            (is (adp/-block-one-time-jwt lrs jwt oti))
+            (is (true? (adp/-jwt-blocked? lrs jwt))))))
       (testing "Admin password update"
         (let [account-id   (-> (adp/-authenticate-account lrs
                                                           test-username
@@ -143,15 +192,23 @@
           (adp/-update-admin-password
            lrs account-id new-password test-password)))
       (testing "Admin account deletion"
-        (let [account-id (-> (adp/-authenticate-account lrs
-                                                        test-username
-                                                        test-password)
-                             :result)]
+        (let [account-id   (-> (adp/-authenticate-account lrs
+                                                          test-username
+                                                          test-password)
+                               :result)
+              account-id-2 (-> (adp/-authenticate-account lrs
+                                                          test-username-2
+                                                          test-password)
+                               :result)]
           (testing "When OIDC is off"
             (let [oidc-enabled? false]
               (testing "Succeeds if there is more than one account"
                 (adp/-delete-account lrs account-id oidc-enabled?)
+                (adp/-delete-account lrs account-id-2 oidc-enabled?)
                 (is (-> (adp/-authenticate-account lrs test-username test-password)
+                        :result
+                        (= :lrsql.admin/missing-account-error)))
+                (is (-> (adp/-authenticate-account lrs test-username-2 test-password)
                         :result
                         (= :lrsql.admin/missing-account-error))))
               (testing "Fails if there is only one account"
@@ -191,9 +248,9 @@
       (testing "delete actor"
         (testing "delete actor: delete actor"
           (let [actor (stmt-1 "actor")]
-            (lrsp/-store-statements lrs auth-ident [stmt-1] [])
+            (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-1] [])
             (adp/-delete-actor lrs {:actor-ifi (ua/actor->ifi actor)})
-            (is (= (lrsp/-get-person lrs auth-ident {:agent actor})
+            (is (= (lrsp/-get-person lrs tc/ctx auth-ident {:agent actor})
                    {:person {"objectType" "Person"}}))))
         (let [arb-query #(jdbc/execute! ds %)]
           (testing "delete-actor: delete statements related to actor"
@@ -201,7 +258,7 @@
                   ifis (->> (conj stmts (stmt-3 "object"))
                             (map #(ua/actor->ifi (% "actor"))))
                   get-actor-ss-count (fn [ifi]
-                                       (-> (lrsp/-get-statements lrs auth-ident {:actor-ifi ifi} [])
+                                       (-> (lrsp/-get-statements lrs tc/ctx auth-ident {:actor-ifi ifi} [])
                                            (get-in [:statement-result :statements])
                                            count))
                   get-stmt-#s (fn []
@@ -209,31 +266,31 @@
                                           (assoc m actor-ifi (get-actor-ss-count actor-ifi)))
                                         {} ifis))]
 
-              (lrsp/-store-statements lrs auth-ident stmts [])
+              (lrsp/-store-statements lrs tc/ctx auth-ident stmts [])
               (is (every? pos-int? (vals (get-stmt-#s))))
               (doseq [ifi ifis]
                 (adp/-delete-actor lrs {:actor-ifi ifi}))
               (is (every? zero? (vals (get-stmt-#s))))))
           (testing "delete-actor: delete statements related to deleted statements"
             (let [stmt->ifi #(ua/actor->ifi (% "actor"))
-                  count-of-actor (fn [actor-ifi] (-> (lrsp/-get-statements lrs auth-ident {:actor-ifi actor-ifi} []) :statement-result :statements count))
+                  count-of-actor (fn [actor-ifi] (-> (lrsp/-get-statements lrs tc/ctx auth-ident {:actor-ifi actor-ifi} []) :statement-result :statements count))
                   child-ifi (stmt->ifi (stmt-3 "object"))
                   parent-ifi (stmt->ifi stmt-3)]
               (testing "delete-actor correctly deletes statements that are parent to actor (sub)statements"
-                (lrsp/-store-statements lrs auth-ident [stmt-3] [])
+                (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-3] [])
                 (is (= 1 (count-of-actor parent-ifi)))
                 (adp/-delete-actor lrs {:actor-ifi child-ifi})
                 (is (zero? (count-of-actor parent-ifi))) ;
                 (adp/-delete-actor lrs {:actor-ifi parent-ifi}))
               (testing "delete-actor correctly deletes substatements that are child to actor statements"
-                (lrsp/-store-statements lrs auth-ident [stmt-3] [])
+                (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-3] [])
                 (is (= 1 (count-of-actor child-ifi)))
                 (adp/-delete-actor lrs {:actor-ifi parent-ifi})
                 (is (zero? (count-of-actor child-ifi)))
                 (adp/-delete-actor lrs {:actor-ifi child-ifi}))
               (testing "for StatementRefs, delete-actor deletes statement->actor relationships but leaves statements by another actor untouched"
                 (let [[ifi-0 ifi-2] (mapv stmt->ifi [stmt-0 stmt-2])]
-                  (lrsp/-store-statements lrs auth-ident [stmt-0 stmt-2] [])
+                  (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0 stmt-2] [])
                   (is (= [2 2] (mapv count-of-actor [ifi-0 ifi-2])))
                   (adp/-delete-actor lrs {:actor-ifi ifi-0})
                   (is (= [1 1] (mapv count-of-actor [ifi-0 ifi-2])))
@@ -242,25 +299,112 @@
 
           (testing "delete-actor: delete state_document of deleted actor"
             (let [ifi (ua/actor->ifi (:agent lrst/state-id-params))]
-              (lrsp/-set-document lrs auth-ident lrst/state-id-params lrst/state-doc-1 true)
+              (lrsp/-set-document lrs tc/ctx auth-ident lrst/state-id-params lrst/state-doc-1 true)
               (adp/-delete-actor lrs {:actor-ifi ifi})
               (is (empty? (arb-query ["select * from state_document where agent_ifi  = ?" ifi])))))
 
           (testing "delete-actor: delete agent profile document of deleted actor"
             (let [{:keys [agent profileId]}  lrst/agent-prof-id-params
                   ifi (ua/actor->ifi agent)]
-              (lrsp/-set-document lrs auth-ident lrst/agent-prof-id-params lrst/agent-prof-doc true)
+              (lrsp/-set-document lrs tc/ctx auth-ident lrst/agent-prof-id-params lrst/agent-prof-doc true)
               (adp/-delete-actor lrs {:actor-ifi ifi})
-              (is (nil? (:document (lrsp/-get-document lrs auth-ident {:profileId profileId
+              (is (nil? (:document (lrsp/-get-document lrs tc/ctx auth-ident {:profileId profileId
                                                                        :agent agent}))))))
           (testing "delete-actor: delete attachments of deleted statements"
             (let [ifi (ua/actor->ifi (lrst/stmt-4 "actor"))
                   stmt-id (u/str->uuid (lrst/stmt-4 "id"))]
-              (lrsp/-store-statements lrs auth-ident [lrst/stmt-4] [lrst/stmt-4-attach])
+              (lrsp/-store-statements lrs tc/ctx auth-ident [lrst/stmt-4] [lrst/stmt-4-attach])
               (adp/-delete-actor lrs {:actor-ifi ifi})
-              (is (empty? (:attachments (lrsp/-get-statements lrs auth-ident {:statement_id stmt-id} []))))
+              (is (empty? (:attachments (lrsp/-get-statements lrs tc/ctx auth-ident {:statement_id stmt-id} []))))
               (testing "delete actor: delete statement-to-activity entries for deleted statements"
                 (is (empty? (arb-query ["select * from statement_to_activity where statement_id  = ?" stmt-id]))))))))
+      (finally (component/stop sys')))))
+
+(deftest download-csv-test
+  (let [sys  (support/test-system)
+        sys' (component/start sys)
+        lrs  (:lrs sys')
+        hdrs [["id"] ["actor" "mbox"] ["verb" "id"] ["object" "id"]]]
+    (try
+      (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0 stmt-1 stmt-2] [])
+      (testing "CSV Seq"
+        (testing "- no params"
+          (with-open [writer (java.io.StringWriter.)]
+            (adp/-get-statements-csv lrs writer hdrs {})
+            (let [stmt-str (str writer)
+                  stmt-seq (csv/read-csv stmt-str)]
+              (is (= ["id" "actor_mbox" "verb_id" "object_id"]
+                     (first stmt-seq)))
+              (is (= [(get stmt-2 "id")
+                      (get-in stmt-2 ["actor" "mbox"] "") ;  is nil
+                      (get-in stmt-2 ["verb" "id"])
+                      (get-in stmt-2 ["object" "id"])]
+                     (first (rest stmt-seq))))
+              (is (= [(get stmt-1 "id")
+                      (get-in stmt-1 ["actor" "mbox"])
+                      (get-in stmt-1 ["verb" "id"])
+                      (get-in stmt-1 ["object" "id"])]
+                     (first (rest (rest stmt-seq)))))
+              (is (= [(get stmt-0 "id")
+                      (get-in stmt-0 ["actor" "mbox"])
+                      (get-in stmt-0 ["verb" "id"])
+                      (get-in stmt-0 ["object" "id"])]
+                     (first (rest (rest (rest stmt-seq)))))))))
+        (testing "- ascending set to true"
+          (with-open [writer (java.io.StringWriter.)]
+            (adp/-get-statements-csv lrs writer hdrs {:ascending true})
+            (let [stmt-str (str writer)
+                  stmt-seq (csv/read-csv stmt-str)]
+              (is (not (realized? stmt-seq)))
+              (is (= ["id" "actor_mbox" "verb_id" "object_id"]
+                     (first stmt-seq)))
+              (is (= [(get stmt-0 "id")
+                      (get-in stmt-0 ["actor" "mbox"])
+                      (get-in stmt-0 ["verb" "id"])
+                      (get-in stmt-0 ["object" "id"])]
+                     (first (rest stmt-seq))))
+              (is (= [(get stmt-1 "id")
+                      (get-in stmt-1 ["actor" "mbox"])
+                      (get-in stmt-1 ["verb" "id"])
+                      (get-in stmt-1 ["object" "id"])]
+                     (first (rest (rest stmt-seq)))))
+              (is (= [(get stmt-2 "id")
+                      (get-in stmt-2 ["actor" "mbox"] "") ; is nil
+                      (get-in stmt-2 ["verb" "id"])
+                      (get-in stmt-2 ["object" "id"])]
+                     (first (rest (rest (rest stmt-seq)))))))))
+        (testing "- agent filter"
+          (with-open [writer (java.io.StringWriter.)]
+            (adp/-get-statements-csv lrs writer hdrs {:agent (-> (get stmt-2 "actor")
+                                                                 (dissoc "name"))})
+            (let [stmt-str (str writer)
+                  stmt-seq (csv/read-csv stmt-str)]
+              (is (= 2 (count stmt-seq)))
+              (is (= [(get stmt-2 "id")
+                      (get-in stmt-2 ["actor" "mbox"] "") ; is nil
+                      (get-in stmt-2 ["verb" "id"])
+                      (get-in stmt-2 ["object" "id"])]
+                     (first (rest stmt-seq)))))))
+        (testing "- verb filter"
+          (with-open [writer (java.io.StringWriter.)]
+            (adp/-get-statements-csv lrs writer hdrs {:verb (get-in stmt-2 ["verb" "id"])})
+            (let [stmt-str (str writer)
+                  stmt-seq (csv/read-csv stmt-str)]
+              (is (= 2 (count stmt-seq)))
+              (is (= [(get stmt-2 "id")
+                      (get-in stmt-2 ["actor" "mbox"] "") ; is nil
+                      (get-in stmt-2 ["verb" "id"])
+                      (get-in stmt-2 ["object" "id"])]
+                     (first (rest stmt-seq)))))))
+        (testing "- entire database gets returned beyond `:limit`"
+          (let [statements (->> #(assoc stmt-0 "id" (str (squuid/generate-squuid)))
+                                (repeatedly 100))]
+            (lrsp/-store-statements lrs tc/ctx auth-ident statements []))
+          (with-open [writer (java.io.StringWriter.)]
+            (adp/-get-statements-csv lrs writer hdrs {})
+            (let [stmt-str (str writer)
+                  stmt-seq (csv/read-csv stmt-str)]
+              (is (= 104 (count stmt-seq)))))))
       (finally (component/stop sys')))))
 
 ;; TODO: Add tests for creds with no explicit scopes, once
@@ -269,12 +413,16 @@
 (deftest auth-test
   (let [sys    (support/test-system)
         sys'   (component/start sys)
-        lrs    (:lrs sys')
+        {:keys [lrs backend]} sys'
+        ds (get-in lrs [:connection :conn-pool])
         acc-id (:result (adp/-create-account lrs test-username test-password))]
     (try
       (testing "Credential creation"
         (let [{:keys [api-key secret-key] :as key-pair}
-              (adp/-create-api-keys lrs acc-id #{"all" "all/read"})]
+              (adp/-create-api-keys lrs acc-id nil #{"all" "all/read"})
+              {credential-id :cred_id} (jdbc/with-transaction [tx ds]
+                                         (bp/-query-credential-ids backend tx {:api-key api-key
+                                                                               :secret-key secret-key}))]
           (is (re-matches Base64RegEx api-key))
           (is (re-matches Base64RegEx secret-key))
           (is (= {:api-key    api-key
@@ -282,13 +430,17 @@
                   :scopes     #{"all" "all/read"}}
                  key-pair))
           (testing "and credential retrieval"
-            (is (= [{:api-key    api-key
+            (is (= (adp/-get-api-keys lrs acc-id)
+                   [{:api-key api-key
                      :secret-key secret-key
-                     :scopes     #{"all" "all/read"}}]
+                     :label      nil
+                     :scopes     #{"all" "all/read"}
+                     :id         credential-id}]
                    (adp/-get-api-keys lrs acc-id))))
           (testing "and credential update"
             (is (= {:api-key    api-key
                     :secret-key secret-key
+                    :label      "My Label"
                     :scopes     #{"all/read"
                                   "statements/read"
                                   "statements/read/mine"}}
@@ -297,12 +449,16 @@
                     acc-id
                     api-key
                     secret-key
+                    "My Label"
                     #{"all/read" "statements/read" "statements/read/mine"})))
-            (is (= [{:api-key    api-key
+            (is (= (adp/-get-api-keys lrs acc-id)
+                   [{:api-key api-key
                      :secret-key secret-key
+                     :label      "My Label"
                      :scopes     #{"all/read"
                                    "statements/read"
-                                   "statements/read/mine"}}]
+                                   "statements/read/mine"}
+                     :id credential-id}]
                    (adp/-get-api-keys lrs acc-id))))
           (testing "and credential deletion"
             (adp/-delete-api-keys lrs acc-id api-key secret-key)
@@ -311,9 +467,9 @@
       (finally (component/stop sys')))))
 
 (defn- get-last-stored
-  [lrs auth-ident]
+  [lrs ctx auth-ident]
   (get-in
-   (lrsp/-get-statements lrs auth-ident {} [])
+   (lrsp/-get-statements lrs ctx auth-ident {} [])
    [:statement-result
     :statements
     0
@@ -338,8 +494,8 @@
                 :timeline              []}
                (adp/-get-status lrs {})))
         ;; add a statement
-        (lrsp/-store-statements lrs auth-ident [stmt-0] [])
-        (let [last-stored-0 (get-last-stored lrs auth-ident)
+        (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-0] [])
+        (let [last-stored-0 (get-last-stored lrs tc/ctx auth-ident)
               day-0         (snap-day last-stored-0)]
           (is (= {:statement-count       1
                   :actor-count           1
@@ -349,11 +505,11 @@
                                            :count  1}]}
                  (adp/-get-status lrs {})))
           ;; add another
-          (lrsp/-store-statements lrs auth-ident [stmt-1] [])
-          (let [last-stored-1 (get-last-stored lrs auth-ident)
+          (lrsp/-store-statements lrs tc/ctx auth-ident [stmt-1] [])
+          (let [last-stored-1 (get-last-stored lrs tc/ctx auth-ident)
                 day-1         (snap-day last-stored-1)]
-            (is (= {:statement-count       2 ;; increments
-                    :actor-count           1 ;; same
+            (is (= {:statement-count       2  ;; increments
+                    :actor-count           1  ;; same
                     :last-statement-stored last-stored-1 ;; increments
                     :platform-frequency    {"example"         1
                                             ;; new platform

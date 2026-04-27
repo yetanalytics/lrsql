@@ -5,7 +5,8 @@
             [lrsql.admin.protocol :as adp]
             [lrsql.spec.reaction :as rs]
             [lrsql.util.reaction :as ru]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [xapi-schema.spec :as xs]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Validation Interceptors
@@ -21,16 +22,19 @@
             (get-in ctx [:request :json-params])
             params (cond-> raw-params
                      ruleset
-                     (update :ruleset ru/json->ruleset))]
-        (if-some [err (s/explain-data rs/create-reaction-params-spec params)]
-          ;; Invalid parameters - Bad Request
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400
-                  :body   {:error (format "Invalid parameters:\n%s"
-                                          (-> err s/explain-out with-out-str))}})
-          ;; Valid params - continue
-          (assoc ctx ::data params))))}))
+                     (update :ruleset ru/json->ruleset))
+            lrs (:com.yetanalytics/lrs ctx)
+            xapi-version (get-in lrs [:config :reaction-version] "1.0.3")]
+        (binding [xs/*xapi-version* xapi-version]
+          (if-some [err (s/explain-data rs/create-reaction-params-spec params)]
+            ;; Invalid parameters - Bad Request
+            (assoc (chain/terminate ctx)
+                   :response
+                   {:status 400
+                    :body   {:error (format "Invalid parameters:\n%s"
+                                            (-> err s/explain-out with-out-str))}})
+            ;; Valid params - continue
+            (assoc ctx ::data params)))))}))
 
 (def validate-update-reaction-params
   "Validate valid params for reaction update."
@@ -44,17 +48,20 @@
                        ru/json->input
                        (update :reaction-id u/str->uuid)
                        (cond->
-                         ruleset
-                         (update :ruleset ru/json->ruleset)))]
-        (if-some [err (s/explain-data rs/update-reaction-params-spec params)]
-          ;; Invalid parameters - Bad Request
-          (assoc (chain/terminate ctx)
-                 :response
-                 {:status 400
-                  :body   {:error (format "Invalid parameters:\n%s"
-                                          (-> err s/explain-out with-out-str))}})
-          ;; Valid params - continue
-          (assoc ctx ::data params))))}))
+                        ruleset
+                         (update :ruleset ru/json->ruleset)))
+            lrs (:com.yetanalytics/lrs ctx)
+            xapi-version (get-in lrs [:config :reaction-version] "1.0.3")]
+        (binding [xs/*xapi-version* xapi-version]
+          (if-some [err (s/explain-data rs/update-reaction-params-spec params)]
+            ;; Invalid parameters - Bad Request
+            (assoc (chain/terminate ctx)
+                   :response
+                   {:status 400
+                    :body   {:error (format "Invalid parameters:\n%s"
+                                            (-> err s/explain-out with-out-str))}})
+            ;; Valid params - continue
+            (assoc ctx ::data params)))))}))
 
 (def validate-delete-reaction-params
   "Validate valid params for reaction delete."

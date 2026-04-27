@@ -602,7 +602,7 @@
     "enabled" : true,
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
-    "redirectUris" : [ "http://localhost:9500/", "http://localhost:8080/admin/index.html", "http://localhost:9500/*" ],
+    "redirectUris" : [ "http://localhost:9500/", "http://localhost:8080/admin/ui", "http://localhost:9500/admin/ui" ],
     "webOrigins" : [ "http://localhost:8080", "http://localhost:9500" ],
     "notBefore" : 0,
     "bearerOnly" : false,

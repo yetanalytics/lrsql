@@ -149,8 +149,6 @@ CREATE INDEX IF NOT EXISTS sts_ancestor_id_idx ON statement_to_statement(ancesto
 -- :doc Create an index on the `statement_to_statement.descendant_id` column.
 CREATE INDEX IF NOT EXISTS sts_descendant_id_idx ON statement_to_statement(descendant_id)
 
-
-
 /* Document Tables */
 
 -- :name create-state-document-table!
@@ -523,4 +521,98 @@ SET sql = 'CREATE TABLE statement_to_actor (
     ON DELETE CASCADE,
   FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
 )'
-WHERE type = 'table' AND name = 'statement_to_actor'
+WHERE type = 'table' AND name = 'statement_to_actor';
+
+/* Migration 2024-10-31 - Add JWT Blocklist Table */
+
+-- :name create-blocked-jwt-table!
+-- :command :execute
+-- :doc Create the `blocked_jwt` table if it does not exist yet.
+CREATE TABLE IF NOT EXISTS blocked_jwt (
+  jwt        TEXT PRIMARY KEY,
+  evict_time TIMESTAMP
+);
+
+-- :name create-blocked-jwt-evict-time-idx!
+-- :command :execute
+-- :doc Create the `blocked_jwt_evict_time_idx` table if it does not exist yet.
+CREATE INDEX IF NOT EXISTS blocked_jwt_evict_time_idx ON blocked_jwt(evict_time);
+
+/* Migration 2025-03-05 - Add One-Time ID to Blocklist Table */
+
+-- :name query-blocked-jwt-one-time-id-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `blocked_jwt.one_time_id` exists.
+SELECT 1 FROM pragma_table_info('blocked_jwt') WHERE name = 'one_time_id';
+
+-- :name alter-blocked-jwt-add-one-time-id!
+-- :command :execute
+-- :result :one
+-- :doc Add the column `blocked_jwt.one_time_id` for one-time JWTs; JWTs with one-time IDs are not considered blocked yet.
+ALTER TABLE blocked_jwt ADD COLUMN one_time_id TEXT;
+
+-- :name alter-blocked-jwt-add-one-time-id-idx!
+-- :command :execute
+-- :result :one
+-- :doc Add a unique index on `blocked_jwt.one_time_id` (since SQLite does not allow directly adding unique columns).
+CREATE UNIQUE INDEX IF NOT EXISTS blocked_jwt_one_time_id_idx ON blocked_jwt(one_time_id);
+
+/* Migration 2025-03-21 - Add label column to lrs_credential table */
+
+-- :name query-lrs-credential-label-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `lrs_credential.label` exists.
+SELECT 1 FROM pragma_table_info('lrs_credential') WHERE name = 'label'
+
+-- :name alter-lrs-credential-add-label!
+-- :command :execute
+-- :doc Add the `label` column to the `lrs_credential` table.
+ALTER TABLE lrs_credential ADD COLUMN label TEXT;
+
+-- :name query-lrs-credential-is-seed-exists
+-- :command :query
+-- :result :one
+-- :doc Query to see if `lrs_credential.is_seed` exists.
+SELECT 1 FROM pragma_table_info('lrs_credential') WHERE name = 'is_seed'
+
+-- :name alter-lrs-credential-add-is-seed!
+-- :command :execute
+-- :doc Add the `is_seed` column to the `lrs_credential` table.
+ALTER TABLE lrs_credential ADD COLUMN is_seed INTEGER; -- boolean type
+
+/* Migration 2025-09-26 - Add ContextAgent, ContextGroup, SubContextAgent, SubContextGroup to statement_to_actor usage enum */
+
+-- :name query-statement-to-actor-usage-enum-has-context-actors
+-- :command :query
+-- :result :one
+-- :doc Query to see if the `statement_to_actor.usage` column has ContextAgent in its enum.
+SELECT 1
+FROM sqlite_master
+WHERE type = 'table'
+  AND name = 'statement_to_actor'
+  AND sql LIKE '%ContextAgent%';
+
+-- :name alter-statement-to-actor-usage-enum-add-context-actors!
+-- :command :execute
+-- :doc Change the enum datatype of the `statement_to_actor.usage` column to add ContextAgent, ContextGroup, SubContextAgent, and SubContextGroup.
+UPDATE sqlite_schema
+SET sql = 'CREATE TABLE statement_to_actor (
+  id           TEXT NOT NULL PRIMARY KEY, -- uuid
+  statement_id TEXT NOT NULL,             -- uuid
+  usage        TEXT NOT NULL CHECK (
+                 usage IN (''Actor'', ''Object'', ''Authority'', ''Instructor'', ''Team'',
+                           ''SubActor'', ''SubObject'', ''SubInstructor'', ''SubTeam'',
+                           ''ContextAgent'', ''ContextGroup'', ''SubContextAgent'', ''SubContextGroup'')
+                                   ),     -- enum
+  actor_ifi    TEXT NOT NULL,             -- ifi string
+  actor_type   TEXT NOT NULL CHECK (
+                 actor_type IN (''Agent'', ''Group'')
+                 ),                       -- enum
+
+  FOREIGN KEY (statement_id) REFERENCES xapi_statement(statement_id)
+    ON DELETE CASCADE,
+  FOREIGN KEY (actor_ifi, actor_type) REFERENCES actor(actor_ifi, actor_type)
+)'
+WHERE type = 'table' AND name = 'statement_to_actor';

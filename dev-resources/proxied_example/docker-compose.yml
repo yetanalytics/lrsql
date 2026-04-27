@@ -14,11 +14,12 @@ configs:
 volumes:
   db_data:
 
+
 services:
   db:
-    image: postgres
+    image: postgres:18
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
     environment:
       POSTGRES_USER: lrsql_user
       POSTGRES_PASSWORD: lrsql_password

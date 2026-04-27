@@ -21,7 +21,9 @@
        (if-some [err (or (when key-pair?
                            (s/explain-data as/key-pair-spec params))
                          (when scopes?
-                           (s/explain-data as/scopes-spec params)))]
+                           (s/explain-data as/scopes-spec params))
+                         (when (:label params)
+                           (s/explain-data as/label-spec params)))]
          ;; Invalid parameters - Bad Request
          (assoc (chain/terminate ctx)
                 :response
@@ -31,6 +33,7 @@
          ;; Valid parameters - continue
          (let [cred-info (select-keys params [:api-key
                                               :secret-key
+                                              :label
                                               :scopes])]
            (-> ctx
                (assoc ::data cred-info)
@@ -48,11 +51,12 @@
     (fn create-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
              {:keys [account-id]} ::jwt/data
-             {:keys [scopes]} ::data}
+             {:keys [label scopes]} ::data}
             ctx
             api-key-res
             (adp/-create-api-keys lrs
                                   account-id
+                                  label
                                   (set scopes))]
         (assoc ctx
                :response
@@ -82,13 +86,14 @@
     (fn update-api-keys [ctx]
       (let [{lrs :com.yetanalytics/lrs
              {:keys [account-id]} ::jwt/data
-             {:keys [api-key secret-key scopes]} ::data}
+             {:keys [api-key secret-key label scopes]} ::data}
             ctx
             api-key-res
             (adp/-update-api-keys lrs
                                   account-id
                                   api-key
                                   secret-key
+                                  label
                                   (set scopes))]
         (assoc ctx
                :response

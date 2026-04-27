@@ -1,7 +1,7 @@
 ;; All values here are Hikari defaults except for `:pool-minimum-idle` and
 ;; `:pool-maximum-size`, since the default config is geared for single-threaded
 ;; databases.
-{:pool-auto-commit        #boolean #or [#env LRSQL_POOL_AUTO_COMMIT true]
+{:pool-auto-commit        #boolean #or [#env LRSQL_POOL_AUTO_COMMIT false]
  :pool-keepalive-time     #long #or [#env LRSQL_POOL_KEEPALIVE_TIME 0]
  :pool-connection-timeout #long #or [#env LRSQL_POOL_CONNECTION_TIMEOUT 30000]
  :pool-idle-timeout       #long #or [#env LRSQL_POOL_IDLE_TIMEOUT 600000]

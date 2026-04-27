@@ -37,10 +37,24 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 - [OpenID Connect Support](doc/oidc.md)
   - [Auth0 Setup Guide](doc/oidc/auth0.md)
 
-### DBMS-specific Sections
+### DBMS-specific Information
 
-- [Postgres](doc/postgres.md)
-- [SQLite](doc/sqlite.md)
+| DB Engine  | Supported Versions |
+| ---------- | ------------------ |
+| [SQLite](doc/sqlite.md) | 3.42 (Embedded Engine) |
+| [Postgres](doc/postgres.md) | 14 |
+|  | 15 |
+|  | 16 |
+|  | 17 |
+|  | 18 |
+| [MariaDB](doc/mariadb.md) | 10.6 |
+|  | 10.11 |
+|  | 11.4 |
+|  | 11.7.2 |
+|  | 11.8 |
+| [MySQL](doc/mysql.md) | 8.0.44 |
+|  | 8.4 |
+|  | 9.5.0 |
 
 ### Reference
 
@@ -49,7 +63,9 @@ For releases and release notes, see the [Releases](https://github.com/yetanalyti
 - [Developer Documentation](doc/dev.md)
 - [Example AWS Deployment](doc/aws.md)
 - [Reactions](doc/reactions.md)
+- [JSON Spec](doc/reactions/spec.md)
 - [Sending xAPI statement(s) with Postman](doc/postman.md)
+- [xAPI Versioning](doc/xapi_versioning.md)
 
 ### Demos
 
@@ -62,6 +78,6 @@ Before contributing to this project, please read the [Contribution Guidelines](C
 
 ## License
 
-Copyright © 2021-2024 Yet Analytics, Inc.
+Copyright © 2021-2025 Yet Analytics, Inc.
 
 Distributed under the Apache License version 2.0.

@@ -58,7 +58,8 @@
 
 (s/def ::usage
   #{"Actor" "Object" "Authority" "Instructor" "Team"
-    "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"})
+    "SubActor" "SubObject" "SubAuthority" "SubInstructor" "SubTeam"
+    "ContextAgent" "ContextGroup" "SubContextAgent" "SubContextGroup"})
 
 ;; JSON string version: :xapi.statements.GET.request.params/agent
 (s/def ::payload ::xs/actor)
@@ -86,7 +87,8 @@
 ;; - id:           SEQUENTIAL UUID NOT NULL PRIMARY KEY
 ;; - statement_id: UUID NOT NULL FOREIGN KEY
 ;; - usage:        ENUM ('Actor', 'Object', 'Authority', 'Instructor', 'Team',
-;;                       'SubActor', 'SubObject', 'SubAuthority', 'SubInstructor', 'SubTeam')
+;;                       'SubActor', 'SubObject', 'SubAuthority', 'SubInstructor', 'SubTeam',
+;;                       'ContextAgent', 'ContextGroup', 'SubContextAgent', 'SubContextGroup')
 ;;                 NOT NULL
 ;; - actor_ifi:    STRING NOT NULL FOREIGN KEY
 
