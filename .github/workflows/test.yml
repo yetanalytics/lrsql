@@ -35,6 +35,8 @@ jobs:
 
       - name: Setup CI Environment
         uses: yetanalytics/action-setup-env@v2
+        with:
+          java-version: '21'
 
       - name: Run Makefile Target ${{ matrix.target }}
         run: make ${{ matrix.target }}
