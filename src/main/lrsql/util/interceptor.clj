@@ -20,7 +20,8 @@
    (error-dispatch
     [ctx ex]
     ;; JSON Parse failure
-    [{:exception-type :com.fasterxml.jackson.core.JsonParseException
+    [{:exception-type (:or :com.fasterxml.jackson.core.JsonParseException
+                           :charred.CharredException)
       :exception      exception}]
     (let [msg (cond-> exception
                 true    get-message
@@ -31,7 +32,8 @@
              {:status 400
               :body   {:error msg}}))
     ;; JSON EOF failure (subclass of the above)
-    [{:exception-type :com.fasterxml.jackson.core.io.JsonEOFException
+    [{:exception-type (:or :java.io.EOFException
+                           :com.fasterxml.jackson.core.io.JsonEOFException)
       :exception      exception}]
     (let [msg (get-message exception)]
       (assoc ctx
