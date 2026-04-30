@@ -8,10 +8,10 @@ RUN apk update \
         && apk upgrade \
         && apk add ca-certificates \
         && update-ca-certificates \
-        && apk add --no-cache openjdk11 \
+        && apk add --no-cache openjdk21 \
         && mkdir -p /lrsql/runtimes \
         && jlink --output /lrsql/runtimes/linux/ --add-modules $(cat /lrsql/.java_modules) \
-        && apk del openjdk11 \
+        && apk del openjdk21 \
         && rm -rf /var/cache/apk/*
 
 # delete bench utils for leaner container
