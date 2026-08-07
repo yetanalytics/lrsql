@@ -30,8 +30,8 @@
   com.zaxxer/HikariCP                           {:mvn/version "5.0.0"
                                                  :exclusions  [org.slf4j/slf4j-api]}
   ;; Pedestal and Jetty webserver deps
-  io.pedestal/pedestal.error                  {:mvn/version "0.8.2-beta-5"}
-  io.pedestal/pedestal.jetty                  {:mvn/version "0.8.2-beta-5"}
+  io.pedestal/pedestal.error                  {:mvn/version "0.8.2-beta-10"}
+  io.pedestal/pedestal.jetty                  {:mvn/version "0.8.2-beta-10"}
   ;; re-add metrics libs removed from pedestal log
   io.dropwizard.metrics/metrics-core          {:mvn/version "4.2.19"}
   io.dropwizard.metrics/metrics-jmx           {:mvn/version "4.2.19"}
@@ -88,7 +88,7 @@
    :extra-deps  {org.xerial/sqlite-jdbc {:mvn/version "3.42.0.0"}}}
   :db-postgres
   {:extra-paths ["src/db/postgres"]
-   :extra-deps  {org.postgresql/postgresql {:mvn/version "42.6.1"}
+   :extra-deps  {org.postgresql/postgresql {:mvn/version "42.7.13"}
                  com.kohlschutter.junixsocket/junixsocket-common
                  {:mvn/version "2.6.1"}
                  com.kohlschutter.junixsocket/junixsocket-native-common
@@ -116,10 +116,10 @@
                  "dev-resources"]
    :extra-deps  {;; DB deps
                  org.xerial/sqlite-jdbc     {:mvn/version "3.42.0.0"}
-                 org.postgresql/postgresql  {:mvn/version "42.6.1"}
+                 org.postgresql/postgresql  {:mvn/version "42.7.13"}
                  clj-test-containers/clj-test-containers
-                 {:mvn/version "0.7.3"}
-                 ;; org.testcontainers/postgresql {:mvn/version "1.19.8"}
+                 {:mvn/version "0.7.4"}
+                 org.testcontainers/postgresql {:mvn/version "1.21.4"}
                  com.kohlschutter.junixsocket/junixsocket-common
                  {:mvn/version "2.6.1"}
                  com.kohlschutter.junixsocket/junixsocket-native-common
@@ -128,8 +128,8 @@
                  {:mvn/version "3.5.3"}
                  com.mysql/mysql-connector-j
                  {:mvn/version "9.4.0"}
-                 org.testcontainers/mariadb {:mvn/version "1.21.2"}
-                 org.testcontainers/mysql   {:mvn/version "1.21.3"}
+                 org.testcontainers/mariadb {:mvn/version "1.21.4"}
+                 org.testcontainers/mysql   {:mvn/version "1.21.4"}
 
                  ;; Other test deps
                  org.clojure/test.check {:mvn/version "1.1.1"}
