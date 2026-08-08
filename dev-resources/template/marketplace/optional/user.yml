@@ -1,0 +1,168 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Create user for database"
+Parameters:
+  Username:
+    Description: Username for DB
+    Type: String
+  CredentialsPath:
+    Description: Identifying Path for user in Secrets Manager
+    Type: String
+  DBStackName:
+    Description: DB Stack Reference
+    Type: String
+  SSMStackName:
+    Description: SSM Stack Reference
+    Type: String
+  VPCStackName:
+    Description: VPC Stack Reference
+    Type: String
+  Permissions:
+    Description: "Set of permissions allowed for the proxy in database (permissions described here: https://www.postgresql.org/docs/current/predefined-roles.html#PREDEFINED-ROLES-TABLE)"
+    Type: List<String>
+    Default: pg_read_all_data 
+    AllowedValues:
+      - pg_read_all_data
+      - pg_write_all_data
+  CreateUserBucketOverride:
+    Description: Override for s3 bucket containing RDSCreateUser Lambda code
+    Type: String
+    Default: ""
+  CreateUserFnKeyOverride:
+    Description: Override for s3 Key containing RDSCreateUser Lambda Code
+    Type: String
+    Default: ""
+  RDSCreateUserVersion:
+    Description: Semantic version of the rds-create-user lambda
+    Type: String
+    Default: "v0.0.4"
+Conditions:
+  CreateUserBucket: !Not [!Equals [!Ref CreateUserBucketOverride, ""]]
+  CreateUserFnKey: !Not [!Equals [!Ref CreateUserFnKeyOverride, ""]]
+Resources:
+  CredentialsSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Ref CredentialsPath 
+      Description: Credentials for proxy on PG 
+      GenerateSecretString:
+        SecretStringTemplate: !Sub 
+          - |
+            {
+              "engine": "postgres",
+              "host": "${DBEndpoint}",
+              "port": "${DBPort}",
+              "username": "${Username}"
+            }
+          - DBEndpoint:
+              Fn::ImportValue:
+                !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
+            DBPort:
+              Fn::ImportValue:
+                !Join [":", [!Ref "DBStackName", "DBPort"]]
+        GenerateStringKey: "password"
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+  CreateUserPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: IAM Policy for rds-create-user lambda access.
+      ManagedPolicyName: !Sub "${AWS::StackName}-${AWS::Region}-create-user-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          # Allow access to SSM and VPC related networking
+          - Effect: Allow
+            Action:
+              - "secretsmanager:GetSecretValue"
+              - "ssm:GetParameter"
+            Resource:
+              - !GetAtt CredentialsSecret.Id
+              - !Sub
+                - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBMasterUserPasswordPath}"
+                - DBMasterUserPasswordPath:
+                    Fn::ImportValue:
+                      !Join [":", [!Ref "SSMStackName", "DBMasterUserPasswordPath"]]
+          - Effect: Allow
+            Action:
+              - ec2:DescribeNetworkInterfaces
+              - ec2:CreateNetworkInterface
+              - ec2:DeleteNetworkInterface
+              - ec2:DescribeInstances
+              - ec2:AttachNetworkInterface
+            Resource: "*"
+  CreateUserRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - !Ref CreateUserPolicy
+  CreateUserSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG For Lambda Init Fn
+      VpcId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "VPCStackName", "VPCId"]]
+  CreateUserIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from the create user fn to RDS instance
+      GroupId:
+        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
+      IpProtocol: tcp
+      FromPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      SourceSecurityGroupId: !Ref CreateUserSG
+  # TODO: put this in its own template
+  CreateUserFn:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !If
+          - CreateUserBucket
+          - !Ref CreateUserBucketOverride
+          - !Sub "yet-rds-db-init-deploy-${AWS::Region}"
+        S3Key: !If
+          - CreateUserFnKey
+          - !Ref CreateUserFnKeyOverride
+          - !Sub "rds-create-user${RDSCreateUserVersion}.zip"
+      Runtime: nodejs16.x
+      Handler: index.handler
+      Role: !GetAtt CreateUserRole.Arn
+      Timeout: 15
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref CreateUserSG
+        SubnetIds:
+          - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetOne']]
+          - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetTwo']]
+  CreateUser:
+    Type: Custom::CreateDBUser
+    Properties:
+      ServiceToken: !GetAtt CreateUserFn.Arn
+      Credentials: !GetAtt CredentialsSecret.Id
+      Permissions: !Ref Permissions
+      DBMasterUsername:
+          Fn::ImportValue:
+            !Join [":", [!Ref "DBStackName", "DBMasterUserName"]]
+      DBMasterUserPasswordPath:
+          Fn::ImportValue:
+            !Join [":", [!Ref "SSMStackName", "DBMasterUserPasswordPath"]]
+      DBName:
+          Fn::ImportValue:
+            !Join [":", [!Ref "DBStackName", "DBName"]]
+Outputs:
+  SecretsManagerReference:
+    Description: Reference to user in Secrets Manager
+    Value: !Ref CredentialsSecret 

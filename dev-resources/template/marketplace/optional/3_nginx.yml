@@ -1,0 +1,160 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "RDS nginx proxy"
+Transform: AWS::LanguageExtensions
+Parameters:
+  VPCStackName:
+    Description: Name of our VPC Stack
+    Type: String
+  DBStackName:
+    Description: Name of our DB Stack
+    Type: String
+  AMI:
+    Description: AMI ID
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  InstanceType:
+    Description: Instance Type
+    Type: String
+    Default: t3.micro
+  AllowedCIDRs:
+    Description: List of CIDR blocks allowed to access the instance.
+    Type: CommaDelimitedList
+
+Resources:
+
+  IngressRuleLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      Policies:
+        - PolicyName: LambdaPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+              - Effect: Allow
+                Action: ["cloudformation:DescribeStacks"]
+                Resource: "*"
+
+  IngressRuleLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.lambda_handler
+      Role: !GetAtt IngressRuleLambdaExecutionRole.Arn
+      Code:
+        ZipFile: 
+          !Sub
+            - |
+              import boto3
+              import cfnresponse
+
+              def lambda_handler(event, context):
+                  try:
+                      if event['RequestType'] in ['Create', 'Update']:
+                          cidr_blocks = event['ResourceProperties']['CidrBlocks']
+                          ingress_rules = [
+                              {
+                                  "IpProtocol": "tcp",
+                                  "FromPort": ${Port},
+                                  "ToPort": ${Port},
+                                  "CidrIp": cidr
+                              }
+                              for cidr in cidr_blocks
+                          ]
+                          response_data = {'IngressRules': ingress_rules}
+                          cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+                      else:
+                          cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                  except Exception as e:
+                      print(f"Error processing request: {str(e)}")
+                      cfnresponse.send(event, context, cfnresponse.FAILED, {})
+            - Port:
+                Fn::ImportValue:
+                  !Join [":", [!Ref "DBStackName", "DBPort"]]
+      Runtime: python3.8
+      Timeout: 120
+  
+  SecurityGroupIngressRules:
+    Type: Custom::SecurityGroupIngress
+    Properties:
+      ServiceToken: !GetAtt IngressRuleLambda.Arn
+      CidrBlocks: !Ref AllowedCIDRs
+
+  NginxInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for NginxInstance 
+      VpcId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "VPCStackName", "VPCId"]]
+      SecurityGroupIngress: !GetAtt SecurityGroupIngressRules.IngressRules
+    
+  SSMInstanceIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      Description: Ingress from NginxInstance
+      GroupId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
+      IpProtocol: tcp
+      FromPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      SourceSecurityGroupId: !Ref NginxInstanceSG
+
+  NginxRDSProxy:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref AMI
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+      - !Ref NginxInstanceSG
+      SubnetId:
+        Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PublicSubnetOne']]
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            yum update -y
+            yum install nginx nginx-mod-stream -y
+            cat <<'EOF' >/usr/share/nginx/modules/rds.conf
+            # Load the stream module
+            stream {
+              upstream database_server {
+                  server ${Host}:${Port};
+              }
+              server {
+                  listen ${Port};
+                  proxy_pass database_server;
+                  proxy_connect_timeout 10s;
+                  proxy_timeout 60s;
+                  proxy_buffer_size 16k;
+              }
+            }
+            EOF
+            systemctl start nginx
+          - Port:
+              Fn::ImportValue:
+                !Join [":", [!Ref "DBStackName", "DBPort"]]
+            Host:
+              Fn::ImportValue:
+                !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
+Outputs:
+
+  ProxyPublicIp:
+    Description: Public IP of Nginx Proxy 
+    Value: !GetAtt NginxRDSProxy.PublicIp
+  ProxySG:
+    Description: SG group for Nginx Proxy
+    Value: !Ref NginxInstanceSG
