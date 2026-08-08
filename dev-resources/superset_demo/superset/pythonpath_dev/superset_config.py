@@ -150,7 +150,6 @@ curr = os.path.abspath(os.getcwd())
 AUTH_TYPE = AUTH_OID
 OIDC_CLIENT_SECRETS = curr + '/docker/pythonpath_dev/client_secret.json'
 OIDC_ID_TOKEN_COOKIE_SECURE = False
-OIDC_REQUIRE_VERIFIED_EMAIL = False
 OIDC_OPENID_REALM = get_env_variable('OIDC_OPENID_REALM')
 OIDC_INTROSPECTION_AUTH_METHOD = 'client_secret_post'
 CUSTOM_SECURITY_MANAGER = OIDCSecurityManager
