@@ -7,7 +7,7 @@ LRS_ADMIN_UI_LOCATION ?= https://github.com/yetanalytics/lrs-admin-ui/releases/d
 LRS_ADMIN_ZIPFILE ?= lrs-admin-ui-${LRS_ADMIN_UI_VERSION}.zip
 
 # Get the admin UI SPA release from GitHub
-resources/public/admin:
+resources/public/admin/index.html:
 	curl -L ${LRS_ADMIN_UI_LOCATION} -o ${LRS_ADMIN_ZIPFILE}
 	mkdir -p resources/public/admin
 	unzip ${LRS_ADMIN_ZIPFILE} -d resources/public/admin
@@ -92,24 +92,24 @@ ci: test-sqlite test-postgres test-mariadb test-mysql
 
 # Dev
 
-ephemeral: resources/public/admin
+ephemeral: resources/public/admin/index.html
 	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite :ephemeral? true
 
 # like ephemeral, but takes env vars
-ephemeral-prod: resources/public/admin
+ephemeral-prod: resources/public/admin/index.html
 	clojure -M:db-sqlite -m lrsql.sqlite.main --ephemeral true
 
 # like ephemeral, but includes OIDC config for use with `keycloak-demo`
-ephemeral-oidc: resources/public/admin
+ephemeral-oidc: resources/public/admin/index.html
 	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite :ephemeral? true :override-profile :test-oidc
 
-sqlite: resources/public/admin
+sqlite: resources/public/admin/index.html
 	clojure -X:db-sqlite lrsql.sqlite.main/run-test-sqlite
 
-postgres: resources/public/admin # Requires a running Postgres instance
+postgres: resources/public/admin/index.html # Requires a running Postgres instance
 	clojure -X:db-postgres lrsql.postgres.main/run-test-postgres
 
-mariadb: resources/public/admin # Requires a running MariaDB instance
+mariadb: resources/public/admin/index.html # Requires a running MariaDB instance
 	clojure -X:db-mariadb lrsql.mariadb.main/run-test-mariadb
 
 # Bench - requires a running lrsql instance
@@ -161,7 +161,7 @@ clean-non-dl:
 
 # Compile and make Uberjar
 
-target/bundle/lrsql.jar: resources/public/admin
+target/bundle/lrsql.jar: resources/public/admin/index.html
 	clojure -X:build uber
 
 target/bundle/bench.jar:
@@ -238,7 +238,7 @@ target/bundle/lrsql_mysql.exe: exe/lrsql_mysql.exe
 
 # Copy Admin UI
 
-target/bundle/admin: resources/public/admin
+target/bundle/admin: resources/public/admin/index.html
 	mkdir -p target/bundle
 	cp -r resources/public/admin target/bundle/admin
 
