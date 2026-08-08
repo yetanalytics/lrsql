@@ -9,14 +9,16 @@
   org.clojure/core.async                {:mvn/version "1.6.681"}
   ;; Util deps
   camel-snake-kebab/camel-snake-kebab   {:mvn/version "0.4.2"}
-  cheshire/cheshire                     {:mvn/version "6.2.0"}
+  cheshire/cheshire                     
+  {:mvn/version "6.2.0"
+   :exclusions  [com.fasterxml.jackson.core/jackson-core]}
   clj-commons/clj-yaml                  {:mvn/version "1.0.27"}
   clojure.java-time/clojure.java-time   {:mvn/version "1.2.0"}
   danlentz/clj-uuid                     {:mvn/version "0.1.9"}
   metosin/spec-tools                    {:mvn/version "0.10.6"}
   aero/aero                             {:mvn/version "1.1.6"}
   selmer/selmer                         {:mvn/version "1.12.59"}
-  ch.qos.logback/logback-classic        {:mvn/version "1.5.25"}
+  ch.qos.logback/logback-classic        {:mvn/version "1.5.34"}
   commons-io/commons-io                 {:mvn/version "2.14.0"}
   commons-fileupload/commons-fileupload {:mvn/version "1.6.0"}
 
@@ -31,15 +33,17 @@
                                                  :exclusions  [org.slf4j/slf4j-api]}
   ;; Pedestal and Jetty webserver deps
   io.pedestal/pedestal.error                  {:mvn/version "0.8.2-beta-10"}
-  io.pedestal/pedestal.jetty                  {:mvn/version "0.8.2-beta-10"}
+  io.pedestal/pedestal.jetty                  
+  {:mvn/version "0.8.2-beta-10"
+   :exclusions  [com.fasterxml.jackson.core/jackson-core]}
   ;; re-add metrics libs removed from pedestal log
   io.dropwizard.metrics/metrics-core          {:mvn/version "4.2.19"}
   io.dropwizard.metrics/metrics-jmx           {:mvn/version "4.2.19"}
   ;; org.eclipse.jetty/jetty-server           {:mvn/version "11.0.20"}
-  org.eclipse.jetty.ee10/jetty-ee10-servlet   {:mvn/version "12.0.32"}
-  org.eclipse.jetty/jetty-alpn-server         {:mvn/version "12.0.32"}
+  org.eclipse.jetty.ee10/jetty-ee10-servlet   {:mvn/version "12.0.37"}
+  org.eclipse.jetty/jetty-alpn-server         {:mvn/version "12.0.37"}
   ;; org.eclipse.jetty.http2/http2-server        {:mvn/version "12.0.32"}
-  org.eclipse.jetty/jetty-alpn-java-server    {:mvn/version "12.0.32"}
+  org.eclipse.jetty/jetty-alpn-java-server    {:mvn/version "12.0.37"}
   ;; Security deps
   buddy/buddy-core                              {:mvn/version "1.11.418"
                                                  :exclusions  [org.bouncycastle/bcprov-jdk18on
@@ -52,6 +56,7 @@
   org.bouncycastle/bcpkix-jdk18on               {:mvn/version "1.84"}
   less-awful-ssl/less-awful-ssl                 {:mvn/version "1.0.6"}
   xyz.capybara/clamav-client                    {:mvn/version "2.1.2"}
+  com.fasterxml.jackson.core/jackson-core       {:mvn/version "2.21.5"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
   {:mvn/version "1.5.0"
