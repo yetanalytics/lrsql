@@ -36,6 +36,7 @@
             [lrsql.util.oidc               :as oidc-util]
             [lrsql.util.statement          :as stmt-util]
             [lrsql.util                    :as util]
+            [lrsql.util.document           :as doc-util]
             [lrsql.init.authority          :refer [make-authority-fn]]
             [lrsql.system.util             :refer [assert-config]]
             [lrsql.util.concurrency        :refer [with-rerunable-txn]]))
@@ -188,13 +189,28 @@
 
   lrsp/DocumentResource
   (-set-document
-    [lrs _ctx _auth-identity params document merge?]
-    (let [conn  (lrs-conn lrs)
-          input (doc-input/insert-document-input params document)]
+    [lrs ctx _auth-identity params document merge?]
+    (let [conn      (lrs-conn lrs)
+          input     (doc-input/insert-document-input params document)
+          ;; Extract If-Match / If-None-Match headers from the request context
+          if-match      (get-in ctx [:request :headers "if-match"])
+          if-none-match (get-in ctx [:request :headers "if-none-match"])]
       (jdbc/with-transaction [tx conn]
-        (if merge?
-          (doc-cmd/upsert-document! backend tx input)
-          (doc-cmd/insert-document! backend tx input)))))
+        (if (or if-match if-none-match)
+          ;; Atomic etag validation: query + validate + write in one transaction
+          (let [query-input  (doc-input/document-input params)
+                {:keys [document]} (doc-q/query-document backend tx query-input)
+                precond-err  (doc-util/check-etag-precondition
+                              if-match if-none-match document)]
+            (if precond-err
+              precond-err ;; returns {:error ex-info} — propagated as 412
+              (if merge?
+                (doc-cmd/upsert-document! backend tx input)
+                (doc-cmd/insert-document! backend tx input))))
+          ;; No etag headers — proceed directly
+          (if merge?
+            (doc-cmd/upsert-document! backend tx input)
+            (doc-cmd/insert-document! backend tx input))))))
   (-get-document
     [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
