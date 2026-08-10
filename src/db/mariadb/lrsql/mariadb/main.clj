@@ -17,5 +17,5 @@
 
 (defn -main [& _args]
   (-> (system/system mariadb-backend :prod-mariadb)
-      component/start
+      su/start-system
       su/add-shutdown-hook!))

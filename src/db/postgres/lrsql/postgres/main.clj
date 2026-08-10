@@ -17,5 +17,5 @@
 
 (defn -main [& _args]
   (-> (system/system postgres-backend :prod-postgres)
-      component/start
+      su/start-system
       su/add-shutdown-hook!))
