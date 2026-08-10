@@ -95,3 +95,14 @@
                              (fn []
                                (component/stop system))))
   system)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Component-redacted Startup
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn start-system
+  [system]
+  (try
+    (component/start system)
+    (catch Throwable error
+      (throw (component/ex-without-components error)))))

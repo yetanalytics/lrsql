@@ -28,5 +28,5 @@
         ephemeral?  (Boolean/parseBoolean ?per-str)
         profile     (if ephemeral? :prod-sqlite-mem :prod-sqlite)]
     (-> (system/system sqlite-backend profile)
-        component/start
+        su/start-system
         su/add-shutdown-hook!)))
