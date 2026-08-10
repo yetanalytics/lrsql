@@ -1,5 +1,6 @@
 (ns lrsql.system.lrs
   (:require [clojure.set                   :as cset]
+            [clojure.spec.alpha            :as s]
             [clojure.tools.logging         :as log]
             [com.stuartsierra.component    :as cmp]
             [next.jdbc                     :as jdbc]
@@ -12,6 +13,7 @@
             [lrsql.input.actor             :as agent-input]
             [lrsql.input.activity          :as activity-input]
             [lrsql.input.admin             :as admin-input]
+            [lrsql.input.admin.jwt         :as admin-jwt-input]
             [lrsql.input.admin.status      :as admin-stat-input]
             [lrsql.input.auth              :as auth-input]
             [lrsql.input.statement         :as stmt-input]
@@ -50,7 +52,8 @@
                                 config
                                 authority-fn
                                 oidc-authority-fn
-                                reaction-channel]
+                                reaction-channel
+                                supported-versions]
   cmp/Lifecycle
   (start
     [lrs]
@@ -63,11 +66,14 @@
            api-key      :api-key-default
            srt-key      :api-secret-default
            auth-tp      :authority-template
-           oidc-auth-tp :oidc-authority-template}
+           oidc-auth-tp :oidc-authority-template
+           sup-versions :supported-versions}
           config
           ;; Authority function
-          auth-fn      (make-authority-fn auth-tp)
-          oidc-auth-fn (oidc-init/make-authority-fn oidc-auth-tp)]
+          auth-fn               (make-authority-fn auth-tp)
+          oidc-auth-fn          (oidc-init/make-authority-fn oidc-auth-tp)
+          supported-version-set (s/conform ::cs/supported-versions
+                                           sup-versions)]
       ;; Combine all init ops into a single txn, since the user would expect
       ;; such actions to happen as a single unit. If init-backend! succeeds
       ;; but insert-default-creds! fails, this would constitute a partial
@@ -80,7 +86,8 @@
                :connection connection
                :authority-fn auth-fn
                :oidc-authority-fn oidc-auth-fn
-               :reaction-channel (react-init/reaction-channel config)))))
+               :reaction-channel (react-init/reaction-channel config)
+               :supported-versions supported-version-set))))
   (stop
     [lrs]
     (log/info "Stopping LRS...")
@@ -88,23 +95,24 @@
            :connection nil
            :authority-fn nil
            :oidc-authority-fn nil
-           :reaction-channel nil))
+           :reaction-channel nil
+           :supported-versions nil))
 
   lrsp/AboutResource
   (-get-about
-    [_lrs _auth-identity]
-    ;; TODO: Add 2.X.X versions
-    {:body {:version ["1.0.0" "1.0.1" "1.0.2" "1.0.3"]}})
+   [_lrs _ctx _auth-identity]
+   {:body {:version (into [] supported-versions)}})
 
   lrsp/StatementsResource
   (-store-statements
-    [lrs auth-identity statements attachments]
+    [lrs ctx auth-identity statements attachments]
     (let [conn
           (lrs-conn lrs)
           authority
           (-> auth-identity :agent)
+          version (:com.yetanalytics.lrs/version ctx)
           stmts
-          (map (partial stmt-util/prepare-statement authority)
+          (map (partial stmt-util/prepare-statement version authority)
                statements)
           stmt-inputs
           (-> (map stmt-input/insert-statement-input stmts)
@@ -112,67 +120,75 @@
                attachments))
           retry-test   (partial bp/-txn-retry? backend)
           retry-limit  (:stmt-retry-limit config)
-          retry-budget (:stmt-retry-budget config)]
-      (with-rerunable-txn [tx conn {:retry-test  retry-test
-                                    :budget      retry-budget
-                                    :max-attempt retry-limit}]
-        (loop [stmt-ins stmt-inputs
-               stmt-res {:statement-ids []}]
-          (if-some [stmt-input (first stmt-ins)]
-            ;; Statement input available to insert
-            (let [stmt-descs  (stmt-q/query-descendants
-                               backend
-                               tx
-                               stmt-input)
-                  stmt-input' (stmt-input/add-insert-descendant-inputs
-                               stmt-input
-                               stmt-descs)
-                  stmt-result (stmt-cmd/insert-statement!
-                               backend
-                               tx
-                               stmt-input')]
-              (if-some [err (:error stmt-result)]
-                ;; Statement conflict or some other error - stop and rollback
-                ;; Return the error, which will either be logged here or
-                ;; (if it's unexpected) bubble up until the end
-                (do (when (= ::lrsp/statement-conflict (-> err ex-data :type))
-                      (log/warn (ex-message err)))
-                    (log/warn "Rolling back transaction...")
-                    (.rollback tx)
-                    stmt-result)
-                ;; Non-error result - continue
-                (if-some [stmt-id (:statement-id stmt-result)]
-                  (do
-                    ;; Submit statement for reaction if enabled
-                    (react-init/offer-trigger! reaction-channel stmt-id)
-                    (recur (rest stmt-ins)
-                           (update stmt-res :statement-ids conj stmt-id)))
-                  (recur (rest stmt-ins)
-                         stmt-res))))
-            ;; No more statement inputs - return
-            stmt-res)))))
-
+          retry-budget (:stmt-retry-budget config)
+          result (with-rerunable-txn [tx conn {:retry-test  retry-test
+                                               :budget      retry-budget
+                                               :max-attempt retry-limit}]
+                   (loop [stmt-ins stmt-inputs
+                          stmt-res {:statement-ids []}]
+                     (if-some [stmt-input (first stmt-ins)]
+                       ;; Statement input available to insert
+                       (let [stmt-descs  (stmt-q/query-descendants
+                                          backend
+                                          tx
+                                          stmt-input)
+                             stmt-input' (stmt-input/add-insert-descendant-inputs
+                                          stmt-input
+                                          stmt-descs)
+                             stmt-result (stmt-cmd/insert-statement!
+                                          backend
+                                          tx
+                                          stmt-input')]
+                                        ;verify statement presence and query success
+                         (if-some [err (:error stmt-result)]
+                           ;; Statement conflict or some other error - stop and rollback
+                           ;; Return the error, which will either be logged here or
+                           ;; (if it's unexpected) bubble up until the end
+                           (do (when (= ::lrsp/statement-conflict (-> err ex-data :type))
+                                 (log/warn (ex-message err)))
+                               (log/warn "Rolling back transaction...")
+                               (.rollback tx)
+                               stmt-result)
+                           ;; Non-error result - continue
+                           (if-some [stmt-id (:statement-id stmt-result)]
+                             (recur (rest stmt-ins)
+                                    (update stmt-res :statement-ids conj stmt-id))
+                             (recur (rest stmt-ins)
+                                    stmt-res))))
+                       ;; No more statement inputs - return
+                       stmt-res)))]
+      ;; Log stmts for reaction submission if enabled
+      (when-not (:error result)
+        (doseq [stmt-id (:statement-ids result)]
+          (react-init/offer-trigger! reaction-channel stmt-id)))
+      result))
   (-get-statements
-    [lrs auth-identity params ltags]
+    [lrs ctx auth-identity params ltags]
     (let [conn   (lrs-conn lrs)
           config (:config lrs)
           prefix (:stmt-url-prefix config)
           auth?  (-> auth-identity
-                     auth-util/most-permissive-statement-read-scope
-                     #{:scope/statements.read.mine})
+                     auth-util/statement-read-mine-authorization?)
           ?auth  (if auth? (:agent auth-identity) nil)
           inputs (-> params
                      (stmt-util/ensure-default-max-limit config)
-                     (stmt-input/query-statement-input ?auth))]
+                     (stmt-input/query-statement-input ?auth))
+          version (:com.yetanalytics.lrs/version ctx)
+          strict-version?
+          (:enable-strict-version config)]
       (jdbc/with-transaction [tx conn]
-        (stmt-q/query-statements backend tx inputs ltags prefix))))
+        (cond-> (stmt-q/query-statements backend tx inputs ltags prefix)
+          (and
+           strict-version?
+           (= "1.0.3" version))
+          stmt-util/strict-version-result))))
   (-consistent-through
     [_lrs _ctx _auth-identity]
     (str (util/current-time)))
 
   lrsp/DocumentResource
   (-set-document
-    [lrs _auth-identity params document merge?]
+    [lrs _ctx _auth-identity params document merge?]
     (let [conn  (lrs-conn lrs)
           input (doc-input/insert-document-input params document)]
       (jdbc/with-transaction [tx conn]
@@ -180,25 +196,25 @@
           (doc-cmd/upsert-document! backend tx input)
           (doc-cmd/insert-document! backend tx input)))))
   (-get-document
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-input params)]
       (jdbc/with-transaction [tx conn]
         (doc-q/query-document backend tx input))))
   (-get-document-ids
-    [lrs _auth-identity params]
-    (let [conn  (lrs-conn lrs)
-          input (doc-input/document-ids-input params)]
-      (jdbc/with-transaction [tx conn]
-        (doc-q/query-document-ids backend tx input))))
+   [lrs _ctx _auth-identity params]
+   (let [conn  (lrs-conn lrs)
+         input (doc-input/document-ids-input params)]
+     (jdbc/with-transaction [tx conn]
+       (doc-q/query-document-ids backend tx input))))
   (-delete-document
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-input params)]
       (jdbc/with-transaction [tx conn]
         (doc-cmd/delete-document! backend tx input))))
   (-delete-documents
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (doc-input/document-multi-input params)]
       (jdbc/with-transaction [tx conn]
@@ -206,7 +222,7 @@
 
   lrsp/AgentInfoResource
   (-get-person
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (agent-input/query-agent-input params)]
       (jdbc/with-transaction [tx conn]
@@ -214,7 +230,7 @@
 
   lrsp/ActivityInfoResource
   (-get-activity
-    [lrs _auth-identity params]
+    [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
           input (activity-input/query-activity-input params)]
       (jdbc/with-transaction [tx conn]
@@ -305,14 +321,47 @@
               (admin-cmd/update-admin-password! backend tx input))
             {:result result})))))
 
+  adp/AdminJWTManager
+  (-purge-blocklist
+    [this leeway]
+    (let [conn  (lrs-conn this)
+          input (admin-jwt-input/purge-blocklist-input leeway)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/purge-blocklist! backend tx input))))
+  (-create-one-time-jwt
+    [this jwt exp one-time-id]
+    (let [conn  (lrs-conn this)
+          input (admin-jwt-input/insert-one-time-jwt-input jwt exp one-time-id)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/insert-one-time-jwt! backend tx input))))
+  (-block-jwt
+    [this jwt exp]
+    (let [conn      (lrs-conn this)
+          jwt-input (admin-jwt-input/insert-blocked-jwt-input jwt exp)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
+  (-block-one-time-jwt
+    [this jwt one-time-id]
+    (let [conn      (lrs-conn this)
+          jwt-input (admin-jwt-input/update-one-time-jwt-input jwt one-time-id)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/update-one-time-jwt! backend tx jwt-input))))
+  (-jwt-blocked?
+    [this jwt]
+    (let [conn      (lrs-conn this)
+          jwt-input (admin-jwt-input/query-blocked-jwt-input jwt)]
+      (jdbc/with-transaction [tx conn]
+        (admin-q/query-blocked-jwt-exists backend tx jwt-input))))
+
   adp/APIKeyManager
   (-create-api-keys
-    [this account-id scopes]
+    [this account-id label scopes]
     (let [conn     (lrs-conn this)
           key-pair (auth-util/generate-key-pair)
           cred-in  (auth-input/insert-credential-input
                     account-id
-                    key-pair)
+                    key-pair
+                    label)
           scope-in (auth-input/insert-credential-scopes-input
                     key-pair
                     scopes)]
@@ -328,7 +377,7 @@
         (auth-q/query-credentials backend tx input))))
   (-update-api-keys
     ;; TODO: Verify the key pair is associated with the account ID
-    [this _account-id api-key secret-key scopes]
+    [this _account-id api-key secret-key label scopes]
     (let [conn  (lrs-conn this)
           input (auth-input/query-credential-scopes*-input api-key secret-key)]
       (jdbc/with-transaction [tx conn]
@@ -345,11 +394,17 @@
               del-inputs (auth-input/delete-credential-scopes-input
                           api-key
                           secret-key
-                          del-scopes)]
+                          del-scopes)
+              lab-inputs (auth-input/update-credential-label-input
+                          api-key
+                          secret-key
+                          label)]
+          (auth-cmd/update-credential-label! backend tx lab-inputs)
           (auth-cmd/insert-credential-scopes! backend tx add-inputs)
           (auth-cmd/delete-credential-scopes! backend tx del-inputs)
           {:api-key    api-key
            :secret-key secret-key
+           :label      label
            :scopes     scopes}))))
   (-delete-api-keys
     [this account-id api-key secret-key]
@@ -395,7 +450,20 @@
 
   adp/AdminLRSManager
   (-delete-actor [this {:keys [actor-ifi]}]
-    (let [conn (lrs-conn this)
+    (let [conn  (lrs-conn this)
           input (agent-input/delete-actor-input actor-ifi)]
       (jdbc/with-transaction [tx conn]
-        (stmt-cmd/delete-actor! backend tx input)))))
+        (stmt-cmd/delete-actor! backend tx input))))
+  (-get-statements-csv [lrs output-stream property-paths params]
+    (let [conn   (lrs-conn lrs)
+          config (:config lrs)
+          input  (-> params
+                     (stmt-util/ensure-default-max-limit-csv config)
+                     (stmt-input/query-statement-input nil))]
+      (jdbc/with-transaction [tx conn]
+        (stmt-q/query-statements-stream backend
+                                        tx
+                                        input
+                                        {}
+                                        property-paths
+                                        output-stream)))))

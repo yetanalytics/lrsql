@@ -25,7 +25,7 @@ jobs:
     needs: get_modules
     uses: yetanalytics/workflow-runtimer/.github/workflows/runtimer.yml@v2
     with:
-      java-version: '11'
+      java-version: '21'
       java-distribution: 'temurin'
       java-modules: ${{ needs.get_modules.outputs.modules }}
 
@@ -38,6 +38,8 @@ jobs:
 
     - name: Setup CI Environment
       uses: yetanalytics/action-setup-env@v2
+      with:
+        java-version: '21'
 
     # BUILD WITHOUT RUNTIME
     - name: Build Bundle

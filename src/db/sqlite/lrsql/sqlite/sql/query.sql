@@ -89,8 +89,7 @@ TRUE
 --~ (when (:authority-ifis params) "AND :frag:sqlite-auth-ref-subquery")
 ))
 --~ (if (:ascending? params) "ORDER BY stmt.id ASC" "ORDER BY stmt.id DESC")
-LIMIT :limit
-
+--~ (when (:limit params)    "LIMIT :limit")
 
 /* Statement Object Queries */
 
@@ -262,7 +261,7 @@ WHERE oidc_issuer IS NULL
 -- :command :query
 -- :result :many
 -- :doc Query all credentials associated with `:account-id`.
-SELECT api_key, secret_key FROM lrs_credential
+SELECT id, api_key, secret_key, label, is_seed FROM lrs_credential
 WHERE account_id = :account-id
 
 -- :name query-credential-ids
@@ -395,3 +394,21 @@ WITH RECURSIVE trigger_history (statement_id, reaction_id, trigger_id) AS (
 SELECT reaction_id
 FROM trigger_history
 WHERE reaction_id IS NOT NULL;
+
+/* JWT Blocklist */
+
+-- :name query-blocked-jwt-exists
+-- :command :query
+-- :result :one
+-- :doc Query that `:jwt` is in the blocklist. Excludes JWTs where `one_time_id` is not null.
+SELECT 1 FROM blocked_jwt
+WHERE jwt = :jwt
+AND one_time_id IS NULL;
+
+-- :name query-one-time-jwt-exists
+-- :command :query
+-- :result :one
+-- :doc Query that `:jwt` with `:one-time-id` exists.
+SELECT 1 FROM blocked_jwt
+WHERE jwt = :jwt
+AND one_time_id = :one-time-id;

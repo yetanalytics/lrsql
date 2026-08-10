@@ -1,16 +1,16 @@
 (ns lrsql.init.oidc-test
-  (:require [clojure.test       :refer [deftest is testing are]]
+  (:require [clojure.test       :refer [deftest is testing are use-fixtures]]
             [lrsql.init.oidc    :refer [get-configuration
                                         resolve-authority-claims
                                         make-authority-fn
                                         render-client-config]]
-            [lrsql.test-support :refer [instrument-lrsql]]))
+            [lrsql.test-support :as support]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests

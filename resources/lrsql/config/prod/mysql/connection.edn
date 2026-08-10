@@ -1,0 +1,4 @@
+#merge
+[#include "prod/default/connection.edn"
+ {:pool-minimum-idle #long #or [#env LRSQL_POOL_MINIMUM_IDLE 10]
+  :pool-maximum-size #long #or [#env LRSQL_POOL_MAXIMUM_SIZE 10]}]

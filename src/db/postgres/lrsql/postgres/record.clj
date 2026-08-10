@@ -1,6 +1,7 @@
 (ns lrsql.postgres.record
   (:require [com.stuartsierra.component :as cmp]
             [hugsql.core :as hug]
+            [next.jdbc :as jdbc]
             [lrsql.backend.data :as bd]
             [lrsql.backend.protocol :as bp]
             [lrsql.init :refer [init-hugsql-adapter!]]
@@ -17,6 +18,8 @@
 (hug/def-db-fns "lrsql/postgres/sql/query.sql")
 (hug/def-db-fns "lrsql/postgres/sql/update.sql")
 (hug/def-db-fns "lrsql/postgres/sql/delete.sql")
+
+(hug/def-sqlvec-fns "lrsql/postgres/sql/query.sql")
 
 ;; Define record
 #_{:clj-kondo/ignore [:unresolved-symbol]} ; Shut up VSCode warnings
@@ -70,13 +73,20 @@
       (xapi-statement-add-reaction-id! tx))
     (when-not (some? (query-xapi-statement-trigger-id-exists tx))
       (xapi-statement-add-trigger-id! tx))
-    (if (-> tuning :config :enable-jsonb)
-      (migrate-to-jsonb! tx)
-      (migrate-to-json! tx))
+    (let [is-json? (some? (query-payload-json tx))
+          enable-b (-> tuning :config :enable-jsonb)]
+      (when (and is-json? enable-b) (migrate-to-jsonb! tx)) 
+      (when (not (or is-json? enable-b)) (migrate-to-json! tx)))
     (when (nil? (check-statement-to-actor-cascading-delete tx))
       (add-statement-to-actor-cascading-delete! tx))
     (when (some? (query-varchar-exists tx))
-      (convert-varchars-to-text! tx)))
+      (convert-varchars-to-text! tx))
+    (create-blocked-jwt-table! tx)
+    (alter-blocked-jwt-add-one-time-id! tx)
+    (alter-lrs-credential-add-label! tx)
+    (alter-lrs-credential-add-is-seed! tx)
+    (when-not (some? (query-statement-to-actor-usage-enum-has-context-actors tx))
+      (alter-statement-to-actor-usage-enum-add-context-actors! tx)))
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
@@ -102,6 +112,12 @@
     (query-statement-exists tx input))
   (-query-statement-descendants [_ tx input]
     (query-statement-descendants tx input))
+  (-query-statements-lazy [_ tx input]
+    (let [sqlvec (query-statements-sqlvec input)]
+      (jdbc/plan tx sqlvec {:fetch-size  4000
+                            :concurrency :read-only
+                            :cursors     :close
+                            :result-type :forward-only})))
 
   bp/ActorBackend
   (-insert-actor! [_ tx input]
@@ -197,11 +213,29 @@
   (-query-account-count-local [_ tx]
     (query-account-count-local tx))
 
+  bp/JWTBlocklistBackend
+  (-insert-blocked-jwt! [_ tx input]
+    (insert-blocked-jwt! tx input))
+  (-insert-one-time-jwt! [_ tx input]
+    (insert-one-time-jwt! tx input))
+  (-update-one-time-jwt! [_ tx input]
+    (update-one-time-jwt! tx input))
+  (-delete-blocked-jwt-by-time! [_ tx input]
+    (delete-blocked-jwt-by-time! tx input))
+  (-query-blocked-jwt [_ tx input]
+    (query-blocked-jwt-exists tx input))
+  (-query-one-time-jwt [_ tx input]
+    (query-one-time-jwt-exists tx input))
+
   bp/CredentialBackend
   (-insert-credential! [_ tx input]
     (insert-credential! tx input))
   (-insert-credential-scope! [_ tx input]
     (insert-credential-scope! tx input))
+  (-update-credential-label! [_ tx input]
+    (update-credential-label! tx input))
+  (-update-credential-is-seed! [_ tx input]
+    (update-credential-is-seed! tx input))
   (-delete-credential! [_ tx input]
     (delete-credential! tx input))
   (-delete-credential-scope! [_ tx input]

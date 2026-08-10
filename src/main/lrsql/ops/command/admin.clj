@@ -2,8 +2,9 @@
   (:require [clojure.spec.alpha :as s]
             [lrsql.backend.protocol :as bp]
             [lrsql.input.admin :as admin-i]
-            [lrsql.spec.common :refer [transaction?]]
-            [lrsql.spec.admin :as ads]))
+            [lrsql.spec.common :as cs :refer [transaction?]]
+            [lrsql.spec.admin :as ads]
+            [lrsql.spec.admin.jwt :as jwts]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Admin Account Insertion
@@ -105,3 +106,75 @@
                                 ensure-input)]
       (bp/-insert-admin-account-oidc! bk tx insert-input)
       {:result primary-key})))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Admin JWTs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef purge-blocklist!
+  :args (s/cat :bk jwts/admin-jwt-backend?
+               :tx transaction?
+               :input jwts/purge-blocklist-input-spec)
+  :ret nil?)
+
+(defn purge-blocklist!
+  "Delete all JWTs from the blocklist that have expired, i.e. whose expirations
+   are before the `:current-time` in `input`."
+  [bk tx input]
+  (bp/-delete-blocked-jwt-by-time! bk tx input)
+  nil)
+
+(s/fdef insert-blocked-jwt!
+  :args (s/cat :bk jwts/admin-jwt-backend?
+               :tx transaction?
+               :input jwts/insert-blocked-jwt-input-spec)
+  :ret (s/or :success jwts/blocked-jwt-op-result-spec
+             :error (s/keys :req-un [::cs/error])))
+
+(defn insert-blocked-jwt!
+  "Insert a new JWT to the blocklist table."
+  [bk tx input]
+  (if (some? (bp/-query-blocked-jwt bk tx input))
+    {:error (ex-info "Cannot have identical JWTs in the blocklist"
+                     {:type ::jwt-conflict-error
+                      :jwt  (:jwt input)})}
+    (do
+      (bp/-insert-blocked-jwt! bk tx input)
+      {:result (:jwt input)})))
+
+;; One-time JWTs ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef insert-one-time-jwt!
+  :args (s/cat :bk jwts/admin-jwt-backend?
+               :tx transaction?
+               :input jwts/insert-one-time-jwt-input-spec)
+  :ret (s/or :success jwts/blocked-jwt-op-result-spec
+             :error (s/keys :req-un [::cs/error])))
+
+(defn insert-one-time-jwt!
+  "Insert a new one-time JWT to the blocklist table, with `:one-time-id`."
+  [bk tx input]
+  (if (some? (bp/-query-one-time-jwt bk tx input))
+    {:error (ex-info "Cannot have identical one-time JWTs"
+                     {:type ::jwt-conflict-error
+                      :jwt  (:jwt input)})}
+    (do
+      (bp/-insert-one-time-jwt! bk tx input)
+      {:result (:jwt input)})))
+
+(s/fdef update-one-time-jwt!
+  :args (s/cat :bk jwts/admin-jwt-backend?
+               :tx transaction?
+               :input jwts/update-one-time-jwt-input-spec)
+  :ret (s/or :success jwts/blocked-jwt-op-result-spec
+             :error (s/keys :req-un [::cs/error])))
+
+(defn update-one-time-jwt!
+  [bk tx input]
+  (if (nil? (bp/-query-one-time-jwt bk tx input))
+    {:error (ex-info "One-time JWT could not be found"
+                     {:type ::jwt-not-found
+                      :jwt  (:jwt input)})}
+    (do
+      (bp/-update-one-time-jwt! bk tx input)
+      {:result (:jwt input)})))

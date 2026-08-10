@@ -8,7 +8,7 @@
 ;; Init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(support/instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 (use-fixtures :each support/fresh-db-fixture)
 
@@ -21,18 +21,19 @@
     (let [sys  (support/test-system)
           sys' (component/start sys)
           pre  (-> sys' :webserver :config :url-prefix)]
-      ;; We need to pass the `--insecure` arg because curl would otherwise
-      ;; not accept our generate selfie certs
-      (is (= 200
-             (:status (curl/get "https://0.0.0.0:8443/health"
-                                {:raw-args ["--insecure"]}))))
-      (is (some?
-           (:body (curl/get (format "https://0.0.0.0:8443%s/about" pre)
-                            {:raw-args ["--insecure"]}))))
-      (testing "is not over the HTTP port"
-        (is (thrown-with-msg?
-             clojure.lang.ExceptionInfo
-             #"curl: \(35\).+"
-             (curl/get "https://0.0.0.0:8080/health"
-                       {:raw-args ["--insecure"]}))))
-      (component/stop sys'))))
+      (try
+        ;; We need to pass the `--insecure` arg because curl would otherwise
+        ;; not accept our generate selfie certs
+        (is (= 200
+               (:status (curl/get "https://0.0.0.0:8443/health"
+                                  {:raw-args ["--insecure"]}))))
+        (is (some?
+             (:body (curl/get (format "https://0.0.0.0:8443%s/about" pre)
+                              {:raw-args ["--insecure"]}))))
+        (testing "is not over the HTTP port"
+          (is (thrown-with-msg?
+               clojure.lang.ExceptionInfo
+               #"curl: \(35\).+"
+               (curl/get "https://0.0.0.0:8080/health"
+                         {:raw-args ["--insecure"]}))))
+        (finally (component/stop sys'))))))

@@ -1,16 +1,13 @@
 (ns lrsql.util.statement
-  (:require [ring.util.codec :refer [form-encode]]
+  (:require [clojure.string :as cs]
+            [com.yetanalytics.pathetic :as pa]
             [com.yetanalytics.lrs.xapi.statements :as ss]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [lrsql.util.path :as up]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Preparation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; If a Statement lacks a version, the version MUST be set to 1.0.0
-;; TODO: Change for version 2.0.0
-;; FIXME: Why is this not version 1.0.3?
-(def xapi-version "1.0.0")
 
 ;; NOTE: SQL LRS overwrites any pre-existing authority object in a statement, as
 ;; suggested by the spec:
@@ -32,13 +29,13 @@
     ;; Dissoc empty object activity name + description
     (= "Activity" (get-in statement ["object" "objectType"]))
     (update-in ["object" "definition"]
-            (fn [{:strs [choices scale source target steps] :as obj-def}]
-              (cond-> (dissoc-empty-lang-maps* obj-def)
-                choices (update "choices" #(mapv dissoc-empty-lang-maps* %))
-                scale   (update "scale" #(mapv dissoc-empty-lang-maps* %))
-                source  (update "source" #(mapv dissoc-empty-lang-maps* %))
-                target  (update "target" #(mapv dissoc-empty-lang-maps* %))
-                steps   (update "steps" #(mapv dissoc-empty-lang-maps* %)))))
+               (fn [{:strs [choices scale source target steps] :as obj-def}]
+                 (cond-> (dissoc-empty-lang-maps* obj-def)
+                   choices (update "choices" #(mapv dissoc-empty-lang-maps* %))
+                   scale   (update "scale" #(mapv dissoc-empty-lang-maps* %))
+                   source  (update "source" #(mapv dissoc-empty-lang-maps* %))
+                   target  (update "target" #(mapv dissoc-empty-lang-maps* %))
+                   steps   (update "steps" #(mapv dissoc-empty-lang-maps* %)))))
     ;; Dissoc empty attachemnt name + description
     (contains? statement "attachments")
     (update "attachments" #(mapv dissoc-empty-lang-maps* %))))
@@ -57,7 +54,7 @@
   "Prepare `statement` for LRS storage by coll-ifying context activities
    and setting missing id, timestamp, authority, version, and stored
    properties. In addition, removes empty maps from `statement`."
-  [authority statement]
+  [version authority statement]
   (let [{?id        "id"
          ?timestamp "timestamp"
          ?version   "version"}
@@ -93,7 +90,9 @@
       (not ?timestamp)
       (assoc-to-statement "timestamp" squuid-ts-str)
       (not ?version)
-      (assoc-to-statement "version" xapi-version))))
+      (assoc-to-statement "version" (case version
+                                      "1.0.3" "1.0.0"
+                                      "2.0.0" "2.0.0")))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Statement Equality
@@ -141,18 +140,38 @@
    {limit-max     :stmt-get-max
     limit-default :stmt-get-default
     :as _lrs-config}]
-  (assoc params
-         :limit
-         (cond
-           ;; Ensure limit is =< max
-           (pos-int? ?limit)
-           (min ?limit limit-max)
-           ;; If zero, spec says use max
-           (and ?limit (zero? ?limit))
-           limit-max
-           ;; Otherwise, apply default
-           :else
-           limit-default)))
+  (let [limit (cond
+                ;; Ensure limit is <= max
+                (pos-int? ?limit)
+                (min ?limit limit-max)
+                ;; If limit is zero, spec says use max
+                (and ?limit (zero? ?limit))
+                limit-max
+                ;; Otherwise, apply default
+                :else
+                limit-default)]
+    (assoc params :limit limit)))
+
+(defn ensure-default-max-limit-csv
+  "Similar to `ensure-default-max-limit`, but uses `:stmt-get-max-csv`.
+   Does not apply `:stmt-get-default`."
+  [{?limit :limit
+    :as    params}
+   {?limit-max :stmt-get-max-csv
+    :as _lrs-config}]
+  (let [limit (cond
+                ;; Ensure limit is <= max
+                (and (pos-int? ?limit)
+                     (pos-int? ?limit-max))
+                (min ?limit ?limit-max)
+                ;; If limit is zero or missing, default to max
+                (pos-int? ?limit-max)
+                ?limit-max
+                ;; Otherwise, no limit
+                :else
+                nil)]
+    (cond-> params
+      limit (assoc :limit limit))))
 
 ;; Post-query
 
@@ -164,7 +183,76 @@
   (let [{?agent :agent} query-params]
     (str prefix
          "/statements?"
-         (form-encode
+         (u/form-encode
           (cond-> query-params
-            true   (assoc :from next-cursor)
+            true   (assoc :from (u/uuid->str next-cursor))
             ?agent (assoc :agent (u/write-json-str ?agent)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement CSV
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def ^:private json-path-opts
+  {:return-missing?    true
+   :return-duplicates? false})
+
+(defn property-paths->json-paths
+  [property-paths]
+  (mapv up/path->jsonpath-vec property-paths))
+
+(defn property-paths->csv-headers
+  [property-paths]
+  (mapv up/path->csv-header property-paths))
+
+(defn statement->csv-row
+  [json-paths statement]
+  (pa/get-values* statement json-paths json-path-opts))
+
+(defn statements->csv-seq
+  "Converts a lazy `statement-seq` into a lazy seq of CSV data in the
+   form of vectors of vectors representing row data. The first vector
+   is the headers, parsed from `property-paths`."
+  [property-paths statements-seq]
+  (let [json-paths  (mapv up/path->jsonpath-vec property-paths)
+        csv-headers (mapv up/path->csv-header property-paths)
+        stmt->row   (partial statement->csv-row json-paths)]
+    (->> statements-seq
+         (map stmt->row)
+         (cons csv-headers)
+         lazy-seq)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Statement Versioning
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- ensure-103-timestamp
+  "Ensure the timestamp is in the 1.0.3 format."
+  [timestamp]
+  (if (cs/includes? timestamp " ")
+    (cs/replace-first timestamp " " "T")
+    timestamp))
+
+(defn convert-200-to-103
+  "Convert a Statement from xAPI 2.0.0 to 1.0.3 by removing properties not in
+   the 1.0.3 spec and normalizing timestamp."
+  [statement]
+  (if (= "2.0.0" (get statement "version"))
+    (-> statement
+        (assoc "version" "1.0.0")
+        (update "timestamp" ensure-103-timestamp)
+        (cond-> (get statement "context")
+          (update "context" dissoc "contextAgents" "contextGroups")))
+    statement))
+
+(defn strict-version-result
+  "Process a get-statements result in strict version mode."
+  [{:keys [statement statement-result]
+    :as    get-statements-ret}]
+  (cond
+    statement
+    (update get-statements-ret :statement convert-200-to-103)
+    statement-result
+    (update-in get-statements-ret
+               [:statement-result :statements]
+               #(mapv convert-200-to-103 %))
+    :else get-statements-ret))

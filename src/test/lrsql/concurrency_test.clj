@@ -1,11 +1,10 @@
 (ns lrsql.concurrency-test
+  "Tests for concurrent insertions and queries."
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure.spec.alpha :as s]
             [clojure.core.async :as a]
             [com.stuartsierra.component :as component]
             [babashka.curl :as curl]
-            [com.yetanalytics.datasim.input :as sim-input]
-            [com.yetanalytics.datasim.sim   :as sim]
             [xapi-schema.spec :as xs]
             [lrsql.test-support :as support]
             [lrsql.util :as u]))
@@ -14,28 +13,9 @@
 ;; Init
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(support/instrument-lrsql)
+(use-fixtures :once support/instrumentation-fixture)
 
 (use-fixtures :each support/fresh-db-fixture)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Helpers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; We reuse bench inputs for tests here.
-
-(defn test-statements
-  [num-stmts]
-  (->> "dev-resources/bench/insert_input.json"
-       (sim-input/from-location :input :json)
-       sim/sim-seq
-       (take num-stmts)
-       (into [])))
-
-(def test-queries
-  (-> "dev-resources/bench/query_input.json"
-      slurp
-      (u/parse-json :object? false)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tests
@@ -56,76 +36,80 @@
                          req-chan)
     (a/<!! (a/into [] res-chan))))
 
+(def headers
+  {"Content-Type"             "application/json"
+   "X-Experience-API-Version" "1.0.3"})
+
+(def basic-auth
+  ["username" "password"])
+
 (deftest concurrency-test
   (let [sys        (support/test-system)
         sys'       (component/start sys)
         url-prefix (-> sys' :webserver :config :url-prefix)
-        ;; Curl
-        headers    {"Content-Type"             "application/json"
-                    "X-Experience-API-Version" "1.0.3"}
-        basic-auth ["username" "password"]
         ;; Parameters
         endpoint    (format "http://localhost:8080%s/statements" url-prefix)
         num-stmts   100
         batch-size  5
         num-threads 5
         query-mult  5]
-    (testing "concurrent insertions"
-      (let [insert-reqs (->> (test-statements num-stmts)
-                             (partition batch-size)
-                             (map (fn [batch]
-                                    {:headers    headers
-                                     :basic-auth basic-auth
-                                     :body       (u/write-json-str (vec batch))})))
-            insert-res  (do-async-op! curl/post
-                                      endpoint
-                                      insert-reqs
-                                      num-threads)]
-        (is (= (/ num-stmts batch-size)
-               (count insert-res)))
-        (is (every? (fn [res]
-                      (cond ;; Best we can do to catch PG deadlock exn
-                        (instance? clojure.lang.ExceptionInfo res)
-                        (let [exd (ex-data res)]
-                          (and (= 500 (:status exd))
-                               (= "org.postgresql.util.PSQLException"
-                                  (-> exd
-                                      :body
-                                      u/parse-json
-                                      (get-in ["error" "type" "name"])))))
+    (try
+      (testing "concurrent insertions"
+        (let [insert-reqs (->> (support/bench-statements num-stmts)
+                               (partition batch-size)
+                               (map (fn [batch]
+                                      {:headers    headers
+                                       :basic-auth basic-auth
+                                       :body       (u/write-json-str (vec batch))})))
+              insert-res  (do-async-op! curl/post
+                                        endpoint
+                                        insert-reqs
+                                        num-threads)]
+          (is (= (/ num-stmts batch-size)
+                 (count insert-res)))
+          (is (every? (fn [res]
+                        (cond ;; Best we can do to catch PG deadlock exn
+                          (instance? clojure.lang.ExceptionInfo res)
+                          (let [exd (ex-data res)]
+                            (and (= 500 (:status exd))
+                                 (= "org.postgresql.util.PSQLException"
+                                    (-> exd
+                                        :body
+                                        u/parse-json
+                                        (get-in ["error" "type" "name"])))))
 
-                        (= 200 (:status res))
-                        (= batch-size (-> res
-                                          :body
-                                          (u/parse-json :object? false)
-                                          count))
+                          (= 200 (:status res))
+                          (= batch-size (-> res
+                                            :body
+                                            (u/parse-json :object? false)
+                                            count))
 
-                        :else
-                        false))
-                    insert-res))))
-    (testing "concurrent queries"
-      (let [query-reqs (->> test-queries
-                            (mapcat (partial repeat query-mult))
-                            (map (fn [query]
-                                   {:headers      headers
-                                    :basic-auth   basic-auth
-                                    :query-params (not-empty query)})))
-            query-res  (do-async-op! curl/get
-                                     endpoint
-                                     query-reqs
-                                     num-threads)]
-        (is (= (* query-mult (count test-queries))
-               (count query-res)))
-        (is (every? (fn [res]
-                      (cond ;; Queries should never deadlock
-                        (= 200 (:status res))
-                        (s/valid? (s/coll-of ::xs/statement)
-                                  (-> res
-                                      :body
-                                      u/parse-json
-                                      (get "statements")))
+                          :else
+                          false))
+                      insert-res))))
+      (testing "concurrent queries"
+        (let [query-reqs (->> support/bench-queries
+                              (mapcat (partial repeat query-mult))
+                              (map (fn [query]
+                                     {:headers      headers
+                                      :basic-auth   basic-auth
+                                      :query-params (not-empty query)})))
+              query-res  (do-async-op! curl/get
+                                       endpoint
+                                       query-reqs
+                                       num-threads)]
+          (is (= (* query-mult (count support/bench-queries))
+                 (count query-res)))
+          (is (every? (fn [res]
+                        (cond ;; Queries should never deadlock
+                          (= 200 (:status res))
+                          (s/valid? (s/coll-of ::xs/statement)
+                                    (-> res
+                                        :body
+                                        u/parse-json
+                                        (get "statements")))
 
-                        :else
-                        false))
-                    query-res))))
-    (component/stop sys')))
+                          :else
+                          false))
+                      query-res))))
+      (finally (component/stop sys')))))

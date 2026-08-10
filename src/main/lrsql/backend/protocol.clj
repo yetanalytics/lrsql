@@ -30,6 +30,7 @@
   ;; Queries
   (-query-statement [this tx input])
   (-query-statements [this tx input])
+  (-query-statements-lazy [this tx input])
   (-query-statement-exists [this tx input])
   (-query-statement-descendants [this tx input]))
 
@@ -101,10 +102,22 @@
   (-query-all-admin-accounts [this tx])
   (-query-account-count-local [this tx]))
 
+(defprotocol JWTBlocklistBackend
+  ;; Commands
+  (-insert-blocked-jwt! [this tx input])
+  (-insert-one-time-jwt! [this tx input])
+  (-update-one-time-jwt! [this tx input])
+  (-delete-blocked-jwt-by-time! [this tx input])
+  ;; Queries
+  (-query-blocked-jwt [this tx input])
+  (-query-one-time-jwt [this tx input]))
+
 (defprotocol CredentialBackend
   ;; Commands
   (-insert-credential! [this tx input])
   (-insert-credential-scope! [this tx input])
+  (-update-credential-label! [this tx input])
+  (-update-credential-is-seed! [this tx input])
   (-delete-credential! [this tx input])
   (-delete-credential-scope! [this tx input])
   ;; Queries

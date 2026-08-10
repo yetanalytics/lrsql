@@ -27,10 +27,13 @@ The following examples use `http://example.org` as the URL body. All methods ret
   * `password` must contain at least one of the following special characters: `!@#$%^&*_-+=?`.
 
 The response body contains a newly generated JSON Web Token (JWT) on success. A `401 UNAUTHORIZED` status code is returned if the credentials are incorrect.
+- `POST http://example.org/admin/account/logout`: Log out of the current account. This will revoke any unexpired JWTs associated with the user. (NOTE: This endpoint will return a `400 BAD REQUEST` error if `LRSQL_JWT_NO_VAL` is set to `true`.)
+- `GET http://example.org/admin/account/renew`: Renew the current account's login session by issuing a new JWT. For a given JWT, the renewal is only granted if the current time is less than the `ref` timestamp (which is determined by `LRSQL_JWT_REFRESH_EXP_TIME`).
 - `POST http://example.org/admin/account/create`: Create a new admin account. The request body must be a JSON object that contains `username` and `password` strings. The endpoint returns a JSON object with the ID (UUID) of the newly created user on success, and returns a `409 CONFLICT` if the account already exists.
 - `DELETE http://example.org/admin/account`: Delete an existing account. The JSON request body must contain a UUID `account-id` value. The endpoint returns a JSON object with the ID of the deleted account on success and returns a `404 NOT FOUND` error if the account does not exist.
 - `GET http://example.org/admin/account`: Return an array of all admin accounts in the system on success.
 - `GET http://example.org/admin/me`: Returns the currently authenticated admin accounts on success.
+- `GET http://example.org/admin/verify`: Returns a `204 No Content` response, without a body, on success (the success conditions are the same as the `/admin/me` endpoint).
 
 #### Admin Credential Routes
 
@@ -39,9 +42,17 @@ The response body contains a newly generated JSON Web Token (JWT) on success. A 
 - `GET http://example.org/admin/creds`: Read all credential pairs and their associated scopes for a particular account (denoted by the JWT).
 - `DELETE http://example.org/admin/creds`: Delete an existing credential pair, given by the `api-key` and `secret-key` properties in the request body, as well as any associated scopes.
 
+#### Statement CSV Download
+
+- `GET http://example.org/admin/csv/auth`: Return a one-time JWT for use for `/admin/csv`, used in order to use the latter endpoint as a `download`
+attribute for HTML anchor tags and authenticate without headers.
+- `GET http://example.org/admin/csv`: Download statements in the LRS as a CSV filestream. This endpoint accepts the statement query parameters defined in the [xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#213-get-statements), but allows two additional parameters: the one-time JWT `token` string and the URL-encoded `property-path` vector strings.
+
 #### Misc Admin Routes
 
 - `GET http://example.org/admin/env`: Get select environment variables about the configuration which may aid in client-side operations.
+- `GET http://example.org/admin/openapi`: Get an OpenAPI JSON spec of the endpoint API, which can then be visualized using an OpenAPI viewer like Swagger.
+- `GET http://example.org/admin/status`: Get LRS status information, such as the number of statements in the LRS.
 - `DELETE http://example.org/admin/agents`: Runs a *hard delete* of all records of an actor, and associated records (statements, attachments, etc).  Intended for privacy purposes like GDPR.  Body should be a JSON object of form `{"actor-ifi":<actor-ifi>}`.  Disabled unless the configuration variable enableAdminDeleteActor to be set to `true`.
 
 ### Reaction Management Routes

@@ -4,6 +4,15 @@
 
 The SQL LRS is a Clojure Web Application built on the Pedestal Framework.
 
+### Testing
+
+Development is primarily test-driven, which uses an exhaustive suite of unit tests. To run them locally, run a `make test-[database]` command. In addition, all tests are run for all versions in GitHub Actions CI.
+
+However, in some situations, such as UI development, relying on the unit tests may be inadequate. In these cases, in addition to performing visual tests on the UI, one may need to test these specific scenarios:
+- Login with OIDC ([demo](oidc.md#keycloak-demo))
+- Proxy paths ([demo](other_demos.md#proxied-lrs-demo))
+- JWT override ([JWT config vars](env_vars.md#jwt-config))
+
 ### Build
 
 The SQL LRS can be built or run with the following Makefile targets. They can be executed with `make [target]`.
@@ -14,6 +23,16 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `ci`               | Called when running continuous integration; runs all test cases in all SQL flavors.                                                                                                                          |
 | `test-sqlite`      | Run all tests with SQLite database.                                                                                                                                                                          |
+| `test-mariadb`       | Run all tests with Mariadb database version 11.7.2. Set the `LRSQL_TEST_DB_VERSION` env var to a valid MariaDB docker tag to use another version.                                                              |
+| `test-mariadb-10.6`       | Run all tests with Mariadb database version 10.6.                                                              |
+| `test-mariadb-10.11`       | Run all tests with Mariadb database version 10.11.                                                              |
+| `test-mariadb-11.4`       | Run all tests with Mariadb database version 11.4.                                                              |
+| `test-mariadb-11.7.2`       | Run all tests with Mariadb database version 11.7.2.                                                              |
+| `test-mariadb-11.8`       | Run all tests with Mariadb database version 11.8.                                                              |
+| `test-mysql`       | Run all tests with MySQL database version 8.0.44. Set the `LRSQL_TEST_DB_VERSION` env var to a valid MySQL docker tag to use another version.                                                                                                                                                             |
+| `test-mysql-8.0.44` | Run all tests with MySQL database version 8.0.44                                                                                                                                                             |
+| `test-mysql-8.4` | Run all tests with MySQL database version 8.4                                                                                                                                                      |
+| `test-mysql-9.5.0` | Run all tests with MySQL database version 9.5.0                                                                                                                                                             |
 | `test-postgres`    | Run all tests with Postgres database version 11. Set the `LRSQL_TEST_DB_VERSION` env var to a valid Postgres docker tag to use another version.                                                              |
 | `test-postgres-11` | Run all tests with Postgres database version 11.                                                                                                                                                             |
 | `test-postgres-12` | Run all tests with Postgres database version 12.                                                                                                                                                             |
@@ -32,9 +51,14 @@ The SQL LRS can be built or run with the following Makefile targets. They can be
 | `ephemeral-prod`           | Similar to `ephemeral`, except that the `:prod` profile is used, enabling the use of environment variables without full compilation.       |
 | `sqlite`                   | Start a SQLite-based SQL LRS.                                                                                                              |
 | `postgres`                 | Start a Postgres SQL LRS. Requires a running Postgres instance.                                                                            |
+| `mariadb`                  | Start a Mariadb SQL LRS. Requires a running MariaDB instance.                                                                             |
+| `mysql`                    | Start a MySQL SQL LRS. Requires a running MySQL instance.                                                                             |
 | `run-jar-sqlite`           | Similar to `sqlite` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables.    |
 | `run-jar-sqlite-ephemeral` | Similar to `ephemeral` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables. |
 | `run-jar-postgres`         | Similar to `postgres` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables.  |
+| `run-jar-mariadb`          | Similar to `mariadb` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables.  |
+| `run-jar-mysql`          | Similar to `mysql` but it runs the finished Jar instead of directly from Clojure. Runs with a predefined default set of env variables.  |
+
 
 #### Cleanup Targets
 

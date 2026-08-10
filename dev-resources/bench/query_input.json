@@ -1,8 +1,8 @@
 [
     {},
     {"ascending": "true"},
-    {"agent": "{\"mbox\": \"mailto:bob@example.com\"}"},
-    {"agent": "{\"mbox\": \"mailto:bob@example.com\"}", "related_agents": "true"},
+    {"agent": "{\"mbox\": \"mailto:bob@example.org\"}"},
+    {"agent": "{\"mbox\": \"mailto:bob@example.org\"}", "related_agents": "true"},
     {"activity": "https://w3id.org/xapi/video/activity-type/video"},
     {"activity": "https://w3id.org/xapi/video/activity-type/video", "related_activities": "true"},
     {"registration": "00000000-4000-8000-0000-000000000000"},

@@ -1,9 +1,10 @@
 (ns lrsql.spec.config
   (:require [clojure.spec.alpha :as s]
+            [clojure.string :as cstr]
             [xapi-schema.spec :as xs]
             [lrsql.spec.util :as u]))
 
-(s/def ::db-type #{"sqlite" "postgres" "postgresql"})
+(s/def ::db-type #{"sqlite" "postgres" "postgresql" "mariadb" "mysql"})
 (s/def ::db-name string?)
 (s/def ::db-host string?)
 (s/def ::db-port nat-int?)
@@ -107,6 +108,14 @@
            [{:keys [pool-validation-timeout pool-connection-timeout]}]
            (< pool-validation-timeout pool-connection-timeout))))
 
+(defn- prefix? [s]
+  (cstr/starts-with? s "/"))
+
+(defn- not-admin-prefix? [s]
+  (not (cstr/starts-with? s "/admin")))
+
+(s/def ::stmt-url-prefix (s/and string? prefix? not-admin-prefix?))
+
 (s/def ::admin-user-default string?)
 (s/def ::admin-pass-default string?)
 
@@ -115,6 +124,7 @@
 
 (s/def ::stmt-get-default pos-int?)
 (s/def ::stmt-get-max pos-int?)
+(s/def ::stmt-get-max-csv pos-int?)
 
 (s/def ::authority-template string?)
 (s/def ::authority-url ::xs/irl)
@@ -123,6 +133,23 @@
 
 (s/def ::enable-reactions boolean?)
 (s/def ::reaction-buffer-size pos-int?)
+(s/def ::reaction-version #{"1.0.3" "2.0.0"})
+
+(s/def ::supported-versions
+  (s/and
+   (s/conformer
+    (fn [x]
+      (if (string? x)
+        (into #{}
+              (cstr/split x #","))
+        x)))
+   (s/coll-of
+    #{"1.0.3" "2.0.0"}
+    :kind set?
+    :into #{}
+    :min-count 1)))
+
+(s/def ::enable-strict-version boolean?)
 
 (s/def ::lrs
   (s/and (s/conformer u/remove-nil-vals)
@@ -135,11 +162,20 @@
                           ::oidc-authority-template
                           ::oidc-scope-prefix
                           ::enable-reactions
-                          ::reaction-buffer-size]
+                          ::reaction-buffer-size
+                          ::reaction-version
+                          ::supported-versions
+                          ::enable-strict-version]
                  :opt-un [::admin-user-default
                           ::admin-pass-default
                           ::api-key-default
-                          ::api-secret-default])))
+                          ::api-secret-default
+                          ::stmt-get-max-csv])
+         (fn reaction-version-supported?
+           [{:keys [reaction-version supported-versions]}]
+           (let [supported-set (s/conform ::supported-versions supported-versions)]
+             (and (not= ::s/invalid supported-set)
+                  (contains? supported-set reaction-version))))))
 
 (s/def ::enable-http boolean?)
 (s/def ::enable-http2 boolean?)
@@ -147,12 +183,16 @@
 (s/def ::http-host string?)
 (s/def ::http-port nat-int?)
 (s/def ::ssl-port nat-int?)
+(s/def ::url-prefix ::stmt-url-prefix)
 
 (s/def ::allow-all-origins boolean?)
 (s/def ::allowed-origins (s/nilable (s/coll-of string?)))
 
 (s/def ::jwt-exp-time pos-int?)
 (s/def ::jwt-exp-leeway nat-int?)
+(s/def ::jwt-refresh-exp-time pos-int?)
+(s/def ::jwt-refresh-interval pos-int?)
+(s/def ::jwt-interaction-window pos-int?)
 (s/def ::jwt-no-val boolean?)
 (s/def ::jwt-no-val-uname (s/nilable string?))
 (s/def ::jwt-no-val-issuer (s/nilable string?))
@@ -182,6 +222,8 @@
 (s/def ::oidc-verify-remote-issuer boolean?)
 (s/def ::oidc-enable-local-admin boolean?)
 
+(s/def ::auth-by-cred-id boolean?)
+
 (s/def ::sec-head-hsts (s/nilable string?))
 (s/def ::sec-head-frame (s/nilable string?))
 (s/def ::sec-head-content-type (s/nilable string?))
@@ -210,6 +252,9 @@
                     ::key-enable-selfie
                     ::jwt-exp-time
                     ::jwt-exp-leeway
+                    ::jwt-refresh-exp-time
+                    ::jwt-refresh-interval
+                    ::jwt-interaction-window
                     ::jwt-no-val
                     ::enable-admin-ui
                     ::enable-admin-status
@@ -239,14 +284,19 @@
                     ::sec-head-content
                     ::oidc-issuer
                     ::oidc-audience
-                    ::oidc-client-id])
+                    ::oidc-client-id
+                    ::auth-by-cred-id])
    ;; conditional validation for presence of no-val supporting config
    (fn [{:keys [jwt-no-val jwt-no-val-uname jwt-no-val-issuer
                 jwt-no-val-role-key jwt-no-val-role]}]
      (if jwt-no-val
        (and jwt-no-val-uname jwt-no-val-issuer jwt-no-val-role-key
             jwt-no-val-role)
-       true))))
+       true))
+   ;; validation for JWT temporal intervals
+   (fn [{:keys [jwt-exp-time jwt-refresh-interval jwt-interaction-window]}]
+     (and (<= jwt-interaction-window jwt-refresh-interval)
+          (< jwt-refresh-interval jwt-exp-time)))))
 
 (s/def ::tuning
   (s/keys :opt-un [::enable-jsonb]))

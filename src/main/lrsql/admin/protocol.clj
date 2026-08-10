@@ -18,12 +18,24 @@
   (-update-admin-password [this account-id old-password new-password]
     "Update the password for an admin account given old and new passwords."))
 
+(defprotocol AdminJWTManager
+  (-purge-blocklist [this leeway]
+    "Purge the blocklist of any JWTs that have expired since they were added.")
+  (-create-one-time-jwt [this jwt exp one-time-id]
+    "Add a one-time JWT that will be blocked after it is validated.")
+  (-block-jwt [this jwt expiration]
+    "Block `jwt` and apply an associated `expiration` number of seconds. Returns an error if `jwt` is already in the blocklist.")
+  (-block-one-time-jwt [this jwt one-time-id]
+    "Similar to `-block-jwt` but specific to blocking one-time JWTs. Returns an error if `jwt` and `one-time-id` cannot be found or updated.")
+  (-jwt-blocked? [this jwt]
+    "Is `jwt` on the blocklist?"))
+
 (defprotocol APIKeyManager
-  (-create-api-keys [this account-id scopes]
+  (-create-api-keys [this account-id label scopes]
     "Create a new API key pair with the associated scopes.")
   (-get-api-keys [this account-id]
     "Get all API key pairs associated with the account.")
-  (-update-api-keys [this account-id api-key secret-key scopes]
+  (-update-api-keys [this account-id api-key secret-key label scopes]
     "Update the key pair associated with the account with new scopes.")
   (-delete-api-keys [this account-id api-key secret-key]
     "Delete the key pair associated with the account."))
@@ -43,4 +55,11 @@
     "Soft-delete a reaction."))
 
 (defprotocol AdminLRSManager
-  (-delete-actor [this params]))
+  (-delete-actor [this params]
+    "Delete actor by `:actor-id`")
+  (-get-statements-csv [this writer property-paths params]
+    "Retrieve statements by CSV. Instead of returning a sequence of
+     statements, streams them to `writer` as a side effect, in order to
+     avoid storing them in memory. `property-paths` are defined in the
+     Reactions API, while `params` are the same query params for
+     `-get-statements`."))

@@ -4,6 +4,9 @@
  :key-enable-selfie         true
  :jwt-exp-time              3600
  :jwt-exp-leeway            1
+ :jwt-refresh-exp-time      86400
+ :jwt-refresh-interval      3540
+ :jwt-interaction-window    600
  :jwt-no-val                false
  :jwt-no-val-uname          nil
  :jwt-no-val-issuer         nil
@@ -13,6 +16,7 @@
  :jwt-common-secret         nil
  :enable-http               true
  :enable-http2              true
+ :enable-sni                false
  :ssl-port                  8443
  :http-host                 "0.0.0.0"
  :http-port                 8080
@@ -32,4 +36,5 @@
  :oidc-enable-local-admin   false
  :enable-clamav             false
  :clamav-host               "localhost"
- :clamav-port               3310}
+ :clamav-port               3310
+ :auth-by-cred-id           false}

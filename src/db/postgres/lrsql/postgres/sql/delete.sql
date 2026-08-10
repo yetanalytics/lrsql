@@ -108,3 +108,12 @@ DELETE FROM state_document WHERE agent_ifi = :actor-ifi;
 
 DELETE FROM actor WHERE actor_ifi = :actor-ifi;
 ------------------end delete-actor--------------------
+
+/* JWT Blocklist */
+
+-- :name delete-blocked-jwt-by-time!
+-- :command :execute
+-- :result :affected
+-- :doc Delete all blocked JWTs where `:current-time` is past the eviction time.
+DELETE FROM blocked_jwt
+WHERE evict_time <= :current-time;

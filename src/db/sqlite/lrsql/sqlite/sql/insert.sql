@@ -135,9 +135,9 @@ INSERT INTO admin_account (
 -- :result :affected
 -- :doc Given API keys and `:account-id`, insert the credentials into the credential table.
 INSERT INTO lrs_credential (
-  id, api_key, secret_key, account_id
+  id, api_key, secret_key, account_id, label
 ) VALUES (
-  :primary-key, :api-key, :secret-key, :account-id
+  :primary-key, :api-key, :secret-key, :account-id, :label
 )
 
 -- :name insert-credential-scope!
@@ -158,4 +158,26 @@ INSERT INTO reaction (
   id, title, ruleset, active, created, modified
 ) VALUES (
   :primary-key, :title, :ruleset, :active, :created, :modified
+);
+
+/* JWT Blocklist */
+
+-- :name insert-blocked-jwt!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a `:jwt` and a `:eviction-time` into the blocklist.
+INSERT INTO blocked_jwt (
+  jwt, evict_time
+) VALUES (
+  :jwt, :eviction-time
+);
+
+-- :name insert-one-time-jwt!
+-- :command :insert
+-- :result :affected
+-- :doc Insert a `:jwt` and a `:eviction-time` with `:one-time-id` into the blocklist.
+INSERT INTO blocked_jwt (
+  jwt, evict_time, one_time_id
+) VALUES (
+  :jwt, :eviction-time, :one-time-id
 );

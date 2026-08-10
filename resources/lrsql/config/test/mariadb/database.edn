@@ -1,0 +1,4 @@
+#merge
+[#include "test/default/database.edn"
+ {:db-properties #or [#env LRSQL_DB_PROPERTIES "allowMultiQueries=true"]}]
+
