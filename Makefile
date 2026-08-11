@@ -23,7 +23,7 @@ resources/public/admin/index.html:
 # All other phony targets run lrsql instances that can be used and tested
 # during development. All start up with fixed DB properties and seed creds.
 
-.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, mariadb, mysql, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-14, test-postgres-15, test-postgres-16, test-postgres-17, test-postgres-18, test-mariadb, test-mariadb-10.6, test-mariadb-10.11, test-mariadb-11.4, test-mariadb-11.7.2, test-mariadb-11.8, test-mysql, test-mysql-8.0.44, test-mysql-8.4, test-mysql-9.5.0
+.phony: clean-dev, ci, ephemeral, ephemeral-prod, sqlite, postgres, mariadb, mysql, bench, bench-async, keycloak-demo, ephemeral-oidc, superset-demo, clamav-demo, test-sqlite, test-postgres, test-postgres-14, test-postgres-15, test-postgres-16, test-postgres-17, test-postgres-18, test-mariadb, test-mariadb-10.6, test-mariadb-10.11, test-mariadb-11.4, test-mariadb-11.7.2, test-mariadb-11.8, test-mysql, test-mysql-8.0.44, test-mysql-8.4, test-mysql-9.5.0, sbom, sbom-csv
 
 clean-dev:
 	rm -rf *.db *.log resources/public tmp
@@ -149,7 +149,7 @@ clamav-demo:
 # lrsql package, including config, docs, JARs, admin UI files, JREs,
 # Windows executables, NOTICE and LICENSE
 
-.phony: clean, clean-non-dl, bundle
+.phony: clean, clean-non-dl, bundle, runtime-info
 
 clean:
 	rm -rf target resources/public pom.xml
@@ -253,6 +253,14 @@ target/bundle: target/bundle/config target/bundle/doc target/bundle/bin target/b
 endif
 
 bundle: target/bundle
+
+# Runtime info (Docker)
+
+target/runtime-info.txt: bundle Dockerfile
+	mkdir -p target
+	docker build -t lrsql:local .
+	docker run --rm --entrypoint sh lrsql:local -c 'set -e; echo "== OS =="; cat /etc/os-release; echo; echo "== Kernel =="; uname -a; echo; echo "== Java =="; /lrsql/runtimes/linux/bin/java -version 2>&1; echo; echo "== Packages =="; apk info -vv' > target/runtime-info.txt
+runtime-info: target/runtime-info.txt
 
 # *** Build Windows EXEs with launch4j ***
 
@@ -363,6 +371,16 @@ run-jar-mysql: target/bundle
 
 pom.xml:
 	clojure -Adb-sqlite:db-postgres -Spom
+
+sbom: pom.xml
+	mvn -q org.cyclonedx:cyclonedx-maven-plugin:makeAggregateBom \
+	  -DoutputFormat=json \
+	  -DoutputName=lrsql \
+	  -DschemaVersion=1.6 \
+	  -DprojectType=application
+
+sbom-csv: sbom
+	jq -r -f ./dev-resources/sbom/sbom_flat.jq ./target/lrsql.json > ./target/lrsql-sbom.csv
 
 # TODO: Add a local vulnerability checker.
 # Note that we removed our previous one that used nvd-clojure as that app was
