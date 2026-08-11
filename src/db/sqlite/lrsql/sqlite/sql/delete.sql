@@ -43,7 +43,7 @@ DELETE FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 AND state_id = :state-id
---~ (when (:registration params) "AND registration = :registration" "AND registration ISNULL")
+--~ (if (:registration params) "AND registration = :registration" "AND registration ISNULL")
 AND contents = :expected-contents
 
 -- :name delete-agent-profile-document-if-contents!
