@@ -33,6 +33,7 @@
             [lrsql.ops.query.statement     :as stmt-q]
             [lrsql.spec.config             :as cs]
             [lrsql.util.auth               :as auth-util]
+            [lrsql.util.document           :as doc-util]
             [lrsql.util.oidc               :as oidc-util]
             [lrsql.util.statement          :as stmt-util]
             [lrsql.util                    :as util]
@@ -188,13 +189,12 @@
 
   lrsp/DocumentResource
   (-set-document
-    [lrs _ctx _auth-identity params document merge?]
+    [lrs ctx _auth-identity params document merge?]
     (let [conn  (lrs-conn lrs)
-          input (doc-input/insert-document-input params document)]
-      (jdbc/with-transaction [tx conn]
-        (if merge?
-          (doc-cmd/upsert-document! backend tx input)
-          (doc-cmd/insert-document! backend tx input)))))
+          input (doc-input/insert-document-input params document)
+          retry-opts (doc-util/document-retry-opts backend config)]
+      (with-rerunable-txn [tx conn retry-opts]
+        (doc-cmd/set-document-cas! backend tx ctx input merge?))))
   (-get-document
     [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)

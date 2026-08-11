@@ -5,7 +5,35 @@
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
             [lrsql.util :as u]
+            [lrsql.util.document :as du]
             [lrsql.ops.util :refer [throw-invalid-table-ex]]))
+
+(defn- document-cas-ops
+  "Return the backend operations used for a document CAS write."
+  [table]
+  (case table
+    :state-document
+    {:query  bp/-query-state-document
+     :insert bp/-insert-state-document-if-absent!
+     :update bp/-update-state-document-if-contents!}
+
+    :agent-profile-document
+    {:query  bp/-query-agent-profile-document
+     :insert bp/-insert-agent-profile-document-if-absent!
+     :update bp/-update-agent-profile-document-if-contents!}
+
+    :activity-profile-document
+    {:query  bp/-query-activity-profile-document
+     :insert bp/-insert-activity-profile-document-if-absent!
+     :update bp/-update-activity-profile-document-if-contents!}
+
+    (throw-invalid-table-ex "document-cas-ops" {:table table})))
+
+(defn- ensure-cas-applied!
+  [applied? operation table]
+  (when-not applied?
+    (du/throw-cas-conflict! {:operation operation
+                             :table     table})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertion
@@ -165,6 +193,72 @@
                        bp/-update-activity-profile-document!)
     ;; Else
     (throw-invalid-table-ex "upsert-document!" input)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Atomic Document Setting
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- put-document-cas!
+  [bk tx input old-doc insert-fn! update-fn!]
+  (let [{:keys [table]} input]
+    (ensure-cas-applied!
+     (if old-doc
+       (update-fn! bk tx (assoc input
+                                :expected-contents (:contents old-doc)))
+       (insert-fn! bk tx input))
+     :put
+     table)
+    {}))
+
+(defn- post-document-cas!
+  [bk tx input old-doc insert-fn! update-fn!]
+  (let [{:keys [table]} input]
+    (if old-doc
+      (upsert-update-document!
+       bk
+       tx
+       input
+       old-doc
+       (fn [bk' tx' merged-input]
+         (ensure-cas-applied!
+          (update-fn! bk'
+                      tx'
+                      (assoc merged-input
+                             :expected-contents (:contents old-doc)))
+          :post
+          table)))
+      (upsert-insert-document!
+       bk
+       tx
+       input
+       (fn [bk' tx' new-input]
+         (ensure-cas-applied! (insert-fn! bk' tx' new-input)
+                              :post
+                              table))))))
+
+(s/fdef set-document-cas!
+  :args (s/cat :bk ds/document-backend?
+               :tx transaction?
+               :ctx map?
+               :input ds/insert-document-spec
+               :merge? boolean?)
+  :ret ds/document-command-res-spec)
+
+(defn set-document-cas!
+  "Atomically PUT or POST a document after validating the normalized ETag
+   preconditions in `ctx` against the contents read in this transaction.
+   A missed database CAS predicate throws an internal retryable conflict."
+  [bk tx ctx {:keys [table] :as input} merge?]
+  (let [{:keys [query insert update]} (document-cas-ops table)
+        old-doc (query bk tx input)
+        operation (if merge? :post :put)]
+    (if-some [error-result
+              (du/precondition-error ctx old-doc {:operation operation
+                                                  :table     table})]
+      error-result
+      (if merge?
+        (post-document-cas! bk tx input old-doc insert update)
+        (put-document-cas! bk tx input old-doc insert update)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Deletion
