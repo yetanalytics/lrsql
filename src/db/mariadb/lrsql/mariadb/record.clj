@@ -6,7 +6,8 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.result :as br]
             [lrsql.init :refer [init-hugsql-adapter!]]
-            [lrsql.mariadb.data :as md])
+            [lrsql.mariadb.data :as md]
+            [clojure.string :as cstr])
   (:import [java.security MessageDigest]
            [java.sql SQLException]))
 
@@ -14,7 +15,7 @@
   (as-> p path
     (map #(format "\"%s\"" %) path)
     (into [\$] path)
-    (clojure.string/join \. path)
+    (cstr/join \. path)
     (format "'%s'" path)))
 
 (defn sha256-bytes [^String s]
