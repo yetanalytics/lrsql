@@ -131,9 +131,13 @@
                (:schema_version (query-schema-version tx))))
 
   bp/BackendUtil
-  (-txn-retry? [_ _ex]
-    ;; No known retry cases for SQLite
-    false)
+  (-txn-retry? [_ ex]
+    (and (instance? SQLiteException ex)
+         ;; Extended BUSY and LOCKED codes retain their primary result code in
+         ;; the low byte (e.g. SQLITE_BUSY_SNAPSHOT is 0x205).
+         (contains? #{5 6}
+                    (bit-and 0xff
+                             (.-code (.getResultCode ^SQLiteException ex))))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]

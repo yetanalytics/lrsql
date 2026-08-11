@@ -6,7 +6,8 @@
             [com.yetanalytics.lrs.xapi.document :as lrs-doc]
             [lrsql.test-constants :as tc]
             [lrsql.test-support :as support]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [lrsql.util.document :as doc-util]))
 
 (use-fixtures :once support/instrumentation-fixture)
 (use-fixtures :each support/fresh-db-fixture)
@@ -234,5 +235,76 @@
                   tc/auth-ident
                   absent-params))
                 "If-Match fails for an absent document"))))
+      (finally
+        (component/stop sys)))))
+
+(defn- state-collection-params
+  [suffix]
+  {:activityId (str "https://example.org/precondition/collection/" suffix)
+   :agent      {"mbox" "mailto:state-collection@example.org"}})
+
+(defn- state-document-params
+  [collection-params state-id]
+  (assoc collection-params :stateId state-id))
+
+(defn- get-state-document-ids
+  [lrs params]
+  (lrsp/-get-document-ids lrs tc/ctx tc/auth-ident params))
+
+(deftest state-collection-delete-preconditions-test
+  (let [sys (component/start (support/test-system))
+        lrs (:lrs sys)]
+    (try
+      (testing "canonical response and matching or stale If-Match"
+        (let [params (state-collection-params "conditional")]
+          (doseq [state-id ["zeta" "alpha" "middle"]]
+            (is (= {} (lrsp/-set-document
+                       lrs tc/ctx tc/auth-ident
+                       (state-document-params params state-id)
+                       (document initial-body)
+                       false))))
+          (let [ids  ["alpha" "middle" "zeta"]
+                etag (doc-util/state-document-ids-etag ids)]
+            (is (= {:document-ids ids}
+                   (get-state-document-ids lrs params)))
+            (is (precondition-failed?
+                 (lrsp/-delete-documents
+                  lrs
+                  (precondition-ctx {:if-match #{"stale"}})
+                  tc/auth-ident
+                  params)))
+            (is (= ids
+                   (:document-ids (get-state-document-ids lrs params)))
+                "a stale collection ETag leaves every State document intact")
+            (is (= {}
+                   (lrsp/-delete-documents
+                    lrs
+                    (precondition-ctx {:if-match #{etag}})
+                    tc/auth-ident
+                    params)))
+            (is (= {:document-ids []}
+                   (get-state-document-ids lrs params)))
+            (is (= {}
+                   (lrsp/-delete-documents
+                    lrs
+                    (precondition-ctx
+                     {:if-match
+                      #{(doc-util/state-document-ids-etag [])}})
+                    tc/auth-ident
+                    params))
+                "the empty collection has the ETag of its [] representation"))))
+
+      (testing "unconditional collection deletion"
+        (let [params (state-collection-params "unconditional")]
+          (doseq [state-id ["one" "two"]]
+            (is (= {} (lrsp/-set-document
+                       lrs tc/ctx tc/auth-ident
+                       (state-document-params params state-id)
+                       (document initial-body)
+                       false))))
+          (is (= {} (lrsp/-delete-documents
+                     lrs tc/ctx tc/auth-ident params)))
+          (is (= [] (:document-ids
+                     (get-state-document-ids lrs params))))))
       (finally
         (component/stop sys)))))

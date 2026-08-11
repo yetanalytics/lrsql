@@ -6,9 +6,9 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.result :as br]
             [lrsql.init :refer [init-hugsql-adapter!]]
-            [lrsql.mariadb.data :as md]
-            [clojure.string :refer [includes?]])
-  (:import [java.security MessageDigest]))
+            [lrsql.mariadb.data :as md])
+  (:import [java.security MessageDigest]
+           [java.sql SQLException]))
 
 (defn make-path-str [p]
   (as-> p path
@@ -75,10 +75,13 @@
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
-    (and (instance? java.sql.SQLException ex)
-         (let [msg (.getMessage ex)]
-           (or (includes? msg "Record has changed since last read")
-               (includes? msg "Deadlock found when trying to get lock")))))
+    (and (instance? SQLException ex)
+         (let [sql-ex ^SQLException ex]
+           (or (= "40001" (.getSQLState sql-ex))
+               (contains? #{1020  ; record changed since last read
+                            1205  ; lock wait timeout
+                            1213} ; deadlock / serialization conflict
+                          (.getErrorCode sql-ex))))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]

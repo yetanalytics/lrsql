@@ -5,7 +5,8 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.util.concurrency :as concurrency]
             [lrsql.util.document :as document])
-  (:import [java.nio.charset StandardCharsets]))
+  (:import [java.nio.charset StandardCharsets]
+           [java.util Arrays]))
 
 (defn- utf8-bytes
   [s]
@@ -15,6 +16,19 @@
   (reify bp/BackendUtil
     (-txn-retry? [_ ex]
       (= ::retryable-database-error (:type (ex-data ex))))))
+
+(deftest state-document-id-representation-test
+  (let [canonical ["alpha" "middle" "zeta"]
+        json      "[\"alpha\",\"middle\",\"zeta\"]"]
+    (is (= canonical
+           (document/canonical-state-document-ids
+            ["zeta" "alpha" "middle"])))
+    (is (Arrays/equals (utf8-bytes json)
+                       (document/state-document-ids-contents canonical)))
+    (is (= (hash/sha-1 json)
+           (document/state-document-ids-etag canonical)))
+    (is (= (hash/sha-1 "[]")
+           (document/state-document-ids-etag [])))))
 
 (deftest normalized-preconditions-test
   (let [contents (utf8-bytes "{\"value\":\"current\"}")
@@ -107,6 +121,18 @@
       (is (= 7 (:max-attempt opts)))
       (is (= 250 (:budget opts)))
       (is ((:retry-test opts) (document/cas-conflict-ex)))
+      (is ((:retry-test opts)
+           (ex-info "Retry database error"
+                    {:type ::retryable-database-error})))))
+
+  (testing "State collection operations add only serializable isolation"
+    (let [opts (document/state-collection-retry-opts
+                retrying-backend
+                {:stmt-retry-limit  7
+                 :stmt-retry-budget 250})]
+      (is (= :serializable (:isolation opts)))
+      (is (= 7 (:max-attempt opts)))
+      (is (= 250 (:budget opts)))
       (is ((:retry-test opts)
            (ex-info "Retry database error"
                     {:type ::retryable-database-error})))))

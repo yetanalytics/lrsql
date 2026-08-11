@@ -215,11 +215,12 @@
       (with-rerunable-txn [tx conn retry-opts]
         (doc-cmd/delete-document-cas! backend tx ctx input))))
   (-delete-documents
-    [lrs _ctx _auth-identity params]
+    [lrs ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
-          input (doc-input/document-multi-input params)]
-      (jdbc/with-transaction [tx conn]
-        (doc-cmd/delete-documents! backend tx input))))
+          input (doc-input/document-multi-input params)
+          retry-opts (doc-util/state-collection-retry-opts backend config)]
+      (with-rerunable-txn [tx conn retry-opts]
+        (doc-cmd/delete-documents-cas! backend tx ctx input))))
 
   lrsp/AgentInfoResource
   (-get-person

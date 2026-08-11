@@ -329,3 +329,37 @@
     ;; Else
     (throw-invalid-table-ex "delete-documents!" input))
   {})
+
+(s/fdef delete-documents-cas!
+  :args (s/cat :bk ds/document-backend?
+               :tx transaction?
+               :ctx map?
+               :input ds/state-doc-multi-input-spec)
+  :ret ds/document-command-res-spec)
+
+(defn delete-documents-cas!
+  "Atomically validate and delete a State document collection. The caller
+   must execute this read and mutation in a serializable, rerunnable
+   transaction so concurrent membership changes either precede validation or
+   occur after the deletion."
+  [bk tx ctx {:keys [table] :as input}]
+  (case table
+    :state-document
+    (let [ids (->> input
+                   (bp/-query-state-document-ids bk tx)
+                   (map :state_id)
+                   du/canonical-state-document-ids)
+          collection-document
+          {:contents (du/state-document-ids-contents ids)}]
+      (if-some [error-result
+                (du/precondition-error ctx
+                                       collection-document
+                                       {:operation :delete
+                                        :table     table
+                                        :collection? true})]
+        error-result
+        (do
+          (bp/-delete-state-documents! bk tx input)
+          {})))
+
+    (throw-invalid-table-ex "delete-documents-cas!" input)))

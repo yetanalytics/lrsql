@@ -1,7 +1,28 @@
 (ns lrsql.util.document
-  (:require [com.yetanalytics.lrs.util.hash :as hash]
+  (:require [cheshire.core :as json]
+            [com.yetanalytics.lrs.util.hash :as hash]
             [com.yetanalytics.lrs.xapi.document :as lrs-doc]
-            [lrsql.backend.protocol :as bp]))
+            [lrsql.backend.protocol :as bp])
+  (:import [java.nio.charset StandardCharsets]))
+
+(defn canonical-state-document-ids
+  "Return State document IDs in the canonical order used by collection GET
+   responses and collection precondition validation."
+  [ids]
+  (->> ids sort vec))
+
+(defn state-document-ids-contents
+  "Canonicalize and serialize State document IDs exactly as the LRS document
+   route serializes its JSON response body."
+  [ids]
+  (.getBytes ^String
+             (json/generate-string (canonical-state-document-ids ids))
+             StandardCharsets/UTF_8))
+
+(defn state-document-ids-etag
+  "Return the unquoted SHA-1 ETag for a canonical State document ID vector."
+  [ids]
+  (hash/sha-1 (state-document-ids-contents ids)))
 
 (defn preconditions
   "Return the normalized ETag preconditions supplied by the LRS library.
@@ -69,6 +90,14 @@
   {:retry-test  (partial document-txn-retry? backend)
    :max-attempt (:stmt-retry-limit config)
    :budget      (:stmt-retry-budget config)})
+
+(defn state-collection-retry-opts
+  "Build retry options for an atomic State collection operation. Collection
+   membership requires serializable isolation; retry limits and budget remain
+   the existing statement retry settings."
+  [backend config]
+  (assoc (document-retry-opts backend config)
+         :isolation :serializable))
 
 (defn document-dispatch
   "Return either `:state-document`, `:agent-profile-document`, or

@@ -4,7 +4,9 @@
             [com.stuartsierra.component :as component]
             [com.yetanalytics.lrs :as lrs]
             [com.yetanalytics.lrs.util.hash :as hash]
-            [lrsql.test-support :as support]))
+            [lrsql.test-support :as support]
+            [lrsql.util :as u]
+            [lrsql.util.document :as doc-util]))
 
 (use-fixtures :once support/instrumentation-fixture)
 (use-fixtures :each support/fresh-db-fixture)
@@ -52,6 +54,17 @@
      :get    curl/get)
    endpoint
    (request-options resource document-id header body)))
+
+(defn- state-collection-request
+  [{:keys [endpoint query-params]} method header]
+  ((case method
+     :delete curl/delete
+     :get    curl/get)
+   endpoint
+   {:basic-auth   ["username" "password"]
+    :headers      (cond-> base-headers header (merge header))
+    :query-params query-params
+    :throw        false}))
 
 (defn- await!
   [pending label]
@@ -143,5 +156,110 @@
                                          "-"
                                          (name precondition))
                       :precondition precondition})))
+      (finally
+        (component/stop sys)))))
+
+(defn- run-state-collection-race!
+  [membership-change]
+  (let [suffix   (name membership-change)
+        resource (-> (first resource-cases)
+                     (assoc-in [:query-params "activityId"]
+                               (str "https://example.org/etag-race/collection/"
+                                    suffix)))
+        initial-ids ["alpha" "zeta"]]
+    (doseq [state-id initial-ids]
+      (ensure-status! 204
+                      (document-request resource
+                                        :put
+                                        state-id
+                                        {"If-None-Match" "*"}
+                                        initial-body)
+                      "initial State document PUT"))
+    (let [header {"If-Match"
+                  (str "\""
+                       (doc-util/state-document-ids-etag initial-ids)
+                       "\"")}
+          original-preconditions-met? doc-util/preconditions-met?
+          collection-read             (promise)
+          release-read                (promise)
+          membership-started          (promise)
+          read-count                  (atom 0)]
+      (with-redefs [doc-util/preconditions-met?
+                    (fn [& args]
+                      (let [result (apply original-preconditions-met? args)]
+                        ;; Pause the collection request after its authoritative
+                        ;; transaction has read and validated membership.
+                        (when (= 1 (swap! read-count inc))
+                          (deliver collection-read true)
+                          (await! release-read "collection DELETE release"))
+                        result))]
+        (let [collection-delete
+              (future (state-collection-request resource :delete header))]
+          (try
+            (await! collection-read "collection DELETE validation")
+            (let [membership-request
+                  (future
+                    (deliver membership-started true)
+                    (case membership-change
+                      :addition
+                      (document-request resource
+                                        :put
+                                        "new"
+                                        {"If-None-Match" "*"}
+                                        winner-body)
+
+                      :removal
+                      (document-request resource
+                                        :delete
+                                        "zeta"
+                                        nil
+                                        nil)))]
+              (try
+                (await! membership-started "membership-changing request")
+                (deliver release-read true)
+                (let [delete-response   (await! collection-delete
+                                                "collection DELETE")
+                      membership-response
+                      (await! membership-request "membership change")
+                      final-response (state-collection-request resource
+                                                               :get
+                                                               nil)
+                      final-ids      (u/parse-json (:body final-response)
+                                                   :object? false)]
+                  (is (= 204 (:status membership-response)))
+                  (is (contains? #{204 412} (:status delete-response))
+                      "the collection DELETE either precedes the change or rejects its stale ETag")
+                  (is (= 200 (:status final-response)))
+                  (case membership-change
+                    :addition
+                    (do
+                      (is (some #{"new"} final-ids)
+                          "a concurrent addition is never deleted")
+                      (is (= (if (= 412 (:status delete-response))
+                               ["alpha" "new" "zeta"]
+                               ["new"])
+                             final-ids)))
+
+                    :removal
+                    (do
+                      (is (not-any? #{"zeta"} final-ids)
+                          "the concurrent removal is preserved")
+                      (is (= (if (= 412 (:status delete-response))
+                               ["alpha"]
+                               [])
+                             final-ids)))))
+                (finally
+                  (future-cancel membership-request))))
+            (finally
+              (deliver release-read true)
+              (future-cancel collection-delete))))))))
+
+(deftest state-collection-etag-precondition-is-atomic-test
+  (let [sys (component/start (support/test-system))]
+    (try
+      (testing "concurrent State document addition"
+        (run-state-collection-race! :addition))
+      (testing "concurrent State document removal"
+        (run-state-collection-race! :removal))
       (finally
         (component/stop sys)))))
