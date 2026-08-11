@@ -1450,6 +1450,39 @@
 
     (component/stop sys')))
 
+(deftest test-registered-state-document-deletion
+  (let [registration "00000000-0000-4000-8000-000000000001"
+        params-1     (assoc state-id-params :registration registration)
+        params-2     (assoc state-id-params-2 :registration registration)
+        sys          (component/start (support/test-system))
+        lrs          (:lrs sys)]
+    (try
+      (support/seq-is
+       {}
+       (lrsp/-set-document lrs tc/ctx auth-ident params-1 state-doc-1 false)
+       (lrsp/-set-document lrs tc/ctx auth-ident params-2 state-doc-2 false))
+
+      (is (= {:document-ids ["some-id" "some-other-id"]}
+             (lrsp/-get-document-ids lrs
+                                     tc/ctx
+                                     auth-ident
+                                     (dissoc params-1 :stateId))))
+
+      (is (= {}
+             (lrsp/-delete-document lrs tc/ctx auth-ident params-1)))
+      (is (= {:document nil}
+             (lrsp/-get-document lrs tc/ctx auth-ident params-1)))
+
+      (is (= {}
+             (lrsp/-delete-documents lrs
+                                     tc/ctx
+                                     auth-ident
+                                     (dissoc params-2 :stateId))))
+      (is (= {:document nil}
+             (lrsp/-get-document lrs tc/ctx auth-ident params-2)))
+      (finally
+        (component/stop sys)))))
+
 (deftest accept-version-test
   (let [lrs            (component/start (support/test-system))]
     (testing "Accepts versions 1.0.0-1.0.3"

@@ -220,7 +220,7 @@ AND profile_id = :profile-id;
 SELECT state_id FROM state_document
 WHERE activity_hash = UNHEX(SHA2(:activity-iri,256))
 AND agent_hash = UNHEX(SHA2(:agent-ifi,256))
---~ (when (:registration params) "AND registration = :registration" "AND registration IS NULL")
+--~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
 --~ (when (:since params) "AND last_modified > :since")
 ;
 
