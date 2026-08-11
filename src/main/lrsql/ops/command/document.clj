@@ -9,23 +9,26 @@
             [lrsql.ops.util :refer [throw-invalid-table-ex]]))
 
 (defn- document-cas-ops
-  "Return the backend operations used for a document CAS write."
+  "Return the backend operations used for a document CAS mutation."
   [table]
   (case table
     :state-document
     {:query  bp/-query-state-document
      :insert bp/-insert-state-document-if-absent!
-     :update bp/-update-state-document-if-contents!}
+     :update bp/-update-state-document-if-contents!
+     :delete bp/-delete-state-document-if-contents!}
 
     :agent-profile-document
     {:query  bp/-query-agent-profile-document
      :insert bp/-insert-agent-profile-document-if-absent!
-     :update bp/-update-agent-profile-document-if-contents!}
+     :update bp/-update-agent-profile-document-if-contents!
+     :delete bp/-delete-agent-profile-document-if-contents!}
 
     :activity-profile-document
     {:query  bp/-query-activity-profile-document
      :insert bp/-insert-activity-profile-document-if-absent!
-     :update bp/-update-activity-profile-document-if-contents!}
+     :update bp/-update-activity-profile-document-if-contents!
+     :delete bp/-delete-activity-profile-document-if-contents!}
 
     (throw-invalid-table-ex "document-cas-ops" {:table table})))
 
@@ -263,6 +266,33 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Deletion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef delete-document-cas!
+  :args (s/cat :bk ds/document-backend?
+               :tx transaction?
+               :ctx map?
+               :input ds/document-input-spec)
+  :ret ds/document-command-res-spec)
+
+(defn delete-document-cas!
+  "Atomically delete a single document after validating the normalized ETag
+   preconditions in `ctx` against the contents read in this transaction.
+   A missed database CAS predicate throws an internal retryable conflict."
+  [bk tx ctx {:keys [table] :as input}]
+  (let [{:keys [query delete]} (document-cas-ops table)
+        old-doc (query bk tx input)]
+    (if-some [error-result
+              (du/precondition-error ctx old-doc {:operation :delete
+                                                  :table     table})]
+      error-result
+      (do
+        (when old-doc
+          (ensure-cas-applied!
+           (delete bk tx (assoc input
+                                :expected-contents (:contents old-doc)))
+           :delete
+           table))
+        {}))))
 
 (s/fdef delete-document!
   :args (s/cat :bk ds/document-backend?

@@ -179,3 +179,60 @@
             (is (nil? (get-body lrs json-params))))))
       (finally
         (component/stop sys)))))
+
+(deftest document-delete-preconditions-test
+  (let [sys (component/start (support/test-system))
+        lrs (:lrs sys)]
+    (try
+      (doseq [{:keys [label] :as resource} resource-cases]
+        (testing label
+          (let [stale-params       (params-for resource "delete-stale")
+                match-params       (params-for resource "delete-match")
+                unconditional-params
+                (params-for resource "delete-unconditional")
+                absent-params      (params-for resource "delete-absent")
+                initial-etag       (hash/sha-1 initial-body)
+                match-ctx          (precondition-ctx
+                                    {:if-match #{initial-etag}})
+                stale-ctx          (precondition-ctx
+                                    {:if-match #{"stale"}})]
+            (is (= {} (lrsp/-set-document lrs tc/ctx tc/auth-ident
+                                           stale-params
+                                           (document initial-body)
+                                           false)))
+            (is (precondition-failed?
+                 (lrsp/-delete-document lrs stale-ctx tc/auth-ident
+                                        stale-params)))
+            (is (= initial-body (get-body lrs stale-params))
+                "stale DELETE leaves the current representation unchanged")
+
+            (is (= {} (lrsp/-set-document lrs tc/ctx tc/auth-ident
+                                           match-params
+                                           (document initial-body)
+                                           false)))
+            (is (= {} (lrsp/-delete-document lrs match-ctx tc/auth-ident
+                                              match-params)))
+            (is (nil? (get-body lrs match-params))
+                "matching DELETE removes the representation")
+
+            (is (= {} (lrsp/-set-document lrs tc/ctx tc/auth-ident
+                                           unconditional-params
+                                           (document initial-body)
+                                           false)))
+            (is (= {} (lrsp/-delete-document lrs tc/ctx tc/auth-ident
+                                              unconditional-params)))
+            (is (nil? (get-body lrs unconditional-params))
+                "unconditional DELETE removes the representation")
+            (is (= {} (lrsp/-delete-document lrs tc/ctx tc/auth-ident
+                                              unconditional-params))
+                "unconditional DELETE remains idempotent")
+
+            (is (precondition-failed?
+                 (lrsp/-delete-document
+                  lrs
+                  (precondition-ctx {:if-match :*})
+                  tc/auth-ident
+                  absent-params))
+                "If-Match fails for an absent document"))))
+      (finally
+        (component/stop sys)))))

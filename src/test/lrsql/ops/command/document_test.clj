@@ -36,7 +36,8 @@
 
 (defn- conflicting-backend
   [state winner-body query-count]
-  (let [first-update? (atom true)]
+  (let [first-update? (atom true)
+        first-delete? (atom true)]
     (reify
       bp/BackendUtil
       (-txn-retry? [_ _] false)
@@ -60,7 +61,15 @@
               true)
             false)))
       (-delete-activity-profile-document! [_ _ _] nil)
-      (-delete-activity-profile-document-if-contents! [_ _ _] false)
+      (-delete-activity-profile-document-if-contents! [_ _ input]
+        (if (compare-and-set! first-delete? true false)
+          (do
+            (reset! state (raw-document winner-body))
+            false)
+          (if (Arrays/equals ^bytes (:expected-contents input)
+                             ^bytes (:contents @state))
+            (do (reset! state nil) true)
+            false)))
       (-query-activity-profile-document [_ _ _]
         (swap! query-count inc)
         @state)
@@ -71,6 +80,17 @@
   [backend ctx input merge?]
   (concurrency/rerunable-txn*
    #(command/set-document-cas! backend ::tx ctx input merge?)
+   0
+   (assoc (document/document-retry-opts
+           backend
+           {:stmt-retry-limit  2
+            :stmt-retry-budget 1})
+          :j-range 0)))
+
+(defn- run-delete-with-retries
+  [backend ctx input]
+  (concurrency/rerunable-txn*
+   #(command/delete-document-cas! backend ::tx ctx input)
    0
    (assoc (document/document-retry-opts
            backend
@@ -136,3 +156,20 @@
     (is (identical? expected thrown))
     (is (not (document/cas-conflict? thrown)))
     (is (not (lrs-doc/precondition-failed? thrown)))))
+
+(deftest stale-delete-precondition-after-cas-conflict-test
+  (let [initial-body "{\"value\":\"initial\"}"
+        winner-body  "{\"value\":\"winner\"}"
+        state        (atom (raw-document initial-body))
+        query-count  (atom 0)
+        backend      (conflicting-backend state winner-body query-count)
+        ctx          {::lrs-doc/preconditions
+                      {:if-match #{(hash/sha-1 initial-body)}}}
+        result       (run-delete-with-retries backend
+                                              ctx
+                                              (document-input initial-body))]
+    (is (= 2 @query-count) "the delete CAS miss causes a fresh read")
+    (is (lrs-doc/precondition-failed? (:error result)))
+    (is (= {"value" "winner"}
+           (u/parse-json (:contents @state)))
+        "the stale retry cannot delete the winner")))

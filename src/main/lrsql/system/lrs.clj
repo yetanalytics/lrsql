@@ -208,11 +208,12 @@
      (jdbc/with-transaction [tx conn]
        (doc-q/query-document-ids backend tx input))))
   (-delete-document
-    [lrs _ctx _auth-identity params]
+    [lrs ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
-          input (doc-input/document-input params)]
-      (jdbc/with-transaction [tx conn]
-        (doc-cmd/delete-document! backend tx input))))
+          input (doc-input/document-input params)
+          retry-opts (doc-util/document-retry-opts backend config)]
+      (with-rerunable-txn [tx conn retry-opts]
+        (doc-cmd/delete-document-cas! backend tx ctx input))))
   (-delete-documents
     [lrs _ctx _auth-identity params]
     (let [conn  (lrs-conn lrs)
