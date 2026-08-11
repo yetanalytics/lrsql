@@ -49,7 +49,7 @@ WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 AND state_hash = UNHEX(SHA2(:state-id,256))
 AND state_id = :state-id
---~ (when (:registration params) "AND registration = :registration" "AND registration IS NULL")
+--~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
 AND contents = :expected-contents;
 
 -- :name delete-agent-profile-document-if-contents!
