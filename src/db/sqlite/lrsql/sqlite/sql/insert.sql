@@ -108,6 +108,64 @@ INSERT INTO activity_profile_document (
   :last-modified, :content-type, :content-length, :contents
 )
 
+/* Conditional Document Insertion */
+
+-- :name insert-state-document-if-absent!
+-- :command :execute
+-- :result :affected
+-- :doc Insert a state document only when its logical key is absent.
+INSERT INTO state_document (
+  id, state_id, activity_iri, agent_ifi, registration,
+  last_modified, content_type, content_length, contents
+)
+SELECT
+  :primary-key, :state-id, :activity-iri, :agent-ifi, :registration,
+  :last-modified, :content-type, :content-length, :contents
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM state_document
+  WHERE state_id = :state-id
+  AND activity_iri = :activity-iri
+  AND agent_ifi = :agent-ifi
+  --~ (if (:registration params) "AND registration = :registration" "AND registration ISNULL")
+)
+
+-- :name insert-agent-profile-document-if-absent!
+-- :command :execute
+-- :result :affected
+-- :doc Insert an agent profile document only when its logical key is absent.
+INSERT INTO agent_profile_document (
+  id, profile_id, agent_ifi,
+  last_modified, content_type, content_length, contents
+)
+SELECT
+  :primary-key, :profile-id, :agent-ifi,
+  :last-modified, :content-type, :content-length, :contents
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM agent_profile_document
+  WHERE profile_id = :profile-id
+  AND agent_ifi = :agent-ifi
+)
+
+-- :name insert-activity-profile-document-if-absent!
+-- :command :execute
+-- :result :affected
+-- :doc Insert an activity profile document only when its logical key is absent.
+INSERT INTO activity_profile_document (
+  id, profile_id, activity_iri,
+  last_modified, content_type, content_length, contents
+)
+SELECT
+  :primary-key, :profile-id, :activity-iri,
+  :last-modified, :content-type, :content-length, :contents
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM activity_profile_document
+  WHERE profile_id = :profile-id
+  AND activity_iri = :activity-iri
+)
+
 /* Accounts */
 
 -- :name insert-admin-account!
