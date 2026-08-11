@@ -15,7 +15,7 @@ services:
     ports:
       - "5432:5432" # Useful if we only want to run the DB w/o other services
   clamav:
-    image: clamav/clamav:1.2.1
+    image: clamav/clamav:1.4
   lrs:
     # build: . # switch to this for active dev
     image: yetanalytics/lrsql:latest

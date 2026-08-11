@@ -78,6 +78,6 @@ Before contributing to this project, please read the [Contribution Guidelines](C
 
 ## License
 
-Copyright © 2021-2025 Yet Analytics, Inc.
+Copyright © 2021-2026 Yet Analytics, Inc.
 
 Distributed under the Apache License version 2.0.

@@ -9,7 +9,7 @@
             [lrsql.admin.interceptors.jwt :as jwt]
             [com.yetanalytics.lrs.pedestal.interceptor.xapi :as i-xapi]
             [com.yetanalytics.lrs-reactions.spec :as rs])
-  (:import [javax.servlet ServletOutputStream]))
+  (:import [jakarta.servlet ServletOutputStream]))
 
 ;; See also: `admin.interceptors.account/generate-jwt`
 (defn generate-one-time-jwt
