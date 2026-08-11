@@ -210,7 +210,7 @@ AND profile_id = :profile-id;
 SELECT state_id FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
---~ (when (:registration params) "AND registration = :registration" "AND registration IS NULL")
+--~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
 --~ (when (:since params) "AND last_modified > :since")
 ;
 
