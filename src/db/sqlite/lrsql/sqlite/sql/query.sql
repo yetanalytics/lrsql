@@ -187,7 +187,7 @@ AND profile_id = :profile-id
 -- :command :query
 -- :result :many
 -- :doc Query for one or more state document IDs using resource params. If `:registration` is missing then `registration` must be NULL.
-SELECT state_id FROM state_document
+SELECT id, state_id FROM state_document
 WHERE activity_iri = :activity-iri
 AND agent_ifi = :agent-ifi
 --~ (if (:registration params) "AND registration = :registration" "AND registration ISNULL")

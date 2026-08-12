@@ -6,8 +6,7 @@
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.result :as br]
             [lrsql.init :refer [init-hugsql-adapter!]]
-            [lrsql.postgres.data :as pd]
-            [clojure.string :refer [includes?]])
+            [lrsql.postgres.data :as pd])
   (:import [org.postgresql.util PSQLException]))
 
 ;; Init HugSql functions
@@ -91,12 +90,11 @@
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
-    ;; only retry PGExceptions with a specified phrase
+    ;; PostgreSQL reports transaction rollbacks by SQLSTATE.
     (and (instance? PSQLException ex)
-         (let [msg (.getMessage ^PSQLException ex)]
-           (or (includes? msg "ERROR: deadlock detected")
-               (includes? msg "ERROR: could not serialize access due to concurrent update")
-               (includes? msg "ERROR: could not serialize access due to read/write dependencies among transactions")))))
+         (contains? #{"40001" ; serialization_failure
+                      "40P01"} ; deadlock_detected
+                    (.getSQLState ^PSQLException ex))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
@@ -163,6 +161,8 @@
     (br/affected->applied? (delete-state-document-if-contents! tx input)))
   (-delete-state-documents! [_ tx input]
     (delete-state-documents! tx input))
+  (-delete-state-documents-by-primary-keys! [_ tx input]
+    (delete-state-documents-by-primary-keys! tx input))
   (-query-state-document [_ tx input]
     (query-state-document tx input))
   (-query-state-document-ids [_ tx input]

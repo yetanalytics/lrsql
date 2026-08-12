@@ -329,3 +329,50 @@
     ;; Else
     (throw-invalid-table-ex "delete-documents!" input))
   {})
+
+(def ^:private state-document-delete-batch-size 500)
+
+(defn- observed-primary-keys
+  [rows]
+  (->> rows
+       (map :id)
+       (sort-by str)
+       vec))
+
+(s/fdef delete-documents-cas!
+  :args (s/cat :bk ds/document-backend?
+               :tx transaction?
+               :ctx map?
+               :input ds/state-doc-multi-input-spec)
+  :ret ds/document-command-res-spec)
+
+(defn delete-documents-cas!
+  "Validate a State collection against the rows observed in this transaction,
+   then delete only those rows by immutable physical primary key. Rows added or
+   recreated after the observation are outside this operation's ordering point
+   and are not deleted."
+  [bk tx ctx {:keys [table] :as input}]
+  (case table
+    :state-document
+    (let [rows (bp/-query-state-document-ids bk tx input)
+          ids  (->> rows
+                    (map :state_id)
+                    du/canonical-state-document-ids)
+          collection-document
+          {:contents (du/state-document-ids-contents ids)}]
+      (if-some [error-result
+                (du/precondition-error ctx
+                                       collection-document
+                                       {:operation   :delete
+                                        :table       table
+                                        :collection? true})]
+        error-result
+        (do
+          (doseq [primary-keys (partition-all
+                                state-document-delete-batch-size
+                                (observed-primary-keys rows))]
+            (bp/-delete-state-documents-by-primary-keys!
+             bk tx (assoc input :primary-keys (vec primary-keys))))
+          {})))
+
+    (throw-invalid-table-ex "delete-documents-cas!" input)))

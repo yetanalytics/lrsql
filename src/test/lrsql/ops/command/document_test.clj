@@ -1,5 +1,5 @@
 (ns lrsql.ops.command.document-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [clojure.test :refer [deftest is testing]]
             [com.yetanalytics.lrs.util.hash :as hash]
             [com.yetanalytics.lrs.xapi.document :as lrs-doc]
             [lrsql.backend.protocol :as bp]
@@ -97,6 +97,142 @@
            {:stmt-retry-limit  2
             :stmt-retry-budget 1})
           :j-range 0)))
+
+(defn- state-collection-backend
+  [rows delete-calls]
+  (reify
+    bp/BackendUtil
+    (-txn-retry? [_ ex]
+      (= ::retryable-database-error (:type (ex-data ex))))
+
+    bp/StateDocumentBackend
+    (-insert-state-document! [_ _ _] nil)
+    (-insert-state-document-if-absent! [_ _ _] false)
+    (-update-state-document! [_ _ _] nil)
+    (-update-state-document-if-contents! [_ _ _] false)
+    (-delete-state-document! [_ _ _] nil)
+    (-delete-state-document-if-contents! [_ _ _] false)
+    (-delete-state-documents! [_ _ _] nil)
+    (-delete-state-documents-by-primary-keys! [_ _ input]
+      (swap! delete-calls conj input)
+      0)
+    (-query-state-document [_ _ _] nil)
+    (-query-state-document-ids [_ _ _] @rows)
+    (-query-state-document-exists [_ _ _] false)))
+
+(deftest state-collection-observed-primary-key-delete-test
+  (let [ids          (mapv #(format "state-%03d" %) (range 502))
+        primary-keys (mapv (fn [_] (UUID/randomUUID)) ids)
+        rows          (atom (mapv (fn [primary-key state-id]
+                                    {:id primary-key :state_id state-id})
+                                  (reverse primary-keys)
+                                  (reverse ids)))
+        delete-calls  (atom [])
+        backend       (state-collection-backend rows delete-calls)
+        input         {:table        :state-document
+                       :activity-iri "https://example.org/collection"
+                       :agent-ifi    "mbox::mailto:test@example.org"
+                       :registration nil}
+        ctx           {::lrs-doc/preconditions
+                       {:if-match
+                        #{(document/state-document-ids-etag ids)}}}]
+    (is (= {} (command/delete-documents-cas!
+               backend ::tx ctx input)))
+    (is (= [500 2] (mapv (comp count :primary-keys) @delete-calls))
+        "observed primary keys are deleted in 500-row batches")
+    (is (= (sort-by str primary-keys)
+           (mapcat :primary-keys @delete-calls))
+        "primary keys have a deterministic lock order")
+    (is (every? #(= (select-keys input [:activity-iri
+                                        :agent-ifi
+                                        :registration])
+                    (select-keys % [:activity-iri
+                                    :agent-ifi
+                                    :registration]))
+                @delete-calls)
+        "each batch retains its collection scope")))
+
+(deftest state-collection-precondition-and-retry-test
+  (let [initial-rows [{:id (UUID/randomUUID) :state_id "initial"}]
+        changed-rows [{:id (UUID/randomUUID) :state_id "initial"}
+                      {:id (UUID/randomUUID) :state_id "new"}]
+        input        {:table        :state-document
+                      :activity-iri "https://example.org/collection"
+                      :agent-ifi    "mbox::mailto:test@example.org"}]
+    (testing "stale and wildcard conditions do not delete"
+      (doseq [preconditions [{:if-match #{"stale"}}
+                             {:if-none-match :*}]]
+        (let [rows         (atom initial-rows)
+              delete-calls (atom [])
+              backend      (state-collection-backend rows delete-calls)
+              result       (command/delete-documents-cas!
+                            backend ::tx
+                            {::lrs-doc/preconditions preconditions}
+                            input)]
+          (is (lrs-doc/precondition-failed? (:error result)))
+          (is (empty? @delete-calls)))))
+
+    (testing "the empty collection validates against the [] representation"
+      (let [rows         (atom [])
+            delete-calls (atom [])
+            backend      (state-collection-backend rows delete-calls)]
+        (is (= {} (command/delete-documents-cas!
+                   backend ::tx
+                   {::lrs-doc/preconditions
+                    {:if-match
+                     #{(document/state-document-ids-etag [])}}}
+                   input)))
+        (is (empty? @delete-calls))))
+
+    (testing "a retried database conflict reevaluates the original condition"
+      (let [rows          (atom initial-rows)
+            delete-calls  (atom [])
+            base-backend  (state-collection-backend rows delete-calls)
+            first-delete? (atom true)
+            backend       (reify
+                            bp/BackendUtil
+                            (-txn-retry? [_ ex]
+                              (= ::retryable-database-error
+                                 (:type (ex-data ex))))
+                            bp/StateDocumentBackend
+                            (-insert-state-document! [_ _ _] nil)
+                            (-insert-state-document-if-absent! [_ _ _] false)
+                            (-update-state-document! [_ _ _] nil)
+                            (-update-state-document-if-contents! [_ _ _] false)
+                            (-delete-state-document! [_ _ _] nil)
+                            (-delete-state-document-if-contents! [_ _ _] false)
+                            (-delete-state-documents! [_ _ _] nil)
+                            (-delete-state-documents-by-primary-keys!
+                              [_ _ delete-input]
+                              (if (compare-and-set! first-delete? true false)
+                                (do
+                                  (reset! rows changed-rows)
+                                  (throw
+                                   (ex-info "Retry database error"
+                                            {:type
+                                             ::retryable-database-error})))
+                                (bp/-delete-state-documents-by-primary-keys!
+                                 base-backend ::tx delete-input)))
+                            (-query-state-document [_ _ _] nil)
+                            (-query-state-document-ids [_ _ _] @rows)
+                            (-query-state-document-exists [_ _ _] false))
+            ctx           {::lrs-doc/preconditions
+                           {:if-match
+                            #{(document/state-document-ids-etag
+                               ["initial"])}}}
+            result        (concurrency/rerunable-txn*
+                           #(command/delete-documents-cas!
+                             backend ::tx ctx input)
+                           0
+                           (assoc (document/document-retry-opts
+                                   backend
+                                   {:stmt-retry-limit  2
+                                    :stmt-retry-budget 1})
+                                  :j-range 0))]
+        (is (lrs-doc/precondition-failed? (:error result)))
+        (is (= changed-rows @rows))
+        (is (empty? @delete-calls)
+            "the stale retry cannot delete the changed collection")))))
 
 (deftest stale-precondition-after-cas-conflict-test
   (let [initial-body "{\"value\":\"initial\"}"

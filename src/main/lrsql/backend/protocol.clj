@@ -69,6 +69,9 @@
   (-delete-state-document-if-contents! [this tx input]
     "Delete a state document only when its contents equal :expected-contents. Returns a boolean indicating whether the delete was applied.")
   (-delete-state-documents! [this tx input])
+  (-delete-state-documents-by-primary-keys! [this tx input]
+    "Delete State documents in the requested collection whose physical IDs
+     are present in :primary-keys. Returns the backend affected-row result.")
   ;; Queries
   (-query-state-document [this tx input])
   (-query-state-document-ids [this tx input])

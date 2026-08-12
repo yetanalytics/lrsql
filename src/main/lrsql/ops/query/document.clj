@@ -5,6 +5,7 @@
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
             [lrsql.util :as u]
+            [lrsql.util.document :as du]
             [lrsql.ops.util :refer [throw-invalid-table-ex]]))
 
 (s/fdef query-document
@@ -59,7 +60,8 @@
               :state-document
               (->> input
                    (bp/-query-state-document-ids bk tx)
-                   (map :state_id))
+                   (map :state_id)
+                   du/canonical-state-document-ids)
               :agent-profile-document
               (->> input
                    (bp/-query-agent-profile-document-ids bk tx)
