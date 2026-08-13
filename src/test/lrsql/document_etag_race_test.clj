@@ -183,7 +183,7 @@
         "the stale request must not modify the winning representation")))
 
 (deftest document-etag-precondition-is-atomic-test
-  (let [{:keys [sys] :as race-system} (start-race-system!)]
+  (let [race-system (start-race-system!)]
     (try
       (doseq [{:keys [label] :as resource} resource-cases
               [action precondition]
