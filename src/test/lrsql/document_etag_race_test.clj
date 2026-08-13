@@ -3,10 +3,13 @@
             [clojure.test :refer [deftest is testing use-fixtures]]
             [com.stuartsierra.component :as component]
             [com.yetanalytics.lrs :as lrs]
+            [com.yetanalytics.lrs.protocol :as lrsp]
             [com.yetanalytics.lrs.util.hash :as hash]
             [lrsql.test-support :as support]
             [lrsql.util :as u]
-            [lrsql.util.document :as doc-util]))
+            [lrsql.util.document :as doc-util])
+  (:import [java.io File]
+           [java.sql DriverManager]))
 
 (use-fixtures :once support/instrumentation-fixture)
 (use-fixtures :each support/fresh-db-fixture)
@@ -36,6 +39,46 @@
 (def initial-body "{\"value\":\"initial\"}")
 (def winner-body  "{\"value\":\"winner\"}")
 (def stale-body   "{\"value\":\"stale\"}")
+
+(defn- delete-sqlite-files!
+  [^File db-file]
+  (doseq [path [(.getAbsolutePath db-file)
+                (str (.getAbsolutePath db-file) "-wal")
+                (str (.getAbsolutePath db-file) "-shm")]]
+    (let [file (File. path)]
+      (when (and (.exists file) (not (.delete file)))
+        (.deleteOnExit file)))))
+
+(defn- start-race-system!
+  "Start the configured test system with enough independent connections for a
+   transaction-level race. SQLite additionally needs a file-backed WAL database
+   so a winner can commit while the observed transaction remains open."
+  []
+  (let [base-system (support/test-system)]
+    (if (= "sqlite"
+           (get-in base-system [:connection :config :database :db-type]))
+      (let [db-file (doto (File/createTempFile "lrsql-etag-race-" ".db")
+                      (.deleteOnExit))
+            jdbc-url (str "jdbc:sqlite:" (.getAbsolutePath db-file))]
+        (with-open [conn (DriverManager/getConnection jdbc-url)
+                    stmt (.createStatement conn)]
+          (.execute stmt "PRAGMA journal_mode=WAL"))
+        (let [sys (component/start
+                   (support/test-system
+                    :conf-overrides
+                    {[:connection :pool-maximum-size] 2
+                     [:connection :database :db-jdbc-url]
+                     jdbc-url}))]
+          {:sys sys :sqlite-db-file db-file}))
+      {:sys (component/start base-system)})))
+
+(defn- stop-race-system!
+  [{:keys [sys sqlite-db-file]}]
+  (try
+    (component/stop sys)
+    (finally
+      (when sqlite-db-file
+        (delete-sqlite-files! sqlite-db-file)))))
 
 (defn- request-options
   [{:keys [document-id-param query-params]} document-id header body]
@@ -94,15 +137,15 @@
                                         {"If-None-Match" "*"}
                                         initial-body)
                       "initial document PUT"))
-    (let [original-get lrs/get-document
-          read-done    (promise)
-          release-read (promise)
-          read-count   (atom 0)]
-      (with-redefs [lrs/get-document
+    (let [original-preconditions-met? doc-util/preconditions-met?
+          read-done                   (promise)
+          release-read                (promise)
+          read-count                  (atom 0)]
+      (with-redefs [doc-util/preconditions-met?
                     (fn [& args]
-                      (let [result (apply original-get args)]
-                        ;; Pause only the stale request, after its database read
-                        ;; has completed but before its precondition is applied.
+                      (let [result (apply original-preconditions-met? args)]
+                        ;; Pause only the stale request after LRSQL's
+                        ;; authoritative database read and validation.
                         (when (= 1 (swap! read-count inc))
                           (deliver read-done true)
                           (await! release-read "stale request release"))
@@ -140,7 +183,7 @@
         "the stale request must not modify the winning representation")))
 
 (deftest document-etag-precondition-is-atomic-test
-  (let [sys (component/start (support/test-system))]
+  (let [{:keys [sys] :as race-system} (start-race-system!)]
     (try
       (doseq [{:keys [label] :as resource} resource-cases
               [action precondition]
@@ -156,6 +199,93 @@
                                          "-"
                                          (name precondition))
                       :precondition precondition})))
+      (finally
+        (stop-race-system! race-system)))))
+
+(deftest authoritative-precondition-handoff-test
+  (let [sys (component/start (support/test-system))
+        lrs-impl (:lrs sys)]
+    (try
+      (is (true? (lrsp/atomic-document-preconditions? lrs-impl)))
+      (let [resource       (first resource-cases)
+            put-id         "handoff-put"
+            post-id        "handoff-post"
+            delete-id      "handoff-delete"
+            collection     (assoc-in resource
+                                     [:query-params "activityId"]
+                                     "https://example.org/etag-handoff/collection")
+            collection-ids ["alpha" "zeta"]
+            match-etag     (hash/sha-1 initial-body)
+            match-header   {"If-Match" (str "\"" match-etag "\"")}
+            observed       (atom [])]
+        (doseq [document-id [put-id post-id delete-id]]
+          (ensure-status! 204
+                          (document-request resource
+                                            :put
+                                            document-id
+                                            {"If-None-Match" "*"}
+                                            initial-body)
+                          "single document setup"))
+        (doseq [state-id collection-ids]
+          (ensure-status! 204
+                          (document-request collection
+                                            :put
+                                            state-id
+                                            {"If-None-Match" "*"}
+                                            initial-body)
+                          "collection setup"))
+        (let [original-preconditions doc-util/preconditions]
+          (with-redefs [lrs/get-document
+                        (fn [& _]
+                          (throw (ex-info "Unexpected preliminary document GET"
+                                          {})))
+                        lrs/get-document-ids
+                        (fn [& _]
+                          (throw (ex-info "Unexpected preliminary collection GET"
+                                          {})))
+                        doc-util/preconditions
+                        (fn [ctx]
+                          (let [preconditions (original-preconditions ctx)]
+                            (swap! observed conj preconditions)
+                            preconditions))]
+            (ensure-status! 204
+                            (document-request resource
+                                              :put
+                                              put-id
+                                              match-header
+                                              winner-body)
+                            "conditional PUT")
+            (ensure-status! 204
+                            (document-request resource
+                                              :post
+                                              post-id
+                                              match-header
+                                              stale-body)
+                            "conditional POST")
+            (ensure-status! 204
+                            (document-request resource
+                                              :delete
+                                              delete-id
+                                              match-header
+                                              nil)
+                            "conditional single DELETE")
+            (ensure-status!
+             204
+             (state-collection-request
+              collection
+              :delete
+              {"If-Match"
+               (str "\""
+                    (doc-util/state-document-ids-etag collection-ids)
+                    "\"")})
+             "conditional collection DELETE")))
+        (is (= [{:if-match #{match-etag}}
+                {:if-match #{match-etag}}
+                {:if-match #{match-etag}}
+                {:if-match
+                 #{(doc-util/state-document-ids-etag collection-ids)}}]
+               @observed)
+            "LRSQL receives each normalized precondition map unchanged"))
       (finally
         (component/stop sys)))))
 

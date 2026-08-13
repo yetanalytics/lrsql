@@ -187,6 +187,11 @@
     [_lrs _ctx _auth-identity]
     (str (util/current-time)))
 
+  lrsp/AtomicDocumentPreconditions
+  (-atomic-document-preconditions?
+    [_lrs]
+    true)
+
   lrsp/DocumentResource
   (-set-document
     [lrs ctx _auth-identity params document merge?]
