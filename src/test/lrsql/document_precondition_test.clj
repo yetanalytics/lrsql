@@ -6,7 +6,8 @@
             [com.yetanalytics.lrs.xapi.document :as lrs-doc]
             [lrsql.test-constants :as tc]
             [lrsql.test-support :as support]
-            [lrsql.util :as u]))
+            [lrsql.util :as u]
+            [lrsql.util.document :as doc-util]))
 
 (use-fixtures :once support/instrumentation-fixture)
 (use-fixtures :each support/fresh-db-fixture)
@@ -234,5 +235,98 @@
                   tc/auth-ident
                   absent-params))
                 "If-Match fails for an absent document"))))
+      (finally
+        (component/stop sys)))))
+
+(defn- state-collection-params
+  [suffix]
+  {:activityId (str "https://example.org/precondition/collection/" suffix)
+   :agent      {"mbox" "mailto:state-collection@example.org"}})
+
+(defn- state-document-params
+  [collection-params state-id]
+  (assoc collection-params :stateId state-id))
+
+(defn- get-state-document-ids
+  [lrs params]
+  (lrsp/-get-document-ids lrs tc/ctx tc/auth-ident params))
+
+(defn- put-state-document!
+  [lrs params state-id]
+  (lrsp/-set-document lrs tc/ctx tc/auth-ident
+                      (state-document-params params state-id)
+                      (document initial-body)
+                      false))
+
+(deftest state-collection-delete-preconditions-test
+  (let [sys (component/start (support/test-system))
+        lrs (:lrs sys)]
+    (try
+      (testing "canonical response and ETag conditions"
+        (let [params (state-collection-params "conditional")]
+          (doseq [state-id ["zeta" "alpha" "middle"]]
+            (is (= {} (put-state-document! lrs params state-id))))
+          (let [ids  ["alpha" "middle" "zeta"]
+                etag (doc-util/state-document-ids-etag ids)]
+            (is (= {:document-ids ids}
+                   (get-state-document-ids lrs params))
+                "the public result stays sorted and contains no internal keys")
+            (doseq [ctx [(precondition-ctx {:if-match #{"stale"}})
+                         (precondition-ctx {:if-none-match #{etag}})
+                         (precondition-ctx {:if-none-match :*})]]
+              (is (precondition-failed?
+                   (lrsp/-delete-documents lrs ctx tc/auth-ident params)))
+              (is (= ids
+                     (:document-ids (get-state-document-ids lrs params)))
+                  "a failed collection condition leaves every row intact"))
+            (is (= {}
+                   (lrsp/-delete-documents
+                    lrs
+                    (precondition-ctx {:if-match #{etag}})
+                    tc/auth-ident
+                    params)))
+            (is (= {:document-ids []}
+                   (get-state-document-ids lrs params)))
+            (is (= {}
+                   (lrsp/-delete-documents
+                    lrs
+                    (precondition-ctx
+                     {:if-match
+                      #{(doc-util/state-document-ids-etag [])}})
+                    tc/auth-ident
+                    params))
+                "the empty collection has the ETag of its [] representation")
+            (is (= {}
+                   (lrsp/-delete-documents
+                    lrs
+                    (precondition-ctx {:if-match :*})
+                    tc/auth-ident
+                    params))
+                "the empty array representation still exists for If-Match"))))
+
+      (testing "wildcard and unconditional collection deletion"
+        (doseq [[suffix ctx]
+                [["wildcard" (precondition-ctx {:if-match :*})]
+                 ["unconditional" tc/ctx]]]
+          (let [params (state-collection-params suffix)]
+            (doseq [state-id ["one" "two"]]
+              (is (= {} (put-state-document! lrs params state-id))))
+            (is (= {} (lrsp/-delete-documents
+                       lrs ctx tc/auth-ident params)))
+            (is (= [] (:document-ids
+                       (get-state-document-ids lrs params)))))))
+
+      (testing "registration remains part of the collection scope"
+        (let [params       (state-collection-params "registration")
+              registration "00000000-0000-4000-8000-000000000001"
+              registered   (assoc params :registration registration)]
+          (is (= {} (put-state-document! lrs params "unregistered")))
+          (is (= {} (put-state-document! lrs registered "registered")))
+          (is (= {} (lrsp/-delete-documents
+                     lrs tc/ctx tc/auth-ident registered)))
+          (is (= {:document-ids ["unregistered"]}
+                 (get-state-document-ids lrs params)))
+          (is (= {:document-ids []}
+                 (get-state-document-ids lrs registered)))))
       (finally
         (component/stop sys)))))

@@ -19,6 +19,17 @@ AND agent_ifi = :agent-ifi
 --~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
 ;
 
+-- :name delete-state-documents-by-primary-keys!
+-- :command :execute
+-- :result :affected
+-- :doc Delete observed State documents by physical primary key, retaining collection scoping predicates.
+DELETE FROM state_document
+WHERE activity_iri = :activity-iri
+AND agent_ifi = :agent-ifi
+--~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
+AND id IN (:v*:primary-keys)
+;
+
 -- :name delete-agent-profile-document!
 -- :command :execute
 -- :result :affected

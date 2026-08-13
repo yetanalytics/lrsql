@@ -91,12 +91,17 @@
 
   bp/BackendUtil
   (-txn-retry? [_ ex]
-    ;; only retry PGExceptions with a specified phrase
     (and (instance? PSQLException ex)
-         (let [msg (.getMessage ^PSQLException ex)]
-           (or (includes? msg "ERROR: deadlock detected")
-               (includes? msg "ERROR: could not serialize access due to concurrent update")
-               (includes? msg "ERROR: could not serialize access due to read/write dependencies among transactions")))))
+         (or
+          ;; PostgreSQL reports transaction rollbacks by SQLSTATE.
+          (contains? #{"40001" ; serialization_failure
+                       "40P01"} ; deadlock_detected
+                     (.getSQLState ^PSQLException ex))
+          ;; In the past we have seen scenarios where PG does not properly set SQLSTATE
+          (let [msg (.getMessage ^PSQLException ex)]
+            (or (includes? msg "ERROR: deadlock detected")
+                (includes? msg "ERROR: could not serialize access due to concurrent update")
+                (includes? msg "ERROR: could not serialize access due to read/write dependencies among transactions"))))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
@@ -163,6 +168,8 @@
     (br/affected->applied? (delete-state-document-if-contents! tx input)))
   (-delete-state-documents! [_ tx input]
     (delete-state-documents! tx input))
+  (-delete-state-documents-by-primary-keys! [_ tx input]
+    (delete-state-documents-by-primary-keys! tx input))
   (-query-state-document [_ tx input]
     (query-state-document tx input))
   (-query-state-document-ids [_ tx input]

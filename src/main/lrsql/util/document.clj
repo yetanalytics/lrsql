@@ -1,7 +1,25 @@
 (ns lrsql.util.document
   (:require [com.yetanalytics.lrs.util.hash :as hash]
             [com.yetanalytics.lrs.xapi.document :as lrs-doc]
-            [lrsql.backend.protocol :as bp]))
+            [lrsql.backend.protocol :as bp]
+            [lrsql.util :as u]))
+
+(defn canonical-state-document-ids
+  "Return State document IDs in the canonical order used by collection GET
+   responses and collection precondition validation."
+  [ids]
+  (->> ids sort vec))
+
+(defn state-document-ids-contents
+  "Canonicalize and serialize State document IDs exactly as the LRS document
+   route serializes its JSON response body."
+  [ids]
+  (u/write-json (canonical-state-document-ids ids)))
+
+(defn state-document-ids-etag
+  "Return the unquoted SHA-1 ETag for a canonical State document ID vector."
+  [ids]
+  (hash/sha-1 (state-document-ids-contents ids)))
 
 (defn preconditions
   "Return the normalized ETag preconditions supplied by the LRS library.

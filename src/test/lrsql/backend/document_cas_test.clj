@@ -1,10 +1,13 @@
 (ns lrsql.backend.document-cas-test
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [com.stuartsierra.component :as component]
+            [com.yetanalytics.lrs.xapi.document :as lrs-doc]
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.result :as br]
+            [lrsql.ops.command.document :as command]
             [lrsql.test-support :as support]
             [lrsql.util :as u]
+            [lrsql.util.document :as document-util]
             [next.jdbc :as jdbc])
   (:import [java.nio.charset StandardCharsets]
            [java.util UUID]))
@@ -145,5 +148,79 @@
                     "a delete with current observed contents is applied")
                 (is (nil? (query bk tx initial-input))
                     "the matching delete removes the document"))))))
+      (finally
+        (component/stop sys)))))
+
+(defn- state-document-input
+  [collection-input state-id]
+  (merge collection-input
+         {:table          :state-document
+          :primary-key    (UUID/randomUUID)
+          :state-id       state-id
+          :last-modified  (u/current-time)
+          :content-type   "application/json"
+          :content-length 2
+          :contents       (utf8-bytes "{}")}))
+
+(deftest state-collection-observed-primary-key-primitives-test
+  (let [sys (component/start (support/test-system))]
+    (try
+      (let [bk         (:backend sys)
+            ds         (get-in sys [:lrs :connection :conn-pool])
+            collection {:activity-iri "https://example.org/observed-keys"
+                        :agent-ifi    "mbox::mailto:observed@example.org"
+                        :registration nil}]
+        (testing "the backend primitive deletes only observed, in-scope keys"
+          (let [observed   (state-document-input collection "observed")
+                unobserved (state-document-input collection "unobserved")
+                other      (state-document-input
+                            (assoc collection
+                                   :activity-iri
+                                   "https://example.org/other-collection")
+                            "other")]
+            (jdbc/with-transaction [tx ds]
+              (doseq [input [observed unobserved other]]
+                (bp/-insert-state-document! bk tx input))
+              (bp/-delete-state-documents-by-primary-keys!
+               bk tx
+               (assoc collection
+                      :primary-keys [(:primary-key observed)
+                                     (:primary-key other)
+                                     (UUID/randomUUID)]))
+              (is (nil? (bp/-query-state-document bk tx observed)))
+              (is (some? (bp/-query-state-document bk tx unobserved))
+                  "an unobserved row in the collection survives")
+              (is (some? (bp/-query-state-document bk tx other))
+                  "a supplied key outside the collection scope survives"))))
+
+        (testing "more than 500 observed keys are batched atomically"
+          (let [batch-collection
+                (assoc collection
+                       :activity-iri "https://example.org/batched-keys")
+                inputs (mapv #(state-document-input
+                               batch-collection
+                               (format "state-%03d" %))
+                             (range 501))
+                ids    (mapv :state-id inputs)
+                ctx    {::lrs-doc/preconditions
+                        {:if-match
+                         #{(document-util/state-document-ids-etag ids)}}}]
+            (jdbc/with-transaction [tx ds]
+              (doseq [input inputs]
+                (bp/-insert-state-document! bk tx input))
+              (is (= 501
+                     (count (bp/-query-state-document-ids
+                             bk tx
+                             (assoc batch-collection
+                                    :table :state-document))))
+                  "all rows are visible at the collection ordering point")
+              (is (= {}
+                     (command/delete-documents-cas!
+                      bk tx ctx
+                      (assoc batch-collection :table :state-document))))
+              (is (empty? (bp/-query-state-document-ids
+                           bk tx
+                           (assoc batch-collection
+                                  :table :state-document))))))))
       (finally
         (component/stop sys)))))

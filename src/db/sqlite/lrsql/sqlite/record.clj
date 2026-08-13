@@ -131,9 +131,14 @@
                (:schema_version (query-schema-version tx))))
 
   bp/BackendUtil
-  (-txn-retry? [_ _ex]
-    ;; No known retry cases for SQLite
-    false)
+  (-txn-retry? [_ ex]
+    (and (instance? SQLiteException ex)
+         ;; Extended BUSY and LOCKED codes retain their primary result code in
+         ;; the low byte (e.g. SQLITE_BUSY_SNAPSHOT is 0x205).
+         (contains? #{5 6}
+                    (bit-and 0xff
+                             (.-code (.getResultCode
+                                      ^SQLiteException ex))))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
@@ -203,6 +208,8 @@
     (br/affected->applied? (delete-state-document-if-contents! tx input)))
   (-delete-state-documents! [_ tx input]
     (delete-state-documents! tx input))
+  (-delete-state-documents-by-primary-keys! [_ tx input]
+    (delete-state-documents-by-primary-keys! tx input))
   (-query-state-document [_ tx input]
     (query-state-document tx input))
   (-query-state-document-ids [_ tx input]
