@@ -27,7 +27,7 @@ Parameters:
   DBInitFnVersion:
     Type: String
     Description: Version of rds-db-init function code to use to initialize the DB application user.
-    Default: "0.0.2"
+    Default: "0.0.3"
   DBInitFnBucketOverride:
     Type: String
     Description: Override for the S3 bucket to source the DB Init function. Use this if you are hosting your own DB init function code.
@@ -81,7 +81,7 @@ Parameters:
   LrsVersion:
     Description: Version of SQL LRS to download and install (public release versions on GitHub)
     Type: String
-    Default: v0.5.5
+    Default: v0.9.7
 
   EnableReactions:
     Description: Whether or not to enable xAPI Reactions
@@ -192,7 +192,7 @@ Resources:
           - !Ref DBInitFnKeyOverride
           - !Sub "rds-db-init-v${DBInitFnVersion}.zip"
       Handler: index.handler
-      Runtime: nodejs16.x
+      Runtime: nodejs22.x
       Timeout: 15
       Role: !GetAtt DBInitFnExecRole.Arn
       VpcConfig:
@@ -319,7 +319,7 @@ Resources:
             random_str = ''.join(random.choices(string.ascii_letters + string.digits, k=63))
             resp_value = {'random_string': random_str}
             cfnresponse.send(event, context, cfnresponse.SUCCESS, resp_value)
-      Runtime: 'python3.8'
+      Runtime: 'python3.14'
       Timeout: 10
 
   # Run the lambda init fn as a custom resource
@@ -396,6 +396,7 @@ Resources:
         - !Ref InstancePolicy
         - !Ref LogPolicy
         - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -441,17 +442,17 @@ Resources:
       AWS::CloudFormation::Init:
         configSets:
           default:
-            - installLrs
-            - setupCfnHup
             - configureCw
             - restartCw
+            - installLrs
+            - setupCfnHup
             - configureLrs
             - enableLrs
             - startLrs
           UpdateEnvironment:
-            - installLrs
             - configureCw
             - restartCw
+            - installLrs
             - configureLrs
             - restartLrs
         installLrs:
@@ -468,10 +469,10 @@ Resources:
           commands:
             00make_dir:
               cwd: "~"
-              command: "sudo mkdir /opt/lrsql"
+              command: "sudo mkdir -p /opt/lrsql"
             01unzip_lrs:
               cwd: "~"
-              command: "sudo unzip /tmp/lrsql.zip -d /opt/lrsql/"
+              command: "sudo unzip -o /tmp/lrsql.zip -d /opt/lrsql/"
         setupCfnHup:
           files:
             "/etc/cfn/cfn-hup.conf":
@@ -518,6 +519,9 @@ Resources:
             '/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json':
               content: !Sub |
                 {
+                  "agent": {
+                    "metrics_collection_interval": 60
+                  },
                   "metrics": {
                     "append_dimensions": {
                       "AutoScalingGroupName": "${!aws:AutoScalingGroupName}",
@@ -532,7 +536,8 @@ Resources:
                           "usage_nice",
                           "usage_system",
                           "usage_user"
-                        ]
+                        ],
+                        "totalcpu": true
                       },
                       "mem": {
                         "measurement": [
@@ -551,23 +556,44 @@ Resources:
                       "files":{
                         "collect_list": [
                           {
-                            "file_path": "/opt/lrsql/logs/*",
-                            "auto_removal": true,
+                            "file_path": "/opt/lrsql/logs/lrsql*.log",
                             "log_group_name": "${LogGroup}",
                             "log_stream_name": "lrsql-instance-{instance_id}"
+                          },
+                          {
+                            "file_path": "/var/log/cloud-init-output.log",
+                            "log_group_name": "${LogGroup}",
+                            "log_stream_name": "bootstrap/{instance_id}/cloud-init"
+                          },
+                          {
+                            "file_path": "/var/log/cfn-init.log",
+                            "log_group_name": "${LogGroup}",
+                            "log_stream_name": "bootstrap/{instance_id}/cfn-init"
+                          },
+                          {
+                            "file_path": "/var/log/cfn-hup.log",
+                            "log_group_name": "${LogGroup}",
+                            "log_stream_name": "bootstrap/{instance_id}/cfn-hup"
+                          },
+                          {
+                            "file_path": "/var/log/messages",
+                            "log_group_name": "${LogGroup}",
+                            "log_stream_name": "system/{instance_id}/messages"
+                          },
+                          {
+                            "file_path": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
+                            "log_group_name": "${LogGroup}",
+                            "log_stream_name": "bootstrap/{instance_id}/cloudwatch-agent"
                           }
                         ]
                       }
-                    },
-                    "log_stream_name": "lrsql-instance-{instance_id}"
+                    }
                   }
                 }
-        # Invoke amazon-cloudwatch-agent-ctl to restart the AmazonCloudWatchAgent.
+        # Validate the config and start (or restart) the CloudWatch agent.
         restartCw:
           commands:
-            01_stop_service:
-              command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a stop
-            02_start_service:
+            01_start_service:
               command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
         configureLrs:
           files:
