@@ -60,9 +60,18 @@
 (defprotocol StateDocumentBackend
   ;; Commands
   (-insert-state-document! [this tx input])
+  (-insert-state-document-if-absent! [this tx input]
+    "Insert a state document only when its logical key is absent. Returns a boolean indicating whether the insert was applied.")
   (-update-state-document! [this tx input])
+  (-update-state-document-if-contents! [this tx input]
+    "Update a state document only when its contents equal :expected-contents. Returns a boolean indicating whether the update was applied.")
   (-delete-state-document! [this tx input])
+  (-delete-state-document-if-contents! [this tx input]
+    "Delete a state document only when its contents equal :expected-contents. Returns a boolean indicating whether the delete was applied.")
   (-delete-state-documents! [this tx input])
+  (-delete-state-documents-by-primary-keys! [this tx input]
+    "Delete State documents in the requested collection whose physical IDs
+     are present in :primary-keys. Returns the backend affected-row result.")
   ;; Queries
   (-query-state-document [this tx input])
   (-query-state-document-ids [this tx input])
@@ -71,8 +80,14 @@
 (defprotocol AgentProfileDocumentBackend
   ;; Commands
   (-insert-agent-profile-document! [this tx input])
+  (-insert-agent-profile-document-if-absent! [this tx input]
+    "Insert an agent profile document only when its logical key is absent. Returns a boolean indicating whether the insert was applied.")
   (-update-agent-profile-document! [this tx input])
+  (-update-agent-profile-document-if-contents! [this tx input]
+    "Update an agent profile document only when its contents equal :expected-contents. Returns a boolean indicating whether the update was applied.")
   (-delete-agent-profile-document! [this tx input])
+  (-delete-agent-profile-document-if-contents! [this tx input]
+    "Delete an agent profile document only when its contents equal :expected-contents. Returns a boolean indicating whether the delete was applied.")
   ;; Queries
   (-query-agent-profile-document [this tx input])
   (-query-agent-profile-document-ids [this tx input])
@@ -81,8 +96,14 @@
 (defprotocol ActivityProfileDocumentBackend
   ;; Commands
   (-insert-activity-profile-document! [this tx input])
+  (-insert-activity-profile-document-if-absent! [this tx input]
+    "Insert an activity profile document only when its logical key is absent. Returns a boolean indicating whether the insert was applied.")
   (-update-activity-profile-document! [this tx input])
+  (-update-activity-profile-document-if-contents! [this tx input]
+    "Update an activity profile document only when its contents equal :expected-contents. Returns a boolean indicating whether the update was applied.")
   (-delete-activity-profile-document! [this tx input])
+  (-delete-activity-profile-document-if-contents! [this tx input]
+    "Delete an activity profile document only when its contents equal :expected-contents. Returns a boolean indicating whether the delete was applied.")
   ;; Queries
   (-query-activity-profile-document [this tx input])
   (-query-activity-profile-document-ids [this tx input])

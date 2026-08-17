@@ -19,6 +19,17 @@ AND agent_ifi = :agent-ifi
 --~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
 ;
 
+-- :name delete-state-documents-by-primary-keys!
+-- :command :execute
+-- :result :affected
+-- :doc Delete observed State documents by physical primary key, retaining collection scoping predicates.
+DELETE FROM state_document
+WHERE activity_iri = :activity-iri
+AND agent_ifi = :agent-ifi
+--~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
+AND id IN (:v*:primary-keys)
+;
+
 -- :name delete-agent-profile-document!
 -- :command :execute
 -- :result :affected
@@ -34,6 +45,37 @@ AND agent_ifi = :agent-ifi;
 DELETE FROM activity_profile_document
 WHERE profile_id = :profile-id
 AND activity_iri = :activity-iri;
+
+/* Conditional Document Deletion */
+
+-- :name delete-state-document-if-contents!
+-- :command :execute
+-- :result :affected
+-- :doc Delete a state document only when its contents equal the observed contents.
+DELETE FROM state_document
+WHERE activity_iri = :activity-iri
+AND agent_ifi = :agent-ifi
+AND state_id = :state-id
+--~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
+AND contents = :expected-contents;
+
+-- :name delete-agent-profile-document-if-contents!
+-- :command :execute
+-- :result :affected
+-- :doc Delete an agent profile document only when its contents equal the observed contents.
+DELETE FROM agent_profile_document
+WHERE profile_id = :profile-id
+AND agent_ifi = :agent-ifi
+AND contents = :expected-contents;
+
+-- :name delete-activity-profile-document-if-contents!
+-- :command :execute
+-- :result :affected
+-- :doc Delete an activity profile document only when its contents equal the observed contents.
+DELETE FROM activity_profile_document
+WHERE profile_id = :profile-id
+AND activity_iri = :activity-iri
+AND contents = :expected-contents;
 
 /* Admin Accounts + Credentials */
 

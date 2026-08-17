@@ -68,6 +68,49 @@ SET
 WHERE profile_id = :profile-id
 AND activity_iri = :activity-iri;
 
+/* Conditional Document Updates */
+
+-- :name update-state-document-if-contents!
+-- :command :execute
+-- :result :affected
+-- :doc Update a state document only when its contents equal the observed contents.
+UPDATE state_document
+SET
+  content_length = :content-length,
+  contents = :contents,
+  last_modified = :last-modified
+WHERE state_id = :state-id
+AND activity_iri = :activity-iri
+AND agent_ifi = :agent-ifi
+--~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
+AND contents = :expected-contents;
+
+-- :name update-agent-profile-document-if-contents!
+-- :command :execute
+-- :result :affected
+-- :doc Update an agent profile document only when its contents equal the observed contents.
+UPDATE agent_profile_document
+SET
+  content_length = :content-length,
+  contents = :contents,
+  last_modified = :last-modified
+WHERE profile_id = :profile-id
+AND agent_ifi = :agent-ifi
+AND contents = :expected-contents;
+
+-- :name update-activity-profile-document-if-contents!
+-- :command :execute
+-- :result :affected
+-- :doc Update an activity profile document only when its contents equal the observed contents.
+UPDATE activity_profile_document
+SET
+  content_length = :content-length,
+  contents = :contents,
+  last_modified = :last-modified
+WHERE profile_id = :profile-id
+AND activity_iri = :activity-iri
+AND contents = :expected-contents;
+
 /* Admin Accounts + Credentials */
 
 -- :name update-admin-password!

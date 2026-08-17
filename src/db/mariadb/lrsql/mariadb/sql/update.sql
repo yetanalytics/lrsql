@@ -71,6 +71,52 @@ WHERE profile_hash = UNHEX(SHA2(:profile-id,256))
 AND profile_id = :profile-id
 AND activity_hash = UNHEX(SHA2(:activity-iri,256));
 
+/* Conditional Document Updates */
+
+-- :name update-state-document-if-contents!
+-- :command :execute
+-- :result :affected
+-- :doc Update a state document only when its contents equal the observed contents.
+UPDATE state_document
+SET
+  content_length = :content-length,
+  contents = :contents,
+  last_modified = :last-modified
+WHERE state_hash = UNHEX(SHA2(:state-id,256))
+AND state_id = :state-id
+AND activity_hash = UNHEX(SHA2(:activity-iri,256))
+AND agent_hash = UNHEX(SHA2(:agent-ifi,256))
+--~ (if (:registration params) "AND registration = :registration" "AND registration IS NULL")
+AND contents = :expected-contents;
+
+-- :name update-agent-profile-document-if-contents!
+-- :command :execute
+-- :result :affected
+-- :doc Update an agent profile document only when its contents equal the observed contents.
+UPDATE agent_profile_document
+SET
+  content_length = :content-length,
+  contents = :contents,
+  last_modified = :last-modified
+WHERE profile_hash = UNHEX(SHA2(:profile-id,256))
+AND profile_id = :profile-id
+AND agent_hash = UNHEX(SHA2(:agent-ifi,256))
+AND contents = :expected-contents;
+
+-- :name update-activity-profile-document-if-contents!
+-- :command :execute
+-- :result :affected
+-- :doc Update an activity profile document only when its contents equal the observed contents.
+UPDATE activity_profile_document
+SET
+  content_length = :content-length,
+  contents = :contents,
+  last_modified = :last-modified
+WHERE profile_hash = UNHEX(SHA2(:profile-id,256))
+AND profile_id = :profile-id
+AND activity_hash = UNHEX(SHA2(:activity-iri,256))
+AND contents = :expected-contents;
+
 /* Admin Accounts + Credentials */
 
 -- :name update-admin-password!

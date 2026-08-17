@@ -5,6 +5,7 @@
             [next.jdbc :as jdbc]
             [lrsql.backend.protocol :as bp]
             [lrsql.backend.data :as bd]
+            [lrsql.backend.result :as br]
             [lrsql.init :refer [init-hugsql-adapter!]]
             [lrsql.sqlite.data :as sd]
             [lrsql.util.path :refer [path->sqlpath-string]])
@@ -130,9 +131,14 @@
                (:schema_version (query-schema-version tx))))
 
   bp/BackendUtil
-  (-txn-retry? [_ _ex]
-    ;; No known retry cases for SQLite
-    false)
+  (-txn-retry? [_ ex]
+    (and (instance? SQLiteException ex)
+         ;; Extended BUSY and LOCKED codes retain their primary result code in
+         ;; the low byte (e.g. SQLITE_BUSY_SNAPSHOT is 0x205).
+         (contains? #{5 6}
+                    (bit-and 0xff
+                             (.-code (.getResultCode
+                                      ^SQLiteException ex))))))
 
   bp/StatementBackend
   (-insert-statement! [_ tx input]
@@ -190,12 +196,20 @@
   bp/StateDocumentBackend
   (-insert-state-document! [_ tx input]
     (insert-state-document! tx input))
+  (-insert-state-document-if-absent! [_ tx input]
+    (br/affected->applied? (insert-state-document-if-absent! tx input)))
   (-update-state-document! [_ tx input]
     (update-state-document! tx input))
+  (-update-state-document-if-contents! [_ tx input]
+    (br/affected->applied? (update-state-document-if-contents! tx input)))
   (-delete-state-document! [_ tx input]
     (delete-state-document! tx input))
+  (-delete-state-document-if-contents! [_ tx input]
+    (br/affected->applied? (delete-state-document-if-contents! tx input)))
   (-delete-state-documents! [_ tx input]
     (delete-state-documents! tx input))
+  (-delete-state-documents-by-primary-keys! [_ tx input]
+    (delete-state-documents-by-primary-keys! tx input))
   (-query-state-document [_ tx input]
     (query-state-document tx input))
   (-query-state-document-ids [_ tx input]
@@ -206,10 +220,16 @@
   bp/AgentProfileDocumentBackend
   (-insert-agent-profile-document! [_ tx input]
     (insert-agent-profile-document! tx input))
+  (-insert-agent-profile-document-if-absent! [_ tx input]
+    (br/affected->applied? (insert-agent-profile-document-if-absent! tx input)))
   (-update-agent-profile-document! [_ tx input]
     (update-agent-profile-document! tx input))
+  (-update-agent-profile-document-if-contents! [_ tx input]
+    (br/affected->applied? (update-agent-profile-document-if-contents! tx input)))
   (-delete-agent-profile-document! [_ tx input]
     (delete-agent-profile-document! tx input))
+  (-delete-agent-profile-document-if-contents! [_ tx input]
+    (br/affected->applied? (delete-agent-profile-document-if-contents! tx input)))
   (-query-agent-profile-document [_ tx input]
     (query-agent-profile-document tx input))
   (-query-agent-profile-document-ids [_ tx input]
@@ -220,10 +240,16 @@
   bp/ActivityProfileDocumentBackend
   (-insert-activity-profile-document! [_ tx input]
     (insert-activity-profile-document! tx input))
+  (-insert-activity-profile-document-if-absent! [_ tx input]
+    (br/affected->applied? (insert-activity-profile-document-if-absent! tx input)))
   (-update-activity-profile-document! [_ tx input]
     (update-activity-profile-document! tx input))
+  (-update-activity-profile-document-if-contents! [_ tx input]
+    (br/affected->applied? (update-activity-profile-document-if-contents! tx input)))
   (-delete-activity-profile-document! [_ tx input]
     (delete-activity-profile-document! tx input))
+  (-delete-activity-profile-document-if-contents! [_ tx input]
+    (br/affected->applied? (delete-activity-profile-document-if-contents! tx input)))
   (-query-activity-profile-document [_ tx input]
     (query-activity-profile-document tx input))
   (-query-activity-profile-document-ids [_ tx input]

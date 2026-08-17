@@ -5,7 +5,38 @@
             [lrsql.spec.common :refer [transaction?]]
             [lrsql.spec.document :as ds]
             [lrsql.util :as u]
+            [lrsql.util.document :as du]
             [lrsql.ops.util :refer [throw-invalid-table-ex]]))
+
+(defn- document-cas-ops
+  "Return the backend operations used for a document CAS mutation."
+  [table]
+  (case table
+    :state-document
+    {:query  bp/-query-state-document
+     :insert bp/-insert-state-document-if-absent!
+     :update bp/-update-state-document-if-contents!
+     :delete bp/-delete-state-document-if-contents!}
+
+    :agent-profile-document
+    {:query  bp/-query-agent-profile-document
+     :insert bp/-insert-agent-profile-document-if-absent!
+     :update bp/-update-agent-profile-document-if-contents!
+     :delete bp/-delete-agent-profile-document-if-contents!}
+
+    :activity-profile-document
+    {:query  bp/-query-activity-profile-document
+     :insert bp/-insert-activity-profile-document-if-absent!
+     :update bp/-update-activity-profile-document-if-contents!
+     :delete bp/-delete-activity-profile-document-if-contents!}
+
+    (throw-invalid-table-ex "document-cas-ops" {:table table})))
+
+(defn- ensure-cas-applied!
+  [applied? operation table]
+  (when-not applied?
+    (du/throw-cas-conflict! {:operation operation
+                             :table     table})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Insertion
@@ -167,8 +198,101 @@
     (throw-invalid-table-ex "upsert-document!" input)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Atomic Document Setting
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- put-document-cas!
+  [bk tx input old-doc insert-fn! update-fn!]
+  (let [{:keys [table]} input]
+    (ensure-cas-applied!
+     (if old-doc
+       (update-fn! bk tx (assoc input
+                                :expected-contents (:contents old-doc)))
+       (insert-fn! bk tx input))
+     :put
+     table)
+    {}))
+
+(defn- post-document-cas!
+  [bk tx input old-doc insert-fn! update-fn!]
+  (let [{:keys [table]} input]
+    (if old-doc
+      (upsert-update-document!
+       bk
+       tx
+       input
+       old-doc
+       (fn [bk' tx' merged-input]
+         (ensure-cas-applied!
+          (update-fn! bk'
+                      tx'
+                      (assoc merged-input
+                             :expected-contents (:contents old-doc)))
+          :post
+          table)))
+      (upsert-insert-document!
+       bk
+       tx
+       input
+       (fn [bk' tx' new-input]
+         (ensure-cas-applied! (insert-fn! bk' tx' new-input)
+                              :post
+                              table))))))
+
+(s/fdef set-document-cas!
+  :args (s/cat :bk ds/document-backend?
+               :tx transaction?
+               :ctx map?
+               :input ds/insert-document-spec
+               :merge? boolean?)
+  :ret ds/document-command-res-spec)
+
+(defn set-document-cas!
+  "Atomically PUT or POST a document after validating the normalized ETag
+   preconditions in `ctx` against the contents read in this transaction.
+   A missed database CAS predicate throws an internal retryable conflict."
+  [bk tx ctx {:keys [table] :as input} merge?]
+  (let [{:keys [query insert update]} (document-cas-ops table)
+        old-doc (query bk tx input)
+        operation (if merge? :post :put)]
+    (if-some [error-result
+              (du/precondition-error ctx old-doc {:operation operation
+                                                  :table     table})]
+      error-result
+      (if merge?
+        (post-document-cas! bk tx input old-doc insert update)
+        (put-document-cas! bk tx input old-doc insert update)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Document Deletion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(s/fdef delete-document-cas!
+  :args (s/cat :bk ds/document-backend?
+               :tx transaction?
+               :ctx map?
+               :input ds/document-input-spec)
+  :ret ds/document-command-res-spec)
+
+(defn delete-document-cas!
+  "Atomically delete a single document after validating the normalized ETag
+   preconditions in `ctx` against the contents read in this transaction.
+   A missed database CAS predicate throws an internal retryable conflict."
+  [bk tx ctx {:keys [table] :as input}]
+  (let [{:keys [query delete]} (document-cas-ops table)
+        old-doc (query bk tx input)]
+    (if-some [error-result
+              (du/precondition-error ctx old-doc {:operation :delete
+                                                  :table     table})]
+      error-result
+      (do
+        (when old-doc
+          (ensure-cas-applied!
+           (delete bk tx (assoc input
+                                :expected-contents (:contents old-doc)))
+           :delete
+           table))
+        {}))))
 
 (s/fdef delete-document!
   :args (s/cat :bk ds/document-backend?
@@ -205,3 +329,50 @@
     ;; Else
     (throw-invalid-table-ex "delete-documents!" input))
   {})
+
+(def ^:private state-document-delete-batch-size 500)
+
+(defn- observed-primary-keys
+  [rows]
+  (->> rows
+       (map :id)
+       (sort-by str)
+       vec))
+
+(s/fdef delete-documents-cas!
+  :args (s/cat :bk ds/document-backend?
+               :tx transaction?
+               :ctx map?
+               :input ds/state-doc-multi-input-spec)
+  :ret ds/document-command-res-spec)
+
+(defn delete-documents-cas!
+  "Validate a State collection against the rows observed in this transaction,
+   then delete only those rows by immutable physical primary key. Rows added or
+   recreated after the observation are outside this operation's ordering point
+   and are not deleted."
+  [bk tx ctx {:keys [table] :as input}]
+  (case table
+    :state-document
+    (let [rows (bp/-query-state-document-ids bk tx input)
+          ids  (->> rows
+                    (map :state_id)
+                    du/canonical-state-document-ids)
+          collection-document
+          {:contents (du/state-document-ids-contents ids)}]
+      (if-some [error-result
+                (du/precondition-error ctx
+                                       collection-document
+                                       {:operation   :delete
+                                        :table       table
+                                        :collection? true})]
+        error-result
+        (do
+          (doseq [primary-keys (partition-all
+                                state-document-delete-batch-size
+                                (observed-primary-keys rows))]
+            (bp/-delete-state-documents-by-primary-keys!
+             bk tx (assoc input :primary-keys (vec primary-keys))))
+          {})))
+
+    (throw-invalid-table-ex "delete-documents-cas!" input)))
