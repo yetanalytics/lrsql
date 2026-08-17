@@ -59,9 +59,7 @@
   com.fasterxml.jackson.core/jackson-core       {:mvn/version "2.21.5"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
-  {;; :mvn/version "1.5.0"
-   :git/url "https://github.com/yetanalytics/lrs.git"
-   :git/sha "237a01282a1600d3ac6fac7a139d46cbe6294f8c"
+  {:mvn/version "1.5.1"
    :exclusions  [org.clojure/clojure
                  org.clojure/clojurescript
                  com.yetanalytics/xapi-schema]}
