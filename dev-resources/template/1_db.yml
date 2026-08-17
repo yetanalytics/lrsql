@@ -24,10 +24,12 @@ Parameters:
   DBEngineVersion:
     Description: PostgreSQL engine version on RDS
     Type: String
-    Default: "14.3"
+    Default: "18.3"
     AllowedValues:
-      - "12.9"
-      - "14.3"
+      - "16.13"
+      - "15.17"
+      - "17.9"
+      - "18.3"
   DBInstanceClass:
     Description: For provisioned aurora, the instance class to use
     Type: String
@@ -76,10 +78,14 @@ Parameters:
 
 Mappings:
   DBClusterParameterGroupMap:
-    "12.9":
-      Name: default.aurora-postgresql12
-    "14.3":
-      Name: default.aurora-postgresql14
+    "15.17":
+      Name: default.aurora-postgresql15
+    "16.13":
+      Name: default.aurora-postgresql16
+    "17.9":
+      Name: default.aurora-postgresql17
+    "18.3":
+      Name: default.aurora-postgresql18
 
 Conditions:
   DBProvisioned:
