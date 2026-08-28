@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "RDS SSM Connect for LRSQL App"
+Parameters:
+  VPCStackName:
+    Description: Name of our VPC Stack
+    Type: String
+  AppStackName:
+    Description: LRSQL App Stack Reference
+    Type: String
+  DBStackName:
+    Description: LRSQL DB Stack Reference
+    Type: String
+  SSMInstanceAMI:
+    Description: AMI ID
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+Resources:
+  SSMInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "ec2.amazonaws.com"
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Path: "/"
+  SSMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - Ref: SSMInstanceRole
+  SSMInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for SSMInstance 
+      VpcId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "VPCStackName", "VPCId"]] 
+  AppSSMInstanceIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      Description: Ingress from SSMInstance
+      GroupId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "AppStackName", "InstanceSG"]]
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !Ref SSMInstanceSG
+  DBSSMInstanceIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      Description: Ingress from SSMInstance
+      GroupId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
+      IpProtocol: tcp
+      FromPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      SourceSecurityGroupId: !Ref SSMInstanceSG
+  SSMEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      InstanceType: t3.micro
+      ImageId: !Ref SSMInstanceAMI
+      SecurityGroupIds:
+        - !Ref SSMInstanceSG 
+      SubnetId:
+        Fn::ImportValue: !Join [":", [!Ref "VPCStackName", "PrivateSubnetOne"]]
+Outputs:
+  SSMInstanceId:
+    Description: Instance ID of SSM EC2 Instance (needed for local ssm client config)
+    Value: !GetAtt SSMEC2Instance.InstanceId
+    Export:
+      Name: !Sub "${AWS::StackName}:SSMInstanceId"
