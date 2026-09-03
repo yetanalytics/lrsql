@@ -15,7 +15,7 @@ Note that for Keycloak to work (at least on Docker for Mac) you'll need to map y
 To run the demo:
 
     cd dev-resources/superset_demo
-    docker compose up -d
+    docker compose up -d --build
 
 or
 
