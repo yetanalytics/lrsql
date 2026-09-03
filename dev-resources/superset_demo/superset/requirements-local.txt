@@ -1,3 +1,2 @@
-itsdangerous==2.0.1
-flask-oidc
-flask_openid
+Authlib==1.6.7
+psycopg2-binary==2.9.9

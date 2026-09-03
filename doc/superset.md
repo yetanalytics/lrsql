@@ -15,7 +15,7 @@ Note that for Keycloak to work (at least on Docker for Mac) you'll need to map y
 To run the demo:
 
     cd dev-resources/superset_demo
-    docker compose up -d
+    docker compose up -d --build
 
 or
 
@@ -33,15 +33,18 @@ git clone https://github.com/yetanalytics/datasim.git
 
 cd datasim
 
-docker run -v "$(pwd)"/dev-resources:/dev-resources  \
-           -it \
-           --rm \
-           yetanalytics/datasim:latest \
-           -i /dev-resources/input/simple.json \
-           -E http://host.docker.internal:8080/xapi \
-           -U my_key \
-           -P my_secret \
-           generate post
+docker run --rm \
+  --platform linux/amd64 \
+  -v "$PWD/dev-resources:/dev-resources:ro" \
+  yetanalytics/datasim:latest \
+  generate-post \
+  -i /dev-resources/input/simple.json \
+  -E http://host.docker.internal:8080/xapi \
+  -U my_key \
+  -P my_secret \
+  -B 1 \
+  -C 1 \
+  --no-async
 
 ```
 

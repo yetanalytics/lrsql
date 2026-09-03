@@ -135,7 +135,7 @@ keycloak-demo:
 	cd dev-resources/keycloak_demo; docker compose up
 
 superset-demo:
-	cd dev-resources/superset_demo; docker compose up -d
+	cd dev-resources/superset_demo; docker compose up -d --build
 
 clamav-demo:
 	cd dev-resources/clamav; docker compose up -d
