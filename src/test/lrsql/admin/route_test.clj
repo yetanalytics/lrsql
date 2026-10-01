@@ -258,9 +258,13 @@
               new-jwt  (get edn-body "json-web-token")]
           ;; success
           (is (= 200 status))
-          ;; body is a new JWT
+          ;; The renewed JWT authenticates (it can equal the original when
+          ;; both are issued within the same second).
           (is (string? new-jwt))
-          (is (not= seed-jwt new-jwt))))
+          (is (= 200
+                 (:status (get-me (merge content-type
+                                         {"Authorization"
+                                          (str "Bearer " new-jwt)})))))))
       (testing "log into the `myname` account"
         (let [{:keys [status body]}
               (login-account content-type req-body)
