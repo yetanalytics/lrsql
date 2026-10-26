@@ -56,7 +56,7 @@
   org.bouncycastle/bcpkix-jdk18on               {:mvn/version "1.85"}
   less-awful-ssl/less-awful-ssl                 {:mvn/version "1.0.6"}
   xyz.capybara/clamav-client                    {:mvn/version "2.1.2"}
-  com.fasterxml.jackson.core/jackson-core       {:mvn/version "2.21.5"}
+  com.fasterxml.jackson.core/jackson-core       {:mvn/version "2.21.7"}
   ;; Yet Analytics deps
   com.yetanalytics/lrs
   {:mvn/version "1.5.2"
