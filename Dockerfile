@@ -1,4 +1,4 @@
-FROM alpine:3.19.1
+FROM alpine:3.23
 
 ADD target/bundle /lrsql
 ADD .java_modules /lrsql/.java_modules
@@ -9,6 +9,7 @@ RUN apk update \
         && apk add ca-certificates \
         && update-ca-certificates \
         && apk add --no-cache openjdk21 \
+        && java -version \
         && mkdir -p /lrsql/runtimes \
         && jlink --output /lrsql/runtimes/linux/ --add-modules $(cat /lrsql/.java_modules) \
         && apk del openjdk21 \
