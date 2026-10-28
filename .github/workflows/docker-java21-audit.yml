@@ -1,0 +1,52 @@
+name: Docker Java 21 security candidate
+on:
+  pull_request:
+    paths:
+      - Dockerfile
+      - .github/workflows/docker-java21-audit.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: yetanalytics/action-setup-env@v2
+        with:
+          java-version: '21'
+      - name: Build application bundle for container
+        run: make bundle BUNDLE_RUNTIMES=false
+      - name: Build Java 21 candidate image
+        run: docker build -t lrsql-java21-candidate:local .
+      - name: Assert bundled Java major version
+        run: |
+          docker run --rm --entrypoint /lrsql/runtimes/linux/bin/java lrsql-java21-candidate:local -version 2>&1 | tee java-version.txt
+          grep -E 'version "21\.' java-version.txt
+      - name: Install scanner releases
+        env:
+          SYFT_VERSION: v1.34.2
+          GRYPE_VERSION: v0.104.0
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSLo /tmp/syft.tgz "https://github.com/anchore/syft/releases/download/${SYFT_VERSION}/syft_${SYFT_VERSION#v}_linux_amd64.tar.gz"
+          curl -fsSLo /tmp/grype.tgz "https://github.com/anchore/grype/releases/download/${GRYPE_VERSION}/grype_${GRYPE_VERSION#v}_linux_amd64.tar.gz"
+          tar -xzf /tmp/syft.tgz -C "$HOME/.local/bin" syft
+          tar -xzf /tmp/grype.tgz -C "$HOME/.local/bin" grype
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Generate image SBOM and vulnerability report
+        run: |
+          syft lrsql-java21-candidate:local -o cyclonedx-json=sbom.cdx.json
+          grype sbom:sbom.cdx.json -o json > vulnerabilities.json
+      - name: Block high and critical vulnerabilities
+        run: grype sbom:sbom.cdx.json --fail-on high
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lrsql-java21-candidate-security
+          path: |
+            java-version.txt
+            sbom.cdx.json
+            vulnerabilities.json
+          if-no-files-found: ignore
