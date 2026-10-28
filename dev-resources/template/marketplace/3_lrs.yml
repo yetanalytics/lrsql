@@ -1,0 +1,919 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "SQL LRS and DB Init Script"
+Parameters:
+  VPCStackName:
+    Description: Name of our VPC Stack
+    Type: String
+  # DB Details
+  DBStackName:
+    Description: DB Stack Reference (leave empty if ephemeral)
+    Type: String
+    Default: ''
+  SecretStackName:
+    Description: SSM Stack Reference
+    Type: String
+  # Lambda DB Init Script
+
+  # Server(s)
+  InstanceType:
+    Type: String
+    Description: EC2 Instance Type to launch.
+    Default: c5.large
+    AllowedValues:
+      - c5.large
+      - c5.xlarge
+      - c5.2xlarge
+      - c5.4xlarge
+      - c5.9xlarge
+      - c5.12xlarge
+      - c5.18xlarge
+      - c5.24xlarge
+  InstanceKeyName:
+    Description: Name of an EC2 key pair that can be used to connect to the server (optional)
+    Type: String
+  InstanceSSHCidr:
+    Description: CIDR Range for SSH Access to instances (Typically VPC CIDR Range)
+    Type: String
+    Default: "172.147.0.0/16"
+  InstanceHttpPort:
+    Description: Port on which the server runs HTTP
+    Type: String
+    Default: 8080
+  InstanceCreationPolicyResourceSignalTimeout:
+    Description: How long to wait for a resource signal on the deployment of an instance.  
+    Type: String
+    Default: PT15M
+  DefaultAdminUser:
+    Default: lrsqladmin
+    Type: String
+    Description: Username of seed lrs admin
+  DefaultAdminPass:
+    Description: Initial seed password for lrs admin
+    NoEcho: true
+    Type: String
+  LrsVersion:
+    Description: Version of SQL LRS to pull from Mapping of AMIs
+    Type: String
+    AllowedValues:
+      - 0.7.14
+      - 0.7.19
+    Default: 0.7.19
+
+  ASGMinSize:
+    Type: Number
+    Default: 1
+    Description: Minimum number of instances to launch in the autoscaling group.
+  ASGDesiredSize:
+    Type: Number
+    Description: Desired number of instances to launch in the autoscaling group.
+    Default: 1
+  ASGMaxSize:
+    Type: Number
+    Description: Maximum number of instances to launch in the autoscaling group.
+    Default: 2
+  ASGCPUPolicyTargetValue:
+    Type: String # according to docs a Double
+    Description: Target CPU utilization of instances. Leave blank to disable CPU autoscaling.
+    Default: "" # "60.0"
+  ASGALBRequestCountTargetValue:
+    Type: String # according to docs a Double
+    Description: Target requests per instance. Leave blank to disable request count autoscaling.
+    Default: "" # "10000.0"
+  ASGHealthCheckGracePeriod:
+    Type: Number
+    Default: 120
+    Description: Time (in seconds) to wait before deciding a new instance is unhealthy.
+  ASGCreationPolicyResourceSignalTimeout:
+    Type: String
+    Description: How long to wait for instances before declaring failed creation.
+    Default: PT15M
+  ASGUpdatePolicyAutoScalingRollingUpdatePauseTime:
+    Type: String
+    Description: The amount of time that CloudFormation should wait for the Auto Scaling group to receive the required number of valid signals from added or replaced instances.
+    Default: PT15M
+
+  # Front-end (ALB) specific settings
+  ALBHostName:
+    Type: String
+    Description: The hostname to use for the Elastic Load Balancer.
+    Default: "ami.yet.systems"
+  ALBCertArn:
+    Type: String
+    Description: The ARN of an ACM cert to use on the ALB
+  ALBHostedZone:
+    Type: String
+    Description: Route53 Hosted Zone in which to set a DNS record. If unset no record will be updated
+    Default: ""
+  # CORS Settings
+  CORSAllowedOrigins:
+    Type: CommaDelimitedList
+    Description: A comma-separated list of origins to allow. If not provided ALBHostName will be used if present, otherwise no origins will be allowed.
+
+  # Logging Settings
+  LogRetentionInDays:
+    Description: How long to retain CloudWatch Logs from the LRSQL Instance
+    Type: Number
+    Default: 7
+  LogLevel:
+    Description: Detail of SQL LRS Logging level.
+    Type: String
+    AllowedValues:
+      - ALL
+      - TRACE
+      - DEBUG
+      - INFO
+      - WARN
+      - ERROR
+      - OFF
+    Default: INFO
+  LogGroupPrefix:
+    Description: Prefix for CloudWatch log group.
+    Type: String
+    Default: "/yet/lrsql/"
+  CreateUserBucketOverride:
+    Description: Override for s3 bucket containing RDSCreateUser Lambda code
+    Type: String
+    Default: ""
+  CreateUserFnKeyOverride:
+    Description: Override for s3 Key containing RDSCreateUser Lambda Code
+    Type: String
+    Default: ""
+  RDSCreateUserVersion:
+    Description: Version of function that creates users for RDS
+    Type: String
+    Default: "v0.0.8"
+  
+  DBMode:
+    Description: Select DB type for initialization
+    Type: String
+    AllowedValues:
+      - Postgres
+      - Ephemeral
+    Default: Postgres
+
+Conditions:
+  SetDNS: !Not [!Equals [!Ref ALBHostedZone, ""]]
+  SetCORS: !Not [!Equals [!Join ["", !Ref CORSAllowedOrigins], ""]]
+  ASGCPUPolicyTargetValueProvided:
+    !Not [!Equals [!Ref ASGCPUPolicyTargetValue, ""]]
+  ASGALBRequestCountTargetValueProvided:
+    !Not [!Equals [!Ref ASGALBRequestCountTargetValue, ""]]
+  InstanceKeyNameProvided:
+    !Not [!Equals [!Ref InstanceKeyName, ""]]
+  CreateUserBucket: !Not [!Equals [!Ref CreateUserBucketOverride, ""]]
+  CreateUserFnKey: !Not [!Equals [!Ref CreateUserFnKeyOverride, ""]]
+  IsPostgres:
+    !Equals [!Ref DBMode, "Postgres"]
+  IsEphemeral:
+    !Equals [!Ref DBMode, "Ephemeral"]
+  IsNotEphemeral:
+    !Not [!Equals [!Ref DBMode, "Ephemeral"]]
+
+Resources:
+  CreateUserPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: IsNotEphemeral
+    Properties:
+      Description: IAM Policy for rds-create-user lambda access.
+      ManagedPolicyName: !Sub "${AWS::StackName}-${AWS::Region}-create-user-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+            Resource: 
+              - !Sub 
+                  - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${Path}"
+                  - Path:
+                      Fn::ImportValue:
+                        !Join [":", [!Ref "SecretStackName", "DBMasterUserPasswordPath"]]
+              - !Sub 
+                  - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${Path}"
+                  - Path:
+                      Fn::ImportValue:
+                        !Join [":", [!Ref "SecretStackName", "DBAppUserPasswordPath"]]
+          - Effect: Allow
+            Action:
+              - ec2:DescribeNetworkInterfaces
+              - ec2:CreateNetworkInterface
+              - ec2:DeleteNetworkInterface
+              - ec2:DescribeInstances
+              - ec2:AttachNetworkInterface
+            Resource: "*"
+  CreateUserRole:
+    Type: AWS::IAM::Role
+    Condition: IsNotEphemeral
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [lambda.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - !Ref CreateUserPolicy
+  CreateUserSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG For Lambda Init Fn
+      VpcId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "VPCStackName", "VPCId"]]
+  CreateUserIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: IsNotEphemeral
+    Properties:
+      Description: Ingress from the create user fn to RDS instance
+      GroupId:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
+      IpProtocol: tcp
+      FromPort: 
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort: 
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      SourceSecurityGroupId: !Ref CreateUserSG
+  
+  CreateUserFn:
+    Type: AWS::Lambda::Function
+    Condition: IsNotEphemeral
+    Properties:
+      Code:
+        S3Bucket: !If
+          - CreateUserBucket
+          - !Ref CreateUserBucketOverride
+          - !Sub "yet-rds-db-init-deploy-${AWS::Region}"
+        S3Key: !If
+          - CreateUserFnKey
+          - !Ref CreateUserFnKeyOverride
+          - !Sub "rds-create-user${RDSCreateUserVersion}.zip"
+      Runtime: nodejs20.x
+      Handler: index.handler
+      Role: !GetAtt CreateUserRole.Arn
+      Timeout: 15
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref CreateUserSG
+        SubnetIds:
+          - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetOne']]
+          - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetTwo']]
+  CreateAdminUser:
+    Type: Custom::CreateDBUser
+    Condition: IsNotEphemeral
+    Properties:
+      ServiceToken: !GetAtt CreateUserFn.Arn
+      MasterUsername: 
+        Fn::ImportValue: 
+          !Join [":", [!Ref "SecretStackName", "DBMasterUsername"]]
+      MasterPasswordPath:
+        Fn::ImportValue:
+          !Join [":", [!Ref "SecretStackName", "DBMasterUserPasswordPath"]]
+      DBName:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBName"]]
+      Host:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
+      Port: 
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      User:
+        Username:
+          Fn::ImportValue:
+            !Join [":", [!Ref "SecretStackName", "DBAppUsername"]]
+        PasswordPath:
+          Fn::ImportValue:
+            !Join [":", [!Ref "SecretStackName", "DBAppUserPasswordPath"]]
+        Permissions:
+          - pg_read_all_data
+          - pg_write_all_data
+
+  # Servers
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '${LogGroupPrefix}${AWS::StackName}'
+      RetentionInDays: !Ref LogRetentionInDays
+
+  LogPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: IAM Policy that allows SQL LRS instances to write to the log group.
+      ManagedPolicyName: !Sub '${AWS::StackName}-${AWS::Region}-lrsql-log-policy'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:DescribeLogGroups'
+            Resource:
+              - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+          - Effect: Allow
+            Action:
+              - 'logs:DescribeLogGroups'
+              - 'logs:CreateLogStream'
+              - 'logs:DescribeLogStreams'
+              - 'logs:PutLogEvents'
+            Resource:
+              - !GetAtt LogGroup.Arn
+
+
+  InstancePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: IAM Policy for a SQL LRS Server.
+      ManagedPolicyName: !Sub "${AWS::StackName}-${AWS::Region}-lrsql-instance-policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          # Allow pulling DB password
+          - Effect: Allow
+            Action:
+              - "ssm:GetParameter"
+              - "secretsmanager:GetSecretValue"
+            Resource:
+              - !Sub 
+                - "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${DBAppUserPasswordPath}"
+                - DBAppUserPasswordPath:
+                    Fn::ImportValue:
+                      !Join [":", [!Ref "SecretStackName", "DBAppUserPasswordPath"]]
+          # Allegedly needed for securestring...
+          - Effect: Allow
+            Action:
+              - "kms:Decrypt"
+            Resource:
+              - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/secretsmanager"
+              - !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/ssm"
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ec2.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      Path: /
+      ManagedPolicyArns:
+        - !Ref InstancePolicy
+        - !Ref LogPolicy
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles: [!Ref InstanceRole]
+
+  InstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the LRS Instance
+      VpcId: 
+        Fn::ImportValue: 
+          !Join [':', [!Ref 'VPCStackName', 'VPCId']]
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref InstanceSSHCidr
+
+  DBInstanceIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Condition: IsNotEphemeral
+    Properties:
+      Description: Ingress from the LRS instance to RDS instance
+      GroupId:
+        Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBInstanceSG"]]
+      IpProtocol: tcp
+      FromPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      ToPort:
+        Fn::ImportValue:
+          !Join [":", [!Ref "DBStackName", "DBPort"]]
+      SourceSecurityGroupId: !Ref InstanceSG
+
+  # Randomly generate shared JWT
+  GenerateJWTSecretRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: [lambda.amazonaws.com]
+              Action: ["sts:AssumeRole"]
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  GenerateJWTSecretFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: 'index.handler'
+      Role: !GetAtt GenerateJWTSecretRole.Arn
+      Code:
+        ZipFile: |
+          import random
+          import string
+          import cfnresponse
+
+          def handler(event, context):
+            random_str = ''.join(random.choices(string.ascii_letters + string.digits, k=63))
+            resp_value = {'random_string': random_str}
+            cfnresponse.send(event, context, cfnresponse.SUCCESS, resp_value)
+      Runtime: 'python3.8'
+      Timeout: 10
+
+  # Run the lambda init fn as a custom resource          
+  GenerateJWTSecretResource:
+    Type: Custom::generateJWTSecretCustomResource
+    DependsOn: GenerateJWTSecretFunction
+    Properties:
+      ServiceToken: !GetAtt GenerateJWTSecretFunction.Arn
+
+  LrsInstances:
+    Type: AWS::EC2::LaunchTemplate
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: !Ref ASGCreationPolicyResourceSignalTimeout 
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          default:
+            - setupCfnHup
+            - configureCw
+            - restartCw
+            - !If [IsPostgres, configureLrs, !Ref "AWS::NoValue"]
+            - !If [IsPostgres, startLrs, !Ref "AWS::NoValue"]
+            - !If [IsEphemeral, configureEphemeralLrs, !Ref "AWS::NoValue"]
+            - !If [IsEphemeral, startEphemeralLrs, !Ref "AWS::NoValue"]
+          UpdateEnvironment:
+            - configureCw
+            - restartCw
+            - configureLrs
+            - restartLrs
+          UpdateEphemeralEnvironment:
+            - configureCw
+            - restartCw
+            - configureEphemeralLrs
+            - restartEphemeralLrs
+        setupCfnHup:
+          files:
+            "/etc/cfn/cfn-hup.conf":
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+                interval=1
+              mode: "000400"
+              owner: root
+              group: root
+            "/lib/systemd/system/cfn-hup.service":
+              content: |
+                [Unit]
+                Description=cfn-hup daemon
+                [Service]
+                Type=simple
+                ExecStart=/opt/aws/bin/cfn-hup
+                Restart=always
+                [Install]
+                WantedBy=multi-user.target
+            "/etc/cfn/hooks.d/lrsql-auto-reloader.conf":
+              content: !Sub 
+                - |
+                  [cfn-auto-reloader-hook]
+                  triggers=post.update
+                  path=Resources.LrsInstances.Metadata.AWS::CloudFormation::Init
+                  action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets ${EnvironmentUpdater}
+                  runas=root
+                - EnvironmentUpdater:
+                    !If 
+                      - IsPostgres
+                      - "UpdateEnvironment"
+                      - "UpdateEphemeralEnvironment"
+              mode: "000400"
+              owner: root
+              group: root
+          commands:
+            01enable_cfn_hup:
+              command: |
+                systemctl enable cfn-hup.service
+            02start_cfn_hup:
+              command: |
+                systemctl start cfn-hup.service
+        configureCw:
+          packages:
+            rpm:
+              amazon-cloudwatch-agent: https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+          files:
+            '/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json':
+              content: !Sub |
+                {
+                  "metrics": {
+                    "append_dimensions": {
+                      "AutoScalingGroupName": "${!aws:AutoScalingGroupName}",
+                      "ImageId": "${!aws:ImageId}",
+                      "InstanceId": "${!aws:InstanceId}",
+                      "InstanceType": "${!aws:InstanceType}"
+                    },
+                    "metrics_collected": {
+                      "cpu": {
+                        "measurement": [
+                          "usage_active",
+                          "usage_nice",
+                          "usage_system",
+                          "usage_user"
+                        ]
+                      },
+                      "mem": {
+                        "measurement": [
+                          "mem_used_percent"
+                        ]
+                      },
+                      "swap": {
+                        "measurement": [
+                          "swap_used_percent"
+                        ]
+                      }
+                    }
+                  },
+                  "logs":{
+                    "logs_collected": {
+                      "files":{
+                        "collect_list": [
+                          {
+                            "file_path": "/opt/lrsql/logs/*",
+                            "auto_removal": true,
+                            "log_group_name": "${LogGroup}",
+                            "log_stream_name": "lrsql-instance-{instance_id}"
+                          }
+                        ]
+                      }
+                    },
+                    "log_stream_name": "lrsql-instance-{instance_id}"
+                  }
+                }
+        # Invoke amazon-cloudwatch-agent-ctl to restart the AmazonCloudWatchAgent.
+        restartCw:
+          commands:
+            01_stop_service:
+              command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a stop
+            02_start_service:
+              command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+        
+        # Postgres
+        configureLrs:
+          files:
+            "/opt/lrsql/config/lrsql.json":
+              content: !Sub
+                - |
+                  {
+                    "database": {
+                      "dbHost": "${DBHost}",
+                      "dbPort": ${DBPort},
+                      "dbName": "${DBName}",
+                      "dbUser": "${DBAppUsername}",
+                      "dbPassword": "${DBPass}"
+                    },
+                    "lrs" : {
+                      "adminUserDefault": "${DefaultAdminUser}",
+                      "adminPassDefault": "${DefaultAdminPass}",
+                      "authorityUrl": "http://mydomain.com"
+                    },
+                    "webserver": {
+                      "httpHost": "0.0.0.0",
+                      "httpPort": ${InstanceHttpPort},
+                      "allowedOrigins": ${AllowedOrigins},
+                      "jwtCommonSecret": "${GenerateJWTSecretResource.random_string}"
+                    },
+                    "logger": {
+                      "logLevel":"${LogLevel}"
+                    }
+                  }
+                - DBName:
+                    !If
+                      - IsNotEphemeral
+                      - Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBName"]]
+                      - ""
+                  DBHost:
+                    !If
+                      - IsNotEphemeral
+                      - Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBEndpoint"]]
+                      - "" 
+                  DBAppUsername: 
+                    !If
+                      - IsNotEphemeral
+                      - !GetAtt CreateAdminUser.dbAppUser
+                      - "" 
+                  DBPass:
+                    !If
+                      - IsNotEphemeral
+                      - !GetAtt CreateAdminUser.dbAppPass
+                      - "" 
+                  DefaultAdminUser: !Ref DefaultAdminUser
+                  DefaultAdminPass: !Ref DefaultAdminPass
+                  InstanceHttpPort: !Ref InstanceHttpPort
+                  DBPort:
+                    !If
+                      - IsNotEphemeral
+                      - Fn::ImportValue: !Join [":", [!Ref "DBStackName", "DBPort"]]
+                      - "" 
+                  AllowedOrigins: !If
+                    - SetCORS
+                    - !Sub
+                      - '["${JoinedAllowedOrigins}"]'
+                      - JoinedAllowedOrigins: !Join ['","', !Ref CORSAllowedOrigins]
+                    - !If
+                      - SetDNS
+                      - !Sub '["https://${ALBHostName}"]'
+                      - "[]"
+              mode: "000755"
+              owner: root
+              group: root
+        startLrs:
+          commands:
+            01start_lrsql:
+              command:  |
+                systemctl start lrsql.service
+        restartLrs:
+          commands:
+            01daemon_reload:
+              command: |
+                systemctl daemon-reload
+            02restart_lrsql:
+              command: |
+                systemctl restart lrsql.service
+        
+        # Ephemeral
+        configureEphemeralLrs:
+          files:
+            "/opt/lrsql/config/lrsql.json":
+              content: !Sub
+                - |
+                  {
+                    "lrs" : {
+                      "adminUserDefault": "${DefaultAdminUser}",
+                      "adminPassDefault": "${DefaultAdminPass}",
+                      "authorityUrl": "http://mydomain.com"
+                    },
+                    "webserver": {
+                      "httpHost": "0.0.0.0",
+                      "httpPort": ${InstanceHttpPort},
+                      "allowedOrigins": ${AllowedOrigins},
+                      "jwtCommonSecret": "${GenerateJWTSecretResource.random_string}"
+                    },
+                    "logger": {
+                      "logLevel":"${LogLevel}"
+                    }
+                  }
+                - DefaultAdminUser: !Ref DefaultAdminUser
+                  DefaultAdminPass: !Ref DefaultAdminPass
+                  InstanceHttpPort: !Ref InstanceHttpPort
+                  AllowedOrigins: !If
+                    - SetCORS
+                    - !Sub
+                      - '["${JoinedAllowedOrigins}"]'
+                      - JoinedAllowedOrigins: !Join ['","', !Ref CORSAllowedOrigins]
+                    - !If
+                      - SetDNS
+                      - !Sub '["https://${ALBHostName}"]'
+                      - "[]"
+        startEphemeralLrs:
+          commands:
+            01start_lrsql:
+              command:  |
+                systemctl start lrsql-ephemeral.service
+        restartEphemeralLrs:
+          commands:
+            01daemon_reload:
+              command: |
+                systemctl daemon-reload
+            02restart_lrsql:
+              command: |
+                systemctl restart lrsql.service
+    Properties:
+      LaunchTemplateName: !Sub ${AWS::StackName}-lrsql-launch-template
+      LaunchTemplateData:
+        ImageId: !Sub "{{resolve:ssm:/lrsql-ami/${AWS::Region}/${LrsVersion}/latest}}"
+        InstanceType: !Ref InstanceType
+        KeyName: !If
+          - InstanceKeyNameProvided
+          - !Ref InstanceKeyName
+          - !Ref AWS::NoValue
+        SecurityGroupIds:
+          - !GetAtt [ "InstanceSG", "GroupId" ]
+        IamInstanceProfile:
+          Arn: !GetAtt 
+            - InstanceProfile
+            - Arn
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash -xe
+            echo 'Yet SQL LRS ${LrsVersion}'
+            # run configsets
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LrsInstances --region ${AWS::Region} --configsets default
+            # signal CF
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource AutoScalingGroup --region ${AWS::Region}
+
+  # Autoscaling Policies
+
+  # Average CPU utilization of instances
+  ASGCPUPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: ASGCPUPolicyTargetValueProvided
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: !Ref ASGCPUPolicyTargetValue
+
+  # Requests inbound to the ALB Target
+  ASGALBRequestCountPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Condition: ASGALBRequestCountTargetValueProvided
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ALBRequestCountPerTarget
+          ResourceLabel: !Join
+            - "/"
+            - - !GetAtt LoadBalancer.LoadBalancerFullName
+              - !GetAtt TargetGroup.TargetGroupFullName
+        TargetValue: !Ref ASGALBRequestCountTargetValue
+
+
+  # ASG
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetOne']]
+        - Fn::ImportValue: !Join [':', [!Ref 'VPCStackName', 'PrivateSubnetTwo']]
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LrsInstances
+        Version: !GetAtt LrsInstances.LatestVersionNumber
+      MinSize: !Ref ASGMinSize
+      MaxSize: !Ref ASGMaxSize
+      DesiredCapacity: !Ref ASGDesiredSize
+      # Attach to Target Group for ALB
+      TargetGroupARNs:
+        - !Ref TargetGroup
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: !Ref ASGHealthCheckGracePeriod
+      # Enable Group Metrics Collection
+      MetricsCollection:
+        - Granularity: "1Minute"
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: !Ref InstanceCreationPolicyResourceSignalTimeout
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: "1"
+        MaxBatchSize: "1"
+        PauseTime: !Ref ASGUpdatePolicyAutoScalingRollingUpdatePauseTime
+        WaitOnResourceSignals: "true"
+        SuspendProcesses:
+          - HealthCheck
+          - ReplaceUnhealthy
+          - AZRebalance
+          - AlarmNotification
+          - ScheduledActions
+
+  # Load Balancer
+
+  LoadBalancerSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the load balancer
+      VpcId: 
+        Fn::ImportValue: 
+          !Join [':', [!Ref 'VPCStackName', 'VPCId']]
+      SecurityGroupIngress:
+        # Allow access to ALB from anywhere on the internet
+        # on 80 as redirect-only
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+        # on http:443 for https
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: "30"
+      Subnets:
+        - Fn::ImportValue:
+            !Join [':', [!Ref 'VPCStackName', 'PublicSubnetOne']]
+        - Fn::ImportValue:
+            !Join [':', [!Ref 'VPCStackName', 'PublicSubnetTwo']]
+      SecurityGroups:
+        - !Ref LoadBalancerSG
+
+  LoadBalancerListenerHTTP:
+    #redirect to https
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - LoadBalancer
+    Properties:
+      DefaultActions:
+        - RedirectConfig:
+            Protocol: HTTPS
+            StatusCode: HTTP_301
+            Port: "443"
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "{query}"
+          Type: "redirect"
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  LoadBalancerListenerHTTPS:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - LoadBalancer
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: "forward"
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref ALBCertArn
+
+  IngressFromALB:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from the ALB
+      GroupId: !Ref InstanceSG
+      IpProtocol: tcp
+      FromPort: !Ref InstanceHttpPort
+      ToPort: !Ref InstanceHttpPort
+      SourceSecurityGroupId: !Ref LoadBalancerSG
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /health
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Port: !Ref InstanceHttpPort
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId: 
+        Fn::ImportValue: 
+          !Join [':', [!Ref 'VPCStackName', 'VPCId']]
+  #DNS Update for Domain
+
+  DNSRecordSet:
+    Condition: SetDNS
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !Ref ALBHostName
+      HostedZoneId: !Ref ALBHostedZone
+      # Set the target, depending if we are on APIGW or EC2
+      AliasTarget:
+        DNSName: !GetAtt LoadBalancer.DNSName
+        HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
+
+Outputs:
+  LBEndpoint:
+    Description: Load Balancer Endpoint
+    Value: !GetAtt LoadBalancer.DNSName
+    Export:
+      Name: !Sub "${AWS::StackName}:LBEndpoint"
+  LrsAddress:
+    Description: Location of the LRS and Admin application
+    Value: !Join
+      - ""
+      - - "https://"
+        - !Ref ALBHostName
+    Export:
+      Name: !Sub "${AWS::StackName}:LrsAddress"
+  InstanceSG:
+    Description: LRSQLApp instance security group
+    Value: !Ref InstanceSG
+    Export:
+      Name: !Sub "${AWS::StackName}:InstanceSG"
