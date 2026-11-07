@@ -1,2 +1,2 @@
-Authlib==1.6.12
+Authlib==1.9.1
 psycopg2-binary==2.9.9
