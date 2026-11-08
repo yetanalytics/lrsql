@@ -1,4 +1,5 @@
 FROM alpine:3.23
+# Fail closed if the Alpine repositories cannot provide patched zlib (CVE-2026-4738).
 
 ADD target/bundle /lrsql
 ADD .java_modules /lrsql/.java_modules
@@ -6,7 +7,6 @@ ADD .java_modules /lrsql/.java_modules
 # replace the linux runtime via jlink
 RUN apk update \
         && apk upgrade \
-        # Fail the build rather than ship a zlib revision flagged by CVE-2026-4738.
         && apk add --no-cache 'zlib>=1.4-r0' \
         && apk add ca-certificates \
         && update-ca-certificates \
