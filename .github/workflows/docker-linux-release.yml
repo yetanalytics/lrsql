@@ -1,0 +1,113 @@
+name: Linux container build and release
+
+# Linux images do not depend on desktop JRE bundles. Keep the existing CD
+# workflow for macOS/Windows/Linux downloadable releases.
+on:
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - Makefile
+      - deps.edn
+      - .java_modules
+      - .github/workflows/docker-linux-release.yml
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate release ref and source provenance
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git merge-base --is-ancestor HEAD refs/remotes/origin/main
+
+      - uses: yetanalytics/action-setup-env@v2
+        with:
+          java-version: '21'
+
+      - name: Build Linux application bundle without desktop runtimes
+        run: make bundle BUNDLE_RUNTIMES=false
+
+      - name: Build Linux container once
+        run: docker build --pull --tag lrsql-linux-release-candidate:local .
+
+      - name: Verify Java 21 and patched zlib
+        run: |
+          set -euo pipefail
+          docker run --rm --entrypoint /lrsql/runtimes/linux/bin/java lrsql-linux-release-candidate:local -version 2>&1 | tee java-version.txt
+          grep -E 'version "21\.' java-version.txt
+          docker run --rm --entrypoint /bin/sh lrsql-linux-release-candidate:local -c "apk info -v zlib" | tee zlib-version.txt
+          grep -E '^zlib-1\.([4-9]|[1-9][0-9])\.' zlib-version.txt
+
+      - name: Install pinned scanner binaries
+        env:
+          SYFT_VERSION: v1.34.2
+          GRYPE_VERSION: v0.104.0
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSLo /tmp/syft.tgz "https://github.com/anchore/syft/releases/download/${SYFT_VERSION}/syft_${SYFT_VERSION#v}_linux_amd64.tar.gz"
+          curl -fsSLo /tmp/grype.tgz "https://github.com/anchore/grype/releases/download/${GRYPE_VERSION}/grype_${GRYPE_VERSION#v}_linux_amd64.tar.gz"
+          tar -xzf /tmp/syft.tgz -C "$HOME/.local/bin" syft
+          tar -xzf /tmp/grype.tgz -C "$HOME/.local/bin" grype
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Generate security evidence
+        run: |
+          set -euo pipefail
+          syft lrsql-linux-release-candidate:local -o cyclonedx-json=sbom.cdx.json
+          grype sbom:sbom.cdx.json -o json > vulnerabilities.json
+          docker image inspect lrsql-linux-release-candidate:local --format '{{.Id}}' > image-id.txt
+
+      - name: Block high and critical vulnerabilities
+        run: grype sbom:sbom.cdx.json --fail-on high
+
+      - name: Save security evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lrsql-linux-security-${{ github.sha }}
+          path: |
+            java-version.txt
+            zlib-version.txt
+            image-id.txt
+            sbom.cdx.json
+            vulnerabilities.json
+          if-no-files-found: warn
+
+      # Credentials are never exposed to pull requests or to the scan steps.
+      # Only publish the image that passed the security gate above.
+      - name: Authenticate to Docker Hub
+        if: ${{ startsWith(github.ref, 'refs/tags/') && github.event_name == 'push' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Publish vetted versioned container image
+        if: ${{ startsWith(github.ref, 'refs/tags/') && github.event_name == 'push' }}
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          docker tag lrsql-linux-release-candidate:local "yetanalytics/lrsql:$RELEASE_TAG"
+          docker push "yetanalytics/lrsql:$RELEASE_TAG"
+          docker image inspect "yetanalytics/lrsql:$RELEASE_TAG" --format '{{.Id}}'
