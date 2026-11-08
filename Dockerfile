@@ -6,6 +6,8 @@ ADD .java_modules /lrsql/.java_modules
 # replace the linux runtime via jlink
 RUN apk update \
         && apk upgrade \
+        # Fail the build rather than ship a zlib revision flagged by CVE-2026-4738.
+        && apk add --no-cache 'zlib>=1.4-r0' \
         && apk add ca-certificates \
         && update-ca-certificates \
         && apk add --no-cache openjdk21 \
