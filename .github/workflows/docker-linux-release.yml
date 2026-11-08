@@ -58,7 +58,7 @@ jobs:
           set -euo pipefail
           docker run --rm --entrypoint /lrsql/runtimes/linux/bin/java lrsql-linux-release-candidate:local -version 2>&1 | tee java-version.txt
           grep -E 'version "21\.' java-version.txt
-          docker run --rm --entrypoint /bin/sh lrsql-linux-release-candidate:local -c "apk info -v zlib" | tee zlib-version.txt
+          docker run --rm --entrypoint /bin/sh lrsql-linux-release-candidate:local -c "apk info -v | grep '^zlib-'" | tee zlib-version.txt
           grep -E '^zlib-1\.([4-9]|[1-9][0-9])([.-])' zlib-version.txt
 
       - name: Install pinned scanner binaries
