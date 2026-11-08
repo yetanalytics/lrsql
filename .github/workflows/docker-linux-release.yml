@@ -43,6 +43,10 @@ jobs:
         with:
           java-version: '21'
 
+      - name: Verify PostgreSQL 17 integration before tag publication
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: make test-postgres-17
+
       - name: Build Linux application bundle without desktop runtimes
         run: make bundle BUNDLE_RUNTIMES=false
 
