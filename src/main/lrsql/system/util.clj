@@ -1,6 +1,7 @@
 (ns lrsql.system.util
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
+            [clojure.string :as cstr]
             [clojure.walk :as w]
             [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
@@ -39,16 +40,51 @@
   [config]
   (w/postwalk redact-at-node config))
 
+;; `explain-data` holds every value it checked (each problem's `:val`, and the
+;; whole map as `::s/value`), secrets included, so neither the log nor the
+;; thrown exception carries it. They carry, for each problem, only the key path
+;; (`:in`), the predicate that failed and spec's reason, which come from the
+;; spec and not from the configuration.
+
+(defn config-problems
+  "Given the `explain-data` of a rejected configuration, return its problems
+   as key paths, failed predicates and reasons, with no configuration values."
+  [explain-data]
+  (mapv (fn [{:keys [in pred reason]}]
+          (cond-> {:in in :pred (s/abbrev pred)}
+            reason (assoc :reason reason)))
+        (::s/problems explain-data)))
+
+(defn format-config-problem
+  "Format one problem from `config-problems` as a log line."
+  [{:keys [in pred reason]}]
+  (format "  at %s: failed %s%s" (pr-str in) (pr-str pred)
+          (if reason (str " (" reason ")") "")))
+
 (defmacro assert-config
+  "Check `config` against `spec`. If it does not conform, log and throw the
+   key path and failed check of each problem, never the configuration's
+   values."
   [spec component-name config]
-  `(when-some [err# (s/explain-data ~spec ~(redact-config-vars config))]
-     (do
+  `(when-some [err# (s/explain-data ~spec ~config)]
+     (let [problems# (config-problems err#)]
        (log/errorf "Configuration errors:\n%s"
-                   (with-out-str (s/explain-out err#)))
+                   (cstr/join "\n" (map format-config-problem problems#)))
        (throw (ex-info (format "Invalid %s configuration!"
                                ~component-name)
-                       {:type ::invalid-config
-                        :error-data err#})))))
+                       {:type     ::invalid-config
+                        :problems problems#})))))
+
+(defn config-key-paths
+  "Return the key paths of `config` that hold a non-nil value, sorted, and
+   none of the values."
+  [config]
+  (letfn [(paths [prefix x]
+            (cond
+              (map? x) (mapcat (fn [[k v]] (paths (conj prefix k) v)) x)
+              (nil? x) []
+              :else    [prefix]))]
+    (sort-by pr-str (paths [] config))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; JDBC Config

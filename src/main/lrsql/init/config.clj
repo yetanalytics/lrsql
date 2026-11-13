@@ -4,7 +4,8 @@
             [aero.core :as aero]
             [clojure.string :refer [split]]
             [camel-snake-kebab.core :as csk])
-  (:import [java.io File]))
+  (:import [java.io File]
+           [com.fasterxml.jackson.core JsonProcessingException]))
 
 (defn- merge-user-config
   "Given a static config map from aero and a path where a user config json file
@@ -21,12 +22,19 @@
        (try
          (with-open [rdr (io/reader config-file)]
            (json/parse-stream-strict rdr csk/->kebab-case-keyword))
+         ;; Without the cause: its message can quote the file's content,
+         ;; secrets included. The path, the error class and the position of a
+         ;; syntax error say what to fix.
          (catch Exception ex
            (throw
             (ex-info "Invalid JSON in Config File"
-                     {:type ::invalid-user-config-json
-                      :path user-config-json}
-                     ex))))))))
+                     (merge {:type  ::invalid-user-config-json
+                             :path  user-config-json
+                             :error (.getName (class ex))}
+                            (when-let [loc (and (instance? JsonProcessingException ex)
+                                                (.getLocation ^JsonProcessingException ex))]
+                              {:line   (.getLineNr loc)
+                               :column (.getColumnNr loc)}))))))))))
 
 ;; The default aero `#include` resolver does not work with JARs, so we
 ;; need to resolve the root dirs manually.

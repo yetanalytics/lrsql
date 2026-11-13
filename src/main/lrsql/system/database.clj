@@ -97,7 +97,10 @@
       (if-not ?conn-pool
         (let [conn-pool (make-conn-pool backend config)]
           (log/infof "Starting new connection for %s database..." db-type)
-          (log/debugf "Config: %s" (cu/redact-config-vars config))
+          ;; Key paths only: a value can hold a credential that
+          ;; `redact-config-vars` does not name, such as a password in
+          ;; `db-properties`.
+          (log/debugf "Config keys: %s" (vec (cu/config-key-paths config)))
           (assoc conn :conn-pool conn-pool))
         (do
           (log/info "Connection already started; do nothing.")
