@@ -15,6 +15,7 @@
             [lrsql.admin.interceptors.reaction :as ri]
             [lrsql.admin.interceptors.xapi-credentials-override :as xco]
             [lrsql.util.interceptor :as util-i]
+            [lrsql.util.json-depth :as json-depth]
             [lrsql.util.headers :as h]
             [com.yetanalytics.gen-openapi.core :as gc]
             [com.yetanalytics.gen-openapi.generate :as g]
@@ -27,6 +28,8 @@
    i/x-forwarded-for-interceptor
    (h/secure-headers sec-head-opts)
    json-body
+   ;; Before body-params, which runs ahead of any authentication.
+   json-depth/depth-limit-interceptor
    (body-params
     ;; By default the JSON parser will attempt to parse strings with `/` as
     ;; qualified keywords. We prevent this so (name x) is always the string.

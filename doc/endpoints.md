@@ -4,6 +4,8 @@
 
 The HTTP methods that are LRS-specific are given in [the xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#datatransfer). Requests to the LRS (which are denoted by the `xapi` path prefix) must contain a Base64 encoded, colon-separated public and secret API key pair in the `Authorization` field of the header. For example (assuming `http://example` is the URL body), `http://example.org/xapi/statements` is the URL at which the user inserts and queries xAPI statements; other URLs are used to insert and query documents, agents, and activities.
 
+Request bodies on both the `xapi` and `admin` routes are checked before they are parsed. A JSON body (or the JSON first part of a `multipart/mixed` statement request) nested more than 64 levels deep is refused with `400 BAD REQUEST`, and a `multipart/mixed` request whose first part does not end within 8 MiB is refused with `413 PAYLOAD TOO LARGE`. EDN and Transit request bodies (`application/edn`, `application/transit+json` and `application/transit+msgpack`) are refused with `415 UNSUPPORTED MEDIA TYPE`, except on the document resources (state, activity profile and agent profile), which store them unparsed.
+
 ### Admin Account and Credential Routes
 
 In addition to the LRS HTTP methods, the SQL LRS supports methods for admin account creation, login, and use, as well as routes used to create and use API ; these methods are denoted by the `admin` path prefix.
