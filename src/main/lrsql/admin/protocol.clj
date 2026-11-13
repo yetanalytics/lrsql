@@ -23,6 +23,9 @@
     "Purge the blocklist of any JWTs that have expired since they were added.")
   (-create-one-time-jwt [this jwt exp one-time-id]
     "Add a one-time JWT that will be blocked after it is validated.")
+  (-block-session [this session-key eviction-time]
+    "Block every token of a session until `eviction-time`, by storing
+     `session-key` in the blocklist.")
   (-block-jwt [this jwt expiration]
     "Block `jwt` and apply an associated `expiration` number of seconds. Returns an error if `jwt` is already in the blocklist.")
   (-block-one-time-jwt [this jwt one-time-id]

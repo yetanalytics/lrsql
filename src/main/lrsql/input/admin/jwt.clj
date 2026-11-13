@@ -43,6 +43,25 @@
   [leeway]
   {:current-time (current-time leeway)})
 
+;; Blocked sessions
+
+(defn session-eviction-time
+  "Return the instant a blocked session's entry may be purged: the session's
+   refresh limit `refresh-exp`, plus the token lifetime `exp` and `leeway`
+   (both in seconds), plus one second, as `eviction-time` adds one."
+  [refresh-exp exp leeway]
+  (u/offset-time refresh-exp (+ exp leeway 1) :seconds))
+
+(s/fdef insert-blocked-session-input
+  :args (s/cat :session-key ::jwts/jwt
+               :eviction-time ::jwts/eviction-time)
+  :ret jwts/insert-blocked-jwt-input-spec)
+
+(defn insert-blocked-session-input
+  [session-key eviction-time]
+  {:jwt           session-key
+   :eviction-time eviction-time})
+
 ;; One-time JWTs
 
 (s/fdef insert-one-time-jwt-input

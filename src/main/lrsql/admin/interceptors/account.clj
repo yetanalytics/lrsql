@@ -6,6 +6,7 @@
             [lrsql.admin.protocol :as adp]
             [lrsql.spec.admin :as ads]
             [lrsql.util.admin :as admin-u]
+            [lrsql.input.admin.jwt :as admin-jwt-input]
             [lrsql.admin.interceptors.jwt :as jwt]
             [lrsql.util :as u]))
 
@@ -287,13 +288,14 @@
    {:name ::renew-jwt
     :enter
     (fn renew-jwt [ctx]
-      (let [{{:keys [account-id refresh-exp]} ::jwt/data} ctx
+      (let [{{:keys [account-id refresh-exp session-id]} ::jwt/data} ctx
             curr-time (u/current-time)]
         (if (jt/before? curr-time refresh-exp)
           (let [json-web-token (admin-u/account-id->jwt* account-id
                                                          secret
                                                          exp
-                                                         refresh-exp)]
+                                                         refresh-exp
+                                                         session-id)]
             (assoc ctx
                    :response
                    {:status 200
@@ -317,10 +319,17 @@
     (fn add-jwt-to-blocklist [ctx]
       (if-not no-val?
         (let [{lrs :com.yetanalytics/lrs
-               {:keys [jwt account-id]} ::jwt/data}
+               {:keys [jwt account-id session-id refresh-exp]} ::jwt/data}
               ctx]
           (adp/-purge-blocklist lrs leeway) ; Update blocklist upon logout
           (adp/-block-jwt lrs jwt exp)
+          ;; Revoke the whole session, including tokens issued before a
+          ;; renewal, until the last of them could have expired.
+          (when (and session-id refresh-exp)
+            (adp/-block-session lrs
+                                (admin-u/session-block-key session-id)
+                                (admin-jwt-input/session-eviction-time
+                                 refresh-exp exp leeway)))
           (assoc (chain/terminate ctx)
                  :response
                  {:status 200
