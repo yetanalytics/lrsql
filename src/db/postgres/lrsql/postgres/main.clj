@@ -16,6 +16,7 @@
       su/add-shutdown-hook!))
 
 (defn -main [& _args]
-  (-> (system/system postgres-backend :prod-postgres)
-      su/start-system
+  ;; A startup failure is logged without configuration values and exits
+  ;; with status 1.
+  (-> (su/start-system-or-exit #(system/system postgres-backend :prod-postgres))
       su/add-shutdown-hook!))

@@ -142,3 +142,51 @@
     (component/start system)
     (catch Throwable error
       (throw (component/ex-without-components error)))))
+
+;; An uncaught startup exception reaches the JVM's default handler, which
+;; prints each ex-info with its data, and that data can hold configuration
+;; values, secrets included. `start-system-or-exit` logs only what the code
+;; wrote: the classes, the messages (never the data), a keyword `:type` and
+;; the failing component's key.
+
+(def startup-logger-name
+  "The logger that reports a failed startup."
+  "lrsql.startup")
+
+(defn- startup-cause-text
+  [^Throwable t]
+  (let [t-type (:type (ex-data t))
+        msg    (some-> (.getMessage t) (cstr/replace #"\s+" " ") cstr/trim)]
+    (str (.getName (class t))
+         (when (keyword? t-type) (str " type=" t-type))
+         (when (seq msg)
+           (str ": " (if (< 300 (count msg)) (str (subs msg 0 300) "...") msg))))))
+
+(defn startup-failure-line
+  "Describe the startup failure `error` in one line, from its cause chain's
+   classes, messages and keyword `:type`s and the `:system-key` of the
+   component that failed. No exception data and no `toString` of an ex-info."
+  [^Throwable error]
+  (let [chain (take 16 (take-while some? (iterate #(.getCause ^Throwable %) error)))
+        sys-k (some (fn [t] (let [k (:system-key (ex-data t))]
+                              (when (keyword? k) k)))
+                    chain)]
+    (str "Startup failed"
+         (when sys-k (str " in component " sys-k))
+         ": "
+         (cstr/join " <- " (map startup-cause-text chain)))))
+
+(defn- exit!
+  [status]
+  (System/exit status))
+
+(defn start-system-or-exit
+  "Make a system with `make-system` (a no-argument function) and start it with
+   `start-system`. If either throws, log one ERROR line from
+   `startup-failure-line` and exit with status 1."
+  [make-system]
+  (try
+    (start-system (make-system))
+    (catch Throwable error
+      (log/log startup-logger-name :error nil (startup-failure-line error))
+      (exit! 1))))

@@ -138,8 +138,7 @@
            key-password
            key-pkey-file
            key-cert-chain
-           key-enable-selfie]
-    :as config}]
+           key-enable-selfie]}]
   (or
    (and key-file
         (when-let [keystore (file->keystore key-file key-password)]
@@ -159,6 +158,13 @@
      (log/warn "No cert files found. Creating self-signed cert!")
      (selfie-keystore
       key-alias key-password))
+   ;; Only whether each keystore source was set, never a value or path: the
+   ;; whole web server configuration, which holds the JWT secret and the
+   ;; keystore password, does not belong in the data of an exception that
+   ;; can go uncaught at startup and be printed.
    (throw (ex-info "Cannot Create Keystore"
-                   {:type ::cannot-create-keystore
-                    :config config}))))
+                   {:type               ::cannot-create-keystore
+                    :key-file-set       (some? key-file)
+                    :key-pkey-file-set  (some? key-pkey-file)
+                    :key-cert-chain-set (some? key-cert-chain)
+                    :key-enable-selfie  (boolean key-enable-selfie)}))))

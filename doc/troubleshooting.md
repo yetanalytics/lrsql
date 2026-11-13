@@ -8,6 +8,10 @@ First of all, ensure that the SQL LRS app is running and that the host and port 
 
 In addition, if you are using a proper domain name (either via DNS or via a `hosts` file) or using a proxy server, you may need to adjust [configuration for CORS](env_vars.md#cors) (Cross-Origin Resource Sharing). CORS restricts which endpoints SQL LRS will accept requests from; requests from disallowed endpoints will result in a 403 Forbidden response. Either specify allowed endpoints via `LRSQL_ALLOWED_ORIGINS` (the recommended method for production) or allow all endpoints via setting `LRSQL_ALLOW_ALL_ORIGINS` to `true`.
 
+### SQL LRS exits at startup
+
+If SQL LRS cannot start, for example because the keystore cannot be created, a setting is invalid or the database is unreachable, it logs one `ERROR` line from the `lrsql.startup` logger and exits with status `1`. The line names the component that failed (such as `:webserver`, `:lrs` or `:connection`) and the error messages, without exception data, so the line carries no configuration values such as passwords or the JWT secret.
+
 ### I am unable to run the Docker image in Postgres mode
 
 First of all, ensure that you are indeed executing the SQL LRS image in Postgres mode. The command `/lrsql/bin/run_postgres.sh` needs to be run as a custom command in order to override the default command, which runs the app in SQLite mode.
