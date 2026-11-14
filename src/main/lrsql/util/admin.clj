@@ -1,10 +1,8 @@
 (ns lrsql.util.admin
   (:require [buddy.hashers  :as bh]
-            [buddy.sign.jwt :as bj]
             [lrsql.util :as u]
-            [clojure.string :refer [split]])
-  (:import [java.security SecureRandom]
-           [java.util Base64]))
+            [lrsql.util.jws :as jws]
+            [clojure.string :refer [split]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Passwords
@@ -28,7 +26,8 @@
 (defn- jwt-claim
   "Create the JWT claim, i.e. payload, containing the account ID `:acc`, the
    issued-at time `:iat`, the expiration time `:exp`, and the refresh
-   expiration time `:ref`.
+   expiration time `:ref`. Callers add the session ID `:sid` and the token
+   ID `:jti`.
 
    Time values MUST be a number containing a NumericDate value ie. a JSON
    numeric value representing the number of seconds (not milliseconds!) from
@@ -39,20 +38,9 @@
    :exp (quot (u/time->millis etime) 1000)
    :ref (quot (u/time->millis rtime) 1000)})
 
-(def ^:private ^SecureRandom session-id-rng
-  (SecureRandom.))
-
-(defn- new-session-id
-  "Return a random 128-bit session ID, base64url-encoded without padding
-   (22 characters)."
-  []
-  (let [bs (byte-array 16)]
-    (.nextBytes session-id-rng bs)
-    (.encodeToString (.withoutPadding (Base64/getUrlEncoder)) bs)))
-
 (defn one-time-jwt
-  "Create a one-time JWT, with only `:iat`, `:exp` and a unique `:oti` property
-   (short for \"one time ID\") in the claim body. If `account-id` and
+  "Create a one-time JWT, with only `:iat`, `:exp`, a unique `:oti` property
+   (short for \"one time ID\") and a random token ID `:jti` in the claim body. If `account-id` and
    `expiration` does not exist (e.g. in a proxy JWT or OIDC login scenario),
    we fall back to `exp` for the expiration. Returns a map containing
    `:jwt` alongside `:exp` and `:oti`."
@@ -71,8 +59,9 @@
         otid  (random-uuid)
         claim {:iat (quot (u/time->millis ctime) 1000)
                :exp (quot (u/time->millis etime) 1000) ; seconds from epoch
-               :oti otid}]
-    {:jwt (bj/sign claim secret)
+               :oti otid
+               :jti (jws/random-id)}]
+    {:jwt (jws/sign claim secret)
      :exp (- (:exp claim)  ; later machinery needs exp denoted in "seconds from now"
              (:iat claim)) ; so, subtracting current time
      :oti otid}))
@@ -88,8 +77,9 @@
    (let [ctime (u/current-time)
          etime (u/offset-time ctime exp :seconds)
          claim (cond-> (jwt-claim account-id ctime etime rtime)
-                 session-id (assoc :sid session-id))]
-     (bj/sign claim secret))))
+                 session-id (assoc :sid session-id)
+                 true       (assoc :jti (jws/random-id)))]
+     (jws/sign claim secret))))
 
 (defn account-id->jwt
   "Generate a new signed JSON Web Token with `account-id` in the claim
@@ -97,14 +87,18 @@
    times are given as `:iat`, `:exp`, and `:ref`, respectively. The token and
    refresh expiration time offsets are given by `exp` and `ref`, respectively,
    in seconds. Each call starts a new session: the token carries a new random
-   session ID as `:sid`, which renewal keeps and sign-out revokes."
+   session ID as `:sid`, which renewal keeps and sign-out revokes. Every
+   token, including a renewed one, also carries a random token ID as `:jti`,
+   so no two tokens are the same. Tokens are signed with HS256 through the
+   JVM's security providers (see `lrsql.util.jws`)."
   [account-id secret exp ref]
   (let [ctime (u/current-time)
         etime (u/offset-time ctime exp :seconds)
         rtime (u/offset-time ctime ref :seconds)
         claim (-> (jwt-claim account-id ctime etime rtime)
-                  (assoc :sid (new-session-id)))]
-    (bj/sign claim secret)))
+                  (assoc :sid (jws/random-id))
+                  (assoc :jti (jws/random-id)))]
+    (jws/sign claim secret)))
 
 (defn header->jwt
   "Given an header of the form `Bearer [encoded JWT]`, return the JWT.
@@ -126,7 +120,7 @@
   [tok secret leeway]
   (if tok ; Avoid encountering a null pointer exception
     (try
-      (let [{:keys [acc exp ref oti sid]} (bj/unsign tok secret {:leeway leeway})]
+      (let [{:keys [acc exp ref oti sid]} (jws/unsign tok secret leeway)]
         (cond-> {}
           acc           (assoc :account-id (u/str->uuid acc))
           exp           (assoc :expiration (u/millis->time (* 1000 exp)))

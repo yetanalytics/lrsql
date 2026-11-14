@@ -10,7 +10,7 @@ In addition, if you are using a proper domain name (either via DNS or via a `hos
 
 ### SQL LRS exits at startup
 
-If SQL LRS cannot start, for example because the keystore cannot be created, a setting is invalid or the database is unreachable, it logs one `ERROR` line from the `lrsql.startup` logger and exits with status `1`. The line names the component that failed (such as `:webserver`, `:lrs` or `:connection`) and the error messages, without exception data, so the line carries no configuration values such as passwords or the JWT secret.
+If SQL LRS cannot start, for example because the keystore cannot be created, a setting is invalid or the database is unreachable, it logs one `ERROR` line from the `lrsql.startup` logger and exits with status `1`. The line names the component that failed (such as `:webserver`, `:lrs` or `:connection`) and the error messages, without exception data, so the line carries no configuration values such as passwords or the JWT secret. If the line says the admin token signing key cannot be used, `LRSQL_JWT_COMMON_SECRET` is empty or was refused by the JVM's security provider; set it to a value of 32 to 64 characters.
 
 ### I am unable to run the Docker image in Postgres mode
 

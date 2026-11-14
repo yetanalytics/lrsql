@@ -2,7 +2,11 @@
   (:require [clojure.test :refer [deftest testing is]]
             [java-time.api :as jt]
             [lrsql.util.admin :as ua]
-            [lrsql.util :as u]))
+            [lrsql.util :as u])
+  (:import [java.security Provider Provider$Service Security]
+           [java.nio ByteBuffer]
+           [java.util Base64]
+           [javax.crypto Mac MacSpi]))
 
 (deftest password-test
   (testing "password hashing and verification"
@@ -81,3 +85,93 @@
         (is (uuid? oti))
         (is (= expiration
                (-> jwt jwt->payload :expiration)))))))
+
+(defn- token-claims
+  "Decode (without verifying) the claims of the compact JWS `jwt`."
+  [jwt]
+  (->> (re-find #"^[^.]+.([^.]+)." jwt)
+       second
+       (.decode (Base64/getUrlDecoder))
+       u/parse-json))
+
+(deftest jwt-id-test
+  (let [test-id (u/str->uuid "00000000-0000-1000-0000-000000000001")
+        instant (u/current-time)]
+    (with-redefs [u/current-time (constantly instant)]
+      (testing "every token carries a 128-bit token ID (22 base64url characters)"
+        (let [rtime (-> test-id account-id->jwt jwt->payload :refresh-exp)
+              toks  [(account-id->jwt test-id)
+                     (ua/account-id->jwt* test-id "secret" 3600 rtime "a-session-id")
+                     (:jwt (one-time-jwt))]]
+          (doseq [tok toks]
+            (is (re-matches #"[A-Za-z0-9_-]{22}"
+                            (str (get (token-claims tok) "jti")))))))
+      (testing "renewals within one session and one second all differ"
+        (let [rtime (-> test-id account-id->jwt jwt->payload :refresh-exp)
+              toks  (repeatedly 100 #(ua/account-id->jwt* test-id "secret" 3600
+                                                          rtime "a-session-id"))]
+          (is (= 100 (count (set toks))))
+          (is (= #{"a-session-id"}
+                 (set (map #(:session-id (jwt->payload %)) toks))))))
+      (testing "sign-ins and one-time tokens within one second all differ"
+        (is (= 100 (count (set (repeatedly 100 #(account-id->jwt test-id))))))
+        (is (= 100 (count (set (repeatedly 100 #(:jwt (one-time-jwt)))))))))))
+
+;; A JCA provider, installed first, whose HmacSHA256 counts its uses and
+;; delegates to the JDK's own implementation. It shows whether admin tokens are
+;; computed through the JVM's provider list, as a FIPS provider would be used.
+
+(defn- counting-mac-spi
+  ^MacSpi [counter]
+  (let [^Mac delegate (Mac/getInstance "HmacSHA256" "SunJCE")]
+    (proxy [MacSpi] []
+      (engineGetMacLength [] (.getMacLength delegate))
+      (engineInit [k params]
+        (swap! counter inc)
+        (.init delegate k params))
+      (engineUpdate
+        ([b] (if (instance? ByteBuffer b)
+               (.update delegate ^ByteBuffer b)
+               (.update delegate (byte b))))
+        ([^bytes bs off len] (.update delegate bs (int off) (int len))))
+      (engineDoFinal [] (.doFinal delegate))
+      (engineReset [] (.reset delegate)))))
+
+(defn- counting-provider
+  ^Provider [counter]
+  (let [provider (proxy [Provider] ["LrsqlTestCountingHmac" "1.0" "test only"])
+        service  (proxy [Provider$Service]
+                        [provider "Mac" "HmacSHA256" "test.CountingHmac" nil nil]
+                   (newInstance [_] (counting-mac-spi counter))
+                   (supportsParameter [_] true))]
+    (proxy [Provider] ["LrsqlTestCountingHmac" "1.0" "test only"]
+      (getService [type algorithm]
+        (when (and (= "Mac" type) (= "HmacSHA256" algorithm))
+          service)))))
+
+(deftest jwt-provider-test
+  (let [test-id  (u/str->uuid "00000000-0000-1000-0000-000000000001")
+        counter  (atom 0)
+        provider (counting-provider counter)]
+    (try
+      (Security/insertProviderAt provider 1)
+      (testing "the test provider is the JVM's first HmacSHA256 provider"
+        (is (= "LrsqlTestCountingHmac"
+               (.getName (.getProvider (Mac/getInstance "HmacSHA256"))))))
+      (testing "sign-in, renewal and one-time tokens are signed through it"
+        (reset! counter 0)
+        (let [tok (account-id->jwt test-id)]
+          (is (pos? @counter))
+          (reset! counter 0)
+          (account-id->jwt* test-id (:refresh-exp (jwt->payload tok)))
+          (is (pos? @counter))
+          (reset! counter 0)
+          (one-time-jwt)
+          (is (pos? @counter))))
+      (testing "tokens are verified through it"
+        (let [tok (account-id->jwt test-id)]
+          (reset! counter 0)
+          (is (= test-id (:account-id (jwt->payload tok))))
+          (is (pos? @counter))))
+      (finally
+        (Security/removeProvider "LrsqlTestCountingHmac")))))
