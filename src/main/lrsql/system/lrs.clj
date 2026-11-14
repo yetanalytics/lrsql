@@ -9,7 +9,6 @@
             [lrsql.init                    :as init]
             [lrsql.init.oidc               :as oidc-init]
             [lrsql.init.reaction           :as react-init]
-            [lrsql.backend.protocol        :as bp]
             [lrsql.input.actor             :as agent-input]
             [lrsql.input.activity          :as activity-input]
             [lrsql.input.admin             :as admin-input]
@@ -36,6 +35,7 @@
             [lrsql.util.document           :as doc-util]
             [lrsql.util.oidc               :as oidc-util]
             [lrsql.util.statement          :as stmt-util]
+            [lrsql.util.statement-conflict :as stmt-conflict]
             [lrsql.util                    :as util]
             [lrsql.init.authority          :refer [make-authority-fn]]
             [lrsql.system.util             :refer [assert-config]]
@@ -119,7 +119,9 @@
           (-> (map stmt-input/insert-statement-input stmts)
               (stmt-input/add-insert-attachment-inputs
                attachments))
-          retry-test   (partial bp/-txn-retry? backend)
+          ;; Also re-run when another request inserted the same statement ID
+          ;; first; the re-run's conflict check then answers 204 or 409.
+          retry-test   (partial stmt-conflict/statement-txn-retry? backend)
           retry-limit  (:stmt-retry-limit config)
           retry-budget (:stmt-retry-budget config)
           result (with-rerunable-txn [tx conn {:retry-test  retry-test
