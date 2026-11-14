@@ -322,7 +322,7 @@ ALTER TABLE IF EXISTS credential_to_scope ALTER COLUMN scope TYPE scope_enum USI
 -- :command :query
 -- :result :one
 -- :doc Query to see if `xapi_statement.timestamp` exists.
-SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'timestamp';
+SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'xapi_statement' AND column_name = 'timestamp';
 
 -- :name alter-xapi-statement-add-timestamp!
 -- :command :execute
@@ -340,7 +340,7 @@ UPDATE xapi_statement SET timestamp = (payload->>'timestamp')::timestamptz WHERE
 -- :command :query
 -- :result :one
 -- :doc Query to see if `xapi_statement.stored` exists.
-SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'stored';
+SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'xapi_statement' AND column_name = 'stored';
 
 -- :name alter-xapi-statement-add-stored!
 -- :command :execute
@@ -359,7 +359,7 @@ UPDATE xapi_statement SET stored = (payload->>'stored')::timestamptz WHERE store
 -- :result :one
 -- :doc Query to see if `state_document.last_modified` is a timestamp.
 SELECT * FROM information_schema.columns
-WHERE table_name = 'state_document' AND column_name = 'last_modified' AND data_type = 'timestamp with time zone';
+WHERE table_schema = current_schema() AND table_name = 'state_document' AND column_name = 'last_modified' AND data_type = 'timestamp with time zone';
 
 -- :name migrate-state-document-last-modified!
 -- :command :execute
@@ -384,7 +384,7 @@ USING last_modified AT TIME ZONE :sql:tz-id;
 -- :result :one
 -- :doc Query to see if any of 'xapi_statement.payload', 'actor.payload', or 'activity.payload' is json
 SELECT 1 FROM information_schema.columns
-WHERE column_name = 'payload' AND data_type = 'json' AND table_name in ('xapi_statement', 'actor', 'activity');
+WHERE table_schema = current_schema() AND column_name = 'payload' AND data_type = 'json' AND table_name in ('xapi_statement', 'actor', 'activity');
 
 -- :name migrate-to-jsonb!
 -- :command :execute
@@ -419,7 +419,7 @@ CREATE TABLE IF NOT EXISTS reaction (
 -- :command :query
 -- :result :one
 -- :doc Query to see if `xapi_statement.reaction_id` exists.
-SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'reaction_id';
+SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'xapi_statement' AND column_name = 'reaction_id';
 
 -- :name xapi-statement-add-reaction-id!
 -- :command :execute
@@ -432,7 +432,7 @@ CREATE INDEX IF NOT EXISTS stmt_reaction_id_idx ON xapi_statement(reaction_id);
 -- :command :query
 -- :result :one
 -- :doc Query to see if `xapi_statement.trigger_id` exists.
-SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'trigger_id';
+SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'xapi_statement' AND column_name = 'trigger_id';
 
 -- :name xapi-statement-add-trigger-id!
 -- :command :execute
@@ -447,6 +447,7 @@ CREATE INDEX IF NOT EXISTS stmt_trigger_id_idx ON xapi_statement(trigger_id);
 SELECT 1
 FROM pg_constraint
 WHERE conname = 'statement_fk'
+AND conrelid = 'statement_to_actor'::regclass
 AND pg_get_constraintdef(oid) LIKE '%ON DELETE CASCADE%'
 
 -- :name add-statement-to-actor-cascading-delete!
@@ -461,7 +462,7 @@ ALTER TABLE statement_to_actor ADD CONSTRAINT statement_fk FOREIGN KEY (statemen
 -- :command :query
 -- :result :one
 -- :doc Query to see if varchar->text conversion has not happened yet.
-SELECT 1 FROM information_schema.columns WHERE table_name = 'xapi_statement' AND column_name = 'verb_iri' and data_type = 'character varying';
+SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'xapi_statement' AND column_name = 'verb_iri' and data_type = 'character varying';
 
 -- :name convert-varchars-to-text!
 -- :command :execute
