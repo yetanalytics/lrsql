@@ -2,7 +2,9 @@
   (:require [buddy.hashers  :as bh]
             [buddy.sign.jwt :as bj]
             [lrsql.util :as u]
-            [clojure.string :refer [split]]))
+            [clojure.string :refer [split]])
+  (:import [java.security SecureRandom]
+           [java.util Base64]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Passwords
@@ -37,6 +39,17 @@
    :exp (quot (u/time->millis etime) 1000)
    :ref (quot (u/time->millis rtime) 1000)})
 
+(def ^:private ^SecureRandom session-id-rng
+  (SecureRandom.))
+
+(defn- new-session-id
+  "Return a random 128-bit session ID, base64url-encoded without padding
+   (22 characters)."
+  []
+  (let [bs (byte-array 16)]
+    (.nextBytes session-id-rng bs)
+    (.encodeToString (.withoutPadding (Base64/getUrlEncoder)) bs)))
+
 (defn one-time-jwt
   "Create a one-time JWT, with only `:iat`, `:exp` and a unique `:oti` property
    (short for \"one time ID\") in the claim body. If `account-id` and
@@ -66,24 +79,31 @@
 
 (defn account-id->jwt*
   "Same as `account-id->jwt`, but uses a pre-existing `rtime` timestamp instead
-   of an `ref` offset."
-  [account-id secret exp rtime]
-  (let [ctime (u/current-time)
-        etime (u/offset-time ctime exp :seconds)
-        claim (jwt-claim account-id ctime etime rtime)]
-    (bj/sign claim secret)))
+   of an `ref` offset, and the existing session ID `session-id`, which is
+   kept as the `:sid` claim. Used to renew a token within its session. Without
+   `session-id` the token has no `:sid` claim, and the admin routes refuse it."
+  ([account-id secret exp rtime]
+   (account-id->jwt* account-id secret exp rtime nil))
+  ([account-id secret exp rtime session-id]
+   (let [ctime (u/current-time)
+         etime (u/offset-time ctime exp :seconds)
+         claim (cond-> (jwt-claim account-id ctime etime rtime)
+                 session-id (assoc :sid session-id))]
+     (bj/sign claim secret))))
 
 (defn account-id->jwt
   "Generate a new signed JSON Web Token with `account-id` in the claim
    as a custom `:acc` field. The issued-at, expiration, and refresh expiration
    times are given as `:iat`, `:exp`, and `:ref`, respectively. The token and
    refresh expiration time offsets are given by `exp` and `ref`, respectively,
-   in seconds."
+   in seconds. Each call starts a new session: the token carries a new random
+   session ID as `:sid`, which renewal keeps and sign-out revokes."
   [account-id secret exp ref]
   (let [ctime (u/current-time)
         etime (u/offset-time ctime exp :seconds)
         rtime (u/offset-time ctime ref :seconds)
-        claim (jwt-claim account-id ctime etime rtime)]
+        claim (-> (jwt-claim account-id ctime etime rtime)
+                  (assoc :sid (new-session-id)))]
     (bj/sign claim secret)))
 
 (defn header->jwt
@@ -95,9 +115,10 @@
 
 (defn jwt->payload
   "Given the JSON Web Token `tok`, unsign and verify the token using `secret`.
-   Return a map of `:account-id`, `:expiration`, `:refresh-exp` and/or
-   `:one-time-id`, depending on the contents of `tok` (i.e. `:account-id`
-   and `:refresh-exp` are only present in regular account JWTs, while
+   Return a map of `:account-id`, `:expiration`, `:refresh-exp`,
+   `:session-id` and/or `:one-time-id`, depending on the contents of `tok`
+   (i.e. `:account-id`, `:refresh-exp` and `:session-id` are only present in
+   regular account JWTs, while
    `:one-time-id` is unique to one-time JWTs). Otherwise return
    `:lrsql.admin/unauthorized-token-error`.
    `leeway` is a time amount (in seconds) provided to compensate for
@@ -105,15 +126,23 @@
   [tok secret leeway]
   (if tok ; Avoid encountering a null pointer exception
     (try
-      (let [{:keys [acc exp ref oti]} (bj/unsign tok secret {:leeway leeway})]
+      (let [{:keys [acc exp ref oti sid]} (bj/unsign tok secret {:leeway leeway})]
         (cond-> {}
-          acc (assoc :account-id (u/str->uuid acc))
-          exp (assoc :expiration (u/millis->time (* 1000 exp)))
-          ref (assoc :refresh-exp (u/millis->time (* 1000 ref)))
-          oti (assoc :one-time-id (u/str->uuid oti))))
+          acc           (assoc :account-id (u/str->uuid acc))
+          exp           (assoc :expiration (u/millis->time (* 1000 exp)))
+          ref           (assoc :refresh-exp (u/millis->time (* 1000 ref)))
+          (string? sid) (assoc :session-id sid)
+          oti           (assoc :one-time-id (u/str->uuid oti))))
       (catch clojure.lang.ExceptionInfo _
         :lrsql.admin/unauthorized-token-error))
     :lrsql.admin/unauthorized-token-error))
+
+(defn session-block-key
+  "Return the blocklist entry that revokes every token of session
+   `session-id`. The `sid:` prefix keeps it apart from blocked tokens, which
+   always start with `eyJ`."
+  [session-id]
+  (str "sid:" session-id))
 
 (defn proxy-jwt->payload
   "Decode (without validating!) a JWT claim and verify that the role-key on

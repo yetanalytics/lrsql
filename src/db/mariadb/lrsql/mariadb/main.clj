@@ -16,6 +16,7 @@
       su/add-shutdown-hook!))
 
 (defn -main [& _args]
-  (-> (system/system mariadb-backend :prod-mariadb)
-      su/start-system
+  ;; A startup failure is logged without configuration values and exits
+  ;; with status 1.
+  (-> (su/start-system-or-exit #(system/system mariadb-backend :prod-mariadb))
       su/add-shutdown-hook!))

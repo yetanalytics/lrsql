@@ -34,12 +34,23 @@
   "Normal JWT, normal signature verification and blocklist check."
   [lrs token secret leeway]
   (try
-    (let [result (admin-u/jwt->payload token secret leeway)]
-      (if (keyword? result)
+    (let [result (admin-u/jwt->payload token secret leeway)
+          {:keys [account-id session-id]} (when (map? result) result)]
+      (cond
+        (keyword? result)
         result
-        (if-not (adp/-jwt-blocked? lrs token)
-          (assoc result :jwt token)
-          :lrsql.admin/unauthorized-token-error)))
+        (adp/-jwt-blocked? lrs token)
+        :lrsql.admin/unauthorized-token-error
+        ;; An account token without a session ID was issued before sessions
+        ;; were tracked, and could not be revoked by signing out.
+        (and account-id (nil? session-id))
+        :lrsql.admin/unauthorized-token-error
+        ;; The token's session was signed out.
+        (and session-id
+             (adp/-jwt-blocked? lrs (admin-u/session-block-key session-id)))
+        :lrsql.admin/unauthorized-token-error
+        :else
+        (assoc result :jwt token)))
     (catch Exception ex
       ;; We want any error here to return a 401, but we log
       (log/warnf ex "Unexpected JWT Error: %s" (ex-message ex))

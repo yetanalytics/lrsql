@@ -12,7 +12,8 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
-            [lrsql.util.interceptor :refer [handle-json-parse-exn]]))
+            [lrsql.util.interceptor :refer [handle-json-parse-exn]]
+            [lrsql.util.json-depth :as json-depth]))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -85,9 +86,13 @@
         routes
         (->> (build {:lrs               lrs
                      :path-prefix       url-prefix
+                     ;; The depth limit runs before the xAPI routes'
+                     ;; body-params and parse-multiparts, and before the
+                     ;; document routes read a JSON document.
                      :wrap-interceptors (into
                                          [i/error-interceptor
-                                          (handle-json-parse-exn)]
+                                          (handle-json-parse-exn)
+                                          json-depth/depth-limit-interceptor]
                                          oidc-resource-interceptors)
                      :file-scanner      (when enable-clamav
                                           (clamav/init-file-scanner

@@ -27,6 +27,7 @@
   (let [{?per-str "--ephemeral"} args
         ephemeral?  (Boolean/parseBoolean ?per-str)
         profile     (if ephemeral? :prod-sqlite-mem :prod-sqlite)]
-    (-> (system/system sqlite-backend profile)
-        su/start-system
+    ;; A startup failure is logged without configuration values and exits
+    ;; with status 1.
+    (-> (su/start-system-or-exit #(system/system sqlite-backend profile))
         su/add-shutdown-hook!)))

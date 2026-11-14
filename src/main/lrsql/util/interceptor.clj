@@ -40,6 +40,24 @@
              :response
              {:status 400
               :body   {:error msg}}))
+    ;; A parser constraint, e.g. Jackson's nesting depth (multipart
+    ;; statements and documents are parsed with Cheshire).
+    ;; `lrsql.util.json-depth` refuses deep bodies before parsing; this is
+    ;; the backstop.
+    [{:exception-type :com.fasterxml.jackson.core.exc.StreamConstraintsException}]
+    (assoc ctx
+           :response
+           {:status 400
+            :body   {:error "JSON exceeds the parser's limits"}})
+    ;; The stack overflowed while a body was parsed; elsewhere it stays an
+    ;; error.
+    [{:exception-type :java.lang.StackOverflowError
+      :interceptor    (:or :io.pedestal.http.body-params/body-params
+                           :com.yetanalytics.lrs.pedestal.interceptor.xapi.statements/parse-multiparts)}]
+    (assoc ctx
+           :response
+           {:status 400
+            :body   {:error "JSON nesting too deep"}})
     ;; Other error (incl. non-parsing-related Jackson errors);
     ;; continue as need be.
     :else

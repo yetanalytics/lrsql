@@ -4,6 +4,8 @@
 
 The HTTP methods that are LRS-specific are given in [the xAPI spec](https://github.com/adlnet/xAPI-Spec/blob/master/xAPI-Communication.md#datatransfer). Requests to the LRS (which are denoted by the `xapi` path prefix) must contain a Base64 encoded, colon-separated public and secret API key pair in the `Authorization` field of the header. For example (assuming `http://example` is the URL body), `http://example.org/xapi/statements` is the URL at which the user inserts and queries xAPI statements; other URLs are used to insert and query documents, agents, and activities.
 
+Request bodies on both the `xapi` and `admin` routes are checked before they are parsed. A JSON body (or the JSON first part of a `multipart/mixed` statement request) nested more than 64 levels deep is refused with `400 BAD REQUEST`, and a `multipart/mixed` request whose first part does not end within 8 MiB is refused with `413 PAYLOAD TOO LARGE`. EDN and Transit request bodies (`application/edn`, `application/transit+json` and `application/transit+msgpack`) are refused with `415 UNSUPPORTED MEDIA TYPE`, except on the document resources (state, activity profile and agent profile), which store them unparsed.
+
 ### Admin Account and Credential Routes
 
 In addition to the LRS HTTP methods, the SQL LRS supports methods for admin account creation, login, and use, as well as routes used to create and use API ; these methods are denoted by the `admin` path prefix.
@@ -27,8 +29,8 @@ The following examples use `http://example.org` as the URL body. All methods ret
   * `password` must contain at least one of the following special characters: `!@#$%^&*_-+=?`.
 
 The response body contains a newly generated JSON Web Token (JWT) on success. A `401 UNAUTHORIZED` status code is returned if the credentials are incorrect.
-- `POST http://example.org/admin/account/logout`: Log out of the current account. This will revoke any unexpired JWTs associated with the user. (NOTE: This endpoint will return a `400 BAD REQUEST` error if `LRSQL_JWT_NO_VAL` is set to `true`.)
-- `GET http://example.org/admin/account/renew`: Renew the current account's login session by issuing a new JWT. For a given JWT, the renewal is only granted if the current time is less than the `ref` timestamp (which is determined by `LRSQL_JWT_REFRESH_EXP_TIME`).
+- `POST http://example.org/admin/account/logout`: Log out of the current account. This will revoke the JWT used and every other JWT issued in the same login session, including JWTs replaced by a renewal. Other login sessions of the same account are unaffected. (NOTE: This endpoint will return a `400 BAD REQUEST` error if `LRSQL_JWT_NO_VAL` is set to `true`.)
+- `GET http://example.org/admin/account/renew`: Renew the current account's login session by issuing a new JWT. For a given JWT, the renewal is only granted if the current time is less than the `ref` timestamp (which is determined by `LRSQL_JWT_REFRESH_EXP_TIME`). The new JWT belongs to the same login session as the one renewed. (NOTE: Every admin JWT issued at login carries a session ID (the `sid` claim). JWTs issued by versions of SQL LRS that did not add this claim are refused with `401 UNAUTHORIZED`, so after upgrading, admin users signed in at the time must log in again.)
 - `POST http://example.org/admin/account/create`: Create a new admin account. The request body must be a JSON object that contains `username` and `password` strings. The endpoint returns a JSON object with the ID (UUID) of the newly created user on success, and returns a `409 CONFLICT` if the account already exists.
 - `DELETE http://example.org/admin/account`: Delete an existing account. The JSON request body must contain a UUID `account-id` value. The endpoint returns a JSON object with the ID of the deleted account on success and returns a `404 NOT FOUND` error if the account does not exist.
 - `GET http://example.org/admin/account`: Return an array of all admin accounts in the system on success.

@@ -347,6 +347,13 @@
           jwt-input (admin-jwt-input/insert-blocked-jwt-input jwt exp)]
       (jdbc/with-transaction [tx conn]
         (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
+  (-block-session
+    [this session-key eviction-time]
+    (let [conn      (lrs-conn this)
+          jwt-input (admin-jwt-input/insert-blocked-session-input
+                     session-key eviction-time)]
+      (jdbc/with-transaction [tx conn]
+        (admin-cmd/insert-blocked-jwt! backend tx jwt-input))))
   (-block-one-time-jwt
     [this jwt one-time-id]
     (let [conn      (lrs-conn this)
