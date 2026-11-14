@@ -179,6 +179,7 @@
 
 (s/def ::enable-http boolean?)
 (s/def ::enable-http2 boolean?)
+(s/def ::enable-https boolean?)
 
 (s/def ::http-host string?)
 (s/def ::http-port nat-int?)
@@ -266,7 +267,8 @@
                     ::enable-clamav
                     ::clamav-host
                     ::clamav-port]
-           :opt-un [::key-file
+           :opt-un [::enable-https
+                    ::key-file
                     ::key-pkey-file
                     ::key-cert-chain
                     ::jwt-no-val-uname
@@ -293,6 +295,9 @@
        (and jwt-no-val-uname jwt-no-val-issuer jwt-no-val-role-key
             jwt-no-val-role)
        true))
+   ;; at least one of HTTP and HTTPS must be enabled
+   (fn [{:keys [enable-http enable-https] :or {enable-https true}}]
+     (or enable-http enable-https))
    ;; validation for JWT temporal intervals
    (fn [{:keys [jwt-exp-time jwt-refresh-interval jwt-interaction-window]}]
      (and (<= jwt-interaction-window jwt-refresh-interval)

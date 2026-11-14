@@ -122,7 +122,8 @@ _NOTE:_ `LRSQL_STMT_RETRY_LIMIT` and `LRSQL_STMT_RETRY_BUDGET` are used to mitig
 
 | Env Var                           | Config                   | Description                                                                                                                                                                                                                                            | Default   |
 | --------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
-| `LRSQL_ENABLE_HTTP`               | `enableHttp`             | Whether HTTP is enabled or not (as opposed to HTTPS, which is always enabled). | `true`    |
+| `LRSQL_ENABLE_HTTP`               | `enableHttp`             | Whether HTTP is enabled or not.                                                | `true`    |
+| `LRSQL_ENABLE_HTTPS`              | `enableHttps`            | Whether HTTPS is enabled or not. Set it to `false` when TLS ends at a proxy or load balancer in front of SQL LRS. With `false` there is no listener on `LRSQL_SSL_PORT` and no HTTP/2 over TLS, and `LRSQL_ENABLE_HTTP` must be `true`. | `true`    |
 | `LRSQL_ENABLE_HTTP2`              | `enableHttp2`            | Whether HTTP/2 is supported or not.                                            | `true`    |
 | `LRSQL_CHECK_SNI`                 | `enableSni`              | Whether to enable [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication). | `false`   |
 | `LRSQL_HTTP_HOST`                 | `httpHost`               | The host that the webserver will run on.                                       | `0.0.0.0` |

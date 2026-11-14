@@ -21,6 +21,7 @@
   (let [;; Destructure webserver config
         {:keys [enable-http
                 enable-http2
+                enable-https
                 enable-sni
                 http-host
                 http-port
@@ -57,7 +58,8 @@
                 auth-by-cred-id]
          jwt-exp :jwt-exp-time
          jwt-lwy :jwt-exp-leeway
-         jwt-ref :jwt-refresh-exp-time}
+         jwt-ref :jwt-refresh-exp-time
+         :or     {enable-https true}}
         config
         ;; Keystore and private key
         ;; The private key is used as the JWT symmetric secret
@@ -156,11 +158,13 @@
                          (or allow-all-origins
                              (some #(= origin %) allowed-list)))}
      ::http/container-options
+     ;; Pedestal creates the SSL connector when any of `:ssl?`, `:ssl-port`
+     ;; or `:h2?` is set, so all three follow `enable-https`.
      {:h2c?          (and enable-http enable-http2)
-      :h2?           enable-http2
-      :ssl?          true
+      :h2?           (and enable-https enable-http2)
+      :ssl?          enable-https
       :insecure-ssl? (not enable-sni)
-      :ssl-port      ssl-port
+      :ssl-port      (when enable-https ssl-port)
       :keystore      keystore
       :key-password  key-password}}))
 
@@ -188,11 +192,17 @@
           (let [{{ssl-port :ssl-port} ::http/container-options
                  http-port            ::http/port
                  host                 ::http/host} service]
-            (if http-port
+            (cond
+              (and http-port ssl-port)
               (log/infof "Starting new webserver at host %s, HTTP port %s, and SSL port %s"
                          host
                          http-port
                          ssl-port)
+              http-port
+              (log/infof "Starting new webserver at host %s and HTTP port %s (HTTPS disabled)"
+                         host
+                         http-port)
+              :else
               (log/infof "Starting new webserver at host %s and SSL port %s"
                          host
                          ssl-port)))

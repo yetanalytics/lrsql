@@ -57,6 +57,8 @@ Additional variables can be set in `config/lrsql.json` that configure SSL behavi
 
 - If you would like to disable HTTP so that only HTTPS is served by the SQL LRS, you can do so by setting `LRSQL_ENABLE_HTTP` (`enableHttp` in config) to `false`.
 
+- If TLS ends at a proxy or load balancer and you would like SQL LRS to serve only HTTP, you can disable the HTTPS listener by setting `LRSQL_ENABLE_HTTPS` (`enableHttps` in config) to `false`. At least one of `LRSQL_ENABLE_HTTP` and `LRSQL_ENABLE_HTTPS` must be `true`. The keystore is still loaded, or a self-signed one generated, because its private key signs admin tokens unless `LRSQL_JWT_COMMON_SECRET` is set.
+
 - If you would like to disable the generation of self-signed certificates entirely you can set `LRSQL_KEY_ENABLE_SELFIE` (`keyEnableSelfie` in config) to `false`.
 
 For more information on these and other options see [Configuration Variables](env_vars.md).
