@@ -43,8 +43,10 @@
         ;; Context Agents/Groups
         ?ctx-ag-inputs     (when ?stmt-ctx-agents
                              (map i-ac/insert-actor-input ?stmt-ctx-agents))
+        ;; `keep`, because `insert-actor-input` returns nil for an anonymous
+        ;; Group, which has no identifier; its members are stored below
         ?ctx-gr-inputs     (when ?stmt-ctx-groups
-                             (map i-ac/insert-actor-input ?stmt-ctx-groups))
+                             (keep i-ac/insert-actor-input ?stmt-ctx-groups))
         ;; Member Actors
         ?act-mem-inputs    (i-ac/insert-group-input stmt-act)
         ?obj-mem-inputs    (when actor-obj? (i-ac/insert-group-input stmt-obj))
