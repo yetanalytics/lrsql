@@ -12,6 +12,10 @@ In addition, if you are using a proper domain name (either via DNS or via a `hos
 
 If SQL LRS cannot start, for example because the keystore cannot be created, a setting is invalid or the database is unreachable, it logs one `ERROR` line from the `lrsql.startup` logger and exits with status `1`. The line names the component that failed (such as `:webserver`, `:lrs` or `:connection`) and the error messages, without exception data, so the line carries no configuration values such as passwords or the JWT secret.
 
+### What time zone are the log timestamps in?
+
+Each log line, on the console and in `logs/lrsql.log`, starts with the full ISO 8601 date and time in UTC, to the millisecond, for example `2026-01-02T03:04:05.678Z`, whatever the host's time zone. To use a different format, supply your own Logback configuration, for example by setting the environment variable `JAVA_TOOL_OPTIONS=-Dlogback.configurationFile=<path>`.
+
 ### I am unable to run the Docker image in Postgres mode
 
 First of all, ensure that you are indeed executing the SQL LRS image in Postgres mode. The command `/lrsql/bin/run_postgres.sh` needs to be run as a custom command in order to override the default command, which runs the app in SQLite mode.
