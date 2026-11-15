@@ -100,7 +100,7 @@
                  {:mvn/version "2.6.1"}}}
   :db-mariadb
   {:extra-paths ["src/db/mariadb"]
-   :extra-deps  {org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.5.3"}
+   :extra-deps  {org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.5.11"}
                  ;; allow MySQL swap-in
                  com.mysql/mysql-connector-j          {:mvn/version "9.4.0"}}}
 
@@ -130,7 +130,7 @@
                  com.kohlschutter.junixsocket/junixsocket-native-common
                  {:mvn/version "2.6.1"}
                  org.mariadb.jdbc/mariadb-java-client
-                 {:mvn/version "3.5.3"}
+                 {:mvn/version "3.5.11"}
                  com.mysql/mysql-connector-j
                  {:mvn/version "9.4.0"}
                  org.testcontainers/mariadb {:mvn/version "1.21.4"}
