@@ -5,7 +5,8 @@
             [clojure.walk :as w]
             [clojure.tools.logging :as log]
             [next.jdbc.connection :as jdbc-conn]
-            [lrsql.util :refer [form-encode form-decode]]))
+            [lrsql.util :refer [form-encode form-decode]]
+            [lrsql.util.crypto-mode :as crypto-mode]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers and Macros
@@ -181,10 +182,11 @@
   (System/exit status))
 
 (defn start-system-or-exit
-  "Make a system with `make-system` (a no-argument function) and start it with
-   `start-system`. If either throws, log one ERROR line from
-   `startup-failure-line` and exit with status 1."
+  "Log the JVM's crypto mode, then make a system with `make-system` (a
+   no-argument function) and start it with `start-system`. If either throws,
+   log one ERROR line from `startup-failure-line` and exit with status 1."
   [make-system]
+  (crypto-mode/log-crypto-mode!)
   (try
     (start-system (make-system))
     (catch Throwable error
