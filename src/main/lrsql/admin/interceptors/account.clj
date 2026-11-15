@@ -8,6 +8,7 @@
             [lrsql.util.admin :as admin-u]
             [lrsql.input.admin.jwt :as admin-jwt-input]
             [lrsql.admin.interceptors.jwt :as jwt]
+            [lrsql.util.auth-log :as auth-log]
             [lrsql.util :as u]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -120,7 +121,7 @@
           ;; The account is not in the table - Not Found
           (or (= :lrsql.admin/missing-account-error result)
               (= :lrsql.admin/invalid-password-error result))
-          (assoc (chain/terminate ctx)
+          (assoc (auth-log/refuse (chain/terminate ctx) :invalid-credentials)
                  :response
                  {:status 401
                   :body   {:error "Invalid Account Credentials"}}))))}))
@@ -301,7 +302,7 @@
                    {:status 200
                     :body   {:account-id     account-id
                              :json-web-token json-web-token}}))
-          (assoc (chain/terminate ctx)
+          (assoc (auth-log/refuse (chain/terminate ctx) :refresh-expired)
                  :response
                  {:status 401
                   :body   {:error "Attempting JWT login after refresh expiry."}}))))}))

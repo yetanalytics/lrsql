@@ -13,6 +13,7 @@
             [lrsql.init.authority :as authority]
             [lrsql.spec.config :as config]
             [lrsql.spec.oidc :as oidc]
+            [lrsql.util.auth-log :as auth-log]
             [selmer.parser :as selm-parser]
             [selmer.util :as selm-u]
             [xapi-schema.spec :as xs])
@@ -78,6 +79,37 @@
 ;; Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; The key set is fetched inside the key lookup below, so a failed fetch
+;; reaches the decoder as an exception from unsign, which pedestal-oidc reports
+;; as :unknown with that exception, not as :keyset-error.
+(defn- keyset-fetch-failure?
+  [ex]
+  (loop [^Throwable t ex]
+    (cond
+      (nil? t) false
+      (= ::jwt/jwks-public-key (:type (ex-data t))) true
+      :else (recur (.getCause t)))))
+
+(defn decoder-refusal-reason
+  "The authentication log's reason code for a token the OIDC decoder refused
+   with `failure`, and the exception `ex` it passed, if any."
+  [failure ex]
+  (if (or (#{:keyset-error :keyset-invalid} failure)
+          (keyset-fetch-failure? ex))
+    :keyset-error
+    :invalid-token))
+
+(defn decoder-unauthorized
+  "The decoder's :unauthorized handler: unknown or nil key IDs pass through for
+   possible subsequent handling; every other failure gets pedestal-oidc's 401
+   and a reason code for the authentication log."
+  [ctx failure & rest-args]
+  (if (= :kid-not-found failure)
+    ctx
+    (auth-log/refuse
+     (apply oidc-i/default-unauthorized ctx failure rest-args)
+     (decoder-refusal-reason failure (first rest-args)))))
+
 (s/fdef resource-interceptors
   :args (s/cat :config (s/merge partial-config-spec
                                 (s/keys :req-un [::config/jwt-exp-leeway])))
@@ -112,10 +144,7 @@
           :required? false
           :unauthorized
           ;; Allow unknown/nil key IDs through for possible subsequent handling
-          (fn [ctx failure & rest-args]
-            (if (= :kid-not-found failure)
-              ctx
-              (apply oidc-i/default-unauthorized ctx failure rest-args)))
+          decoder-unauthorized
           :unsign-opts
           (cond-> {:iss    oidc-issuer
                    :leeway jwt-exp-leeway}

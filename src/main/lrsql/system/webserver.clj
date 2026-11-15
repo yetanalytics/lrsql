@@ -11,6 +11,7 @@
             [lrsql.init.git-data :refer [read-version]]
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
+            [lrsql.util.auth-log :as auth-log]
             [lrsql.util.cert :as cu]
             [lrsql.util.interceptor :refer [handle-json-parse-exn]]
             [lrsql.util.json-depth :as json-depth]))
@@ -164,6 +165,15 @@
       :keystore      keystore
       :key-password  key-password}}))
 
+(defn- add-auth-log
+  "Puts the authentication-log interceptor first in the service's interceptor
+   chain. Its :leave runs last, when the response status and the identity the
+   route established are final."
+  [service]
+  (update service
+          ::http/interceptors
+          #(into [auth-log/auth-log-interceptor] %)))
+
 (defrecord Webserver [service
                       server
                       lrs
@@ -182,6 +192,7 @@
                           (service-map lrs config))
               server  (-> service
                           i/xapi-default-interceptors
+                          add-auth-log
                           http/create-server
                           http/start)]
           ;; Logging
