@@ -12,6 +12,7 @@
             [lrsql.spec.config :as cs]
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
+            [lrsql.util.headers :as h]
             [lrsql.util.interceptor :refer [handle-json-parse-exn]]
             [lrsql.util.json-depth :as json-depth]))
 
@@ -164,6 +165,18 @@
       :keystore      keystore
       :key-password  key-password}}))
 
+(defn- add-sec-headers
+  "Put the security header interceptor first in the service's interceptor
+   chain. Its `:leave` then runs last, so the configured `LRSQL_SEC_HEAD_*`
+   headers reach every response: the xAPI routes, `/health`, the admin UI
+   and its static files, redirects and errors, as well as the admin API and
+   OpenAPI routes. With no header configured it adds nothing."
+  [service config]
+  (update service
+          ::http/interceptors
+          #(into [(h/secure-headers (select-keys config (keys h/sec-head-names)))]
+                 %)))
+
 (defrecord Webserver [service
                       server
                       lrs
@@ -182,6 +195,7 @@
                           (service-map lrs config))
               server  (-> service
                           i/xapi-default-interceptors
+                          (add-sec-headers config)
                           http/create-server
                           http/start)]
           ;; Logging

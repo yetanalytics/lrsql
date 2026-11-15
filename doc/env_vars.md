@@ -193,6 +193,8 @@ This section is for optionally configuring [ClamAV antivirus scanning](https://w
 #### Browser Security Headers
 These config vars enable and configure browser security response headers from the server. In all cases, not setting them results in no corresponding header, setting them to `"[default]"` results in a generic server default (specified below), and any other string manually overrides the header value.
 
+The configured headers are sent on every response: the xAPI and admin API routes, `/health`, the admin UI page and its static files, redirects and error responses. Because they now reach the admin UI page, a `Content-Security-Policy` must allow the admin UI's own scripts and styles. The `[default]` policy uses `'strict-dynamic'`, which makes browsers ignore the `https:` and `http:` sources, so it blocks the admin UI's script files; if the admin UI is enabled, set `LRSQL_SEC_HEAD_CONTENT` to a policy written for it, for example one based on `'self'`.
+
 | Env Var                       | Config               | Header Name                         | `[default]` value                     |
 | ----------------------------- | -------------------- | ----------------------------------- | ------------------------------------- |
 | `LRSQL_SEC_HEAD_HSTS`         | `secHeadHsts`        | `Strict-Transport-Security`         | `max-age=31536000; includeSubdomains` |
