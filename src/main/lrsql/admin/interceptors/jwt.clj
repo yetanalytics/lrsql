@@ -3,6 +3,8 @@
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.protocol :as adp]
             [lrsql.util.admin :as admin-u]
+            [lrsql.util.auth-log :as auth-log]
+            [buddy.sign.jwt :as bj]
             [clojure.tools.logging :as log]))
 
 ;; NOTE: These interceptors are specifically for JWT validation.
@@ -30,31 +32,45 @@
       (log/warnf ex "No-val JWT Error: %s" (ex-message ex))
       :lrsql.admin/unauthorized-token-error)))
 
+(defn- token-refusal-reason
+  "Why `jwt->payload` refused `token`, for the authentication log:
+   :expired or :invalid-token. Runs only on the refusal path."
+  [token secret leeway]
+  (try
+    (bj/unsign token secret {:leeway leeway})
+    :invalid-token
+    (catch clojure.lang.ExceptionInfo e
+      (if (= :exp (:cause (ex-data e))) :expired :invalid-token))
+    (catch Exception _
+      :invalid-token)))
+
 (defn- validate-jwt*
-  "Normal JWT, normal signature verification and blocklist check."
+  "Normal JWT, normal signature verification and blocklist check. Returns
+   `[result reason]`, where `reason` says why a refused token was refused,
+   for the authentication log."
   [lrs token secret leeway]
   (try
     (let [result (admin-u/jwt->payload token secret leeway)
           {:keys [account-id session-id]} (when (map? result) result)]
       (cond
         (keyword? result)
-        result
+        [result (token-refusal-reason token secret leeway)]
         (adp/-jwt-blocked? lrs token)
-        :lrsql.admin/unauthorized-token-error
+        [:lrsql.admin/unauthorized-token-error :blocked]
         ;; An account token without a session ID was issued before sessions
         ;; were tracked, and could not be revoked by signing out.
         (and account-id (nil? session-id))
-        :lrsql.admin/unauthorized-token-error
+        [:lrsql.admin/unauthorized-token-error :invalid-token]
         ;; The token's session was signed out.
         (and session-id
              (adp/-jwt-blocked? lrs (admin-u/session-block-key session-id)))
-        :lrsql.admin/unauthorized-token-error
+        [:lrsql.admin/unauthorized-token-error :session-ended]
         :else
-        (assoc result :jwt token)))
+        [(assoc result :jwt token) nil]))
     (catch Exception ex
       ;; We want any error here to return a 401, but we log
       (log/warnf ex "Unexpected JWT Error: %s" (ex-message ex))
-      :lrsql.admin/unauthorized-token-error)))
+      [:lrsql.admin/unauthorized-token-error :invalid-token])))
 
 (defn validate-jwt
   "Validate that the header JWT is valid (e.g. not expired and signed properly).
@@ -69,9 +85,13 @@
             token  (-> ctx
                        (get-in [:request :headers "authorization"])
                        admin-u/header->jwt)
-            result (if no-val?
-                     (validate-no-val-jwt lrs token no-val-opts)
-                     (validate-jwt* lrs token secret leeway))]
+            [result reason]
+            (if no-val?
+              (let [r (validate-no-val-jwt lrs token no-val-opts)]
+                [r (if (= :lrsql.admin/oidc-issuer-mismatch-error r)
+                     :issuer-mismatch
+                     :invalid-token)])
+              (validate-jwt* lrs token secret leeway))]
         (cond
           ;; Success - assoc the account ID as an intermediate value
           (map? result)
@@ -80,13 +100,13 @@
               (assoc-in [:request :session ::data] result))
           ;; Problem with the non-validated account ensure
           (= :lrsql.admin/oidc-issuer-mismatch-error result)
-          (assoc (chain/terminate ctx)
+          (assoc (auth-log/refuse (chain/terminate ctx) reason)
                  :response
                  {:status 401
                   :body   {:error "Token Issuer Mismatch!"}})
           ;; The token is bad (expired, malformed, etc.) - Unauthorized
           (= :lrsql.admin/unauthorized-token-error result)
-          (assoc (chain/terminate ctx)
+          (assoc (auth-log/refuse (chain/terminate ctx) reason)
                  :response
                  {:status 401
                   :body   {:error "Unauthorized JSON Web Token!"}}))))}))
@@ -101,11 +121,12 @@
     (fn validate-one-time-jwt [ctx]
       (let [{lrs :com.yetanalytics/lrs} ctx
             token  (get-in ctx [:request :params :token])
-            result (validate-jwt* lrs token secret leeway)]
+            [result reason] (validate-jwt* lrs token secret leeway)]
         (cond
           (or (= :lrsql.admin/unauthorized-token-error result)
               (nil? (:one-time-id result)))
-          (assoc (chain/terminate ctx)
+          (assoc (auth-log/refuse (chain/terminate ctx)
+                                  (or reason :invalid-token))
                  :response
                  {:status 401
                   :body   {:error "Unauthorized JSON Web Token!"}})
@@ -114,7 +135,7 @@
                 block-result
                 (adp/-block-one-time-jwt lrs token one-time-id)]
             (if-some [_ (:error block-result)]
-              (assoc (chain/terminate ctx)
+              (assoc (auth-log/refuse (chain/terminate ctx) :blocked)
                      :response
                      {:status 401
                       :body   {:error "Unauthorized, JSON Web Token was not issued!"}})
@@ -140,7 +161,7 @@
           ;; Success - continue on your merry way
           ctx
           ;; The account does not exist/was deleted - Unauthorized
-          (assoc (chain/terminate ctx)
+          (assoc (auth-log/refuse (chain/terminate ctx) :account-missing)
                  :response
                  {:status 401
                   :body   {:error "Unauthorized, account does not exist!"}}))))}))

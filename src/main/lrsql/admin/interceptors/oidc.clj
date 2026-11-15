@@ -3,6 +3,7 @@
             [io.pedestal.interceptor.chain :as chain]
             [lrsql.admin.interceptors.jwt :as jwt]
             [lrsql.admin.protocol :as adp]
+            [lrsql.util.auth-log :as auth-log]
             [lrsql.util.oidc :as oidc]))
 
 (def validate-oidc-identity
@@ -17,7 +18,7 @@
                     ctx
                     (get-in lrs [:config :oidc-scope-prefix]))]
         (if (= ::oidc/unauthorized ret)
-          (assoc (chain/terminate ctx)
+          (assoc (auth-log/refuse (chain/terminate ctx) :oidc-claims)
                  :response
                  {:status 401
                   :body   {:error "Invalid JWT Claims!"}})
@@ -38,7 +39,7 @@
       (if (or (nil? admin-identity)
               (oidc/authorize-admin-action? ctx admin-identity))
         ctx
-        (assoc (chain/terminate ctx)
+        (assoc (auth-log/refuse (chain/terminate ctx) :oidc-scope)
                :response
                {:status 401
                 :body   {:error "Unauthorized Admin Action!"}})))}))
@@ -73,7 +74,7 @@
                                 username
                                 oidc-issuer)]
           (if (= :lrsql.admin/oidc-issuer-mismatch-error result)
-            (assoc (chain/terminate ctx)
+            (assoc (auth-log/refuse (chain/terminate ctx) :issuer-mismatch)
                    :response
                    {:status 401
                     :body   {:error "OIDC Issuer Mismatch!"}})
@@ -105,7 +106,7 @@
     (fn require-oidc-identity [ctx]
       (if (::admin-identity ctx)
         ctx
-        (assoc (chain/terminate ctx)
+        (assoc (auth-log/refuse (chain/terminate ctx) :oidc-required)
                :response
                {:status 401
                 :body   {:error "Admin authentication requires OIDC!"}})))}))

@@ -10,6 +10,31 @@ All configuration variables can either be set directly via the command line as e
 | ----------------- | ---------- | ------------------------------------------------------------------------------------------ | ------- |
 | `LRSQL_LOG_LEVEL` | `logLevel` | The logging level to use. Can be `ALL`, `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR` or `OFF` | `INFO`  |
 
+#### Authentication Events
+
+SQL LRS logs one line per authentication event to the `lrsql.auth` logger. Each line starts with `AUTH` and is a list of `key=value` pairs:
+
+| Event | Level | Example |
+| ----- | ----- | ------- |
+| Admin sign-in succeeded | `INFO` | `AUTH event=admin.login outcome=success account=<account UUID> method=local src=<client address> status=200` |
+| Admin sign-in failed | `WARN` | `AUTH event=admin.login outcome=failure user="<username>" reason=invalid-credentials src=<client address> status=401` |
+| Admin token renewed | `INFO` | `AUTH event=admin.renew outcome=success account=<account UUID> session=<session tag> src=<client address> status=200` |
+| Admin token renewal refused | `WARN` | `AUTH event=admin.renew outcome=failure account=<account UUID> reason=refresh-expired src=<client address> status=401` |
+| Admin sign-out | `INFO` | `AUTH event=admin.logout outcome=success account=<account UUID> session=<session tag> src=<client address> status=200` |
+| Authenticated admin request | `INFO` | `AUTH event=admin.request outcome=success route=<route name> account=<account UUID> method=local src=<client address> status=200` |
+| Refused admin request | `WARN` | `AUTH event=admin.request outcome=refused route=<route name> reason=<reason> src=<client address> status=401` |
+| Refused xAPI request | `WARN` | `AUTH event=xapi.request outcome=refused reason=<reason> credential=<credential ID or -> src=<client address> status=401` |
+
+- `method` is `local` for an admin account token, `oidc` for an OpenID Connect token (the account is then given as `account="<username>" issuer="<issuer>"`), and `onetime` for the one-time token of a CSV download.
+- An admin refusal `reason` is one of `invalid-token`, `expired`, `blocked`, `session-ended`, `account-missing`, `issuer-mismatch`, `oidc-claims`, `oidc-scope`, `oidc-required` or `keyset-error` (the identity provider's key set could not be fetched). An xAPI refusal `reason` is `no-credentials`, `invalid-credentials` (401) or `scope` (403).
+- `session` is the first 8 hex digits of the SHA-256 hash of the session ID, enough to correlate a session's sign-in, renewals and sign-out without logging the ID itself.
+- `src` is the address of the connecting client. Behind a proxy or load balancer it is the proxy's address.
+- Usernames and issuers are cut to 64 printable ASCII characters, and `"` and `\` are replaced with `_`.
+- Successful xAPI requests are not logged.
+- No line ever contains a password, token, API key, API secret or signing secret.
+
+Successes are logged at `INFO` and refusals at `WARN`, so `LRSQL_LOG_LEVEL=WARN` keeps only the refusals. To send these lines elsewhere or turn them off, give the `lrsql.auth` logger its own entry in a custom [Logback configuration](https://logback.qos.ch/manual/configuration.html) (for example `<logger name="lrsql.auth" level="OFF" />`).
+
 ### Database
 
 | Env Var               | Config         | Description                                                                                                                                                                                                                                                     | Default     |
