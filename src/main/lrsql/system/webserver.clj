@@ -13,7 +13,8 @@
             [lrsql.system.util :refer [assert-config redact-config-vars]]
             [lrsql.util.cert :as cu]
             [lrsql.util.interceptor :refer [handle-json-parse-exn]]
-            [lrsql.util.json-depth :as json-depth]))
+            [lrsql.util.json-depth :as json-depth]
+            [lrsql.util.jws :as jws]))
 
 (defn- service-map
   "Create a new service map for the webserver."
@@ -63,6 +64,11 @@
         ;; The private key is used as the JWT symmetric secret
         {:keys [keystore
                 private-key]} (cu/init-keystore config)
+        ;; The admin token signing key, checked once here so that a key the
+        ;; crypto provider refuses stops startup instead of failing every
+        ;; sign-in
+        secret (or jwt-common-secret private-key)
+        _      (jws/check-key! secret)
         ;; OIDC Interceptors & derived settings
         {{oidc-resource-interceptors :resource-interceptors
           oidc-admin-interceptors    :admin-interceptors
@@ -112,7 +118,7 @@
                :no-val-role-key           jwt-no-val-role-key
                :no-val-role               jwt-no-val-role
                :no-val-logout-url         jwt-no-val-logout-url
-               :secret                    (or jwt-common-secret private-key)
+               :secret                    secret
                :enable-admin-delete-actor enable-admin-delete-actor
                :enable-admin-ui           enable-admin-ui
                :admin-language-code       admin-language
